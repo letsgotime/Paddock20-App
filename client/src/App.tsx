@@ -21,7 +21,7 @@ function App() {
         <TooltipProvider>
           <div className="min-h-screen bg-black font-openSans text-white">
             <Navbar />
-            <div className="container mx-auto">
+            <div className="container mx-auto px-4">
               <Toaster />
               <Routes>
                 <Route path="/" element={<Home />} />
