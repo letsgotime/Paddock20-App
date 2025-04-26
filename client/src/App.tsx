@@ -14,6 +14,7 @@ import Settings from "@/pages/Settings";
 import Events from "./pages/Events";
 import DropdownNavbar from "./components/DropdownNavbar";
 import { WeatherProvider } from "./contexts/WeatherContext";
+import './apexvault.css';
 
 function App() {
   return (

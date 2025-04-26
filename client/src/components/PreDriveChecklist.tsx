@@ -3,15 +3,13 @@ import React, { useState } from 'react';
 const PreDriveChecklist = () => {
   const [checklistItems, setChecklistItems] = useState([
     { id: 1, text: 'Check tire pressure', checked: false },
-    { id: 2, text: 'Check oil level', checked: false },
-    { id: 3, text: 'Check coolant level', checked: false },
-    { id: 4, text: 'Check brake fluid level', checked: false },
-    { id: 5, text: 'Inspect brake pads', checked: false },
-    { id: 6, text: 'Verify lug nuts torqued to spec', checked: false },
-    { id: 7, text: 'Clean windshield', checked: false },
-    { id: 8, text: 'Check lights functionality', checked: false },
-    { id: 9, text: 'Check fuel level', checked: false },
-    { id: 10, text: 'Verify emergency kit present', checked: false }
+    { id: 2, text: 'Inspect brake lights', checked: false },
+    { id: 3, text: 'Check oil level', checked: false },
+    { id: 4, text: 'Check coolant level', checked: false },
+    { id: 5, text: 'Check windshield washer fluid', checked: false },
+    { id: 6, text: 'Inspect windshield wipers', checked: false },
+    { id: 7, text: 'Adjust mirrors', checked: false },
+    { id: 8, text: 'Test brake pedal feel', checked: false }
   ]);
 
   const toggleChecked = (id: number) => {
@@ -33,9 +31,9 @@ const PreDriveChecklist = () => {
   );
 
   return (
-    <div className="bg-gray-900 text-white p-6 rounded-xl shadow-lg mb-8">
+    <div className="apex-card mb-8">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-2xl text-green-400 font-orbitron uppercase">Pre-Drive Checklist</h2>
+        <h2 className="apex-header-green">Pre-Drive Checklist</h2>
         <div className="flex items-center gap-4">
           <div className="text-sm">
             <span className="text-green-400 font-bold">{percentComplete}%</span> Complete
@@ -70,12 +68,20 @@ const PreDriveChecklist = () => {
         ))}
       </ul>
       
-      <div className="mt-8 bg-gray-800 rounded-lg p-4">
-        <h3 className="text-green-400 font-orbitron text-sm uppercase mb-2">Pre-Drive Notes</h3>
-        <textarea 
-          className="w-full bg-gray-700 text-white rounded p-3 h-24"
-          placeholder="Add any notes or observations here..."
-        ></textarea>
+      <div className="flex justify-between mt-6">
+        <button 
+          className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded"
+          disabled={percentComplete < 100}
+        >
+          Download Checklist
+        </button>
+        
+        <button 
+          className={`${percentComplete === 100 ? 'apex-button' : 'bg-gray-700 text-gray-400 px-4 py-2 rounded cursor-not-allowed'}`}
+          disabled={percentComplete < 100}
+        >
+          Ready to Drive
+        </button>
       </div>
     </div>
   );
