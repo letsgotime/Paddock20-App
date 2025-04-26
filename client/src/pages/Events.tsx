@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import Paddock20EventCard from '@/components/Paddock20EventCard';
-import HagertyEventCard from '@/components/HagertyEventCard';
+import Paddock20EventCard from '../components/Paddock20EventCard';
+import HagertyEventCard from '../components/HagertyEventCard';
 import axios from 'axios';
 
 interface HagertyEvent {

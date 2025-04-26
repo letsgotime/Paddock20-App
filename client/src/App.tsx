@@ -11,7 +11,7 @@ import Journal from "@/pages/Journal";
 import Marketplace from "@/pages/Marketplace";
 import Motorsports from "@/pages/Motorsports";
 import Settings from "@/pages/Settings";
-import Events from "@/pages/Events";
+import Events from "./pages/Events";
 import Navbar from "@/components/Navbar";
 import { WeatherProvider } from "./contexts/WeatherContext";
 
@@ -30,6 +30,7 @@ function App() {
                 <Route path="/journal" element={<Journal />} />
                 <Route path="/marketplace" element={<Marketplace />} />
                 <Route path="/motorsports" element={<Motorsports />} />
+                <Route path="/events" element={<Events />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
