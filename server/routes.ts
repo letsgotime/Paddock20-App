@@ -49,6 +49,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: (error as Error).message || 'Failed to fetch forecast data' });
     }
   });
+  
+  // OneCall API route - combines current, minutely, hourly, daily forecast in one call
+  app.get('/api/onecall', async (req, res) => {
+    try {
+      const { lat, lon, units, exclude } = req.query;
+      
+      if (!lat || !lon) {
+        return res.status(400).json({ message: 'Latitude and longitude are required' });
+      }
+
+      const apiKey = process.env.OPENWEATHER_API_KEY || "default_key";
+      let url = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&units=${units || 'metric'}&appid=${apiKey}`;
+      
+      // Add exclude parameter if provided
+      if (exclude) {
+        url += `&exclude=${exclude}`;
+      }
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`OneCall API error: ${response.status} - ${await response.text()}`);
+      }
+      
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ message: (error as Error).message || 'Failed to fetch OneCall weather data' });
+    }
+  });
 
   app.get('/api/location', async (req, res) => {
     try {

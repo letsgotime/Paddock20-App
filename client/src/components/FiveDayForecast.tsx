@@ -1,106 +1,114 @@
 import React from 'react';
 import { useWeather } from '@/contexts/WeatherContext';
-import WeatherIcon from './WeatherIcon';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { CalendarDays } from 'lucide-react';
+import WeatherIcon from './WeatherIcon';
 import { format } from 'date-fns';
 
 const FiveDayForecast: React.FC = () => {
   const { forecastData, unit } = useWeather();
-
+  
   if (!forecastData) return null;
 
-  // Process forecast data to get daily forecasts (OpenWeatherMap forecast data is in 3-hour intervals)
+  const tempUnit = unit === 'metric' ? '°C' : '°F';
+  
+  // Process forecast data to get daily forecasts
+  // We need to group by day and get min/max temps for each day
   const getDailyForecasts = () => {
-    // Group forecast items by day
-    const dailyData: Record<string, any[]> = {};
+    const dailyData: {
+      [key: string]: {
+        date: Date;
+        minTemp: number;
+        maxTemp: number;
+        icon: string;
+        description: string;
+        humidity: number;
+        windSpeed: number;
+      }
+    } = {};
     
+    // Group by day
     forecastData.list.forEach(item => {
       const date = new Date(item.dt * 1000);
       const day = format(date, 'yyyy-MM-dd');
       
       if (!dailyData[day]) {
-        dailyData[day] = [];
-      }
-      
-      dailyData[day].push(item);
-    });
-    
-    // Get one forecast per day (noon forecast when available)
-    const dailyForecasts = Object.keys(dailyData).map(day => {
-      const dayData = dailyData[day];
-      
-      // Try to get forecast closest to noon for the day
-      const noonForecast = dayData.reduce((closest, current) => {
-        const currentDate = new Date(current.dt * 1000);
-        const currentHour = currentDate.getHours();
-        const closestDate = new Date(closest.dt * 1000);
-        const closestHour = closestDate.getHours();
+        dailyData[day] = {
+          date,
+          minTemp: item.main.temp_min,
+          maxTemp: item.main.temp_max,
+          icon: item.weather[0].icon,
+          description: item.weather[0].description,
+          humidity: item.main.humidity,
+          windSpeed: item.wind.speed
+        };
+      } else {
+        // Update min/max temperatures
+        dailyData[day].minTemp = Math.min(dailyData[day].minTemp, item.main.temp_min);
+        dailyData[day].maxTemp = Math.max(dailyData[day].maxTemp, item.main.temp_max);
         
-        // Get the item closest to noon (12:00)
-        return Math.abs(currentHour - 12) < Math.abs(closestHour - 12) ? current : closest;
-      });
-      
-      return {
-        day,
-        forecast: noonForecast
-      };
+        // Update icon to prefer daytime icons (those without 'n' suffix)
+        if (!item.weather[0].icon.includes('n')) {
+          dailyData[day].icon = item.weather[0].icon;
+          dailyData[day].description = item.weather[0].description;
+        }
+      }
     });
     
-    // Return only the next 5 days
-    return dailyForecasts.slice(0, 5);
+    // Convert to array and sort by date
+    return Object.values(dailyData)
+      .sort((a, b) => a.date.getTime() - b.date.getTime())
+      .slice(0, 5); // Get 5 days
   };
-
+  
   const dailyForecasts = getDailyForecasts();
 
   return (
-    <div className="mt-8">
-      <h2 className="text-2xl font-semibold mb-4">5-Day Forecast</h2>
-      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-        {dailyForecasts.map(({ day, forecast }) => {
-          const date = new Date(forecast.dt * 1000);
-          const dayName = format(date, 'EEEE'); // Monday, Tuesday, etc.
-          const formattedDate = format(date, 'MMM d'); // Jan 1, Feb 2, etc.
-          const tempUnit = unit === 'metric' ? '°C' : '°F';
-          
-          return (
-            <Card key={day} className="bg-gray-900 border-gray-800 shadow-lg hover:shadow-xl transition-all">
-              <CardHeader className="pb-2">
-                <CardTitle className="text-center text-lg font-medium">{dayName}</CardTitle>
-                <p className="text-center text-sm text-gray-400">{formattedDate}</p>
-              </CardHeader>
-              <CardContent>
-                <div className="flex flex-col items-center">
-                  <WeatherIcon 
-                    iconCode={forecast.weather[0].icon} 
-                    description={forecast.weather[0].description}
-                    size={48}
-                    className="text-blue-400 mb-2"
-                  />
-                  <div className="mt-2 text-center">
-                    <p className="text-xl font-bold">{Math.round(forecast.main.temp)}{tempUnit}</p>
-                    <div className="flex justify-between text-sm text-gray-400 mt-1">
-                      <span>H: {Math.round(forecast.main.temp_max)}{tempUnit}</span>
-                      <span className="mx-1">|</span>
-                      <span>L: {Math.round(forecast.main.temp_min)}{tempUnit}</span>
-                    </div>
+    <Card className="bg-gray-900 border-gray-800 shadow-xl">
+      <CardHeader className="pb-2">
+        <div className="flex items-center">
+          <CalendarDays className="text-blue-400 mr-2 h-5 w-5" />
+          <CardTitle>5-Day Forecast</CardTitle>
+        </div>
+      </CardHeader>
+      <CardContent>
+        <div className="grid grid-cols-1 divide-y divide-gray-800">
+          {dailyForecasts.map((forecast, index) => (
+            <div 
+              key={index} 
+              className="py-3 flex items-center justify-between"
+            >
+              <div className="flex items-center">
+                <div className="w-24">
+                  <div className="font-medium">
+                    {format(forecast.date, 'EEE')}
                   </div>
-                  <div className="grid grid-cols-2 gap-2 mt-3 w-full text-center text-xs">
-                    <div className="bg-gray-800 rounded p-1">
-                      <span className="block text-gray-400">Humidity</span>
-                      <span>{forecast.main.humidity}%</span>
-                    </div>
-                    <div className="bg-gray-800 rounded p-1">
-                      <span className="block text-gray-400">Wind</span>
-                      <span>{forecast.wind.speed} {unit === 'metric' ? 'm/s' : 'mph'}</span>
-                    </div>
+                  <div className="text-sm text-gray-400">
+                    {format(forecast.date, 'MMM d')}
                   </div>
                 </div>
-              </CardContent>
-            </Card>
-          );
-        })}
-      </div>
-    </div>
+                <div className="flex items-center">
+                  <WeatherIcon 
+                    iconCode={forecast.icon} 
+                    size={36} 
+                    className="text-blue-400" 
+                  />
+                  <div className="ml-2 capitalize text-sm">
+                    {forecast.description}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <div className="text-right">
+                  <div className="font-medium">{Math.round(forecast.maxTemp)}{tempUnit}</div>
+                  <div className="text-sm text-gray-400">{Math.round(forecast.minTemp)}{tempUnit}</div>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </CardContent>
+    </Card>
   );
 };
 
