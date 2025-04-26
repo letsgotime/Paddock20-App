@@ -1,6 +1,7 @@
 import React from 'react';
 import { useWeather } from '@/contexts/WeatherContext';
 import { MapPin, Thermometer, Droplets, Wind, Gauge } from 'lucide-react';
+import WeatherIcon from './WeatherIcon';
 
 const CurrentWeather: React.FC = () => {
   const { weatherData, selectedLocation, unit } = useWeather();
