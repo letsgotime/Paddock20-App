@@ -138,9 +138,7 @@ const WeatherAlerts: React.FC = () => {
           <Alert 
             key={alert.id} 
             variant={
-              alert.severity === 'high' ? 'destructive' : 
-              alert.severity === 'medium' ? 'default' : 
-              'outline'
+              alert.severity === 'high' ? 'destructive' : 'default'
             }
             className={
               alert.severity === 'high' ? 'bg-red-900/20 border-red-800' : 
