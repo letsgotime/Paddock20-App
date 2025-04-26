@@ -11,6 +11,7 @@ import Journal from "@/pages/Journal";
 import Marketplace from "@/pages/Marketplace";
 import Motorsports from "@/pages/Motorsports";
 import Settings from "@/pages/Settings";
+import Events from "@/pages/Events";
 import Navbar from "@/components/Navbar";
 import { WeatherProvider } from "./contexts/WeatherContext";
 
