@@ -1,5 +1,141 @@
 import { Location, WeatherData, ForecastData } from 'shared/schema';
 
+// Define interface for OneCall API response
+export interface OneCallData {
+  lat: number;
+  lon: number;
+  timezone: string;
+  timezone_offset: number;
+  current: {
+    dt: number;
+    sunrise: number;
+    sunset: number;
+    temp: number;
+    feels_like: number;
+    pressure: number;
+    humidity: number;
+    dew_point: number;
+    uvi: number;
+    clouds: number;
+    visibility: number;
+    wind_speed: number;
+    wind_deg: number;
+    wind_gust?: number;
+    weather: Array<{
+      id: number;
+      main: string;
+      description: string;
+      icon: string;
+    }>;
+    rain?: {
+      '1h'?: number;
+    };
+    snow?: {
+      '1h'?: number;
+    };
+  };
+  minutely?: Array<{
+    dt: number;
+    precipitation: number;
+  }>;
+  hourly?: Array<{
+    dt: number;
+    temp: number;
+    feels_like: number;
+    pressure: number;
+    humidity: number;
+    dew_point: number;
+    uvi: number;
+    clouds: number;
+    visibility: number;
+    wind_speed: number;
+    wind_deg: number;
+    wind_gust?: number;
+    weather: Array<{
+      id: number;
+      main: string;
+      description: string;
+      icon: string;
+    }>;
+    pop: number;
+    rain?: {
+      '1h'?: number;
+    };
+    snow?: {
+      '1h'?: number;
+    };
+  }>;
+  daily?: Array<{
+    dt: number;
+    sunrise: number;
+    sunset: number;
+    moonrise: number;
+    moonset: number;
+    moon_phase: number;
+    temp: {
+      day: number;
+      min: number;
+      max: number;
+      night: number;
+      eve: number;
+      morn: number;
+    };
+    feels_like: {
+      day: number;
+      night: number;
+      eve: number;
+      morn: number;
+    };
+    pressure: number;
+    humidity: number;
+    dew_point: number;
+    wind_speed: number;
+    wind_deg: number;
+    wind_gust?: number;
+    weather: Array<{
+      id: number;
+      main: string;
+      description: string;
+      icon: string;
+    }>;
+    clouds: number;
+    pop: number;
+    rain?: number;
+    snow?: number;
+    uvi: number;
+  }>;
+  alerts?: Array<{
+    sender_name: string;
+    event: string;
+    start: number;
+    end: number;
+    description: string;
+    tags: string[];
+  }>;
+}
+
+/**
+ * Get comprehensive weather data for a specific location using the OneCall API
+ */
+export const getOneCallData = async (location: Location, unit: 'metric' | 'imperial'): Promise<OneCallData> => {
+  try {
+    // Use our server-side proxy endpoint
+    const url = `/api/onecall?lat=${location.lat}&lon=${location.lon}&units=${unit}`;
+    const response = await fetch(url);
+    
+    if (!response.ok) {
+      const errorText = await response.text();
+      throw new Error(`OneCall API error (${response.status}): ${errorText}`);
+    }
+    
+    const data = await response.json();
+    return data as OneCallData;
+  } catch (error) {
+    console.error('Error fetching OneCall data:', error);
+    throw new Error(`Failed to fetch comprehensive weather data: ${(error as Error).message}`);
+  }
+};
+
 /**
  * Get current weather data for a specific location
  */
