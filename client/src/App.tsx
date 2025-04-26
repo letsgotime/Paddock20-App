@@ -12,7 +12,7 @@ import Marketplace from "@/pages/Marketplace";
 import Motorsports from "@/pages/Motorsports";
 import Settings from "@/pages/Settings";
 import Events from "./pages/Events";
-import Navbar from "@/components/Navbar";
+import DropdownNavbar from "./components/DropdownNavbar";
 import { WeatherProvider } from "./contexts/WeatherContext";
 
 function App() {
@@ -21,7 +21,7 @@ function App() {
       <WeatherProvider>
         <TooltipProvider>
           <div className="min-h-screen bg-black font-openSans text-white">
-            <Navbar />
+            <DropdownNavbar />
             <div className="container mx-auto px-4">
               <Toaster />
               <Routes>
