@@ -1,17 +1,12 @@
 import { Location, WeatherData, ForecastData } from 'shared/schema';
 
-// Get the OpenWeatherMap API key from environment variables
-const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY || "default_key";
-
-// Base URL for OpenWeatherMap API
-const BASE_URL = 'https://api.openweathermap.org/data/2.5';
-
 /**
  * Get current weather data for a specific location
  */
 export const getWeatherData = async (location: Location, unit: 'metric' | 'imperial'): Promise<WeatherData> => {
   try {
-    const url = `${BASE_URL}/weather?lat=${location.lat}&lon=${location.lon}&units=${unit}&appid=${API_KEY}`;
+    // Use our server-side proxy endpoint
+    const url = `/api/weather?lat=${location.lat}&lon=${location.lon}&units=${unit}`;
     const response = await fetch(url);
     
     if (!response.ok) {
@@ -32,7 +27,8 @@ export const getWeatherData = async (location: Location, unit: 'metric' | 'imper
  */
 export const getHourlyForecast = async (location: Location, unit: 'metric' | 'imperial'): Promise<ForecastData> => {
   try {
-    const url = `${BASE_URL}/forecast?lat=${location.lat}&lon=${location.lon}&units=${unit}&appid=${API_KEY}`;
+    // Use our server-side proxy endpoint
+    const url = `/api/forecast?lat=${location.lat}&lon=${location.lon}&units=${unit}`;
     const response = await fetch(url);
     
     if (!response.ok) {
@@ -53,7 +49,8 @@ export const getHourlyForecast = async (location: Location, unit: 'metric' | 'im
  */
 export const searchLocation = async (query: string): Promise<Location> => {
   try {
-    const url = `https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(query)}&limit=1&appid=${API_KEY}`;
+    // Use our server-side proxy endpoint
+    const url = `/api/location?q=${encodeURIComponent(query)}`;
     const response = await fetch(url);
     
     if (!response.ok) {
@@ -63,17 +60,11 @@ export const searchLocation = async (query: string): Promise<Location> => {
     
     const data = await response.json();
     
-    if (!data || data.length === 0) {
+    if (!data) {
       throw new Error(`No location found for: ${query}`);
     }
     
-    const result = data[0];
-    return {
-      id: Date.now().toString(), // Generate unique ID for this location
-      name: result.name,
-      lat: result.lat,
-      lon: result.lon
-    };
+    return data as Location;
   } catch (error) {
     console.error('Error searching location:', error);
     throw new Error(`Failed to search location: ${(error as Error).message}`);
