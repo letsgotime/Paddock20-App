@@ -9,6 +9,7 @@ function Navbar() {
       <Link className="text-blue-400 hover:text-green-400 font-orbitron uppercase" to="/journal">Journal</Link>
       <Link className="text-blue-400 hover:text-green-400 font-orbitron uppercase" to="/marketplace">Marketplace</Link>
       <Link className="text-blue-400 hover:text-green-400 font-orbitron uppercase" to="/motorsports">Motorsports</Link>
+      <Link className="text-blue-400 hover:text-green-400 font-orbitron uppercase" to="/events">Events</Link>
       <Link className="text-blue-400 hover:text-green-400 font-orbitron uppercase" to="/settings">Settings</Link>
     </nav>
   );
