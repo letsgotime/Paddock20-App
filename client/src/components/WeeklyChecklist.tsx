@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 
 const WeeklyChecklist = () => {
   const [checklistItems, setChecklistItems] = useState([
-    { id: 1, text: 'Wash exterior thoroughly', checked: false },
-    { id: 2, text: 'Clean wheels and wheel wells', checked: false },
-    { id: 3, text: 'Vacuum and dust interior', checked: false },
-    { id: 4, text: 'Apply quick detailer', checked: false },
-    { id: 5, text: 'Check and top up fluids', checked: false },
-    { id: 6, text: 'Inspect tire tread and pressure', checked: false },
-    { id: 7, text: 'Clean glass surfaces', checked: false },
-    { id: 8, text: 'Condition leather surfaces', checked: false }
+    { id: 1, text: 'Check tire pressure', checked: false },
+    { id: 2, text: 'Inspect brake pads', checked: false },
+    { id: 3, text: 'Check fluid levels', checked: false },
+    { id: 4, text: 'Wash and wax', checked: false },
+    { id: 5, text: 'Clean interior surfaces', checked: false },
+    { id: 6, text: 'Check all lights', checked: false },
+    { id: 7, text: 'Visual inspection of undercarriage', checked: false },
+    { id: 8, text: 'Clean glass surfaces', checked: false }
   ]);
 
   const toggleChecked = (id: number) => {
@@ -72,7 +72,7 @@ const WeeklyChecklist = () => {
         <h3 className="text-green-400 font-orbitron text-sm uppercase mb-2">Weekly Maintenance Notes</h3>
         <textarea 
           className="w-full bg-gray-700 text-white rounded p-3 h-24"
-          placeholder="Add any notes or observations here..."
+          placeholder="Add notes on maintenance issues, product usage, etc..."
         ></textarea>
       </div>
     </div>
