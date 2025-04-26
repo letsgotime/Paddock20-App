@@ -14,7 +14,7 @@ const FiveDayForecast: React.FC = () => {
   
   // Process OneCall API data to get daily forecasts
   const getDailyForecasts = () => {
-    return oneCallData.daily.slice(0, 5).map(day => {
+    return oneCallData.daily?.slice(0, 5).map(day => {
       return {
         date: new Date(day.dt * 1000),
         minTemp: day.temp.min,
@@ -26,7 +26,7 @@ const FiveDayForecast: React.FC = () => {
         pop: day.pop,
         uvi: day.uvi
       };
-    });
+    }) || [];
   };
   
   const dailyForecasts = getDailyForecasts();
