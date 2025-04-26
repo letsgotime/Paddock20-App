@@ -1,5 +1,5 @@
 import React from 'react';
-import WeatherStation from '../components/WeatherStation';
+import SimpleWeatherStation from '../components/SimpleWeatherStation';
 import TireTracker from '../components/TireTracker';
 import PreDriveChecklist from '../components/PreDriveChecklist';
 import GlossTracker from '../components/GlossTracker';
@@ -22,20 +22,20 @@ function Home() {
 
   return (
     <div className="p-10 bg-black min-h-screen">
-      <h1 className="text-blue-400 font-orbitron text-3xl mb-10 text-center">
+      <h1 className="apex-header text-3xl mb-10 text-center">
         ApexVault™ Garage Dashboard
       </h1>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
         {/* Weather Widget */}
-        <div className="bg-gray-900 p-6 rounded-xl shadow-md hover:bg-gray-800 transition">
-          <WeatherStation />
+        <div className="apex-card">
+          <SimpleWeatherStation />
         </div>
 
         {/* Last Drive Snapshot */}
-        <div className="bg-gray-900 p-6 rounded-xl shadow-md hover:bg-gray-800 transition">
-          <h2 className="text-green-400 font-orbitron text-xl uppercase mb-4">Last Drive</h2>
+        <div className="apex-card">
+          <h2 className="apex-header-green mb-4">Last Drive</h2>
           <p className="text-white">Car: {lastDrive.car}</p>
           <p className="text-white">Location: {lastDrive.location}</p>
           <p className="text-white">Mileage: {lastDrive.mileage} miles</p>
@@ -44,8 +44,8 @@ function Home() {
         </div>
 
         {/* Torque + Tire Snapshot */}
-        <div className="bg-gray-900 p-6 rounded-xl shadow-md hover:bg-gray-800 transition">
-          <h2 className="text-green-400 font-orbitron text-xl uppercase mb-4">Torque & Tire</h2>
+        <div className="apex-card">
+          <h2 className="apex-header-green mb-4">Torque & Tire</h2>
           <p className="text-white">Tire: {vehicleProfile.tire.brand} {vehicleProfile.tire.model}</p>
           <p className="text-white">Current Mileage: {vehicleProfile.tire.currentMileage} miles</p>
           <p className="text-white">Tire Pressure Targets: 29psi Front / 34psi Rear</p>
@@ -53,28 +53,28 @@ function Home() {
         </div>
 
         {/* Quick Pre-Drive Launch */}
-        <div className="bg-gray-900 p-6 rounded-xl shadow-md hover:bg-gray-800 transition">
-          <h2 className="text-green-400 font-orbitron text-xl uppercase mb-4">Pre-Drive Checklist</h2>
+        <div className="apex-card">
+          <h2 className="apex-header-green mb-4">Pre-Drive Checklist</h2>
           <p className="text-white mb-4">Launch a quick Pre-Drive Readiness Check.</p>
           <a 
             href="/garage" 
-            className="bg-green-500 hover:bg-green-400 text-black font-bold py-2 px-4 rounded-lg transition inline-block"
+            className="apex-button inline-block"
           >
             Go to Pre-Drive
           </a>
         </div>
 
         {/* Maintenance Alerts */}
-        <div className="bg-gray-900 p-6 rounded-xl shadow-md hover:bg-gray-800 transition">
-          <h2 className="text-green-400 font-orbitron text-xl uppercase mb-4">Maintenance Monitor</h2>
+        <div className="apex-card">
+          <h2 className="apex-header-green mb-4">Maintenance Monitor</h2>
           {maintenanceAlerts.map((alert, index) => (
             <p key={index} className="text-white mb-2">{alert}</p>
           ))}
         </div>
 
         {/* Gloss Tracker Snapshot */}
-        <div className="bg-gray-900 p-6 rounded-xl shadow-md hover:bg-gray-800 transition">
-          <h2 className="text-green-400 font-orbitron text-xl uppercase mb-4">Gloss Status</h2>
+        <div className="apex-card">
+          <h2 className="apex-header-green mb-4">Gloss Status</h2>
           <p className="text-white">Last Gloss Boost: {vehicleProfile.glossTracking.lastGlossBoost}</p>
           <p className="text-white">Next Maintenance Suggestion: Within 30 days</p>
         </div>
