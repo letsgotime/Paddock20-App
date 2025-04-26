@@ -97,7 +97,7 @@ function Garage() {
           )}
           
           {activeTab === 'gloss' && (
-            <GlossTracker glossHistory={vehicleData.glossTracking.glossGrowthLog} />
+            <GlossTracker />
           )}
           
           {activeTab === 'seasonal' && (

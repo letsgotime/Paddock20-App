@@ -1,119 +1,117 @@
 import React from 'react';
+import { vehicleProfile } from '../data/vehicles';
 
 function GarageVaultCard() {
-  const carProfile = {
-    make: "Ferrari",
-    model: "458 Italia",
-    year: "2015",
-    tirePressureCold: "29 psi Front / 34 psi Rear",
-    tirePressureHot: "32 psi Front / 36 psi Rear",
-    torqueSpec: "96 lb-ft (lug nuts)",
-    location: {
-      address: "Mulholland Hwy, Los Angeles, CA",
-      gps: {
-        lat: 34.107,
-        lng: -118.664
-      }
-    },
-    nearbyResources: {
-      gasStations: [
-        { name: "Shell Mulholland", distanceKm: 2.3 },
-        { name: "Chevron Topanga", distanceKm: 3.1 }
-      ],
-      airStations: [
-        { name: "Discount Tire Topanga", distanceKm: 2.9 }
-      ],
-      refreshments: [
-        { name: "Canyon Cafe", distanceKm: 3.5 }
-      ],
-      oilStations: [
-        { name: "AutoZone Woodland Hills", distanceKm: 4.8 }
-      ]
-    },
-    checklist: [
-      "Tires Checked",
-      "Torque Lug Nuts",
-      "Fluids Checked",
-      "Helmet Packed",
-      "Surface Temp Safe"
-    ]
-  };
-
+  const carProfile = vehicleProfile;
+  
   return (
-    <div className="bg-black text-white font-openSans p-6 rounded-xl shadow-lg max-w-4xl mx-auto mt-8">
-      <h2 className="text-3xl font-orbitron text-blue-400 uppercase tracking-wide mb-4 text-center">
-        {carProfile.make} {carProfile.model}
-      </h2>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Tire & Torque Specs */}
-        <div className="bg-gray-900 p-4 rounded-lg">
-          <h3 className="text-green-400 font-orbitron text-sm uppercase mb-2">Tire Pressure Targets</h3>
-          <p className="text-lg">Cold: {carProfile.tirePressureCold}</p>
-          <p className="text-lg">Hot: {carProfile.tirePressureHot}</p>
-
-          <h3 className="text-green-400 font-orbitron text-sm uppercase mt-4 mb-2">Torque Spec</h3>
-          <p className="text-lg">{carProfile.torqueSpec}</p>
+    <div className="apex-card mb-8">
+      <h2 className="apex-header mb-6">Vehicle Profile</h2>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+        {/* Left Column - Vehicle Image and Basic Info */}
+        <div>
+          <div className="bg-gray-800 rounded-lg overflow-hidden mb-6">
+            <img 
+              src="https://images.unsplash.com/photo-1614200187524-dc4b892acf16?auto=format&fit=crop&q=80&w=2787&ixlib=rb-4.0.3" 
+              alt={`${carProfile.make} ${carProfile.model}`}
+              className="w-full h-64 object-cover"
+            />
+            <div className="p-4">
+              <h3 className="text-xl font-bold text-blue-400 font-orbitron">
+                {carProfile.year} {carProfile.make} {carProfile.model}
+              </h3>
+              <p className="text-gray-300">VIN: {carProfile.vin}</p>
+              <p className="text-gray-300">Color: {carProfile.color}</p>
+              <p className="text-gray-300">Mileage: {carProfile.mileage.toLocaleString()} miles</p>
+            </div>
+          </div>
+          
+          <div className="bg-gray-800 rounded-lg p-4">
+            <h3 className="text-md text-green-400 font-orbitron uppercase mb-3">Maintenance Status</h3>
+            <div className="flex justify-between mb-2">
+              <span className="text-gray-400">Last Service:</span>
+              <span className="text-white">{carProfile.lastService}</span>
+            </div>
+            <div className="flex justify-between mb-2">
+              <span className="text-gray-400">Next Service:</span>
+              <span className="text-white">{carProfile.nextService}</span>
+            </div>
+            <div className="mt-4 pt-4 border-t border-gray-700">
+              <h4 className="text-sm text-gray-300 mb-2">Recent Services:</h4>
+              {carProfile.maintenance.map((service, index) => (
+                <div key={index} className="mb-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-blue-400">{service.date}</span>
+                    <span className="text-green-400">{service.type}</span>
+                  </div>
+                  <p className="text-gray-400 text-xs">{service.notes}</p>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
-
-        {/* Drive Location */}
-        <div className="bg-gray-900 p-4 rounded-lg">
-          <h3 className="text-green-400 font-orbitron text-sm uppercase mb-2">Drive Location</h3>
-          <p className="text-lg">{carProfile.location.address}</p>
-          <p className="text-sm text-gray-400">Lat: {carProfile.location.gps.lat}, Lng: {carProfile.location.gps.lng}</p>
+        
+        {/* Right Column - Technical Specifications */}
+        <div>
+          <div className="bg-gray-800 rounded-lg p-4 mb-6">
+            <h3 className="text-md text-green-400 font-orbitron uppercase mb-3">Specifications</h3>
+            <table className="w-full">
+              <tbody>
+                <tr className="border-b border-gray-700">
+                  <td className="py-2 text-gray-400">Engine</td>
+                  <td className="py-2 text-right text-white">{carProfile.engineType}</td>
+                </tr>
+                <tr className="border-b border-gray-700">
+                  <td className="py-2 text-gray-400">Transmission</td>
+                  <td className="py-2 text-right text-white">{carProfile.transmission}</td>
+                </tr>
+                <tr className="border-b border-gray-700">
+                  <td className="py-2 text-gray-400">Horsepower</td>
+                  <td className="py-2 text-right text-white">{carProfile.horsepower} hp</td>
+                </tr>
+                <tr className="border-b border-gray-700">
+                  <td className="py-2 text-gray-400">Torque</td>
+                  <td className="py-2 text-right text-white">{carProfile.torque}</td>
+                </tr>
+                <tr className="border-b border-gray-700">
+                  <td className="py-2 text-gray-400">Drive Type</td>
+                  <td className="py-2 text-right text-white">{carProfile.driveType}</td>
+                </tr>
+                <tr>
+                  <td className="py-2 text-gray-400">Fuel</td>
+                  <td className="py-2 text-right text-white">{carProfile.fuel}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+          
+          <div className="bg-gray-800 rounded-lg p-4">
+            <h3 className="text-md text-green-400 font-orbitron uppercase mb-3">Tire & Wheel Config</h3>
+            <div className="flex justify-between mb-2">
+              <span className="text-gray-400">Tire Brand:</span>
+              <span className="text-white">{carProfile.tire.brand}</span>
+            </div>
+            <div className="flex justify-between mb-2">
+              <span className="text-gray-400">Tire Model:</span>
+              <span className="text-white">{carProfile.tire.model}</span>
+            </div>
+            <div className="flex justify-between mb-2">
+              <span className="text-gray-400">Current Mileage:</span>
+              <span className="text-white">{carProfile.tire.currentMileage.toLocaleString()} miles</span>
+            </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">Last Tread Check:</span>
+              <span className="text-white">{carProfile.tire.lastTreadDepthCheck}</span>
+            </div>
+          </div>
         </div>
       </div>
-
-      {/* Checklist Section */}
-      <div className="mt-8">
-        <h3 className="text-blue-400 font-orbitron text-md uppercase mb-3">Drive Readiness Checklist</h3>
-        <ul className="grid grid-cols-1 md:grid-cols-2 gap-2">
-          {carProfile.checklist.map((item, index) => (
-            <li key={index} className="flex items-center bg-gray-800 p-3 rounded-lg">
-              <span className="w-2 h-2 bg-green-400 rounded-full mr-3"></span>
-              <span>{item}</span>
-            </li>
-          ))}
-        </ul>
-      </div>
-
-      {/* Nearby Resources */}
-      <div className="mt-8">
-        <h3 className="text-blue-400 font-orbitron text-md uppercase mb-3">Nearby Resources</h3>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {/* Gas Stations */}
-          <div>
-            <h4 className="text-green-400 font-orbitron text-xs uppercase mb-1">Gas Stations</h4>
-            {carProfile.nearbyResources.gasStations.map((station, idx) => (
-              <p key={idx} className="text-sm">{station.name} - {station.distanceKm} km</p>
-            ))}
-          </div>
-
-          {/* Air Stations */}
-          <div>
-            <h4 className="text-green-400 font-orbitron text-xs uppercase mb-1">Air Stations</h4>
-            {carProfile.nearbyResources.airStations.map((station, idx) => (
-              <p key={idx} className="text-sm">{station.name} - {station.distanceKm} km</p>
-            ))}
-          </div>
-
-          {/* Refreshments */}
-          <div>
-            <h4 className="text-green-400 font-orbitron text-xs uppercase mb-1">Refreshments</h4>
-            {carProfile.nearbyResources.refreshments.map((spot, idx) => (
-              <p key={idx} className="text-sm">{spot.name} - {spot.distanceKm} km</p>
-            ))}
-          </div>
-
-          {/* Oil Stations */}
-          <div>
-            <h4 className="text-green-400 font-orbitron text-xs uppercase mb-1">Oil Stations</h4>
-            {carProfile.nearbyResources.oilStations.map((shop, idx) => (
-              <p key={idx} className="text-sm">{shop.name} - {shop.distanceKm} km</p>
-            ))}
-          </div>
-        </div>
+      
+      <div className="flex justify-end mt-6">
+        <button className="apex-button">
+          Edit Vehicle Details
+        </button>
       </div>
     </div>
   );
