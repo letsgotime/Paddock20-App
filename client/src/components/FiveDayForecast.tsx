@@ -6,59 +6,27 @@ import WeatherIcon from './WeatherIcon';
 import { format } from 'date-fns';
 
 const FiveDayForecast: React.FC = () => {
-  const { forecastData, unit } = useWeather();
+  const { oneCallData, unit } = useWeather();
   
-  if (!forecastData) return null;
+  if (!oneCallData || !oneCallData.daily) return null;
 
   const tempUnit = unit === 'metric' ? '°C' : '°F';
   
-  // Process forecast data to get daily forecasts
-  // We need to group by day and get min/max temps for each day
+  // Process OneCall API data to get daily forecasts
   const getDailyForecasts = () => {
-    const dailyData: {
-      [key: string]: {
-        date: Date;
-        minTemp: number;
-        maxTemp: number;
-        icon: string;
-        description: string;
-        humidity: number;
-        windSpeed: number;
-      }
-    } = {};
-    
-    // Group by day
-    forecastData.list.forEach(item => {
-      const date = new Date(item.dt * 1000);
-      const day = format(date, 'yyyy-MM-dd');
-      
-      if (!dailyData[day]) {
-        dailyData[day] = {
-          date,
-          minTemp: item.main.temp_min,
-          maxTemp: item.main.temp_max,
-          icon: item.weather[0].icon,
-          description: item.weather[0].description,
-          humidity: item.main.humidity,
-          windSpeed: item.wind.speed
-        };
-      } else {
-        // Update min/max temperatures
-        dailyData[day].minTemp = Math.min(dailyData[day].minTemp, item.main.temp_min);
-        dailyData[day].maxTemp = Math.max(dailyData[day].maxTemp, item.main.temp_max);
-        
-        // Update icon to prefer daytime icons (those without 'n' suffix)
-        if (!item.weather[0].icon.includes('n')) {
-          dailyData[day].icon = item.weather[0].icon;
-          dailyData[day].description = item.weather[0].description;
-        }
-      }
+    return oneCallData.daily.slice(0, 5).map(day => {
+      return {
+        date: new Date(day.dt * 1000),
+        minTemp: day.temp.min,
+        maxTemp: day.temp.max,
+        icon: day.weather[0].icon,
+        description: day.weather[0].description,
+        humidity: day.humidity,
+        windSpeed: day.wind_speed,
+        pop: day.pop,
+        uvi: day.uvi
+      };
     });
-    
-    // Convert to array and sort by date
-    return Object.values(dailyData)
-      .sort((a, b) => a.date.getTime() - b.date.getTime())
-      .slice(0, 5); // Get 5 days
   };
   
   const dailyForecasts = getDailyForecasts();

@@ -45,10 +45,10 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
     isLoading: isWeatherLoading, 
     error: weatherError,
     refetch: refetchWeather
-  } = useQuery({
+  } = useQuery<WeatherData | null>({
     queryKey: ['weather', selectedLocation?.name, unit],
     enabled: !!selectedLocation,
-    queryFn: () => {
+    queryFn: async () => {
       if (!selectedLocation) return null;
       return getWeatherData(selectedLocation, unit);
     },
@@ -60,10 +60,10 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
     isLoading: isForecastLoading, 
     error: forecastError,
     refetch: refetchForecast
-  } = useQuery({
+  } = useQuery<ForecastData | null>({
     queryKey: ['forecast', selectedLocation?.name, unit],
     enabled: !!selectedLocation,
-    queryFn: () => {
+    queryFn: async () => {
       if (!selectedLocation) return null;
       return getHourlyForecast(selectedLocation, unit);
     },
@@ -75,10 +75,10 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
     isLoading: isOneCallLoading, 
     error: oneCallError,
     refetch: refetchOneCall
-  } = useQuery({
+  } = useQuery<OneCallData | null>({
     queryKey: ['onecall', selectedLocation?.name, unit],
     enabled: !!selectedLocation,
-    queryFn: () => {
+    queryFn: async () => {
       if (!selectedLocation) return null;
       return getOneCallData(selectedLocation, unit);
     },
@@ -123,7 +123,7 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
     refetchOneCall();
   };
 
-  const value = {
+  const value: WeatherContextType = {
     unit,
     setUnit,
     selectedLocation,
@@ -133,9 +133,9 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
     removeSavedLocation,
     isLoading: isWeatherLoading || isForecastLoading || isOneCallLoading,
     error: weatherError as Error || forecastError as Error || oneCallError as Error || null,
-    weatherData,
-    forecastData,
-    oneCallData,
+    weatherData: weatherData || null,
+    forecastData: forecastData || null,
+    oneCallData: oneCallData || null,
     refreshWeather
   };
 
