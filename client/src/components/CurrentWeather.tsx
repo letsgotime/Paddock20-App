@@ -31,11 +31,13 @@ const CurrentWeather: React.FC = () => {
           </div>
         </div>
         <div className="flex items-center">
-          <img 
-            src={`https://openweathermap.org/img/wn/${weatherData.weather[0].icon}@2x.png`}
-            alt={weatherData.weather[0].description}
-            className="w-16 h-16"
-          />
+          <div className="mr-2">
+            <WeatherIcon 
+              iconCode={weatherData.weather[0].icon}
+              size={64}
+              className="text-blue-400"
+            />
+          </div>
           <div className="text-center">
             <div className="text-4xl font-medium">{Math.round(weatherData.main.temp)}{tempUnit}</div>
             <div className="text-gray-400 capitalize">{weatherData.weather[0].description}</div>

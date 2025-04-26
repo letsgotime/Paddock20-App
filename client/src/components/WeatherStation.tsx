@@ -4,6 +4,10 @@ import LocationSelector from './LocationSelector';
 import CurrentWeather from './CurrentWeather';
 import WeatherCards from './WeatherCards';
 import HourlyForecast from './HourlyForecast';
+import FiveDayForecast from './FiveDayForecast';
+import WeatherMap from './WeatherMap';
+import WeatherAlerts from './WeatherAlerts';
+import WeatherStats from './WeatherStats';
 import { Loader2, AlertCircle } from 'lucide-react';
 
 const WeatherStation: React.FC = () => {
@@ -95,8 +99,14 @@ const WeatherStation: React.FC = () => {
       {weatherData && !isLoading && !error && (
         <>
           <CurrentWeather />
+          <WeatherAlerts />
           <WeatherCards />
-          <HourlyForecast />
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+            <HourlyForecast />
+            <FiveDayForecast />
+          </div>
+          <WeatherStats />
+          <WeatherMap />
         </>
       )}
 
