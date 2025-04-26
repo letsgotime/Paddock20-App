@@ -39,7 +39,7 @@ function GarageVaultCard() {
             </div>
             <div className="mt-4 pt-4 border-t border-gray-700">
               <h4 className="text-sm text-gray-300 mb-2">Recent Services:</h4>
-              {carProfile.maintenance.map((service, index) => (
+              {carProfile.maintenance.records && carProfile.maintenance.records.map((service, index) => (
                 <div key={index} className="mb-2 text-sm">
                   <div className="flex justify-between">
                     <span className="text-blue-400">{service.date}</span>
