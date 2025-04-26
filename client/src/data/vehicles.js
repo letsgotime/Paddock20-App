@@ -41,20 +41,28 @@ export const vehicleProfile = {
       }
     ]
   },
-  maintenance: [
-    {
-      date: "2023-12-01",
-      type: "Oil Change",
-      mileage: 5000,
-      notes: "Full synthetic oil change with filter replacement"
-    },
-    {
-      date: "2024-02-10",
-      type: "Major Service",
-      mileage: 7500,
-      notes: "Annual service including brake fluid flush, air filters"
-    }
-  ]
+  maintenance: {
+    lastOilChange: "2023-11-01",
+    lastAirFilterChange: "2022-06-01",
+    lastCabinFilterChange: "2022-06-01",
+    lastCoolantFlush: "2021-09-15",
+    lastBrakeFluidChange: "2022-10-10",
+    lastTransmissionService: "2021-08-01",
+    records: [
+      {
+        date: "2023-12-01",
+        type: "Oil Change",
+        mileage: 5000,
+        notes: "Full synthetic oil change with filter replacement"
+      },
+      {
+        date: "2024-02-10",
+        type: "Major Service",
+        mileage: 7500,
+        notes: "Annual service including brake fluid flush, air filters"
+      }
+    ]
+  }
 };
 
 export const garageVehicles = [

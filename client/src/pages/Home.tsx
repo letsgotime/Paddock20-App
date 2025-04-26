@@ -3,6 +3,8 @@ import SimpleWeatherStation from '../components/SimpleWeatherStation';
 import TireTracker from '../components/TireTracker';
 import PreDriveChecklist from '../components/PreDriveChecklist';
 import GlossTracker from '../components/GlossTracker';
+import MaintenanceAlerts from '../components/MaintenanceAlerts';
+import SeasonalChecklist from '../components/SeasonalChecklist';
 import { vehicleProfile } from '../data/vehicles';
 
 function Home() {
@@ -14,11 +16,6 @@ function Home() {
     weather: "Clear",
     photoUrl: ""
   };
-
-  const maintenanceAlerts = [
-    "Oil change due in 21 days",
-    "Tire inspection due next month"
-  ];
 
   return (
     <div className="p-10 bg-black min-h-screen">
@@ -65,12 +62,10 @@ function Home() {
         </div>
 
         {/* Maintenance Alerts */}
-        <div className="apex-card">
-          <h2 className="apex-header-green mb-4">Maintenance Monitor</h2>
-          {maintenanceAlerts.map((alert, index) => (
-            <p key={index} className="text-white mb-2">{alert}</p>
-          ))}
-        </div>
+        <MaintenanceAlerts />
+
+        {/* Seasonal Checklist */}
+        <SeasonalChecklist />
 
         {/* Gloss Tracker Snapshot */}
         <div className="apex-card">
