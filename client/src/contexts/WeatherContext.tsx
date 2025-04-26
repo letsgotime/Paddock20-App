@@ -2,7 +2,7 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import { getWeatherData, getHourlyForecast } from '@/lib/weather';
+import { getWeatherData, getHourlyForecast, getOneCallData, OneCallData } from '@/lib/weather';
 import { WeatherData, ForecastData, Location } from 'shared/schema';
 
 interface WeatherContextType {
@@ -17,6 +17,7 @@ interface WeatherContextType {
   error: Error | null;
   weatherData: WeatherData | null;
   forecastData: ForecastData | null;
+  oneCallData: OneCallData | null;
   refreshWeather: () => void;
 }
 
@@ -67,6 +68,21 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
       return getHourlyForecast(selectedLocation, unit);
     },
   });
+  
+  // Get comprehensive weather data via OneCall API
+  const { 
+    data: oneCallData, 
+    isLoading: isOneCallLoading, 
+    error: oneCallError,
+    refetch: refetchOneCall
+  } = useQuery({
+    queryKey: ['onecall', selectedLocation?.name, unit],
+    enabled: !!selectedLocation,
+    queryFn: () => {
+      if (!selectedLocation) return null;
+      return getOneCallData(selectedLocation, unit);
+    },
+  });
 
   // Handle errors
   useEffect(() => {
@@ -104,6 +120,7 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
   const refreshWeather = () => {
     refetchWeather();
     refetchForecast();
+    refetchOneCall();
   };
 
   const value = {
@@ -114,10 +131,11 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
     savedLocations,
     addSavedLocation,
     removeSavedLocation,
-    isLoading: isWeatherLoading || isForecastLoading,
-    error: weatherError as Error || forecastError as Error || null,
+    isLoading: isWeatherLoading || isForecastLoading || isOneCallLoading,
+    error: weatherError as Error || forecastError as Error || oneCallError as Error || null,
     weatherData,
     forecastData,
+    oneCallData,
     refreshWeather
   };
 
