@@ -203,4 +203,89 @@ function DrivingConditionEmoji({
   );
 }
 
+// Add static method for getting driving condition outside component
+DrivingConditionEmoji.getDrivingCondition = (temperature, visibility, windSpeed, precipitation) => {
+  // Calculate score using the same logic
+  // Temperature factor (0-25 points)
+  let tempScore = 25;
+  if (temperature < 32) {
+    tempScore = Math.max(5, (temperature / 32) * 15);
+  } else if (temperature < 50) {
+    tempScore = 15 + ((temperature - 32) / 18) * 10;
+  } else if (temperature > 85) {
+    tempScore = 25 - Math.min(15, (temperature - 85) / 10);
+  }
+  
+  // Visibility factor (0-30 points)
+  let visibilityScore = 30;
+  if (visibility < 0.25) {
+    visibilityScore = 0;
+  } else if (visibility < 1) {
+    visibilityScore = visibility * 10;
+  } else if (visibility < 5) {
+    visibilityScore = 10 + ((visibility - 1) / 4) * 20;
+  }
+  
+  // Wind factor (0-20 points)
+  let windScore = 20;
+  if (windSpeed > 35) {
+    windScore = 5;
+  } else if (windSpeed > 20) {
+    windScore = 5 + ((35 - windSpeed) / 15) * 10;
+  } else if (windSpeed > 10) {
+    windScore = 15 + ((20 - windSpeed) / 10) * 5;
+  }
+  
+  // Precipitation factor (0-25 points)
+  let precipScore = 25;
+  if (precipitation > 0.5) {
+    precipScore = 5;
+  } else if (precipitation > 0.1) {
+    precipScore = 5 + ((0.5 - precipitation) / 0.4) * 10;
+  } else if (precipitation > 0) {
+    precipScore = 15 + ((0.1 - precipitation) / 0.1) * 10;
+  }
+  
+  // Calculate final score (0-100)
+  const score = Math.round(tempScore + visibilityScore + windScore + precipScore);
+  
+  // Return condition based on score
+  if (score >= 85) {
+    return {
+      icon: "Smile",
+      color: 'text-green-500',
+      text: 'Excellent driving conditions',
+      drivingTip: 'Perfect time for a drive! Enjoy the road responsibly.'
+    };
+  } else if (score >= 65) {
+    return {
+      icon: "Smile",
+      color: 'text-green-400',
+      text: 'Good driving conditions',
+      drivingTip: 'Good conditions overall. Enjoy your drive!'
+    };
+  } else if (score >= 50) {
+    return {
+      icon: "Meh",
+      color: 'text-yellow-400',
+      text: 'Fair driving conditions',
+      drivingTip: 'Drive with extra care and maintain safe distances.'
+    };
+  } else if (score >= 35) {
+    return {
+      icon: "Frown",
+      color: 'text-orange-400',
+      text: 'Poor driving conditions',
+      drivingTip: 'Consider postponing non-essential travel. Slow down if driving.'
+    };
+  } else {
+    return {
+      icon: "Frown",
+      color: 'text-red-500',
+      text: 'Dangerous driving conditions',
+      drivingTip: 'Avoid driving if possible. Emergency vehicles only.'
+    };
+  }
+};
+
 export default DrivingConditionEmoji;

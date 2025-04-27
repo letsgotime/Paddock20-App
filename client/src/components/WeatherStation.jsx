@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import WeatherMoodEmoji from './WeatherMoodEmoji';
 import DrivingConditionEmoji from './DrivingConditionEmoji';
+import WeatherVoiceOver from './WeatherVoiceOver';
 import { Droplets, Wind, Sun, CloudRain } from 'lucide-react';
 
 function WeatherStation() {
@@ -174,6 +175,20 @@ function WeatherStation() {
         </a>
       </div>
       
+      {/* Accessibility Voice Over */}
+      <WeatherVoiceOver 
+        weatherData={weatherData}
+        forecastData={forecastData}
+        drivingCondition={
+          DrivingConditionEmoji.getDrivingCondition(
+            weatherData.main.temp,
+            weatherData.visibility / 1609.34,
+            weatherData.wind.speed,
+            precipitation
+          )
+        }
+      />
+
       {/* Seasonal Checklist Button */}
       <div className="mt-6">
         <Link to="/seasonal-checklist" className="apex-button">
