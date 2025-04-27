@@ -86,7 +86,11 @@ function App() {
           <div className="min-h-screen bg-black font-openSans text-white">
             {/* Header with navigation */}
             <header role="banner">
-              {(effectiveSession || previewMode) && <DropdownNavbar />}
+              {(effectiveSession || previewMode) && (
+                <>
+                  <DropdownNavbar />
+                </>
+              )}
             </header>
 
             {/* Main content area */}
