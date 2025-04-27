@@ -99,7 +99,14 @@ function JuiceBoxPage() {
   };
 
   return (
-    <div className="p-10 bg-black min-h-screen">
+    <div 
+      className="p-10 min-h-screen bg-black bg-cover bg-center"
+      style={{
+        backgroundImage: "url('/assets/attached_assets/image (6).png')",
+        backgroundBlendMode: "overlay",
+        backgroundColor: "rgba(0,0,0,0.8)",
+      }}
+    >
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
         <h1 className="apex-header text-3xl text-center md:text-left">
           🧼 Juice Box
