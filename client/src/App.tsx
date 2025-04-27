@@ -18,6 +18,7 @@ import LoadoutsPage from "./pages/LoadoutsPage";
 import GlossGrowthPage from "./pages/GlossGrowthPage";
 import VideoLibraryPage from "./pages/VideoLibraryPage";
 import BrokerPortalPage from "./pages/BrokerPortalPage";
+import Weather from "./pages/Weather";
 import DropdownNavbar from "./components/DropdownNavbar";
 import { WeatherProvider } from "./contexts/WeatherContext";
 import AuthPage from "./pages/AuthPage";
@@ -76,6 +77,7 @@ function App() {
                 <Route path="/gloss-growth" element={<ProtectedRoute><GlossGrowthPage /></ProtectedRoute>} />
                 <Route path="/juicebox-videos" element={<ProtectedRoute><VideoLibraryPage /></ProtectedRoute>} />
                 <Route path="/broker-portal" element={<ProtectedRoute><BrokerPortalPage /></ProtectedRoute>} />
+                <Route path="/weather" element={<ProtectedRoute><Weather /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
