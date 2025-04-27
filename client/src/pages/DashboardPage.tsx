@@ -11,6 +11,7 @@ function DashboardPage() {
   return (
     <div className="p-10 bg-black min-h-screen">
       <div className="max-w-6xl mx-auto">
+
         <div className="flex justify-between items-center mb-10">
           <h1 className="apex-header text-3xl">ApexVault™ Dashboard</h1>
           <button 
@@ -25,12 +26,12 @@ function DashboardPage() {
           Welcome to your personal car enthusiast command center.
         </p>
 
-        {/* ✅ Insert WeatherStation Widget here */}
+        {/* Insert WeatherStation */}
         <div className="mb-10">
           <WeatherStation />
         </div>
 
-        {/* ✅ Dashboard Navigation Cards */}
+        {/* Dashboard Navigation Links */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Link to="/garage" className="apex-card hover:bg-gray-900 p-6 rounded-lg">
             <h2 className="apex-header-green mb-4">Garage Vault</h2>
@@ -39,12 +40,12 @@ function DashboardPage() {
 
           <Link to="/journal" className="apex-card hover:bg-gray-900 p-6 rounded-lg">
             <h2 className="apex-header-green mb-4">Drive Journal</h2>
-            <p className="text-gray-400">Log your drives and track performance metrics.</p>
+            <p className="text-gray-400">Log your drives, add mood, miles, photos.</p>
           </Link>
 
           <Link to="/juicebox" className="apex-card hover:bg-gray-900 p-6 rounded-lg">
             <h2 className="apex-header-green mb-4">Juice Box™</h2>
-            <p className="text-gray-400">Explore detailing products and guides.</p>
+            <p className="text-gray-400">Explore elite detailing products and guides.</p>
           </Link>
 
           <Link to="/gloss-growth" className="apex-card hover:bg-gray-900 p-6 rounded-lg">
@@ -54,7 +55,7 @@ function DashboardPage() {
 
           <Link to="/juicebox-videos" className="apex-card hover:bg-gray-900 p-6 rounded-lg">
             <h2 className="apex-header-green mb-4">Video Library</h2>
-            <p className="text-gray-400">Watch tutorials and expert guides.</p>
+            <p className="text-gray-400">Watch tutorials and expert training guides.</p>
           </Link>
 
           <Link to="/events" className="apex-card hover:bg-gray-900 p-6 rounded-lg">
@@ -64,7 +65,7 @@ function DashboardPage() {
 
           <Link to="/seasonal-checklist" className="apex-card hover:bg-gray-900 p-6 rounded-lg">
             <h2 className="apex-header-green mb-4">Seasonal Adaptation Checklist</h2>
-            <p className="text-gray-400">Seasonal maintenance routines and environment adaptations.</p>
+            <p className="text-gray-400">Update your maintenance based on seasons.</p>
           </Link>
         </div>
       </div>
