@@ -119,9 +119,32 @@ export interface OneCallData {
  */
 export const getOneCallData = async (location: Location, unit: 'metric' | 'imperial'): Promise<OneCallData> => {
   try {
+    if (!location || typeof location.lat !== 'number' || typeof location.lon !== 'number') {
+      throw new Error('Invalid location data');
+    }
+    
     // Use our server-side proxy endpoint
     const url = `/api/onecall?lat=${location.lat}&lon=${location.lon}&units=${unit}`;
-    const response = await fetch(url);
+    
+    // Add retry logic for network errors
+    let retries = 2;
+    let response;
+    
+    while (retries >= 0) {
+      try {
+        response = await fetch(url);
+        break; // Exit the loop if fetch is successful
+      } catch (fetchError) {
+        if (retries === 0) throw fetchError;
+        retries--;
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+    
+    if (!response) {
+      throw new Error('Network error occurred while fetching OneCall data');
+    }
     
     if (!response.ok) {
       const errorText = await response.text();
@@ -129,6 +152,11 @@ export const getOneCallData = async (location: Location, unit: 'metric' | 'imper
     }
     
     const data = await response.json();
+    
+    if (!data || !data.current) {
+      throw new Error('Received invalid data format from OneCall API');
+    }
+    
     return data as OneCallData;
   } catch (error) {
     console.error('Error fetching OneCall data:', error);
@@ -141,9 +169,32 @@ export const getOneCallData = async (location: Location, unit: 'metric' | 'imper
  */
 export const getWeatherData = async (location: Location, unit: 'metric' | 'imperial'): Promise<WeatherData> => {
   try {
+    if (!location || typeof location.lat !== 'number' || typeof location.lon !== 'number') {
+      throw new Error('Invalid location data');
+    }
+    
     // Use our server-side proxy endpoint
     const url = `/api/weather?lat=${location.lat}&lon=${location.lon}&units=${unit}`;
-    const response = await fetch(url);
+    
+    // Add retry logic for network errors
+    let retries = 2;
+    let response;
+    
+    while (retries >= 0) {
+      try {
+        response = await fetch(url);
+        break; // Exit the loop if fetch is successful
+      } catch (fetchError) {
+        if (retries === 0) throw fetchError;
+        retries--;
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+    
+    if (!response) {
+      throw new Error('Network error occurred while fetching weather data');
+    }
     
     if (!response.ok) {
       const errorText = await response.text();
@@ -151,6 +202,11 @@ export const getWeatherData = async (location: Location, unit: 'metric' | 'imper
     }
     
     const data = await response.json();
+    
+    if (!data || !data.weather || !data.main) {
+      throw new Error('Received invalid data format from weather API');
+    }
+    
     return data as WeatherData;
   } catch (error) {
     console.error('Error fetching weather data:', error);
