@@ -6,7 +6,9 @@ function WeatherStation() {
   const [tempUnit, setTempUnit] = useState('F'); // Default to Fahrenheit
   const [apiKey, setApiKey] = useState('');
   
-  const city = "Charlotte"; // Change to your preferred city
+  // Using coordinates instead of city name
+  const latitude = 34.0522; // Los Angeles latitude
+  const longitude = -118.2437; // Los Angeles longitude
 
   // First, get the API key from the server
   useEffect(() => {
@@ -29,7 +31,7 @@ function WeatherStation() {
     
     async function fetchWeather() {
       try {
-        const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=imperial&appid=${apiKey}`);
+        const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?lat=${latitude}&lon=${longitude}&units=imperial&appid=${apiKey}`);
         const data = await response.json();
         console.log('Weather data:', data);
         setWeatherData(data);
@@ -40,7 +42,7 @@ function WeatherStation() {
       }
     }
     fetchWeather();
-  }, [city, apiKey]);
+  }, [latitude, longitude, apiKey]);
 
   const toggleUnit = () => {
     setTempUnit(tempUnit === 'F' ? 'C' : 'F');
