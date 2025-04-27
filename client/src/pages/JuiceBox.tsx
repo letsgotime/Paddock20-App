@@ -6,7 +6,8 @@ import CategoryProducts from '../components/CategoryProducts';
 import SevenDayReset from '../components/SevenDayReset';
 import DetailingKits from '../components/DetailingKits';
 import TrainingVideos from '../components/TrainingVideos';
-import { productCategories, sevenDaySchedule, detailingKits, trainingVideos } from '../data/detailingData';
+import GlossHistory from '../components/GlossHistory';
+import { productCategories, sevenDaySchedule, detailingKits, trainingVideos, glossHistory } from '../data/detailingData';
 
 interface Product {
   name: string;
@@ -76,6 +77,15 @@ function JuiceBoxPage() {
         >
           Detailing Kits
         </button>
+        <button 
+          onClick={() => setActiveTab('videos')}
+          className={`px-5 py-2 rounded-lg font-orbitron text-sm
+            ${activeTab === 'videos' 
+              ? 'bg-green-500 text-black' 
+              : 'bg-gray-800 text-white hover:bg-gray-700'}`}
+        >
+          Training Videos
+        </button>
       </div>
       
       {/* Tab Content */}
@@ -99,6 +109,10 @@ function JuiceBoxPage() {
       
       {activeTab === 'kits' && (
         <DetailingKits kits={detailingKits} />
+      )}
+      
+      {activeTab === 'videos' && (
+        <TrainingVideos videoCategories={trainingVideos} />
       )}
     </div>
   );

@@ -3,6 +3,7 @@ export interface Product {
   name: string;
   link: string;
   notes: string;
+  affiliate?: boolean;
 }
 
 export interface CategoryData {
@@ -17,22 +18,26 @@ export const productCategories: CategoryData[] = [
       {
         name: "Frothe (AMMO NYC)",
         link: "https://www.ammonyc.com/shop/hoseless-lift-kit-150/",
-        notes: "Hoseless safe wash, gloss-preserving."
+        notes: "Hoseless safe wash, gloss-preserving.",
+        affiliate: false
       },
       {
         name: "GYEON Foam",
         link: "https://www.gyeonquartzusa.com/",
-        notes: "Heavy foam jobs, deep cleaning."
+        notes: "Heavy foam jobs, deep cleaning.",
+        affiliate: false
       },
       {
         name: "MTM PF22.2 Foam Cannon",
         link: "https://www.obsessedgarage.com/products/mtm-pf22-2-foam-cannon",
-        notes: "Best-in-class foam application."
+        notes: "Best-in-class foam application.",
+        affiliate: true
       },
       {
         name: "4-Bucket System",
         link: "https://www.obsessedgarage.com/collections/buckets",
-        notes: "Ultimate wash safety with paint, lower, wheels, soap split."
+        notes: "Ultimate wash safety with paint, lower, wheels, soap split.",
+        affiliate: true
       }
     ]
   },
@@ -327,6 +332,47 @@ export const trainingVideos: VideoCategory[] = [
         link: "https://www.ammonyc.com/videos/"
       }
     ]
+  }
+];
+
+// Gloss History Events
+export interface GlossEvent {
+  event: string;
+  date: string;
+  glossScore: number;
+  notes: string;
+}
+
+export const glossHistory: GlossEvent[] = [
+  {
+    event: "Full Decontamination + Boost",
+    date: "2024-03-01",
+    glossScore: 85,
+    notes: "Post-winter reset. Strong water behavior restored. Frothe Boost applied."
+  },
+  {
+    event: "Gloss Reset 7-Day Complete",
+    date: "2024-03-07",
+    glossScore: 92,
+    notes: "Full 7-Day Reset executed. Reload + Elixir final topper. Glass beading strong."
+  },
+  {
+    event: "Monthly Maintenance: Frothe Wipe + Reload",
+    date: "2024-04-01",
+    glossScore: 90,
+    notes: "Maintained excellent gloss after heavy pollen season."
+  },
+  {
+    event: "Quick Boost Application",
+    date: "2024-04-20",
+    glossScore: 91,
+    notes: "AMMO Boost applied during rainy week prep. Minimal gloss drop."
+  },
+  {
+    event: "New Sealant Applied",
+    date: "2024-05-10",
+    glossScore: 94,
+    notes: "Seal N Shine short-term sealant layered before flip prep."
   }
 ];
 

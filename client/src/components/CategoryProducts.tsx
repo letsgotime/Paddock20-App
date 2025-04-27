@@ -26,14 +26,21 @@ function CategoryProducts({ categoryData, onAddProduct }: CategoryProductsProps)
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {category.products.map((product, index) => (
               <div key={index} className="bg-black p-4 rounded-lg">
-                <a 
-                  href={product.link} 
-                  target="_blank" 
-                  rel="noopener noreferrer" 
-                  className="text-blue-400 font-orbitron text-md hover:underline"
-                >
-                  {product.name}
-                </a>
+                <div className="flex justify-between items-start">
+                  <a 
+                    href={product.link} 
+                    target="_blank" 
+                    rel="noopener noreferrer" 
+                    className="text-blue-400 font-orbitron text-md hover:underline flex-grow"
+                  >
+                    {product.name}
+                  </a>
+                  {product.affiliate && (
+                    <span className="bg-green-500 text-black text-xs px-2 py-1 rounded ml-2">
+                      Partner
+                    </span>
+                  )}
+                </div>
                 <p className="text-white mt-2">{product.notes}</p>
                 <button
                   onClick={() => onAddProduct(product)}
