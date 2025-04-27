@@ -20,9 +20,9 @@ function DropdownNavbar() {
     <nav className="bg-black border-b border-gray-700 p-4 flex items-center justify-between">
       <Link to="/dashboard" className="flex items-center font-orbitron text-2xl no-underline">
         <img 
-          src="/assets/GoTime White.png" 
+          src="/assets/GoTime Logo-7FC844-Black (1).png" 
           alt="GoTime Motorsports" 
-          className="h-10 w-auto mr-2"
+          className="h-8 w-auto mr-2"
         />
         <span className="text-green-500">ApexVault™</span>
       </Link>
