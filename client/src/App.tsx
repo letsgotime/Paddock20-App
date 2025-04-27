@@ -26,11 +26,16 @@ import { useAuth } from "./hooks/useAuth";
 import './apexvault.css';
 
 function App() {
+  // TEMPORARY: Force preview mode to bypass auth
+  const previewMode = true;
   const { session, loading } = useAuth();
+  
+  // For preview purposes, we'll create a mock session
+  const effectiveSession = previewMode ? { user: { id: 'preview-user' } } : session;
 
   // Protected route component
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-    if (loading) {
+    if (loading && !previewMode) {
       return (
         <div className="min-h-screen bg-black flex items-center justify-center">
           <p className="text-white">Loading...</p>
@@ -38,7 +43,7 @@ function App() {
       );
     }
     
-    if (!session) {
+    if (!effectiveSession && !previewMode) {
       return <Navigate to="/auth" replace />;
     }
     
@@ -50,12 +55,12 @@ function App() {
       <WeatherProvider>
         <TooltipProvider>
           <div className="min-h-screen bg-black font-openSans text-white">
-            {session && <DropdownNavbar />}
+            {(effectiveSession || previewMode) && <DropdownNavbar />}
             <div className="container mx-auto px-4">
               <Toaster />
               <Routes>
                 {/* Public authentication route */}
-                <Route path="/auth" element={!session ? <AuthPage /> : <Navigate to="/dashboard" replace />} />
+                <Route path="/auth" element={!session && !previewMode ? <AuthPage /> : <Navigate to="/dashboard" replace />} />
                 
                 {/* Protected routes */}
                 <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
