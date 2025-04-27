@@ -69,8 +69,12 @@ export class LiveRegion {
 
 /**
  * Generate an accessible weather description based on current weather data
+ * 
+ * @param weatherData The weather data object
+ * @param unit The temperature unit (metric or imperial)
+ * @returns A detailed weather description string
  */
-export function generateWeatherDescription(weatherData: any, unit: 'metric' | 'imperial'): string {
+export function generateWeatherDescription(weatherData: any, unit: 'metric' | 'imperial' = 'imperial'): string {
   if (!weatherData) return '';
 
   const tempUnit = unit === 'metric' ? 'Celsius' : 'Fahrenheit';
@@ -88,6 +92,27 @@ export function generateWeatherDescription(weatherData: any, unit: 'metric' | 'i
     Conditions: ${description}. 
     Humidity: ${humidity} percent. 
     Wind speed: ${windSpeed} ${speedUnit}.`;
+}
+
+/**
+ * Alternative weather description function with simplified parameter structure
+ * This function provides backward compatibility with existing components
+ * 
+ * @param weatherData The weather data object with optional properties
+ * @returns A simplified weather description string
+ */
+export function getWeatherDescription(weatherData: any): string {
+  if (!weatherData) {
+    return "No weather data available at this time.";
+  }
+
+  // Handle both API response format and simplified format
+  const condition = weatherData.weather?.[0]?.description || weatherData.condition || "unknown";
+  const temp = typeof weatherData.main?.temp !== 'undefined' ? Math.round(weatherData.main.temp) : (weatherData.temp || "unknown");
+  const windSpeed = typeof weatherData.wind?.speed !== 'undefined' ? weatherData.wind.speed : (weatherData.windSpeed || "unknown");
+  const uvIndex = weatherData.current?.uvi || weatherData.uvIndex || "unknown";
+
+  return `Current weather conditions are ${condition}. Surface temperature is ${temp} degrees Fahrenheit. Wind speed is ${windSpeed} miles per hour. UV Index is ${uvIndex}.`;
 }
 
 /**
