@@ -4,7 +4,7 @@ import ChecklistItem from '../components/ChecklistItem';
 function PreDriveChecklistPage() {
   return (
     <div className="p-10 bg-black min-h-screen">
-      <h2 className="apex-header-green mb-8 text-center">Pre-Drive Readiness Checklist</h2>
+      <h2 className="apex-header-gray mb-8 text-center">Pre-Drive Readiness Checklist</h2>
 
       <div className="grid grid-cols-1 gap-6">
         <ChecklistItem checklistName="Pre-Drive Readiness" itemName="Tire Pressure Front/Rear Match" />

@@ -18,7 +18,7 @@ function DashboardPage() {
         />
 
         <div className="flex justify-between items-center mb-10">
-          <h1 className="text-green-500 font-orbitron text-3xl uppercase">ApexVault™ Dashboard</h1>
+          <h1 className="text-gray-400 font-orbitron text-3xl uppercase">ApexVault™ Dashboard</h1>
           <button 
             onClick={handleLogout}
             className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
@@ -74,7 +74,7 @@ function DashboardPage() {
           </Link>
 
           <Link to="/pre-drive-checklist" className="apex-card hover:bg-gray-900 p-6 rounded-lg">
-            <h2 className="apex-header-green mb-4">Pre-Drive Readiness</h2>
+            <h2 className="apex-header-gray mb-4">Pre-Drive Readiness</h2>
             <p className="text-gray-400">Complete your essential vehicle safety checklist before every drive.</p>
           </Link>
         </div>
