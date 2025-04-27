@@ -62,11 +62,25 @@ const supabase = {
             part_link: 'https://www.example.com/akrapovic-exhaust',
             notes: '+15hp, -12kg weight reduction over stock'
           }
+        ] : table === 'UserChecklists' ? [
+          {
+            id: 1,
+            user_id: 'preview-user',
+            checklist_name: 'seasonal',
+            item_name: 'Check tire pressure',
+            is_complete: false
+          }
         ] : [],
         error: null
       };
     },
     insert: (data) => {
+      return Promise.resolve({
+        data: { ...data, id: Math.floor(Math.random() * 1000) },
+        error: null
+      });
+    },
+    upsert: (data) => {
       return Promise.resolve({
         data: { ...data, id: Math.floor(Math.random() * 1000) },
         error: null
@@ -93,7 +107,20 @@ const supabase = {
               notes: '+15hp, -12kg weight reduction over stock'
             }
           ],
-          error: null
+          error: null,
+          // Support for chaining .eq() calls
+          eq: (field2, value2) => ({
+            data: [{
+              id: 1,
+              is_complete: false,
+              item_name: value2
+            }],
+            error: null,
+            single: () => ({
+              data: { is_complete: false },
+              error: null
+            })
+          })
         };
       }
       return {
@@ -112,7 +139,20 @@ const supabase = {
               { id: 2, car_name: 'Porsche 911 GT3' },
             error: null
           };
-        }
+        },
+        // Support for chaining .eq() calls
+        eq: (field2, value2) => ({
+          data: [{
+            id: 1,
+            is_complete: false,
+            item_name: value2
+          }],
+          error: null,
+          single: () => ({
+            data: { is_complete: false },
+            error: null
+          })
+        })
       };
     },
     single: () => {
