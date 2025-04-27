@@ -1,5 +1,6 @@
 import React from 'react';
 import SimpleWeatherStation from '../components/SimpleWeatherStation';
+import WeatherMoodGenerator from '../components/WeatherMoodGenerator';
 import TireTracker from '../components/TireTracker';
 import PreDriveChecklist from '../components/PreDriveChecklist';
 import GlossTracker from '../components/GlossTracker';
@@ -63,6 +64,9 @@ function Home() {
 
         {/* Maintenance Alerts */}
         <MaintenanceAlerts />
+
+        {/* Weather Mood Generator */}
+        <WeatherMoodGenerator />
 
         {/* Seasonal Checklist */}
         <SeasonalChecklist />
