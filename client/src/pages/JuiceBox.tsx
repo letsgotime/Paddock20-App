@@ -102,7 +102,7 @@ function JuiceBoxPage() {
     <div 
       className="p-10 min-h-screen bg-black bg-cover bg-center"
       style={{
-        backgroundImage: "url('/assets/attached_assets/image (6).png')",
+        backgroundImage: "url('/assets/images/image (6).png')",
         backgroundBlendMode: "overlay",
         backgroundColor: "rgba(0,0,0,0.8)",
       }}
