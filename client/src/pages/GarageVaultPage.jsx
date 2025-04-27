@@ -9,7 +9,7 @@ import WeeklyChecklist from '../components/WeeklyChecklist';
 import MonthlyChecklist from '../components/MonthlyChecklist';
 import QuarterlyChecklist from '../components/QuarterlyChecklist';
 import SeasonalAdaptationChecklist from '../components/SeasonalAdaptationChecklist';
-import { vehicleProfile } from '../data/vehicles';
+import { vehicleProfile, garageVehicles } from '../data/vehicles';
 
 function GarageVaultPage() {
   const [vehicles, setVehicles] = useState([]);
@@ -35,16 +35,23 @@ function GarageVaultPage() {
         const { data, error } = await supabase
           .from('Vehicles')
           .select('*');
-        if (error) throw error;
-        setVehicles(data || []);
         
-        // Set first vehicle as active if there is one
+        if (error) throw error;
+        
         if (data && data.length > 0) {
+          setVehicles(data);
           setActiveVehicle(data[0]);
+        } else {
+          // Use garageVehicles if no database data available
+          console.log("Using mock vehicle data");
+          setVehicles(garageVehicles);
+          setActiveVehicle(garageVehicles[0]);
         }
       } catch (error) {
         console.error('Error fetching vehicles:', error.message);
-        setVehicles([]);
+        // Fallback to garageVehicles array on error
+        setVehicles(garageVehicles);
+        setActiveVehicle(garageVehicles[0]);
       }
       setLoading(false);
     }
@@ -302,9 +309,9 @@ function GarageVaultPage() {
                       : 'bg-gray-800 hover:bg-gray-700'}`}
                     aria-current={activeVehicle?.id === vehicle.id ? 'true' : 'false'}
                   >
-                    <div className="font-bold text-white">{vehicle.car_name}</div>
+                    <div className="font-bold text-white">{vehicle.make} {vehicle.model}</div>
                     <div className="text-sm text-gray-400">
-                      {vehicle.mileage} miles | VIN: {vehicle.vin?.slice(-4) || "N/A"}
+                      {vehicle.year} | {vehicleProfile.mileage || 0} miles
                     </div>
                   </button>
                 )) : (
