@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from 'react';
-import supabase from '../services/supabaseClient';
 
 interface ChecklistItemProps {
   checklistName: string;
@@ -9,44 +8,33 @@ interface ChecklistItemProps {
 function ChecklistItem({ checklistName, itemName }: ChecklistItemProps) {
   const [isComplete, setIsComplete] = useState(false);
 
-  // Using a simpler approach for mock data to avoid API issues
+  // Use local storage exclusively for the demo version
   useEffect(() => {
-    // Store checklist items in local storage for the demo
-    const storageKey = `checklist_${checklistName}_${itemName}`;
-    const savedStatus = localStorage.getItem(storageKey);
-    
-    if (savedStatus !== null) {
-      setIsComplete(savedStatus === 'true');
+    try {
+      // Store checklist items in local storage for the demo
+      const storageKey = `checklist_${checklistName}_${itemName}`;
+      const savedStatus = localStorage.getItem(storageKey);
+      
+      if (savedStatus !== null) {
+        setIsComplete(savedStatus === 'true');
+      }
+    } catch (err) {
+      console.info('Local storage not available, using defaults');
     }
   }, [checklistName, itemName]);
 
-  const toggleComplete = async () => {
-    // Update local storage
-    const storageKey = `checklist_${checklistName}_${itemName}`;
-    const newStatus = !isComplete;
-    localStorage.setItem(storageKey, String(newStatus));
-    setIsComplete(newStatus);
-    
-    // Still attempt the Supabase call for completeness
+  const toggleComplete = () => {
     try {
-      const userResponse = await supabase.auth.getUser();
-      
-      const { data } = userResponse;
-      if (!data || !data.user) {
-        console.info('Demo mode: User not authenticated');
-        return;
-      }
-      
-      await supabase
-        .from('UserChecklists')
-        .upsert({
-          user_id: data.user.id,
-          checklist_name: checklistName,
-          item_name: itemName,
-          is_complete: newStatus
-        });
+      // Update local storage
+      const storageKey = `checklist_${checklistName}_${itemName}`;
+      const newStatus = !isComplete;
+      localStorage.setItem(storageKey, String(newStatus));
+      setIsComplete(newStatus);
+      console.info(`Checklist item "${itemName}" ${newStatus ? 'completed' : 'uncompleted'}`);
     } catch (error) {
-      console.info('Demo mode: Using local storage for checklists');
+      // Fallback if localStorage is not available
+      setIsComplete(!isComplete);
+      console.info('Demo mode: State updated in-memory only');
     }
   };
 
