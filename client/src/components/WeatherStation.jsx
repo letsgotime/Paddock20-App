@@ -5,7 +5,7 @@ function WeatherStation() {
   const [loading, setLoading] = useState(true);
   const [tempUnit, setTempUnit] = useState('F'); // Default Fahrenheit
 
-  const apiKey = import.meta.env.VITE_WEATHER_API_KEY; // From your environment variables
+  const apiKey = import.meta.env.OPENWEATHER_API_KEY || import.meta.env.VITE_WEATHER_API_KEY; // From environment variables
   const city = "Charlotte"; // <-- Change to your city if needed
 
   useEffect(() => {
@@ -35,7 +35,7 @@ function WeatherStation() {
     return <div className="text-white text-center p-10">Loading Weather...</div>;
   }
 
-  if (!weatherData) {
+  if (!weatherData || !weatherData.main || !weatherData.wind) {
     return <div className="text-red-500 text-center p-10">Weather data not available.</div>;
   }
 
