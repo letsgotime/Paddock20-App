@@ -8,100 +8,101 @@ interface ChecklistItemProps {
 
 function ChecklistItem({ checklistName, itemName }: ChecklistItemProps) {
   const [isComplete, setIsComplete] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
-  // Fetch status from Supabase, fallback to localStorage if needed
   useEffect(() => {
     async function fetchStatus() {
+      setIsLoading(true);
       try {
-        // Try to get status from Supabase first
         const { data, error } = await supabase
           .from('UserChecklists')
           .select('is_complete')
           .match({ checklist_name: checklistName, item_name: itemName })
           .single();
-
         if (data) {
           setIsComplete(data.is_complete);
-        } else {
-          // Fallback to localStorage if no data in Supabase or error
-          const storageKey = `checklist_${checklistName}_${itemName}`;
-          const savedStatus = localStorage.getItem(storageKey);
-          
-          if (savedStatus !== null) {
-            setIsComplete(savedStatus === 'true');
-          }
         }
       } catch (err) {
-        // Fallback to localStorage on error
-        console.info('Error accessing Supabase, using localStorage');
-        try {
-          const storageKey = `checklist_${checklistName}_${itemName}`;
-          const savedStatus = localStorage.getItem(storageKey);
-          
-          if (savedStatus !== null) {
-            setIsComplete(savedStatus === 'true');
-          }
-        } catch (localErr) {
-          console.info('Local storage not available, using defaults');
-        }
+        console.error('Error fetching checklist item status:', err);
+      } finally {
+        setIsLoading(false);
       }
     }
-    
     fetchStatus();
   }, [checklistName, itemName]);
 
   const toggleComplete = async () => {
-    const newStatus = !isComplete;
+    if (isLoading) return; // Prevent toggling while loading
     
     try {
-      // Try to update in Supabase first
-      const { data, error } = await supabase
+      const { error } = await supabase
         .from('UserChecklists')
         .upsert({
+          user_id: (await supabase.auth.getUser()).data.user.id,
           checklist_name: checklistName,
           item_name: itemName,
-          is_complete: newStatus
-        }, {
-          onConflict: 'checklist_name,item_name'
+          is_complete: !isComplete
         });
         
-      if (error) {
-        throw new Error(error.message);
+      if (!error) {
+        setIsComplete(!isComplete);
+      } else {
+        console.error('Checklist Toggle Error:', error.message);
       }
-      
-      // Also update in localStorage as backup
-      const storageKey = `checklist_${checklistName}_${itemName}`;
-      localStorage.setItem(storageKey, String(newStatus));
-      
-      // Update UI state
-      setIsComplete(newStatus);
-      console.info(`Checklist item "${itemName}" ${newStatus ? 'completed' : 'uncompleted'}`);
     } catch (error) {
-      // Fallback to just localStorage if Supabase fails
-      try {
-        const storageKey = `checklist_${checklistName}_${itemName}`;
-        localStorage.setItem(storageKey, String(newStatus));
-        setIsComplete(newStatus);
-        console.info(`Fallback to localStorage: Checklist item "${itemName}" ${newStatus ? 'completed' : 'uncompleted'}`);
-      } catch (localError) {
-        // Last resort - just update the state in memory
-        setIsComplete(newStatus);
-        console.info('Demo mode: State updated in-memory only');
-      }
+      console.error('Checklist toggle failed:', error);
+    }
+  };
+
+  // Generate a stable, URL-safe ID for the checkbox
+  const id = `${checklistName}-${itemName}`.replace(/\s+/g, '-').toLowerCase();
+
+  // Keyboard handler for accessibility
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      toggleComplete();
     }
   };
 
   return (
-    <div className="flex items-center space-x-4 mb-4">
-      <input
-        type="checkbox"
-        checked={isComplete}
-        onChange={toggleComplete}
-        className="w-5 h-5"
-      />
-      <p className={`text-white ${isComplete ? 'line-through' : ''}`}>
+    <div 
+      className="flex items-center space-x-4 mb-4" 
+      role="group" 
+      aria-labelledby={`${id}-label`}
+    >
+      {isLoading ? (
+        <div className="w-5 h-5 bg-gray-700 animate-pulse rounded" aria-hidden="true" />
+      ) : (
+        <>
+          <input
+            id={id}
+            type="checkbox"
+            checked={isComplete}
+            onChange={toggleComplete}
+            className="w-5 h-5 cursor-pointer focus:ring-2 focus:ring-green-500 focus:outline-none"
+            aria-labelledby={`${id}-label`}
+          />
+          
+          {/* Visual feedback for screen readers */}
+          <span 
+            className="sr-only" 
+            aria-live="polite"
+          >
+            Item {itemName} is {isComplete ? 'completed' : 'not completed'}
+          </span>
+        </>
+      )}
+      
+      <label 
+        htmlFor={id} 
+        id={`${id}-label`} 
+        className={`text-white ${isComplete ? 'line-through' : ''}`}
+        tabIndex={0}
+        onKeyDown={handleKeyDown}
+      >
         {itemName}
-      </p>
+      </label>
     </div>
   );
 }
