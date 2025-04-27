@@ -124,10 +124,10 @@ function WeatherMoodEmoji({ weatherCondition, isNight }) {
         color = 'text-blue-200';
         ariaLabel = 'Clear night weather';
         activities = [
-          'Check all lights',
-          'Practice night driving',
-          'Inspect dashboard indicators in darkness',
-          'Perfect weather for night cruise'
+          'Test headlights and fog lamps',
+          'Assess visibility in low-light conditions',
+          'Practice defensive night driving techniques',
+          'Look for road reflectors and markings'
         ];
       }
     } else if (condition.includes('cloud')) {
