@@ -21,7 +21,7 @@ import VideoLibraryPage from "./pages/VideoLibraryPage";
 import BrokerPortalPage from "./pages/BrokerPortalPage";
 import Weather from "./pages/Weather";
 import SeasonalChecklistPage from "./pages/SeasonalChecklistPage";
-import eBooksPage from "./pages/eBooksPage";
+import EBooksPage from "./pages/eBooksPage";
 import DropdownNavbar from "./components/DropdownNavbar";
 import { WeatherProvider } from "./contexts/WeatherContext";
 import AuthPage from "./pages/AuthPage";
@@ -131,7 +131,7 @@ function App() {
                 <Route path="/concierge" element={<ProtectedRoute><ConciergePage /></ProtectedRoute>} />
                 <Route path="/hustle-planner" element={<ProtectedRoute><HustlePlannerPage /></ProtectedRoute>} />
                 <Route path="/route-planner" element={<ProtectedRoute><RoutePlannerPage /></ProtectedRoute>} />
-                <Route path="/ebooks" element={<ProtectedRoute><eBooksPage /></ProtectedRoute>} />
+                <Route path="/ebooks" element={<ProtectedRoute><EBooksPage /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>
