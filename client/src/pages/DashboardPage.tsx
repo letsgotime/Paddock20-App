@@ -39,43 +39,48 @@ function DashboardPage() {
         {/* Dashboard Navigation Links */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Link to="/garage-vault" className="apex-card hover:bg-gray-900 p-6 rounded-lg">
-            <h2 className="apex-header-green mb-4">Garage Vault</h2>
+            <h2 className="apex-header mb-4">Garage Vault</h2>
             <p className="text-gray-400">Manage your vehicles and track modifications with Supabase database.</p>
           </Link>
 
           <Link to="/journal" className="apex-card hover:bg-gray-900 p-6 rounded-lg">
-            <h2 className="apex-header-green mb-4">Drive Journal</h2>
+            <h2 className="apex-header mb-4">Drive Journal</h2>
             <p className="text-gray-400">Log your drives, add mood, miles, photos.</p>
           </Link>
 
           <Link to="/juicebox" className="apex-card hover:bg-gray-900 p-6 rounded-lg">
-            <h2 className="apex-header-green mb-4">Juice Box™</h2>
+            <h2 className="apex-header mb-4">Juice Box™</h2>
             <p className="text-gray-400">Explore elite detailing products and guides.</p>
           </Link>
 
           <Link to="/gloss-growth" className="apex-card hover:bg-gray-900 p-6 rounded-lg">
-            <h2 className="apex-header-green mb-4">Gloss Growth</h2>
+            <h2 className="apex-header mb-4">Gloss Growth</h2>
             <p className="text-gray-400">Track the evolution of your vehicle's finish.</p>
           </Link>
 
           <Link to="/juicebox-videos" className="apex-card hover:bg-gray-900 p-6 rounded-lg">
-            <h2 className="apex-header-green mb-4">Video Library</h2>
+            <h2 className="apex-header mb-4">Video Library</h2>
             <p className="text-gray-400">Watch tutorials and expert training guides.</p>
           </Link>
 
           <Link to="/events" className="apex-card hover:bg-gray-900 p-6 rounded-lg">
-            <h2 className="apex-header-green mb-4">Events & Meetups</h2>
+            <h2 className="apex-header mb-4">Events & Meetups</h2>
             <p className="text-gray-400">Find local car events and meetups.</p>
           </Link>
 
           <Link to="/seasonal-checklist" className="apex-card hover:bg-gray-900 p-6 rounded-lg">
-            <h2 className="apex-header-green mb-4">Seasonal Adaptation Checklist</h2>
+            <h2 className="apex-header mb-4">Seasonal Adaptation Checklist</h2>
             <p className="text-gray-400">Update your maintenance based on seasons.</p>
           </Link>
 
           <Link to="/pre-drive-checklist" className="apex-card hover:bg-gray-900 p-6 rounded-lg">
-            <h2 className="apex-header-gray mb-4">Pre-Drive Readiness</h2>
+            <h2 className="apex-header mb-4">Pre-Drive Readiness</h2>
             <p className="text-gray-400">Complete your essential vehicle safety checklist before every drive.</p>
+          </Link>
+          
+          <Link to="/route-planner" className="apex-card hover:bg-gray-900 p-6 rounded-lg">
+            <h2 className="apex-header mb-4">Route Planner</h2>
+            <p className="text-gray-400">Plan your drives with optimal routes and scenic detours.</p>
           </Link>
         </div>
       </div>
