@@ -18,7 +18,7 @@ const mockSession = {
 
 const supabase = {
   from: (table) => ({
-    select: () => {
+    select: (columns) => {
       return {
         data: table === 'Vehicles' ? [
           {
@@ -71,7 +71,23 @@ const supabase = {
             is_complete: false
           }
         ] : [],
-        error: null
+        error: null,
+        eq: (field, value) => ({
+          data: [{ is_complete: false }],
+          error: null,
+          eq: (field2, value2) => ({
+            data: [{ is_complete: false }],
+            error: null,
+            single: () => ({
+              data: { is_complete: false },
+              error: null
+            })
+          }),
+          single: () => ({
+            data: { is_complete: false },
+            error: null
+          })
+        })
       };
     },
     insert: (data) => {
