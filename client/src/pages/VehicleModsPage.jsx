@@ -10,6 +10,8 @@ function VehicleModsPage() {
   const [newMod, setNewMod] = useState({ name: '', description: '', date_installed: '', cost: '' });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState(null);
+  const [editingMod, setEditingMod] = useState(null);
+  const [isEditing, setIsEditing] = useState(false);
 
   // Fetch vehicle and mods data
   useEffect(() => {
@@ -30,10 +32,16 @@ function VehicleModsPage() {
         const { data: modsData, error: modsError } = await supabase
           .from('VehicleMods')
           .select('*')
-          .eq('vehicle_id', id)
-          .order('date_installed', { ascending: false });
+          .eq('vehicle_id', id);
 
         if (modsError) throw modsError;
+        
+        // Sort manually since we're using a mock client
+        const sortedMods = modsData ? [...modsData].sort((a, b) => {
+          if (!a.date_installed) return 1;
+          if (!b.date_installed) return -1;
+          return new Date(b.date_installed) - new Date(a.date_installed);
+        }) : [];
         setMods(modsData || []);
       } catch (error) {
         console.error('Error fetching data:', error.message);
@@ -49,7 +57,61 @@ function VehicleModsPage() {
   // Handle form input changes
   const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setNewMod(prev => ({ ...prev, [name]: value }));
+    if (isEditing) {
+      setEditingMod(prev => ({ ...prev, [name]: value }));
+    } else {
+      setNewMod(prev => ({ ...prev, [name]: value }));
+    }
+  };
+  
+  // Handle edit mod
+  const handleEditMod = (mod) => {
+    setEditingMod(mod);
+    setIsEditing(true);
+    setNewMod({
+      name: mod.name,
+      description: mod.description,
+      date_installed: mod.date_installed || '',
+      cost: mod.cost || ''
+    });
+    
+    // Scroll to form
+    document.getElementById("addModHeading").scrollIntoView({ behavior: "smooth" });
+  };
+  
+  // Handle cancel edit
+  const handleCancelEdit = () => {
+    setIsEditing(false);
+    setEditingMod(null);
+    setNewMod({ name: '', description: '', date_installed: '', cost: '' });
+  };
+  
+  // Handle delete mod
+  const handleDeleteMod = async (modId) => {
+    if (!window.confirm("Are you sure you want to delete this modification?")) {
+      return;
+    }
+    
+    try {
+      const { error } = await supabase
+        .from('VehicleMods')
+        .delete()
+        .eq('id', modId);
+        
+      if (error) throw error;
+      
+      // Update local state
+      setMods(mods.filter(mod => mod.id !== modId));
+      
+      // Announce to screen readers
+      const liveRegion = document.getElementById('live-region');
+      if (liveRegion) {
+        liveRegion.textContent = "Modification deleted successfully";
+      }
+    } catch (error) {
+      console.error('Error deleting mod:', error.message);
+      setError('Failed to delete modification. Please try again.');
+    }
   };
 
   // Handle form submission
@@ -64,29 +126,63 @@ function VehicleModsPage() {
         throw new Error('Name and description are required');
       }
 
-      // Submit to Supabase
-      const { data, error } = await supabase
-        .from('VehicleMods')
-        .insert([
-          { 
+      let response;
+
+      if (isEditing) {
+        // Update existing mod
+        response = await supabase
+          .from('VehicleMods')
+          .update({
+            name: newMod.name,
+            description: newMod.description,
+            date_installed: newMod.date_installed || null,
+            cost: newMod.cost ? parseFloat(newMod.cost) : null
+          })
+          .eq('id', editingMod.id)
+          .select();
+          
+        if (response.error) throw response.error;
+        
+        // Update local state
+        setMods(prev => prev.map(mod => 
+          mod.id === editingMod.id ? response.data[0] : mod
+        ));
+        
+        // Announce to screen readers
+        const liveRegion = document.getElementById('live-region');
+        if (liveRegion) {
+          liveRegion.textContent = "Modification updated successfully";
+        }
+      } else {
+        // Add new mod
+        response = await supabase
+          .from('VehicleMods')
+          .insert([{ 
             ...newMod, 
             vehicle_id: id,
             cost: newMod.cost ? parseFloat(newMod.cost) : null 
-          }
-        ])
-        .select();
-
-      if (error) throw error;
-
-      // Update local state
-      setMods(prev => [data[0], ...prev]);
+          }])
+          .select();
+          
+        if (response.error) throw response.error;
+        
+        // Update local state
+        setMods(prev => [response.data[0], ...prev]);
+        
+        // Announce to screen readers
+        const liveRegion = document.getElementById('live-region');
+        if (liveRegion) {
+          liveRegion.textContent = "New modification added successfully";
+        }
+      }
       
-      // Reset form
+      // Reset form state
       setNewMod({ name: '', description: '', date_installed: '', cost: '' });
+      setIsEditing(false);
+      setEditingMod(null);
       
-      // Success message or notification could be added here
     } catch (error) {
-      console.error('Error adding mod:', error.message);
+      console.error('Error saving mod:', error.message);
       setError(error.message);
     } finally {
       setIsSubmitting(false);
@@ -129,7 +225,9 @@ function VehicleModsPage() {
           className="apex-card p-6 mb-8"
           aria-labelledby="addModHeading"
         >
-          <h3 id="addModHeading" className="text-blue-400 font-orbitron text-lg mb-4">Add New Modification</h3>
+          <h3 id="addModHeading" className="text-blue-400 font-orbitron text-lg mb-4">
+            {isEditing ? 'Edit Modification' : 'Add New Modification'}
+          </h3>
           
           {error && (
             <div className="bg-red-900 text-white p-3 mb-4 rounded" role="alert">
@@ -137,7 +235,10 @@ function VehicleModsPage() {
             </div>
           )}
           
-          <form onSubmit={handleSubmit} aria-label="Add modification form">
+          {/* Hidden live region for screen reader announcements */}
+          <div id="live-region" className="sr-only" aria-live="polite"></div>
+          
+          <form onSubmit={handleSubmit} aria-label={isEditing ? 'Edit modification form' : 'Add modification form'}>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
               <div>
                 <label htmlFor="name" className="block text-gray-300 mb-1">
@@ -200,14 +301,26 @@ function VehicleModsPage() {
               </div>
             </div>
             
-            <div className="flex justify-end">
+            <div className="flex justify-end gap-4">
+              {isEditing && (
+                <button 
+                  type="button"
+                  onClick={handleCancelEdit}
+                  className="bg-gray-700 hover:bg-gray-600 text-white py-2 px-4 rounded"
+                  aria-label="Cancel editing"
+                >
+                  Cancel
+                </button>
+              )}
               <button 
                 type="submit" 
                 className="apex-button"
                 disabled={isSubmitting}
                 aria-busy={isSubmitting}
               >
-                {isSubmitting ? 'Adding...' : 'Add Modification'}
+                {isSubmitting 
+                  ? (isEditing ? 'Saving...' : 'Adding...') 
+                  : (isEditing ? 'Save Changes' : 'Add Modification')}
               </button>
             </div>
           </form>
