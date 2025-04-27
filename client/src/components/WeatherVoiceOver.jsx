@@ -1,138 +1,107 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
+import { getWeatherDescription } from '../lib/accessibility';
 
-function WeatherVoiceOver({ 
-  weatherData, 
-  forecastData, 
-  drivingCondition,
-  isVisible = true 
-}) {
-  const [speaking, setSpeaking] = useState(false);
-  const [speechEnabled, setSpeechEnabled] = useState(false);
-  
-  // Check if speech synthesis is available
-  useEffect(() => {
-    if ('speechSynthesis' in window) {
-      setSpeechEnabled(true);
+/**
+ * WeatherVoiceOver Component
+ * 
+ * A screen reader accessibility enhancement that provides an audible
+ * weather description using the browser's Speech Synthesis API.
+ * 
+ * @param {Object} props - Component props
+ * @param {Object} props.weatherData - Current weather data object
+ * @param {Object} props.forecastData - Optional forecast data object
+ * @param {Object} props.drivingCondition - Optional driving condition assessment
+ */
+function WeatherVoiceOver({ weatherData, forecastData = null, drivingCondition = null }) {
+  const [isPlaying, setIsPlaying] = useState(false);
+
+  // Create a comprehensive description for screen readers
+  const generateVoiceDescription = () => {
+    if (!weatherData) {
+      return 'Weather data is not available at this time.';
     }
-  }, []);
-  
-  // Generate detailed weather description
-  const generateWeatherDescription = useCallback(() => {
-    if (!weatherData) return '';
-    
-    // Build weather description
-    let description = `Current weather conditions for ${weatherData.name}. `;
-    
-    // Current conditions
-    if (weatherData.weather && weatherData.weather.length > 0) {
-      description += `The current condition is ${weatherData.weather[0].description}. `;
-    }
-    
-    // Temperature
-    if (weatherData.main) {
-      description += `The temperature is ${Math.round(weatherData.main.temp)} degrees Fahrenheit, `;
-      description += `with a feels like temperature of ${Math.round(weatherData.main.feels_like)} degrees. `;
-      description += `Humidity is at ${weatherData.main.humidity} percent. `;
-    }
-    
-    // Wind
-    if (weatherData.wind) {
-      description += `Wind is blowing at ${Math.round(weatherData.wind.speed)} miles per hour. `;
-    }
-    
-    // Add driving recommendation if available
+
+    // Start with the base weather description
+    let fullDescription = getWeatherDescription(weatherData);
+
+    // Add driving conditions if available
     if (drivingCondition) {
-      description += `Driving conditions are ${drivingCondition.text.toLowerCase()}. ${drivingCondition.drivingTip} `;
+      fullDescription += ` Driving conditions assessment: ${drivingCondition.score} out of 10. `;
+      fullDescription += `${drivingCondition.recommendation} `;
     }
-    
-    // Add forecast if available
+
+    // Add forecast information if available
     if (forecastData && forecastData.list && forecastData.list.length > 0) {
       const nextForecast = forecastData.list[0];
-      description += `In the next few hours, expect ${nextForecast.weather[0].description} `;
-      description += `with temperatures around ${Math.round(nextForecast.main.temp)} degrees Fahrenheit. `;
+      fullDescription += ` Upcoming forecast: ${nextForecast.weather[0].description}. `;
+      fullDescription += ` Temperature will be ${Math.round(nextForecast.main.temp)}°F. `;
     }
-    
-    return description;
-  }, [weatherData, forecastData, drivingCondition]);
-  
-  // Speak the weather information
-  const speak = useCallback(() => {
-    if (!speechEnabled || !weatherData) return;
-    
-    // Cancel any ongoing speech
-    window.speechSynthesis.cancel();
-    
-    const description = generateWeatherDescription();
-    const utterance = new SpeechSynthesisUtterance(description);
-    
-    // Set voice settings
-    utterance.rate = 0.95; // Slightly slower
-    utterance.pitch = 1;
-    utterance.volume = 1;
-    
-    // Get available voices and set a preferable one if available
-    const voices = window.speechSynthesis.getVoices();
-    const preferredVoice = voices.find(voice => 
-      voice.name.includes('Alex') || // macOS voice
-      voice.name.includes('Google US English') || // Chrome
-      voice.name.includes('Microsoft David') || // Windows
-      voice.name.includes('English United States') // Generic
-    );
-    
-    if (preferredVoice) {
-      utterance.voice = preferredVoice;
+
+    return fullDescription;
+  };
+
+  // Handle the speak button click
+  const handleSpeak = () => {
+    // Stop any ongoing speech
+    if (isPlaying) {
+      window.speechSynthesis.cancel();
+      setIsPlaying(false);
+      return;
     }
+
+    // Get the weather description
+    const textToSpeak = generateVoiceDescription();
+
+    // Create a new speech utterance
+    const utterance = new SpeechSynthesisUtterance(textToSpeak);
+    
+    // Customize voice settings
+    utterance.rate = 1.0;  // Normal speaking rate
+    utterance.pitch = 1.0; // Normal pitch
+    utterance.volume = 1.0; // Full volume
     
     // Event handlers
-    utterance.onstart = () => setSpeaking(true);
-    utterance.onend = () => setSpeaking(false);
-    utterance.onerror = () => setSpeaking(false);
-    
+    utterance.onstart = () => setIsPlaying(true);
+    utterance.onend = () => setIsPlaying(false);
+    utterance.onerror = () => setIsPlaying(false);
+
+    // Try to set a better voice if available (English voices)
+    const voices = window.speechSynthesis.getVoices();
+    const englishVoices = voices.filter(voice => voice.lang.includes('en-'));
+    if (englishVoices.length > 0) {
+      utterance.voice = englishVoices[0];
+    }
+
     // Speak the text
     window.speechSynthesis.speak(utterance);
-  }, [speechEnabled, weatherData, generateWeatherDescription]);
-  
-  // Stop speaking
-  const stopSpeaking = useCallback(() => {
-    if (!speechEnabled) return;
-    window.speechSynthesis.cancel();
-    setSpeaking(false);
-  }, [speechEnabled]);
-  
-  // Cleanup
-  useEffect(() => {
-    return () => {
-      if (speechEnabled) {
-        window.speechSynthesis.cancel();
-      }
-    };
-  }, [speechEnabled]);
-  
-  if (!isVisible || !speechEnabled) return null;
-  
+  };
+
   return (
-    <div className="flex flex-col items-center mb-4">
+    <div className="mt-4 flex items-center justify-center">
       <button
-        onClick={speaking ? stopSpeaking : speak}
-        className="flex items-center gap-2 py-2 px-4 bg-gray-800 hover:bg-gray-700 text-white rounded-full transition-colors"
-        aria-label={speaking ? "Stop weather voice description" : "Play weather voice description"}
+        onClick={handleSpeak}
+        className="apex-button flex items-center space-x-2"
+        aria-label={isPlaying ? "Stop weather voice reading" : "Listen to weather report"}
+        aria-pressed={isPlaying}
       >
-        {speaking ? (
+        {isPlaying ? (
           <>
-            <VolumeX className="h-5 w-5 text-red-400" />
-            <span>Stop Voice Description</span>
+            <VolumeX size={20} aria-hidden="true" />
+            <span>Stop Reading</span>
           </>
         ) : (
           <>
-            <Volume2 className="h-5 w-5 text-green-400" />
+            <Volume2 size={20} aria-hidden="true" />
             <span>Listen to Weather Report</span>
           </>
         )}
       </button>
-      <p className="text-xs text-gray-400 mt-1">
-        {speaking ? "Playing weather report..." : "Click to hear detailed weather information"}
-      </p>
+      
+      {/* Hidden text for screen readers only */}
+      <div className="sr-only" aria-live="polite">
+        {isPlaying ? 'Reading weather information aloud' : ''}
+      </div>
     </div>
   );
 }

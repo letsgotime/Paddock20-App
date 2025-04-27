@@ -1,5 +1,5 @@
 import PreDriveChecklistPage from './pages/PreDriveChecklistPage';
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -28,6 +28,7 @@ import DashboardPage from "./pages/DashboardPage";
 import GarageVaultPage from "./pages/GarageVaultPage";
 import VehicleModsPage from "./pages/VehicleModsPage";
 import { useAuth } from "./hooks/useAuth";
+import { MAIN_CONTENT_ID, LiveRegion } from './lib/accessibility';
 import './apexvault.css';
 
 function App() {
@@ -55,14 +56,37 @@ function App() {
     return <>{children}</>;
   };
 
+  // Create a global screen reader notification system
+  useEffect(() => {
+    // Create a live region for screen reader announcements
+    const announcer = new LiveRegion('polite');
+    
+    // Clean up when component unmounts
+    return () => {
+      announcer.remove();
+    };
+  }, []);
+
   return (
     <QueryClientProvider client={queryClient}>
       <WeatherProvider>
         <TooltipProvider>
+          {/* Skip link for keyboard navigation */}
+          <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
+            Skip to main content
+          </a>
+          
           <div className="min-h-screen bg-black font-openSans text-white">
-            {(effectiveSession || previewMode) && <DropdownNavbar />}
-            <div className="container mx-auto px-4">
+            {/* Header with navigation */}
+            <header role="banner">
+              {(effectiveSession || previewMode) && <DropdownNavbar />}
+            </header>
+
+            {/* Main content area */}
+            <main id={MAIN_CONTENT_ID} className="container mx-auto px-4" tabIndex={-1}>
+              {/* Toast notifications with ARIA live region built in */}
               <Toaster />
+              
               <Routes>
                 {/* Public authentication route */}
                 <Route path="/auth" element={!session && !previewMode ? <AuthPage /> : <Navigate to="/dashboard" replace />} />
@@ -89,7 +113,19 @@ function App() {
                 <Route path="/vehicle-mods/:id" element={<ProtectedRoute><VehicleModsPage /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
-            </div>
+            </main>
+
+            {/* Footer with accessibility information */}
+            <footer role="contentinfo" className="py-4 mt-8 border-t border-gray-800">
+              <div className="container mx-auto px-4 text-center text-sm text-gray-500">
+                <p>© {new Date().getFullYear()} GoTime Motorsports - ApexVault™</p>
+                <p className="mt-2">
+                  <a href="#accessibility" className="text-green-500 hover:text-green-400 underline">
+                    Accessibility Statement
+                  </a>
+                </p>
+              </div>
+            </footer>
           </div>
         </TooltipProvider>
       </WeatherProvider>
