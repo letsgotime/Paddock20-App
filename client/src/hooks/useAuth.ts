@@ -8,9 +8,13 @@ export function useAuth() {
 
   useEffect(() => {
     // Get the current session
-    const { data: { session } } = supabase.auth.getSession();
-    setSession(session);
-    setLoading(false);
+    const getSession = async () => {
+      const { data } = await supabase.auth.getSession();
+      setSession(data.session);
+      setLoading(false);
+    };
+    
+    getSession();
 
     // Listen for auth changes
     const { data: authListener } = supabase.auth.onAuthStateChange(
