@@ -17,6 +17,7 @@ const mockSession = {
 };
 
 const supabase = {
+  _isMockClient: true, // Flag to identify this as a mock client
   from: (table) => ({
     select: (columns) => {
       return {
@@ -83,6 +84,14 @@ const supabase = {
               error: null
             })
           }),
+          single: () => ({
+            data: { is_complete: false },
+            error: null
+          })
+        }),
+        match: (matchObj) => ({
+          data: [{ is_complete: false }],
+          error: null,
           single: () => ({
             data: { is_complete: false },
             error: null

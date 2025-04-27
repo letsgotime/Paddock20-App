@@ -14,16 +14,24 @@ function ChecklistItem({ checklistName, itemName }: ChecklistItemProps) {
     async function fetchStatus() {
       setIsLoading(true);
       try {
-        const { data, error } = await supabase
+        // Check if we're using the mock client (demo mode)
+        const isMockClient = (supabase as any)._isMockClient === true;
+        
+        const response = await supabase
           .from('UserChecklists')
           .select('is_complete')
           .match({ checklist_name: checklistName, item_name: itemName })
           .single();
-        if (data) {
-          setIsComplete(data.is_complete);
+          
+        if (response.data) {
+          setIsComplete(response.data.is_complete);
+        } else if (response.error && !isMockClient) {
+          // Only log error if we're not in demo mode
+          console.error('Error fetching checklist item status:', response.error);
         }
       } catch (err) {
-        console.error('Error fetching checklist item status:', err);
+        // This is a more severe error (like network issue)
+        console.error('Exception fetching checklist item status:', err);
       } finally {
         setIsLoading(false);
       }
@@ -35,6 +43,9 @@ function ChecklistItem({ checklistName, itemName }: ChecklistItemProps) {
     if (isLoading) return; // Prevent toggling while loading
     
     try {
+      // Check if we're using the mock client (demo mode)
+      const isMockClient = (supabase as any)._isMockClient === true;
+      
       const { error } = await supabase
         .from('UserChecklists')
         .upsert({
@@ -46,11 +57,18 @@ function ChecklistItem({ checklistName, itemName }: ChecklistItemProps) {
         
       if (!error) {
         setIsComplete(!isComplete);
-      } else {
+      } else if (!isMockClient) {
+        // Only log error if we're not in demo mode
         console.error('Checklist Toggle Error:', error.message);
       }
     } catch (error) {
+      // This is a more severe error (like network issue)
       console.error('Checklist toggle failed:', error);
+    }
+    
+    // In demo mode, just toggle the state directly
+    if ((supabase as any)._isMockClient) {
+      setIsComplete(!isComplete);
     }
   };
 
