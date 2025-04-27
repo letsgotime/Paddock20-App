@@ -40,7 +40,7 @@ const EBooksPage: React.FC = () => {
     <div 
       className="bg-black bg-cover bg-center min-h-screen py-8"
       style={{
-        backgroundImage: "url('/assets/attached_assets/an exotic car with qr codes on it.png')",
+        backgroundImage: "url('/assets/images/an exotic car with qr codes on it.png')",
         backgroundBlendMode: "overlay",
         backgroundColor: "rgba(0,0,0,0.8)",
       }}

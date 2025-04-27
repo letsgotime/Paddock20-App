@@ -9,7 +9,7 @@ const Paddock20HomePage: React.FC = () => {
     <div
       className="min-h-screen bg-black bg-cover bg-center"
       style={{
-        backgroundImage: "url('/assets/images/F1/f1-stadium-sunset.png')",
+        backgroundImage: "url('/assets/images/f1-stadium-sunset.png')",
         backgroundBlendMode: "overlay",
         backgroundColor: "rgba(0,0,0,0.7)",
       }}
