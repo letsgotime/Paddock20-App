@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import WeatherMoodEmoji from './WeatherMoodEmoji';
 import DrivingConditionEmoji from './DrivingConditionEmoji';
+import WeatherVoiceOver from './WeatherVoiceOver';
 import { Droplets, Wind, Sun, CloudRain, Gauge } from 'lucide-react';
 
 function ZipWeatherStation() {
@@ -180,6 +181,17 @@ function ZipWeatherStation() {
         visibility={weatherData.visibility / 1609.34} // Convert meters to miles
         windSpeed={weatherData.wind.speed}
         precipitation={precipitation}
+      />
+      
+      {/* Accessibility Voice Over */}
+      <WeatherVoiceOver 
+        weatherData={weatherData}
+        drivingCondition={{
+          text: weatherCondition ? 'Moderate driving conditions' : 'Good driving conditions',
+          drivingTip: precipitation > 0 
+            ? 'Drive carefully on wet roads and allow for extra stopping distance.' 
+            : 'Road conditions are generally good. Maintain safe driving practices.'
+        }}
       />
       
       {/* Navigation Links */}
