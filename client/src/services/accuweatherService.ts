@@ -1,55 +1,93 @@
-const API_KEY = import.meta.env.VITE_ACCUWEATHER_API_KEY;
-const BASE_URL = "https://dataservice.accuweather.com";
+import axios from 'axios';
 
-export async function getLocationKey(lat: number, lon: number) {
+// Base URL for AccuWeather API calls
+const ACCU_BASE_URL = 'https://dataservice.accuweather.com';
+
+/**
+ * Get AccuWeather location key from lat/lon coordinates
+ * Location key is required for all other AccuWeather API calls
+ */
+export async function getLocationKey(latitude: number, longitude: number): Promise<string> {
   try {
-    const response = await fetch(
-      `${BASE_URL}/locations/v1/cities/geoposition/search?apikey=${API_KEY}&q=${lat},${lon}`
-    );
-    const data = await response.json();
-    return data.Key; // Location Key
+    const response = await axios.get(`/api/accuweather/location`, {
+      params: { lat: latitude, lon: longitude }
+    });
+    
+    if (response.data && response.data.Key) {
+      return response.data.Key;
+    }
+    throw new Error('No location key found');
   } catch (error) {
-    console.error("Error fetching location key:", error);
+    console.error('Error fetching AccuWeather location key:', error);
     throw error;
   }
 }
 
+/**
+ * Get current conditions for a location
+ */
 export async function fetchCurrentConditions(locationKey: string) {
   try {
-    const response = await fetch(
-      `${BASE_URL}/currentconditions/v1/${locationKey}?apikey=${API_KEY}&details=true`
-    );
-    const data = await response.json();
-    return data[0];
+    const response = await axios.get(`/api/accuweather/current-conditions/${locationKey}`);
+    return response.data[0]; // API returns an array with a single item
   } catch (error) {
-    console.error("Error fetching current conditions:", error);
+    console.error('Error fetching AccuWeather current conditions:', error);
     throw error;
   }
 }
 
+/**
+ * Get daily forecast for a location
+ */
 export async function fetchDailyForecast(locationKey: string) {
   try {
-    const response = await fetch(
-      `${BASE_URL}/forecasts/v1/daily/1day/${locationKey}?apikey=${API_KEY}&details=true`
-    );
-    const data = await response.json();
-    return data.DailyForecasts[0];
+    const response = await axios.get(`/api/accuweather/daily-forecast/${locationKey}`);
+    return response.data.DailyForecasts[0]; // Get first day forecast
   } catch (error) {
-    console.error("Error fetching daily forecast:", error);
+    console.error('Error fetching AccuWeather daily forecast:', error);
     throw error;
   }
 }
 
+/**
+ * Get minutecast precipitation data for precise short-term forecasts
+ */
 export async function fetchMinuteCast(locationKey: string) {
   try {
-    const response = await fetch(
-      `${BASE_URL}/forecasts/v1/minute/1hour/${locationKey}?apikey=${API_KEY}&details=true`
-    );
-    const data = await response.json();
-    return data;
+    const response = await axios.get(`/api/accuweather/minutecast/${locationKey}`);
+    return response.data;
   } catch (error) {
-    console.error("Error fetching minute cast:", error);
-    // MinuteCast might not be available for all locations
-    return { Summary: "Minute forecast not available for your location" };
+    console.error('Error fetching AccuWeather minutecast:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get hourly forecasts for the next 12 hours
+ */
+export async function fetchHourlyForecast(locationKey: string) {
+  try {
+    const response = await axios.get(`/api/accuweather/hourly-forecast/${locationKey}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching AccuWeather hourly forecast:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get indices specific to driving activities
+ * This includes indices for various outdoor activities
+ */
+export async function fetchDrivingIndices(locationKey: string) {
+  try {
+    const response = await axios.get(`/api/accuweather/indices/${locationKey}`);
+    return response.data.filter((index: any) => 
+      index.ID === 1 || // Driving index
+      index.ID === 10   // Road Construction index
+    );
+  } catch (error) {
+    console.error('Error fetching AccuWeather indices:', error);
+    throw error;
   }
 }

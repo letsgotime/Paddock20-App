@@ -614,7 +614,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AccuWeather API routes for enhanced driving data
-  app.get('/api/accu-location', async (req, res) => {
+  app.get('/api/accuweather/location', async (req, res) => {
     try {
       const { lat, lon } = req.query;
       
@@ -643,9 +643,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AccuWeather Current Conditions
-  app.get('/api/accu-current', async (req, res) => {
+  app.get('/api/accuweather/current-conditions/:locationKey', async (req, res) => {
     try {
-      const { locationKey } = req.query;
+      const { locationKey } = req.params;
       
       if (!locationKey) {
         return res.status(400).json({ message: 'Location key is required' });
@@ -672,9 +672,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AccuWeather Daily Forecast
-  app.get('/api/accu-forecast', async (req, res) => {
+  app.get('/api/accuweather/daily-forecast/:locationKey', async (req, res) => {
     try {
-      const { locationKey } = req.query;
+      const { locationKey } = req.params;
       
       if (!locationKey) {
         return res.status(400).json({ message: 'Location key is required' });
@@ -701,9 +701,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   });
 
   // AccuWeather MinuteCast
-  app.get('/api/accu-minute', async (req, res) => {
+  app.get('/api/accuweather/minutecast/:locationKey', async (req, res) => {
     try {
-      const { locationKey } = req.query;
+      const { locationKey } = req.params;
       
       if (!locationKey) {
         return res.status(400).json({ message: 'Location key is required' });
