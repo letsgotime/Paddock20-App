@@ -146,6 +146,7 @@ const supabase = {
       }
       return {
         select: () => {
+      console.log(`Supabase mock client selecting from table: ${table}`);
           return {
             data: table === 'Vehicles' && field === 'id' && value === '1' ? 
               { id: 1, car_name: 'Ferrari 458 Italia' } :
