@@ -13,12 +13,16 @@ import {
 export async function registerRoutes(app: Express): Promise<Server> {
   // Helper function to get AccuWeather API key
   function getAccuWeatherApiKey() {
-    // Try both keys in case one works
-    const newKey = "CvuAGFLFJfRdLdjXG1QawpoWGXF4alyN";
-    const oldKey = "6YVvHqaIpOL72UELtPTIagWC8j5IGjv2";
+    // Use the API key from environment variables
+    const apiKey = process.env.VITE_ACCUWEATHER_API_KEY || "CvuAGFLFJfRdLdjXG1QawpoWGXF4alyN";
     
-    // Let's try the new key first, but return the old one as backup
-    return process.env.VITE_ACCUWEATHER_API_KEY || newKey || oldKey;
+    if (!apiKey) {
+      console.error('No AccuWeather API key found. Check your environment variables.');
+    }
+    
+    // Log the first few characters of the key for debugging
+    console.log(`Using AccuWeather API Key: ${apiKey ? apiKey.substring(0, 5) : 'none'}...`);
+    return apiKey;
   }
   
   // Helper to handle AccuWeather API errors with detailed logging
@@ -667,9 +671,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(500).json({ message: 'AccuWeather API key is not configured' });
       }
       
-      // Use city search API instead of geoposition search
-      // Use Charlotte as the search query since that matches our coordinates
-      const url = `https://dataservice.accuweather.com/locations/v1/cities/search?apikey=${apiKey}&q=Charlotte`;
+      // Use the geoposition search API as shown in the AccuWeather API Reference
+      // This endpoint is preferred for getting location based on coordinates
+      // Use the geoposition search API as shown in the AccuWeather API Flow Diagram
+      const url = `https://dataservice.accuweather.com/locations/v1/cities/geoposition/search?apikey=${apiKey}&q=${lat},${lon}`;
       
       try {
         // Use our helper function for consistent error handling
