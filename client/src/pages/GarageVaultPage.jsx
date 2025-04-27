@@ -73,28 +73,28 @@ function GarageVaultPage() {
     // Example activities based on season
     const seasonalActivities = {
       spring: [
-        { title: 'Interior Detailing', description: 'Focus on your interior while it\'s not too hot outside', priority: 'high' },
-        { title: 'Photo Shoot', description: 'Diffused lighting is perfect for car photography', priority: 'medium' },
-        { title: 'Maintenance Check', description: 'Good time to inspect systems without heat interference', priority: 'high' },
-        { title: 'Paint Correction', description: 'Ideal time to address paint imperfections', priority: 'medium' }
+        { title: "Interior Detailing", description: "Focus on your interior while it's not too hot outside", priority: "high" },
+        { title: "Photo Shoot", description: "Diffused lighting is perfect for car photography", priority: "medium" },
+        { title: "Maintenance Check", description: "Good time to inspect systems without heat interference", priority: "high" },
+        { title: "Paint Correction", description: "Ideal time to address paint imperfections", priority: "medium" }
       ],
       summer: [
-        { title: 'Heat Protection', description: 'Apply UV protection to interior surfaces', priority: 'high' },
-        { title: 'Cooling System Check', description: 'Ensure coolant levels are optimal', priority: 'high' },
-        { title: 'Dawn/Dusk Photo Shoot', description: 'Perfect lighting conditions for showcasing your car', priority: 'medium' },
-        { title: 'Mountain Drive', description: 'Take advantage of clear roads for a scenic drive', priority: 'medium' }
+        { title: "Heat Protection", description: "Apply UV protection to interior surfaces", priority: "high" },
+        { title: "Cooling System Check", description: "Ensure coolant levels are optimal", priority: "high" },
+        { title: "Dawn/Dusk Photo Shoot", description: "Perfect lighting conditions for showcasing your car", priority: "medium" },
+        { title: "Mountain Drive", description: "Take advantage of clear roads for a scenic drive", priority: "medium" }
       ],
       fall: [
-        { title: 'Winter Prep', description: 'Apply paint protection before winter', priority: 'high' },
-        { title: 'Tire Inspection', description: 'Check tread depth for winter readiness', priority: 'high' },
-        { title: 'Fall Colors Drive', description: 'Document your car against autumn landscapes', priority: 'medium' },
-        { title: 'Paint Sealant', description: 'Protect your finish before harsh weather arrives', priority: 'high' }
+        { title: "Winter Prep", description: "Apply paint protection before winter", priority: "high" },
+        { title: "Tire Inspection", description: "Check tread depth for winter readiness", priority: "high" },
+        { title: "Fall Colors Drive", description: "Document your car against autumn landscapes", priority: "medium" },
+        { title: "Paint Sealant", description: "Protect your finish before harsh weather arrives", priority: "high" }
       ],
       winter: [
-        { title: 'Battery Check', description: 'Cold weather affects battery performance', priority: 'high' },
-        { title: 'Undercarriage Protection', description: 'Protect against salt and ice damage', priority: 'medium' },
-        { title: 'Interior Detailing', description: 'Perfect time for deep cleaning while car is used less', priority: 'medium' },
-        { title: 'Snow Photography', description: 'Capture unique winter shots of your vehicle', priority: 'low' }
+        { title: "Battery Check", description: "Cold weather affects battery performance", priority: "high" },
+        { title: "Undercarriage Protection", description: "Protect against salt and ice damage", priority: "medium" },
+        { title: "Interior Detailing", description: "Perfect time for deep cleaning while car is used less", priority: "medium" },
+        { title: "Snow Photography", description: "Capture unique winter shots of your vehicle", priority: "low" }
       ]
     };
     
