@@ -22,6 +22,7 @@ import GlossGrowthPage from "./pages/GlossGrowthPage";
 import VideoLibraryPage from "./pages/VideoLibraryPage";
 import BrokerPortalPage from "./pages/BrokerPortalPage";
 import Weather from "./pages/Weather";
+import WeatherPage from "./pages/WeatherPage";
 import SeasonalChecklistPage from "./pages/SeasonalChecklistPage";
 import EBooksPage from "./pages/eBooksPage";
 import Paddock20HomePage from "./pages/Paddock20HomePage";
