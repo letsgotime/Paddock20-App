@@ -1,3 +1,4 @@
+import PreDriveChecklistPage from './pages/PreDriveChecklistPage';
 import React from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { queryClient } from "./lib/queryClient";
@@ -80,6 +81,7 @@ function App() {
                 <Route path="/broker-portal" element={<ProtectedRoute><BrokerPortalPage /></ProtectedRoute>} />
                 <Route path="/weather" element={<ProtectedRoute><Weather /></ProtectedRoute>} />
                 <Route path="/seasonal-checklist" element={<ProtectedRoute><SeasonalChecklistPage /></ProtectedRoute>} />
+                <Route path="/pre-drive-checklist" element={<ProtectedRoute><PreDriveChecklistPage /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>

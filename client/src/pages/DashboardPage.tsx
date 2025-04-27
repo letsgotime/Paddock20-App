@@ -72,6 +72,11 @@ function DashboardPage() {
             <h2 className="apex-header-green mb-4">Seasonal Adaptation Checklist</h2>
             <p className="text-gray-400">Update your maintenance based on seasons.</p>
           </Link>
+
+          <Link to="/pre-drive-checklist" className="apex-card hover:bg-gray-900 p-6 rounded-lg">
+            <h2 className="apex-header-green mb-4">Pre-Drive Readiness</h2>
+            <p className="text-gray-400">Complete your essential vehicle safety checklist before every drive.</p>
+          </Link>
         </div>
       </div>
     </div>
