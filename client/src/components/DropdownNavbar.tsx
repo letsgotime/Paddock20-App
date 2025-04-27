@@ -34,7 +34,19 @@ const DropdownNavbar = () => {
             <Link to="/manifestation-mod-planner" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>🧭 Manifestation Station & Mod Planner</Link>
             <Link to="/drive-journal" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>📝 Drive Journal</Link>
             <Link to="/hustle-planner" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>🧠 Hustle Planner</Link>
-            <Link to="/juice-box" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>🧼 Juice Box</Link>
+            {/* Juice Box Dropdown */}
+            <div className="relative group">
+              <button className="flex items-center hover:text-green-400 w-full">
+                🧼 Juice Box <span className="ml-2">🔽</span>
+              </button>
+              <div className="absolute left-full ml-2 top-0 hidden group-hover:block bg-gray-900 border border-gray-700 rounded-lg p-4 z-10">
+                <Link to="/juicebox" className="block hover:text-green-400" onClick={() => setIsOpen(false)}>🧪 Detailing Products</Link>
+                <Link to="/juice-loadouts" className="block hover:text-green-400" onClick={() => setIsOpen(false)}>🧰 Loadouts</Link>
+                <Link to="/gloss-growth" className="block hover:text-green-400" onClick={() => setIsOpen(false)}>✨ Gloss Growth</Link>
+                <Link to="/gloss-reset" className="block hover:text-green-400" onClick={() => setIsOpen(false)}>🔄 Gloss Reset</Link>
+                <Link to="/juicebox-videos" className="block hover:text-green-400" onClick={() => setIsOpen(false)}>🎥 Video Library</Link>
+              </div>
+            </div>
 
             {/* Checklists Dropdown */}
             <div className="relative group">
@@ -45,6 +57,7 @@ const DropdownNavbar = () => {
                 <Link to="/checklists/tire" className="block hover:text-green-400" onClick={() => setIsOpen(false)}>🛞 Tire Checklist</Link>
                 <Link to="/checklists/maintenance" className="block hover:text-green-400" onClick={() => setIsOpen(false)}>🛠️ Maintenance Checklist</Link>
                 <Link to="/checklists/pre-drive" className="block hover:text-green-400" onClick={() => setIsOpen(false)}>🛡️ Pre-Drive Checklist</Link>
+                <Link to="/seasonal-checklist" className="block hover:text-green-400" onClick={() => setIsOpen(false)}>🌦️ Seasonal Checklist</Link>
               </div>
             </div>
 
