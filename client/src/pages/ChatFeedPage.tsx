@@ -1,17 +1,27 @@
 import React, { useEffect, useState } from "react";
 import { db } from "@/services/firebaseConfig";
 import { collection, addDoc, onSnapshot, query, orderBy, Timestamp } from "firebase/firestore";
+import { useAuth } from "@/hooks/useAuth";
 
 interface Message {
   id: string;
   text: string;
   createdAt: Timestamp;
-  user: string;
+  userId: string;
+  userEmail?: string;
+  displayName?: string;
 }
 
 const ChatFeedPage = () => {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState("");
+  const { session } = useAuth();
+  
+  // Get current user information
+  const currentUser = session?.user;
+  const userEmail = currentUser?.email || "paddock20@member.com";
+  const userId = currentUser?.id || "anonymous";
+  const displayName = userEmail.split('@')[0] || "Paddock20 Member";
 
   useEffect(() => {
     const q = query(collection(db, "chat-messages"), orderBy("createdAt", "desc"));
@@ -27,7 +37,9 @@ const ChatFeedPage = () => {
     await addDoc(collection(db, "chat-messages"), {
       text: newMessage,
       createdAt: Timestamp.now(),
-      user: "Anonymous", // Later phase: replace with user ID or name
+      userId: userId,
+      userEmail: userEmail,
+      displayName: displayName,
     });
     setNewMessage("");
   };
@@ -52,7 +64,7 @@ const ChatFeedPage = () => {
           <div key={message.id} className="mb-4 p-3 rounded-lg bg-[#0a0a0a] border border-gray-800">
             <div className="flex justify-between items-center mb-2">
               <span className="text-blue-400 text-sm">
-                {message.user}
+                {message.displayName || "Anonymous"}
               </span>
               <span className="text-gray-500 text-xs">
                 {message.createdAt && message.createdAt.toDate 

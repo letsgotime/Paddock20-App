@@ -27,7 +27,7 @@ const DropdownNavbar = () => {
         {isOpen && (
           <div className="absolute right-0 mt-2 w-60 bg-gradient-to-r from-[#111111] to-[#1a1a1a] rounded-lg shadow-lg p-4 space-y-2 z-50 border border-gray-800">
             <Link to="/" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>🏠 Home</Link>
-            <Link to="/weather-center" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>☁️ Weather Center</Link>
+            <Link to="/weather" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>☁️ Weather Center</Link>
             <Link to="/route-planner" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>🛣️ Route Planner</Link>
             <Link to="/events" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>📅 Events & Meetups</Link>
             <Link to="/paddock20-vault" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>🏁 Paddock20 Membership</Link>
