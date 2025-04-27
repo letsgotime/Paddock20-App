@@ -251,12 +251,36 @@ function DropdownNavbar() {
               )}
             </div>
             <Link 
+              to="/manifestation-station" 
+              className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
+              onClick={() => setIsOpen(false)}
+              role="menuitem"
+            >
+              Manifestation Station
+            </Link>
+            <Link 
+              to="/hustle-planner" 
+              className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
+              onClick={() => setIsOpen(false)}
+              role="menuitem"
+            >
+              Hustle Planner
+            </Link>
+            <Link 
               to="/broker-portal" 
               className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
               onClick={() => setIsOpen(false)}
               role="menuitem"
             >
               Broker Portal
+            </Link>
+            <Link 
+              to="/paddock20-membership" 
+              className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans font-bold"
+              onClick={() => setIsOpen(false)}
+              role="menuitem"
+            >
+              Paddock20 Membership
             </Link>
             <Link 
               to="/settings" 

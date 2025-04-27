@@ -44,11 +44,11 @@ function JuiceBoxCodexViewer({ onAddProduct }: JuiceBoxCodexViewerProps) {
 
   return (
     <div className="apex-card">
-      <h2 className="apex-header-green mb-6 text-center">GoTime Juice Box™ Codex</h2>
+      <h2 className="apex-header-green mb-6 text-center">GoTime Juice Box™ Product Guide</h2>
 
       {isLoading && (
         <div className="text-center py-8">
-          <p className="text-gray-400">Loading Juice Box Codex...</p>
+          <p className="text-gray-400">Loading Juice Box Products...</p>
         </div>
       )}
 
@@ -56,7 +56,7 @@ function JuiceBoxCodexViewer({ onAddProduct }: JuiceBoxCodexViewerProps) {
         <div className="text-center py-8">
           <p className="text-red-500">{error}</p>
           <p className="text-gray-400 mt-2">
-            The Codex will be available soon. In the meantime, you can browse our other categories.
+            The Product Guide will be available soon. In the meantime, you can browse our other categories.
           </p>
         </div>
       )}
