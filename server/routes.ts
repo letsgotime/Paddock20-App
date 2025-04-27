@@ -700,6 +700,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // AccuWeather Hourly Forecast
+  app.get('/api/accuweather/hourly-forecast/:locationKey', async (req, res) => {
+    try {
+      const { locationKey } = req.params;
+      
+      if (!locationKey) {
+        return res.status(400).json({ message: 'Location key is required' });
+      }
+
+      const apiKey = process.env.VITE_ACCUWEATHER_API_KEY;
+      
+      if (!apiKey) {
+        return res.status(500).json({ message: 'AccuWeather API key is not configured' });
+      }
+      
+      const url = `https://dataservice.accuweather.com/forecasts/v1/hourly/12hour/${locationKey}?apikey=${apiKey}&details=true`;
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`AccuWeather Hourly Forecast API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ message: (error as Error).message || 'Failed to fetch AccuWeather hourly forecast' });
+    }
+  });
+
+  // AccuWeather Indices for driving conditions
+  app.get('/api/accuweather/indices/:locationKey', async (req, res) => {
+    try {
+      const { locationKey } = req.params;
+      
+      if (!locationKey) {
+        return res.status(400).json({ message: 'Location key is required' });
+      }
+
+      const apiKey = process.env.VITE_ACCUWEATHER_API_KEY;
+      
+      if (!apiKey) {
+        return res.status(500).json({ message: 'AccuWeather API key is not configured' });
+      }
+      
+      const url = `https://dataservice.accuweather.com/indices/v1/daily/1day/${locationKey}?apikey=${apiKey}`;
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`AccuWeather Indices API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ message: (error as Error).message || 'Failed to fetch AccuWeather indices' });
+    }
+  });
+
   // AccuWeather MinuteCast
   app.get('/api/accuweather/minutecast/:locationKey', async (req, res) => {
     try {
@@ -732,6 +790,64 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
     } catch (error) {
       res.status(500).json({ message: (error as Error).message || 'Failed to fetch AccuWeather minute forecast' });
+    }
+  });
+
+  // AccuWeather Location API to get location key
+  app.get('/api/accuweather/location', async (req, res) => {
+    try {
+      const { lat, lon } = req.query;
+      
+      if (!lat || !lon) {
+        return res.status(400).json({ message: 'Latitude and longitude are required' });
+      }
+
+      const apiKey = process.env.VITE_ACCUWEATHER_API_KEY;
+      
+      if (!apiKey) {
+        return res.status(500).json({ message: 'AccuWeather API key is not configured' });
+      }
+      
+      const url = `https://dataservice.accuweather.com/locations/v1/cities/geoposition/search?apikey=${apiKey}&q=${lat},${lon}&details=true`;
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`AccuWeather Location API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ message: (error as Error).message || 'Failed to fetch AccuWeather location data' });
+    }
+  });
+
+  // AccuWeather Current Conditions
+  app.get('/api/accuweather/current-conditions/:locationKey', async (req, res) => {
+    try {
+      const { locationKey } = req.params;
+      
+      if (!locationKey) {
+        return res.status(400).json({ message: 'Location key is required' });
+      }
+
+      const apiKey = process.env.VITE_ACCUWEATHER_API_KEY;
+      
+      if (!apiKey) {
+        return res.status(500).json({ message: 'AccuWeather API key is not configured' });
+      }
+      
+      const url = `https://dataservice.accuweather.com/currentconditions/v1/${locationKey}?apikey=${apiKey}&details=true`;
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`AccuWeather Current Conditions API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ message: (error as Error).message || 'Failed to fetch AccuWeather current conditions' });
     }
   });
 

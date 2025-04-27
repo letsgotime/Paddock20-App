@@ -1,314 +1,200 @@
-import React, { useEffect, useState } from "react";
-import { getLocationKey, fetchCurrentConditions, fetchDailyForecast, fetchMinuteCast } from "@/services/accuweatherService";
-import { useWeather } from '@/contexts/WeatherContext';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { AlertCircle, Droplets, Sun, Thermometer, Wind, CloudRain, Clock, Shield, CarFront } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { CarFront, Wind, Droplets, ThermometerSun, AlertTriangle, Sun, CloudRain } from 'lucide-react';
+import { getLocationKey, fetchCurrentConditions, fetchDailyForecast, fetchMinuteCast, fetchHourlyForecast, fetchDrivingIndices } from '../services/accuweatherService';
 
-// Specialized driving-focused weather component using AccuWeather
-export function DrivingWeatherInsights() {
-  const { selectedLocation } = useWeather();
-  const [accuCurrentConditions, setAccuCurrentConditions] = useState<any>(null);
-  const [accuDailyForecast, setAccuDailyForecast] = useState<any>(null);
-  const [accuMinuteCast, setAccuMinuteCast] = useState<any>(null);
+interface DrivingWeatherInsightsProps {
+  latitude: number;
+  longitude: number;
+}
+
+export function DrivingWeatherInsights({ latitude, longitude }: DrivingWeatherInsightsProps) {
   const [locationKey, setLocationKey] = useState<string | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [currentConditions, setCurrentConditions] = useState<any>(null);
+  const [forecast, setForecast] = useState<any>(null);
+  const [minutecast, setMinutecast] = useState<any>(null);
+  const [hourlyForecast, setHourlyForecast] = useState<any[]>([]);
+  const [drivingIndices, setDrivingIndices] = useState<any[]>([]);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     async function fetchAccuWeatherData() {
-      if (!selectedLocation) return;
+      if (!latitude || !longitude) return;
+      
+      setLoading(true);
+      setError(null);
       
       try {
-        setLoading(true);
-        
-        // Step 1: Get the AccuWeather location key for the selected location
-        const key = await getLocationKey(selectedLocation.lat, selectedLocation.lon);
+        // Get AccuWeather location key first
+        const key = await getLocationKey(latitude, longitude);
         setLocationKey(key);
         
-        // Step 2: Get the current conditions, forecast, and minutecast
-        const [current, forecast, minute] = await Promise.all([
-          fetchCurrentConditions(key),
-          fetchDailyForecast(key),
-          fetchMinuteCast(key)
-        ]);
-        
-        setAccuCurrentConditions(current);
-        setAccuDailyForecast(forecast);
-        setAccuMinuteCast(minute);
-        setLoading(false);
+        if (key) {
+          // Fetch all needed data in parallel
+          const [conditions, dailyForecast, minuteData, hourlyData, indices] = await Promise.all([
+            fetchCurrentConditions(key),
+            fetchDailyForecast(key),
+            fetchMinuteCast(key).catch(() => ({ Summary: "Minute forecast not available for your location" })),
+            fetchHourlyForecast(key).catch(() => []),
+            fetchDrivingIndices(key).catch(() => [])
+          ]);
+          
+          setCurrentConditions(conditions);
+          setForecast(dailyForecast);
+          setMinutecast(minuteData);
+          setHourlyForecast(hourlyData);
+          setDrivingIndices(indices);
+        }
       } catch (err) {
-        console.error("Error fetching AccuWeather data:", err);
-        setError("Could not load enhanced driving data. Using standard weather information.");
+        console.error('Error fetching AccuWeather data:', err);
+        setError('Unable to fetch enhanced driving weather data. Using standard forecast.');
+      } finally {
         setLoading(false);
       }
     }
-    
+
     fetchAccuWeatherData();
-  }, [selectedLocation]);
+  }, [latitude, longitude]);
 
   if (loading) {
-    return (
-      <Card className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] border-gray-800">
-        <CardContent className="p-6">
-          <div className="flex items-center space-x-2">
-            <CarFront className="h-6 w-6 text-blue-400" />
-            <h2 className="text-xl font-medium text-blue-400">Loading Driving Intelligence...</h2>
-          </div>
-          <div className="mt-4 h-32 flex items-center justify-center">
-            <div className="animate-pulse flex flex-col items-center">
-              <div className="h-10 w-10 rounded-full bg-blue-400/30 mb-3"></div>
-              <div className="h-4 w-36 bg-gray-700 rounded mb-2"></div>
-              <div className="h-3 w-24 bg-gray-700/70 rounded"></div>
-            </div>
-          </div>
-        </CardContent>
-      </Card>
-    );
+    return <div className="mt-4 p-4 rounded-lg bg-black/20 animate-pulse h-40"></div>;
   }
 
   if (error) {
     return (
-      <Card className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] border-gray-800">
-        <CardContent className="p-6">
-          <div className="flex items-center space-x-2">
-            <CarFront className="h-6 w-6 text-blue-400" />
-            <h2 className="text-xl font-medium text-blue-400">Driving Intelligence</h2>
-          </div>
-          <div className="mt-4 flex flex-col items-center">
-            <AlertCircle className="h-10 w-10 text-yellow-500 mb-3" />
-            <p className="text-gray-300">{error}</p>
-          </div>
-        </CardContent>
-      </Card>
+      <div className="mt-4 p-4 rounded-lg bg-black/20 border border-red-500/30">
+        <div className="flex items-center text-red-400 mb-2">
+          <AlertTriangle size={18} className="mr-2" />
+          <span>Enhanced driving forecast unavailable</span>
+        </div>
+        <p className="text-sm text-gray-400">Using standard weather forecast instead.</p>
+      </div>
     );
   }
 
-  if (!accuCurrentConditions) return null;
+  // If no data is available yet, don't render
+  if (!currentConditions) {
+    return null;
+  }
 
-  // Calculate tire grip based on weather
-  const calculateTireGrip = () => {
-    const temp = accuCurrentConditions.Temperature.Imperial.Value;
-    const hasRain = accuCurrentConditions.HasPrecipitation && 
-                   accuCurrentConditions.PrecipitationType === "Rain";
-    const hasSnow = accuCurrentConditions.HasPrecipitation && 
-                   accuCurrentConditions.PrecipitationType === "Snow";
-    
-    if (hasSnow) return { level: "Extremely Low", color: "text-red-600" };
-    if (hasRain) return { level: "Low", color: "text-red-500" };
-    
-    if (temp < 45) return { level: "Reduced", color: "text-yellow-500" };
-    if (temp > 95) return { level: "Reduced", color: "text-yellow-500" };
-    
-    return { level: "Optimal", color: "text-green-500" };
-  };
+  // Extract relevant driving data
+  const roadTemp = currentConditions.RoadSurface?.Temperature?.Metric?.Value || 
+                  currentConditions.Temperature?.Metric?.Value || '—';
+                  
+  const humidity = currentConditions.RelativeHumidity || '—';
+  const uvIndex = currentConditions.UVIndex || '—';
+  const visibility = currentConditions.Visibility?.Metric?.Value || '—';
+  const visibilityUnit = currentConditions.Visibility?.Metric?.Unit || 'km';
+  const windGust = currentConditions.WindGust?.Speed?.Metric?.Value || '—';
+  const windGustUnit = currentConditions.WindGust?.Speed?.Metric?.Unit || 'km/h';
+  const precipitation1hr = currentConditions.Precip1hr?.Metric?.Value || 0;
+  
+  // Get driving index and road construction index if available
+  const drivingIndex = drivingIndices.find(idx => idx.ID === 1);
+  const roadConstructionIndex = drivingIndices.find(idx => idx.ID === 10);
 
-  // Calculate visibility conditions
-  const calculateVisibility = () => {
-    const visibility = accuCurrentConditions.Visibility.Imperial.Value;
-    const weatherText = accuCurrentConditions.WeatherText.toLowerCase();
-    
-    if (weatherText.includes("fog") || weatherText.includes("mist") || visibility < 1) {
-      return { level: "Poor", color: "text-red-500" };
-    }
-    
-    if (weatherText.includes("haze") || visibility < 3) {
-      return { level: "Moderate", color: "text-yellow-500" };
-    }
-    
-    return { level: "Good", color: "text-green-500" };
-  };
-
-  // Calculate road conditions
-  const calculateRoadConditions = () => {
-    const weatherText = accuCurrentConditions.WeatherText.toLowerCase();
-    const hasPrecipitation = accuCurrentConditions.HasPrecipitation;
-    
-    if (weatherText.includes("snow") || weatherText.includes("ice") || 
-        (hasPrecipitation && accuCurrentConditions.PrecipitationType === "Snow")) {
-      return { level: "Hazardous", color: "text-red-600", icon: <AlertCircle className="h-5 w-5" /> };
-    }
-    
-    if (weatherText.includes("rain") || weatherText.includes("drizzle") || 
-        (hasPrecipitation && accuCurrentConditions.PrecipitationType === "Rain")) {
-      return { level: "Wet", color: "text-yellow-500", icon: <Droplets className="h-5 w-5" /> };
-    }
-    
-    return { level: "Dry", color: "text-green-500", icon: <CarFront className="h-5 w-5" /> };
-  };
-
-  // Overall driving assessment
-  const getDrivingAssessment = () => {
-    const tireGrip = calculateTireGrip();
-    const visibility = calculateVisibility();
-    const roadConditions = calculateRoadConditions();
-    
-    // Poor conditions in any category means caution is needed
-    if (tireGrip.level === "Extremely Low" || visibility.level === "Poor" || roadConditions.level === "Hazardous") {
-      return { 
-        level: "High Risk", 
-        color: "text-red-500", 
-        icon: <AlertCircle className="h-5 w-5" />,
-        description: "Consider postponing non-essential drives. Extreme caution required."
-      };
-    }
-    
-    if (tireGrip.level === "Low" || tireGrip.level === "Reduced" || 
-        visibility.level === "Moderate" || roadConditions.level === "Wet") {
-      return { 
-        level: "Exercise Caution", 
-        color: "text-yellow-500", 
-        icon: <Shield className="h-5 w-5" />,
-        description: "Adjust driving style, increase following distances, and reduce speed."
-      };
-    }
-    
-    return { 
-      level: "Favorable", 
-      color: "text-green-500", 
-      icon: <CarFront className="h-5 w-5" />,
-      description: "Excellent conditions for driving. Enjoy your journey."
-    };
-  };
-
-  const tireGrip = calculateTireGrip();
-  const visibility = calculateVisibility();
-  const roadConditions = calculateRoadConditions();
-  const drivingAssessment = getDrivingAssessment();
-
-  const formatSunTimes = () => {
-    if (!accuDailyForecast || !accuDailyForecast.Sun) return { rise: "N/A", set: "N/A" };
-    
-    const formatTime = (dateString: string) => {
-      const date = new Date(dateString);
-      return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    };
-    
-    return {
-      rise: formatTime(accuDailyForecast.Sun.Rise),
-      set: formatTime(accuDailyForecast.Sun.Set)
-    };
-  };
-
-  const sunTimes = formatSunTimes();
+  // Get minute cast precipitation probability
+  const precipProbability = minutecast?.PrecipitationProbability || '—';
 
   return (
-    <Card className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] border-gray-800">
-      <CardHeader className="pb-2">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center space-x-2">
-            <CarFront className="h-6 w-6 text-blue-400" />
-            <CardTitle className="text-blue-400">Paddock20™ Driving Intelligence</CardTitle>
-          </div>
-          <Badge variant="outline" className="ml-2 bg-blue-900/20 text-blue-300 border-blue-800">
-            AccuWeather
-          </Badge>
+    <div className="mt-4 p-4 rounded-lg bg-gradient-to-br from-gray-900 to-black border border-blue-500/20">
+      <h2 className="text-blue-500 font-semibold text-lg mb-4 flex items-center">
+        <CarFront size={18} className="mr-2" /> 
+        Driving Conditions
+      </h2>
+      
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+        <div className="bg-black/30 p-3 rounded-lg">
+          <p className="text-gray-400 text-xs mb-1 flex items-center">
+            <ThermometerSun size={14} className="mr-1 text-orange-400" /> Road Temp
+          </p>
+          <p className="text-white font-mono">{roadTemp}°C</p>
         </div>
-        <CardDescription>
-          Enhanced weather insights for driving enthusiasts
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="pt-2">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
-          <div className="flex flex-col bg-black/20 rounded-lg p-4">
-            <h3 className="text-lg font-medium text-blue-300 mb-2">Current Surface Conditions</h3>
-            <div className="grid grid-cols-2 gap-3">
-              <div className="flex items-center">
-                <Thermometer className="text-red-400 h-5 w-5 mr-2" />
-                <div>
-                  <p className="text-xs text-gray-400">Surface Temp</p>
-                  <p className="text-white">{accuCurrentConditions.Temperature.Imperial.Value}°F</p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <Wind className="text-blue-400 h-5 w-5 mr-2" />
-                <div>
-                  <p className="text-xs text-gray-400">Wind</p>
-                  <p className="text-white">{accuCurrentConditions.Wind.Speed.Imperial.Value} mph</p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <Droplets className="text-blue-400 h-5 w-5 mr-2" />
-                <div>
-                  <p className="text-xs text-gray-400">Humidity</p>
-                  <p className="text-white">{accuCurrentConditions.RelativeHumidity}%</p>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <Sun className="text-yellow-400 h-5 w-5 mr-2" />
-                <div>
-                  <p className="text-xs text-gray-400">UV Index</p>
-                  <p className="text-white">{accuCurrentConditions.UVIndex} - {accuCurrentConditions.UVIndexText}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-black/20 rounded-lg p-4">
-            <h3 className="text-lg font-medium text-blue-300 mb-2">Drive Risk Assessment</h3>
-            <div className="flex flex-col space-y-2">
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">Tire Grip:</span>
-                <span className={`font-medium ${tireGrip.color}`}>{tireGrip.level}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">Visibility:</span>
-                <span className={`font-medium ${visibility.color}`}>{visibility.level}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-gray-400">Road Surface:</span>
-                <span className={`font-medium ${roadConditions.color}`}>{roadConditions.level}</span>
-              </div>
-            </div>
+        
+        <div className="bg-black/30 p-3 rounded-lg">
+          <p className="text-gray-400 text-xs mb-1 flex items-center">
+            <Droplets size={14} className="mr-1 text-blue-400" /> Humidity
+          </p>
+          <p className="text-white font-mono">{humidity}%</p>
+        </div>
+        
+        <div className="bg-black/30 p-3 rounded-lg">
+          <p className="text-gray-400 text-xs mb-1 flex items-center">
+            <Sun size={14} className="mr-1 text-yellow-400" /> UV Index
+          </p>
+          <p className="text-white font-mono">{uvIndex}</p>
+        </div>
+        
+        <div className="bg-black/30 p-3 rounded-lg">
+          <p className="text-gray-400 text-xs mb-1 flex items-center">
+            <Wind size={14} className="mr-1 text-blue-400" /> Wind Gust
+          </p>
+          <p className="text-white font-mono">{windGust} {windGustUnit}</p>
+        </div>
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div className="bg-black/30 p-3 rounded-lg">
+          <p className="text-gray-400 text-xs mb-1 flex items-center">
+            <CloudRain size={14} className="mr-1 text-blue-400" /> Precipitation Chance
+          </p>
+          <p className="text-white font-mono">{precipProbability}%</p>
+          <div className="mt-2 text-xs text-gray-400">
+            {precipitation1hr > 0 ? (
+              <span>Active precipitation: {precipitation1hr} mm in last hour</span>
+            ) : (
+              <span>No active precipitation</span>
+            )}
           </div>
         </div>
-
-        {accuMinuteCast && accuMinuteCast.Summary && (
-          <div className="bg-blue-900/20 border border-blue-800/30 rounded-lg p-3 mb-4">
-            <div className="flex items-center">
-              <Clock className="h-5 w-5 text-blue-400 mr-2" />
-              <h3 className="text-blue-300 font-medium">Precipitation Forecast</h3>
-            </div>
-            <p className="text-gray-300 text-sm mt-1">{accuMinuteCast.Summary}</p>
-          </div>
-        )}
-
-        <div className="bg-gray-800/30 p-4 rounded-lg border border-gray-700 mt-4">
-          <div className="flex items-center space-x-2 mb-2">
-            {drivingAssessment.icon}
-            <h3 className={`text-lg font-medium ${drivingAssessment.color}`}>
-              {drivingAssessment.level} Driving Conditions
-            </h3>
-          </div>
-          <p className="text-gray-300">{drivingAssessment.description}</p>
-          
-          <Separator className="my-3 bg-gray-700" />
-          
-          <div className="flex flex-wrap justify-between text-sm mt-2">
-            <div className="flex items-center space-x-1">
-              <Sun className="h-4 w-4 text-yellow-400" />
-              <span className="text-gray-400">Sunrise: </span>
-              <span className="text-white">{sunTimes.rise}</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <Sun className="h-4 w-4 text-orange-400" />
-              <span className="text-gray-400">Sunset: </span>
-              <span className="text-white">{sunTimes.set}</span>
-            </div>
-            <div className="flex items-center space-x-1">
-              <CloudRain className="h-4 w-4 text-blue-400" />
-              <span className="text-gray-400">Precipitation: </span>
-              <span className="text-white">
-                {accuCurrentConditions.HasPrecipitation 
-                  ? `${accuCurrentConditions.PrecipitationType}${accuCurrentConditions.PrecipitationIntensity ? ` (${accuCurrentConditions.PrecipitationIntensity})` : ''}`
-                  : "None"}
+        
+        <div className="bg-black/30 p-3 rounded-lg">
+          <p className="text-gray-400 text-xs mb-1">Driving Conditions</p>
+          <p className="text-white font-mono">
+            {drivingIndex ? (
+              <span 
+                className={
+                  drivingIndex.Category === 'Good' ? 'text-green-500' : 
+                  drivingIndex.Category === 'Fair' ? 'text-yellow-500' : 
+                  'text-red-500'
+                }
+              >
+                {drivingIndex.Category || 'Unknown'}
               </span>
-            </div>
+            ) : (
+              'No data available'
+            )}
+          </p>
+          <div className="mt-2 text-xs text-gray-400">
+            Visibility: {visibility} {visibilityUnit}
           </div>
         </div>
-      </CardContent>
-    </Card>
+      </div>
+      
+      {minutecast && minutecast.Summary && minutecast.Summary !== "Minute forecast not available for your location" && (
+        <div className="mt-4 p-3 bg-black/30 rounded-lg">
+          <p className="text-gray-400 text-xs mb-1">Next Hour Precipitation</p>
+          <p className="text-white text-sm">{minutecast.Summary}</p>
+        </div>
+      )}
+      
+      {roadConstructionIndex && (
+        <div className="mt-4 p-3 bg-black/30 rounded-lg">
+          <p className="text-gray-400 text-xs mb-1">Road Construction</p>
+          <p className="text-white text-sm">
+            <span 
+              className={
+                roadConstructionIndex.Category === 'Low' ? 'text-green-500' : 
+                roadConstructionIndex.Category === 'Medium' ? 'text-yellow-500' : 
+                'text-red-500'
+              }
+            >
+              {roadConstructionIndex.Category || 'Unknown'} - {roadConstructionIndex.Text}
+            </span>
+          </p>
+        </div>
+      )}
+    </div>
   );
 }
 
