@@ -22,6 +22,7 @@ import BrokerPortalPage from "./pages/BrokerPortalPage";
 import Weather from "./pages/Weather";
 import SeasonalChecklistPage from "./pages/SeasonalChecklistPage";
 import DropdownNavbar from "./components/DropdownNavbar";
+import HorizontalNavbar from "./components/HorizontalNavbar";
 import { WeatherProvider } from "./contexts/WeatherContext";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
