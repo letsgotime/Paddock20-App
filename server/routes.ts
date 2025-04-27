@@ -20,7 +20,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Latitude and longitude are required' });
       }
 
-      const apiKey = process.env.OPENWEATHER_API_KEY || "default_key";
+      const apiKey = process.env.OPENWEATHER_API_KEY || "2379a18ee0e478c88aa7d4aa1df44410";
       const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=${units || 'metric'}&appid=${apiKey}`;
       
       const response = await fetch(url);
@@ -43,7 +43,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Latitude and longitude are required' });
       }
 
-      const apiKey = process.env.OPENWEATHER_API_KEY || "default_key";
+      const apiKey = process.env.OPENWEATHER_API_KEY || "2379a18ee0e478c88aa7d4aa1df44410";
       const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=${units || 'metric'}&appid=${apiKey}`;
       
       const response = await fetch(url);
@@ -67,8 +67,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Latitude and longitude are required' });
       }
 
-      const apiKey = process.env.OPENWEATHER_API_KEY || "default_key";
-      let url = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&units=${units || 'metric'}&appid=${apiKey}`;
+      const apiKey = process.env.OPENWEATHER_API_KEY || "2379a18ee0e478c88aa7d4aa1df44410";
+      let url = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&units=${units || 'metric'}&appid=${apiKey}`;
       
       // Add exclude parameter if provided
       if (exclude) {
@@ -95,7 +95,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Query parameter is required' });
       }
 
-      const apiKey = process.env.OPENWEATHER_API_KEY || "default_key";
+      const apiKey = process.env.OPENWEATHER_API_KEY || "2379a18ee0e478c88aa7d4aa1df44410";
       const url = `https://api.openweathermap.org/geo/1.0/direct?q=${q}&limit=1&appid=${apiKey}`;
       
       const response = await fetch(url);
