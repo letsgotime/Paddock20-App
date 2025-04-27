@@ -234,7 +234,7 @@ function WeatherMoodEmoji({ weatherCondition, isNight }) {
       {/* Suggested Activities */}
       <div className="mt-6 w-full max-w-lg">
         <h3 className="text-green-500 font-orbitron text-lg mb-3">SUGGESTED ACTIVITIES</h3>
-        <ul className="bg-gray-800 rounded-lg p-4 text-left">
+        <ul className="bg-gray-900 bg-opacity-95 rounded-lg p-4 text-left shadow-lg" style={{ background: 'linear-gradient(45deg, #111111, #1a1a1a)' }}>
           {mood.activities.map((activity, index) => (
             <li key={index} className="text-gray-300 mb-2 flex items-start">
               <span className="text-green-400 mr-2">→</span>
