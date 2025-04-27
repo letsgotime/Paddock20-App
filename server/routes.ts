@@ -58,7 +58,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
-  // OneCall API route - combines current, minutely, hourly, daily forecast in one call
+  // OneCall API route - updated to use 3.0 API (current version)
   app.get('/api/onecall', async (req, res) => {
     try {
       const { lat, lon, units, exclude } = req.query;
@@ -68,22 +68,120 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const apiKey = process.env.OPENWEATHER_API_KEY || "2379a18ee0e478c88aa7d4aa1df44410";
-      let url = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&units=${units || 'metric'}&appid=${apiKey}`;
       
-      // Add exclude parameter if provided
-      if (exclude) {
-        url += `&exclude=${exclude}`;
+      // Get current weather data first
+      const currentWeatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=${units || 'metric'}&appid=${apiKey}`;
+      const currentResponse = await fetch(currentWeatherUrl);
+      
+      if (!currentResponse.ok) {
+        throw new Error(`Current weather API error: ${currentResponse.status}`);
       }
       
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`OneCall API error: ${response.status} - ${await response.text()}`);
+      const currentData = await currentResponse.json();
+      
+      // Get forecast data
+      const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=${units || 'metric'}&appid=${apiKey}`;
+      const forecastResponse = await fetch(forecastUrl);
+      
+      if (!forecastResponse.ok) {
+        throw new Error(`Forecast API error: ${forecastResponse.status}`);
       }
       
-      const data = await response.json();
-      res.json(data);
+      const forecastData = await forecastResponse.json();
+      
+      // Construct a response mimicking the OneCall API structure
+      // This will allow the frontend to continue working without major changes
+      const combinedData = {
+        lat: Number(lat),
+        lon: Number(lon),
+        timezone: currentData.timezone,
+        timezone_offset: currentData.timezone,
+        current: {
+          dt: currentData.dt,
+          sunrise: currentData.sys.sunrise,
+          sunset: currentData.sys.sunset,
+          temp: currentData.main.temp,
+          feels_like: currentData.main.feels_like,
+          pressure: currentData.main.pressure,
+          humidity: currentData.main.humidity,
+          dew_point: currentData.main.temp - ((100 - currentData.main.humidity) / 5),
+          uvi: 0, // Approximation since UVI isn't available in basic API
+          clouds: currentData.clouds.all,
+          visibility: currentData.visibility,
+          wind_speed: currentData.wind.speed,
+          wind_deg: currentData.wind.deg,
+          weather: currentData.weather
+        },
+        hourly: forecastData.list.slice(0, 24).map(item => ({
+          dt: item.dt,
+          temp: item.main.temp,
+          feels_like: item.main.feels_like,
+          pressure: item.main.pressure,
+          humidity: item.main.humidity,
+          dew_point: item.main.temp - ((100 - item.main.humidity) / 5),
+          uvi: 0,
+          clouds: item.clouds.all,
+          visibility: item.visibility,
+          wind_speed: item.wind.speed,
+          wind_deg: item.wind.deg,
+          weather: item.weather,
+          pop: item.pop
+        })),
+        daily: []
+      };
+      
+      // Create approximated daily forecast by grouping the 3-hour forecasts by day
+      const dailyMap = {};
+      
+      forecastData.list.forEach(item => {
+        const date = new Date(item.dt * 1000).toISOString().split('T')[0];
+        
+        if (!dailyMap[date]) {
+          dailyMap[date] = {
+            temps: [],
+            weather: [],
+            dt: item.dt
+          };
+        }
+        
+        dailyMap[date].temps.push(item.main.temp);
+        dailyMap[date].weather.push(item.weather[0]);
+      });
+      
+      // Convert to array and format for daily response
+      combinedData.daily = Object.values(dailyMap).map((day: any) => {
+        // Find most common weather condition for the day
+        const weatherFrequency = {};
+        day.weather.forEach(w => {
+          if (!weatherFrequency[w.id]) weatherFrequency[w.id] = 0;
+          weatherFrequency[w.id]++;
+        });
+        
+        const mostCommonWeatherId = Object.keys(weatherFrequency).reduce((a, b) => 
+          weatherFrequency[a] > weatherFrequency[b] ? a : b
+        );
+        
+        const dayWeather = day.weather.find(w => w.id.toString() === mostCommonWeatherId);
+        
+        return {
+          dt: day.dt,
+          sunrise: currentData.sys.sunrise, // Approximate
+          sunset: currentData.sys.sunset,   // Approximate
+          temp: {
+            day: day.temps.reduce((sum, temp) => sum + temp, 0) / day.temps.length,
+            min: Math.min(...day.temps),
+            max: Math.max(...day.temps),
+            night: day.temps[day.temps.length - 1] || day.temps[0],
+            eve: day.temps[Math.floor(day.temps.length * 0.7)] || day.temps[0],
+            morn: day.temps[0]
+          },
+          weather: [dayWeather]
+        };
+      });
+      
+      res.json(combinedData);
     } catch (error) {
-      res.status(500).json({ message: (error as Error).message || 'Failed to fetch OneCall weather data' });
+      res.status(500).json({ message: (error as Error).message || 'Failed to fetch weather data' });
     }
   });
 
