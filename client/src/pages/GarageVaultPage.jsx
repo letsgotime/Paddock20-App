@@ -91,16 +91,17 @@ function GarageVaultPage() {
               </p>
               
               {/* VIN Decoded Information */}
-              {vinInfo[vehicle.vin] && (
-                <div className="mt-2 mb-3 bg-gray-900 p-3 rounded border border-green-800" aria-label="Decoded VIN Information">
-                  <h4 className="text-green-400 text-sm font-bold mb-2">VIN Decoded Information:</h4>
-                  <ul className="text-sm space-y-1">
-                    <li className="text-white">Manufacturer: {vinInfo[vehicle.vin].manufacturer}</li>
-                    <li className="text-white">Model: {vinInfo[vehicle.vin].model}</li>
-                    <li className="text-white">Year: {vinInfo[vehicle.vin].year}</li>
-                    <li className="text-white">Engine: {vinInfo[vehicle.vin].engine}</li>
-                    <li className="text-white">Transmission: {vinInfo[vehicle.vin].transmission}</li>
-                  </ul>
+              {decodedData[vehicle.vin] && (
+                <div className="mt-4 text-sm text-white bg-black p-4 rounded-lg" aria-label="Decoded VIN Information">
+                  <h4 className="text-blue-400 font-orbitron mb-2">VIN Decoded Details:</h4>
+                  {decodedData[vehicle.vin].slice(0, 8).map((field, index) => (
+                    <div key={index} className="mb-1">
+                      <strong>{field.Variable}:</strong> {field.Value}
+                    </div>
+                  ))}
+                  {decodedData[vehicle.vin].length > 8 && (
+                    <p className="text-blue-400 text-xs mt-2">More available, expand feature coming Phase 7!</p>
+                  )}
                 </div>
               )}
               
