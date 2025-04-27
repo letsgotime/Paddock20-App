@@ -198,7 +198,7 @@ function WeatherMoodGenerator() {
       <div className="mb-6">
         <h3 className="text-blue-400 font-orbitron text-xl mb-2">{weatherMoods[weatherMood]?.title}</h3>
         <p className="text-gray-300">
-          {weatherData?.weather?.[0]?.description} • {Math.round(weatherData?.main?.temp)}°F
+          {weatherData?.weather?.[0]?.description} • {weatherData?.main?.temp ? Math.round(weatherData.main.temp) : '--'}°F
         </p>
       </div>
 
