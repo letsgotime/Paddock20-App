@@ -5,6 +5,8 @@ import { Link } from 'react-router-dom';
 function GarageVaultPage() {
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [decodedData, setDecodedData] = useState({});
+  const [decoding, setDecoding] = useState(false);
 
   useEffect(() => {
     async function fetchVehicles() {
@@ -21,12 +23,47 @@ function GarageVaultPage() {
     }
     fetchVehicles();
   }, []);
+  
+  // Function to handle VIN decoding
+  const handleVinDecode = async (vin) => {
+    setDecoding(true);
+    try {
+      const response = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinExtended/${vin}?format=json`);
+      const result = await response.json();
+      const usefulData = result.Results.filter(item => item.Value && item.Variable !== "Error Code");
+      
+      setDecodedData(prev => ({
+        ...prev,
+        [vin]: usefulData
+      }));
+      
+      // Announce to screen readers
+      const announcer = document.getElementById('announcer');
+      if (announcer) {
+        const makeModel = usefulData.find(item => item.Variable === "Make")?.Value + ' ' + 
+                         usefulData.find(item => item.Variable === "Model")?.Value;
+        announcer.textContent = `VIN has been successfully decoded for ${makeModel || 'your vehicle'}`;
+      }
+    } catch (error) {
+      console.error('Error decoding VIN:', error.message);
+      // Announce error to screen readers
+      const announcer = document.getElementById('announcer');
+      if (announcer) {
+        announcer.textContent = `Error decoding VIN. Please try again later.`;
+      }
+    } finally {
+      setDecoding(false);
+    }
+  };
 
   return (
     <div className="p-10 bg-black min-h-screen" aria-labelledby="garageVaultHeading">
       <h2 id="garageVaultHeading" className="apex-header-green mb-8 text-center">
         Garage Vault | Vehicles & Builds
       </h2>
+      
+      {/* Screen reader announcer */}
+      <div id="announcer" className="sr-only" aria-live="polite"></div>
 
       {loading ? (
         <p className="text-gray-400 text-center" role="status" aria-live="polite">
@@ -39,7 +76,34 @@ function GarageVaultPage() {
               <h3 id={`vehicle-${index}-heading`} className="text-blue-400 font-orbitron text-lg mb-2">
                 {vehicle.car_name}
               </h3>
-              <p className="text-white mb-1">VIN: {vehicle.vin || "N/A"}</p>
+              <p className="text-white mb-1">
+                VIN: {vehicle.vin || "N/A"}
+                {vehicle.vin && (
+                  <button
+                    onClick={() => handleVinDecode(vehicle.vin)}
+                    className="apex-button ml-3 text-sm py-1"
+                    aria-label={`Decode VIN for ${vehicle.car_name}`}
+                    disabled={decoding}
+                  >
+                    {decoding ? 'Decoding...' : 'Decode VIN'}
+                  </button>
+                )}
+              </p>
+              
+              {/* VIN Decoded Information */}
+              {vinInfo[vehicle.vin] && (
+                <div className="mt-2 mb-3 bg-gray-900 p-3 rounded border border-green-800" aria-label="Decoded VIN Information">
+                  <h4 className="text-green-400 text-sm font-bold mb-2">VIN Decoded Information:</h4>
+                  <ul className="text-sm space-y-1">
+                    <li className="text-white">Manufacturer: {vinInfo[vehicle.vin].manufacturer}</li>
+                    <li className="text-white">Model: {vinInfo[vehicle.vin].model}</li>
+                    <li className="text-white">Year: {vinInfo[vehicle.vin].year}</li>
+                    <li className="text-white">Engine: {vinInfo[vehicle.vin].engine}</li>
+                    <li className="text-white">Transmission: {vinInfo[vehicle.vin].transmission}</li>
+                  </ul>
+                </div>
+              )}
+              
               <p className="text-white mb-1">Tire Pressure (F): {vehicle.tire_pressure_front} psi</p>
               <p className="text-white mb-1">Tire Pressure (R): {vehicle.tire_pressure_rear} psi</p>
               <p className="text-white mb-1">Torque Spec: {vehicle.torque_spec} lb-ft</p>

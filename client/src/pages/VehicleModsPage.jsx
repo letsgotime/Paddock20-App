@@ -36,13 +36,17 @@ function VehicleModsPage() {
 
         if (modsError) throw modsError;
         
+        console.log('Retrieved mods data:', modsData);
+        
         // Sort manually since we're using a mock client
         const sortedMods = modsData ? [...modsData].sort((a, b) => {
           if (!a.date_installed) return 1;
           if (!b.date_installed) return -1;
           return new Date(b.date_installed) - new Date(a.date_installed);
         }) : [];
-        setMods(modsData || []);
+        
+        console.log('Sorted mods data:', sortedMods);
+        setMods(sortedMods);
       } catch (error) {
         console.error('Error fetching data:', error.message);
         setError('Failed to load vehicle data. Please try again later.');
