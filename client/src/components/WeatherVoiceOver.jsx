@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Volume2, VolumeX } from 'lucide-react';
-import { getWeatherDescription } from '../lib/accessibility';
+import { generateWeatherDescription } from '../lib/accessibility';
 
 /**
  * WeatherVoiceOver Component
@@ -23,7 +23,7 @@ function WeatherVoiceOver({ weatherData, forecastData = null, drivingCondition =
     }
 
     // Start with the base weather description
-    let fullDescription = getWeatherDescription(weatherData);
+    let fullDescription = generateWeatherDescription(weatherData);
 
     // Add driving conditions if available
     if (drivingCondition) {

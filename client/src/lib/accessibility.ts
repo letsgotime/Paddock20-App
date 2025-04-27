@@ -3,6 +3,29 @@
 // ID for the main content area (for skip links)
 export const MAIN_CONTENT_ID = 'main-content';
 
+// ARIA labels for components
+export const ARIA_LABELS = {
+  weatherStation: {
+    temperature: 'Current temperature',
+    conditions: 'Weather conditions',
+    location: 'Weather location',
+    humidity: 'Humidity percentage',
+    wind: 'Wind speed',
+    feelsLike: 'Feels like temperature',
+    forecast: 'Weather forecast',
+    refresh: 'Refresh weather data'
+  },
+  zipWeather: {
+    input: 'Enter zip code for weather',
+    submit: 'Get weather for this location',
+    error: 'Error getting weather data'
+  },
+  navigation: {
+    mainMenu: 'Main navigation menu',
+    skipToContent: 'Skip to main content'
+  }
+};
+
 /**
  * Creates a live region element for screen reader announcements
  * @param politeness 'polite' or 'assertive'
