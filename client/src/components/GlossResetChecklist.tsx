@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ChecklistItem from './ChecklistItem';
 
 interface ResetTask {
   day: number;
@@ -8,7 +9,6 @@ interface ResetTask {
 
 function GlossResetChecklist() {
   const [resetSteps, setResetSteps] = useState<ResetTask[]>([]);
-  const [completedSteps, setCompletedSteps] = useState<{[key: string]: boolean}>({});
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -32,14 +32,6 @@ function GlossResetChecklist() {
     }
     fetchGlossReset();
   }, []);
-
-  const toggleTask = (dayIndex: number, taskIndex: number) => {
-    const key = `${dayIndex}-${taskIndex}`;
-    setCompletedSteps(prev => ({
-      ...prev,
-      [key]: !prev[key]
-    }));
-  };
 
   return (
     <div className="apex-card">
@@ -66,22 +58,14 @@ function GlossResetChecklist() {
             Day {day.day}: {day.title}
           </h3>
           <ul className="grid grid-cols-1 gap-4">
-            {day.tasks.map((task, taskIndex) => {
-              const taskKey = `${dayIndex}-${taskIndex}`;
-              return (
-                <li key={taskKey} className="flex items-center space-x-4">
-                  <input
-                    type="checkbox"
-                    checked={completedSteps[taskKey] || false}
-                    onChange={() => toggleTask(dayIndex, taskIndex)}
-                    className="w-5 h-5 accent-green-500 cursor-pointer"
-                  />
-                  <p className={`${completedSteps[taskKey] ? 'text-green-500 line-through' : 'text-white'}`}>
-                    {task}
-                  </p>
-                </li>
-              );
-            })}
+            {day.tasks.map((task, taskIndex) => (
+              <li key={taskIndex}>
+                <ChecklistItem
+                  checklistName={`GlossReset_Day${day.day}`}
+                  itemName={task}
+                />
+              </li>
+            ))}
           </ul>
         </div>
       ))}

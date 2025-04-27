@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import ChecklistItem from './ChecklistItem';
 
 function SeasonalChecklist() {
   const [season, setSeason] = useState('');
@@ -51,9 +52,11 @@ function SeasonalChecklist() {
 
       <ul className="grid grid-cols-1 gap-4">
         {season && seasonalTasks[season]?.map((task, index) => (
-          <li key={index} className="flex items-center space-x-4">
-            <div className="w-5 h-5 bg-green-500 rounded-full"></div>
-            <p className="text-white">{task}</p>
+          <li key={index}>
+            <ChecklistItem 
+              checklistName={`Seasonal_${season}`} 
+              itemName={task} 
+            />
           </li>
         ))}
       </ul>
