@@ -74,6 +74,34 @@ function DropdownNavbar() {
               Juice Box™
             </Link>
             <Link 
+              to="/gloss-reset" 
+              className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans pl-8"
+              onClick={() => setIsOpen(false)}
+            >
+              Gloss Reset
+            </Link>
+            <Link 
+              to="/juice-loadouts" 
+              className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans pl-8"
+              onClick={() => setIsOpen(false)}
+            >
+              Loadouts
+            </Link>
+            <Link 
+              to="/gloss-growth" 
+              className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans pl-8"
+              onClick={() => setIsOpen(false)}
+            >
+              Gloss Growth
+            </Link>
+            <Link 
+              to="/juicebox-videos" 
+              className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans pl-8"
+              onClick={() => setIsOpen(false)}
+            >
+              Video Library
+            </Link>
+            <Link 
               to="/settings" 
               className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
               onClick={() => setIsOpen(false)}

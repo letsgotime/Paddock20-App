@@ -15,6 +15,8 @@ import Events from "./pages/Events";
 import JuiceBox from "./pages/JuiceBox";
 import GlossResetPage from "./pages/GlossResetPage";
 import LoadoutsPage from "./pages/LoadoutsPage";
+import GlossGrowthPage from "./pages/GlossGrowthPage";
+import VideoLibraryPage from "./pages/VideoLibraryPage";
 import DropdownNavbar from "./components/DropdownNavbar";
 import { WeatherProvider } from "./contexts/WeatherContext";
 import './apexvault.css';
@@ -38,6 +40,8 @@ function App() {
                 <Route path="/juicebox" element={<JuiceBox />} />
                 <Route path="/gloss-reset" element={<GlossResetPage />} />
                 <Route path="/juice-loadouts" element={<LoadoutsPage />} />
+                <Route path="/gloss-growth" element={<GlossGrowthPage />} />
+                <Route path="/juicebox-videos" element={<VideoLibraryPage />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
