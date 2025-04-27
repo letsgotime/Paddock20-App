@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { Link } from "react-router-dom";
+import { ChevronRight } from "lucide-react";
 
 const DropdownNavbar = () => {
   const [isOpen, setIsOpen] = useState(false);
@@ -24,7 +25,7 @@ const DropdownNavbar = () => {
         </button>
         
         {isOpen && (
-          <div className="absolute right-0 mt-2 w-60 bg-gradient-to-r from-[#111111] to-[#1a1a1a] rounded-lg shadow-lg p-4 space-y-2 z-50">
+          <div className="absolute right-0 mt-2 w-60 bg-gradient-to-r from-[#111111] to-[#1a1a1a] rounded-lg shadow-lg p-4 space-y-2 z-50 border border-gray-800">
             <Link to="/weather-center" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>☁️ Weather Center</Link>
             <Link to="/route-planner" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>🛣️ Route Planner</Link>
             <Link to="/events" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>📅 Events & Meetups</Link>
@@ -35,16 +36,18 @@ const DropdownNavbar = () => {
             <Link to="/drive-journal" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>📝 Drive Journal</Link>
             <Link to="/hustle-planner" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>🧠 Hustle Planner</Link>
             <Link to="/juicebox" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>🧼 Juice Box</Link>
+            <Link to="/discounts" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>💸 Discounts & Promotions</Link>
             
             {/* Checklists Dropdown */}
             <div className="relative group">
-              <button className="flex items-center hover:text-green-400 w-full">
-                ✅ Checklists <span className="ml-2">🔽</span>
+              <button className="flex items-center justify-between hover:text-green-400 w-full text-white">
+                <span>✅ Checklists</span>
+                <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-green-400" />
               </button>
-              <div className="absolute left-full ml-2 top-0 hidden group-hover:block bg-gray-900 border border-gray-700 rounded-lg p-4 z-10">
-                <Link to="/checklists/tire" className="block hover:text-green-400" onClick={() => setIsOpen(false)}>🛞 Tire Checklist</Link>
-                <Link to="/checklists/maintenance" className="block hover:text-green-400" onClick={() => setIsOpen(false)}>🛠️ Maintenance Checklist</Link>
-                <Link to="/checklists/pre-drive" className="block hover:text-green-400" onClick={() => setIsOpen(false)}>🛡️ Pre-Drive Checklist</Link>
+              <div className="absolute right-full mr-2 top-0 hidden group-hover:block bg-[#151515] border border-gray-800 rounded-lg p-3 z-10 w-52 shadow-xl">
+                <Link to="/checklists/tire" className="block hover:text-green-400 py-1" onClick={() => setIsOpen(false)}>🛞 Tire Checklist</Link>
+                <Link to="/checklists/maintenance" className="block hover:text-green-400 py-1" onClick={() => setIsOpen(false)}>🛠️ Maintenance Checklist</Link>
+                <Link to="/checklists/pre-drive" className="block hover:text-green-400 py-1" onClick={() => setIsOpen(false)}>🛡️ Pre-Drive Checklist</Link>
               </div>
             </div>
 
