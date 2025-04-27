@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import supabase from '../services/supabaseClient';
 import { Link } from 'react-router-dom';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 function GarageVaultPage() {
   const [vehicles, setVehicles] = useState([]);
@@ -55,12 +57,87 @@ function GarageVaultPage() {
       setDecoding(false);
     }
   };
+  
+  // Function to export garage data to PDF
+  const exportToPDF = async () => {
+    // Notify user the export is starting
+    const announcer = document.getElementById('announcer');
+    if (announcer) {
+      announcer.textContent = "Preparing PDF export. This may take a moment...";
+    }
+    
+    try {
+      const input = document.getElementById('garageVaultSection');
+      const canvas = await html2canvas(input);
+      const imgData = canvas.toDataURL('image/png');
+      
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      
+      // ✅ Load your logo
+      const logoUrl = '/assets/Logos/GoTime-White.png'; // Default logo path
+      
+      // Get page dimensions
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      
+      // Add title to PDF
+      pdf.setFont('helvetica', 'bold');
+      pdf.setFontSize(20);
+      pdf.setTextColor(127, 200, 68); // Green color
+      pdf.text('GoTime Motorsports - GarageVault', pdfWidth / 2, 20, {align: 'center'});
+      
+      // Add generation date
+      pdf.setFont('helvetica', 'normal');
+      pdf.setFontSize(10);
+      pdf.setTextColor(150, 150, 150); // Gray color
+      const dateStr = new Date().toLocaleDateString();
+      pdf.text(`Generated on: ${dateStr}`, pdfWidth / 2, 30, {align: 'center'});
+      
+      // Now add the main garage vault content
+      const imgProps = pdf.getImageProperties(imgData);
+      const vaultImgWidth = pdfWidth - 20;
+      const vaultImgHeight = (imgProps.height * vaultImgWidth) / imgProps.width;
+      
+      // Add the image below the text
+      pdf.addImage(imgData, 'PNG', 10, 40, vaultImgWidth, vaultImgHeight);
+      
+      // Add footer
+      const pageCount = pdf.internal.getNumberOfPages();
+      pdf.setFont('helvetica', 'italic');
+      pdf.setFontSize(8);
+      pdf.setTextColor(100, 100, 100);
+      pdf.text('© GoTime Motorsports - ApexVault™ - Confidential Vehicle Information', pdfWidth / 2, 285, {align: 'center'});
+      
+      // Save the PDF
+      pdf.save('GarageVault.pdf');
+      
+      // Notify user the export is complete
+      if (announcer) {
+        announcer.textContent = "PDF export completed successfully.";
+      }
+    } catch (error) {
+      console.error('Error exporting to PDF:', error.message);
+      // Notify user of the error
+      if (announcer) {
+        announcer.textContent = "Error creating PDF. Please try again later.";
+      }
+    }
+  };
 
   return (
     <div className="p-10 bg-black min-h-screen" aria-labelledby="garageVaultHeading">
-      <h2 id="garageVaultHeading" className="apex-header-green mb-8 text-center">
-        Garage Vault | Vehicles & Builds
-      </h2>
+      <div className="flex justify-between items-center mb-8">
+        <h2 id="garageVaultHeading" className="apex-header-green">
+          Garage Vault | Vehicles & Builds
+        </h2>
+        
+        <button 
+          onClick={exportToPDF}
+          className="apex-button flex items-center"
+          aria-label="Export Garage Vault to PDF"
+        >
+          <span className="mr-2">📄</span> Export to PDF
+        </button>
+      </div>
       
       {/* Screen reader announcer */}
       <div id="announcer" className="sr-only" aria-live="polite"></div>
@@ -70,7 +147,7 @@ function GarageVaultPage() {
           Loading your garage...
         </p>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-8" role="region" aria-label="List of vehicles in your garage">
+        <div id="garageVaultSection" className="grid grid-cols-1 md:grid-cols-2 gap-8" role="region" aria-label="List of vehicles in your garage">
           {vehicles.map((vehicle, index) => (
             <div key={index} className="apex-card p-6" role="group" aria-labelledby={`vehicle-${index}-heading`}>
               <h3 id={`vehicle-${index}-heading`} className="text-blue-400 font-orbitron text-lg mb-2">
