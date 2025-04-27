@@ -139,7 +139,7 @@ const WeatherStation: React.FC = () => {
           
           {/* Weather Voice Over Component */}
           <div className="mt-6 mb-8">
-            <WeatherVoiceOver />
+            <WeatherVoiceOver weatherData={weatherData} />
           </div>
           
           <WeatherCards />
