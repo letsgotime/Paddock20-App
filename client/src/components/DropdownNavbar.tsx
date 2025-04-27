@@ -53,7 +53,7 @@ const DropdownNavbar = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
                 </svg>
               </button>
-              <div className="absolute top-0 left-full ml-2 hidden group-hover:block bg-gray-900 border border-gray-700 rounded-lg shadow-lg p-4 z-10">
+              <div className="absolute top-0 right-full mr-2 hidden group-hover:block bg-gray-900 border border-gray-700 rounded-lg shadow-lg p-4 z-10 w-48">
                 <Link to="/checklists/tire" className="block hover:text-green-400 mb-2" onClick={() => setIsOpen(false)}>🛞 Tire Checklist</Link>
                 <Link to="/checklists/maintenance" className="block hover:text-green-400 mb-2" onClick={() => setIsOpen(false)}>🛠️ Maintenance Checklist</Link>
                 <Link to="/checklists/pre-drive" className="block hover:text-green-400" onClick={() => setIsOpen(false)}>🛡️ Pre-Drive Checklist</Link>
