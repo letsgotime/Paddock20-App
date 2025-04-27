@@ -1,395 +1,272 @@
-import jsPDF from 'jspdf';
 import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
-// Common function to prepare HTML content for export
-const captureHtmlSection = async (sectionId) => {
-  const announcer = document.getElementById('announcer');
-  if (announcer) {
-    announcer.textContent = "Preparing content for export. This may take a moment...";
-  }
-  
+/**
+ * Exports the content of an HTML element to a PDF document
+ * @param {string} elementId - The ID of the HTML element to export
+ * @param {string} filename - The name of the PDF file (without extension)
+ * @param {string} logoPath - Optional path to a logo to include on the PDF
+ * @returns {Promise<void>}
+ */
+export async function exportToPDF(elementId, filename = 'export', logoPath = null) {
   try {
-    const input = document.getElementById(sectionId);
-    if (!input) {
-      throw new Error(`Element with ID '${sectionId}' not found`);
+    const element = document.getElementById(elementId);
+    if (!element) {
+      throw new Error(`Element with ID ${elementId} not found`);
     }
     
-    // Capture the section as canvas
-    const canvas = await html2canvas(input, {
-      scale: 2, // Higher quality
-      useCORS: true, // Allow cross-origin images
-      allowTaint: true,
-      backgroundColor: '#000000', // Match dark background
+    // Announce to screen readers
+    const announcer = document.getElementById('aria-live-announcer') || document.createElement('div');
+    if (!document.getElementById('aria-live-announcer')) {
+      announcer.id = 'aria-live-announcer';
+      announcer.className = 'sr-only';
+      announcer.setAttribute('aria-live', 'polite');
+      document.body.appendChild(announcer);
+    }
+    announcer.textContent = 'Generating PDF export. Please wait...';
+    
+    // Capture the element as a canvas
+    const canvas = await html2canvas(element, {
+      scale: 2, // Higher scale for better quality
+      useCORS: true, // Enable if images from other domains are used
+      logging: false,
+      backgroundColor: '#111111',
     });
     
-    return canvas;
-  } catch (error) {
-    console.error('Error capturing content:', error);
-    if (announcer) {
-      announcer.textContent = `Error preparing content: ${error.message}`;
-    }
-    throw error;
-  }
-};
-
-// Export to PDF with high-quality formatting and logo
-export const exportToPDF = async (sectionId, title, logoPath = '/assets/Logos/GoTime-White.png') => {
-  const announcer = document.getElementById('announcer');
-  if (announcer) {
-    announcer.textContent = "Creating PDF export. This may take a moment...";
-  }
-  
-  try {
-    const canvas = await captureHtmlSection(sectionId);
-    const imgData = canvas.toDataURL('image/png');
+    // Create PDF
+    const pdf = new jsPDF({
+      orientation: 'portrait',
+      unit: 'mm',
+      format: 'a4',
+    });
     
-    // Create PDF with A4 dimensions
-    const pdf = new jsPDF('p', 'mm', 'a4');
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = pdf.internal.pageSize.getHeight();
+    // Set PDF metadata
+    pdf.setProperties({
+      title: filename,
+      creator: 'ApexVault™ Systems',
+      author: 'GoTime Motorsports',
+    });
     
-    // Add the logo
-    // Create an Image object to get dimensions
-    const img = new Image();
-    img.src = logoPath;
+    // Calculate dimensions to fit the canvas to the PDF
+    const imgWidth = 210; // A4 width in mm
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
     
-    // Use a placeholder size initially
-    const logoWidth = 40;
-    const logoHeight = 15;
-    const logoX = 10;
-    const logoY = 10;
-
-    // Add logo
-    pdf.addImage(logoPath, 'PNG', logoX, logoY, logoWidth, logoHeight);
-    
-    // Add title
-    pdf.setFont('helvetica', 'bold');
-    pdf.setFontSize(20);
-    pdf.setTextColor(127, 200, 68); // GoTime green
-    pdf.text(title, pdfWidth / 2, logoY + logoHeight + 10, { align: 'center' });
-    
-    // Add generation info
-    pdf.setFont('helvetica', 'normal');
-    pdf.setFontSize(10);
-    pdf.setTextColor(150, 150, 150); // Gray
-    const dateStr = new Date().toLocaleDateString();
-    pdf.text(`Generated on: ${dateStr}`, pdfWidth / 2, logoY + logoHeight + 20, { align: 'center' });
-    
-    // Now add the main content
-    const imgProps = pdf.getImageProperties(imgData);
-    const contentImgWidth = pdfWidth - 20;
-    // Calculate height to maintain aspect ratio
-    const contentImgHeight = (imgProps.height * contentImgWidth) / imgProps.width;
-    
-    // Start the content below the header with some margin
-    const contentStartY = logoY + logoHeight + 30;
-    
-    // Handle if content is too large for one page
-    if (contentImgHeight > pdfHeight - contentStartY - 20) {
-      // Content needs multiple pages
-      const pageHeight = pdfHeight - contentStartY - 20;
-      let remainingHeight = contentImgHeight;
-      let sourceY = 0;
-      
-      while (remainingHeight > 0) {
-        // Calculate height for this page
-        const heightOnThisPage = Math.min(remainingHeight, pageHeight);
+    // Add logo if provided
+    if (logoPath) {
+      try {
+        const logo = new Image();
+        logo.src = logoPath;
+        await new Promise((resolve) => {
+          logo.onload = resolve;
+          logo.onerror = resolve;
+        });
         
-        // Calculate the portion of the image to use for this page
-        const sourceHeight = (heightOnThisPage / contentImgHeight) * imgProps.height;
-        
-        // Add this portion of the image
-        pdf.addImage(
-          imgData, 
-          'PNG', 
-          10, // x
-          contentStartY, // y
-          contentImgWidth, // width
-          heightOnThisPage, // height on page
-          '', // alias
-          'FAST', // compression
-          0, // rotation
-          sourceY, // source X (typically 0)
-          0, // source Y (will vary based on page)
-          imgProps.width, // source width
-          sourceHeight // source height for this page
-        );
-        
-        remainingHeight -= heightOnThisPage;
-        sourceY += sourceHeight;
-        
-        // Add footer
-        pdf.setFont('helvetica', 'italic');
-        pdf.setFontSize(8);
-        pdf.setTextColor(100, 100, 100);
-        const pageFooter = '© GoTime Motorsports - ApexVault™ - Confidential Vehicle Information';
-        pdf.text(pageFooter, pdfWidth / 2, pdfHeight - 10, { align: 'center' });
-        
-        // If there's more content, add a new page
-        if (remainingHeight > 0) {
-          pdf.addPage();
-        }
+        // Add logo at the top right of the first page
+        pdf.addImage(logo, 'PNG', 150, 10, 40, 20);
+      } catch (err) {
+        console.warn('Logo could not be added to PDF:', err.message);
       }
-    } else {
-      // Content fits on one page
-      pdf.addImage(imgData, 'PNG', 10, contentStartY, contentImgWidth, contentImgHeight);
-      
-      // Add footer
-      pdf.setFont('helvetica', 'italic');
-      pdf.setFontSize(8);
-      pdf.setTextColor(100, 100, 100);
-      const pageFooter = '© GoTime Motorsports - ApexVault™ - Confidential Vehicle Information';
-      pdf.text(pageFooter, pdfWidth / 2, pdfHeight - 10, { align: 'center' });
     }
+    
+    // Add data export timestamp
+    const timestamp = new Date().toLocaleString();
+    pdf.setFontSize(8);
+    pdf.setTextColor(100, 100, 100);
+    pdf.text(`Generated on: ${timestamp}`, 20, 10);
+    
+    // Add the captured canvas to the PDF
+    pdf.addImage(canvas.toDataURL('image/png'), 'PNG', 0, 30, imgWidth, imgHeight);
     
     // Save the PDF
-    const fileName = title.replace(/\s+/g, '-').toLowerCase() + '.pdf';
-    pdf.save(fileName);
+    pdf.save(`${filename}.pdf`);
     
-    // Notify user
-    if (announcer) {
-      announcer.textContent = "PDF export completed successfully.";
-    }
+    // Announce completion to screen readers
+    announcer.textContent = 'PDF export complete. File has been downloaded.';
     
     return true;
   } catch (error) {
-    console.error('Error creating PDF:', error);
+    console.error('Error exporting to PDF:', error);
+    
+    // Announce error to screen readers
+    const announcer = document.getElementById('aria-live-announcer');
     if (announcer) {
-      announcer.textContent = `Error creating PDF: ${error.message}`;
+      announcer.textContent = `PDF export failed: ${error.message}. Please try again.`;
     }
+    
     return false;
   }
-};
+}
 
-// Export to CSV (for Google Sheets import)
-export const exportToCSV = async (sectionId, title) => {
-  const announcer = document.getElementById('announcer');
-  if (announcer) {
-    announcer.textContent = "Creating CSV for Google Sheets. This may take a moment...";
-  }
-  
+/**
+ * Exports the content of an HTML element to a CSV file for Google Sheets
+ * @param {string} elementId - The ID of the HTML element containing a table to export
+ * @param {string} filename - The name of the CSV file (without extension)
+ * @returns {Promise<void>}
+ */
+export async function exportToCSV(elementId, filename = 'export') {
   try {
-    const section = document.getElementById(sectionId);
-    if (!section) {
-      throw new Error(`Element with ID '${sectionId}' not found`);
+    const element = document.getElementById(elementId);
+    if (!element) {
+      throw new Error(`Element with ID ${elementId} not found`);
     }
     
-    // Extract data from the section
-    // This is a simple example - you'll need to adapt this based on your specific content structure
-    const rows = [];
+    // Announce to screen readers
+    const announcer = document.getElementById('aria-live-announcer') || document.createElement('div');
+    if (!document.getElementById('aria-live-announcer')) {
+      announcer.id = 'aria-live-announcer';
+      announcer.className = 'sr-only';
+      announcer.setAttribute('aria-live', 'polite');
+      document.body.appendChild(announcer);
+    }
+    announcer.textContent = 'Generating CSV export. Please wait...';
     
-    // First, add a title row with the current date
-    rows.push([`${title} - Generated on ${new Date().toLocaleDateString()}`]);
-    rows.push(['']); // Empty row for spacing
+    // Find all tables in the element
+    const tables = element.querySelectorAll('table');
+    if (tables.length === 0) {
+      throw new Error('No tables found in the specified element');
+    }
     
-    // For demonstration, we'll extract data from paragraphs and headings
-    // Add header row based on what type of content we're dealing with
-    if (sectionId === 'garageVaultSection') {
-      // For Garage Vault, create a header row with vehicle details
-      rows.push(['Vehicle', 'VIN', 'Tire Pressure (F)', 'Tire Pressure (R)', 'Torque Spec', 'Mileage', 'Service History']);
-      
-      // Extract data from each vehicle card
-      const vehicleCards = section.querySelectorAll('.apex-card');
-      vehicleCards.forEach(card => {
-        const vehicleName = card.querySelector('h3')?.textContent.trim() || 'N/A';
-        
-        // Get all text paragraphs
-        const textElements = card.querySelectorAll('p');
-        let vin = 'N/A';
-        let tirePressureFront = 'N/A';
-        let tirePressureRear = 'N/A';
-        let torqueSpec = 'N/A';
-        let mileage = 'N/A';
-        let serviceHistory = 'N/A';
-        
-        // Extract data from paragraphs based on their content
-        textElements.forEach(p => {
-          const text = p.textContent.trim();
-          if (text.startsWith('VIN:')) vin = text.replace('VIN:', '').trim().split(' ')[0];
-          if (text.startsWith('Tire Pressure (F):')) tirePressureFront = text.replace('Tire Pressure (F):', '').trim();
-          if (text.startsWith('Tire Pressure (R):')) tirePressureRear = text.replace('Tire Pressure (R):', '').trim();
-          if (text.startsWith('Torque Spec:')) torqueSpec = text.replace('Torque Spec:', '').trim();
-          if (text.startsWith('Mileage:')) mileage = text.replace('Mileage:', '').trim();
-          if (text.startsWith('Service History:')) serviceHistory = text.replace('Service History:', '').trim();
-        });
-        
-        rows.push([vehicleName, vin, tirePressureFront, tirePressureRear, torqueSpec, mileage, serviceHistory]);
-      });
-    } else if (sectionId === 'juiceBoxSection') {
-      // For JuiceBox, create a header row with product details
-      rows.push(['Product', 'Category', 'Price', 'Rating', 'Description']);
-      
-      // Extract data from each product card
-      const productCards = section.querySelectorAll('.product-card');
-      productCards.forEach(card => {
-        const productName = card.querySelector('.product-name')?.textContent.trim() || 'N/A';
-        const category = card.querySelector('.product-category')?.textContent.trim() || 'N/A';
-        const price = card.querySelector('.product-price')?.textContent.trim() || 'N/A';
-        const rating = card.querySelector('.product-rating')?.textContent.trim() || 'N/A';
-        const description = card.querySelector('.product-description')?.textContent.trim() || 'N/A';
-        
-        rows.push([productName, category, price, rating, description]);
+    // Use the first table
+    const table = tables[0];
+    
+    // Extract headers
+    const headers = [];
+    const headerCells = table.querySelectorAll('thead th');
+    if (headerCells.length > 0) {
+      headerCells.forEach(cell => {
+        headers.push(cell.textContent.trim().replace(/,/g, ' '));
       });
     } else {
-      // Generic approach for other sections
-      // Get all headings and their subsequent paragraphs
-      const headings = section.querySelectorAll('h2, h3, h4, h5, h6');
-      
-      if (headings.length > 0) {
-        // If there are headings, organize content by them
-        headings.forEach(heading => {
-          rows.push([heading.textContent.trim()]);
-          
-          let nextElement = heading.nextElementSibling;
-          while (nextElement && !nextElement.matches('h2, h3, h4, h5, h6')) {
-            if (nextElement.tagName === 'P') {
-              rows.push(['', nextElement.textContent.trim()]);
-            }
-            nextElement = nextElement.nextElementSibling;
-          }
-          
-          // Add a blank row after each section
-          rows.push(['']);
-        });
-      } else {
-        // No headings, just extract all paragraphs
-        const paragraphs = section.querySelectorAll('p');
-        paragraphs.forEach(p => {
-          rows.push([p.textContent.trim()]);
+      // If no thead, use the first row as headers
+      const firstRow = table.querySelector('tr');
+      if (firstRow) {
+        const firstRowCells = firstRow.querySelectorAll('td, th');
+        firstRowCells.forEach(cell => {
+          headers.push(cell.textContent.trim().replace(/,/g, ' '));
         });
       }
     }
     
-    // Convert rows to CSV format
-    let csvContent = '';
+    // Start with headers
+    let csvContent = headers.join(',') + '\\n';
+    
+    // Extract data rows
+    const rows = table.querySelectorAll('tbody tr');
     rows.forEach(row => {
-      // Escape commas, quotes, etc. in cell values
-      const escapedRow = row.map(cell => {
-        // If cell contains commas, quotes, or newlines, wrap in quotes
-        if (cell && (cell.includes(',') || cell.includes('"') || cell.includes('\n'))) {
-          // Replace quotes with double quotes
-          return `"${cell.replace(/"/g, '""')}"`;
-        }
-        return cell;
+      const rowData = [];
+      const cells = row.querySelectorAll('td');
+      cells.forEach(cell => {
+        // Replace commas with spaces to avoid CSV issues
+        rowData.push(cell.textContent.trim().replace(/,/g, ' '));
       });
-      
-      csvContent += escapedRow.join(',') + '\n';
+      csvContent += rowData.join(',') + '\\n';
     });
     
-    // Create a download link
+    // Create blob and download
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
     const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `${title.replace(/\s+/g, '-').toLowerCase()}.csv`);
+    link.setAttribute('download', `${filename}.csv`);
     link.style.visibility = 'hidden';
-    
-    // Append to document, click, and remove
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     
-    // Notify user
-    if (announcer) {
-      announcer.textContent = "CSV export for Google Sheets completed successfully.";
-    }
+    // Announce completion to screen readers
+    announcer.textContent = 'CSV export complete. File has been downloaded.';
     
     return true;
   } catch (error) {
-    console.error('Error creating CSV:', error);
+    console.error('Error exporting to CSV:', error);
+    
+    // Announce error to screen readers
+    const announcer = document.getElementById('aria-live-announcer');
     if (announcer) {
-      announcer.textContent = `Error creating CSV: ${error.message}`;
+      announcer.textContent = `CSV export failed: ${error.message}. Please try again.`;
     }
+    
     return false;
   }
-};
+}
 
-// Export HTML for Google Docs import
-export const exportForGoogleDocs = async (sectionId, title) => {
-  const announcer = document.getElementById('announcer');
-  if (announcer) {
-    announcer.textContent = "Creating HTML for Google Docs. This may take a moment...";
-  }
-  
+/**
+ * Generates an export formatted for Google Docs (HTML)
+ * @param {string} elementId - The ID of the HTML element to export
+ * @param {string} filename - The name of the HTML file (without extension)
+ * @returns {Promise<void>}
+ */
+export async function exportForGoogleDocs(elementId, filename = 'export') {
   try {
-    const section = document.getElementById(sectionId);
-    if (!section) {
-      throw new Error(`Element with ID '${sectionId}' not found`);
+    const element = document.getElementById(elementId);
+    if (!element) {
+      throw new Error(`Element with ID ${elementId} not found`);
     }
     
-    // Clone the section to manipulate for export
-    const clonedSection = section.cloneNode(true);
+    // Announce to screen readers
+    const announcer = document.getElementById('aria-live-announcer') || document.createElement('div');
+    if (!document.getElementById('aria-live-announcer')) {
+      announcer.id = 'aria-live-announcer';
+      announcer.className = 'sr-only';
+      announcer.setAttribute('aria-live', 'polite');
+      document.body.appendChild(announcer);
+    }
+    announcer.textContent = 'Generating HTML export for Google Docs. Please wait...';
     
-    // Add title and header
-    const exportContainer = document.createElement('div');
+    // Clone the element to avoid modifying the original
+    const elementClone = element.cloneNode(true);
     
-    // Add logo placeholder for Google Docs
-    const header = document.createElement('div');
-    header.style.textAlign = 'center';
-    header.style.marginBottom = '20px';
+    // Create a simplified HTML document with basic styling
+    let htmlContent = `
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>${filename}</title>
+      <style>
+        body { font-family: Arial, sans-serif; color: #333; margin: 20px; }
+        table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+        th, td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        th { background-color: #f2f2f2; }
+        h1, h2, h3, h4 { margin-top: 20px; color: #222; }
+        .export-timestamp { color: #888; font-size: 12px; }
+      </style>
+    </head>
+    <body>
+      <h1>${filename}</h1>
+      <p class="export-timestamp">Generated on: ${new Date().toLocaleString()}</p>
+      <div class="content">
+        ${elementClone.innerHTML}
+      </div>
+    </body>
+    </html>
+    `;
     
-    const logoPlaceholder = document.createElement('div');
-    logoPlaceholder.innerHTML = '[GOTIME MOTORSPORTS LOGO]';
-    logoPlaceholder.style.fontWeight = 'bold';
-    logoPlaceholder.style.color = '#7FC844';
-    header.appendChild(logoPlaceholder);
-    
-    const titleElement = document.createElement('h1');
-    titleElement.textContent = title;
-    titleElement.style.color = '#7FC844';
-    header.appendChild(titleElement);
-    
-    const dateElement = document.createElement('p');
-    dateElement.textContent = `Generated on: ${new Date().toLocaleDateString()}`;
-    dateElement.style.color = '#999';
-    header.appendChild(dateElement);
-    
-    exportContainer.appendChild(header);
-    exportContainer.appendChild(clonedSection);
-    
-    // Add footer
-    const footer = document.createElement('div');
-    footer.style.textAlign = 'center';
-    footer.style.marginTop = '20px';
-    footer.style.fontStyle = 'italic';
-    footer.style.fontSize = '8pt';
-    footer.style.color = '#666';
-    footer.textContent = '© GoTime Motorsports - ApexVault™ - Confidential Vehicle Information';
-    exportContainer.appendChild(footer);
-    
-    // Get HTML content
-    const htmlContent = exportContainer.innerHTML;
-    
-    // Create a Blob with the HTML content
-    const blob = new Blob([
-      '<!DOCTYPE html><html><head><title>' + title + '</title><meta charset="utf-8"></head><body>' +
-      htmlContent +
-      '</body></html>'
-    ], { type: 'text/html' });
-    
-    // Create a download link
-    const url = URL.createObjectURL(blob);
+    // Create blob and download
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
     const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
-    link.setAttribute('download', `${title.replace(/\s+/g, '-').toLowerCase()}.html`);
+    link.setAttribute('download', `${filename}.html`);
     link.style.visibility = 'hidden';
-    
-    // Append to document, click, and remove
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     
-    // Notify user
-    if (announcer) {
-      announcer.textContent = "HTML export for Google Docs completed successfully. Open this file in Google Docs to import.";
-    }
+    // Announce completion to screen readers
+    announcer.textContent = 'HTML export complete. File has been downloaded. You can now import this into Google Docs.';
     
     return true;
   } catch (error) {
-    console.error('Error creating HTML for Google Docs:', error);
+    console.error('Error exporting for Google Docs:', error);
+    
+    // Announce error to screen readers
+    const announcer = document.getElementById('aria-live-announcer');
     if (announcer) {
-      announcer.textContent = `Error creating HTML for Google Docs: ${error.message}`;
+      announcer.textContent = `HTML export failed: ${error.message}. Please try again.`;
     }
+    
     return false;
   }
-};
+}
