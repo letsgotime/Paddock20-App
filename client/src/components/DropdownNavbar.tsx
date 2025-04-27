@@ -110,6 +110,13 @@ function DropdownNavbar() {
               Video Library
             </Link>
             <Link 
+              to="/weather" 
+              className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
+              onClick={() => setIsOpen(false)}
+            >
+              Weather Center
+            </Link>
+            <Link 
               to="/broker-portal" 
               className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
               onClick={() => setIsOpen(false)}
