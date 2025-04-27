@@ -11,6 +11,7 @@ import WeatherStats from './WeatherStats';
 import WeatherVoiceOver from './WeatherVoiceOver';
 import WeatherMoodReactions from './WeatherMoodReactions';
 import DrivingConditionsWidget from './DrivingConditionsWidget';
+import DrivingWeatherInsights from './DrivingWeatherInsights';
 import { Loader2, AlertCircle } from 'lucide-react';
 import { LiveRegion, generateWeatherDescription } from '../lib/accessibility';
 
@@ -154,6 +155,11 @@ const WeatherStation: React.FC = () => {
           {/* Driving Conditions Widget */}
           <div className="mt-8 mb-8">
             <DrivingConditionsWidget weatherData={weatherData} />
+          </div>
+          
+          {/* AccuWeather Enhanced Driving Intelligence */}
+          <div className="mt-8 mb-8">
+            <DrivingWeatherInsights />
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
