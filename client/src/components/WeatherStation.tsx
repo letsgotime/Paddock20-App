@@ -159,7 +159,12 @@ const WeatherStation: React.FC = () => {
           
           {/* AccuWeather Enhanced Driving Intelligence */}
           <div className="mt-8 mb-8">
-            <DrivingWeatherInsights />
+            {weatherData && weatherData.coord && (
+              <DrivingWeatherInsights 
+                latitude={weatherData.coord.lat} 
+                longitude={weatherData.coord.lon} 
+              />
+            )}
           </div>
           
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
@@ -175,7 +180,8 @@ const WeatherStation: React.FC = () => {
       <footer className="max-w-6xl mx-auto mt-8 pt-6 border-t border-gray-800">
         <div className="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-500">
           <div className="mb-4 sm:mb-0">
-            <p>Data provided by OpenWeatherMap</p>
+            <p>Weather data provided by OpenWeatherMap</p>
+            <p className="mt-1">Enhanced driving insights powered by AccuWeather</p>
           </div>
           <div className="flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
