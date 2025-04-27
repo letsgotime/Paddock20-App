@@ -92,30 +92,52 @@ export function AccuWeatherProvider({ children }: { children: React.ReactNode })
     setError(null);
     
     try {
-      // First get location key
-      const locationData = await getLocationKey(
-        selectedLocation.lat,
-        selectedLocation.lon
-      );
+      // Step 1: Get location key
+      let keyToUse: string = '349818'; // Default fallback to Charlotte
       
-      setLocationKey(locationData.Key);
+      try {
+        const locationData = await getLocationKey(
+          selectedLocation.lat,
+          selectedLocation.lon
+        );
+        
+        keyToUse = locationData.Key;
+        setLocationKey(keyToUse);
+        
+        console.log('Successfully retrieved AccuWeather location key:', keyToUse);
+      } catch (locationError) {
+        console.warn('Error getting AccuWeather location key:', locationError);
+        
+        // If we already have a location key in state, use that instead of the fallback
+        if (locationKey) {
+          keyToUse = locationKey;
+        }
+        
+        console.log('Using cached/default location key:', keyToUse);
+      }
       
-      // Then fetch all other data in parallel
-      const [current, daily, hourly, indices, automotive] = await Promise.all([
-        fetchCurrentConditions(locationData.Key),
-        fetchDailyForecast(locationData.Key),
-        fetchHourlyForecast(locationData.Key),
-        fetchDrivingIndices(locationData.Key),
-        fetchAutomotiveData(locationData.Key)
-      ]);
-      
-      setCurrentConditions(current);
-      setDailyForecast(daily);
-      setHourlyForecast(hourly);
-      setDrivingIndices(indices);
-      setAutomotiveData(automotive);
+      // Step 2: Fetch all other data
+      try {
+        // Fetch all data in parallel using the keyToUse variable
+        const [current, daily, hourly, indices, automotive] = await Promise.all([
+          fetchCurrentConditions(keyToUse),
+          fetchDailyForecast(keyToUse),
+          fetchHourlyForecast(keyToUse),
+          fetchDrivingIndices(keyToUse),
+          fetchAutomotiveData(keyToUse)
+        ]);
+        
+        setCurrentConditions(current);
+        setDailyForecast(daily);
+        setHourlyForecast(hourly);
+        setDrivingIndices(indices);
+        setAutomotiveData(automotive);
+      } catch (dataError) {
+        console.error('Error fetching AccuWeather data:', dataError);
+        throw dataError;
+      }
     } catch (err) {
-      console.error('Error fetching AccuWeather data:', err);
+      console.error('Error in AccuWeather data fetching process:', err);
       setError(err as Error);
       
       toast({
