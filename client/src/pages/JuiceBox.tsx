@@ -13,6 +13,7 @@ interface Product {
   name: string;
   link: string;
   notes: string;
+  affiliate?: boolean;
 }
 
 function JuiceBoxPage() {
@@ -86,6 +87,15 @@ function JuiceBoxPage() {
         >
           Training Videos
         </button>
+        <button 
+          onClick={() => setActiveTab('gloss-history')}
+          className={`px-5 py-2 rounded-lg font-orbitron text-sm
+            ${activeTab === 'gloss-history' 
+              ? 'bg-green-500 text-black' 
+              : 'bg-gray-800 text-white hover:bg-gray-700'}`}
+        >
+          Gloss History
+        </button>
       </div>
       
       {/* Tab Content */}
@@ -113,6 +123,10 @@ function JuiceBoxPage() {
       
       {activeTab === 'videos' && (
         <TrainingVideos videoCategories={trainingVideos} />
+      )}
+      
+      {activeTab === 'gloss-history' && (
+        <GlossHistory events={glossHistory} />
       )}
     </div>
   );

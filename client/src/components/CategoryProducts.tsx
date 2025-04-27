@@ -4,6 +4,7 @@ interface Product {
   name: string;
   link: string;
   notes: string;
+  affiliate?: boolean;
 }
 
 interface CategoryData {
