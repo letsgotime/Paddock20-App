@@ -1,291 +1,189 @@
-import React from 'react';
-import { Smile, Meh, Frown, Thermometer, Eye, Droplets, Wind } from 'lucide-react';
-import { motion } from 'framer-motion';
+import React, { useState, useEffect } from 'react';
 
-function DrivingConditionEmoji({ 
-  temperature, 
-  visibility, 
-  windSpeed, 
-  precipitation 
-}) {
-  // Calculate driving condition score (0-100)
-  const getConditionScore = () => {
-    // Temperature factor (0-25 points)
-    // Ideal temperature range is 50-75°F
-    let tempScore = 25;
-    if (temperature < 32) {
-      // Freezing conditions
-      tempScore = Math.max(5, (temperature / 32) * 15);
-    } else if (temperature < 50) {
-      // Cold but not freezing
-      tempScore = 15 + ((temperature - 32) / 18) * 10;
-    } else if (temperature > 85) {
-      // Hot conditions
-      tempScore = 25 - Math.min(15, (temperature - 85) / 10);
+/**
+ * DrivingConditionEmoji Component
+ * 
+ * Analyzes weather data to assess driving conditions and provide
+ * safety recommendations with accessible emoji representation.
+ * 
+ * @param {Object} props - Component props
+ * @param {Object} props.weatherData - Weather data object
+ */
+function DrivingConditionEmoji({ weatherData }) {
+  const [condition, setCondition] = useState({
+    score: 10,
+    emoji: '🚗',
+    color: 'text-green-500',
+    recommendation: 'Excellent driving conditions.',
+    ariaLabel: 'Excellent driving conditions'
+  });
+
+  useEffect(() => {
+    if (!weatherData) return;
+
+    // Calculate driving condition score (10 = best, 1 = worst)
+    let score = 10;
+    let factors = [];
+    
+    // Rain impact (heavier rain = worse conditions)
+    if (weatherData.rain) {
+      const rainVolume = weatherData.rain['1h'] || 0;
+      if (rainVolume > 5) {
+        score -= 4;
+        factors.push('Heavy rain');
+      } else if (rainVolume > 1) {
+        score -= 2;
+        factors.push('Moderate rain');
+      } else if (rainVolume > 0) {
+        score -= 1;
+        factors.push('Light rain');
+      }
     }
     
-    // Visibility factor (0-30 points)
-    // Good visibility is > 5 miles
-    let visibilityScore = 30;
-    if (visibility < 0.25) {
-      // Extremely poor visibility
-      visibilityScore = 0;
-    } else if (visibility < 1) {
-      // Very poor visibility
-      visibilityScore = visibility * 10;
-    } else if (visibility < 5) {
-      // Poor to moderate visibility
-      visibilityScore = 10 + ((visibility - 1) / 4) * 20;
+    // Snow impact (any snow significantly affects driving)
+    if (weatherData.snow) {
+      const snowVolume = weatherData.snow['1h'] || 0;
+      if (snowVolume > 3) {
+        score -= 5;
+        factors.push('Heavy snow');
+      } else if (snowVolume > 0.5) {
+        score -= 3;
+        factors.push('Moderate snow');
+      } else if (snowVolume > 0) {
+        score -= 2;
+        factors.push('Light snow');
+      }
     }
     
-    // Wind factor (0-20 points)
-    // Low wind is < 10 mph
-    let windScore = 20;
-    if (windSpeed > 35) {
-      // High wind
-      windScore = 5;
-    } else if (windSpeed > 20) {
-      // Moderate to high wind
-      windScore = 5 + ((35 - windSpeed) / 15) * 10;
-    } else if (windSpeed > 10) {
-      // Mild to moderate wind
-      windScore = 15 + ((20 - windSpeed) / 10) * 5;
+    // Wind impact (higher wind = worse conditions)
+    if (weatherData.wind && weatherData.wind.speed) {
+      if (weatherData.wind.speed > 30) {
+        score -= 4;
+        factors.push('Strong winds');
+      } else if (weatherData.wind.speed > 15) {
+        score -= 2;
+        factors.push('Moderate winds');
+      }
     }
     
-    // Precipitation factor (0-25 points)
-    // No precipitation is ideal
-    let precipScore = 25;
-    if (precipitation > 0.5) {
-      // Heavy rain
-      precipScore = 5;
-    } else if (precipitation > 0.1) {
-      // Moderate rain
-      precipScore = 5 + ((0.5 - precipitation) / 0.4) * 10;
-    } else if (precipitation > 0) {
-      // Light rain
-      precipScore = 15 + ((0.1 - precipitation) / 0.1) * 10;
+    // Visibility impact
+    if (weatherData.visibility) {
+      const visibilityKm = weatherData.visibility / 1000;
+      if (visibilityKm < 1) {
+        score -= 5;
+        factors.push('Very poor visibility');
+      } else if (visibilityKm < 5) {
+        score -= 3;
+        factors.push('Reduced visibility');
+      }
     }
     
-    // Calculate final score (0-100)
-    return Math.round(tempScore + visibilityScore + windScore + precipScore);
-  };
-  
-  const score = getConditionScore();
-  
-  // Get emoji and message based on score
-  const getConditionDetails = () => {
-    if (score >= 85) {
-      return {
-        icon: Smile,
-        color: 'text-green-500',
-        text: 'Excellent driving conditions',
-        drivingTip: 'Perfect time for a drive! Enjoy the road responsibly.'
-      };
-    } else if (score >= 65) {
-      return {
-        icon: Smile,
-        color: 'text-green-400',
-        text: 'Good driving conditions',
-        drivingTip: 'Good conditions overall. Enjoy your drive!'
-      };
-    } else if (score >= 50) {
-      return {
-        icon: Meh,
-        color: 'text-yellow-400',
-        text: 'Fair driving conditions',
-        drivingTip: 'Drive with extra care and maintain safe distances.'
-      };
-    } else if (score >= 35) {
-      return {
-        icon: Frown,
-        color: 'text-orange-400',
-        text: 'Poor driving conditions',
-        drivingTip: 'Consider postponing non-essential travel. Slow down if driving.'
-      };
-    } else {
-      return {
-        icon: Frown,
-        color: 'text-red-500',
-        text: 'Dangerous driving conditions',
-        drivingTip: 'Avoid driving if possible. Emergency vehicles only.'
-      };
+    // Temperature impact (extreme temps can affect vehicle/road conditions)
+    if (weatherData.main && weatherData.main.temp) {
+      if (weatherData.main.temp < 32) {
+        score -= 2;
+        factors.push('Freezing temperatures');
+      } else if (weatherData.main.temp > 95) {
+        score -= 1;
+        factors.push('Extreme heat');
+      }
     }
-  };
-  
-  const conditionDetails = getConditionDetails();
-  const IconComponent = conditionDetails.icon;
-  
-  // Get condition factor icons
-  const getFactorIcons = () => {
-    const factors = [];
-    
-    // Temperature factor
-    if (temperature < 32) {
-      factors.push({ 
-        icon: Thermometer, 
-        color: 'text-blue-400', 
-        text: 'Freezing Temps' 
-      });
-    } else if (temperature > 85) {
-      factors.push({ 
-        icon: Thermometer, 
-        color: 'text-red-400', 
-        text: 'Hot Conditions' 
-      });
-    }
-    
-    // Visibility factor
-    if (visibility < 5) {
-      factors.push({ 
-        icon: Eye, 
-        color: 'text-gray-400', 
-        text: 'Limited Visibility' 
-      });
-    }
-    
-    // Wind factor
-    if (windSpeed > 15) {
-      factors.push({ 
-        icon: Wind, 
-        color: 'text-teal-400', 
-        text: 'Windy Conditions' 
-      });
-    }
-    
-    // Precipitation factor
-    if (precipitation > 0) {
-      factors.push({ 
-        icon: Droplets, 
-        color: 'text-blue-400', 
-        text: 'Wet Roads' 
-      });
-    }
-    
-    return factors;
-  };
-  
-  const factors = getFactorIcons();
-  
-  return (
-    <div className="p-4 bg-gray-800 rounded-lg mb-6">
-      <h3 className="apex-header-green mb-4">DRIVING CONDITIONS</h3>
+
+    // Weather condition impact
+    if (weatherData.weather && weatherData.weather.length > 0) {
+      const mainCondition = weatherData.weather[0].main.toLowerCase();
       
-      <div className="flex flex-col items-center mb-4">
-        <motion.div
-          initial={{ scale: 0.8 }}
-          animate={{ scale: 1 }}
-          transition={{ duration: 0.5 }}
-          className={`${conditionDetails.color} mb-2`}
-        >
-          <IconComponent size={60} strokeWidth={1.5} />
-        </motion.div>
-        <p className="text-xl font-semibold text-white mb-1">{conditionDetails.text}</p>
-        <p className="text-gray-300">{conditionDetails.drivingTip}</p>
+      if (mainCondition.includes('thunderstorm')) {
+        score -= 3;
+        factors.push('Thunderstorms');
+      } else if (mainCondition.includes('fog') || mainCondition.includes('mist')) {
+        score -= 3;
+        factors.push('Foggy conditions');
+      } else if (mainCondition.includes('sand') || mainCondition.includes('dust')) {
+        score -= 4;
+        factors.push('Dust or sand storm');
+      }
+    }
+    
+    // Ensure score remains in range 1-10
+    score = Math.max(1, Math.min(10, score));
+    
+    // Set appropriate emoji, color and recommendation based on score
+    let emoji, color, recommendation, ariaLabel;
+    
+    if (score >= 9) {
+      emoji = '🚗';
+      color = 'text-green-500';
+      recommendation = 'Excellent driving conditions. Enjoy your drive!';
+      ariaLabel = 'Excellent driving conditions';
+    } else if (score >= 7) {
+      emoji = '🚙';
+      color = 'text-green-400';
+      recommendation = 'Good driving conditions. Normal precautions advised.';
+      ariaLabel = 'Good driving conditions';
+    } else if (score >= 5) {
+      emoji = '🚦';
+      color = 'text-yellow-500';
+      recommendation = 'Moderate driving conditions. Increase following distance and reduce speed.';
+      ariaLabel = 'Moderate driving conditions';
+    } else if (score >= 3) {
+      emoji = '⚠️';
+      color = 'text-orange-500';
+      recommendation = 'Poor driving conditions. Consider postponing non-essential travel.';
+      ariaLabel = 'Poor driving conditions';
+    } else {
+      emoji = '🛑';
+      color = 'text-red-500';
+      recommendation = 'Dangerous driving conditions. Avoid travel if possible.';
+      ariaLabel = 'Dangerous driving conditions';
+    }
+    
+    setCondition({
+      score,
+      emoji,
+      color,
+      recommendation,
+      factors,
+      ariaLabel
+    });
+  }, [weatherData]);
+
+  if (!weatherData) {
+    return null;
+  }
+
+  return (
+    <div className="mt-8 p-4 rounded-lg bg-gray-900" role="region" aria-label="Driving conditions assessment">
+      <h3 className="apex-header-green mb-4">Driving Conditions</h3>
+      
+      <div className="flex items-center justify-between mb-4">
+        <div>
+          <span className="text-4xl mr-4" role="img" aria-hidden="true">{condition.emoji}</span>
+          <span className={`font-bold text-lg ${condition.color}`} aria-hidden="true">
+            Score: {condition.score}/10
+          </span>
+        </div>
+        
+        {/* Visually hidden text for screen readers */}
+        <span className="sr-only">
+          {condition.ariaLabel} with a score of {condition.score} out of 10
+        </span>
       </div>
       
-      {factors.length > 0 && (
-        <div className="border-t border-gray-700 pt-4 mt-4">
-          <p className="text-sm text-gray-400 mb-2">Weather factors affecting driving:</p>
-          <div className="flex flex-wrap justify-center gap-3">
-            {factors.map((factor, index) => {
-              const FactorIcon = factor.icon;
-              return (
-                <div key={index} className="flex items-center gap-1 bg-gray-900 px-3 py-2 rounded-full">
-                  <FactorIcon className={`${factor.color} h-4 w-4`} />
-                  <span className="text-sm text-gray-300">{factor.text}</span>
-                </div>
-              );
-            })}
-          </div>
+      <p className="text-white mb-2">{condition.recommendation}</p>
+      
+      {condition.factors && condition.factors.length > 0 && (
+        <div className="mt-4" aria-label="Factors affecting driving conditions">
+          <h4 className="text-sm text-gray-400 uppercase mb-2">Factors to Consider:</h4>
+          <ul className="list-disc list-inside text-gray-200">
+            {condition.factors.map((factor, index) => (
+              <li key={index}>{factor}</li>
+            ))}
+          </ul>
         </div>
       )}
     </div>
   );
 }
-
-// Add static method for getting driving condition outside component
-DrivingConditionEmoji.getDrivingCondition = (temperature, visibility, windSpeed, precipitation) => {
-  // Calculate score using the same logic
-  // Temperature factor (0-25 points)
-  let tempScore = 25;
-  if (temperature < 32) {
-    tempScore = Math.max(5, (temperature / 32) * 15);
-  } else if (temperature < 50) {
-    tempScore = 15 + ((temperature - 32) / 18) * 10;
-  } else if (temperature > 85) {
-    tempScore = 25 - Math.min(15, (temperature - 85) / 10);
-  }
-  
-  // Visibility factor (0-30 points)
-  let visibilityScore = 30;
-  if (visibility < 0.25) {
-    visibilityScore = 0;
-  } else if (visibility < 1) {
-    visibilityScore = visibility * 10;
-  } else if (visibility < 5) {
-    visibilityScore = 10 + ((visibility - 1) / 4) * 20;
-  }
-  
-  // Wind factor (0-20 points)
-  let windScore = 20;
-  if (windSpeed > 35) {
-    windScore = 5;
-  } else if (windSpeed > 20) {
-    windScore = 5 + ((35 - windSpeed) / 15) * 10;
-  } else if (windSpeed > 10) {
-    windScore = 15 + ((20 - windSpeed) / 10) * 5;
-  }
-  
-  // Precipitation factor (0-25 points)
-  let precipScore = 25;
-  if (precipitation > 0.5) {
-    precipScore = 5;
-  } else if (precipitation > 0.1) {
-    precipScore = 5 + ((0.5 - precipitation) / 0.4) * 10;
-  } else if (precipitation > 0) {
-    precipScore = 15 + ((0.1 - precipitation) / 0.1) * 10;
-  }
-  
-  // Calculate final score (0-100)
-  const score = Math.round(tempScore + visibilityScore + windScore + precipScore);
-  
-  // Return condition based on score
-  if (score >= 85) {
-    return {
-      icon: "Smile",
-      color: 'text-green-500',
-      text: 'Excellent driving conditions',
-      drivingTip: 'Perfect time for a drive! Enjoy the road responsibly.'
-    };
-  } else if (score >= 65) {
-    return {
-      icon: "Smile",
-      color: 'text-green-400',
-      text: 'Good driving conditions',
-      drivingTip: 'Good conditions overall. Enjoy your drive!'
-    };
-  } else if (score >= 50) {
-    return {
-      icon: "Meh",
-      color: 'text-yellow-400',
-      text: 'Fair driving conditions',
-      drivingTip: 'Drive with extra care and maintain safe distances.'
-    };
-  } else if (score >= 35) {
-    return {
-      icon: "Frown",
-      color: 'text-orange-400',
-      text: 'Poor driving conditions',
-      drivingTip: 'Consider postponing non-essential travel. Slow down if driving.'
-    };
-  } else {
-    return {
-      icon: "Frown",
-      color: 'text-red-500',
-      text: 'Dangerous driving conditions',
-      drivingTip: 'Avoid driving if possible. Emergency vehicles only.'
-    };
-  }
-};
 
 export default DrivingConditionEmoji;
