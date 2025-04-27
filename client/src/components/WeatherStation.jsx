@@ -3,10 +3,10 @@ import React, { useState, useEffect } from 'react';
 function WeatherStation() {
   const [weatherData, setWeatherData] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [tempUnit, setTempUnit] = useState('F'); // Default Fahrenheit
+  const [tempUnit, setTempUnit] = useState('F'); // Default to Fahrenheit
 
-  const apiKey = import.meta.env.OPENWEATHER_API_KEY || import.meta.env.VITE_WEATHER_API_KEY; // From environment variables
-  const city = "Charlotte"; // <-- Change to your city if needed
+  const apiKey = import.meta.env.VITE_WEATHER_API_KEY;
+  const city = "Charlotte"; // Change to your preferred city
 
   useEffect(() => {
     async function fetchWeather() {
@@ -39,7 +39,7 @@ function WeatherStation() {
     return <div className="text-red-500 text-center p-10">Weather data not available.</div>;
   }
 
-  const surfaceTempApprox = weatherData.main.temp + 3; // Surface estimate
+  const surfaceTempApprox = weatherData.main.temp + 3;
 
   return (
     <div className="apex-card text-center">
