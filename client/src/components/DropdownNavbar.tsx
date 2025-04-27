@@ -117,6 +117,13 @@ function DropdownNavbar() {
               Weather Center
             </Link>
             <Link 
+              to="/seasonal-checklist" 
+              className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
+              onClick={() => setIsOpen(false)}
+            >
+              Seasonal Checklist
+            </Link>
+            <Link 
               to="/broker-portal" 
               className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
               onClick={() => setIsOpen(false)}

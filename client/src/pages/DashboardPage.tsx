@@ -61,6 +61,11 @@ function DashboardPage() {
             <h2 className="apex-header-green mb-4">Events & Meetups</h2>
             <p className="text-gray-400">Find local car events and meetups.</p>
           </Link>
+
+          <Link to="/seasonal-checklist" className="apex-card hover:bg-gray-900 p-6 rounded-lg">
+            <h2 className="apex-header-green mb-4">Seasonal Adaptation Checklist</h2>
+            <p className="text-gray-400">Seasonal maintenance routines and environment adaptations.</p>
+          </Link>
         </div>
       </div>
     </div>

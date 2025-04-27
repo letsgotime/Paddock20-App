@@ -19,6 +19,7 @@ import GlossGrowthPage from "./pages/GlossGrowthPage";
 import VideoLibraryPage from "./pages/VideoLibraryPage";
 import BrokerPortalPage from "./pages/BrokerPortalPage";
 import Weather from "./pages/Weather";
+import SeasonalChecklistPage from "./pages/SeasonalChecklistPage";
 import DropdownNavbar from "./components/DropdownNavbar";
 import { WeatherProvider } from "./contexts/WeatherContext";
 import AuthPage from "./pages/AuthPage";
@@ -78,6 +79,7 @@ function App() {
                 <Route path="/juicebox-videos" element={<ProtectedRoute><VideoLibraryPage /></ProtectedRoute>} />
                 <Route path="/broker-portal" element={<ProtectedRoute><BrokerPortalPage /></ProtectedRoute>} />
                 <Route path="/weather" element={<ProtectedRoute><Weather /></ProtectedRoute>} />
+                <Route path="/seasonal-checklist" element={<ProtectedRoute><SeasonalChecklistPage /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
