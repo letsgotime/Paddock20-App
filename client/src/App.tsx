@@ -22,6 +22,7 @@ import BrokerPortalPage from "./pages/BrokerPortalPage";
 import Weather from "./pages/Weather";
 import SeasonalChecklistPage from "./pages/SeasonalChecklistPage";
 import EBooksPage from "./pages/eBooksPage";
+import Paddock20HomePage from "./pages/Paddock20HomePage";
 import DropdownNavbar from "./components/DropdownNavbar";
 import { WeatherProvider } from "./contexts/WeatherContext";
 import AuthPage from "./pages/AuthPage";
@@ -103,7 +104,8 @@ function App() {
                 <Route path="/auth" element={!session && !previewMode ? <AuthPage /> : <Navigate to="/dashboard" replace />} />
                 
                 {/* Protected routes */}
-                <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+                <Route path="/" element={<ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
+                <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
                 <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
                 {/* Main Garage Vault Hub - Central repository for all vehicle data */}
                 <Route path="/garage-vault" element={<ProtectedRoute><GarageVaultPage /></ProtectedRoute>} />
@@ -139,7 +141,7 @@ function App() {
             {/* Footer with accessibility information */}
             <footer role="contentinfo" className="py-4 mt-8 border-t border-gray-800">
               <div className="container mx-auto px-4 text-center text-sm text-gray-500">
-                <p>© {new Date().getFullYear()} GoTime Motorsports - ApexVault™</p>
+                <p>© {new Date().getFullYear()} GoTime Motorsports - Paddock20™</p>
                 <p className="mt-2">
                   <a href="#accessibility" className="text-green-500 hover:text-green-400 underline">
                     Accessibility Statement
