@@ -13,6 +13,8 @@ import Motorsports from "@/pages/Motorsports";
 import Settings from "@/pages/Settings";
 import Events from "./pages/Events";
 import JuiceBox from "./pages/JuiceBox";
+import GlossResetPage from "./pages/GlossResetPage";
+import LoadoutsPage from "./pages/LoadoutsPage";
 import DropdownNavbar from "./components/DropdownNavbar";
 import { WeatherProvider } from "./contexts/WeatherContext";
 import './apexvault.css';
@@ -34,6 +36,8 @@ function App() {
                 <Route path="/motorsports" element={<Motorsports />} />
                 <Route path="/events" element={<Events />} />
                 <Route path="/juicebox" element={<JuiceBox />} />
+                <Route path="/gloss-reset" element={<GlossResetPage />} />
+                <Route path="/juice-loadouts" element={<LoadoutsPage />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
