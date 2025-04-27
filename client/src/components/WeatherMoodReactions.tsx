@@ -1,347 +1,239 @@
-import React, { useState, useEffect } from 'react';
-import { Smile, Frown, CloudRain, Sun, Cloud, Snowflake, Wind, ThumbsUp, ThumbsDown } from 'lucide-react';
+import React, { useState } from 'react';
 
 interface WeatherMoodReactionsProps {
   weatherData: any;
 }
 
 /**
- * Weather Mood Reactions Component
- * 
- * Displays emoji reactions based on current weather conditions and allows users
- * to react with their own mood in relation to the weather
+ * A component that allows users to react to current weather conditions
+ * with emoji-based reactions and mood indicators
  */
 const WeatherMoodReactions: React.FC<WeatherMoodReactionsProps> = ({ weatherData }) => {
   const [selectedMood, setSelectedMood] = useState<string | null>(null);
-  const [moodStats, setMoodStats] = useState<Record<string, number>>({
-    'love': 0,
-    'happy': 0,
-    'sad': 0,
-    'neutral': 0,
-    'dislike': 0
+  const [reactionCount, setReactionCount] = useState<{[key: string]: number}>({
+    '😍': 0,
+    '😎': 0,
+    '😊': 0,
+    '😐': 0,
+    '😒': 0,
+    '😢': 0,
+    '😡': 0,
+    '🥶': 0,
+    '🥵': 0
   });
-  const [animateEmoji, setAnimateEmoji] = useState<string | null>(null);
+  const [hasReacted, setHasReacted] = useState(false);
   
-  // Determine appropriate weather emoji based on conditions
-  const getWeatherEmoji = () => {
-    if (!weatherData || !weatherData.weather || !weatherData.weather[0]) {
-      return { icon: <Cloud size={40} />, description: 'Unknown weather conditions' };
-    }
-
-    const weatherCode = weatherData.weather[0].id;
-    const weatherMain = weatherData.weather[0].main.toLowerCase();
-    
+  if (!weatherData || !weatherData.weather || weatherData.weather.length === 0) {
+    return null;
+  }
+  
+  // Get weather condition details
+  const temp = weatherData.main?.temp || 0;
+  const weatherId = weatherData.weather[0].id;
+  const weatherType = weatherData.weather[0].main;
+  
+  // Suggest relevant moods based on weather
+  const getSuggestedMoods = () => {
     // Thunderstorm
-    if (weatherCode >= 200 && weatherCode < 300) {
-      return { 
-        icon: '⛈️', 
-        description: 'Thunderstorm',
-        moodSuggestion: 'Stay cozy indoors with a book or movie'
-      };
+    if (weatherId >= 200 && weatherId < 300) {
+      return ['😒', '😐', '😡'];
     }
-    
     // Drizzle
-    if (weatherCode >= 300 && weatherCode < 400) {
-      return { 
-        icon: '🌦️', 
-        description: 'Drizzle',
-        moodSuggestion: 'Perfect for a light walk with a jacket' 
-      };
+    else if (weatherId >= 300 && weatherId < 400) {
+      return ['😐', '😒', '😢'];
     }
-    
     // Rain
-    if (weatherCode >= 500 && weatherCode < 600) {
-      return { 
-        icon: '🌧️', 
-        description: 'Rain',
-        moodSuggestion: 'Hot coffee and relaxing indoors recommended' 
-      };
+    else if (weatherId >= 500 && weatherId < 600) {
+      return ['😐', '😒', '😢'];
     }
-    
     // Snow
-    if (weatherCode >= 600 && weatherCode < 700) {
-      return { 
-        icon: '❄️', 
-        description: 'Snow',
-        moodSuggestion: 'Bundle up! Perfect for winter photography or a snowball fight' 
-      };
+    else if (weatherId >= 600 && weatherId < 700) {
+      return ['😍', '😊', '🥶'];
     }
-    
-    // Atmosphere (fog, mist, etc.)
-    if (weatherCode >= 700 && weatherCode < 800) {
-      return { 
-        icon: '🌫️', 
-        description: 'Foggy/Misty',
-        moodSuggestion: 'Drive carefully, turn on your fog lights' 
-      };
+    // Atmosphere (fog, haze, etc.)
+    else if (weatherId >= 700 && weatherId < 800) {
+      return ['😐', '😒'];
     }
-    
     // Clear
-    if (weatherCode === 800) {
-      return { 
-        icon: '☀️', 
-        description: 'Clear Sky',
-        moodSuggestion: 'Perfect day for a drive or outdoor activities' 
-      };
+    else if (weatherId === 800) {
+      // If it's clear but very cold
+      if (temp < 40) {
+        return ['😎', '🥶', '😊'];
+      }
+      // If it's clear but very hot
+      else if (temp > 85) {
+        return ['😎', '🥵', '😒'];
+      }
+      // If it's clear and nice
+      else {
+        return ['😍', '😎', '😊'];
+      }
+    }
+    // Cloudy
+    else if (weatherId > 800) {
+      return ['😐', '😒', '😊'];
     }
     
-    // Clouds
-    if (weatherCode > 800) {
-      return { 
-        icon: '☁️', 
-        description: 'Cloudy',
-        moodSuggestion: 'Good day for a casual cruise' 
-      };
-    }
-    
-    // Fallback
-    return { 
-      icon: '🌡️', 
-      description: weatherMain,
-      moodSuggestion: 'Check local conditions before heading out' 
-    };
+    // Default set of moods
+    return ['😊', '😐', '😒'];
   };
-
-  // Get activity recommendations based on weather
-  const getActivityRecommendation = () => {
-    if (!weatherData || !weatherData.weather || !weatherData.weather[0]) {
-      return "Check weather conditions before planning activities";
-    }
-
-    const temp = weatherData.main?.temp || 0;
-    const windSpeed = weatherData.wind?.speed || 0;
-    const weatherCode = weatherData.weather[0].id;
+  
+  const getReactionTitle = () => {
+    // Default question
+    let question = "How do you feel about today's weather?";
     
-    // Too hot
-    if (temp > 95) {
-      return "Too hot for most driving activities. Consider indoor car maintenance or detailing in a shaded area.";
-    }
-    
-    // Hot weather
-    if (temp > 85) {
-      return "Good temperature for drives, but monitor engine temps. Early morning or evening drives recommended.";
-    }
-    
-    // Ideal weather
-    if (temp >= 65 && temp <= 85 && weatherCode >= 800) {
-      return "Perfect conditions for driving! Ideal for spirited driving or scenic routes.";
+    // Customize based on weather
+    if (weatherId >= 200 && weatherId < 300) {
+      question = "How's the thunderstorm affecting your mood?";
+    } else if (weatherId >= 500 && weatherId < 600) {
+      question = "Rain got you feeling a certain way?";
+    } else if (weatherId >= 600 && weatherId < 700) {
+      question = "How's the snow making you feel?";
+    } else if (weatherId === 800 && temp > 85) {
+      question = "Is this heat working for you?";
+    } else if (weatherId === 800 && temp < 40) {
+      question = "How are you handling the cold clear day?";
+    } else if (weatherId === 800 && temp >= 40 && temp <= 85) {
+      question = "Perfect weather! How's it affecting your vibe?";
     }
     
-    // Cool weather
-    if (temp >= 45 && temp < 65) {
-      return "Great temperature for driving. Your car's performance might be slightly enhanced in cooler weather.";
-    }
-    
-    // Cold weather
-    if (temp < 45 && temp > 32) {
-      return "Cold weather driving. Allow your car to warm up properly before driving hard.";
-    }
-    
-    // Freezing weather
-    if (temp <= 32) {
-      return "Freezing conditions. Check tire pressure, use winter tires if available, and drive with caution.";
-    }
-    
-    // Rain
-    if (weatherCode >= 500 && weatherCode < 600) {
-      return "Rainy conditions. Reduce speed, increase following distance, and be gentle with controls.";
-    }
-    
-    // Snow
-    if (weatherCode >= 600 && weatherCode < 700) {
-      return "Snowy conditions. Consider postponing drive or use appropriate winter gear and techniques.";
-    }
-    
-    // High winds
-    if (windSpeed > 20) {
-      return "High winds detected. Be cautious of crosswinds, especially in larger vehicles.";
-    }
-    
-    // Default
-    return "Check local conditions and drive accordingly. Always prioritize safety.";
+    return question;
   };
-
-  // Simulate fetching mood statistics
-  useEffect(() => {
-    // In a real app, this would be an API call to get actual user mood statistics
-    const simulatedStats = {
-      'love': Math.floor(Math.random() * 30),
-      'happy': Math.floor(Math.random() * 40),
-      'neutral': Math.floor(Math.random() * 20),
-      'sad': Math.floor(Math.random() * 15),
-      'dislike': Math.floor(Math.random() * 10),
-    };
-    
-    setMoodStats(simulatedStats);
-  }, [weatherData]);
-
+  
   // Handle mood selection
   const handleMoodSelect = (mood: string) => {
-    // Animate the selected emoji
-    setAnimateEmoji(mood);
-    setTimeout(() => setAnimateEmoji(null), 1000);
+    if (hasReacted) return;
     
-    // Update selected mood
     setSelectedMood(mood);
-    
-    // Update mood stats (in a real app, this would be an API call)
-    setMoodStats(prev => ({
-      ...prev,
-      [mood]: prev[mood] + 1
-    }));
+    setReactionCount({
+      ...reactionCount,
+      [mood]: reactionCount[mood] + 1
+    });
+    setHasReacted(true);
   };
-
-  // Get total reactions for calculating percentages
-  const totalReactions = Object.values(moodStats).reduce((sum, count) => sum + count, 0);
-
-  // Get weather emoji and description
-  const { icon, description, moodSuggestion } = getWeatherEmoji();
-  const activityRecommendation = getActivityRecommendation();
-
+  
+  // Get all moods to display
+  const allMoods = Object.keys(reactionCount);
+  
+  // Get suggested moods for this weather
+  const suggestedMoods = getSuggestedMoods();
+  
+  // Get other moods (not in suggested)
+  const otherMoods = allMoods.filter(mood => !suggestedMoods.includes(mood));
+  
   return (
     <div className="bg-gray-900 rounded-lg p-6 shadow-lg border border-gray-700">
-      <h3 className="text-blue-400 font-orbitron text-xl mb-4">Weather Mood Reactions</h3>
+      <h3 className="text-blue-400 font-orbitron text-xl mb-4">Weather Mood Tracker</h3>
       
-      {/* Weather emoji and description */}
-      <div className="flex flex-col sm:flex-row items-center mb-6 bg-gray-800 p-4 rounded-lg">
-        <div className="text-5xl mb-3 sm:mb-0 sm:mr-4">
-          {typeof icon === 'string' ? icon : icon}
+      <div className="mb-4">
+        <p className="text-white">{getReactionTitle()}</p>
+      </div>
+      
+      <div className="space-y-4">
+        {/* Weather description */}
+        <div className="bg-gray-800 rounded p-3 flex items-center justify-between">
+          <div>
+            <span className="text-gray-400">Current conditions:</span>
+            <span className="ml-2 text-white">
+              {weatherData.weather[0].description.charAt(0).toUpperCase() + 
+               weatherData.weather[0].description.slice(1)}
+              {temp ? `, ${Math.round(temp)}°` : ''}
+            </span>
+          </div>
         </div>
+        
+        {/* Suggested Moods */}
         <div>
-          <p className="text-lg font-semibold text-white">{description}</p>
-          <p className="text-sm text-gray-300">{moodSuggestion}</p>
-        </div>
-      </div>
-      
-      {/* Activity recommendation */}
-      <div className="mb-6 bg-gray-800 p-4 rounded-lg">
-        <h4 className="text-green-500 font-orbitron text-lg mb-2">Driver's Recommendation</h4>
-        <p className="text-gray-300">{activityRecommendation}</p>
-      </div>
-      
-      {/* Mood reaction options */}
-      <div className="mb-6">
-        <h4 className="text-white font-semibold mb-3">How do you feel about this weather?</h4>
-        <div className="flex justify-between max-w-md mx-auto">
-          <button 
-            onClick={() => handleMoodSelect('love')}
-            className={`p-2 rounded-full transition-transform ${animateEmoji === 'love' ? 'scale-150' : ''} ${selectedMood === 'love' ? 'bg-pink-900/30 ring-2 ring-pink-600' : 'hover:bg-gray-800'}`}
-            aria-label="Love this weather"
-            aria-pressed={selectedMood === 'love'}
-          >
-            <span className="text-2xl" role="img" aria-label="Love">😍</span>
-          </button>
-          
-          <button 
-            onClick={() => handleMoodSelect('happy')}
-            className={`p-2 rounded-full transition-transform ${animateEmoji === 'happy' ? 'scale-150' : ''} ${selectedMood === 'happy' ? 'bg-green-900/30 ring-2 ring-green-600' : 'hover:bg-gray-800'}`}
-            aria-label="Happy about this weather"
-            aria-pressed={selectedMood === 'happy'}
-          >
-            <span className="text-2xl" role="img" aria-label="Happy">😊</span>
-          </button>
-          
-          <button 
-            onClick={() => handleMoodSelect('neutral')}
-            className={`p-2 rounded-full transition-transform ${animateEmoji === 'neutral' ? 'scale-150' : ''} ${selectedMood === 'neutral' ? 'bg-blue-900/30 ring-2 ring-blue-600' : 'hover:bg-gray-800'}`}
-            aria-label="Neutral about this weather"
-            aria-pressed={selectedMood === 'neutral'}
-          >
-            <span className="text-2xl" role="img" aria-label="Neutral">😐</span>
-          </button>
-          
-          <button 
-            onClick={() => handleMoodSelect('sad')}
-            className={`p-2 rounded-full transition-transform ${animateEmoji === 'sad' ? 'scale-150' : ''} ${selectedMood === 'sad' ? 'bg-purple-900/30 ring-2 ring-purple-600' : 'hover:bg-gray-800'}`}
-            aria-label="Sad about this weather"
-            aria-pressed={selectedMood === 'sad'}
-          >
-            <span className="text-2xl" role="img" aria-label="Sad">😔</span>
-          </button>
-          
-          <button 
-            onClick={() => handleMoodSelect('dislike')}
-            className={`p-2 rounded-full transition-transform ${animateEmoji === 'dislike' ? 'scale-150' : ''} ${selectedMood === 'dislike' ? 'bg-red-900/30 ring-2 ring-red-600' : 'hover:bg-gray-800'}`}
-            aria-label="Dislike this weather"
-            aria-pressed={selectedMood === 'dislike'}
-          >
-            <span className="text-2xl" role="img" aria-label="Dislike">😠</span>
-          </button>
-        </div>
-      </div>
-      
-      {/* Community mood statistics */}
-      <div>
-        <h4 className="text-white font-semibold mb-3">Community Reactions</h4>
-        <div className="space-y-2">
-          <div className="flex items-center">
-            <span className="text-xl mr-2" role="img" aria-hidden="true">😍</span>
-            <div className="flex-1 bg-gray-800 rounded-full h-4 ml-2">
-              <div 
-                className="bg-pink-600 h-4 rounded-full" 
-                style={{ width: `${totalReactions ? (moodStats.love / totalReactions * 100) : 0}%` }}
-                aria-label={`${moodStats.love} love reactions, ${totalReactions ? Math.round(moodStats.love / totalReactions * 100) : 0}% of total`}
-              />
-            </div>
-            <span className="ml-2 text-xs">{moodStats.love}</span>
-          </div>
-          
-          <div className="flex items-center">
-            <span className="text-xl mr-2" role="img" aria-hidden="true">😊</span>
-            <div className="flex-1 bg-gray-800 rounded-full h-4 ml-2">
-              <div 
-                className="bg-green-600 h-4 rounded-full" 
-                style={{ width: `${totalReactions ? (moodStats.happy / totalReactions * 100) : 0}%` }}
-                aria-label={`${moodStats.happy} happy reactions, ${totalReactions ? Math.round(moodStats.happy / totalReactions * 100) : 0}% of total`}
-              />
-            </div>
-            <span className="ml-2 text-xs">{moodStats.happy}</span>
-          </div>
-          
-          <div className="flex items-center">
-            <span className="text-xl mr-2" role="img" aria-hidden="true">😐</span>
-            <div className="flex-1 bg-gray-800 rounded-full h-4 ml-2">
-              <div 
-                className="bg-blue-600 h-4 rounded-full" 
-                style={{ width: `${totalReactions ? (moodStats.neutral / totalReactions * 100) : 0}%` }}
-                aria-label={`${moodStats.neutral} neutral reactions, ${totalReactions ? Math.round(moodStats.neutral / totalReactions * 100) : 0}% of total`}
-              />
-            </div>
-            <span className="ml-2 text-xs">{moodStats.neutral}</span>
-          </div>
-          
-          <div className="flex items-center">
-            <span className="text-xl mr-2" role="img" aria-hidden="true">😔</span>
-            <div className="flex-1 bg-gray-800 rounded-full h-4 ml-2">
-              <div 
-                className="bg-purple-600 h-4 rounded-full" 
-                style={{ width: `${totalReactions ? (moodStats.sad / totalReactions * 100) : 0}%` }}
-                aria-label={`${moodStats.sad} sad reactions, ${totalReactions ? Math.round(moodStats.sad / totalReactions * 100) : 0}% of total`}
-              />
-            </div>
-            <span className="ml-2 text-xs">{moodStats.sad}</span>
-          </div>
-          
-          <div className="flex items-center">
-            <span className="text-xl mr-2" role="img" aria-hidden="true">😠</span>
-            <div className="flex-1 bg-gray-800 rounded-full h-4 ml-2">
-              <div 
-                className="bg-red-600 h-4 rounded-full" 
-                style={{ width: `${totalReactions ? (moodStats.dislike / totalReactions * 100) : 0}%` }}
-                aria-label={`${moodStats.dislike} dislike reactions, ${totalReactions ? Math.round(moodStats.dislike / totalReactions * 100) : 0}% of total`}
-              />
-            </div>
-            <span className="ml-2 text-xs">{moodStats.dislike}</span>
+          <h4 className="text-green-400 text-sm font-semibold mb-2">SUGGESTED FOR THIS WEATHER:</h4>
+          <div className="flex flex-wrap gap-3">
+            {suggestedMoods.map(mood => (
+              <button
+                key={mood}
+                onClick={() => handleMoodSelect(mood)}
+                className={`text-2xl p-2 rounded-full transition-all ${
+                  selectedMood === mood
+                    ? 'bg-blue-500 transform scale-110'
+                    : 'bg-gray-800 hover:bg-gray-700'
+                } ${hasReacted && selectedMood !== mood ? 'opacity-50' : ''}`}
+                disabled={hasReacted && selectedMood !== mood}
+                aria-label={`React with ${mood} emoji`}
+              >
+                {mood}
+              </button>
+            ))}
           </div>
         </div>
-      </div>
-      
-      {/* Selected mood confirmation */}
-      {selectedMood && (
-        <div className="mt-4 text-center text-sm text-gray-300">
-          <p>Thanks for sharing your reaction to today's weather!</p>
+        
+        {/* Other Moods */}
+        <div>
+          <h4 className="text-gray-400 text-sm font-semibold mb-2">OTHER MOODS:</h4>
+          <div className="flex flex-wrap gap-3">
+            {otherMoods.map(mood => (
+              <button
+                key={mood}
+                onClick={() => handleMoodSelect(mood)}
+                className={`text-2xl p-2 rounded-full transition-all ${
+                  selectedMood === mood
+                    ? 'bg-blue-500 transform scale-110'
+                    : 'bg-gray-800 hover:bg-gray-700'
+                } ${hasReacted && selectedMood !== mood ? 'opacity-50' : ''}`}
+                disabled={hasReacted && selectedMood !== mood}
+                aria-label={`React with ${mood} emoji`}
+              >
+                {mood}
+              </button>
+            ))}
+          </div>
         </div>
-      )}
+        
+        {/* Results Section (simplified for this version) */}
+        {hasReacted && (
+          <div className="mt-6 bg-gray-800 p-4 rounded-lg">
+            <h4 className="text-blue-400 font-semibold mb-2">Community Vibes</h4>
+            <p className="text-gray-300 mb-4">
+              You and others in your area feel {selectedMood} about today's weather.
+            </p>
+            
+            <div className="grid grid-cols-3 sm:grid-cols-5 gap-3">
+              {Object.entries(reactionCount)
+                .sort(([_, countA], [__, countB]) => countB - countA)
+                .slice(0, 5)
+                .map(([mood, count]) => (
+                  <div 
+                    key={mood} 
+                    className={`p-2 rounded-lg text-center ${
+                      mood === selectedMood ? 'bg-blue-900/40 border border-blue-700' : 'bg-gray-700'
+                    }`}
+                  >
+                    <div className="text-2xl mb-1">{mood}</div>
+                    <div className="text-sm text-gray-300">
+                      {count} {count === 1 ? 'person' : 'people'}
+                    </div>
+                  </div>
+                ))
+              }
+            </div>
+          </div>
+        )}
+        
+        {/* Reset Button (only show after reacting) */}
+        {hasReacted && (
+          <button
+            onClick={() => {
+              setHasReacted(false);
+              setSelectedMood(null);
+            }}
+            className="w-full mt-4 px-4 py-2 bg-gray-700 hover:bg-gray-600 rounded-lg text-white transition-colors"
+          >
+            Reset my reaction
+          </button>
+        )}
+        
+        {/* Automotive-specific mood note */}
+        <div className="mt-4 text-sm text-gray-400 italic">
+          <p>Note: Weather reactions help the Paddock20 community plan drives and events based on collective preferences.</p>
+        </div>
+      </div>
     </div>
   );
 };
