@@ -623,21 +623,36 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
 
       const apiKey = process.env.VITE_ACCUWEATHER_API_KEY;
+      console.log('Using AccuWeather API Key:', apiKey?.substring(0, 5) + '...');
       
       if (!apiKey) {
-        return res.status(200).json({ Key: "mockLocationKey123" });
+        return res.status(500).json({ message: 'AccuWeather API key is not configured' });
       }
       
       const url = `https://dataservice.accuweather.com/locations/v1/cities/geoposition/search?apikey=${apiKey}&q=${lat},${lon}`;
+      console.log('AccuWeather URL:', url);
       
-      const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`AccuWeather Location API error: ${response.status}`);
+      // Log response details for debugging
+      try {
+        const response = await fetch(url);
+        console.log('AccuWeather Location API Response Status:', response.status);
+        console.log('AccuWeather Location API Response Headers:', JSON.stringify([...response.headers.entries()]));
+        
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error('AccuWeather Error Response:', errorText);
+          throw new Error(`AccuWeather Location API error: ${response.status} - ${errorText}`);
+        }
+        
+        const data = await response.json();
+        console.log('AccuWeather Location API Success - Location Key:', data.Key);
+        res.json(data);
+      } catch (fetchError) {
+        console.error('AccuWeather Fetch Error:', fetchError);
+        throw fetchError;
       }
-      
-      const data = await response.json();
-      res.json(data);
     } catch (error) {
+      console.error('AccuWeather Location API Handler Error:', error);
       res.status(500).json({ message: (error as Error).message || 'Failed to fetch AccuWeather location key' });
     }
   });
