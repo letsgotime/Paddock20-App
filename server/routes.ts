@@ -425,6 +425,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Add route to get weather API key
+  app.get('/api/weather-key', (req, res) => {
+    res.json({ apiKey: process.env.OPENWEATHER_API_KEY });
+  });
+  
   // Initialize database for demo purposes
   // This would normally happen through user registration/onboarding
   app.post('/api/init-demo-data', async (req, res) => {

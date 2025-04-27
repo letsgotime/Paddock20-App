@@ -4,15 +4,34 @@ function WeatherStation() {
   const [weatherData, setWeatherData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [tempUnit, setTempUnit] = useState('F'); // Default to Fahrenheit
-
-  const apiKey = import.meta.env.VITE_WEATHER_API_KEY;
+  const [apiKey, setApiKey] = useState('');
+  
   const city = "Charlotte"; // Change to your preferred city
 
+  // First, get the API key from the server
   useEffect(() => {
+    async function getApiKey() {
+      try {
+        const response = await fetch('/api/weather-key');
+        const data = await response.json();
+        setApiKey(data.apiKey);
+      } catch (error) {
+        console.error('Error fetching API key:', error);
+        setLoading(false);
+      }
+    }
+    getApiKey();
+  }, []);
+
+  // Then, fetch weather data once we have the API key
+  useEffect(() => {
+    if (!apiKey) return; // Skip if we don't have an API key yet
+    
     async function fetchWeather() {
       try {
         const response = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&units=imperial&appid=${apiKey}`);
         const data = await response.json();
+        console.log('Weather data:', data);
         setWeatherData(data);
         setLoading(false);
       } catch (error) {
