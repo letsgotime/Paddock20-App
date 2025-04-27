@@ -1,18 +1,26 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
+import supabase from '../services/supabaseClient';
 
 function DropdownNavbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const navigate = useNavigate();
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
   };
 
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setIsOpen(false);
+    navigate('/auth');
+  };
+
   return (
     <nav className="bg-black border-b border-gray-700 p-4 flex items-center justify-between">
-      <h1 className="text-blue-400 font-orbitron text-2xl">
+      <Link to="/dashboard" className="text-blue-400 font-orbitron text-2xl no-underline">
         ApexVault™
-      </h1>
+      </Link>
 
       <div className="relative">
         <button 
@@ -25,11 +33,11 @@ function DropdownNavbar() {
         {isOpen && (
           <div className="absolute right-0 mt-2 w-48 bg-gray-900 rounded-lg shadow-lg z-20">
             <Link 
-              to="/" 
+              to="/dashboard" 
               className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
               onClick={() => setIsOpen(false)}
             >
-              Home
+              Dashboard
             </Link>
             <Link 
               to="/garage" 
@@ -108,6 +116,12 @@ function DropdownNavbar() {
             >
               Settings
             </Link>
+            <button 
+              onClick={handleLogout}
+              className="block w-full text-left px-4 py-2 text-red-400 hover:bg-red-800 hover:text-white font-openSans border-t border-gray-700 mt-2"
+            >
+              Logout
+            </button>
           </div>
         )}
       </div>
