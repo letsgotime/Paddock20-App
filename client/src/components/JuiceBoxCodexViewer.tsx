@@ -1,11 +1,11 @@
 import React, { useState } from 'react';
-
-interface Product {
-  name: string;
-  link: string;
-  notes: string;
-  affiliate?: boolean;
-}
+import { 
+  productCategories, 
+  trainingVideos as videoCategories,
+  sevenDaySchedule,
+  detailingKits
+} from '../data/detailingData';
+import type { Product } from '../data/detailingData';
 
 interface JuiceBoxCodexViewerProps {
   onAddProduct?: (product: Product) => void;
@@ -13,242 +13,6 @@ interface JuiceBoxCodexViewerProps {
 
 function JuiceBoxCodexViewer({ onAddProduct }: JuiceBoxCodexViewerProps) {
   const [activeSection, setActiveSection] = useState<string>('introduction');
-
-  // Define the Juice Box training videos from the provided links
-  const trainingVideos = {
-    wash: [
-      { title: "Best Carwash Technique: 15 Steps + Tools", link: "https://youtu.be/uWmtLSQYbys" }
-    ],
-    dry: [
-      { title: "How to Dry Paint Properly Without Scratches", link: "https://youtu.be/w0hzJImmvNU" },
-      { title: "Dry Your Paint Safely | Autoblog Details", link: "https://youtu.be/WJnV6-9qDi8" }
-    ],
-    glass: [
-      { title: "Glass Cleaning Basics", link: "https://youtu.be/q4WwOrkgXlc" }
-    ],
-    clay: [
-      { title: "Clay Bar Basics", link: "https://youtu.be/T7k6AjQvqyg" },
-      { title: "Iron Remover Basics", link: "https://youtu.be/NFudV_IgCjU" }
-    ],
-    interior: [
-      { title: "Interior Quick Reset", link: "https://youtu.be/4Bd_IqK5ydU" },
-      { title: "Vent and Button Detailing", link: "https://youtu.be/YJAQxQaTlgg" },
-      { title: "Leather and Glass Deep Cleaning", link: "https://youtu.be/R0EOb2nEWtk" }
-    ],
-    correction: [
-      { title: "Swirl Removal Intro", link: "https://youtu.be/uKbaXVhvMxE" },
-      { title: "Correction Stages Explained", link: "https://youtu.be/0Y-FprmhQA4" },
-      { title: "Final Polish Techniques", link: "https://youtu.be/pF9Q2KcsrCE" }
-    ],
-    wheels: [
-      { title: "How to Clean Barrels and Lugs", link: "https://youtu.be/f0pRK0LvZ-Q" }
-    ]
-  };
-
-  // JuiceBox product categories based on provided content
-  const productCategories = [
-    {
-      category: "Wash & Foam",
-      products: [
-        { name: "AMMO Foam", link: "https://www.ammonyc.com/shop/hoseless-lift-kit-150/", notes: "Thick, safe, coating-respecting" },
-        { name: "GYEON Foam", link: "https://www.gyeonquartzusa.com/", notes: "Deep pull, stays where it sprays" },
-        { name: "Turtle Wax Snow Foam", link: "https://www.amazon.com/", notes: "High yield, great for flips" },
-        { name: "MTM PF22.2 Foam Cannon", link: "https://www.obsessedgarage.com/products/mtm-pf22-2-foam-cannon", notes: "Consistent laydown, adjustable fan", affiliate: true },
-        { name: "4-Bucket System", link: "https://www.obsessedgarage.com/collections/buckets", notes: "Paint, lower panel, soap, wheels – each gets a job", affiliate: true }
-      ]
-    },
-    {
-      category: "Wheels, Tires & Rubber",
-      products: [
-        { name: "AMMO Plum", link: "https://www.ammonyc.com/shop/ammo-plum-wheel-cleaner/", notes: "Foamable, no sling, low scent" },
-        { name: "GYEON Tire Cleaner", link: "https://www.gyeonquartzusa.com/", notes: "Strong, safe for rubber" },
-        { name: "AMMO Iron Remover", link: "https://www.ammonyc.com/", notes: "Embedded dust dissolver" },
-        { name: "RaceGlaze XL", link: "https://www.obsessedgarage.com/products/raceglaze-detailing-brush-xl", notes: "Best reach, safest flex", affiliate: true },
-        { name: "Curveball Brush", link: "https://detailersunited.com/", notes: "Ergonomic, soft impact" },
-        { name: "Tuf Shine Tire Brush", link: "https://www.tufshine.com/", notes: "Grip + scrub balance" },
-        { name: "BigBoi BlowR Pro", link: "https://www.obsessedgarage.com/products/bigboi-blowr-pro", notes: "Spot-free barrels, no towel needed", affiliate: true }
-      ]
-    },
-    {
-      category: "Correction & Polish",
-      products: [
-        { name: "Turtle Wax 1 & Done", link: "https://www.amazon.com/dp/B08P5432LM/", notes: "Great ROI on flips, easy one-step" },
-        { name: "Meguiar's D300/D302", link: "https://www.amazon.com/Meguiars-Microfiber-Correction-Compound-Removes/dp/B0051PKGU8/", notes: "Proven stack, safe for most clears" },
-        { name: "CarPro Essence Plus", link: "https://www.amazon.com/CarPro-Essence-Plus-500mL/dp/B01MS4LQOV/", notes: "Gloss layer before coating" },
-        { name: "Xtreme Solutions Wonder Bundle", link: "https://xtremesolutionsinc.com/", notes: "Reliable, aggressive + refined pairing" }
-      ]
-    },
-    {
-      category: "Coatings, Sealants & Toppers",
-      products: [
-        { name: "CarPro CQuartz UK 3.0", link: "https://www.amazon.com/dp/B00W8APMQM/", notes: "Consistent results, long-term trust" },
-        { name: "DLUX", link: "https://www.amazon.com/dp/B00FPUIQWE/", notes: "Temp safe, fade-proof" },
-        { name: "FlyBy Forte", link: "https://www.amazon.com/dp/B01C6E6DIA/", notes: "Wiper-safe, hydrophobic" },
-        { name: "CarPro Reload", link: "https://www.amazon.com/CarPro-Reload-Inorganic-Spray-Sealant/dp/B00VK9HUMG/", notes: "Flex gloss, safe layer" },
-        { name: "AMMO Boost", link: "https://www.ammonyc.com/", notes: "Cold-safe, quick protection" },
-        { name: "CarPro Elixir", link: "https://www.carpro-us.com/", notes: "Fast gloss" },
-        { name: "HydroSlick", link: "https://www.chemicalguys.com/", notes: "High pop, low price, flip-friendly" }
-      ]
-    },
-    {
-      category: "Interior Tools & Cleaners",
-      products: [
-        { name: "AMMO Mousse", link: "https://www.ammonyc.com/shop/mousse-interior-cleaner/", notes: "Dry touch, no scent, no film" },
-        { name: "GYEON Leather Shield", link: "https://www.gyeonquartzusa.com/", notes: "Easy, safe, subtle" },
-        { name: "Stoner Invisible Glass", link: "https://www.amazon.com/dp/B0007OWD2M/", notes: "Streak-free, no fog feedback" },
-        { name: "Colourlock Leather Shield", link: "https://www.colourlock.com/", notes: "Deep nourishment, dry-to-touch" },
-        { name: "Detail Factory Brushes", link: "https://detailfactory.com/", notes: "Never scratch, always finish-ready" }
-      ]
-    },
-    {
-      category: "Towels That Work",
-      products: [
-        { name: "Drying Towel (Obsessed Garage + Griot's PFM)", link: "https://www.amazon.com/dp/B01CJ4NY3C/", notes: "Absorbent drying with minimal friction" },
-        { name: "Coating Towel", link: "https://www.obsessedgarage.com/products/wax-removal-detail-spray-towel", notes: "Low pile, laser cut, edge-free", affiliate: true },
-        { name: "Interior Towel", link: "https://detail-division.com/", notes: "High absorption, lint-free" },
-        { name: "Waffle Weave", link: "https://theragcompany.com/", notes: "Tight pattern, no streaks" },
-        { name: "All-Purpose (Costco Kirkland)", link: "https://www.costco.com/kirkland-signature-ultra-plush-microfiber-towel%2c-yellow%2c-16-in-x-16-in%2c-36-count.product.100356999.html", notes: "General utility, budget solution" }
-      ]
-    },
-    {
-      category: "Equipment That Moves with You",
-      products: [
-        { name: "BigBoi BlowR Pro", link: "https://www.obsessedgarage.com/products/bigboi-blowr-pro", notes: "Heat-safe, fast, zero towel swipes", affiliate: true },
-        { name: "MetroVac", link: "https://www.obsessedgarage.com/products/metrovac-sidekick-blower", notes: "Corners, edges, trim", affiliate: true },
-        { name: "TORQ22D", link: "https://www.amazon.com/dp/B014ONKB6Q/", notes: "5–6\" panel coverage" },
-        { name: "Griot's G8 Mini", link: "https://www.griotsgarage.com/", notes: "Tight curves + touch-ups" },
-        { name: "Porter Cable 7424XP", link: "https://www.amazon.com/", notes: "Safe DA option, great learner tool" },
-        { name: "CR Spotless System", link: "https://www.obsessedgarage.com/", notes: "TDS-safe, perfect for black cars", affiliate: true }
-      ]
-    }
-  ];
-
-  // Juice Box loadout kits
-  const juiceBoxLoadouts = [
-    { 
-      name: "$150 Starter Kit",
-      contents: [
-        "Foam Gun (entry level)",
-        "Chemical Guys Snow Foam Soap",
-        "3 Premium Microfiber Towels",
-        "1 GYEON Smoothie Wash Mitt",
-        "AMMO Frothe Hoseless Lift Kit"
-      ],
-      purpose: "Entry-level kit for flip cars or basic maintenance washes."
-    },
-    {
-      name: "$500 Builder Kit",
-      contents: [
-        "MTM PF22.2 Foam Cannon",
-        "AMMO Foam",
-        "CarPro Reload Sealant",
-        "AMMO Boost Maintenance Layer",
-        "Griot's PFM Drying Towel",
-        "Obsessed Garage Wax Removal Towels",
-        "BigBoi BlowR Pro (Optional lower-end model if available)"
-      ],
-      purpose: "For weekly users, home garages, and semi-pro flip garages."
-    },
-    {
-      name: "$1500+ Pro Kit",
-      contents: [
-        "Complete 4-Bucket Wash Setup (Paint, Lower, Soap, Wheels)",
-        "MTM PF22.2 Foam Cannon + High PSI Pressure Washer",
-        "BigBoi BlowR Pro or MetroVac Sidekick Blower",
-        "Full Gloss Reset Product Stack (Frothe, Reload, Elixir, Boost)",
-        "CQuartz UK 3.0 Ceramic Coating Kit",
-        "DLUX Wheel and Trim Coating",
-        "FlyBy Forte Glass Coating",
-        "Complete Interior Protection Stack (Mousse, Leather Shield)",
-        "Obsessed Garage Full Towel Kit",
-        "Polisher Setup (Torq22D or Griot's G8 Mini Combo)"
-      ],
-      purpose: "Workshop-ready detailing kit for client delivery prep, serious resale prepping, and full personal garage sovereignty."
-    }
-  ];
-
-  // 7-Day Reset Schedule
-  const sevenDaySchedule = [
-    {
-      day: 1,
-      title: "Inspect + Journal",
-      tasks: [
-        "Check Paint - Beading, Sheeting, Grit",
-        "Inspect Trim - Fading, Stickiness",
-        "Inspect Wheels - Fallout, Brake Dust",
-        "Inspect Glass - Water Spots, Wiper Chatter",
-        "Inspect Interior - Grease, Dust, Film",
-        "Start Gloss Journal - Track now, compare on Day 7"
-      ]
-    },
-    {
-      day: 2,
-      title: "Decon & Reset",
-      tasks: [
-        "Apply IronX to lower panels and barrels",
-        "Full body pre-wash using AMMO Foam",
-        "Clay Mitt surface with Frothe lubrication",
-        "Rinse and Blow Dry vehicle",
-        "Conduct baggie test for surface smoothness"
-      ]
-    },
-    {
-      day: 3,
-      title: "Frothe + Topper Pass",
-      tasks: [
-        "Quick wipe with Frothe to reboost slickness",
-        "Apply Reload if water behavior is weak",
-        "Optional Elixir gloss bump if flip prepping",
-        "Boost maintenance layer if garage storing"
-      ]
-    },
-    {
-      day: 4,
-      title: "Interior Reset",
-      tasks: [
-        "Mousse wipe on wheels, console, armrest",
-        "Vent and button brushing",
-        "Glass streak inspection",
-        "Optional DLUX application on dash/console",
-        "Leather conditioning with Leather Shield or CQuartz Leather",
-        "Re-scent cabin with Diptyque or Culti diffuser"
-      ]
-    },
-    {
-      day: 5,
-      title: "Wheels + Tires Final Reset",
-      tasks: [
-        "Deep tire scrub with AMMO Plum",
-        "Optional iron fallout cleanup if necessary",
-        "Barrel face mitt wash + detail brush",
-        "Blow dry wheels and calipers",
-        "Apply DLUX if coating wheels",
-        "Apply GYEON Tire Dressing or AMMO Mud"
-      ]
-    },
-    {
-      day: 6,
-      title: "Final Prep Polish (Optional)",
-      tasks: [
-        "Essence Plus for safe smooth finish polish",
-        "1&Done one-step if deeper defects visible",
-        "Frothe wipe-down post polish",
-        "Apply Reload to lock gloss if needed"
-      ]
-    },
-    {
-      day: 7,
-      title: "Photos, Packet, Walkthrough",
-      tasks: [
-        "Final walk-around photos and video",
-        "Document product stack used",
-        "Journal Gloss Reset results",
-        "Prepare Flip Packet if selling",
-        "Optional: QR-code product list inclusion",
-        "Final handover checklist (Gloss Verified ✅)"
-      ]
-    }
-  ];
 
   return (
     <div>
@@ -414,7 +178,7 @@ function JuiceBoxCodexViewer({ onAddProduct }: JuiceBoxCodexViewerProps) {
           </div>
 
           <div className="space-y-8">
-            {juiceBoxLoadouts.map((kit, index) => (
+            {detailingKits.map((kit, index) => (
               <div key={index} className="bg-black p-5 rounded-lg">
                 <h3 className="text-xl font-orbitron text-blue-400 mb-3">{kit.name}</h3>
                 <p className="text-white mb-4">{kit.purpose}</p>
@@ -533,7 +297,7 @@ function JuiceBoxCodexViewer({ onAddProduct }: JuiceBoxCodexViewerProps) {
             <div>
               <h3 className="text-xl font-orbitron text-blue-400 mb-4">Wash Technique</h3>
               <div className="space-y-4">
-                {trainingVideos.wash.map((video, index) => (
+                {videoCategories.find(cat => cat.category === "Wash Technique")?.videos.map((video, index) => (
                   <div key={index} className="bg-black p-4 rounded-lg">
                     <h4 className="text-blue-400 font-orbitron text-md mb-2">{video.title}</h4>
                     <div className="relative aspect-video bg-gray-900 mb-3 flex items-center justify-center">
@@ -567,7 +331,7 @@ function JuiceBoxCodexViewer({ onAddProduct }: JuiceBoxCodexViewerProps) {
             <div>
               <h3 className="text-xl font-orbitron text-blue-400 mb-4">Drying Techniques</h3>
               <div className="space-y-4">
-                {trainingVideos.dry.map((video, index) => (
+                {videoCategories.find(cat => cat.category === "Drying Techniques")?.videos.map((video, index) => (
                   <div key={index} className="bg-black p-4 rounded-lg">
                     <h4 className="text-blue-400 font-orbitron text-md mb-2">{video.title}</h4>
                     <div className="relative aspect-video bg-gray-900 mb-3 flex items-center justify-center">
@@ -601,7 +365,7 @@ function JuiceBoxCodexViewer({ onAddProduct }: JuiceBoxCodexViewerProps) {
             <div>
               <h3 className="text-xl font-orbitron text-blue-400 mb-4">Glass Cleaning</h3>
               <div className="space-y-4">
-                {trainingVideos.glass.map((video, index) => (
+                {videoCategories.find(cat => cat.category === "Glass Cleaning")?.videos.map((video, index) => (
                   <div key={index} className="bg-black p-4 rounded-lg">
                     <h4 className="text-blue-400 font-orbitron text-md mb-2">{video.title}</h4>
                     <div className="relative aspect-video bg-gray-900 mb-3 flex items-center justify-center">
