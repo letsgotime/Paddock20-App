@@ -18,13 +18,13 @@ function DropdownNavbar() {
 
   return (
     <nav className="bg-black border-b border-gray-700 p-4 flex items-center justify-between">
-      <Link to="/dashboard" className="flex items-center text-blue-400 font-orbitron text-2xl no-underline">
+      <Link to="/dashboard" className="flex items-center font-orbitron text-2xl no-underline">
         <img 
-          src="/assets/GoTime Logo-7FC844-White (1).png" 
+          src="/assets/GoTime White.png" 
           alt="GoTime Motorsports" 
           className="h-10 w-auto mr-2"
         />
-        <span>ApexVault™</span>
+        <span className="text-green-500">ApexVault™</span>
       </Link>
 
       <div className="relative">

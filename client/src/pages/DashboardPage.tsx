@@ -12,13 +12,13 @@ function DashboardPage() {
     <div className="p-10 bg-black min-h-screen">
       <div className="max-w-6xl mx-auto">
         <img 
-          src="/assets/GoTime Logo-7FC844-White (1).png" 
+          src="/assets/GoTime White.png" 
           alt="GoTime Motorsports" 
-          className="h-20 w-auto mx-auto mb-8"
+          className="h-24 w-auto mx-auto mb-8"
         />
 
         <div className="flex justify-between items-center mb-10">
-          <h1 className="apex-header text-3xl">ApexVault™ Dashboard</h1>
+          <h1 className="text-green-500 font-orbitron text-3xl uppercase">ApexVault™ Dashboard</h1>
           <button 
             onClick={handleLogout}
             className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg"
