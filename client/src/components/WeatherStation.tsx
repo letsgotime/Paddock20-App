@@ -120,11 +120,11 @@ const WeatherStation: React.FC = () => {
         </div>
       )}
 
-      {error && !isLoading && (
+      {(error || (!weatherData && !isLoading)) && (
         <div className="bg-gray-900 rounded-xl p-8 text-center" aria-live="assertive" role="alert">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" aria-hidden="true" />
           <p className="text-xl text-red-500">Unable to load weather data</p>
-          <p className="text-gray-400 mt-2">{error.message || 'Please check your connection and try again'}</p>
+          <p className="text-gray-400 mt-2">{error ? (error.message || 'Please check your connection and try again') : 'Could not retrieve weather information. Please try again.'}</p>
           <button 
             onClick={refreshWeather} 
             className="mt-4 px-5 py-2 bg-blue-500 hover:bg-blue-600 transition-colors rounded-lg focus:ring-2 focus:ring-blue-400 focus:outline-none"
@@ -135,7 +135,7 @@ const WeatherStation: React.FC = () => {
         </div>
       )}
 
-      {weatherData && !isLoading && !error && (
+      {!isLoading && !error && weatherData && (
         <>
           <CurrentWeather />
           <WeatherAlerts />

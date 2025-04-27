@@ -87,20 +87,30 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
   // Handle errors
   useEffect(() => {
     if (weatherError) {
+      console.error("Weather API error:", weatherError);
       toast({
         title: "Error fetching weather data",
-        description: (weatherError as Error).message,
+        description: "Unable to load current weather. Please try again.",
         variant: "destructive",
       });
     }
     if (forecastError) {
+      console.error("Forecast API error:", forecastError);
       toast({
         title: "Error fetching forecast data",
-        description: (forecastError as Error).message,
+        description: "Unable to load forecast data. Please try again.",
         variant: "destructive",
       });
     }
-  }, [weatherError, forecastError]);
+    if (oneCallError) {
+      console.error("OneCall API error:", oneCallError);
+      toast({
+        title: "Error fetching extended weather data",
+        description: "Unable to load extended weather details. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [weatherError, forecastError, oneCallError]);
 
   // Add a location to saved locations
   const addSavedLocation = (location: Location) => {
@@ -132,7 +142,7 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
     addSavedLocation,
     removeSavedLocation,
     isLoading: isWeatherLoading || isForecastLoading || isOneCallLoading,
-    error: weatherError as Error || forecastError as Error || oneCallError as Error || null,
+    error: weatherError || forecastError || oneCallError || null,
     weatherData: weatherData || null,
     forecastData: forecastData || null,
     oneCallData: oneCallData || null,
