@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 
 function WeatherStation() {
   const [weatherData, setWeatherData] = useState(null);
@@ -110,9 +111,9 @@ function WeatherStation() {
       
       {/* Seasonal Checklist Button */}
       <div className="mt-6">
-        <a href="/seasonal-checklist" className="apex-button">
+        <Link to="/seasonal-checklist" className="apex-button">
           View Full Seasonal Checklist
-        </a>
+        </Link>
       </div>
 
       {/* We'll add the iframe when we have the API key */}
