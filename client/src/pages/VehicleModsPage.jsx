@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import supabase from '../services/supabaseClient';
 import { Card } from '@/components/ui/card';
-import { ArrowLeft, Link as LinkIcon, Calendar, FileText } from 'lucide-react';
+import { ArrowLeft, Link as LinkIcon, Calendar, FileText, Wrench } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Button } from '@/components/ui/button';
@@ -17,24 +17,30 @@ function VehicleModsPage() {
     notes: ''
   });
   const [loading, setLoading] = useState(true);
-  const [vehicle, setVehicle] = useState(null);
+  const [vehicleName, setVehicleName] = useState('');
 
   useEffect(() => {
     async function fetchData() {
       try {
         setLoading(true);
         
-        // Fetch vehicle and mods data from Supabase (mocked)
+        // Fetch vehicle data (for the name)
         const vehicleResponse = await supabase
           .from('Vehicles')
+          .select('car_name')
           .eq('id', id)
           .single();
           
+        if (vehicleResponse.data) {
+          setVehicleName(vehicleResponse.data.car_name);
+        }
+          
+        // Fetch mods data for this vehicle
         const modsResponse = await supabase
           .from('VehicleMods')
+          .select('*')
           .eq('vehicle_id', id);
           
-        setVehicle(vehicleResponse.data || { car_name: 'Sample Vehicle' });
         setMods(modsResponse.data || []);
         setLoading(false);
       } catch (error) {
@@ -54,11 +60,11 @@ function VehicleModsPage() {
     e.preventDefault();
     
     try {
-      // Add new mod to Supabase (mocked)
+      // Add new mod to Supabase
       const { data, error } = await supabase
         .from('VehicleMods')
         .insert({
-          user_id: 'preview-user',
+          user_id: (await supabase.auth.getUser()).data.user.id,
           vehicle_id: id,
           mod_title: modData.mod_title,
           install_date: modData.install_date,
@@ -105,12 +111,12 @@ function VehicleModsPage() {
           <Link to="/garage-vault" className="mr-4 text-gray-400 hover:text-white">
             <ArrowLeft className="h-5 w-5" />
           </Link>
-          <h2 className="apex-header-green">MODS & UPGRADES: {vehicle?.car_name}</h2>
+          <h2 className="apex-header-green">{vehicleName} | BUILD SHEET</h2>
         </div>
 
         {/* Mod Form */}
         <Card className="apex-card mb-10 p-6 bg-gray-900 border-gray-800">
-          <h3 className="apex-header-gray mb-6">ADD NEW MODIFICATION</h3>
+          <h3 className="text-blue-400 font-orbitron text-lg mb-6 text-center">ADD NEW MODIFICATION</h3>
           
           <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6">
             <div>
@@ -153,7 +159,7 @@ function VehicleModsPage() {
             </div>
             
             <div>
-              <label htmlFor="notes" className="block text-sm text-gray-400 mb-1">Notes (performance gains, installation notes, etc.)</label>
+              <label htmlFor="notes" className="block text-sm text-gray-400 mb-1">Notes (performance gains, installation notes)</label>
               <Textarea 
                 id="notes"
                 name="notes" 
@@ -165,7 +171,10 @@ function VehicleModsPage() {
               ></Textarea>
             </div>
             
-            <Button type="submit" className="apex-button w-full">Add Modification</Button>
+            <Button type="submit" className="apex-button w-full flex items-center justify-center">
+              <Wrench className="h-4 w-4 mr-2" />
+              Add Modification
+            </Button>
           </form>
         </Card>
 
@@ -211,6 +220,13 @@ function VehicleModsPage() {
             ))}
           </div>
         )}
+        
+        <div className="text-center mt-10">
+          <Link to="/garage-vault" className="apex-button inline-block">
+            <ArrowLeft className="h-4 w-4 mr-2 inline" />
+            Return to Garage Vault
+          </Link>
+        </div>
       </div>
     </div>
   );
