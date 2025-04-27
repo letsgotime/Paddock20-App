@@ -1,93 +1,110 @@
 import React, { useState, useEffect } from 'react';
 import { useWeather } from '@/contexts/WeatherContext';
+import { Volume2, VolumeX } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import WeatherIcon from './WeatherIcon';
+import { generateWeatherDescription } from '../lib/accessibility';
 
-interface WeatherData {
-  main: {
-    temp: number;
-    humidity: number;
-  };
-  wind: {
-    speed: number;
-  };
-}
+/**
+ * A simplified weather station component for the homepage
+ * with voice over capability for accessibility
+ */
+const SimpleWeatherStation: React.FC = () => {
+  const { weatherData, selectedLocation, unit } = useWeather();
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  
+  // Stop any ongoing speech when component unmounts
+  useEffect(() => {
+    return () => {
+      window.speechSynthesis?.cancel();
+    };
+  }, []);
 
-function SimpleWeatherStation() {
-  const { 
-    unit, 
-    setUnit, 
-    isLoading, 
-    error, 
-    weatherData
-  } = useWeather();
+  if (!weatherData || !selectedLocation) {
+    return (
+      <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
+        <p className="text-gray-400 text-center">Loading weather information...</p>
+      </div>
+    );
+  }
 
-  const toggleTempUnit = () => {
-    setUnit(unit === 'metric' ? 'imperial' : 'metric');
-  };
+  // Temperature unit symbol
+  const tempUnit = unit === 'metric' ? '°C' : '°F';
+  const speedUnit = unit === 'metric' ? 'm/s' : 'mph';
 
-  // Estimate surface temp roughly 3°F above air temp
-  const getSurfaceTemp = (airTemp: number) => {
-    if (unit === 'imperial') {
-      return airTemp + 3;
-    } else {
-      return airTemp + 1.7; // roughly 3°F in Celsius
+  // Speak the current weather description
+  const speakWeather = () => {
+    // Cancel any previous speech
+    window.speechSynthesis?.cancel();
+    
+    if (isSpeaking) {
+      setIsSpeaking(false);
+      return;
     }
+    
+    const description = generateWeatherDescription(weatherData, unit);
+    const utterance = new SpeechSynthesisUtterance(description);
+
+    // Try to use a nice voice if available
+    const voices = window.speechSynthesis.getVoices();
+    const preferredVoice = voices.find(voice => 
+      voice.lang.includes('en') && (voice.name.includes('Daniel') || voice.name.includes('Google'))
+    );
+    
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+    }
+    
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    
+    window.speechSynthesis.speak(utterance);
+    setIsSpeaking(true);
   };
-
-  if (isLoading) {
-    return (
-      <div className="text-white font-openSans text-center py-10">
-        Loading Weather Data...
-      </div>
-    );
-  }
-
-  if (!weatherData) {
-    return (
-      <div className="text-red-500 font-openSans text-center py-10">
-        Failed to load weather data.
-      </div>
-    );
-  }
-
-  const surfaceTempApprox = getSurfaceTemp(weatherData.main.temp);
-  const unitSymbol = unit === 'metric' ? 'C' : 'F';
 
   return (
-    <div className="apex-card text-center">
-      <h2 className="apex-header mb-6">
-        Garage Weather Station
-      </h2>
-
-      <button
-        onClick={toggleTempUnit}
-        className="apex-button mb-6"
-      >
-        Switch to °{unit === 'imperial' ? 'C' : 'F'}
-      </button>
-
-      <div className="grid grid-cols-2 gap-6">
-        <div className="bg-black p-4 rounded-lg">
-          <h3 className="text-green-400 font-orbitron text-sm uppercase mb-2">Air Temp</h3>
-          <p className="text-2xl text-white">{Math.round(weatherData.main.temp)}°{unitSymbol}</p>
+    <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
+      <div className="flex justify-between items-center mb-2">
+        <div className="flex items-center">
+          <WeatherIcon 
+            iconCode={weatherData.weather[0].icon}
+            size={36}
+            className="mr-2"
+          />
+          <div>
+            <p className="font-orbitron text-lg">{selectedLocation.name}</p>
+            <p className="text-gray-400 text-sm">{new Date().toLocaleDateString()}</p>
+          </div>
         </div>
-
-        <div className="bg-black p-4 rounded-lg">
-          <h3 className="text-green-400 font-orbitron text-sm uppercase mb-2">Surface Temp (Approx)</h3>
-          <p className="text-2xl text-white">{Math.round(surfaceTempApprox)}°{unitSymbol}</p>
+        <div className="text-2xl font-medium">{Math.round(weatherData.main.temp)}{tempUnit}</div>
+      </div>
+      
+      <div className="mt-3 mb-1">
+        <div className="flex justify-between text-sm">
+          <span>Feels like: {Math.round(weatherData.main.feels_like)}{tempUnit}</span>
+          <span>{weatherData.weather[0].description}</span>
         </div>
-
-        <div className="bg-black p-4 rounded-lg">
-          <h3 className="text-green-400 font-orbitron text-sm uppercase mb-2">Humidity</h3>
-          <p className="text-2xl text-white">{weatherData.main.humidity}%</p>
-        </div>
-
-        <div className="bg-black p-4 rounded-lg">
-          <h3 className="text-green-400 font-orbitron text-sm uppercase mb-2">Wind Speed</h3>
-          <p className="text-2xl text-white">{Math.round(weatherData.wind.speed)} {unit === 'imperial' ? 'mph' : 'm/s'}</p>
-        </div>
+      </div>
+      
+      <div className="mt-3 flex justify-between text-sm text-gray-400">
+        <span>Wind: {weatherData.wind.speed} {speedUnit}</span>
+        <span>Humidity: {weatherData.main.humidity}%</span>
+      </div>
+      
+      {/* Voice narration button */}
+      <div className="mt-3 text-right">
+        <Button
+          size="sm"
+          variant="ghost"
+          onClick={speakWeather}
+          aria-label={isSpeaking ? "Stop weather narration" : "Listen to weather narration"}
+          className={`rounded-full h-8 w-8 p-0 ${isSpeaking ? 'text-green-500' : 'text-gray-400 hover:text-blue-400'}`}
+        >
+          {isSpeaking ? <Volume2 size={16} /> : <VolumeX size={16} />}
+        </Button>
       </div>
     </div>
   );
-}
+};
 
 export default SimpleWeatherStation;
