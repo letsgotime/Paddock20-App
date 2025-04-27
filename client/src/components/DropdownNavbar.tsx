@@ -41,14 +41,22 @@ const DropdownNavbar = () => {
             
             {/* Checklists Dropdown */}
             <div className="relative group">
-              <button className="flex items-center justify-between hover:text-green-400 w-full text-white">
-                <span>✅ Checklists</span>
-                <ChevronRight className="w-4 h-4 text-gray-400 group-hover:text-green-400" />
+              <button className="flex items-center hover:text-green-400 w-full">
+                ✅ Checklists
+                <svg
+                  className="w-4 h-4 ml-2"
+                  fill="none"
+                  stroke="currentColor"
+                  viewBox="0 0 24 24"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
+                </svg>
               </button>
-              <div className="absolute right-full mr-2 top-0 hidden group-hover:block bg-[#151515] border border-gray-800 rounded-lg p-3 z-10 w-52 shadow-xl">
-                <Link to="/checklists/tire" className="block hover:text-green-400 py-1" onClick={() => setIsOpen(false)}>🛞 Tire Checklist</Link>
-                <Link to="/checklists/maintenance" className="block hover:text-green-400 py-1" onClick={() => setIsOpen(false)}>🛠️ Maintenance Checklist</Link>
-                <Link to="/checklists/pre-drive" className="block hover:text-green-400 py-1" onClick={() => setIsOpen(false)}>🛡️ Pre-Drive Checklist</Link>
+              <div className="absolute top-0 left-full ml-2 hidden group-hover:block bg-gray-900 border border-gray-700 rounded-lg shadow-lg p-4 z-10">
+                <Link to="/checklists/tire" className="block hover:text-green-400 mb-2" onClick={() => setIsOpen(false)}>🛞 Tire Checklist</Link>
+                <Link to="/checklists/maintenance" className="block hover:text-green-400 mb-2" onClick={() => setIsOpen(false)}>🛠️ Maintenance Checklist</Link>
+                <Link to="/checklists/pre-drive" className="block hover:text-green-400" onClick={() => setIsOpen(false)}>🛡️ Pre-Drive Checklist</Link>
               </div>
             </div>
 
