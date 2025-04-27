@@ -1,100 +1,180 @@
 import React, { useEffect, useState } from "react";
-import { getLocationKey, fetchCurrentConditions, fetchDailyForecast, fetchMinuteCast } from "@/services/accuweatherService";
-import { AlertCircle } from "lucide-react";
+import { getLocationKey, fetchCurrentConditions, fetchDailyForecast, fetchMinuteCast } from "@/services/accuWeatherService";
+import { Loader2 } from "lucide-react";
 
 const WeatherDashboard = () => {
   const [currentConditions, setCurrentConditions] = useState<any>(null);
   const [dailyForecast, setDailyForecast] = useState<any>(null);
   const [minuteCast, setMinuteCast] = useState<any>(null);
-  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
 
   useEffect(() => {
     const fetchWeatherData = async () => {
       try {
         setLoading(true);
-        navigator.geolocation.getCurrentPosition(
-          async (position) => {
-            const { latitude, longitude } = position.coords;
-            
-            try {
-              const locationKey = await getLocationKey(latitude, longitude);
-              
-              const current = await fetchCurrentConditions(locationKey);
-              const daily = await fetchDailyForecast(locationKey);
-              const minute = await fetchMinuteCast(locationKey);
-              
-              setCurrentConditions(current);
-              setDailyForecast(daily);
-              setMinuteCast(minute);
-              setLoading(false);
-            } catch (err) {
-              console.error("Error fetching weather data:", err);
-              setError("Failed to load weather data. Please try again later.");
-              setLoading(false);
-            }
-          },
-          (err) => {
-            console.error("Geolocation error:", err);
-            setError("Location access denied. Please enable location services to get weather information.");
-            setLoading(false);
-          }
-        );
+        setError(null);
+        
+        // Request user's current location
+        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(resolve, reject, {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 0
+          });
+        });
+        
+        const { latitude, longitude } = position.coords;
+        console.log('Got user coordinates:', latitude, longitude);
+        
+        // Get AccuWeather location key using coordinates
+        const locationKey = await getLocationKey(latitude, longitude);
+        console.log('Got AccuWeather location key:', locationKey);
+        
+        // Fetch all required data in parallel
+        const [current, daily, minute] = await Promise.all([
+          fetchCurrentConditions(locationKey),
+          fetchDailyForecast(locationKey),
+          fetchMinuteCast(latitude, longitude)
+        ]);
+        
+        setCurrentConditions(current);
+        setDailyForecast(daily);
+        setMinuteCast(minute);
       } catch (err) {
-        console.error("Weather data fetch error:", err);
-        setError("An unexpected error occurred. Please try again later.");
+        console.error('Error fetching weather data:', err);
+        setError('Error loading weather data. Please make sure location services are enabled and try again.');
+      } finally {
         setLoading(false);
       }
     };
-
+    
     fetchWeatherData();
   }, []);
 
   if (loading) {
     return (
-      <div className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg p-6 border border-gray-700 flex justify-center items-center h-64">
-        <div className="animate-pulse flex flex-col items-center">
-          <div className="h-12 w-12 rounded-full bg-blue-400/30 mb-4"></div>
-          <div className="h-4 w-48 bg-gray-700 rounded mb-2"></div>
-          <div className="h-3 w-36 bg-gray-700/70 rounded"></div>
-        </div>
+      <div className="flex flex-col items-center justify-center p-6 min-h-[300px]">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-400" />
+        <p className="text-gray-400 mt-4">Loading weather data...</p>
       </div>
     );
   }
 
   if (error) {
     return (
-      <div className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg p-6 border border-red-800 text-center">
-        <AlertCircle className="h-10 w-10 text-red-500 mx-auto mb-3" />
-        <h3 className="text-red-400 text-lg font-medium mb-2">Weather Data Unavailable</h3>
-        <p className="text-gray-300 mb-4">{error}</p>
-        <button 
-          className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-md transition-colors"
-          onClick={() => window.location.reload()}
-        >
-          Retry
-        </button>
+      <div className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg p-6 border border-gray-700">
+        <h2 className="text-blue-400 font-orbitron text-2xl mb-4">Weather Center</h2>
+        <div className="text-red-400 p-4 rounded bg-black/30 border border-red-900/50">
+          <p>{error}</p>
+          <p className="mt-2 text-sm text-gray-400">
+            Please make sure your AccuWeather API key is valid and your location services are enabled.
+          </p>
+        </div>
       </div>
     );
   }
 
   if (!currentConditions || !dailyForecast) {
-    return <p className="text-white">Loading weather data...</p>;
+    return (
+      <div className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg p-6 border border-gray-700">
+        <h2 className="text-blue-400 font-orbitron text-2xl mb-4">Weather Center</h2>
+        <p className="text-white">No weather data available. Please try again later.</p>
+      </div>
+    );
   }
+
+  // Calculate surface temperatures based on air temperature
+  const airTemp = currentConditions.Temperature.Imperial.Value;
+  const isDaytime = currentConditions.IsDayTime;
+  const cloudCover = currentConditions.CloudCover || 50;
+  
+  // Factors affecting surface heating
+  const cloudEffect = 1 - (cloudCover / 100);
+  const timeEffect = isDaytime ? 1 : 0.2;
+  
+  // Base heating factors (°F above air temperature at peak sun)
+  const asphaltFactor = 25; // Asphalt can be 20-30°F warmer than air
+  const concreteFactor = 15; // Concrete about 10-20°F warmer
+  
+  const asphaltTemp = Math.round(airTemp + (asphaltFactor * cloudEffect * timeEffect));
+  const concreteTemp = Math.round(airTemp + (concreteFactor * cloudEffect * timeEffect));
 
   return (
     <div className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg p-6 border border-gray-700">
       <h2 className="text-blue-400 font-orbitron text-2xl mb-6">☁️ Drive Readiness</h2>
 
-      <div className="text-white space-y-3 font-openSans text-base leading-relaxed">
-        <p>Surface Temp: {currentConditions.Temperature.Imperial.Value}°F</p>
-        <p>Wind: {currentConditions.Wind.Speed.Imperial.Value} mph</p>
-        <p>Humidity: {currentConditions.RelativeHumidity}%</p>
-        <p>Barometric Pressure: {currentConditions.Pressure.Imperial.Value} inHg</p>
-        <p>UV Index: {currentConditions.UVIndexText}</p>
-        <p>Sunrise: {new Date(dailyForecast.Sun.Rise).toLocaleTimeString()}</p>
-        <p>Sunset: {new Date(dailyForecast.Sun.Set).toLocaleTimeString()}</p>
-        <p>Rain in Next Hour: {minuteCast?.Summary || "Not available for your location"}</p>
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        <div className="space-y-4">
+          <div className="text-white text-3xl font-bold">
+            {currentConditions.Temperature.Imperial.Value}°F
+          </div>
+          <div className="text-gray-300 flex items-center">
+            <img 
+              src={currentConditions.WeatherIcon ? 
+                `https://developer.accuweather.com/sites/default/files/${currentConditions.WeatherIcon.toString().padStart(2, '0')}-s.png` : 
+                ''
+              } 
+              alt={currentConditions.WeatherText}
+              className="w-10 h-10 mr-2"
+            />
+            <span>{currentConditions.WeatherText}</span>
+          </div>
+          
+          <div className="text-white space-y-3 font-light text-sm leading-relaxed mt-4">
+            <div className="grid grid-cols-2 gap-2">
+              <div>
+                <p className="text-gray-400">Wind</p>
+                <p>{currentConditions.Wind?.Speed?.Imperial?.Value || 0} mph</p>
+              </div>
+              <div>
+                <p className="text-gray-400">Humidity</p>
+                <p>{currentConditions.RelativeHumidity}%</p>
+              </div>
+              <div>
+                <p className="text-gray-400">Pressure</p>
+                <p>{currentConditions.Pressure?.Imperial?.Value || 0} inHg</p>
+              </div>
+              <div>
+                <p className="text-gray-400">UV Index</p>
+                <p>{currentConditions.UVIndexText}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        <div className="space-y-4">
+          <h3 className="text-green-500 font-orbitron text-lg">Surface Temperatures</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="bg-black/30 p-3 rounded border border-gray-800">
+              <p className="text-gray-400 text-sm">Asphalt</p>
+              <p className="text-white text-xl">{asphaltTemp}°F</p>
+            </div>
+            <div className="bg-black/30 p-3 rounded border border-gray-800">
+              <p className="text-gray-400 text-sm">Concrete</p>
+              <p className="text-white text-xl">{concreteTemp}°F</p>
+            </div>
+          </div>
+          
+          <h3 className="text-green-500 font-orbitron text-lg mt-4">Track Info</h3>
+          <div className="grid grid-cols-2 gap-4">
+            <div>
+              <p className="text-gray-400 text-sm">Sunrise</p>
+              <p className="text-white">{new Date(dailyForecast.Sun.Rise).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+            </div>
+            <div>
+              <p className="text-gray-400 text-sm">Sunset</p>
+              <p className="text-white">{new Date(dailyForecast.Sun.Set).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+            </div>
+          </div>
+          
+          {minuteCast && minuteCast.Summary && (
+            <div className="mt-4 p-3 bg-blue-900/20 rounded border border-blue-900/50">
+              <p className="text-blue-400 font-medium">Precipitation</p>
+              <p className="text-white text-sm">{minuteCast.Summary.Phrase}</p>
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
