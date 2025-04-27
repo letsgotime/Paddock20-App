@@ -37,7 +37,7 @@ import HustlePlannerPage from "./pages/HustlePlannerPage";
 import RoutePlannerPage from "./pages/RoutePlannerPage";
 import { useAuth } from "./hooks/useAuth";
 import { MAIN_CONTENT_ID, LiveRegion } from './lib/accessibility';
-import './apexvault.css';
+import './paddock20.css';
 
 function App() {
   // TEMPORARY: Force preview mode to bypass auth
