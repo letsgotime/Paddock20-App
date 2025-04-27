@@ -7,6 +7,7 @@ import SevenDayReset from '../components/SevenDayReset';
 import DetailingKits from '../components/DetailingKits';
 import TrainingVideos from '../components/TrainingVideos';
 import GlossHistory from '../components/GlossHistory';
+import JuiceBoxCodexViewer from '../components/JuiceBoxCodexViewer';
 import { productCategories, sevenDaySchedule, detailingKits, trainingVideos, glossHistory } from '../data/detailingData';
 
 interface Product {
@@ -50,6 +51,15 @@ function JuiceBoxPage() {
               : 'bg-gray-800 text-white hover:bg-gray-700'}`}
         >
           Product Categories
+        </button>
+        <button 
+          onClick={() => setActiveTab('codex')}
+          className={`px-5 py-2 rounded-lg font-orbitron text-sm
+            ${activeTab === 'codex' 
+              ? 'bg-green-500 text-black' 
+              : 'bg-gray-800 text-white hover:bg-gray-700'}`}
+        >
+          Juice Box Codex
         </button>
         <button 
           onClick={() => setActiveTab('my-box')}
@@ -127,6 +137,13 @@ function JuiceBoxPage() {
       
       {activeTab === 'gloss-history' && (
         <GlossHistory events={glossHistory} />
+      )}
+      
+      {activeTab === 'codex' && (
+        <>
+          <JuiceBoxCodexViewer onAddProduct={addProduct} />
+          <AddCustomJuiceProduct onAddProduct={addProduct} />
+        </>
       )}
     </div>
   );
