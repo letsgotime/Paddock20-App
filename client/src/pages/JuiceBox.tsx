@@ -173,7 +173,7 @@ function JuiceBoxPage() {
               ? 'bg-green-500 text-black' 
               : 'bg-gray-800 text-white hover:bg-gray-700'}`}
         >
-          Juice Box Codex
+          Juice Box Products
         </button>
         <button 
           onClick={() => setActiveTab('my-box')}
