@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { exportToPDF, exportToCSV, exportForGoogleDocs } from '../utils/exportUtils';
+import { exportToPdf, exportToCsv, printElement } from '../utils/exportUtils';
 import JuiceBoxProductList from '../components/JuiceBoxProductList';
 import MyJuiceBox from '../components/MyJuiceBox';
 import AddCustomJuiceProduct from '../components/AddCustomJuiceProduct';
@@ -64,17 +64,32 @@ function JuiceBoxPage() {
   // Export handlers
   const handleExportToPDF = async () => {
     setShowExportMenu(false);
-    await exportToPDF('juiceBoxSection', 'GoTime Motorsports - Juice Box', '/assets/Logos/GoTime-White.png');
+    const element = document.getElementById('juiceBoxSection');
+    if (element) {
+      await exportToPdf(element, 'GoTime Motorsports - Juice Box.pdf');
+    }
   };
   
   const handleExportToGoogleSheets = async () => {
     setShowExportMenu(false);
-    await exportToCSV('juiceBoxSection', 'GoTime Motorsports - Juice Box');
+    // Convert products to CSV-friendly format
+    const exportData = productCategories.flatMap(category => 
+      category.products.map(product => ({
+        category: category.name,
+        name: product.name,
+        link: product.link || 'N/A',
+        notes: product.notes || 'N/A'
+      }))
+    );
+    await exportToCsv(exportData, 'GoTime Motorsports - Juice Box.csv');
   };
   
   const handleExportToGoogleDocs = async () => {
     setShowExportMenu(false);
-    await exportForGoogleDocs('juiceBoxSection', 'GoTime Motorsports - Juice Box');
+    const element = document.getElementById('juiceBoxSection');
+    if (element) {
+      await printElement(element, 'GoTime Motorsports - Juice Box');
+    }
   };
 
   const addProduct = (product: Product) => {

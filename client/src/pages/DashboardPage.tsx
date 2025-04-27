@@ -38,9 +38,9 @@ function DashboardPage() {
 
         {/* Dashboard Navigation Links */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Link to="/garage" className="apex-card hover:bg-gray-900 p-6 rounded-lg">
+          <Link to="/garage-vault" className="apex-card hover:bg-gray-900 p-6 rounded-lg">
             <h2 className="apex-header-green mb-4">Garage Vault</h2>
-            <p className="text-gray-400">Manage your vehicles and maintenance records.</p>
+            <p className="text-gray-400">Manage your vehicles and track modifications with Supabase database.</p>
           </Link>
 
           <Link to="/journal" className="apex-card hover:bg-gray-900 p-6 rounded-lg">
@@ -76,11 +76,6 @@ function DashboardPage() {
           <Link to="/pre-drive-checklist" className="apex-card hover:bg-gray-900 p-6 rounded-lg">
             <h2 className="apex-header-gray mb-4">Pre-Drive Readiness</h2>
             <p className="text-gray-400">Complete your essential vehicle safety checklist before every drive.</p>
-          </Link>
-
-          <Link to="/garage-vault" className="apex-card hover:bg-gray-900 p-6 rounded-lg">
-            <h2 className="apex-header-green mb-4">Garage Vault</h2>
-            <p className="text-gray-400">Manage your vehicles and track modifications with Supabase database.</p>
           </Link>
         </div>
       </div>
