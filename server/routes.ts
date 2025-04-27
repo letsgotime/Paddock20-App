@@ -11,6 +11,12 @@ import {
 } from "@shared/schema";
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Helper function to get AccuWeather API key
+  function getAccuWeatherApiKey() {
+    // Use the new API key directly instead of environment variable
+    return "CvuAGFLFJfRdLdjXG1QawpoWGXF4alyN";
+  }
+  
   // Weather API proxy routes
   app.get('/api/weather', async (req, res) => {
     try {
@@ -622,7 +628,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Latitude and longitude are required' });
       }
 
-      const apiKey = process.env.VITE_ACCUWEATHER_API_KEY;
+      // Use the new API key directly
+      const apiKey = "CvuAGFLFJfRdLdjXG1QawpoWGXF4alyN"; // New AccuWeather API key
       console.log('Using AccuWeather API Key:', apiKey?.substring(0, 5) + '...');
       
       if (!apiKey) {
