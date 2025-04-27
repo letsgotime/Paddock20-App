@@ -31,10 +31,10 @@ function DashboardPage() {
           Welcome to your personal car enthusiast command center.
         </p>
 
-        {/* Insert WeatherStation - clickable to seasonal checklist */}
-        <Link to="/seasonal-checklist" className="block mb-10">
+        {/* Insert WeatherStation - now has its own seasonal checklist button */}
+        <div className="block mb-10">
           <WeatherStation />
-        </Link>
+        </div>
 
         {/* Dashboard Navigation Links */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

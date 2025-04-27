@@ -107,6 +107,13 @@ function WeatherStation() {
           Open in Apple Maps
         </a>
       </div>
+      
+      {/* Seasonal Checklist Button */}
+      <div className="mt-6">
+        <a href="/seasonal-checklist" className="apex-button">
+          View Full Seasonal Checklist
+        </a>
+      </div>
 
       {/* We'll add the iframe when we have the API key */}
       {/* <iframe
