@@ -25,16 +25,27 @@ function ChecklistItem({ checklistName, itemName }: ChecklistItemProps) {
   }, [checklistName, itemName]);
 
   const toggleComplete = async () => {
+    const userResponse = await supabase.auth.getUser();
+    
+    const { data } = userResponse;
+    if (!data || !data.user) {
+      console.error('User not authenticated');
+      return;
+    }
+    
     const { error } = await supabase
       .from('UserChecklists')
       .upsert({
-        user_id: (await supabase.auth.getUser()).data.user.id,
+        user_id: data.user.id,
         checklist_name: checklistName,
         item_name: itemName,
         is_complete: !isComplete
       });
+    
     if (!error) {
       setIsComplete(!isComplete);
+    } else {
+      console.error('Error toggling checklist item:', error);
     }
   };
 
