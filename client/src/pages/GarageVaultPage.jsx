@@ -1,4 +1,5 @@
 import React from "react";
+import TireLifecycleManager from "../components/TireLifecycleManager";
 
 const GarageVaultPage = () => {
   return (
@@ -27,6 +28,10 @@ const GarageVaultPage = () => {
             </button>
           </div>
         </div>
+      </div>
+      
+      <div className="mt-12">
+        <TireLifecycleManager />
       </div>
     </div>
   );
