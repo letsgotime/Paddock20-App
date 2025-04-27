@@ -427,17 +427,17 @@ function GarageVaultPage() {
                       <h3 className="text-blue-400 font-orbitron text-xl mb-2">
                         {activeVehicle.year} {activeVehicle.make} {activeVehicle.model}
                       </h3>
-                      <div className="text-white text-sm mb-4">{activeVehicle.car_name}</div>
+                      <div className="text-white text-sm mb-4">Vehicle ID: {activeVehicle.id}</div>
                       
                       <div className="flex flex-wrap gap-3 mb-4">
                         <span className="inline-flex items-center px-3 py-1 bg-gray-800 text-green-400 rounded-full text-sm">
-                          VIN: {activeVehicle.vin || "N/A"}
+                          VIN: {vehicleProfile.vin || "N/A"}
                         </span>
                         <span className="inline-flex items-center px-3 py-1 bg-gray-800 text-green-400 rounded-full text-sm">
-                          {activeVehicle.mileage} miles
+                          {vehicleProfile.mileage} miles
                         </span>
                         <span className="inline-flex items-center px-3 py-1 bg-gray-800 text-green-400 rounded-full text-sm">
-                          {activeVehicle.license_plate || "N/A"}
+                          {vehicleProfile.color || "N/A"}
                         </span>
                       </div>
                     </div>
@@ -478,15 +478,15 @@ function GarageVaultPage() {
                           </li>
                           <li className="flex justify-between">
                             <span className="text-gray-400">Engine:</span>
-                            <span className="text-white">{activeVehicle.engine || "N/A"}</span>
+                            <span className="text-white">{vehicleProfile.engineType || "N/A"}</span>
                           </li>
                           <li className="flex justify-between">
                             <span className="text-gray-400">Transmission:</span>
-                            <span className="text-white">{activeVehicle.transmission || "N/A"}</span>
+                            <span className="text-white">{vehicleProfile.transmission || "N/A"}</span>
                           </li>
                           <li className="flex justify-between">
                             <span className="text-gray-400">Drivetrain:</span>
-                            <span className="text-white">{activeVehicle.drivetrain || "N/A"}</span>
+                            <span className="text-white">{vehicleProfile.driveType || "N/A"}</span>
                           </li>
                         </ul>
                       </div>
@@ -497,15 +497,15 @@ function GarageVaultPage() {
                         <ul className="space-y-2">
                           <li className="flex justify-between">
                             <span className="text-gray-400">Last Oil Change:</span>
-                            <span className="text-white">March 15, 2023</span>
+                            <span className="text-white">{vehicleProfile.maintenance.lastOilChange}</span>
                           </li>
                           <li className="flex justify-between">
-                            <span className="text-gray-400">Next Service Due:</span>
-                            <span className="text-white">1,500 miles</span>
+                            <span className="text-gray-400">Last Service:</span>
+                            <span className="text-white">{vehicleProfile.lastService}</span>
                           </li>
                           <li className="flex justify-between">
-                            <span className="text-gray-400">Tire Rotation:</span>
-                            <span className="text-white">Due</span>
+                            <span className="text-gray-400">Next Service:</span>
+                            <span className="text-white">{vehicleProfile.nextService}</span>
                           </li>
                         </ul>
                         <button className="text-green-400 mt-3 text-sm hover:underline">
