@@ -608,12 +608,14 @@ function GarageVaultPage() {
                       <p className="text-white mb-4">Track all modifications and upgrades to your vehicle. Keep a record of parts, labor, and performance changes.</p>
                       
                       <Link 
-                        to={`/vehicle-mods/${activeVehicle.id}`}
+                        to={`/vehicle-mods/${activeVehicle?.id}`}
                         className="apex-button inline-block"
                       >
                         Go to Modification Hub
                       </Link>
                     </div>
+                    
+                    <h2 className="text-blue-400 font-orbitron text-2xl mb-4">Product Arsenal</h2>
                     
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                       <div className="bg-gray-800 p-4 rounded-lg">
