@@ -35,7 +35,7 @@ const eBooks = [
   },
 ];
 
-const eBooksPage = () => {
+const EBooksPage = () => {
   return (
     <div className="bg-black min-h-screen max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="font-orbitron text-blue-400 text-4xl mb-8">📚 GoTime eBooks Vault</h1>
@@ -66,4 +66,4 @@ const eBooksPage = () => {
   );
 };
 
-export default eBooksPage;
+export default EBooksPage;
