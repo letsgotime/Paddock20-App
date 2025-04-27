@@ -1,217 +1,170 @@
 import React, { useState, useEffect } from 'react';
+import { Sun, CloudSun, Cloud, CloudRain, CloudLightning, CloudSnow, Wind } from 'lucide-react';
 import { motion } from 'framer-motion';
 
-// Define emoji and animation mappings for different weather conditions
-const weatherMoods = {
-  // Clear skies
-  'clear': {
-    emoji: '😎',
-    mood: 'Feeling sunny and optimistic!',
-    color: '#FFD700', // Gold color
-    animation: {
-      y: [0, -10, 0],
-      scale: [1, 1.1, 1],
-      transition: { repeat: Infinity, duration: 3 }
-    },
-    background: 'radial-gradient(circle, rgba(255,215,0,0.2) 0%, rgba(0,0,0,0) 70%)'
+const weatherEmojis = {
+  'Clear': {
+    day: { icon: Sun, color: 'text-yellow-400', text: 'Beautiful day!' },
+    night: { icon: Sun, color: 'text-blue-300', text: 'Clear night!' }
   },
-  'clear night': {
-    emoji: '🌙',
-    mood: 'Calm night vibes...',
-    color: '#E6E6FA', // Lavender color
-    animation: {
-      rotate: [0, 5, 0, -5, 0],
-      transition: { repeat: Infinity, duration: 4 }
-    },
-    background: 'radial-gradient(circle, rgba(230,230,250,0.2) 0%, rgba(0,0,0,0) 70%)'
-  },
-  
-  // Cloudy conditions
-  'clouds': {
-    emoji: '☁️',
-    mood: 'Head in the clouds today.',
-    color: '#B0C4DE', // Light steel blue
-    animation: {
-      x: [0, 10, 0, -10, 0],
-      transition: { repeat: Infinity, duration: 7 }
-    },
-    background: 'radial-gradient(circle, rgba(176,196,222,0.2) 0%, rgba(0,0,0,0) 70%)'
+  'Clouds': {
+    day: { icon: CloudSun, color: 'text-gray-400', text: 'Partly cloudy' },
+    night: { icon: Cloud, color: 'text-gray-500', text: 'Cloudy night' }
   },
   'few clouds': {
-    emoji: '🌤️',
-    mood: 'Partly sunny with a dash of optimism!',
-    color: '#ADD8E6', // Light blue
-    animation: {
-      x: [0, 8, 0, -8, 0],
-      transition: { repeat: Infinity, duration: 6 }
-    },
-    background: 'radial-gradient(circle, rgba(173,216,230,0.2) 0%, rgba(0,0,0,0) 70%)'
+    day: { icon: CloudSun, color: 'text-yellow-300', text: 'Just a few clouds' },
+    night: { icon: CloudSun, color: 'text-blue-300', text: 'Partly cloudy night' }
   },
-  
-  // Rainy conditions
-  'rain': {
-    emoji: '🌧️',
-    mood: 'Perfect day for puddle jumping!',
-    color: '#4682B4', // Steel blue
-    animation: {
-      y: [0, 5, 0],
-      transition: { repeat: Infinity, duration: 1.5 }
-    },
-    background: 'radial-gradient(circle, rgba(70,130,180,0.2) 0%, rgba(0,0,0,0) 70%)'
+  'broken clouds': {
+    day: { icon: Cloud, color: 'text-gray-300', text: 'Mostly cloudy' },
+    night: { icon: Cloud, color: 'text-gray-500', text: 'Cloudy night' }
+  },
+  'scattered clouds': {
+    day: { icon: CloudSun, color: 'text-gray-300', text: 'Scattered clouds' },
+    night: { icon: Cloud, color: 'text-gray-400', text: 'Scattered clouds' }
+  },
+  'overcast clouds': {
+    day: { icon: Cloud, color: 'text-gray-500', text: 'Overcast' },
+    night: { icon: Cloud, color: 'text-gray-600', text: 'Overcast night' }
+  },
+  'Rain': {
+    day: { icon: CloudRain, color: 'text-blue-400', text: 'Rainy day' },
+    night: { icon: CloudRain, color: 'text-blue-500', text: 'Rainy night' }
   },
   'light rain': {
-    emoji: '🌦️',
-    mood: 'A little rain never hurt anyone!',
-    color: '#87CEEB', // Sky blue
-    animation: {
-      y: [0, 3, 0],
-      transition: { repeat: Infinity, duration: 1.5 }
-    },
-    background: 'radial-gradient(circle, rgba(135,206,235,0.2) 0%, rgba(0,0,0,0) 70%)'
+    day: { icon: CloudRain, color: 'text-blue-300', text: 'Light rain' },
+    night: { icon: CloudRain, color: 'text-blue-400', text: 'Light rain' }
+  },
+  'moderate rain': {
+    day: { icon: CloudRain, color: 'text-blue-400', text: 'Moderate rain' },
+    night: { icon: CloudRain, color: 'text-blue-500', text: 'Moderate rain' }
   },
   'heavy rain': {
-    emoji: '⛈️',
-    mood: 'Stay dry out there!',
-    color: '#36454F', // Charcoal
-    animation: {
-      scale: [1, 1.1, 1],
-      rotate: [-2, 0, 2, 0],
-      transition: { repeat: Infinity, duration: 1 }
-    },
-    background: 'radial-gradient(circle, rgba(54,69,79,0.2) 0%, rgba(0,0,0,0) 70%)'
+    day: { icon: CloudRain, color: 'text-blue-600', text: 'Heavy rain' },
+    night: { icon: CloudRain, color: 'text-blue-700', text: 'Heavy rain' }
   },
-  
-  // Snow conditions
-  'snow': {
-    emoji: '❄️',
-    mood: 'Let it snow! Time to hit the slopes!',
-    color: '#E0FFFF', // Light cyan
-    animation: {
-      rotate: [0, 45, 90, 135, 180, 225, 270, 315, 360],
-      transition: { repeat: Infinity, duration: 8 }
-    },
-    background: 'radial-gradient(circle, rgba(224,255,255,0.2) 0%, rgba(0,0,0,0) 70%)'
+  'Thunderstorm': {
+    day: { icon: CloudLightning, color: 'text-purple-400', text: 'Thunderstorm!' },
+    night: { icon: CloudLightning, color: 'text-purple-500', text: 'Thunderstorm!' }
   },
-  
-  // Misty/foggy conditions
-  'mist': {
-    emoji: '🌫️',
-    mood: 'Mysterious vibes today...',
-    color: '#DCDCDC', // Gainsboro
-    animation: {
-      opacity: [0.7, 1, 0.7],
-      transition: { repeat: Infinity, duration: 4 }
-    },
-    background: 'radial-gradient(circle, rgba(220,220,220,0.2) 0%, rgba(0,0,0,0) 70%)'
+  'Snow': {
+    day: { icon: CloudSnow, color: 'text-blue-100', text: 'Snowy day' },
+    night: { icon: CloudSnow, color: 'text-blue-200', text: 'Snowy night' }
   },
-  'fog': {
-    emoji: '🌫️',
-    mood: 'Drive carefully in the fog!',
-    color: '#D3D3D3', // Light gray
-    animation: {
-      opacity: [0.6, 0.9, 0.6],
-      transition: { repeat: Infinity, duration: 3 }
-    },
-    background: 'radial-gradient(circle, rgba(211,211,211,0.2) 0%, rgba(0,0,0,0) 70%)'
+  'Mist': {
+    day: { icon: Wind, color: 'text-gray-300', text: 'Misty conditions' },
+    night: { icon: Wind, color: 'text-gray-400', text: 'Misty night' }
   },
-  
-  // Stormy conditions
-  'thunderstorm': {
-    emoji: '⚡',
-    mood: 'Electrifying atmosphere!',
-    color: '#9370DB', // Medium purple
-    animation: {
-      scale: [1, 1.3, 1],
-      transition: { repeat: Infinity, duration: 0.8 }
-    },
-    background: 'radial-gradient(circle, rgba(147,112,219,0.2) 0%, rgba(0,0,0,0) 70%)'
+  'Fog': {
+    day: { icon: Wind, color: 'text-gray-400', text: 'Foggy conditions' },
+    night: { icon: Wind, color: 'text-gray-500', text: 'Foggy night' }
   },
-  
-  // Extreme weather
-  'tornado': {
-    emoji: '🌪️',
-    mood: 'Seek shelter immediately!',
-    color: '#696969', // Dim gray
-    animation: {
-      rotate: [0, 360],
-      transition: { repeat: Infinity, duration: 2 }
-    },
-    background: 'radial-gradient(circle, rgba(105,105,105,0.2) 0%, rgba(0,0,0,0) 70%)'
+  'Haze': {
+    day: { icon: Wind, color: 'text-yellow-200', text: 'Hazy conditions' },
+    night: { icon: Wind, color: 'text-yellow-300', text: 'Hazy night' }
   },
-  
-  // Default for unknown conditions
-  'default': {
-    emoji: '🌈',
-    mood: 'Weather is always an adventure!',
-    color: '#FFFFFF', // White
-    animation: {
-      y: [0, -5, 0],
-      transition: { repeat: Infinity, duration: 2 }
-    },
-    background: 'radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(0,0,0,0) 70%)'
+  'Drizzle': {
+    day: { icon: CloudRain, color: 'text-blue-200', text: 'Light drizzle' },
+    night: { icon: CloudRain, color: 'text-blue-300', text: 'Light drizzle' }
   }
 };
 
-const WeatherMoodEmoji = ({ weatherCondition, isNight }) => {
-  const [mood, setMood] = useState(null);
+// Fallback for unknown weather conditions
+const defaultEmoji = {
+  day: { icon: Sun, color: 'text-yellow-400', text: 'Weather looks good!' },
+  night: { icon: Sun, color: 'text-blue-300', text: 'Clear night!' }
+};
+
+function WeatherMoodEmoji({ weatherCondition, isNight = false }) {
+  const [animateIcon, setAnimateIcon] = useState(false);
+  const timeOfDay = isNight ? 'night' : 'day';
   
+  // Find the emoji that best matches the current condition
+  const findMatchingEmoji = () => {
+    // First try exact match
+    if (weatherEmojis[weatherCondition]) {
+      return weatherEmojis[weatherCondition][timeOfDay];
+    }
+    
+    // Then try to find a partial match in the key
+    for (const key in weatherEmojis) {
+      if (weatherCondition.toLowerCase().includes(key.toLowerCase())) {
+        return weatherEmojis[key][timeOfDay];
+      }
+    }
+    
+    // Check for common weather terms
+    if (weatherCondition.toLowerCase().includes('rain')) {
+      return weatherEmojis['Rain'][timeOfDay];
+    } else if (weatherCondition.toLowerCase().includes('cloud')) {
+      return weatherEmojis['Clouds'][timeOfDay];
+    } else if (weatherCondition.toLowerCase().includes('thunder')) {
+      return weatherEmojis['Thunderstorm'][timeOfDay];
+    } else if (weatherCondition.toLowerCase().includes('snow')) {
+      return weatherEmojis['Snow'][timeOfDay];
+    } else if (weatherCondition.toLowerCase().includes('mist') || 
+              weatherCondition.toLowerCase().includes('fog')) {
+      return weatherEmojis['Mist'][timeOfDay];
+    }
+    
+    // Fallback
+    return defaultEmoji[timeOfDay];
+  };
+  
+  const emoji = findMatchingEmoji();
+  const IconComponent = emoji.icon;
+  
+  // Trigger animation periodically
   useEffect(() => {
-    // Convert the weather condition to lowercase for matching
-    const condition = weatherCondition ? weatherCondition.toLowerCase() : '';
+    const interval = setInterval(() => {
+      setAnimateIcon(true);
+      setTimeout(() => setAnimateIcon(false), 1000);
+    }, 5000);
     
-    // Check for night-time clear skies
-    if (condition.includes('clear') && isNight) {
-      setMood(weatherMoods['clear night']);
-      return;
-    }
-    
-    // Look for exact matches first
-    if (weatherMoods[condition]) {
-      setMood(weatherMoods[condition]);
-      return;
-    }
-    
-    // Look for partial matches
-    const partialMatch = Object.keys(weatherMoods).find(key => 
-      condition.includes(key) && key !== 'default'
-    );
-    
-    if (partialMatch) {
-      setMood(weatherMoods[partialMatch]);
-      return;
-    }
-    
-    // Fallback to default
-    setMood(weatherMoods['default']);
-  }, [weatherCondition, isNight]);
+    return () => clearInterval(interval);
+  }, []);
   
-  if (!mood) return null;
-  
+  const getAnimation = () => {
+    if (emoji.icon === Sun) {
+      return {
+        rotate: [0, 20, 0, -20, 0],
+        scale: [1, 1.2, 1]
+      };
+    } else if (emoji.icon === CloudRain) {
+      return {
+        y: [0, -10, 0],
+        x: [0, 5, 0, -5, 0]
+      };
+    } else if (emoji.icon === CloudLightning) {
+      return {
+        scale: [1, 1.3, 1],
+        opacity: [1, 0.8, 1]
+      };
+    } else if (emoji.icon === CloudSnow) {
+      return {
+        rotate: [0, 10, 0, -10, 0],
+        y: [0, -5, 5, 0]
+      };
+    } else {
+      return {
+        scale: [1, 1.1, 1],
+        y: [0, -5, 0]
+      };
+    }
+  };
+
   return (
-    <div 
-      className="weather-mood-container p-4 rounded-xl transition-all duration-300 my-4"
-      style={{ 
-        background: mood.background,
-        border: `2px solid ${mood.color}25`
-      }}
-    >
-      <div className="flex items-center justify-center mb-2">
-        <motion.div 
-          className="text-5xl md:text-6xl" 
-          animate={mood.animation}
-          style={{ filter: 'drop-shadow(0 0 8px ' + mood.color + ')' }}
-        >
-          {mood.emoji}
-        </motion.div>
-      </div>
-      <p 
-        className="text-center font-medium mt-1"
-        style={{ color: mood.color }}
+    <div className="flex flex-col items-center justify-center mb-8">
+      <motion.div
+        animate={animateIcon ? getAnimation() : {}}
+        transition={{ duration: 1 }}
+        className={`${emoji.color} mx-auto mb-2`}
       >
-        {mood.mood}
-      </p>
+        <IconComponent size={80} strokeWidth={1.5} />
+      </motion.div>
+      <p className="text-xl text-center font-medium text-gray-300">{emoji.text}</p>
     </div>
   );
-};
+}
 
 export default WeatherMoodEmoji;
