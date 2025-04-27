@@ -8,6 +8,9 @@ function WeatherStation() {
   const [error, setError] = useState(null);
   const [city, setCity] = useState("New York");
   const [location, setLocation] = useState({ lat: 40.7128, lon: -74.0060 }); // Default to NYC
+  const [weatherMood, setWeatherMood] = useState("😎"); // Default mood emoji
+  const [suggestedActivities, setSuggestedActivities] = useState([]);
+  const [surfaceTemp, setSurfaceTemp] = useState(null);
 
   // First get the location coordinates from the city name
   useEffect(() => {
@@ -54,6 +57,39 @@ function WeatherStation() {
         
         setWeatherData(weatherResponse.data);
         setForecast(forecastResponse.data);
+        
+        // Set weather mood emoji based on conditions
+        if (weatherResponse.data && weatherResponse.data.weather && weatherResponse.data.weather[0]) {
+          const weatherCondition = weatherResponse.data.weather[0].main;
+          const weatherIcon = weatherResponse.data.weather[0].icon;
+          const currentTemp = weatherResponse.data.main.temp;
+          const windSpeed = weatherResponse.data.wind.speed;
+          
+          setWeatherMood(getWeatherEmoji(weatherCondition));
+          setSuggestedActivities(getWeatherActivities(weatherCondition, currentTemp, windSpeed));
+          
+          // Calculate approximate surface temperature (asphalt/concrete)
+          // Surface temps are usually 10-20°C higher than air temp in sunny conditions
+          // and close to air temp in cloudy/rainy conditions
+          const isDaytime = weatherIcon.includes('d');
+          const isClear = weatherCondition.toLowerCase().includes('clear') || 
+                         weatherCondition.toLowerCase().includes('sun');
+          
+          let surfaceAdjustment = 0;
+          if (isDaytime && isClear) {
+            // Sunny day - asphalt gets much hotter
+            surfaceAdjustment = 15; 
+          } else if (isDaytime) {
+            // Cloudy day - slight heating
+            surfaceAdjustment = 5;
+          } else {
+            // Night time - slight cooling of surface compared to air
+            surfaceAdjustment = -2;
+          }
+          
+          const calculatedSurfaceTemp = currentTemp + surfaceAdjustment;
+          setSurfaceTemp(calculatedSurfaceTemp);
+        }
       } catch (err) {
         console.error("Error fetching weather data:", err);
         setError("Failed to load weather data. Please try again later.");
@@ -123,6 +159,50 @@ function WeatherStation() {
       return "🌤️";
     }
   };
+  
+  // Function to get suggested activities based on weather
+  const getWeatherActivities = (condition, temp, windSpeed) => {
+    const conditionLower = condition.toLowerCase();
+    const activities = [];
+    
+    // Check temperature ranges
+    if (temp >= 20 && temp <= 30) {
+      activities.push("Perfect temperature for a drive with the top down");
+    } else if (temp > 30) {
+      activities.push("Hot day - check tire pressure and cooling systems");
+      activities.push("Consider ceramic coating protection from sun");
+    } else if (temp < 10) {
+      activities.push("Cold day - check antifreeze and battery");
+    } else if (temp < 5) {
+      activities.push("Very cold - watch for black ice on roads");
+    }
+    
+    // Check weather conditions
+    if (conditionLower.includes('clear') || conditionLower.includes('sun')) {
+      activities.push("Ideal day for a car wash and wax");
+      activities.push("Great visibility for spirited driving");
+    } else if (conditionLower.includes('cloud')) {
+      activities.push("Overcast - good light for spotting paint imperfections");
+    } else if (conditionLower.includes('rain') || conditionLower.includes('drizzle')) {
+      activities.push("Wet roads - drive cautiously, reduced grip");
+      activities.push("Good day to check windshield wipers");
+    } else if (conditionLower.includes('thunderstorm')) {
+      activities.push("Severe weather - consider postponing drive");
+      activities.push("Check for covered parking to avoid hail damage");
+    } else if (conditionLower.includes('snow')) {
+      activities.push("Winter conditions - use appropriate tires");
+      activities.push("Check undercarriage after driving (salt corrosion)");
+    } else if (conditionLower.includes('fog') || conditionLower.includes('mist')) {
+      activities.push("Reduced visibility - use fog lights if equipped");
+    }
+    
+    // Wind considerations
+    if (windSpeed > 10) {
+      activities.push("Strong winds - be cautious on open highways");
+    }
+    
+    return activities.slice(0, 3); // Return top 3 activities
+  };
 
   // Filter forecast data to get one entry per day
   const getDailyForecast = () => {
@@ -149,7 +229,7 @@ function WeatherStation() {
   return (
     <div className="bg-gray-900 p-6 rounded-lg shadow-lg overflow-hidden">
       <div className="flex justify-between items-center mb-6">
-        <h2 className="text-blue-400 font-bold text-3xl">Weather Station</h2>
+        <h2 className="text-blue-400 font-orbitron text-3xl">Weather Station</h2>
         <div className="flex items-center">
           <input
             type="text"
@@ -177,20 +257,16 @@ function WeatherStation() {
         </div>
       ) : weatherData ? (
         <div>
-          {/* Current Weather */}
+          {/* Current Weather with Emoji Mood */}
           <div className="bg-black bg-opacity-30 rounded-lg p-6 mb-6">
             <div className="flex flex-col md:flex-row justify-between items-center">
               <div className="flex items-center mb-4 md:mb-0">
-                <div className="mr-4">
-                  <img 
-                    src={getWeatherIconUrl(weatherData.weather[0].icon)} 
-                    alt={weatherData.weather[0].description}
-                    className="w-20 h-20"
-                  />
+                <div className="mr-4 text-6xl">
+                  {weatherMood}
                 </div>
                 <div>
                   <h3 className="text-2xl text-white font-bold">{weatherData.name}, {weatherData.sys.country}</h3>
-                  <p className="text-gray-300">{weatherData.weather[0].main} {getWeatherEmoji(weatherData.weather[0].main)}</p>
+                  <p className="text-gray-300">{weatherData.weather[0].main}</p>
                   <p className="text-gray-400 text-sm">{weatherData.weather[0].description}</p>
                 </div>
               </div>
@@ -201,6 +277,11 @@ function WeatherStation() {
                 <div className="text-blue-300 mt-2 text-sm">
                   Feels like: {Math.round(weatherData.main.feels_like)}°C
                 </div>
+                {surfaceTemp && (
+                  <div className="text-green-400 mt-1 text-sm">
+                    Road temp: {Math.round(surfaceTemp)}°C
+                  </div>
+                )}
               </div>
             </div>
             
@@ -223,23 +304,30 @@ function WeatherStation() {
               </div>
             </div>
             
+            {/* Suggested Activities */}
             <div className="mt-6 bg-blue-900 bg-opacity-20 border border-blue-800 p-4 rounded">
-              <p className="text-blue-300">{getWeatherAdvice(weatherData.weather[0])}</p>
+              <h4 className="text-blue-400 font-bold mb-2">Suggested Activities:</h4>
+              <ul className="text-blue-300 space-y-1">
+                {suggestedActivities.map((activity, i) => (
+                  <li key={i} className="flex items-start">
+                    <span className="mr-2">•</span>
+                    <span>{activity}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
           </div>
           
           {/* 5-Day Forecast */}
           <div>
-            <h3 className="text-blue-400 font-bold text-xl mb-4">5-Day Forecast</h3>
+            <h3 className="text-blue-400 font-orbitron text-xl mb-4">5-Day Forecast</h3>
             <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
               {getDailyForecast().map((day, index) => (
                 <div key={index} className="bg-black bg-opacity-30 rounded-lg p-4 text-center">
                   <div className="text-white font-bold">{formatDay(day.dt)}</div>
-                  <img 
-                    src={getWeatherIconUrl(day.weather[0].icon)} 
-                    alt={day.weather[0].description}
-                    className="w-12 h-12 mx-auto my-2"
-                  />
+                  <div className="text-3xl my-2">
+                    {getWeatherEmoji(day.weather[0].main)}
+                  </div>
                   <div className="text-lg text-white">{Math.round(day.main.temp)}°C</div>
                   <div className="text-sm text-gray-400">{day.weather[0].main}</div>
                 </div>
