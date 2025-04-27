@@ -42,7 +42,13 @@ const SimpleWeatherStation: React.FC = () => {
       return;
     }
     
-    const description = generateWeatherDescription(weatherData, unit);
+    // Generate a user-friendly description of the current weather
+const description = `Current weather for ${selectedLocation.name}. 
+  Temperature: ${Math.round(weatherData.main.temp)} degrees ${unit === 'metric' ? 'Celsius' : 'Fahrenheit'}, 
+  feels like ${Math.round(weatherData.main.feels_like)} degrees. 
+  Conditions: ${weatherData.weather[0].description}. 
+  Humidity: ${weatherData.main.humidity} percent. 
+  Wind speed: ${weatherData.wind.speed} ${unit === 'metric' ? 'meters per second' : 'miles per hour'}.`;
     const utterance = new SpeechSynthesisUtterance(description);
 
     // Try to use a nice voice if available
