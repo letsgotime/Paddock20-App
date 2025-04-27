@@ -179,14 +179,12 @@ function WeatherStation() {
       <WeatherVoiceOver 
         weatherData={weatherData}
         forecastData={forecastData}
-        drivingCondition={
-          DrivingConditionEmoji.getDrivingCondition(
-            weatherData.main.temp,
-            weatherData.visibility / 1609.34,
-            weatherData.wind.speed,
-            precipitation
-          )
-        }
+        drivingCondition={{
+          text: weatherCondition ? 'Moderate driving conditions' : 'Good driving conditions',
+          drivingTip: precipitation > 0 
+            ? 'Drive carefully on wet roads and allow for extra stopping distance.' 
+            : 'Road conditions are generally good. Maintain safe driving practices.'
+        }}
       />
 
       {/* Seasonal Checklist Button */}
