@@ -1,66 +1,59 @@
-import React from 'react';
-import { Link } from 'react-router-dom';
+import React from "react";
+import WeatherStation from "../components/WeatherStation";
 
 function Home() {
   return (
-    <div className="container mx-auto">
-      <div className="bg-gray-900 rounded-lg shadow-lg overflow-hidden mb-8">
-        <div className="p-8">
-          <h2 className='text-green-400 font-orbitron text-3xl mb-4'>Welcome to ApexVault™</h2>
-          <p className='text-white text-lg mb-6'>Your comprehensive platform for managing your automotive assets, maintenance, and journey.</p>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <div className="bg-black bg-opacity-50 p-6 rounded-lg border border-gray-800 hover:border-green-400 transition-colors">
-              <h3 className="text-green-400 font-orbitron text-xl mb-3">Garage Vault</h3>
-              <p className="text-gray-300 mb-4">Manage your vehicles, track mods, tires, gloss, readiness — all sovereign, exportable, private.</p>
-              <Link to="/garage-vault" className="inline-block bg-green-600 hover:bg-green-500 text-white py-2 px-4 rounded transition-colors">
-                Access Vault
-              </Link>
-            </div>
-            
-            <div className="bg-black bg-opacity-50 p-6 rounded-lg border border-gray-800 hover:border-green-400 transition-colors">
-              <h3 className="text-green-400 font-orbitron text-xl mb-3">Manifestation Station</h3>
-              <p className="text-gray-300 mb-4">Track your dream assets: future cars, watches, collectibles, garages.</p>
-              <Link to="/manifestation-station" className="inline-block bg-green-600 hover:bg-green-500 text-white py-2 px-4 rounded transition-colors">
-                Manifest Dreams
-              </Link>
-            </div>
+    <div className="container mx-auto px-4 py-8">
+      <h1 className="text-4xl font-bold text-center text-blue-500 mb-8">Weather Dashboard</h1>
+      
+      <div className="mb-12">
+        <WeatherStation />
+      </div>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
+        <div className="bg-gray-900 p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-bold text-blue-400 mb-4">Weather Tips</h2>
+          <ul className="space-y-2 text-gray-300">
+            <li className="flex items-start">
+              <span className="text-blue-400 mr-2">•</span>
+              <span>Check the forecast before planning outdoor activities</span>
+            </li>
+            <li className="flex items-start">
+              <span className="text-blue-400 mr-2">•</span>
+              <span>Weather can change rapidly - be prepared with proper clothing</span>
+            </li>
+            <li className="flex items-start">
+              <span className="text-blue-400 mr-2">•</span>
+              <span>UV index can be high even on cloudy days</span>
+            </li>
+            <li className="flex items-start">
+              <span className="text-blue-400 mr-2">•</span>
+              <span>During storms, stay away from open areas and tall structures</span>
+            </li>
+          </ul>
+        </div>
+        
+        <div className="bg-gray-900 p-6 rounded-lg shadow-md">
+          <h2 className="text-xl font-bold text-blue-400 mb-4">About This App</h2>
+          <p className="text-gray-300">
+            Our weather application provides real-time weather data and forecasts for locations worldwide.
+            The app uses the OpenWeatherMap API to bring you accurate, up-to-date information to help you
+            plan your day effectively. Features include current conditions, 5-day forecasts, and helpful
+            weather advisories.
+          </p>
+          <div className="mt-4">
+            <span className="text-blue-400 font-semibold">Data Sources: </span>
+            <span className="text-gray-300">OpenWeatherMap</span>
           </div>
         </div>
       </div>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-gray-900 p-6 rounded-lg border border-gray-800 hover:border-green-400 transition-colors">
-          <h3 className="text-green-400 font-orbitron text-xl mb-3">Mod Planner</h3>
-          <p className="text-gray-300 mb-4">Plan and track your upgrades and customizations.</p>
-          <Link to="/mod-planner" className="text-green-400 hover:text-white transition-colors">
-            Explore →
-          </Link>
-        </div>
-        
-        <div className="bg-gray-900 p-6 rounded-lg border border-gray-800 hover:border-green-400 transition-colors">
-          <h3 className="text-green-400 font-orbitron text-xl mb-3">Concierge</h3>
-          <p className="text-gray-300 mb-4">Submit asset sourcing requests: cars, watches, collectibles.</p>
-          <Link to="/concierge" className="text-green-400 hover:text-white transition-colors">
-            Explore →
-          </Link>
-        </div>
-        
-        <div className="bg-gray-900 p-6 rounded-lg border border-gray-800 hover:border-green-400 transition-colors">
-          <h3 className="text-green-400 font-orbitron text-xl mb-3">Redline Report</h3>
-          <p className="text-gray-300 mb-4">View cinematic flips, drops, and motorsport media.</p>
-          <Link to="/redline-report" className="text-green-400 hover:text-white transition-colors">
-            Explore →
-          </Link>
-        </div>
-      </div>
-      
-      <div className="bg-black bg-opacity-50 p-6 rounded-lg border border-gray-800">
-        <h3 className="text-green-400 font-orbitron text-xl mb-3">Hustle Planner</h3>
-        <p className="text-gray-300 mb-4">Plan milestones, flips, funding targets, and syndicate growth.</p>
-        <Link to="/hustle-planner" className="inline-block bg-green-600 hover:bg-green-500 text-white py-2 px-4 rounded transition-colors">
-          Start Planning
-        </Link>
+      <div className="bg-blue-900 bg-opacity-30 border border-blue-800 rounded-lg p-6">
+        <h2 className="text-xl font-bold text-blue-400 mb-2">Weather Alert</h2>
+        <p className="text-gray-300">
+          For severe weather alerts and emergency information, please refer to your local weather service
+          or national meteorological agency.
+        </p>
       </div>
     </div>
   );
