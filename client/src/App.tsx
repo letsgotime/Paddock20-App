@@ -31,6 +31,8 @@ import Paddock20VaultPage from "./pages/Paddock20VaultPage";
 import ManifestationStationPage from "./pages/ManifestationStationPage";
 import ModPlannerPage from "./pages/ModPlannerPage";
 import ConciergePage from "./pages/ConciergePage";
+import HustlePlannerPage from "./pages/HustlePlannerPage";
+import RoutePlannerPage from "./pages/RoutePlannerPage";
 import { useAuth } from "./hooks/useAuth";
 import { MAIN_CONTENT_ID, LiveRegion } from './lib/accessibility';
 import './apexvault.css';
@@ -122,6 +124,8 @@ function App() {
                 <Route path="/manifestation-station" element={<ProtectedRoute><ManifestationStationPage /></ProtectedRoute>} />
                 <Route path="/mod-planner" element={<ProtectedRoute><ModPlannerPage /></ProtectedRoute>} />
                 <Route path="/concierge" element={<ProtectedRoute><ConciergePage /></ProtectedRoute>} />
+                <Route path="/hustle-planner" element={<ProtectedRoute><HustlePlannerPage /></ProtectedRoute>} />
+                <Route path="/route-planner" element={<ProtectedRoute><RoutePlannerPage /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>
