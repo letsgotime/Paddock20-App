@@ -18,6 +18,7 @@ function Navbar() {
           
           <div className="hidden md:flex md:items-center md:space-x-6">
             <Link to="/garage-vault" className="hover:text-green-400">🏎️ Garage Vault</Link>
+            <Link to="/paddock20-vault" className="hover:text-green-400">🏁 Paddock20 Vault</Link>
             <Link to="/manifestation-station" className="hover:text-green-400">✨ Manifestation Station</Link>
             <Link to="/mod-planner" className="hover:text-green-400">🔧 Mod Planner</Link>
             <Link to="/concierge" className="hover:text-green-400">👨‍💼 Concierge</Link>
@@ -56,6 +57,9 @@ function Navbar() {
         <div className="px-2 pt-2 pb-3 space-y-1 sm:px-3">
           <Link to="/garage-vault" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-700">
             🏎️ Garage Vault
+          </Link>
+          <Link to="/paddock20-vault" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-700">
+            🏁 Paddock20 Vault
           </Link>
           <Link to="/manifestation-station" className="block px-3 py-2 rounded-md text-base font-medium hover:bg-gray-700">
             ✨ Manifestation Station

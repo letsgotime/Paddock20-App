@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import supabase from '../services/supabaseClient';
 import { Link } from 'react-router-dom';
-import { exportToPDF, exportToCSV, exportForGoogleDocs } from '../utils/exportUtils';
+import { exportToPdf, exportToCsv, printElement } from '../utils/exportUtils';
 import TireTracker from '../components/TireTracker';
 import GlossTracker from '../components/GlossTracker';
 import PreDriveChecklist from '../components/PreDriveChecklist';
@@ -184,17 +184,32 @@ function GarageVaultPage() {
   // Export functions using the utility library
   const handleExportToPDF = async () => {
     setShowExportMenu(false);
-    await exportToPDF('garageVaultSection', 'GoTime Motorsports - GarageVault', '/assets/Logos/GoTime-White.png');
+    const element = document.getElementById('garageVaultSection');
+    if (element) {
+      await exportToPdf(element, 'GoTime Motorsports - GarageVault.pdf');
+    }
   };
   
   const handleExportToGoogleSheets = async () => {
     setShowExportMenu(false);
-    await exportToCSV('garageVaultSection', 'GoTime Motorsports - GarageVault');
+    // Get vehicle data in correct format for CSV
+    const vehicleExportData = vehicles.map(v => ({
+      name: v.car_name,
+      make: v.make,
+      model: v.model,
+      year: v.year,
+      vin: v.vin || 'N/A',
+      mileage: v.mileage
+    }));
+    await exportToCsv(vehicleExportData, 'GoTime Motorsports - GarageVault.csv');
   };
   
   const handleExportToGoogleDocs = async () => {
     setShowExportMenu(false);
-    await exportForGoogleDocs('garageVaultSection', 'GoTime Motorsports - GarageVault');
+    const element = document.getElementById('garageVaultSection');
+    if (element) {
+      await printElement(element, 'GoTime Motorsports - GarageVault');
+    }
   };
   
   // Function to change active vehicle

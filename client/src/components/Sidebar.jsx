@@ -7,6 +7,7 @@ function Sidebar() {
       <nav className="flex flex-col space-y-4">
         <Link to="/" className="hover:text-green-400">🏠 Home</Link>
         <Link to="/garage-vault" className="hover:text-green-400">🚗 Garage Vault</Link>
+        <Link to="/paddock20-vault" className="hover:text-green-400">🏁 Paddock20 Vault</Link>
         <Link to="/manifestation-station" className="hover:text-green-400">🧭 Manifestation Station</Link>
         <Link to="/mod-planner" className="hover:text-green-400">🔧 Mod Planner</Link>
         <Link to="/concierge" className="hover:text-green-400">🛞 Concierge</Link>
