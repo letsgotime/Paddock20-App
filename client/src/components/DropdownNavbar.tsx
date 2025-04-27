@@ -10,6 +10,7 @@ type MouseEventHandler = (event: React.MouseEvent<HTMLDivElement>) => void;
 function DropdownNavbar() {
   const [isOpen, setIsOpen] = useState(false);
   const [juiceBoxOpen, setJuiceBoxOpen] = useState(false);
+  const [checklistsOpen, setChecklistsOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   const menuButtonRef = useRef<HTMLButtonElement>(null);
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ function DropdownNavbar() {
   useEffect(() => {
     setIsOpen(false);
     setJuiceBoxOpen(false);
+    setChecklistsOpen(false);
   }, [location.pathname]);
 
   // Handle clicks outside the menu to close it
@@ -63,6 +65,7 @@ function DropdownNavbar() {
   const toggleJuiceBox: MouseEventHandler = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    if (checklistsOpen) setChecklistsOpen(false);
     setJuiceBoxOpen(!juiceBoxOpen);
   };
 
@@ -70,7 +73,24 @@ function DropdownNavbar() {
   const handleJuiceBoxKeyDown = (e: React.KeyboardEvent) => {
     if (e.key === KEYS.ENTER || e.key === KEYS.SPACE) {
       e.preventDefault();
+      if (checklistsOpen) setChecklistsOpen(false);
       setJuiceBoxOpen(!juiceBoxOpen);
+    }
+  };
+  
+  const toggleChecklists: MouseEventHandler = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (juiceBoxOpen) setJuiceBoxOpen(false);
+    setChecklistsOpen(!checklistsOpen);
+  };
+
+  // Keyboard handler for Checklists submenu toggle
+  const handleChecklistsKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === KEYS.ENTER || e.key === KEYS.SPACE) {
+      e.preventDefault();
+      if (juiceBoxOpen) setJuiceBoxOpen(false);
+      setChecklistsOpen(!checklistsOpen);
     }
   };
 
@@ -121,7 +141,7 @@ function DropdownNavbar() {
             aria-orientation="vertical"
             aria-labelledby="main-menu-button"
           >
-            {/* Weather at the top */}
+            {/* Ordered menu items according to specification */}
             <Link 
               to="/weather" 
               className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans font-bold"
@@ -131,17 +151,60 @@ function DropdownNavbar() {
               Weather Center
             </Link>
             
-            {/* Dashboard second */}
             <Link 
-              to="/dashboard" 
+              to="/route-planner" 
               className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
               onClick={() => setIsOpen(false)}
               role="menuitem"
             >
-              Dashboard
+              Route Planner
             </Link>
             
-            {/* Drive Journal third */}
+            <Link 
+              to="/events" 
+              className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
+              onClick={() => setIsOpen(false)}
+              role="menuitem"
+            >
+              Events & Meetups
+            </Link>
+            
+            <Link 
+              to="/paddock20-membership" 
+              className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans font-bold"
+              onClick={() => setIsOpen(false)}
+              role="menuitem"
+            >
+              Paddock20 Membership
+            </Link>
+            
+            <Link 
+              to="/garage" 
+              className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
+              onClick={() => setIsOpen(false)}
+              role="menuitem"
+            >
+              Garage Vault
+            </Link>
+            
+            <Link 
+              to="/broker-portal" 
+              className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
+              onClick={() => setIsOpen(false)}
+              role="menuitem"
+            >
+              Tires & Timepieces Brokerage
+            </Link>
+            
+            <Link 
+              to="/manifestation-station" 
+              className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
+              onClick={() => setIsOpen(false)}
+              role="menuitem"
+            >
+              Manifestation Station & Mod Planner
+            </Link>
+            
             <Link 
               to="/journal" 
               className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
@@ -151,43 +214,17 @@ function DropdownNavbar() {
               Drive Journal
             </Link>
             
-            {/* Then the rest of the menu */}
             <Link 
-              to="/garage" 
+              to="/hustle-planner" 
               className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
               onClick={() => setIsOpen(false)}
               role="menuitem"
             >
-              Garage Vault
-            </Link>
-            <Link 
-              to="/marketplace" 
-              className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
-              onClick={() => setIsOpen(false)}
-              role="menuitem"
-            >
-              Marketplace
-            </Link>
-            <Link 
-              to="/events" 
-              className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
-              onClick={() => setIsOpen(false)}
-              role="menuitem"
-            >
-              Events & Meetups
-            </Link>
-            <Link 
-              to="/seasonal-checklist" 
-              className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
-              onClick={() => setIsOpen(false)}
-              role="menuitem"
-            >
-              Seasonal Checklist
+              Hustle Planner
             </Link>
             
             {/* Juice Box submenu */}
             <div className="block" role="group" aria-label="Juice Box submenu">
-              {/* Juice Box main item with dropdown arrow */}
               <div 
                 className="flex justify-between items-center px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans cursor-pointer"
                 onClick={toggleJuiceBox}
@@ -250,38 +287,82 @@ function DropdownNavbar() {
                 </div>
               )}
             </div>
+            
+            {/* Checklists submenu */}
+            <div className="block" role="group" aria-label="Checklists submenu">
+              <div 
+                className="flex justify-between items-center px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans cursor-pointer"
+                onClick={toggleChecklists}
+                onKeyDown={handleChecklistsKeyDown}
+                role="menuitem"
+                aria-expanded={checklistsOpen}
+                aria-haspopup="true"
+                tabIndex={0}
+              >
+                <span>Checklists</span>
+                {checklistsOpen ? 
+                  <ChevronDown className="h-4 w-4" aria-hidden="true" /> : 
+                  <ChevronRight className="h-4 w-4" aria-hidden="true" />
+                }
+              </div>
+              
+              {/* Collapsible Checklists submenu */}
+              {checklistsOpen && (
+                <div role="menu" aria-label="Checklists options">
+                  <Link 
+                    to="/seasonal-checklist" 
+                    className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans pl-8"
+                    onClick={() => setIsOpen(false)}
+                    role="menuitem"
+                  >
+                    Seasonal Checklist
+                  </Link>
+                  <Link 
+                    to="/maintenance-checklist" 
+                    className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans pl-8"
+                    onClick={() => setIsOpen(false)}
+                    role="menuitem"
+                  >
+                    Maintenance Checklist
+                  </Link>
+                  <Link 
+                    to="/trackday-checklist" 
+                    className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans pl-8"
+                    onClick={() => setIsOpen(false)}
+                    role="menuitem"
+                  >
+                    Track Day Checklist
+                  </Link>
+                  <Link 
+                    to="/detailing-checklist" 
+                    className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans pl-8"
+                    onClick={() => setIsOpen(false)}
+                    role="menuitem"
+                  >
+                    Detailing Checklist
+                  </Link>
+                </div>
+              )}
+            </div>
+            
             <Link 
-              to="/manifestation-station" 
+              to="/concierge" 
               className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
               onClick={() => setIsOpen(false)}
               role="menuitem"
             >
-              Manifestation Station
+              Concierge
             </Link>
+            
             <Link 
-              to="/hustle-planner" 
+              to="/affiliates" 
               className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
               onClick={() => setIsOpen(false)}
               role="menuitem"
             >
-              Hustle Planner
+              Affiliate Links
             </Link>
-            <Link 
-              to="/broker-portal" 
-              className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
-              onClick={() => setIsOpen(false)}
-              role="menuitem"
-            >
-              Broker Portal
-            </Link>
-            <Link 
-              to="/paddock20-membership" 
-              className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans font-bold"
-              onClick={() => setIsOpen(false)}
-              role="menuitem"
-            >
-              Paddock20 Membership
-            </Link>
+            
             <Link 
               to="/settings" 
               className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
