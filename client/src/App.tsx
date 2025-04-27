@@ -23,10 +23,12 @@ import VideoLibraryPage from "./pages/VideoLibraryPage";
 import BrokerPortalPage from "./pages/BrokerPortalPage";
 import Weather from "./pages/Weather";
 import WeatherPage from "./pages/WeatherPage";
+import RedlineReportPage from "./pages/RedlineReportPage";
 import SeasonalChecklistPage from "./pages/SeasonalChecklistPage";
 import EBooksPage from "./pages/eBooksPage";
 import Paddock20HomePage from "./pages/Paddock20HomePage";
 import DropdownNavbar from "./components/DropdownNavbar";
+import Footer from "./components/Footer";
 import { WeatherProvider } from "./contexts/WeatherContext";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
@@ -133,6 +135,7 @@ function App() {
                 <Route path="/juicebox-videos" element={<ProtectedRoute><VideoLibraryPage /></ProtectedRoute>} />
                 <Route path="/broker-portal" element={<ProtectedRoute><BrokerPortalPage /></ProtectedRoute>} />
                 <Route path="/weather" element={<ProtectedRoute><Weather /></ProtectedRoute>} />
+                <Route path="/redline" element={<ProtectedRoute><RedlineReportPage /></ProtectedRoute>} />
                 <Route path="/seasonal-checklist" element={<ProtectedRoute><SeasonalChecklistPage /></ProtectedRoute>} />
                 <Route path="/pre-drive-checklist" element={<ProtectedRoute><PreDriveChecklistPage /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
@@ -154,17 +157,8 @@ function App() {
               {(effectiveSession || previewMode) && <SupportChatbot />}
             </main>
 
-            {/* Footer with accessibility information */}
-            <footer role="contentinfo" className="py-4 mt-8 border-t border-gray-800">
-              <div className="container mx-auto px-4 text-center text-sm text-gray-500">
-                <p>© {new Date().getFullYear()} GoTime Motorsports - Paddock20™</p>
-                <p className="mt-2">
-                  <a href="#accessibility" className="text-green-500 hover:text-green-400 underline">
-                    Accessibility Statement
-                  </a>
-                </p>
-              </div>
-            </footer>
+            {/* Footer with links and information */}
+            <Footer />
           </div>
         </TooltipProvider>
       </WeatherProvider>
