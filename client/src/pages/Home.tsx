@@ -1,3 +1,4 @@
+import WeatherStation from '../components/WeatherStation';
 import React from 'react';
 import SimpleWeatherStation from '../components/SimpleWeatherStation';
 import WeatherMoodGenerator from '../components/WeatherMoodGenerator';
