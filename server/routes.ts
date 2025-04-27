@@ -758,6 +758,225 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // New Automotive-Specific Weather Data Points
+  app.get('/api/accuweather/automotive/:locationKey', async (req, res) => {
+    try {
+      const { locationKey } = req.params;
+      
+      if (!locationKey) {
+        return res.status(400).json({ message: 'Location key is required' });
+      }
+
+      const apiKey = process.env.VITE_ACCUWEATHER_API_KEY;
+      
+      if (!apiKey) {
+        return res.status(200).json({
+          locationKey,
+          surfaceConditions: {
+            asphalt: { temperature: 62, condition: "Dry" },
+            concrete: { temperature: 58, condition: "Dry" },
+            gravel: { temperature: 55, condition: "Dry" }
+          },
+          drivingRisk: {
+            overall: "Low",
+            visibility: "Good",
+            traction: "Good",
+            score: 2
+          },
+          washConditions: {
+            recommended: true,
+            uv: "Moderate",
+            pollen: "Low",
+            drying: "Excellent"
+          },
+          detailingConditions: {
+            recommended: true,
+            humidity: "Optimal",
+            dust: "Low",
+            sun: "Good diffused light"
+          }
+        });
+      }
+      
+      // Get current conditions
+      const currentUrl = `https://dataservice.accuweather.com/currentconditions/v1/${locationKey}?apikey=${apiKey}&details=true`;
+      const currentResponse = await fetch(currentUrl);
+      
+      if (!currentResponse.ok) {
+        throw new Error(`AccuWeather Current Conditions API error: ${currentResponse.status}`);
+      }
+      
+      const currentData = await currentResponse.json();
+      const current = currentData[0];
+      
+      // Get forecast data
+      const forecastUrl = `https://dataservice.accuweather.com/forecasts/v1/daily/1day/${locationKey}?apikey=${apiKey}&details=true`;
+      const forecastResponse = await fetch(forecastUrl);
+      
+      if (!forecastResponse.ok) {
+        throw new Error(`AccuWeather Forecast API error: ${forecastResponse.status}`);
+      }
+      
+      const forecastData = await forecastResponse.json();
+      const forecast = forecastData.DailyForecasts[0];
+      
+      // Get indices for driving
+      const indicesUrl = `https://dataservice.accuweather.com/indices/v1/daily/1day/${locationKey}?apikey=${apiKey}`;
+      const indicesResponse = await fetch(indicesUrl);
+      
+      if (!indicesResponse.ok) {
+        throw new Error(`AccuWeather Indices API error: ${indicesResponse.status}`);
+      }
+      
+      const indicesData = await indicesResponse.json();
+      
+      // Find the driving index
+      const drivingIndex = indicesData.find(idx => idx.ID === 1) || { 
+        Value: 5, 
+        Category: "Good", 
+        Text: "Conditions are good for driving."
+      };
+      
+      // Calculate surface temperatures
+      const airTemp = current.Temperature.Imperial.Value;
+      const isDaytime = current.IsDayTime;
+      const cloudCover = current.CloudCover;
+      const hasRain = current.HasPrecipitation;
+      const uvIndex = current.UVIndex;
+      
+      // Adjust for cloud cover (0-100%)
+      const cloudEffect = 1 - (cloudCover / 100);
+      
+      // Adjust for day/night
+      const timeEffect = isDaytime ? 1 : 0.2;
+      
+      // Base heating factors (°F above air temperature at peak sun)
+      const asphaltFactor = 25; // Asphalt can be 20-30°F warmer than air
+      const concreteFactor = 15; // Concrete about 10-20°F warmer
+      const gravelFactor = 10;   // Gravel somewhat warmer
+      
+      // Calculate current surface temperatures
+      const asphaltTemp = Math.round(airTemp + (asphaltFactor * cloudEffect * timeEffect));
+      const concreteTemp = Math.round(airTemp + (concreteFactor * cloudEffect * timeEffect));
+      const gravelTemp = Math.round(airTemp + (gravelFactor * cloudEffect * timeEffect));
+      
+      // Determine surface conditions
+      const getPrecipCondition = () => {
+        if (current.HasPrecipitation) {
+          return current.PrecipitationType || "Wet";
+        }
+        if (current.RelativeHumidity > 90) return "Damp";
+        return "Dry";
+      };
+      
+      const surfaceCondition = getPrecipCondition();
+      
+      // Determine driving risk
+      let drivingRiskLevel = "Low";
+      let visibilityCondition = "Good";
+      let tractionCondition = "Good";
+      let riskScore = 2; // 1-10 scale
+      
+      if (hasRain || current.RelativeHumidity > 95) {
+        tractionCondition = "Reduced";
+        riskScore += 2;
+      }
+      
+      if (current.Visibility.Imperial.Value < 5) {
+        visibilityCondition = "Poor";
+        riskScore += 3;
+        drivingRiskLevel = "Moderate";
+      }
+      
+      if (current.WindGust.Imperial.Value > 30) {
+        riskScore += 2;
+        drivingRiskLevel = "Moderate";
+      }
+      
+      // Severe conditions
+      if (current.WeatherText.includes("Snow") || current.WeatherText.includes("Ice")) {
+        tractionCondition = "Poor";
+        riskScore += 4;
+        drivingRiskLevel = "High";
+      }
+      
+      if (current.Visibility.Imperial.Value < 1) {
+        visibilityCondition = "Dangerous";
+        riskScore += 4;
+        drivingRiskLevel = "High";
+      }
+      
+      // Cap risk score
+      riskScore = Math.min(10, Math.max(1, riskScore));
+      
+      // Car wash suitability
+      const isWashSuitable = !hasRain && 
+                          current.RelativeHumidity < 80 && 
+                          current.WindGust.Imperial.Value < 15 &&
+                          forecast.Day.RainProbability < 30;
+      
+      // Detailing suitability
+      const isDetailingSuitable = !hasRain && 
+                               current.RelativeHumidity < 70 && 
+                               current.WindGust.Imperial.Value < 10 &&
+                               current.CloudCover > 20 && // Some clouds for diffused light
+                               current.CloudCover < 80;   // But not too overcast
+      
+      // UV impact on paint/wax
+      let uvImpact = "Low";
+      if (uvIndex > 3 && uvIndex <= 6) uvImpact = "Moderate";
+      if (uvIndex > 6) uvImpact = "High";
+      
+      // Compile response
+      res.json({
+        locationKey,
+        timestamp: current.EpochTime,
+        surfaceConditions: {
+          asphalt: { 
+            temperature: asphaltTemp, 
+            condition: surfaceCondition 
+          },
+          concrete: { 
+            temperature: concreteTemp, 
+            condition: surfaceCondition 
+          },
+          gravel: { 
+            temperature: gravelTemp, 
+            condition: surfaceCondition 
+          }
+        },
+        drivingRisk: {
+          overall: drivingRiskLevel,
+          visibility: visibilityCondition,
+          traction: tractionCondition,
+          score: riskScore,
+          index: drivingIndex.Value,
+          description: drivingIndex.Text
+        },
+        washConditions: {
+          recommended: isWashSuitable,
+          uv: uvImpact,
+          pollen: forecast.AirAndPollen?.find(p => p.Name === "AirQuality")?.Category || "Unknown",
+          drying: current.RelativeHumidity < 60 ? "Excellent" : 
+                 current.RelativeHumidity < 75 ? "Good" : "Fair",
+          rainProbabilityNext24h: forecast.Day.RainProbability
+        },
+        detailingConditions: {
+          recommended: isDetailingSuitable,
+          humidity: `${current.RelativeHumidity}%`,
+          temperature: `${current.Temperature.Imperial.Value}°F`,
+          wind: `${current.Wind.Speed.Imperial.Value} mph`,
+          lighting: current.CloudCover > 20 && current.CloudCover < 80 ? 
+                   "Good diffused light" : 
+                   current.CloudCover >= 80 ? "Too overcast" : "Too bright/direct"
+        }
+      });
+    } catch (error) {
+      console.error('Error fetching automotive weather data:', error);
+      res.status(500).json({ message: (error as Error).message || 'Failed to fetch automotive weather data' });
+    }
+  });
+
   // AccuWeather MinuteCast
   app.get('/api/accuweather/minutecast/:locationKey', async (req, res) => {
     try {

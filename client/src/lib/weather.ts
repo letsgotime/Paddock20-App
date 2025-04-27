@@ -219,9 +219,32 @@ export const getWeatherData = async (location: Location, unit: 'metric' | 'imper
  */
 export const getHourlyForecast = async (location: Location, unit: 'metric' | 'imperial'): Promise<ForecastData> => {
   try {
+    if (!location || typeof location.lat !== 'number' || typeof location.lon !== 'number') {
+      throw new Error('Invalid location data');
+    }
+    
     // Use our server-side proxy endpoint
     const url = `/api/forecast?lat=${location.lat}&lon=${location.lon}&units=${unit}`;
-    const response = await fetch(url);
+    
+    // Add retry logic for network errors
+    let retries = 2;
+    let response;
+    
+    while (retries >= 0) {
+      try {
+        response = await fetch(url);
+        break; // Exit the loop if fetch is successful
+      } catch (fetchError) {
+        if (retries === 0) throw fetchError;
+        retries--;
+        // Wait before retrying
+        await new Promise(resolve => setTimeout(resolve, 500));
+      }
+    }
+    
+    if (!response) {
+      throw new Error('Network error occurred while fetching forecast data');
+    }
     
     if (!response.ok) {
       const errorText = await response.text();
@@ -229,6 +252,11 @@ export const getHourlyForecast = async (location: Location, unit: 'metric' | 'im
     }
     
     const data = await response.json();
+    
+    if (!data || !data.list || !Array.isArray(data.list)) {
+      throw new Error('Received invalid data format from forecast API');
+    }
+    
     return data as ForecastData;
   } catch (error) {
     console.error('Error fetching forecast data:', error);

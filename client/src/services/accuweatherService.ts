@@ -91,3 +91,17 @@ export async function fetchDrivingIndices(locationKey: string) {
     throw error;
   }
 }
+
+/**
+ * Get comprehensive automotive-specific weather data
+ * Includes surface temperatures, driving risk, car wash and detailing conditions
+ */
+export async function fetchAutomotiveData(locationKey: string) {
+  try {
+    const response = await axios.get(`/api/accuweather/automotive/${locationKey}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching automotive weather data:', error);
+    throw error;
+  }
+}
