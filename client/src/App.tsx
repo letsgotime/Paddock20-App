@@ -40,6 +40,8 @@ import HustlePlannerPage from "./pages/HustlePlannerPage";
 import RoutePlannerPage from "./pages/RoutePlannerPage";
 import DiscountsPage from "./pages/DiscountsPage";
 import ContactPage from "./pages/ContactPage";
+import ChatFeedPage from "./pages/ChatFeedPage";
+import SupportChatbot from "./components/SupportChatbot";
 import HomePage from "./pages/Home";
 import { useAuth } from "./hooks/useAuth";
 import { MAIN_CONTENT_ID, LiveRegion } from './lib/accessibility';
@@ -144,8 +146,12 @@ function App() {
                 <Route path="/ebooks" element={<ProtectedRoute><EBooksPage /></ProtectedRoute>} />
                 <Route path="/discounts" element={<ProtectedRoute><DiscountsPage /></ProtectedRoute>} />
                 <Route path="/contact" element={<ProtectedRoute><ContactPage /></ProtectedRoute>} />
+                <Route path="/chat-feed" element={<ProtectedRoute><ChatFeedPage /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              
+              {/* AI Support Chatbot - Available globally */}
+              {(effectiveSession || previewMode) && <SupportChatbot />}
             </main>
 
             {/* Footer with accessibility information */}
