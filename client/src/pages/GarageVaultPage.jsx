@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import supabase from '../services/supabaseClient';
 import { Link } from 'react-router-dom';
-import jsPDF from 'jspdf';
-import html2canvas from 'html2canvas';
+import { exportToPDF, exportToCSV, exportForGoogleDocs } from '../utils/exportUtils';
 
 function GarageVaultPage() {
   const [vehicles, setVehicles] = useState([]);
@@ -58,69 +57,40 @@ function GarageVaultPage() {
     }
   };
   
-  // Function to export garage data to PDF
-  const exportToPDF = async () => {
-    // Notify user the export is starting
-    const announcer = document.getElementById('announcer');
-    if (announcer) {
-      announcer.textContent = "Preparing PDF export. This may take a moment...";
+  // Export functions using the utility library
+  const [showExportMenu, setShowExportMenu] = useState(false);
+  const exportMenuRef = useRef(null);
+
+  // Function to handle clicking outside the dropdown menu
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+        setShowExportMenu(false);
+      }
     }
     
-    try {
-      const input = document.getElementById('garageVaultSection');
-      const canvas = await html2canvas(input);
-      const imgData = canvas.toDataURL('image/png');
-      
-      const pdf = new jsPDF('p', 'mm', 'a4');
-      
-      // ✅ Load your logo
-      const logoUrl = '/assets/Logos/GoTime-White.png'; // Default logo path
-      
-      // Get page dimensions
-      const pdfWidth = pdf.internal.pageSize.getWidth();
-      
-      // Add title to PDF
-      pdf.setFont('helvetica', 'bold');
-      pdf.setFontSize(20);
-      pdf.setTextColor(127, 200, 68); // Green color
-      pdf.text('GoTime Motorsports - GarageVault', pdfWidth / 2, 20, {align: 'center'});
-      
-      // Add generation date
-      pdf.setFont('helvetica', 'normal');
-      pdf.setFontSize(10);
-      pdf.setTextColor(150, 150, 150); // Gray color
-      const dateStr = new Date().toLocaleDateString();
-      pdf.text(`Generated on: ${dateStr}`, pdfWidth / 2, 30, {align: 'center'});
-      
-      // Now add the main garage vault content
-      const imgProps = pdf.getImageProperties(imgData);
-      const vaultImgWidth = pdfWidth - 20;
-      const vaultImgHeight = (imgProps.height * vaultImgWidth) / imgProps.width;
-      
-      // Add the image below the text
-      pdf.addImage(imgData, 'PNG', 10, 40, vaultImgWidth, vaultImgHeight);
-      
-      // Add footer
-      const pageCount = pdf.internal.getNumberOfPages();
-      pdf.setFont('helvetica', 'italic');
-      pdf.setFontSize(8);
-      pdf.setTextColor(100, 100, 100);
-      pdf.text('© GoTime Motorsports - ApexVault™ - Confidential Vehicle Information', pdfWidth / 2, 285, {align: 'center'});
-      
-      // Save the PDF
-      pdf.save('GarageVault.pdf');
-      
-      // Notify user the export is complete
-      if (announcer) {
-        announcer.textContent = "PDF export completed successfully.";
-      }
-    } catch (error) {
-      console.error('Error exporting to PDF:', error.message);
-      // Notify user of the error
-      if (announcer) {
-        announcer.textContent = "Error creating PDF. Please try again later.";
-      }
-    }
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
+  
+  // Function to handle PDF export
+  const handleExportToPDF = async () => {
+    setShowExportMenu(false);
+    await exportToPDF('garageVaultSection', 'GoTime Motorsports - GarageVault', '/assets/Logos/GoTime-White.png');
+  };
+  
+  // Function to handle Google Sheets export (CSV)
+  const handleExportToGoogleSheets = async () => {
+    setShowExportMenu(false);
+    await exportToCSV('garageVaultSection', 'GoTime Motorsports - GarageVault');
+  };
+  
+  // Function to handle Google Docs export (HTML)
+  const handleExportToGoogleDocs = async () => {
+    setShowExportMenu(false);
+    await exportForGoogleDocs('garageVaultSection', 'GoTime Motorsports - GarageVault');
   };
 
   return (
@@ -130,13 +100,50 @@ function GarageVaultPage() {
           Garage Vault | Vehicles & Builds
         </h2>
         
-        <button 
-          onClick={exportToPDF}
-          className="apex-button flex items-center"
-          aria-label="Export Garage Vault to PDF"
-        >
-          <span className="mr-2">📄</span> Export to PDF
-        </button>
+        <div ref={exportMenuRef} className="relative">
+          <button 
+            onClick={() => setShowExportMenu(!showExportMenu)}
+            className="apex-button flex items-center"
+            aria-label="Export Garage Vault"
+            aria-expanded={showExportMenu}
+            aria-haspopup="true"
+          >
+            <span className="mr-2">📥</span> Export Options
+          </button>
+          
+          {showExportMenu && (
+            <div 
+              className="absolute right-0 mt-2 w-60 bg-gray-900 border border-green-500 rounded-md shadow-lg z-50"
+              role="menu"
+              aria-orientation="vertical"
+              aria-labelledby="export-menu"
+            >
+              <div className="py-1" role="none">
+                <button
+                  onClick={handleExportToPDF}
+                  className="flex items-center px-4 py-2 text-sm text-gray-100 hover:bg-gray-800 w-full text-left"
+                  role="menuitem"
+                >
+                  <span className="mr-2">📄</span> Export to PDF
+                </button>
+                <button
+                  onClick={handleExportToGoogleSheets}
+                  className="flex items-center px-4 py-2 text-sm text-gray-100 hover:bg-gray-800 w-full text-left"
+                  role="menuitem"
+                >
+                  <span className="mr-2">📊</span> Export to Google Sheets
+                </button>
+                <button
+                  onClick={handleExportToGoogleDocs}
+                  className="flex items-center px-4 py-2 text-sm text-gray-100 hover:bg-gray-800 w-full text-left"
+                  role="menuitem"
+                >
+                  <span className="mr-2">📝</span> Export to Google Docs
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       </div>
       
       {/* Screen reader announcer */}
