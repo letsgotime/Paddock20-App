@@ -29,7 +29,13 @@
 
   /* Card components */
   .apex-card {
-    @apply bg-gray-900 p-6 rounded-xl shadow-lg hover:bg-gray-800 transition;
+    @apply p-6 rounded-xl shadow-lg transition border border-gray-700;
+    background: linear-gradient(45deg, #111111, #1a1a1a);
+  }
+  
+  .apex-card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
   }
   
   /* Accessibility classes */
