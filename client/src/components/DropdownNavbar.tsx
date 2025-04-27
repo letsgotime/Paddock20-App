@@ -1,13 +1,24 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import supabase from '../services/supabaseClient';
+import { ChevronDown, ChevronRight } from 'lucide-react';
+
+// Define event types
+type MouseEventHandler = (event: React.MouseEvent<HTMLDivElement>) => void;
 
 function DropdownNavbar() {
   const [isOpen, setIsOpen] = useState(false);
+  const [juiceBoxOpen, setJuiceBoxOpen] = useState(false);
   const navigate = useNavigate();
 
   const toggleDropdown = () => {
     setIsOpen(!isOpen);
+  };
+
+  const toggleJuiceBox: MouseEventHandler = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setJuiceBoxOpen(!juiceBoxOpen);
   };
 
   const handleLogout = async () => {
@@ -73,41 +84,60 @@ function DropdownNavbar() {
             >
               Events & Meetups
             </Link>
-            <Link 
-              to="/juicebox" 
-              className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
-              onClick={() => setIsOpen(false)}
-            >
-              Juice Box™
-            </Link>
-            <Link 
-              to="/gloss-reset" 
-              className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans pl-8"
-              onClick={() => setIsOpen(false)}
-            >
-              Gloss Reset
-            </Link>
-            <Link 
-              to="/juice-loadouts" 
-              className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans pl-8"
-              onClick={() => setIsOpen(false)}
-            >
-              Loadouts
-            </Link>
-            <Link 
-              to="/gloss-growth" 
-              className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans pl-8"
-              onClick={() => setIsOpen(false)}
-            >
-              Gloss Growth
-            </Link>
-            <Link 
-              to="/juicebox-videos" 
-              className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans pl-8"
-              onClick={() => setIsOpen(false)}
-            >
-              Video Library
-            </Link>
+            <div className="block">
+              {/* Juice Box main item with dropdown arrow */}
+              <div 
+                className="flex justify-between items-center px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans cursor-pointer"
+                onClick={toggleJuiceBox}
+              >
+                <span>Juice Box™</span>
+                {juiceBoxOpen ? 
+                  <ChevronDown className="h-4 w-4" /> : 
+                  <ChevronRight className="h-4 w-4" />
+                }
+              </div>
+              
+              {/* Collapsible Juice Box submenu */}
+              {juiceBoxOpen && (
+                <div>
+                  <Link 
+                    to="/juicebox" 
+                    className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans pl-8"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Main
+                  </Link>
+                  <Link 
+                    to="/gloss-reset" 
+                    className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans pl-8"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Gloss Reset
+                  </Link>
+                  <Link 
+                    to="/juice-loadouts" 
+                    className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans pl-8"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Loadouts
+                  </Link>
+                  <Link 
+                    to="/gloss-growth" 
+                    className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans pl-8"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Gloss Growth
+                  </Link>
+                  <Link 
+                    to="/juicebox-videos" 
+                    className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans pl-8"
+                    onClick={() => setIsOpen(false)}
+                  >
+                    Video Library
+                  </Link>
+                </div>
+              )}
+            </div>
             <Link 
               to="/weather" 
               className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
