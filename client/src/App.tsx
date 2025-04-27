@@ -12,6 +12,7 @@ import Marketplace from "@/pages/Marketplace";
 import Motorsports from "@/pages/Motorsports";
 import Settings from "@/pages/Settings";
 import Events from "./pages/Events";
+import JuiceBox from "./pages/JuiceBox";
 import DropdownNavbar from "./components/DropdownNavbar";
 import { WeatherProvider } from "./contexts/WeatherContext";
 import './apexvault.css';
@@ -32,6 +33,7 @@ function App() {
                 <Route path="/marketplace" element={<Marketplace />} />
                 <Route path="/motorsports" element={<Motorsports />} />
                 <Route path="/events" element={<Events />} />
+                <Route path="/juicebox" element={<JuiceBox />} />
                 <Route path="/settings" element={<Settings />} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
