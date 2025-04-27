@@ -12,9 +12,9 @@ function DashboardPage() {
     <div className="p-10 bg-black min-h-screen">
       <div className="max-w-6xl mx-auto">
         <img 
-          src="/assets/GoTime White.png" 
+          src="/assets/GoTime Logo-7FC844-White (1).png" 
           alt="GoTime Motorsports" 
-          className="h-16 w-auto mx-auto mb-8"
+          className="h-20 w-auto mx-auto mb-8"
         />
 
         <div className="flex justify-between items-center mb-10">
