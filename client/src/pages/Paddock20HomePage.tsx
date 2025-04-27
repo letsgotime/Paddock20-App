@@ -23,13 +23,36 @@ const Paddock20HomePage = () => {
       {/* Why Paddock20 */}
       <section className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg shadow-lg border border-gray-700 p-8 mb-12">
         <h2 className="text-blue-400 font-orbitron text-3xl mb-6">Why Paddock20™? Why Now?</h2>
-        <p className="text-white font-openSans text-base leading-relaxed mb-6">
-          Because real enthusiasts deserve real systems. Because parking lot dreams deserve pit lane execution. Because knowing when to drive is as important as knowing how.
-        </p>
-        <p className="text-white font-openSans text-base leading-relaxed mb-6">
-          No noise. No fake flex. Just pure data, pure drive, pure community. 
-          Built by operators who care about discipline more than downloads.
-        </p>
+        
+        <div className="flex flex-col md:flex-row gap-6 mb-6">
+          <div className="flex-1">
+            <h3 className="text-green-500 font-orbitron text-xl mb-3">The Paddock Concept</h3>
+            <p className="text-white font-openSans text-base leading-relaxed mb-4">
+              In motorsports, the paddock is the secured area where teams prepare, service, and manage their race cars.
+              It's where the real work happens — where strategy becomes reality.
+            </p>
+            <p className="text-white font-openSans text-base leading-relaxed">
+              Having "paddock access" means you're part of the team, part of the action, not just spectating.
+            </p>
+          </div>
+          
+          <div className="flex-1">
+            <h3 className="text-green-500 font-orbitron text-xl mb-3">Paddock20™ Vision</h3>
+            <p className="text-white font-openSans text-base leading-relaxed mb-4">
+              Because real enthusiasts deserve real systems. Because parking lot dreams deserve pit lane execution. 
+              Because knowing when to drive is as important as knowing how.
+            </p>
+            <p className="text-white font-openSans text-base leading-relaxed">
+              No noise. No fake flex. Just pure data, pure drive, pure community. 
+              Built by operators who care about discipline more than downloads.
+            </p>
+          </div>
+        </div>
+        
+        <blockquote className="border-l-4 border-green-500 pl-4 italic text-gray-300 font-openSans">
+          "The paddock isn't where you show off. It's where you get ready to win. 
+          Paddock20™ was built for that same mindset."
+        </blockquote>
       </section>
 
       {/* Core Features */}
