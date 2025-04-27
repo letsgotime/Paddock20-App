@@ -53,7 +53,9 @@
   }
 
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    font-family: 'Open Sans', sans-serif;
+    color: white;
+    background: linear-gradient(45deg, #111111, #1a1a1a);
   }
 }
 

@@ -39,6 +39,8 @@ import ConciergePage from "./pages/ConciergePage";
 import HustlePlannerPage from "./pages/HustlePlannerPage";
 import RoutePlannerPage from "./pages/RoutePlannerPage";
 import DiscountsPage from "./pages/DiscountsPage";
+import ContactPage from "./pages/ContactPage";
+import HomePage from "./pages/Home";
 import { useAuth } from "./hooks/useAuth";
 import { MAIN_CONTENT_ID, LiveRegion } from './lib/accessibility';
 import './paddock20.css';
@@ -141,6 +143,7 @@ function App() {
                 <Route path="/route-planner" element={<ProtectedRoute><RoutePlannerPage /></ProtectedRoute>} />
                 <Route path="/ebooks" element={<ProtectedRoute><EBooksPage /></ProtectedRoute>} />
                 <Route path="/discounts" element={<ProtectedRoute><DiscountsPage /></ProtectedRoute>} />
+                <Route path="/contact" element={<ProtectedRoute><ContactPage /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>
