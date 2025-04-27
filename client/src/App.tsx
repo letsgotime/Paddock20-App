@@ -94,7 +94,11 @@ function App() {
                 {/* Protected routes */}
                 <Route path="/" element={<ProtectedRoute><Home /></ProtectedRoute>} />
                 <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-                <Route path="/garage" element={<ProtectedRoute><Garage /></ProtectedRoute>} />
+                {/* Main Garage Vault Hub - Central repository for all vehicle data */}
+                <Route path="/garage-vault" element={<ProtectedRoute><GarageVaultPage /></ProtectedRoute>} />
+                {/* Legacy garage route redirects to new Garage Vault structure */}
+                <Route path="/garage" element={<Navigate to="/garage-vault" replace />} />
+                
                 <Route path="/journal" element={<ProtectedRoute><Journal /></ProtectedRoute>} />
                 <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
                 <Route path="/motorsports" element={<ProtectedRoute><Motorsports /></ProtectedRoute>} />
@@ -109,7 +113,6 @@ function App() {
                 <Route path="/seasonal-checklist" element={<ProtectedRoute><SeasonalChecklistPage /></ProtectedRoute>} />
                 <Route path="/pre-drive-checklist" element={<ProtectedRoute><PreDriveChecklistPage /></ProtectedRoute>} />
                 <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-                <Route path="/garage-vault" element={<ProtectedRoute><GarageVaultPage /></ProtectedRoute>} />
                 <Route path="/vehicle-mods/:id" element={<ProtectedRoute><VehicleModsPage /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
