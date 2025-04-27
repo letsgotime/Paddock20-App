@@ -140,6 +140,7 @@ function App() {
                 <Route path="/hustle-planner" element={<ProtectedRoute><HustlePlannerPage /></ProtectedRoute>} />
                 <Route path="/route-planner" element={<ProtectedRoute><RoutePlannerPage /></ProtectedRoute>} />
                 <Route path="/ebooks" element={<ProtectedRoute><EBooksPage /></ProtectedRoute>} />
+                <Route path="/discounts" element={<ProtectedRoute><DiscountsPage /></ProtectedRoute>} />
                 <Route path="*" element={<NotFound />} />
               </Routes>
             </main>
