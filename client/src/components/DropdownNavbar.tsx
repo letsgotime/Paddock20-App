@@ -84,6 +84,13 @@ function DropdownNavbar() {
             >
               Events & Meetups
             </Link>
+            <Link 
+              to="/garage-vault" 
+              className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
+              onClick={() => setIsOpen(false)}
+            >
+              Garage Vault
+            </Link>
             <div className="block">
               {/* Juice Box main item with dropdown arrow */}
               <div 
