@@ -1,232 +1,286 @@
 import React, { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import supabase from '../services/supabaseClient';
-import { Card } from '@/components/ui/card';
-import { ArrowLeft, Link as LinkIcon, Calendar, FileText, Wrench } from 'lucide-react';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Button } from '@/components/ui/button';
 
 function VehicleModsPage() {
-  const { id } = useParams(); // vehicle_id
+  const { id } = useParams();
+  const [vehicle, setVehicle] = useState(null);
   const [mods, setMods] = useState([]);
-  const [modData, setModData] = useState({
-    mod_title: '',
-    install_date: '',
-    part_link: '',
-    notes: ''
-  });
   const [loading, setLoading] = useState(true);
-  const [vehicleName, setVehicleName] = useState('');
+  const [newMod, setNewMod] = useState({ name: '', description: '', date_installed: '', cost: '' });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
+  // Fetch vehicle and mods data
   useEffect(() => {
     async function fetchData() {
+      setLoading(true);
       try {
-        setLoading(true);
-        
-        // Fetch vehicle data (for the name)
-        const vehicleResponse = await supabase
+        // Fetch vehicle details
+        const { data: vehicleData, error: vehicleError } = await supabase
           .from('Vehicles')
-          .select('car_name')
+          .select('*')
           .eq('id', id)
           .single();
-          
-        if (vehicleResponse.data) {
-          setVehicleName(vehicleResponse.data.car_name);
-        }
-          
-        // Fetch mods data for this vehicle
-        const modsResponse = await supabase
+
+        if (vehicleError) throw vehicleError;
+        setVehicle(vehicleData);
+
+        // Fetch mods for this vehicle
+        const { data: modsData, error: modsError } = await supabase
           .from('VehicleMods')
           .select('*')
-          .eq('vehicle_id', id);
-          
-        setMods(modsResponse.data || []);
-        setLoading(false);
+          .eq('vehicle_id', id)
+          .order('date_installed', { ascending: false });
+
+        if (modsError) throw modsError;
+        setMods(modsData || []);
       } catch (error) {
-        console.error('Error fetching data:', error);
+        console.error('Error fetching data:', error.message);
+        setError('Failed to load vehicle data. Please try again later.');
+      } finally {
         setLoading(false);
       }
     }
-    
-    fetchData();
+
+    if (id) fetchData();
   }, [id]);
 
-  const handleChange = (e) => {
-    setModData({ ...modData, [e.target.name]: e.target.value });
+  // Handle form input changes
+  const handleInputChange = (e) => {
+    const { name, value } = e.target;
+    setNewMod(prev => ({ ...prev, [name]: value }));
   };
 
+  // Handle form submission
   const handleSubmit = async (e) => {
     e.preventDefault();
-    
+    setIsSubmitting(true);
+    setError(null);
+
     try {
-      // Add new mod to Supabase
+      // Validate form
+      if (!newMod.name || !newMod.description) {
+        throw new Error('Name and description are required');
+      }
+
+      // Submit to Supabase
       const { data, error } = await supabase
         .from('VehicleMods')
-        .insert({
-          user_id: (await supabase.auth.getUser()).data.user.id,
-          vehicle_id: id,
-          mod_title: modData.mod_title,
-          install_date: modData.install_date,
-          part_link: modData.part_link,
-          notes: modData.notes
-        });
-        
+        .insert([
+          { 
+            ...newMod, 
+            vehicle_id: id,
+            cost: newMod.cost ? parseFloat(newMod.cost) : null 
+          }
+        ])
+        .select();
+
       if (error) throw error;
-      
-      // Add to local state for immediate UI update
-      setMods([...mods, {
-        id: Math.floor(Math.random() * 1000),
-        vehicle_id: id,
-        mod_title: modData.mod_title,
-        install_date: modData.install_date,
-        part_link: modData.part_link,
-        notes: modData.notes
-      }]);
+
+      // Update local state
+      setMods(prev => [data[0], ...prev]);
       
       // Reset form
-      setModData({
-        mod_title: '',
-        install_date: '',
-        part_link: '',
-        notes: ''
-      });
+      setNewMod({ name: '', description: '', date_installed: '', cost: '' });
+      
+      // Success message or notification could be added here
     } catch (error) {
-      console.error('Error saving mod:', error);
+      console.error('Error adding mod:', error.message);
+      setError(error.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
   if (loading) {
     return (
-      <div className="p-6 md:p-10 bg-gray-950 min-h-screen flex items-center justify-center">
-        <p className="text-gray-400 text-center">Loading...</p>
+      <div className="p-10 bg-black min-h-screen flex items-center justify-center">
+        <p className="text-gray-400" role="status" aria-live="polite">Loading vehicle data...</p>
+      </div>
+    );
+  }
+
+  if (!vehicle) {
+    return (
+      <div className="p-10 bg-black min-h-screen">
+        <div className="text-center" role="alert">
+          <h2 className="apex-header-green mb-4">Vehicle Not Found</h2>
+          <p className="text-white mb-6">The vehicle you're looking for doesn't exist or you don't have access to it.</p>
+          <Link to="/garage-vault" className="apex-button">Return to Garage</Link>
+        </div>
       </div>
     );
   }
 
   return (
-    <div className="p-6 md:p-10 bg-gray-950 min-h-screen">
+    <div className="p-10 bg-black min-h-screen" aria-labelledby="modsPageHeading">
       <div className="max-w-6xl mx-auto">
-        <div className="flex items-center mb-8">
-          <Link to="/garage-vault" className="mr-4 text-gray-400 hover:text-white">
-            <ArrowLeft className="h-5 w-5" />
-          </Link>
-          <h2 className="apex-header-green">{vehicleName} | BUILD SHEET</h2>
-        </div>
+        <nav className="mb-6" aria-label="Breadcrumb">
+          <Link to="/garage-vault" className="text-green-400 hover:text-green-300">← Back to Garage</Link>
+        </nav>
 
-        {/* Mod Form */}
-        <Card className="apex-card mb-10 p-6 bg-gray-900 border-gray-800">
-          <h3 className="text-blue-400 font-orbitron text-lg mb-6 text-center">ADD NEW MODIFICATION</h3>
+        <h2 id="modsPageHeading" className="apex-header-green mb-8">
+          {vehicle.car_name} | Modifications
+        </h2>
+
+        {/* Add New Modification Section */}
+        <section 
+          className="apex-card p-6 mb-8"
+          aria-labelledby="addModHeading"
+        >
+          <h3 id="addModHeading" className="text-blue-400 font-orbitron text-lg mb-4">Add New Modification</h3>
           
-          <form onSubmit={handleSubmit} className="grid grid-cols-1 gap-6">
-            <div>
-              <label htmlFor="mod_title" className="block text-sm text-gray-400 mb-1">Modification Title</label>
-              <Input 
-                id="mod_title"
-                type="text" 
-                name="mod_title" 
-                placeholder="e.g. Carbon Fiber Intake System" 
-                value={modData.mod_title} 
-                onChange={handleChange} 
-                required 
-                className="p-3 rounded-lg bg-gray-800 border border-gray-700 text-white" 
-              />
+          {error && (
+            <div className="bg-red-900 text-white p-3 mb-4 rounded" role="alert">
+              {error}
+            </div>
+          )}
+          
+          <form onSubmit={handleSubmit} aria-label="Add modification form">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <div>
+                <label htmlFor="name" className="block text-gray-300 mb-1">
+                  Modification Name*
+                </label>
+                <input 
+                  type="text"
+                  id="name"
+                  name="name"
+                  value={newMod.name}
+                  onChange={handleInputChange}
+                  className="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white"
+                  aria-required="true"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="date_installed" className="block text-gray-300 mb-1">
+                  Date Installed
+                </label>
+                <input 
+                  type="date"
+                  id="date_installed"
+                  name="date_installed"
+                  value={newMod.date_installed}
+                  onChange={handleInputChange}
+                  className="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white"
+                />
+              </div>
+              
+              <div>
+                <label htmlFor="cost" className="block text-gray-300 mb-1">
+                  Cost (USD)
+                </label>
+                <input 
+                  type="number"
+                  id="cost"
+                  name="cost"
+                  value={newMod.cost}
+                  onChange={handleInputChange}
+                  min="0"
+                  step="0.01"
+                  className="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white"
+                />
+              </div>
+              
+              <div className="md:col-span-2">
+                <label htmlFor="description" className="block text-gray-300 mb-1">
+                  Description*
+                </label>
+                <textarea 
+                  id="description"
+                  name="description"
+                  value={newMod.description}
+                  onChange={handleInputChange}
+                  rows="3"
+                  className="w-full bg-gray-800 border border-gray-700 rounded p-2 text-white"
+                  aria-required="true"
+                ></textarea>
+              </div>
             </div>
             
-            <div>
-              <label htmlFor="install_date" className="block text-sm text-gray-400 mb-1">Installation Date</label>
-              <Input 
-                id="install_date"
-                type="date" 
-                name="install_date" 
-                value={modData.install_date} 
-                onChange={handleChange} 
-                className="p-3 rounded-lg bg-gray-800 border border-gray-700 text-white" 
-              />
+            <div className="flex justify-end">
+              <button 
+                type="submit" 
+                className="apex-button"
+                disabled={isSubmitting}
+                aria-busy={isSubmitting}
+              >
+                {isSubmitting ? 'Adding...' : 'Add Modification'}
+              </button>
             </div>
-            
-            <div>
-              <label htmlFor="part_link" className="block text-sm text-gray-400 mb-1">Part Link (optional)</label>
-              <Input 
-                id="part_link"
-                type="url" 
-                name="part_link" 
-                placeholder="https://example.com/part" 
-                value={modData.part_link} 
-                onChange={handleChange} 
-                className="p-3 rounded-lg bg-gray-800 border border-gray-700 text-white" 
-              />
-            </div>
-            
-            <div>
-              <label htmlFor="notes" className="block text-sm text-gray-400 mb-1">Notes (performance gains, installation notes)</label>
-              <Textarea 
-                id="notes"
-                name="notes" 
-                placeholder="E.g. +15hp, improves throttle response, professional installation recommended" 
-                value={modData.notes} 
-                onChange={handleChange} 
-                className="p-3 rounded-lg bg-gray-800 border border-gray-700 text-white" 
-                rows="3"
-              ></Textarea>
-            </div>
-            
-            <Button type="submit" className="apex-button w-full flex items-center justify-center">
-              <Wrench className="h-4 w-4 mr-2" />
-              Add Modification
-            </Button>
           </form>
-        </Card>
+        </section>
 
-        {/* Existing Mods */}
-        <h3 className="apex-header-gray mb-6">INSTALLED MODIFICATIONS</h3>
-        
-        {mods.length === 0 ? (
-          <p className="text-gray-400 text-center p-6">No modifications have been added yet.</p>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {mods.map((mod, index) => (
-              <Card key={index} className="apex-card p-6 bg-gray-900 border-gray-800 hover:border-green-500 transition-all duration-300">
-                <h3 className="text-green-500 font-orbitron text-lg mb-3">{mod.mod_title}</h3>
-                
-                <div className="space-y-3 mb-4">
-                  {mod.install_date && (
-                    <div className="flex items-center">
-                      <Calendar className="h-4 w-4 text-blue-400 mr-2" />
-                      <p className="text-gray-300">Installed: {mod.install_date}</p>
-                    </div>
-                  )}
+        {/* Mods List Section */}
+        <section aria-labelledby="modsListHeading">
+          <h3 id="modsListHeading" className="apex-header-gray mb-4">Installed Modifications</h3>
+          
+          {mods.length === 0 ? (
+            <p className="text-gray-400 text-center py-6">
+              No modifications have been added yet. Add your first mod above!
+            </p>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6" role="region" aria-label="List of vehicle modifications">
+              {mods.map((mod, index) => (
+                <div 
+                  key={mod.id || index} 
+                  className="apex-card p-6 bg-gray-900 border-gray-800 hover:border-green-500 transition-all duration-300"
+                  role="group"
+                  aria-labelledby={`mod-${index}-title`}
+                >
+                  <h4 id={`mod-${index}-title`} className="text-green-500 font-orbitron text-lg mb-3">
+                    {mod.name}
+                  </h4>
                   
-                  {mod.notes && (
-                    <div className="flex items-start">
-                      <FileText className="h-4 w-4 text-blue-400 mt-1 mr-2" />
-                      <p className="text-gray-300">{mod.notes}</p>
-                    </div>
-                  )}
+                  <div className="space-y-3 mb-4">
+                    {mod.date_installed && (
+                      <div className="flex items-center" aria-label="Installation Date">
+                        <div className="h-4 w-4 text-blue-400 mr-2">📅</div>
+                        <p className="text-gray-300">
+                          Installed: {new Date(mod.date_installed).toLocaleDateString()}
+                        </p>
+                      </div>
+                    )}
+                    
+                    {mod.description && (
+                      <div className="flex items-start" aria-label="Notes about modification">
+                        <div className="h-4 w-4 text-blue-400 mt-1 mr-2">📝</div>
+                        <p className="text-gray-300">{mod.description}</p>
+                      </div>
+                    )}
+                    
+                    {mod.cost && (
+                      <div className="flex items-center" aria-label="Cost of modification">
+                        <div className="h-4 w-4 text-blue-400 mr-2">💰</div>
+                        <p className="text-gray-300">Cost: ${parseFloat(mod.cost).toFixed(2)}</p>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Edit and Delete Buttons with Accessibility */}
+                  <div className="flex justify-between items-center mt-6">
+                    <button 
+                      onClick={() => handleEditMod(mod)} 
+                      className="text-sm text-blue-400 hover:text-blue-300"
+                      aria-label={`Edit modification ${mod.name}`}
+                    >
+                      ✏️ Edit
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteMod(mod.id)} 
+                      className="text-sm text-red-500 hover:text-red-400"
+                      aria-label={`Delete modification ${mod.name}`}
+                    >
+                      ❌ Delete
+                    </button>
+                  </div>
                 </div>
-                
-                {mod.part_link && (
-                  <a 
-                    href={mod.part_link} 
-                    target="_blank" 
-                    rel="noopener noreferrer" 
-                    className="flex items-center text-blue-400 hover:text-blue-300 mt-4"
-                  >
-                    <LinkIcon className="h-4 w-4 mr-2" />
-                    View Part Details
-                  </a>
-                )}
-              </Card>
-            ))}
-          </div>
-        )}
-        
-        <div className="text-center mt-10">
-          <Link to="/garage-vault" className="apex-button inline-block">
-            <ArrowLeft className="h-4 w-4 mr-2 inline" />
-            Return to Garage Vault
-          </Link>
-        </div>
+              ))}
+            </div>
+          )}
+        </section>
       </div>
     </div>
   );

@@ -49,18 +49,18 @@ const supabase = {
           {
             id: 1,
             vehicle_id: 1,
-            mod_title: 'Novitec Carbon Fiber Rear Wing',
-            install_date: '2025-03-15',
-            part_link: 'https://www.example.com/novitec-wing',
-            notes: 'Increases downforce by approximately 30% at high speeds'
+            name: 'Novitec Carbon Fiber Rear Wing',
+            date_installed: '2025-03-15',
+            description: 'Increases downforce by approximately 30% at high speeds',
+            cost: 4250.00
           },
           {
             id: 2,
             vehicle_id: 1,
-            mod_title: 'Akrapovic Titanium Exhaust System',
-            install_date: '2025-02-10',
-            part_link: 'https://www.example.com/akrapovic-exhaust',
-            notes: '+15hp, -12kg weight reduction over stock'
+            name: 'Akrapovic Titanium Exhaust System',
+            date_installed: '2025-02-10',
+            description: '+15hp, -12kg weight reduction over stock',
+            cost: 6800.00
           }
         ] : table === 'UserChecklists' ? [
           {
@@ -91,10 +91,15 @@ const supabase = {
       };
     },
     insert: (data) => {
-      return Promise.resolve({
-        data: { ...data, id: Math.floor(Math.random() * 1000) },
-        error: null
-      });
+      const newItem = Array.isArray(data) ? data[0] : data;
+      return {
+        data: [{ ...newItem, id: Math.floor(Math.random() * 1000) }],
+        error: null,
+        select: () => ({
+          data: [{ ...newItem, id: Math.floor(Math.random() * 1000) }],
+          error: null
+        })
+      };
     },
     upsert: (data) => {
       return Promise.resolve({
@@ -109,18 +114,18 @@ const supabase = {
             {
               id: 1,
               vehicle_id: value,
-              mod_title: 'Novitec Carbon Fiber Rear Wing',
-              install_date: '2025-03-15',
-              part_link: 'https://www.example.com/novitec-wing',
-              notes: 'Increases downforce by approximately 30% at high speeds'
+              name: 'Novitec Carbon Fiber Rear Wing',
+              date_installed: '2025-03-15',
+              description: 'Increases downforce by approximately 30% at high speeds',
+              cost: 4250.00
             },
             {
               id: 2,
               vehicle_id: value,
-              mod_title: 'Akrapovic Titanium Exhaust System',
-              install_date: '2025-02-10',
-              part_link: 'https://www.example.com/akrapovic-exhaust',
-              notes: '+15hp, -12kg weight reduction over stock'
+              name: 'Akrapovic Titanium Exhaust System',
+              date_installed: '2025-02-10',
+              description: '+15hp, -12kg weight reduction over stock',
+              cost: 6800.00
             }
           ],
           error: null,
