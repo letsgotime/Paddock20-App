@@ -1,10 +1,20 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import SimpleWeatherStation from '../components/SimpleWeatherStation';
+import EventsPreview from '../components/EventsPreview';
+import VoiceEnabledWeather from '../components/VoiceEnabledWeather';
 
-const Paddock20HomePage = () => {
+const Paddock20HomePage: React.FC = () => {
   return (
-    <div className="bg-black min-h-screen max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div
+      className="min-h-screen bg-black bg-cover bg-center"
+      style={{
+        backgroundImage: "url('/assets/AAFuWkQu2jM_1742366729990.jpg')",
+        backgroundBlendMode: "overlay",
+        backgroundColor: "rgba(0,0,0,0.7)",
+      }}
+    >
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       {/* Hero Section */}
       <section className="text-center mb-12">
         <h1 className="text-blue-400 font-orbitron text-5xl mb-6">Paddock20™</h1>
@@ -17,7 +27,15 @@ const Paddock20HomePage = () => {
       {/* Weather Station Section */}
       <section className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg shadow-lg border border-gray-700 p-6 mb-8">
         <h2 className="font-orbitron text-blue-400 text-2xl mb-4">Today's Drive Conditions</h2>
-        <SimpleWeatherStation />
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <VoiceEnabledWeather />
+          <SimpleWeatherStation />
+        </div>
+      </section>
+      
+      {/* Motorsports Events Preview */}
+      <section className="mb-8">
+        <EventsPreview />
       </section>
 
       {/* Why Paddock20 */}
@@ -101,7 +119,7 @@ const Paddock20HomePage = () => {
       <section className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg shadow-lg border border-gray-700 p-6 mb-8">
         <h2 className="font-orbitron text-blue-400 text-2xl mb-4">Quick Access Launchpad</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          <Link to="/events" className="bg-black p-4 rounded-lg border border-gray-800 hover:border-green-500 transition-colors">
+          <Link to="/motorsports-events" className="bg-black p-4 rounded-lg border border-gray-800 hover:border-green-500 transition-colors">
             <span className="text-2xl block mb-2">🏎️</span>
             <span className="text-white font-openSans hover:text-green-400">Find Motorsport Events</span>
           </Link>
@@ -135,6 +153,7 @@ const Paddock20HomePage = () => {
           Join the operators who don't chase. They build.
         </p>
       </section>
+      </div>
     </div>
   );
 };

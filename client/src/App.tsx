@@ -13,6 +13,8 @@ import Marketplace from "@/pages/Marketplace";
 import Motorsports from "@/pages/Motorsports";
 import Settings from "@/pages/Settings";
 import Events from "./pages/Events";
+import EventsPage from "./pages/EventsPage";
+import MotorsportsEventsPage from "./pages/MotorsportsEventsPage";
 import JuiceBox from "./pages/JuiceBox";
 import GlossResetPage from "./pages/GlossResetPage";
 import LoadoutsPage from "./pages/LoadoutsPage";
@@ -116,6 +118,8 @@ function App() {
                 <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
                 <Route path="/motorsports" element={<ProtectedRoute><Motorsports /></ProtectedRoute>} />
                 <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
+                <Route path="/events-page" element={<ProtectedRoute><EventsPage /></ProtectedRoute>} />
+                <Route path="/motorsports-events" element={<ProtectedRoute><MotorsportsEventsPage /></ProtectedRoute>} />
                 <Route path="/juicebox" element={<ProtectedRoute><JuiceBox /></ProtectedRoute>} />
                 <Route path="/gloss-reset" element={<ProtectedRoute><GlossResetPage /></ProtectedRoute>} />
                 <Route path="/juice-loadouts" element={<ProtectedRoute><LoadoutsPage /></ProtectedRoute>} />
