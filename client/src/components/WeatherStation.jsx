@@ -69,7 +69,7 @@ function WeatherStation() {
         Switch to °{tempUnit === 'F' ? 'C' : 'F'}
       </button>
 
-      <div className="grid grid-cols-2 gap-6">
+      <div className="grid grid-cols-2 gap-6 mb-6">
         <div className="bg-black p-4 rounded-lg">
           <h3 className="text-blue-400 font-orbitron text-sm uppercase mb-2">Air Temp</h3>
           <p className="text-2xl text-white">{convertTemp(weatherData.main.temp)}°{tempUnit}</p>
@@ -87,6 +87,36 @@ function WeatherStation() {
           <p className="text-2xl text-white">{weatherData.wind.speed} mph</p>
         </div>
       </div>
+
+      {/* Navigation Links */}
+      <div className="flex flex-wrap justify-center gap-4 mb-6">
+        <a 
+          href={`https://waze.com/ul?ll=${latitude},${longitude}&navigate=yes`} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="apex-button"
+        >
+          Open Waze Navigation
+        </a>
+        <a 
+          href={`http://maps.apple.com/?daddr=${latitude},${longitude}`} 
+          target="_blank" 
+          rel="noopener noreferrer"
+          className="apex-button"
+        >
+          Open in Apple Maps
+        </a>
+      </div>
+
+      {/* We'll add the iframe when we have the API key */}
+      {/* <iframe
+        width="100%"
+        height="300"
+        frameBorder="0"
+        src={`https://www.google.com/maps/embed/v1/place?key=YOUR_API_KEY&q=${latitude},${longitude}`}
+        allowFullScreen
+        className="rounded-lg"
+      ></iframe> */}
     </div>
   );
 }

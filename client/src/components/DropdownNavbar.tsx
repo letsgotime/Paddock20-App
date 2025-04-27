@@ -24,6 +24,7 @@ function DropdownNavbar() {
           alt="GoTime Motorsports" 
           className="h-10 w-auto mr-2"
         />
+        <span className="text-green-500 font-orbitron">ApexVault™</span>
       </Link>
 
       <div className="relative">
@@ -64,13 +65,7 @@ function DropdownNavbar() {
             >
               Marketplace
             </Link>
-            <Link 
-              to="/motorsports" 
-              className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
-              onClick={() => setIsOpen(false)}
-            >
-              Motorsports
-            </Link>
+
             <Link 
               to="/events" 
               className="block px-4 py-2 text-white hover:bg-green-500 hover:text-black font-openSans"
