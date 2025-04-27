@@ -57,7 +57,7 @@ const WeatherGraphs: React.FC = () => {
   }));
   
   // Process daily forecast data for charts
-  const dailyData = oneCallData.daily.map(item => ({
+  const dailyData = oneCallData.daily ? oneCallData.daily.map(item => ({
     day: formatDay(item.dt),
     maxTemp: Math.round(item.temp.max),
     minTemp: Math.round(item.temp.min),
@@ -67,7 +67,7 @@ const WeatherGraphs: React.FC = () => {
     uvIndex: Math.round(item.uvi),
     label: item.weather[0].main,
     dt: item.dt
-  }));
+  })) : [];
   
   // Hourly temperature graph
   const TempGraph = () => (
@@ -446,7 +446,7 @@ function getWindImpactText(windSpeed: number, unit: string): string {
 }
 
 // Mock Calendar component since we're using the import but it's not defined
-const Calendar = ({ className }) => (
+const Calendar = ({ className }: { className?: string }) => (
   <svg
     xmlns="http://www.w3.org/2000/svg"
     viewBox="0 0 24 24"
