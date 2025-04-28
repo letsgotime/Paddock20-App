@@ -27,13 +27,66 @@ const TiresTimepieces: React.FC = () => {
           <div className="text-center mb-16">
             <h1 className="text-5xl font-orbitron text-blue-500 mb-4">Tires & Timepieces™</h1>
             <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Full-Service Luxury Asset Brokerage
+              Powered by GoTime Motorsports™
             </p>
             <div className="mt-6 text-lg text-gray-400 max-w-3xl mx-auto">
-              From exotic cars to fine timepieces, we handle every aspect of buying, selling, and trading within our trusted network of verified partners.
+              "Where asset passion meets precision execution."
             </div>
+            <p className="mt-6 text-gray-300 max-w-3xl mx-auto">
+              We exist for the builders, the collectors, the flippers, and the dreamers who want their next exotic car or timepiece to mean something.<br />
+              Not hype. Not algorithms. Real sourcing. Real strategy. Real movement.
+            </p>
           </div>
 
+          {/* What You Get */}
+          <div className="mb-16">
+            <h2 className="text-3xl font-orbitron text-blue-500 text-center mb-10">🚗💼 What You Get</h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <div className="bg-gradient-to-br from-gray-900 to-gray-900/40 p-6 rounded-xl border border-gray-800">
+                <h3 className="text-xl font-semibold text-white mb-3">Asset Match Orders</h3>
+                <p className="text-gray-300">
+                  Get paired with the right vehicle or timepiece—fast.
+                </p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-gray-900 to-gray-900/40 p-6 rounded-xl border border-gray-800">
+                <h3 className="text-xl font-semibold text-white mb-3">Concierge Brokerage</h3>
+                <p className="text-gray-300">
+                  Buy, sell, or trade with full authentication, inspection, and protection.
+                </p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-gray-900 to-gray-900/40 p-6 rounded-xl border border-gray-800">
+                <h3 className="text-xl font-semibold text-white mb-3">Flip Forecasts™</h3>
+                <p className="text-gray-300">
+                  Strategic resale guidance before you buy—so you move smarter, not slower.
+                </p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-gray-900 to-gray-900/40 p-6 rounded-xl border border-gray-800">
+                <h3 className="text-xl font-semibold text-white mb-3">Vault Briefs™</h3>
+                <p className="text-gray-300">
+                  Curated asset match packs, complete with margin logic and readiness reports.
+                </p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-gray-900 to-gray-900/40 p-6 rounded-xl border border-gray-800">
+                <h3 className="text-xl font-semibold text-white mb-3">Delivery Engineering</h3>
+                <p className="text-gray-300">
+                  White-glove shipping, presentation-grade handoffs, and concierge-level support.
+                </p>
+              </div>
+              
+              <div className="bg-gradient-to-br from-gray-900 to-gray-900/40 p-6 rounded-xl border border-gray-800">
+                <h3 className="text-xl font-semibold text-white mb-3">Exit Strategy Playbooks</h3>
+                <p className="text-gray-300">
+                  Resale and reinvestment pathways built before you even buy.
+                </p>
+              </div>
+            </div>
+          </div>
+          
           {/* Services Overview */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-16">
             <div className="bg-gradient-to-br from-gray-900 to-gray-900/40 p-8 rounded-xl border border-gray-800">
@@ -42,7 +95,7 @@ const TiresTimepieces: React.FC = () => {
               </div>
               <h2 className="text-2xl font-orbitron text-blue-500 mb-4">Automotive Assets</h2>
               <p className="text-gray-300 mb-6">
-                Our expert automotive brokers source, authenticate, and facilitate transactions for rare and high-value vehicles, from modern exotics to vintage classics.
+                From exotic cars to collectible classics, we handle sourcing, authentication, and secure transactions with white-glove service.
               </p>
               <ul className="space-y-3">
                 <li className="flex items-start">
@@ -51,11 +104,11 @@ const TiresTimepieces: React.FC = () => {
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-3 mt-1 flex-shrink-0" />
-                  <span className="text-white">Private seller representation</span>
+                  <span className="text-white">Strategic flip guidance and market timing</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-3 mt-1 flex-shrink-0" />
-                  <span className="text-white">Secure global shipping and transport</span>
+                  <span className="text-white">White-glove delivery and presentation</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-3 mt-1 flex-shrink-0" />
@@ -70,7 +123,7 @@ const TiresTimepieces: React.FC = () => {
               </div>
               <h2 className="text-2xl font-orbitron text-purple-500 mb-4">Timepiece Collection</h2>
               <p className="text-gray-300 mb-6">
-                Partnered with Bennisson, we offer full-service luxury watch brokerage, authenticity verification, and worldwide access to rare and limited timepieces.
+                Partnered with Bennisson, we offer luxury watch brokerage, verification, and access to rare and limited timepieces with complete authenticity assurance.
               </p>
               <ul className="space-y-3">
                 <li className="flex items-start">
@@ -79,11 +132,11 @@ const TiresTimepieces: React.FC = () => {
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-3 mt-1 flex-shrink-0" />
-                  <span className="text-white">Authentication and appraisal services</span>
+                  <span className="text-white">Authentication by master watchmakers</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-3 mt-1 flex-shrink-0" />
-                  <span className="text-white">Global watchmaker and repair network</span>
+                  <span className="text-white">Strategic collection building and management</span>
                 </li>
                 <li className="flex items-start">
                   <Check className="h-5 w-5 text-green-500 mr-3 mt-1 flex-shrink-0" />
@@ -93,40 +146,84 @@ const TiresTimepieces: React.FC = () => {
             </div>
           </div>
           
-          {/* How It Works */}
+          {/* How to Take Advantage */}
           <div className="mb-16">
-            <h2 className="text-3xl font-orbitron text-blue-500 text-center mb-10">How Our Brokerage Works</h2>
+            <h2 className="text-3xl font-orbitron text-blue-500 text-center mb-10">🤝 How to Take Advantage</h2>
             
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
               <div className="bg-gray-900/50 p-6 rounded-xl border border-gray-800">
-                <div className="bg-blue-900/20 w-12 h-12 rounded-full flex items-center justify-center mb-4">
-                  <Search className="h-6 w-6 text-blue-500" />
-                </div>
-                <h3 className="text-lg font-semibold text-white mb-3">1. Request & Search</h3>
+                <h3 className="text-lg font-semibold text-white mb-3">Submit an Asset Match Order</h3>
                 <p className="text-gray-300">
-                  Submit your specific requirements or browse our private inventory of available assets not listed on public markets.
+                  Whether you're flipping, flexing, gifting, or investing—start with clarity.
                 </p>
               </div>
               
               <div className="bg-gray-900/50 p-6 rounded-xl border border-gray-800">
-                <div className="bg-blue-900/20 w-12 h-12 rounded-full flex items-center justify-center mb-4">
-                  <Shield className="h-6 w-6 text-blue-500" />
-                </div>
-                <h3 className="text-lg font-semibold text-white mb-3">2. Verification</h3>
+                <h3 className="text-lg font-semibold text-white mb-3">Browse Vault Briefs™</h3>
                 <p className="text-gray-300">
-                  Our experts authenticate, inspect, and verify the condition, provenance, and value of each asset before proceeding.
+                  See curated, margin-optimized assets without public-listing headaches.
                 </p>
               </div>
               
               <div className="bg-gray-900/50 p-6 rounded-xl border border-gray-800">
-                <div className="bg-blue-900/20 w-12 h-12 rounded-full flex items-center justify-center mb-4">
-                  <Tag className="h-6 w-6 text-blue-500" />
-                </div>
-                <h3 className="text-lg font-semibold text-white mb-3">3. Secure Transaction</h3>
+                <h3 className="text-lg font-semibold text-white mb-3">Work with Bennisson</h3>
                 <p className="text-gray-300">
-                  We handle all paperwork, payment, logistics, and secure transfers, with optional escrow services for complete peace of mind.
+                  Every timepiece sourced, inspected, or listed through Tires & Timepieces™ is authenticated by master watchmakers.
                 </p>
               </div>
+              
+              <div className="bg-gray-900/50 p-6 rounded-xl border border-gray-800">
+                <h3 className="text-lg font-semibold text-white mb-3">Use Flip Forecasts™</h3>
+                <p className="text-gray-300">
+                  Understand the real story behind every flip opportunity—before you sign.
+                </p>
+              </div>
+              
+              <div className="bg-gray-900/50 p-6 rounded-xl border border-gray-800">
+                <h3 className="text-lg font-semibold text-white mb-3">Reinvest With Precision</h3>
+                <p className="text-gray-300">
+                  Flip. Upgrade. Repeat—with concierge logic behind every move.
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          {/* About Section */}
+          <div className="mb-16">
+            <h2 className="text-3xl font-orbitron text-blue-500 text-center mb-8">💎 About Tires & Timepieces™</h2>
+            
+            <div className="bg-gradient-to-br from-gray-900 to-gray-900/40 p-8 rounded-xl border border-gray-800 mb-8">
+              <p className="text-gray-300 mb-4">
+                We started Tires & Timepieces™ because the traditional dealership model is broken—and trust in asset transactions is rare.
+              </p>
+              <p className="text-gray-300 mb-4">
+                We saw how many flips fell apart because the sourcing was sloppy, the paperwork was shady, or the margin wasn't protected.
+              </p>
+              <p className="text-gray-300 mb-6">
+                T&T fixes that:
+              </p>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <div className="bg-gray-900/70 p-4 rounded-lg text-center">
+                  <p className="text-white font-semibold">Sourcing like insiders.</p>
+                </div>
+                <div className="bg-gray-900/70 p-4 rounded-lg text-center">
+                  <p className="text-white font-semibold">Inspecting like owners.</p>
+                </div>
+                <div className="bg-gray-900/70 p-4 rounded-lg text-center">
+                  <p className="text-white font-semibold">Protecting like brokers.</p>
+                </div>
+                <div className="bg-gray-900/70 p-4 rounded-lg text-center">
+                  <p className="text-white font-semibold">Delivering like builders.</p>
+                </div>
+              </div>
+              <p className="text-gray-300">
+                Whether you're flipping an SF90, sourcing a Rolex Starbucks, or gifting a Patek, Tires & Timepieces™ is the strategic concierge in your corner.
+              </p>
+            </div>
+            
+            <div className="bg-gradient-to-r from-blue-900/20 to-purple-900/20 p-6 rounded-lg border border-blue-900/30 text-center">
+              <p className="text-xl text-white font-medium mb-2">Sourced. Structured. Sealed.™</p>
+              <p className="text-gray-300">That's our promise.</p>
             </div>
           </div>
           
@@ -201,12 +298,42 @@ const TiresTimepieces: React.FC = () => {
             </div>
           </div>
           
-          {/* CTA Section */}
-          <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/20 p-8 rounded-xl border border-blue-900/40 text-center mb-16">
-            <h2 className="text-2xl font-orbitron text-blue-400 mb-4">Ready to Buy, Sell, or Trade?</h2>
-            <p className="text-gray-300 max-w-2xl mx-auto mb-6">
-              Whether you're looking to acquire your dream car, sell a timepiece, or trade up to something new, our concierge team is ready to assist you every step of the way.
+          {/* Final Word */}
+          <div className="bg-gradient-to-br from-gray-900 to-black p-8 rounded-xl border border-gray-800 mb-16">
+            <h2 className="text-2xl font-orbitron text-blue-500 text-center mb-6">🔑 Final Word</h2>
+            <p className="text-gray-300 text-center max-w-3xl mx-auto mb-8">
+              This isn't about flexing louder.<br />
+              It's about flipping smarter, sourcing tighter, and living bigger—one grail at a time.<br />
+              When you're ready to move differently, Tires & Timepieces™ is built for you.
             </p>
+            
+            <div className="bg-gradient-to-r from-blue-900/30 to-purple-900/30 p-6 rounded-lg border border-blue-900/30 mb-8">
+              <h3 className="text-xl font-orbitron text-white text-center mb-3">🚀 Elevator Pitch</h3>
+              <p className="text-gray-300 text-center">
+                🏁 Tires & Timepieces™: Where Passion Meets Precision.<br />
+                Powered by GoTime Motorsports™.<br />
+                We don't just move inventory—we move dreams.<br />
+                From exotic flips to grail watches, T&T is your strategic partner for sourcing, selling, flipping, and legacy-building.<br />
+                Concierge moves. Curated margins. Concierge care.<br />
+                Trust the standard. Move the market.™
+              </p>
+            </div>
+            
+            <div className="text-center mb-8">
+              <h3 className="text-xl font-medium text-white mb-3">✍️ Our Promise</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-3xl mx-auto">
+                <div className="bg-gradient-to-b from-gray-800 to-gray-900 p-4 rounded-lg border border-gray-700">
+                  <p className="text-blue-400 font-medium">"Move Smarter. Flex Cleaner. Live Bigger."</p>
+                </div>
+                <div className="bg-gradient-to-b from-gray-800 to-gray-900 p-4 rounded-lg border border-gray-700">
+                  <p className="text-blue-400 font-medium">"Where Assets Meet Ambition."</p>
+                </div>
+                <div className="bg-gradient-to-b from-gray-800 to-gray-900 p-4 rounded-lg border border-gray-700">
+                  <p className="text-blue-400 font-medium">"Curated Dreams. Concierge Moves.™"</p>
+                </div>
+              </div>
+            </div>
+            
             <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
               <button className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors">
                 Submit a Request

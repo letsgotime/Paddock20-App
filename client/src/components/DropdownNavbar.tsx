@@ -61,7 +61,6 @@ const DropdownNavbar = () => {
             </div>
 
             <Link to="/concierge" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>📩 Concierge</Link>
-            <Link to="/affiliate-links" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>🤝 Affiliate Links</Link>
             <Link to="/contact" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>📩 Contact Us</Link>
             <Link to="/ebooks" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>📚 GoTime eBooks Vault</Link>
             <Link to="/chat-feed" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>💬 Member Chat Feed</Link>
