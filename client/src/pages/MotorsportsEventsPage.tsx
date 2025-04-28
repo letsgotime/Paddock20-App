@@ -1,6 +1,6 @@
 import React from 'react';
 import { CalendarDays, MapPin, Clock, Trophy, Users, Car } from 'lucide-react';
-import VoiceEnabledWeather from '../components/VoiceEnabledWeather';
+import TrackConditionsTelemetry from '../components/TrackConditionsTelemetry';
 
 interface TrackEvent {
   id: number;
@@ -216,10 +216,7 @@ const MotorsportsEventsPage: React.FC = () => {
           {/* Sidebar */}
           <div className="lg:w-1/3 space-y-6">
             {/* Track Conditions */}
-            <div className="bg-gradient-to-r from-gray-900 to-black rounded-lg p-5 shadow-lg border border-gray-800">
-              <h3 className="text-xl font-bold text-blue-500 mb-4">Track Conditions</h3>
-              <VoiceEnabledWeather />
-            </div>
+            <TrackConditionsTelemetry />
 
             {/* Event Categories */}
             <div className="bg-gradient-to-r from-gray-900 to-black rounded-lg p-5 shadow-lg border border-gray-800">
