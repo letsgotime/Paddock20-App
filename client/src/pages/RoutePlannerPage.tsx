@@ -16,6 +16,24 @@ interface Location {
   placeId?: string;
 }
 
+interface Vehicle {
+  id: number;
+  make: string;
+  model: string;
+  year: number;
+  nickname?: string;
+  color?: string;
+  image?: string;
+  currentMileage: number;
+}
+
+interface Passenger {
+  id: number;
+  name: string;
+  relationship?: string;
+  notes?: string;
+}
+
 interface Route {
   id: number;
   name: string;
@@ -30,6 +48,13 @@ interface Route {
   lastDriven?: string;
   weather?: any;
   roadConditions?: any[];
+  vehicle?: Vehicle;  // Selected vehicle for this route
+  vehicleId?: number; // Reference to the vehicle in the database
+  passengers?: Passenger[]; // Optional passengers
+  tripMileage?: number; // Actual recorded mileage, may differ from calculated distance
+  startMileage?: number; // Vehicle odometer at trip start
+  endMileage?: number;   // Vehicle odometer at trip end
+  fuelConsumption?: number; // Fuel used in trip (gallons/liters)
 }
 
 // Simulate road condition data based on weather and temperature
@@ -136,6 +161,134 @@ const ROUTE_CATEGORIES = [
   { id: 'weekend', label: 'Weekend Getaway', icon: '🏞️' },
   { id: 'commute', label: 'Daily Commute', icon: '🏙️' },
   { id: 'enthusiast', label: 'Enthusiast Run', icon: '🏎️' },
+  { id: 'national_park', label: 'National Park', icon: '🌲' },
+  { id: 'racetrack', label: 'Famous Racetrack', icon: '🏎️' },
+  { id: 'legendary', label: 'Legendary Road', icon: '🗻' },
+  { id: 'first_drive', label: 'First Time Drive', icon: '🔍' },
+];
+
+// Featured Routes Database
+const NATIONAL_PARKS_ROUTES = [
+  {
+    id: 'np_blue_ridge',
+    name: 'Blue Ridge Parkway',
+    description: 'America\'s longest linear park running through 29 Virginia and North Carolina counties',
+    length: 469,
+    highlights: ['Linn Cove Viaduct', 'Grandfather Mountain', 'Mount Mitchell'],
+    difficulty: 'Easy to Moderate',
+    bestSeason: 'Fall',
+    startLocation: { name: 'Waynesboro, VA', lat: 38.0685, lon: -78.8896 },
+    endLocation: { name: 'Cherokee, NC', lat: 35.4732, lon: -83.3136 }
+  },
+  {
+    id: 'np_going_to_sun',
+    name: 'Going-to-the-Sun Road',
+    description: 'The only road that crosses Glacier National Park, Montana',
+    length: 50,
+    highlights: ['Logan Pass', 'Lake McDonald', 'St. Mary Lake'],
+    difficulty: 'Moderate',
+    bestSeason: 'Summer',
+    startLocation: { name: 'West Glacier, MT', lat: 48.5128, lon: -113.9954 },
+    endLocation: { name: 'St. Mary, MT', lat: 48.7396, lon: -113.4305 }
+  },
+  {
+    id: 'np_yosemite_loop',
+    name: 'Yosemite Valley Loop',
+    description: 'Scenic drive through Yosemite Valley with iconic landmark views',
+    length: 13,
+    highlights: ['El Capitan', 'Half Dome', 'Yosemite Falls'],
+    difficulty: 'Easy',
+    bestSeason: 'Spring',
+    startLocation: { name: 'Yosemite Valley Visitor Center', lat: 37.7485, lon: -119.5873 },
+    endLocation: { name: 'Yosemite Valley Visitor Center', lat: 37.7485, lon: -119.5873 }
+  },
+];
+
+const FAMOUS_RACETRACKS = [
+  {
+    id: 'track_nurburgring',
+    name: 'Nürburgring Nordschleife',
+    description: 'Legendary 12.9-mile track known as "The Green Hell"',
+    length: 12.9,
+    corners: 154,
+    country: 'Germany',
+    location: { name: 'Nürburg, Germany', lat: 50.3356, lon: 6.9479 },
+    lapRecord: {
+      time: '6:43.300',
+      driver: 'Lars Kern',
+      vehicle: 'Porsche 911 GT2 RS Manthey Racing',
+      year: 2021
+    }
+  },
+  {
+    id: 'track_laguna_seca',
+    name: 'WeatherTech Raceway Laguna Seca',
+    description: 'Famous for the Corkscrew turn with 18% elevation change',
+    length: 2.238,
+    corners: 11,
+    country: 'USA',
+    location: { name: 'Monterey, CA', lat: 36.5858, lon: -121.7547 },
+    lapRecord: {
+      time: '1:05.786',
+      driver: 'Marc Gené',
+      vehicle: 'Ferrari F2003-GA',
+      year: 2012
+    }
+  },
+  {
+    id: 'track_spa',
+    name: 'Circuit de Spa-Francorchamps',
+    description: 'Home to the famous Eau Rouge corner',
+    length: 4.352,
+    corners: 20,
+    country: 'Belgium',
+    location: { name: 'Stavelot, Belgium', lat: 50.4372, lon: 5.9715 },
+    lapRecord: {
+      time: '1:41.252',
+      driver: 'Lewis Hamilton',
+      vehicle: 'Mercedes W11',
+      year: 2020
+    }
+  },
+];
+
+const LEGENDARY_ROADS = [
+  {
+    id: 'road_stelvio',
+    name: 'Stelvio Pass',
+    description: 'One of the highest paved mountain passes in the Eastern Alps',
+    country: 'Italy',
+    length: 47,
+    elevation: 9045,
+    hairpins: 48,
+    difficulty: 'Advanced',
+    bestSeason: 'Summer',
+    location: { name: 'Stelvio, Italy', lat: 46.5453, lon: 10.4683 }
+  },
+  {
+    id: 'road_transfagarasan',
+    name: 'Transfăgărășan Highway',
+    description: 'Romania\'s most dramatic road, climbing through the Carpathian Mountains',
+    country: 'Romania',
+    length: 56,
+    elevation: 6699,
+    hairpins: 27,
+    difficulty: 'Moderate',
+    bestSeason: 'Summer/Fall',
+    location: { name: 'Cartisoara, Romania', lat: 45.6527, lon: 24.6135 }
+  },
+  {
+    id: 'road_tail_of_dragon',
+    name: 'Tail of the Dragon',
+    description: '318 curves in 11 miles at Deal\'s Gap',
+    country: 'USA',
+    length: 11,
+    elevation: 1800,
+    curves: 318,
+    difficulty: 'Advanced',
+    bestSeason: 'Spring/Fall',
+    location: { name: 'Robbinsville, NC', lat: 35.4734, lon: -83.9210 }
+  },
 ];
 
 // Navigation services
@@ -171,6 +324,48 @@ const NAVIGATION_SERVICES = [
       return `http://maps.apple.com/?saddr=${startLat},${startLon}&daddr=${endLat},${endLon}&dirflg=d`;
     }
   }
+];
+
+// Sample vehicles for demonstration
+const SAMPLE_VEHICLES: Vehicle[] = [
+  {
+    id: 1,
+    make: 'Ferrari',
+    model: 'F8 Tributo',
+    year: 2022,
+    nickname: 'The Prancing Horse',
+    color: 'Rosso Corsa',
+    image: '/assets/ferrari-f8.jpg',
+    currentMileage: 3421
+  },
+  {
+    id: 2,
+    make: 'Porsche',
+    model: '911 GT3',
+    year: 2021,
+    nickname: 'Track Beast',
+    color: 'Racing Yellow',
+    image: '/assets/porsche-gt3.jpg',
+    currentMileage: 8753
+  },
+  {
+    id: 3,
+    make: 'Aston Martin',
+    model: 'DB11',
+    year: 2020,
+    nickname: 'British Elegance',
+    color: 'Magnetic Silver',
+    image: '/assets/aston-db11.jpg',
+    currentMileage: 12540
+  }
+];
+
+// Sample passengers
+const SAMPLE_PASSENGERS: Passenger[] = [
+  { id: 1, name: 'Alex Johnson', relationship: 'Co-Driver', notes: 'Experienced navigator' },
+  { id: 2, name: 'Morgan Smith', relationship: 'Spouse', notes: 'Prefers scenic routes' },
+  { id: 3, name: 'Jamie Williams', relationship: 'Friend', notes: 'Car enthusiast, loves technical discussions' },
+  { id: 4, name: 'Taylor Brown', relationship: 'Business Associate', notes: 'Prefers comfort over speed' }
 ];
 
 // Sample data for demonstration purposes
@@ -223,6 +418,18 @@ const RoutePlannerPage = () => {
   const [activeActionTab, setActiveActionTab] = useState('overview');
   const [preferredNavService, setPreferredNavService] = useState('google');
   const [showNavOptions, setShowNavOptions] = useState(false);
+  
+  // Vehicle and passenger selection
+  const [vehicles, setVehicles] = useState<Vehicle[]>(SAMPLE_VEHICLES);
+  const [passengers, setPassengers] = useState<Passenger[]>(SAMPLE_PASSENGERS);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(null);
+  const [selectedPassengerIds, setSelectedPassengerIds] = useState<number[]>([]);
+  const [isFirstDrive, setIsFirstDrive] = useState(false);
+  const [mileageTracking, setMileageTracking] = useState({
+    startMileage: 0,
+    endMileage: 0,
+    fuelConsumption: 0
+  });
   
   // New route state
   const [newRoute, setNewRoute] = useState<Partial<Route>>({
@@ -355,12 +562,88 @@ const RoutePlannerPage = () => {
     return R * c;
   };
   
+  // Get selected vehicle
+  const getSelectedVehicle = () => {
+    if (!selectedVehicleId) return null;
+    return vehicles.find(v => v.id === selectedVehicleId) || null;
+  };
+  
+  // Get selected passengers
+  const getSelectedPassengers = () => {
+    return passengers.filter(p => selectedPassengerIds.includes(p.id));
+  };
+  
+  // Toggle passenger selection
+  const togglePassenger = (passengerId: number) => {
+    if (selectedPassengerIds.includes(passengerId)) {
+      setSelectedPassengerIds(selectedPassengerIds.filter(id => id !== passengerId));
+    } else {
+      setSelectedPassengerIds([...selectedPassengerIds, passengerId]);
+    }
+  };
+  
+  // Update mileage data based on selected vehicle
+  const updateMileageFromVehicle = (vehicleId: number) => {
+    const vehicle = vehicles.find(v => v.id === vehicleId);
+    if (vehicle) {
+      setMileageTracking(prev => ({
+        ...prev,
+        startMileage: vehicle.currentMileage
+      }));
+    }
+  };
+  
+  // When vehicle selection changes
+  const handleVehicleChange = (vehicleId: number) => {
+    setSelectedVehicleId(vehicleId);
+    updateMileageFromVehicle(vehicleId);
+  };
+  
+  // Handle mileage tracking changes
+  const handleMileageChange = (field: 'startMileage' | 'endMileage' | 'fuelConsumption', value: number) => {
+    setMileageTracking(prev => ({
+      ...prev,
+      [field]: value
+    }));
+  };
+  
+  // Generate first drive intelligence
+  const generateFirstDriveIntelligence = () => {
+    if (!newRoute.startPoint || !newRoute.endPoint || !selectedVehicleId) return null;
+    
+    const vehicle = getSelectedVehicle();
+    if (!vehicle) return null;
+    
+    return {
+      vehicleRecommendations: [
+        `${vehicle.make} ${vehicle.model} is best suited for ${newRoute.category === 'track' ? 'spirited driving' : 'this route type'}`,
+        `Estimated fuel consumption: ${Math.round(newRoute.distance! / 22)} gallons`,
+        `Brake check recommended before ${newRoute.category === 'track' ? 'track session' : 'departure'}`,
+        `Tire pressure: Front 32 PSI / Rear 30 PSI for ${vehicle.make} ${vehicle.model}`
+      ],
+      routeInsights: [
+        `First time on this route - consider lower speeds for familiarization`,
+        `Save this route to your Favorites for performance tracking`,
+        `Expect ${newRoute.distance! > 100 ? 'multiple rest stops' : 'light traffic'} on this ${newRoute.category} route`
+      ]
+    };
+  };
+  
   // Handle form submission to add new route
   const handleAddRoute = () => {
     // Validate required fields
     if (!newRoute.name || !newRoute.startPoint || !newRoute.endPoint) {
       alert("Please complete all required fields.");
       return;
+    }
+    
+    const selectedVehicle = getSelectedVehicle();
+    const selectedPassengers = getSelectedPassengers();
+    
+    // Calculate mileage data
+    let tripMileage = 0;
+    if (mileageTracking.startMileage > 0 && mileageTracking.endMileage > 0) {
+      tripMileage = mileageTracking.endMileage - mileageTracking.startMileage;
     }
     
     // Create new route object
@@ -374,11 +657,29 @@ const RoutePlannerPage = () => {
       notes: newRoute.notes || "",
       category: newRoute.category || "scenic",
       favorite: newRoute.favorite || false,
-      lastDriven: new Date().toISOString().split('T')[0]
+      lastDriven: new Date().toISOString().split('T')[0],
+      vehicle: selectedVehicle || undefined,
+      vehicleId: selectedVehicleId || undefined,
+      passengers: selectedPassengers.length > 0 ? selectedPassengers : undefined,
+      startMileage: mileageTracking.startMileage || undefined,
+      endMileage: mileageTracking.endMileage || undefined,
+      tripMileage: tripMileage || undefined,
+      fuelConsumption: mileageTracking.fuelConsumption || undefined
     };
     
     // Add to routes
     setRoutes([...routes, completeRoute]);
+    
+    // Update vehicle mileage in garage (in a real app, this would update the database)
+    if (selectedVehicle && mileageTracking.endMileage > selectedVehicle.currentMileage) {
+      const updatedVehicles = vehicles.map(v => {
+        if (v.id === selectedVehicle.id) {
+          return { ...v, currentMileage: mileageTracking.endMileage };
+        }
+        return v;
+      });
+      setVehicles(updatedVehicles);
+    }
     
     // Reset form
     setNewRoute({
@@ -392,6 +693,14 @@ const RoutePlannerPage = () => {
     });
     setStartLocationInput("");
     setEndLocationInput("");
+    setSelectedVehicleId(null);
+    setSelectedPassengerIds([]);
+    setIsFirstDrive(false);
+    setMileageTracking({
+      startMileage: 0,
+      endMileage: 0,
+      fuelConsumption: 0
+    });
   };
   
   // Handle selecting a route to view details
