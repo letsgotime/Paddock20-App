@@ -3,6 +3,7 @@ import { Dialog } from "@/components/ui/dialog";
 import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getRandomAffirmation } from "../services/affirmationsService";
+import { searchHighResImages, createMediaItemFromSearch } from "../services/imageSearchService";
 
 // Interface for milestones
 interface Milestone {
@@ -483,6 +484,11 @@ const ManifestationStationPage = () => {
     description: ''
   });
 
+  // State for image search
+  const [isSearchingImages, setIsSearchingImages] = useState(false);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [showSearchResults, setShowSearchResults] = useState(false);
+
   // Load a new affirmation on component mount
   useEffect(() => {
     const affirmation = getRandomAffirmation();
@@ -680,6 +686,73 @@ const ManifestationStationPage = () => {
       ...selectedGoal,
       budgetEntries: selectedGoal.budgetEntries.filter(entry => entry.id !== entryId),
       currentAmount: newCurrentAmount
+    };
+    
+    setSelectedGoal(updatedGoal);
+    setGoals(prevGoals => prevGoals.map(g => g.id === selectedGoal.id ? updatedGoal : g));
+  };
+
+  // Handle image search for the goal
+  const handleImageSearch = async () => {
+    if (!selectedGoal) return;
+    
+    try {
+      setIsSearchingImages(true);
+      setSearchResults([]);
+      
+      // Search for high-resolution images related to the goal's target asset
+      const results = await searchHighResImages(selectedGoal.targetAsset, 6);
+      
+      setSearchResults(results);
+      setShowSearchResults(true);
+    } catch (error) {
+      console.error('Error searching for images:', error);
+    } finally {
+      setIsSearchingImages(false);
+    }
+  };
+
+  // Handle adding an image from search results to the goal's media gallery
+  const handleAddImageFromSearch = (imageData: any) => {
+    if (!selectedGoal) return;
+    
+    // Create a media item from the search result
+    const mediaItem = createMediaItemFromSearch(imageData);
+    
+    // Add to the selected goal's media gallery
+    const updatedGoal = {
+      ...selectedGoal,
+      mediaGallery: [...selectedGoal.mediaGallery, mediaItem]
+    };
+    
+    setSelectedGoal(updatedGoal);
+    setGoals(prevGoals => prevGoals.map(g => g.id === selectedGoal.id ? updatedGoal : g));
+  };
+
+  // Handle adding a link to the media gallery
+  const handleAddLink = () => {
+    if (!selectedGoal) return;
+    
+    // This would typically use form inputs from a modal
+    // For demo purposes, we're using prompt, but in a real app use a proper modal form
+    const name = prompt('Enter link name:');
+    const url = prompt('Enter URL:');
+    const description = prompt('Enter description (optional):');
+    
+    if (!name || !url) return;
+    
+    const mediaItem: GoalMedia = {
+      id: Date.now(),
+      type: 'link',
+      name,
+      url,
+      description: description || undefined,
+      dateAdded: new Date().toISOString().split('T')[0]
+    };
+    
+    const updatedGoal = {
+      ...selectedGoal,
+      mediaGallery: [...selectedGoal.mediaGallery, mediaItem]
     };
     
     setSelectedGoal(updatedGoal);
@@ -1763,14 +1836,74 @@ const ManifestationStationPage = () => {
                   <div className="mt-4 bg-gradient-to-br from-blue-900/20 to-blue-900/5 p-4 rounded-lg border border-blue-900/30">
                     <div className="flex items-center justify-between mb-2">
                       <h5 className="text-blue-400 font-medium">🔍 Automatic Photo Search</h5>
-                      <button className="bg-blue-600 hover:bg-blue-500 text-white text-sm px-3 py-1 rounded">
-                        Find Photos
+                      <button 
+                        onClick={handleImageSearch}
+                        disabled={isSearchingImages}
+                        className={`text-white text-sm px-3 py-1 rounded flex items-center ${
+                          isSearchingImages ? 'bg-gray-600 cursor-not-allowed' : 'bg-blue-600 hover:bg-blue-500'
+                        }`}
+                      >
+                        {isSearchingImages ? (
+                          <>
+                            <svg className="animate-spin -ml-1 mr-2 h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                              <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                              <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                            </svg>
+                            Searching...
+                          </>
+                        ) : 'Find Photos'}
                       </button>
                     </div>
                     <p className="text-gray-300 text-sm">
                       Let us find high-quality images of "{selectedGoal.targetAsset}" to help you visualize your goal.
                     </p>
                   </div>
+                  
+                  {/* Search Results */}
+                  {showSearchResults && searchResults.length > 0 && (
+                    <div className="mt-4 bg-black/30 p-4 rounded-lg border border-gray-700">
+                      <div className="flex justify-between items-center mb-3">
+                        <h4 className="text-white font-medium">Search Results</h4>
+                        <button 
+                          onClick={() => setShowSearchResults(false)}
+                          className="text-gray-400 hover:text-white text-sm"
+                        >
+                          ✕ Close
+                        </button>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                        {searchResults.map((image, index) => (
+                          <div 
+                            key={`${image.id}-${index}`}
+                            className="bg-black/50 rounded-lg overflow-hidden border border-gray-800 hover:border-blue-500 transition-all"
+                          >
+                            <div className="relative h-32 overflow-hidden">
+                              <img 
+                                src={image.urls.thumb} 
+                                alt={image.alt_description || image.description} 
+                                className="w-full h-full object-cover"
+                              />
+                            </div>
+                            <div className="p-2">
+                              <p className="text-white text-sm truncate mb-2">
+                                {image.description || image.alt_description || 'Image'}
+                              </p>
+                              <button
+                                onClick={() => {
+                                  handleAddImageFromSearch(image);
+                                  setShowSearchResults(false);
+                                }}
+                                className="w-full bg-blue-600 hover:bg-blue-500 text-white text-xs px-2 py-1 rounded"
+                              >
+                                Add to Gallery
+                              </button>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
 
