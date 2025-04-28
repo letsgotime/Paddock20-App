@@ -171,9 +171,9 @@ const ManifestationStationPage = () => {
           id: 401,
           type: 'image',
           name: 'Ryft Titanium Exhaust',
-          url: 'https://cdn.shopify.com/s/files/1/0085/7478/7093/products/RYFT-Ferrari-488-GTB-Spider-Performance-Exhaust-1_1600x.jpg?v=1592354584',
-          thumbnail: 'https://cdn.shopify.com/s/files/1/0085/7478/7093/products/RYFT-Ferrari-488-GTB-Spider-Performance-Exhaust-1_1600x.jpg?v=1592354584',
-          description: 'Titanium Ryft exhaust system for Ferrari 458',
+          url: '/assets/ryft-exhaust-459.jpg',
+          thumbnail: '/assets/ryft-exhaust-459.jpg',
+          description: 'Titanium Ryft blue exhaust system for Ferrari 458',
           dateAdded: '2025-01-15'
         },
         {
