@@ -2484,6 +2484,81 @@ const RoutePlannerPage = () => {
                   </div>
                 </div>
                 
+                {/* Advanced Route Optimization */}
+                <div>
+                  <h3 className="text-green-400 font-orbitron text-md mb-2">Route Optimization</h3>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    <div>
+                      <label className="block text-gray-300 text-sm mb-1">Traffic Avoidance Strategy</label>
+                      <select 
+                        className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                        value={navigationFeatures.trafficAvoidance || 'moderate'}
+                        onChange={(e) => setNavigationFeatures({...navigationFeatures, trafficAvoidance: e.target.value})}
+                      >
+                        <option value="none">None - Follow Main Route</option>
+                        <option value="light">Light - Minor Detours Only</option>
+                        <option value="moderate">Moderate - Avoid Major Delays</option>
+                        <option value="aggressive">Aggressive - Best Time Priority</option>
+                        <option value="max">Maximum - Avoid All Traffic</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-gray-300 text-sm mb-1">Road Type Preference</label>
+                      <select 
+                        className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                        value={navigationFeatures.roadTypePreference || 'balanced'}
+                        onChange={(e) => setNavigationFeatures({...navigationFeatures, roadTypePreference: e.target.value})}
+                      >
+                        <option value="highways">Highway Priority</option>
+                        <option value="balanced">Balanced</option>
+                        <option value="scenic">Scenic Routes</option>
+                        <option value="enthusiast">Enthusiast Roads</option>
+                        <option value="trackday">Track Day Approach</option>
+                      </select>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-3 grid grid-cols-2 gap-2">
+                    <label className="flex items-center space-x-2 text-white text-sm">
+                      <input
+                        type="checkbox"
+                        checked={navigationFeatures.avoidFerries || false}
+                        onChange={(e) => setNavigationFeatures({...navigationFeatures, avoidFerries: e.target.checked})}
+                        className="form-checkbox text-green-500"
+                      />
+                      <span>Avoid Ferries</span>
+                    </label>
+                    
+                    <label className="flex items-center space-x-2 text-white text-sm">
+                      <input
+                        type="checkbox"
+                        checked={navigationFeatures.optimizeForSportsCars || false}
+                        onChange={(e) => setNavigationFeatures({...navigationFeatures, optimizeForSportsCars: e.target.checked})}
+                        className="form-checkbox text-green-500"
+                      />
+                      <span>Sports Car Optimization</span>
+                    </label>
+                  </div>
+                  
+                  <div className="mt-3">
+                    <label className="block text-gray-300 text-sm mb-1">Route Complexity</label>
+                    <div className="flex items-center">
+                      <span className="text-xs text-gray-400 w-20">Simple</span>
+                      <input
+                        type="range"
+                        min="1"
+                        max="5"
+                        step="1"
+                        value={navigationFeatures.complexityLevel || 3}
+                        onChange={(e) => setNavigationFeatures({...navigationFeatures, complexityLevel: parseInt(e.target.value)})}
+                        className="flex-grow mx-2"
+                      />
+                      <span className="text-xs text-gray-400 w-20 text-right">Complex</span>
+                    </div>
+                  </div>
+                </div>
+                
                 {/* App-specific settings */}
                 {preferredNavApp === "Google Maps" && (
                   <div>
