@@ -10,6 +10,9 @@ import {
   insertGlossLogSchema
 } from "@shared/schema";
 
+// OpenWeather API key - updated April 28, 2025
+const OPENWEATHER_API_KEY = "2379a18ee0e478c88aa7d4aa1df44410";
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Helper function to get AccuWeather API key
   function getAccuWeatherApiKey() {
@@ -62,9 +65,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Latitude and longitude are required' });
       }
 
-      // Use your paid API key
-      const apiKey = "653c5104ce3e922c371a315209765d2f";
-      const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=${units || 'metric'}&appid=${apiKey}`;
+      // Use the OpenWeather API key constant
+      const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=${units || 'metric'}&appid=${OPENWEATHER_API_KEY}`;
       
       console.log(`Fetching OpenWeather data for: ${lat},${lon}`);
       const response = await fetch(url);
@@ -88,9 +90,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Latitude and longitude are required' });
       }
 
-      // Use your paid API key
-      const apiKey = "653c5104ce3e922c371a315209765d2f";
-      const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=${units || 'metric'}&appid=${apiKey}`;
+      // Use the OpenWeather API key constant 
+      const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=${units || 'metric'}&appid=${OPENWEATHER_API_KEY}`;
       
       const response = await fetch(url);
       if (!response.ok) {
@@ -114,9 +115,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Latitude and longitude are required' });
       }
 
-      // Use your paid API key for the $40 standard subscription
-      const apiKey = "653c5104ce3e922c371a315209765d2f"; // Your paid $40 standard subscription key
-      const oneCallUrl = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&units=${units || 'metric'}${exclude ? `&exclude=${exclude}` : ''}&appid=${apiKey}`;
+      // Use the OpenWeather API key constant 
+      const oneCallUrl = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&units=${units || 'metric'}${exclude ? `&exclude=${exclude}` : ''}&appid=${OPENWEATHER_API_KEY}`;
       
       console.log(`Fetching OneCall 3.0 data for: ${lat},${lon}`);
       const oneCallResponse = await fetch(oneCallUrl);
@@ -130,7 +130,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         
         // Fallback to 2.5 API implementation with data combination
         // Get current weather data first
-        const currentWeatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=${units || 'metric'}&appid=${apiKey}`;
+        const currentWeatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=${units || 'metric'}&appid=${OPENWEATHER_API_KEY}`;
         const currentResponse = await fetch(currentWeatherUrl);
         
         if (!currentResponse.ok) {
@@ -140,7 +140,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         const currentData = await currentResponse.json();
         
         // Get forecast data
-        const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=${units || 'metric'}&appid=${apiKey}`;
+        const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=${units || 'metric'}&appid=${OPENWEATHER_API_KEY}`;
         const forecastResponse = await fetch(forecastUrl);
         
         if (!forecastResponse.ok) {
@@ -254,9 +254,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Query parameter is required' });
       }
 
-      // Use your paid API key
-      const apiKey = "653c5104ce3e922c371a315209765d2f";
-      const url = `https://api.openweathermap.org/geo/1.0/direct?q=${q}&limit=1&appid=${apiKey}`;
+      // Use the OpenWeather API key constant 
+      const url = `https://api.openweathermap.org/geo/1.0/direct?q=${q}&limit=1&appid=${OPENWEATHER_API_KEY}`;
       
       console.log(`Searching location for query: ${q}`);
       const response = await fetch(url);
