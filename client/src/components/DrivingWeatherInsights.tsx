@@ -217,7 +217,7 @@ export function DrivingWeatherInsights({ latitude, longitude }: DrivingWeatherIn
           <p className="text-gray-400 text-xs mb-1">Next Hour Weather</p>
           <p className="text-white text-sm">
             {oneCallData.hourly[0].weather[0].description} with 
-            {precipProbability > 0 ? ` ${precipProbability}% chance of precipitation` : ' no precipitation expected'}
+            {typeof precipProbability === 'number' && precipProbability > 0 ? ` ${precipProbability}% chance of precipitation` : ' no precipitation expected'}
           </p>
         </div>
       )}
