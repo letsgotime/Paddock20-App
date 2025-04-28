@@ -61,6 +61,20 @@ const GoalDetailsModal: React.FC<GoalDetailsModalProps> = ({
   handleAddBudgetEntry,
   setShowPhotoUploadModal
 }) => {
+  // Add state for editing mode
+  const [isEditing, setIsEditing] = React.useState(false);
+  const [editedGoal, setEditedGoal] = React.useState<Goal>(goal);
+  
+  // Update edited goal when the original goal changes
+  React.useEffect(() => {
+    setEditedGoal(goal);
+  }, [goal]);
+  
+  // Function to save edits
+  const saveEdits = () => {
+    setGoal(editedGoal);
+    setIsEditing(false);
+  };
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogContent className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] p-0 max-w-5xl w-full border border-gray-700 overflow-hidden">
@@ -71,9 +85,25 @@ const GoalDetailsModal: React.FC<GoalDetailsModalProps> = ({
               <div className="h-8 w-1 bg-blue-400 rounded-full mr-3"></div>
               <h2 className="text-blue-400 font-orbitron text-2xl">{goal.goalName}</h2>
             </div>
-            <DialogClose className="text-gray-400 hover:text-white">
-              <X className="h-5 w-5" />
-            </DialogClose>
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => setIsEditing(!isEditing)}
+                className={`text-sm px-3 py-1 rounded ${isEditing ? 'bg-amber-600 hover:bg-amber-500' : 'bg-blue-600 hover:bg-blue-500'}`}
+              >
+                {isEditing ? 'Cancel Edit' : 'Edit Dream'}
+              </button>
+              {isEditing && (
+                <button
+                  onClick={saveEdits}
+                  className="text-sm px-3 py-1 rounded bg-green-600 hover:bg-green-500"
+                >
+                  Save Changes
+                </button>
+              )}
+              <DialogClose className="text-gray-400 hover:text-white">
+                <X className="h-5 w-5" />
+              </DialogClose>
+            </div>
           </div>
           
           {/* Key stats dashboard */}
@@ -164,32 +194,86 @@ const GoalDetailsModal: React.FC<GoalDetailsModalProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   <div>
                     <div className="text-gray-400 text-xs mb-1">Goal Type</div>
-                    <div className="text-white font-medium">{goal.goalType}</div>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editedGoal.goalType}
+                        onChange={(e) => setEditedGoal({...editedGoal, goalType: e.target.value})}
+                        className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white"
+                      />
+                    ) : (
+                      <div className="text-white font-medium">{goal.goalType}</div>
+                    )}
                   </div>
                   
                   <div>
                     <div className="text-gray-400 text-xs mb-1">Target Asset</div>
-                    <div className="text-white font-medium">{goal.targetAsset}</div>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editedGoal.targetAsset}
+                        onChange={(e) => setEditedGoal({...editedGoal, targetAsset: e.target.value})}
+                        className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white"
+                      />
+                    ) : (
+                      <div className="text-white font-medium">{goal.targetAsset}</div>
+                    )}
                   </div>
                   
                   <div>
                     <div className="text-gray-400 text-xs mb-1">Mind Focus</div>
-                    <div className="text-purple-400 font-medium">{goal.mindFocus}</div>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editedGoal.mindFocus}
+                        onChange={(e) => setEditedGoal({...editedGoal, mindFocus: e.target.value})}
+                        className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-purple-400"
+                      />
+                    ) : (
+                      <div className="text-purple-400 font-medium">{goal.mindFocus}</div>
+                    )}
                   </div>
                   
                   <div>
                     <div className="text-gray-400 text-xs mb-1">Body Focus</div>
-                    <div className="text-green-400 font-medium">{goal.bodyFocus}</div>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editedGoal.bodyFocus}
+                        onChange={(e) => setEditedGoal({...editedGoal, bodyFocus: e.target.value})}
+                        className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-green-400"
+                      />
+                    ) : (
+                      <div className="text-green-400 font-medium">{goal.bodyFocus}</div>
+                    )}
                   </div>
                   
                   <div>
                     <div className="text-gray-400 text-xs mb-1">Spirit Focus</div>
-                    <div className="text-blue-400 font-medium">{goal.spiritFocus}</div>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editedGoal.spiritFocus}
+                        onChange={(e) => setEditedGoal({...editedGoal, spiritFocus: e.target.value})}
+                        className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-blue-400"
+                      />
+                    ) : (
+                      <div className="text-blue-400 font-medium">{goal.spiritFocus}</div>
+                    )}
                   </div>
                   
                   <div>
                     <div className="text-gray-400 text-xs mb-1">Funding Plan</div>
-                    <div className="text-amber-400 font-medium">{goal.fundingPlan}</div>
+                    {isEditing ? (
+                      <input
+                        type="text"
+                        value={editedGoal.fundingPlan}
+                        onChange={(e) => setEditedGoal({...editedGoal, fundingPlan: e.target.value})}
+                        className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-amber-400"
+                      />
+                    ) : (
+                      <div className="text-amber-400 font-medium">{goal.fundingPlan}</div>
+                    )}
                   </div>
                 </div>
               </div>
@@ -236,18 +320,24 @@ const GoalDetailsModal: React.FC<GoalDetailsModalProps> = ({
               </div>
               
               {/* Description */}
-              {goal.description && (
-                <div className="bg-black/30 rounded-lg border border-gray-700 p-4">
-                  <div className="flex items-center mb-4">
-                    <div className="h-5 w-1 bg-purple-400 rounded-full mr-2"></div>
-                    <h3 className="text-purple-400 font-orbitron text-lg">Dream Description</h3>
-                  </div>
-                  
-                  <div className="bg-gray-800/50 p-4 rounded border border-gray-700">
-                    <p className="text-white">{goal.description}</p>
-                  </div>
+              <div className="bg-black/30 rounded-lg border border-gray-700 p-4">
+                <div className="flex items-center mb-4">
+                  <div className="h-5 w-1 bg-purple-400 rounded-full mr-2"></div>
+                  <h3 className="text-purple-400 font-orbitron text-lg">Dream Description</h3>
                 </div>
-              )}
+                
+                <div className="bg-gray-800/50 p-4 rounded border border-gray-700">
+                  {isEditing ? (
+                    <textarea
+                      value={editedGoal.description || ''}
+                      onChange={(e) => setEditedGoal({...editedGoal, description: e.target.value})}
+                      className="w-full bg-gray-800 border border-gray-700 rounded px-3 py-2 text-white min-h-[100px]"
+                    />
+                  ) : (
+                    <p className="text-white">{goal.description || 'No description available.'}</p>
+                  )}
+                </div>
+              </div>
             </div>
           )}
           
