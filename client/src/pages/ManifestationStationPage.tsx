@@ -171,8 +171,8 @@ const ManifestationStationPage = () => {
           id: 401,
           type: 'image',
           name: 'Ryft Titanium Exhaust',
-          url: 'https://www.vividracing.com/images/ryft-ferrari-458-exhaust-1-tn.jpg',
-          thumbnail: 'https://www.vividracing.com/images/ryft-ferrari-458-exhaust-1-tn.jpg',
+          url: 'https://blacklinespeed.com/wp-content/uploads/2022/06/ferrari-458-ryft-exhaust-black-3.jpg',
+          thumbnail: 'https://blacklinespeed.com/wp-content/uploads/2022/06/ferrari-458-ryft-exhaust-black-3.jpg',
           description: 'Titanium Ryft exhaust system for Ferrari 458',
           dateAdded: '2025-01-15'
         },
@@ -255,8 +255,8 @@ const ManifestationStationPage = () => {
           id: 501,
           type: 'image',
           name: 'HRE P101 Wheels - Ferrari 458',
-          url: 'https://cdn.shopify.com/s/files/1/0579/3601/1171/products/1620812060fe0a7334bbaa6Ferrari458ItaliaHRER101BlackSilverRobertsonRacing_1.jpg?v=1676569265',
-          thumbnail: 'https://cdn.shopify.com/s/files/1/0579/3601/1171/products/1620812060fe0a7334bbaa6Ferrari458ItaliaHRER101BlackSilverRobertsonRacing_1.jpg?v=1676569265',
+          url: 'https://images.fitmentindustries.com/web/1548089-1-2012-458-italia-ferrari-base-forgiato-forgiato-2-custom-wheel.jpg',
+          thumbnail: 'https://images.fitmentindustries.com/web/1548089-1-2012-458-italia-ferrari-base-forgiato-forgiato-2-custom-wheel.jpg',
           description: 'HRE P101 wheels on a Ferrari 458 - inspiration for my configuration',
           dateAdded: '2025-02-05'
         },
@@ -331,8 +331,8 @@ const ManifestationStationPage = () => {
           id: 601,
           type: 'image',
           name: 'Patek Philippe Nautilus 5711',
-          url: 'https://hodinkee.imgix.net/uploads/images/1673360778307-fe8f4r2xp5j-ac5a8d2a95f0b10b86dac53a73d796b2/patekphilippe_5711_1awatches.jpg',
-          thumbnail: 'https://hodinkee.imgix.net/uploads/images/1673360778307-fe8f4r2xp5j-ac5a8d2a95f0b10b86dac53a73d796b2/patekphilippe_5711_1awatches.jpg',
+          url: 'https://static.chrono24.com/cdn-cgi/image/f=auto,metadata=none,q=65,w=1200,h=1200,ppv=0/magazine/wp-content/uploads/2020/07/Patek-Philippe-Nautilus-5711-1A-010-Blue-Dial.jpg',
+          thumbnail: 'https://static.chrono24.com/cdn-cgi/image/f=auto,metadata=none,q=65,w=1200,h=1200,ppv=0/magazine/wp-content/uploads/2020/07/Patek-Philippe-Nautilus-5711-1A-010-Blue-Dial.jpg',
           description: 'The iconic Nautilus 5711 with blue dial',
           dateAdded: '2025-03-20'
         },
