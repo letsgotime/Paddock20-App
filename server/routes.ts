@@ -62,8 +62,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Latitude and longitude are required' });
       }
 
-      // Use alternate key as fallback if primary is not available
-      const apiKey = process.env.OPENWEATHER_API_KEY || "efb847e5d07e14ba140f7b62b960f46d";
+      // Use your paid API key
+      const apiKey = "653c5104ce3e922c371a315209765d2f";
       const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=${units || 'metric'}&appid=${apiKey}`;
       
       console.log(`Fetching OpenWeather data for: ${lat},${lon}`);
@@ -88,8 +88,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Latitude and longitude are required' });
       }
 
-      // Use alternate key as fallback if primary is not available
-      const apiKey = process.env.OPENWEATHER_API_KEY || "efb847e5d07e14ba140f7b62b960f46d";
+      // Use your paid API key
+      const apiKey = "653c5104ce3e922c371a315209765d2f";
       const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=${units || 'metric'}&appid=${apiKey}`;
       
       const response = await fetch(url);
@@ -114,10 +114,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Latitude and longitude are required' });
       }
 
-      // Use alternate key as fallback if primary is not available
-      const apiKey = process.env.OPENWEATHER_API_KEY || "efb847e5d07e14ba140f7b62b960f46d";
-      
-      // Try to use OneCall API 3.0 first
+      // Use your paid API key for the $40 standard subscription
+      const apiKey = "653c5104ce3e922c371a315209765d2f"; // Your paid $40 standard subscription key
       const oneCallUrl = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&units=${units || 'metric'}${exclude ? `&exclude=${exclude}` : ''}&appid=${apiKey}`;
       
       console.log(`Fetching OneCall 3.0 data for: ${lat},${lon}`);
@@ -242,6 +240,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
       });
       
       res.json(combinedData);
+      } // Close the else block
     } catch (error) {
       res.status(500).json({ message: (error as Error).message || 'Failed to fetch weather data' });
     }
@@ -255,8 +254,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Query parameter is required' });
       }
 
-      // Use alternate key as fallback if primary is not available
-      const apiKey = process.env.OPENWEATHER_API_KEY || "efb847e5d07e14ba140f7b62b960f46d";
+      // Use your paid API key
+      const apiKey = "653c5104ce3e922c371a315209765d2f";
       const url = `https://api.openweathermap.org/geo/1.0/direct?q=${q}&limit=1&appid=${apiKey}`;
       
       console.log(`Searching location for query: ${q}`);
