@@ -1,5 +1,5 @@
 import React from "react";
-import { Goal, GoalMedia, Milestone, BudgetEntry, DailyCheckin } from "@/types/manifestation";
+import { Goal, GoalMedia, Milestone, BudgetEntry, DailyCheckin } from "../types/manifestation";
 import { Dialog, DialogContent, DialogClose } from "@/components/ui/dialog";
 import { PlusIcon, X } from "lucide-react";
 
