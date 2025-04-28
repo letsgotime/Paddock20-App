@@ -155,31 +155,50 @@ export interface AutomotiveWeatherData {
       condition: string;
       gripLevel?: string; // "Low", "Medium", "High", "Optimal"
       dryingRate?: number; // minutes until surface dries after precipitation
+      thermalDegradation?: number; // rate of grip loss under sustained load
+      rubberization?: number; // 1-10 scale of rubber buildup improving grip
+      textureDepth?: number; // mm - affects water displacement
     };
     concrete: {
       temperature: number;
       condition: string;
       gripLevel?: string;
+      polishFactor?: number; // 1-10 scale of how polished/slick the surface is
     };
     gravel: {
       temperature: number;
       condition: string;
       dustFactor?: number; // visibility impact when driving on gravel
+      stabilityIndex?: number; // 1-10 scale of how loose or stable the gravel is
     };
     // Additional track surface types
     trackSpecific?: {
       curbs: {
         gripDifferential: number; // percentage difference in grip from main surface
         moistureRetention: number; // 1-10 scale of how much moisture they retain
+        vibrationFactor?: number; // impact on car stability when riding curbs
       };
       runoffAreas: {
         condition: string;
         temperature: number;
+        recoverability?: string; // "Easy", "Moderate", "Difficult" - recovery from mistakes
       };
       pitLane: {
         temperature: number;
         condition: string;
+        optimalEntrySpeed?: number; // recommended speed for pit entry in mph
       };
+      paddock?: {
+        temperature: number;
+        condition: string;
+        workingComfort?: string; // "Ideal", "Good", "Challenging" - for mechanics
+      };
+    };
+    racingSurface?: {
+      idealLine: string; // description of the ideal racing line
+      offLineGripLoss: number; // percentage loss when not on racing line
+      trackEvolution: string; // "Improving", "Static", "Degrading" - how track is changing
+      dampPatches?: string[]; // array of locations with damp patches
     };
   };
   drivingRisk: {
