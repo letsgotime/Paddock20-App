@@ -32,6 +32,7 @@ import Footer from "./components/Footer";
 // WeatherProvider has been temporarily removed
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
+import PersonalizedDashboard from "./pages/PersonalizedDashboard";
 import GarageVaultPage from "./pages/GarageVaultPage";
 import VehicleModsPage from "./pages/VehicleModsPage";
 import MembershipPage from "./pages/MembershipPage";

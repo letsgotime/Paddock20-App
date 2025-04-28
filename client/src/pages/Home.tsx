@@ -13,20 +13,20 @@ const Home = () => {
         />
       </div>
       
-      <h1 className="font-orbitron text-blue-400 text-4xl text-center mb-8">Welcome to ApexVault™</h1>
+      <h1 className="font-orbitron text-blue-400 text-4xl text-center mb-8">Welcome to Bespoke Technology Syndicate™</h1>
 
       <section className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg shadow-lg border border-gray-700 p-6 mb-8">
         <p className="font-openSans text-white text-base leading-relaxed mb-6">
           🏁 Drive Sovereignty Starts Here.
         </p>
         <p className="font-openSans text-white text-base leading-relaxed mb-6">
-          ApexVault™ isn't just an app. It's your private command center — built for those who live their drive, not just document it.
+          BTS™ isn't just an app. It's your private command center — built for those who live their drive, not just document it.
         </p>
         <p className="font-openSans text-white text-base leading-relaxed mb-6">
           Every car. Every mile. Every margin. Secured, logged, and leveraged on your terms.
         </p>
         <p className="font-openSans text-white text-base leading-relaxed mb-6">
-          From garage discipline to track-day dominance, ApexVault™ locks your lifestyle into a system built for precision, not noise.
+          From garage discipline to track-day dominance, BTS™ locks your lifestyle into a system built for precision, not noise.
         </p>
         <p className="font-openSans text-white text-base leading-relaxed mb-6">
           Start your day smarter:
@@ -43,7 +43,7 @@ const Home = () => {
           <br />
           This is where you move.
           <br />
-          ApexVault™: Built for Drivers. Designed for Legacy.
+          BTS™: Built for Drivers. Designed for Legacy.
         </p>
       </section>
 
@@ -82,7 +82,7 @@ const Home = () => {
 
       {/* Core Features */}
       <section className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg shadow-lg border border-gray-700 p-6">
-        <h2 className="font-orbitron text-blue-400 text-2xl mb-4">Core ApexVault™ Features</h2>
+        <h2 className="font-orbitron text-blue-400 text-2xl mb-4">Core BTS™ Features</h2>
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
           <div className="bg-black p-4 rounded-lg border border-gray-800">
             <h3 className="font-orbitron text-green-500 text-lg mb-2">Garage Vault</h3>
