@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import F1MotorsportWeatherStation from '../components/F1MotorsportWeatherStation.jsx';
+import F1TelemetryWeatherStation from '../components/F1TelemetryWeatherStation';
 import MoodEnergyTracker from '../components/MoodEnergyTracker.jsx';
 import { Progress } from "@/components/ui/progress";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
@@ -159,7 +159,7 @@ const PersonalizedDashboard: React.FC = () => {
           {/* Weather Widget - Spans 2 columns on large screens */}
           <div className="lg:col-span-2 bts-card">
             <h2 className="bts-header-green mb-4">Current Weather & Drive Conditions</h2>
-            <F1MotorsportWeatherStation />
+            <F1TelemetryWeatherStation />
           </div>
           
           {/* Mood & Energy Tracker - Full Width */}
