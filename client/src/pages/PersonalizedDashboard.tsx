@@ -212,7 +212,7 @@ const PersonalizedDashboard: React.FC = () => {
                         </div>
                       </div>
                       <div className="mt-2 flex items-center justify-between text-xs">
-                        <span className="text-gray-500">{vehicle.mileage.toLocaleString()} miles</span>
+                        <span className="text-gray-500">{vehicle.mileage?.toLocaleString() || 0} miles</span>
                         <span className="text-gray-500">Last service: {new Date(vehicle.lastServiceDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
                       </div>
                     </div>
@@ -424,32 +424,32 @@ const PersonalizedDashboard: React.FC = () => {
                         <div className="mt-1 text-xs px-2 py-1 bg-black/30 rounded border border-gray-800">
                           {activity.type === 'drive' && (
                             <div className="flex justify-between">
-                              <span className="text-gray-400">Route: {activity.details.route}</span>
-                              <span className="text-gray-400">Duration: {activity.details.duration}</span>
+                              <span className="text-gray-400">Route: {activity.details?.route || 'Custom route'}</span>
+                              <span className="text-gray-400">Duration: {activity.details?.duration || '0 min'}</span>
                             </div>
                           )}
                           {activity.type === 'maintenance' && (
                             <div className="flex justify-between">
-                              <span className="text-gray-400">At: {activity.details.location}</span>
-                              <span className="text-gray-400">Cost: ${activity.details.cost}</span>
+                              <span className="text-gray-400">At: {activity.details?.location || 'Unknown'}</span>
+                              <span className="text-gray-400">Cost: ${activity.details?.cost || 0}</span>
                             </div>
                           )}
                           {activity.type === 'purchase' && (
                             <div className="flex justify-between">
-                              <span className="text-gray-400">{activity.details.item}</span>
-                              <span className="text-gray-400">Cost: ${activity.details.cost}</span>
+                              <span className="text-gray-400">{activity.details?.item || 'Item'}</span>
+                              <span className="text-gray-400">Cost: ${activity.details?.cost || 0}</span>
                             </div>
                           )}
                           {activity.type === 'event' && (
                             <div className="flex justify-between">
-                              <span className="text-gray-400">Date: {new Date(activity.details.eventDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                              <span className="text-gray-400">Fee: ${activity.details.cost}</span>
+                              <span className="text-gray-400">Date: {new Date(activity.details?.eventDate || new Date()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                              <span className="text-gray-400">Fee: ${activity.details?.cost || 0}</span>
                             </div>
                           )}
                           {activity.type === 'manifestation' && (
                             <div className="flex justify-between">
-                              <span className="text-gray-400">Previous: ${activity.details.oldAmount.toLocaleString()}</span>
-                              <span className="text-gray-400">New: ${activity.details.newAmount.toLocaleString()}</span>
+                              <span className="text-gray-400">Previous: ${activity.details?.oldAmount?.toLocaleString() || 0}</span>
+                              <span className="text-gray-400">New: ${activity.details?.newAmount?.toLocaleString() || 0}</span>
                             </div>
                           )}
                         </div>
