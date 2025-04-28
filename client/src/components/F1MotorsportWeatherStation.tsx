@@ -18,19 +18,7 @@ import LocationSelector from './LocationSelector';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
-// Create a wrapper for LiveRegion as a React component
-const AccessibilityAnnouncement = ({ children }: { children: React.ReactNode }) => {
-  useEffect(() => {
-    const liveRegion = new LiveRegion();
-    liveRegion.announce(children?.toString() || '');
-    
-    return () => {
-      liveRegion.clear();
-    };
-  }, [children]);
-  
-  return <div className="sr-only" aria-live="polite" role="status">{children}</div>;
-};
+import { AccessibilityAnnouncement } from '@/components/ui/accessibility';
 
 const F1MotorsportWeatherStation = () => {
   const { 
