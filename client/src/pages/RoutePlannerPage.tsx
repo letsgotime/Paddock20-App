@@ -116,6 +116,7 @@ const RoutePlannerPage = () => {
   
   // Navigation app settings and integrations
   const [preferredNavApp, setPreferredNavApp] = useState("Google Maps");
+  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
   
   // Advanced navigation features
   const [navigationFeatures, setNavigationFeatures] = useState({
@@ -171,7 +172,6 @@ const RoutePlannerPage = () => {
     useCarPlayMode: true,
     showGuideInfo: true
   });
-  const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
   
   // Weather and conditions data
   const [weatherData, setWeatherData] = useState<any>(null);
@@ -367,7 +367,14 @@ const RoutePlannerPage = () => {
       optimalTirePressureRear: 33,
       powerOutput: 503,
       weightDistribution: "48/52",
-      aerodynamicProfile: "Medium Downforce"
+      aerodynamicProfile: "Medium Downforce",
+      engineType: "Twin-Turbo I6",
+      drivetrainType: "RWD",
+      suspensionType: "Adaptive M",
+      transmissionType: "8-Speed Auto",
+      fuelType: "Premium",
+      brakingDistance: 108,
+      corneringGForce: 1.03
     }
   };
   
@@ -400,7 +407,14 @@ const RoutePlannerPage = () => {
         optimalTirePressureRear: newVehicle.optimalTirePressureRear, 
         powerOutput: newVehicle.powerOutput,
         weightDistribution: newVehicle.weightDistribution,
-        aerodynamicProfile: newVehicle.aerodynamicProfile
+        aerodynamicProfile: newVehicle.aerodynamicProfile,
+        engineType: newVehicle.engineType,
+        drivetrainType: newVehicle.drivetrainType,
+        suspensionType: newVehicle.suspensionType,
+        transmissionType: newVehicle.transmissionType,
+        fuelType: newVehicle.fuelType,
+        brakingDistance: newVehicle.brakingDistance,
+        corneringGForce: newVehicle.corneringGForce
       }
     }));
     
@@ -413,7 +427,14 @@ const RoutePlannerPage = () => {
       optimalTirePressureRear: 32,
       powerOutput: 400,
       weightDistribution: "50/50",
-      aerodynamicProfile: "Balanced"
+      aerodynamicProfile: "Balanced",
+      engineType: "V6",
+      drivetrainType: "RWD",
+      suspensionType: "Standard",
+      transmissionType: "Automatic",
+      fuelType: "Premium",
+      brakingDistance: 110,
+      corneringGForce: 0.95
     });
     setShowAddVehicleForm(false);
     
@@ -994,21 +1015,163 @@ const RoutePlannerPage = () => {
 
         <div className="space-y-6">
           {/* Route Customization */}
-          <div>
-            <h2 className="text-blue-400 font-orbitron text-xl mb-3">Route Customizations</h2>
-            <div className="grid grid-cols-2 gap-2">
-              {Object.keys(routeCustomizations).map((key) => (
-                <label key={key} className="flex items-center space-x-2 text-white font-openSans">
-                  <input
-                    type="checkbox"
-                    name={key}
-                    checked={(routeCustomizations as any)[key]}
-                    onChange={handleRouteCustomizationChange}
-                    className="form-checkbox text-green-500"
-                  />
-                  <span className="capitalize">{key.replace(/([A-Z])/g, ' $1')}</span>
-                </label>
-              ))}
+          <div className="bg-gradient-to-r from-gray-900 to-black rounded-lg border border-gray-800 p-4 shadow-xl">
+            <h2 className="text-blue-400 font-orbitron text-xl mb-4 flex items-center">
+              <span className="mr-2">⚙️</span> Route Customizations
+            </h2>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Trip Configuration */}
+              <div className="bg-gray-900 p-3 rounded-lg border border-gray-700">
+                <h3 className="text-green-500 font-semibold mb-2 text-sm uppercase tracking-wide">Trip Type</h3>
+                <div className="space-y-2">
+                  <label className="flex items-center p-2 hover:bg-gray-800 rounded transition-colors">
+                    <input
+                      type="checkbox"
+                      name="roundTrip"
+                      checked={routeCustomizations.roundTrip}
+                      onChange={handleRouteCustomizationChange}
+                      className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5"
+                    />
+                    <div>
+                      <span className="text-white font-medium">Round Trip</span>
+                      <p className="text-gray-400 text-xs">Return to starting point</p>
+                    </div>
+                  </label>
+                  <label className="flex items-center p-2 hover:bg-gray-800 rounded transition-colors">
+                    <input
+                      type="checkbox"
+                      name="scenic"
+                      checked={routeCustomizations.scenic}
+                      onChange={handleRouteCustomizationChange}
+                      className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5"
+                    />
+                    <div>
+                      <span className="text-white font-medium">Scenic Route</span>
+                      <p className="text-gray-400 text-xs">Prioritize roads with views</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+              
+              {/* Stops & Services */}
+              <div className="bg-gray-900 p-3 rounded-lg border border-gray-700">
+                <h3 className="text-green-500 font-semibold mb-2 text-sm uppercase tracking-wide">Stops & Services</h3>
+                <div className="space-y-2">
+                  <label className="flex items-center p-2 hover:bg-gray-800 rounded transition-colors">
+                    <input
+                      type="checkbox"
+                      name="foodStop"
+                      checked={routeCustomizations.foodStop}
+                      onChange={handleRouteCustomizationChange}
+                      className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5"
+                    />
+                    <div>
+                      <span className="text-white font-medium">Food Stops</span>
+                      <p className="text-gray-400 text-xs">Include recommended restaurants</p>
+                    </div>
+                  </label>
+                  <label className="flex items-center p-2 hover:bg-gray-800 rounded transition-colors">
+                    <input
+                      type="checkbox"
+                      name="gasStop"
+                      checked={routeCustomizations.gasStop}
+                      onChange={handleRouteCustomizationChange}
+                      className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5"
+                    />
+                    <div>
+                      <span className="text-white font-medium">Fuel Stations</span>
+                      <p className="text-gray-400 text-xs">Include premium fuel stations</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+              
+              {/* Road Preferences */}
+              <div className="bg-gray-900 p-3 rounded-lg border border-gray-700">
+                <h3 className="text-green-500 font-semibold mb-2 text-sm uppercase tracking-wide">Toll Preferences</h3>
+                <div className="space-y-2">
+                  <label className="flex items-center p-2 hover:bg-gray-800 rounded transition-colors">
+                    <input
+                      type="radio"
+                      name="tollPreference"
+                      checked={routeCustomizations.avoidTolls}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setRouteCustomizations(prev => ({
+                            ...prev,
+                            avoidTolls: true,
+                            allowTolls: false
+                          }));
+                        }
+                      }}
+                      className="form-radio text-blue-500 mr-3 h-5 w-5"
+                    />
+                    <div>
+                      <span className="text-white font-medium">Avoid Toll Roads</span>
+                      <p className="text-gray-400 text-xs">May increase travel time</p>
+                    </div>
+                  </label>
+                  <label className="flex items-center p-2 hover:bg-gray-800 rounded transition-colors">
+                    <input
+                      type="radio"
+                      name="tollPreference"
+                      checked={routeCustomizations.allowTolls}
+                      onChange={(e) => {
+                        if (e.target.checked) {
+                          setRouteCustomizations(prev => ({
+                            ...prev,
+                            avoidTolls: false,
+                            allowTolls: true
+                          }));
+                        }
+                      }}
+                      className="form-radio text-blue-500 mr-3 h-5 w-5"
+                    />
+                    <div>
+                      <span className="text-white font-medium">Allow Toll Roads</span>
+                      <p className="text-gray-400 text-xs">Optimize for fastest route</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
+              
+              {/* Additional Options */}
+              <div className="bg-gray-900 p-3 rounded-lg border border-gray-700">
+                <h3 className="text-green-500 font-semibold mb-2 text-sm uppercase tracking-wide">Advanced Features</h3>
+                <div className="space-y-2">
+                  <label className="flex items-center p-2 hover:bg-gray-800 rounded transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={navigationFeatures.curvyRoads}
+                      onChange={(e) => setNavigationFeatures(prev => ({
+                        ...prev,
+                        curvyRoads: e.target.checked
+                      }))}
+                      className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5"
+                    />
+                    <div>
+                      <span className="text-white font-medium">Driving Experience</span>
+                      <p className="text-gray-400 text-xs">Prefer twisty, enjoyable roads</p>
+                    </div>
+                  </label>
+                  <label className="flex items-center p-2 hover:bg-gray-800 rounded transition-colors">
+                    <input
+                      type="checkbox"
+                      checked={navigationFeatures.weatherAlerts}
+                      onChange={(e) => setNavigationFeatures(prev => ({
+                        ...prev,
+                        weatherAlerts: e.target.checked
+                      }))}
+                      className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5"
+                    />
+                    <div>
+                      <span className="text-white font-medium">Weather Insights</span>
+                      <p className="text-gray-400 text-xs">Include weather alerts and forecasts</p>
+                    </div>
+                  </label>
+                </div>
+              </div>
             </div>
           </div>
 
