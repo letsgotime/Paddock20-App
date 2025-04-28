@@ -596,19 +596,67 @@ const RoutePlannerPage = () => {
     }, 100);
   };
 
+  // Multi-city route stop handling
+  const handleStopLocationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewStopLocation(e.target.value);
+  };
+  
+  const handleStopDateChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setNewStopDate(e.target.value);
+  };
+  
+  const handleStayDurationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setStayDuration(parseInt(e.target.value) || 0);
+  };
+  
+  const handleStopNotesChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
+    setStopNotes(e.target.value);
+  };
+  
+  const handleOvernightChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setIsOvernight(e.target.checked);
+  };
+  
+  const addRouteStop = () => {
+    if (newStopLocation.trim() !== "") {
+      const newStop: RouteStop = {
+        location: newStopLocation,
+        arrivalDate: newStopDate,
+        departureDate: newStopDate, // Default to same day, user can edit
+        stayDuration: stayDuration,
+        notes: stopNotes,
+        isOvernight: isOvernight
+      };
+      
+      setRouteStops([...routeStops, newStop]);
+      
+      // Also update legacy waypoints for backward compatibility
+      setWaypoints([...waypoints, newStopLocation]);
+      
+      // Reset input fields
+      setNewStopLocation("");
+      setStopNotes("");
+      setStayDuration(0);
+      setIsOvernight(false);
+    }
+  };
+  
+  const removeRouteStop = (index: number) => {
+    setRouteStops(routeStops.filter((_, i) => i !== index));
+    setWaypoints(waypoints.filter((_, i) => i !== index)); // Keep in sync
+  };
+  
+  // Legacy support
   const handleWaypointChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setNewWaypoint(e.target.value);
+    setNewStopLocation(e.target.value);
   };
 
   const addWaypoint = () => {
-    if (newWaypoint.trim() !== "") {
-      setWaypoints([...waypoints, newWaypoint]);
-      setNewWaypoint("");
-    }
+    addRouteStop();
   };
 
   const removeWaypoint = (index: number) => {
-    setWaypoints(waypoints.filter((_, i) => i !== index));
+    removeRouteStop(index);
   };
 
   const handleRouteCustomizationChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -1434,13 +1482,24 @@ const RoutePlannerPage = () => {
           {/* End Location */}
           <div>
             <label className="block text-gray-300 mb-1">Final Destination</label>
-            <input
-              type="text"
-              placeholder="End Location"
-              value={endLocation}
-              onChange={(e) => setEndLocation(e.target.value)}
-              className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
-            />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input
+                type="text"
+                placeholder="End Location"
+                value={endLocation}
+                onChange={(e) => setEndLocation(e.target.value)}
+                className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
+              />
+              <div>
+                <label className="text-gray-400 text-sm mb-1 block">Arrival Date</label>
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
+                />
+              </div>
+            </div>
           </div>
 
           {/* Vehicle and Passenger Info */}
