@@ -120,6 +120,7 @@ function App() {
               <Route path="/" element={<ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
               <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
               <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+              <Route path="/personalized-dashboard" element={<ProtectedRoute><PersonalizedDashboard /></ProtectedRoute>} />
               {/* Main Garage Vault Hub - Central repository for all vehicle data */}
               <Route path="/garage-vault" element={<ProtectedRoute><GarageVaultPage /></ProtectedRoute>} />
               {/* Legacy garage route redirects to new Garage Vault structure */}

@@ -70,6 +70,11 @@ function HorizontalNavbar() {
               <span className="text-xs mt-1 whitespace-nowrap">Paddock20</span>
             </Link>
             
+            <Link to="/personalized-dashboard" className={`flex flex-col items-center p-2 ${isActive('/personalized-dashboard')}`}>
+              <span className="text-xl">📊</span>
+              <span className="text-xs mt-1 whitespace-nowrap">My Dashboard</span>
+            </Link>
+            
             <Link to="/garage-vault" className={`flex flex-col items-center p-2 ${isActive('/garage-vault')}`}>
               <span className="text-xl">🚗</span>
               <span className="text-xs mt-1 whitespace-nowrap">Garage Vault</span>
@@ -162,6 +167,11 @@ function HorizontalNavbar() {
               <Link to="/paddock20-vault" className="flex flex-col items-center p-2 text-gray-300 hover:text-green-400">
                 <span className="text-xl">🏁</span>
                 <span className="text-xs mt-1">Paddock20</span>
+              </Link>
+              
+              <Link to="/personalized-dashboard" className="flex flex-col items-center p-2 text-gray-300 hover:text-green-400">
+                <span className="text-xl">📊</span>
+                <span className="text-xs mt-1">Dashboard</span>
               </Link>
               
               <Link to="/garage-vault" className="flex flex-col items-center p-2 text-gray-300 hover:text-green-400">
