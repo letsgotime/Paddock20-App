@@ -1,86 +1,408 @@
 import React, { useState } from 'react';
+import { 
+  Check, 
+  X, 
+  Droplet, 
+  Gauge, 
+  Battery, 
+  Lightbulb, 
+  Shield, 
+  ShieldAlert, 
+  Umbrella, 
+  Sun, 
+  Thermometer, 
+  Wrench, 
+  Car, 
+  Smartphone, 
+  Fuel, 
+  Waves, 
+  Eye,
+  Map,
+  Shirt,
+  Oil,
+  Spray
+} from 'lucide-react';
 
-const PreDriveChecklist = () => {
-  const [checklistItems, setChecklistItems] = useState([
-    { id: 1, text: 'Check tire pressure', checked: false },
-    { id: 2, text: 'Inspect brake lights', checked: false },
-    { id: 3, text: 'Check oil level', checked: false },
-    { id: 4, text: 'Check coolant level', checked: false },
-    { id: 5, text: 'Check windshield washer fluid', checked: false },
-    { id: 6, text: 'Inspect windshield wipers', checked: false },
-    { id: 7, text: 'Adjust mirrors', checked: false },
-    { id: 8, text: 'Test brake pedal feel', checked: false }
-  ]);
+export interface ChecklistItem {
+  id: string;
+  category: 'mechanical' | 'safety' | 'comfort' | 'emergency' | 'documents' | 'weather' | 'enthusiast';
+  name: string;
+  description: string;
+  icon: React.ReactNode;
+  critical: boolean;
+}
 
-  const toggleChecked = (id: number) => {
-    setChecklistItems(items => 
-      items.map(item => 
-        item.id === id ? { ...item, checked: !item.checked } : item
-      )
-    );
+interface PreDriveChecklistProps {
+  vehicleId?: number;
+  vehicleType?: 'sports' | 'sedan' | 'suv' | 'truck' | 'exotic';
+  weatherCondition?: string;
+  temperature?: number;
+  precipitation?: boolean;
+  driveType?: 'casual' | 'performance' | 'offroad' | 'track';
+  distance?: number;
+  onChecklistComplete?: (completedItems: string[], missingCriticalItems: string[]) => void;
+}
+
+const PreDriveChecklist: React.FC<PreDriveChecklistProps> = ({
+  vehicleId,
+  vehicleType = 'sports',
+  weatherCondition = 'clear',
+  temperature = 75,
+  precipitation = false,
+  driveType = 'casual',
+  distance = 0,
+  onChecklistComplete
+}) => {
+  // Default checklist items that apply to all drives
+  const defaultChecklistItems: ChecklistItem[] = [
+    {
+      id: 'fluid-levels',
+      category: 'mechanical',
+      name: 'Fluid Levels',
+      description: 'Check oil, coolant, brake fluid, and washer fluid',
+      icon: <Droplet className="w-5 h-5" />,
+      critical: true
+    },
+    {
+      id: 'tire-pressure',
+      category: 'mechanical',
+      name: 'Tire Pressure',
+      description: 'Verify all tires at recommended PSI',
+      icon: <Gauge className="w-5 h-5" />,
+      critical: true
+    },
+    {
+      id: 'battery',
+      category: 'mechanical',
+      name: 'Battery',
+      description: 'Battery is charged and connections are secure',
+      icon: <Battery className="w-5 h-5" />,
+      critical: true
+    },
+    {
+      id: 'lights',
+      category: 'safety',
+      name: 'Lights',
+      description: 'Check headlights, taillights, turn signals, and brake lights',
+      icon: <Lightbulb className="w-5 h-5" />,
+      critical: true
+    },
+    {
+      id: 'brakes',
+      category: 'safety',
+      name: 'Brakes',
+      description: 'Brake pedal feels firm and responsive',
+      icon: <ShieldAlert className="w-5 h-5" />,
+      critical: true
+    },
+    {
+      id: 'documents',
+      category: 'documents',
+      name: 'Documents',
+      description: 'Insurance, registration, and driver\'s license',
+      icon: <Shield className="w-5 h-5" />,
+      critical: true
+    },
+    {
+      id: 'first-aid',
+      category: 'emergency',
+      name: 'First Aid Kit',
+      description: 'Check first aid kit is stocked and accessible',
+      icon: <Shield className="w-5 h-5" />,
+      critical: false
+    },
+    {
+      id: 'phone-charger',
+      category: 'comfort',
+      name: 'Phone Charger',
+      description: 'Mobile phone charger and mount',
+      icon: <Smartphone className="w-5 h-5" />,
+      critical: false
+    },
+    {
+      id: 'fuel',
+      category: 'mechanical',
+      name: 'Fuel Level',
+      description: 'Adequate fuel for journey plus reserve',
+      icon: <Fuel className="w-5 h-5" />,
+      critical: true
+    },
+    {
+      id: 'windshield-wipers',
+      category: 'mechanical',
+      name: 'Windshield Wipers',
+      description: 'Wipers functioning properly with no streaking',
+      icon: <Waves className="w-5 h-5" />,
+      critical: false
+    },
+    {
+      id: 'visibility',
+      category: 'safety',
+      name: 'Clear Visibility',
+      description: 'All windows and mirrors clean and unobstructed',
+      icon: <Eye className="w-5 h-5" />,
+      critical: true
+    },
+    {
+      id: 'navigation',
+      category: 'comfort',
+      name: 'Navigation Set',
+      description: 'Route programmed in navigation system',
+      icon: <Map className="w-5 h-5" />,
+      critical: false
+    }
+  ];
+
+  // Enthusiast-specific items
+  const enthusiastItems: ChecklistItem[] = [
+    {
+      id: 'driving-gloves',
+      category: 'enthusiast',
+      name: 'Driving Gloves',
+      description: 'Premium driving gloves for enhanced grip and control',
+      icon: <Shirt className="w-5 h-5" />,
+      critical: false
+    },
+    {
+      id: 'detail-spray',
+      category: 'enthusiast',
+      name: 'Detail Spray',
+      description: 'Quick detailer spray for touch-ups at stops',
+      icon: <Spray className="w-5 h-5" />,
+      critical: false
+    },
+    {
+      id: 'extra-oil',
+      category: 'enthusiast',
+      name: 'Extra Oil',
+      description: 'Spare quart of manufacturer-recommended oil',
+      icon: <Oil className="w-5 h-5" />,
+      critical: false
+    },
+    {
+      id: 'tire-gauge',
+      category: 'enthusiast',
+      name: 'Tire Pressure Gauge',
+      description: 'Precise tire pressure gauge for performance driving',
+      icon: <Gauge className="w-5 h-5" />,
+      critical: false
+    },
+    {
+      id: 'microfiber-towels',
+      category: 'enthusiast',
+      name: 'Microfiber Towels',
+      description: 'Clean microfiber cloths for window cleaning and detailing',
+      icon: <Spray className="w-5 h-5" />,
+      critical: false
+    }
+  ];
+
+  // Performance driving items
+  const performanceItems: ChecklistItem[] = [
+    {
+      id: 'tire-temp',
+      category: 'mechanical',
+      name: 'Tire Temperature',
+      description: 'Check for even temperature across tire surface',
+      icon: <Thermometer className="w-5 h-5" />,
+      critical: driveType === 'performance' || driveType === 'track'
+    },
+    {
+      id: 'brake-pads',
+      category: 'mechanical',
+      name: 'Brake Pad Condition',
+      description: 'Verify brake pads have adequate material for spirited driving',
+      icon: <Wrench className="w-5 h-5" />,
+      critical: driveType === 'performance' || driveType === 'track'
+    },
+    {
+      id: 'performance-tires',
+      category: 'mechanical',
+      name: 'Performance Tire Check',
+      description: 'Inspect tires for optimal tread pattern and no damage',
+      icon: <Car className="w-5 h-5" />,
+      critical: driveType === 'performance' || driveType === 'track'
+    }
+  ];
+
+  // Weather-specific items
+  const weatherItems: ChecklistItem[] = [];
+  
+  if (precipitation || weatherCondition.includes('rain') || weatherCondition.includes('snow')) {
+    weatherItems.push({
+      id: 'rain-gear',
+      category: 'weather',
+      name: 'Rain/Snow Gear',
+      description: 'Umbrella, rain jacket, or snow equipment',
+      icon: <Umbrella className="w-5 h-5" />,
+      critical: false
+    });
+  }
+  
+  if (temperature > 85) {
+    weatherItems.push({
+      id: 'sun-protection',
+      category: 'weather',
+      name: 'Sun Protection',
+      description: 'Sunglasses, sunscreen, and window shades',
+      icon: <Sun className="w-5 h-5" />,
+      critical: false
+    });
+  }
+  
+  if (temperature < 40) {
+    weatherItems.push({
+      id: 'cold-weather-gear',
+      category: 'weather',
+      name: 'Cold Weather Gear',
+      description: 'Gloves, hat, blanket, and ice scraper',
+      icon: <Thermometer className="w-5 h-5" />,
+      critical: false
+    });
+  }
+
+  // Long distance items
+  const longDistanceItems: ChecklistItem[] = [];
+  
+  if (distance > 100) {
+    longDistanceItems.push({
+      id: 'snacks-water',
+      category: 'comfort',
+      name: 'Snacks & Water',
+      description: 'Adequate food and hydration for the journey',
+      icon: <Droplet className="w-5 h-5" />,
+      critical: false
+    });
+    
+    longDistanceItems.push({
+      id: 'emergency-kit',
+      category: 'emergency',
+      name: 'Emergency Kit',
+      description: 'Flashlight, basic tools, jumper cables, and warning triangle',
+      icon: <ShieldAlert className="w-5 h-5" />,
+      critical: false
+    });
+  }
+
+  // Combine all applicable checklist items based on props
+  const allChecklistItems = [
+    ...defaultChecklistItems,
+    ...enthusiastItems,
+    ...(driveType === 'performance' || driveType === 'track' ? performanceItems : []),
+    ...weatherItems,
+    ...(distance > 100 ? longDistanceItems : [])
+  ];
+
+  // State to track checked items
+  const [checkedItems, setCheckedItems] = useState<Record<string, boolean>>({});
+
+  // Handle item toggle
+  const toggleItem = (id: string) => {
+    setCheckedItems(prev => ({
+      ...prev,
+      [id]: !prev[id]
+    }));
   };
 
-  const resetChecklist = () => {
-    setChecklistItems(items => 
-      items.map(item => ({ ...item, checked: false }))
-    );
+  // Calculate completion status
+  const calculateCompletion = () => {
+    const completedItems = Object.entries(checkedItems)
+      .filter(([_, isChecked]) => isChecked)
+      .map(([id, _]) => id);
+    
+    const missingCriticalItems = allChecklistItems
+      .filter(item => item.critical && !checkedItems[item.id])
+      .map(item => item.id);
+    
+    return {
+      completedItems,
+      missingCriticalItems,
+      isComplete: missingCriticalItems.length === 0
+    };
   };
 
-  const percentComplete = Math.round(
-    (checklistItems.filter(item => item.checked).length / checklistItems.length) * 100
-  );
+  // Handle checklist completion
+  const handleComplete = () => {
+    const { completedItems, missingCriticalItems } = calculateCompletion();
+    if (onChecklistComplete) {
+      onChecklistComplete(completedItems, missingCriticalItems);
+    }
+  };
+
+  const { isComplete } = calculateCompletion();
 
   return (
-    <div className="apex-card mb-8">
-      <div className="flex justify-between items-center mb-6">
-        <h2 className="apex-header-green">Pre-Drive Checklist</h2>
-        <div className="flex items-center gap-4">
-          <div className="text-sm">
-            <span className="text-green-400 font-bold">{percentComplete}%</span> Complete
-          </div>
-          <button 
-            onClick={resetChecklist}
-            className="bg-blue-600 text-white text-xs px-3 py-1 rounded hover:bg-blue-500"
+    <div className="bg-gradient-to-r from-gray-900 to-black rounded-lg shadow-lg border border-gray-800 overflow-hidden p-4">
+      <h2 className="text-blue-400 font-orbitron text-lg mb-4">
+        Pre-Drive Safety Checklist
+        {vehicleType === 'exotic' && <span className="ml-2 text-amber-500">(Exotic Car Edition)</span>}
+        {driveType === 'performance' && <span className="ml-2 text-red-500">(Performance Drive)</span>}
+        {driveType === 'track' && <span className="ml-2 text-purple-500">(Track Day Ready)</span>}
+      </h2>
+      
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+        {allChecklistItems.map(item => (
+          <div 
+            key={item.id}
+            className={`flex items-start gap-3 p-3 rounded-md border ${
+              item.critical 
+                ? (checkedItems[item.id] ? 'border-green-700 bg-green-900/20' : 'border-red-700 bg-red-900/10') 
+                : (checkedItems[item.id] ? 'border-blue-700 bg-blue-900/20' : 'border-gray-700 bg-gray-900/10')
+            } transition-colors`}
+            onClick={() => toggleItem(item.id)}
           >
-            Reset
-          </button>
-        </div>
+            <div className={`flex-shrink-0 w-6 h-6 rounded-full flex items-center justify-center ${
+              checkedItems[item.id] 
+                ? 'bg-green-500 text-black' 
+                : (item.critical ? 'bg-red-500/20 text-red-400' : 'bg-gray-700 text-gray-400')
+            }`}>
+              {checkedItems[item.id] ? <Check className="w-4 h-4" /> : <X className="w-4 h-4" />}
+            </div>
+            
+            <div className="flex-1">
+              <div className="flex items-center gap-2">
+                <span className={`${
+                  item.critical ? 'text-white' : 'text-gray-300'
+                } font-medium`}>{item.name}</span>
+                {item.critical && (
+                  <span className="text-xs bg-red-900/30 text-red-400 px-2 py-0.5 rounded">
+                    Required
+                  </span>
+                )}
+                {item.category === 'enthusiast' && (
+                  <span className="text-xs bg-amber-900/30 text-amber-400 px-2 py-0.5 rounded">
+                    Enthusiast
+                  </span>
+                )}
+              </div>
+              <p className="text-gray-400 text-sm mt-1">{item.description}</p>
+            </div>
+            
+            <div className="flex-shrink-0 text-gray-400">
+              {item.icon}
+            </div>
+          </div>
+        ))}
       </div>
       
-      <ul className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {checklistItems.map(item => (
-          <li 
-            key={item.id} 
-            className={`flex items-center p-4 rounded-lg cursor-pointer transition ${item.checked ? 'bg-gray-700' : 'bg-gray-800 hover:bg-gray-700'}`}
-            onClick={() => toggleChecked(item.id)}
-          >
-            <div className={`w-5 h-5 flex-shrink-0 border-2 rounded mr-3 ${item.checked ? 'bg-green-500 border-green-500' : 'border-gray-500'}`}>
-              {item.checked && (
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="white" className="w-4 h-4">
-                  <path fillRule="evenodd" d="M19.916 4.626a.75.75 0 01.208 1.04l-9 13.5a.75.75 0 01-1.154.114l-6-6a.75.75 0 011.06-1.06l5.353 5.353 8.493-12.739a.75.75 0 011.04-.208z" clipRule="evenodd" />
-                </svg>
-              )}
-            </div>
-            <span className={`${item.checked ? 'line-through text-gray-400' : 'text-white'}`}>
-              {item.text}
-            </span>
-          </li>
-        ))}
-      </ul>
-      
-      <div className="flex justify-between mt-6">
-        <button 
-          className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded"
-          disabled={percentComplete < 100}
-        >
-          Download Checklist
-        </button>
+      <div className="mt-6 flex justify-between items-center">
+        <div className="text-sm text-gray-400">
+          {isComplete 
+            ? <span className="text-green-400">✓ All critical items checked</span>
+            : <span className="text-red-400">! Critical items missing</span>
+          }
+        </div>
         
-        <button 
-          className={`${percentComplete === 100 ? 'apex-button' : 'bg-gray-700 text-gray-400 px-4 py-2 rounded cursor-not-allowed'}`}
-          disabled={percentComplete < 100}
+        <button
+          onClick={handleComplete}
+          disabled={!isComplete}
+          className={`px-4 py-2 rounded font-medium ${
+            isComplete 
+              ? 'bg-green-600 hover:bg-green-700 text-white'
+              : 'bg-gray-700 text-gray-400 cursor-not-allowed'
+          } transition-colors`}
         >
-          Ready to Drive
+          Confirm Ready to Drive
         </button>
       </div>
     </div>

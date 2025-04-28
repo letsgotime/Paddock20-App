@@ -7,18 +7,29 @@ import {
   Fuel, 
   HelpCircle, 
   MapPin, 
-  Spoon, 
+  Utensils, 
   Store, 
-  Tool, 
+  Wrench, 
   TreePine, 
   User, 
   Users, 
-  Wrench,
   Fish,
   Tent,
   Route,
   Mountain,
-  Bath
+  Bath,
+  Camera,
+  Palmtree,
+  Trees,
+  Dog,
+  Sunset,
+  Sunrise,
+  Pizza,
+  Beef,
+  Cookie,
+  Home,
+  Trash,
+  Recycle
 } from 'lucide-react';
 
 // POI Categories
@@ -27,7 +38,7 @@ export type POICategory =
   'food' | 'drives' | 'hikes' | 'camping' | 'fishing' | 'restrooms' |
   'driving_schools' | 'body_shops' | 'photo_spots' | 'lakes' | 'parks' |
   'dog_parks' | 'sunset_spots' | 'sunrise_spots' | 'beaches' |
-  'tacos' | 'pizza' | 'bbq';
+  'tacos' | 'pizza' | 'bbq' | 'rv_stations' | 'rv_dump_stations' | 'waste_services';
 
 interface POI {
   id: string;
@@ -114,7 +125,7 @@ const POI_CATEGORIES: POICategoryDetails[] = [
   { 
     id: 'food', 
     name: 'Food Spots', 
-    icon: <Spoon className="w-5 h-5" />, 
+    icon: <Utensils className="w-5 h-5" />, 
     description: 'Top-rated restaurants and eateries near routes',
     color: 'text-pink-500'
   },
@@ -152,6 +163,97 @@ const POI_CATEGORIES: POICategoryDetails[] = [
     icon: <Bath className="w-5 h-5" />, 
     description: 'Well-maintained rest stops and facilities',
     color: 'text-violet-400'
+  },
+  { 
+    id: 'rv_stations', 
+    name: 'RV Stations', 
+    icon: <Home className="w-5 h-5" />, 
+    description: 'Full-service RV parks with hookups and amenities',
+    color: 'text-blue-600'
+  },
+  { 
+    id: 'rv_dump_stations', 
+    name: 'RV Dump Stations', 
+    icon: <Droplet className="w-5 h-5" />, 
+    description: 'Designated stations for RV waste disposal',
+    color: 'text-green-700'
+  },
+  { 
+    id: 'waste_services', 
+    name: 'Waste Services', 
+    icon: <Trash className="w-5 h-5" />, 
+    description: 'Waste disposal and recycling centers',
+    color: 'text-amber-600'
+  },
+  { 
+    id: 'photo_spots', 
+    name: 'Photo Spots', 
+    icon: <Camera className="w-5 h-5" />, 
+    description: 'Scenic locations perfect for vehicle photography',
+    color: 'text-pink-600'
+  },
+  { 
+    id: 'lakes', 
+    name: 'Lakes', 
+    icon: <Droplet className="w-5 h-5" />, 
+    description: 'Scenic lakes with shoreline drives and parking',
+    color: 'text-blue-500'
+  },
+  { 
+    id: 'parks', 
+    name: 'Parks', 
+    icon: <Trees className="w-5 h-5" />, 
+    description: 'Public parks with vehicle-accessible roads and parking',
+    color: 'text-emerald-600'
+  },
+  { 
+    id: 'dog_parks', 
+    name: 'Dog Parks', 
+    icon: <Dog className="w-5 h-5" />, 
+    description: 'Pet-friendly parks for you and your four-legged co-pilots',
+    color: 'text-yellow-600'
+  },
+  { 
+    id: 'sunset_spots', 
+    name: 'Sunset Viewing', 
+    icon: <Sunset className="w-5 h-5" />, 
+    description: 'Perfect spots to watch the sunset from your vehicle',
+    color: 'text-orange-500'
+  },
+  { 
+    id: 'sunrise_spots', 
+    name: 'Sunrise Viewing', 
+    icon: <Sunrise className="w-5 h-5" />, 
+    description: 'Ideal locations to catch the sunrise from your car',
+    color: 'text-amber-400'
+  },
+  { 
+    id: 'beaches', 
+    name: 'Beaches', 
+    icon: <Palmtree className="w-5 h-5" />, 
+    description: 'Beaches with nearby parking or vehicle access',
+    color: 'text-blue-300'
+  },
+  { 
+    id: 'pizza', 
+    name: 'Pizza Spots', 
+    icon: <Pizza className="w-5 h-5" />, 
+    description: 'Best pizza restaurants along your route',
+    color: 'text-red-600'
+  },
+  { 
+    id: 'bbq', 
+    name: 'BBQ Joints', 
+    icon: <Beef className="w-5 h-5" />, 
+    description: 'Top-rated BBQ restaurants with parking',
+    color: 'text-red-700'
+  },
+  { 
+    id: 'tacos', 
+    name: 'Taco Spots', 
+    icon: <Utensils className="w-5 h-5" />, 
+    description: 'Best taco restaurants and food trucks',
+    color: 'text-yellow-500'
   }
 ];
 
@@ -339,6 +441,51 @@ const SAMPLE_POIS: POI[] = [
     hours: 'Open 24/7',
     amenities: ['Clean Facilities', 'Large Parking Area', 'Security', 'Well-Lit'],
     images: ['/assets/qt-restrooms.jpg']
+  },
+  {
+    id: 'rv_stations-1',
+    name: 'Whispering Pines RV Resort',
+    category: 'rv_stations',
+    description: 'Premium RV resort with full hookups, luxury amenities, and scenic views.',
+    address: '2345 Pine Road, Mooresville, NC 28117',
+    lat: 35.5846,
+    lon: -80.8201,
+    rating: 4.8,
+    website: 'https://www.whisperingpinesrv.com',
+    phone: '704-555-8765',
+    hours: 'Office: 8AM-8PM daily, Gates open 24/7 for registered guests',
+    amenities: ['50/30/20 Amp Service', 'Full Water & Sewer', 'Wi-Fi', 'Cable TV', 'Laundry', 'Showers', 'Pool', 'Dog Park'],
+    images: ['/assets/rv-resort.jpg']
+  },
+  {
+    id: 'rv_dump_stations-1',
+    name: 'Charlotte Motor Speedway Dump Station',
+    category: 'rv_dump_stations',
+    description: 'Clean dump station with easy access for RVs of all sizes.',
+    address: '5555 Concord Parkway South, Concord, NC 28027',
+    lat: 35.3506,
+    lon: -80.6826,
+    rating: 4.5,
+    website: 'https://www.charlottemotorspeedway.com',
+    phone: '704-555-1212',
+    hours: '7AM-9PM daily',
+    amenities: ['Fresh Water Available', 'Easy Pull-Through Access', 'Non-Potable Water Rinse', 'Dump Fee: $10'],
+    images: ['/assets/dump-station.jpg']
+  },
+  {
+    id: 'waste_services-1',
+    name: 'EcoWaste Recycling Center',
+    category: 'waste_services',
+    description: 'Environmentally friendly waste disposal and recycling center that accepts all types of RV and automotive waste.',
+    address: '8765 Green Valley Road, Charlotte, NC 28214',
+    lat: 35.2417,
+    lon: -80.9656,
+    rating: 4.6,
+    website: 'https://www.ecowastecharlotte.com',
+    phone: '704-555-3434',
+    hours: 'Mon-Sat: 7AM-7PM, Sun: 9AM-5PM',
+    amenities: ['Free Recycling', 'Oil Disposal', 'Battery Recycling', 'Tire Disposal', 'Hazardous Waste Acceptance', 'Large Vehicle Access'],
+    images: ['/assets/recycling-center.jpg']
   }
 ];
 
