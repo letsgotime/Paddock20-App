@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import EventsPreview from '../components/EventsPreview';
+import HomeWeatherWidget from '../components/HomeWeatherWidget';
 
 const Paddock20HomePage: React.FC = () => {
   return (
@@ -22,17 +23,10 @@ const Paddock20HomePage: React.FC = () => {
         </p>
       </section>
 
-      {/* Weather Module Placeholder */}
-      <section className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg shadow-lg border border-gray-700 p-6 mb-8">
-        <h2 className="font-orbitron text-blue-400 text-2xl mb-4">Weather Integration</h2>
-        <div className="p-6 text-center">
-          <p className="text-gray-300 mb-4">
-            Our advanced automotive weather integration is being upgraded.
-          </p>
-          <Link to="/weather" className="inline-block px-4 py-2 bg-green-700/20 border border-green-700/40 rounded-md text-green-500 hover:bg-green-700/30 transition-colors">
-            View Weather Center
-          </Link>
-        </div>
+      {/* Live Weather Station */}
+      <section className="mb-8">
+        <h2 className="font-orbitron text-blue-400 text-2xl mb-4">Live Weather Intelligence</h2>
+        <HomeWeatherWidget />
       </section>
       
       {/* Motorsports Events Preview */}
@@ -81,7 +75,7 @@ const Paddock20HomePage: React.FC = () => {
         <div className="grid md:grid-cols-2 gap-8">
           
           {/* Weather Center */}
-          <Link to="/weather-center" className="bg-gray-900 p-6 rounded-lg border border-gray-700 shadow-lg hover:border-green-500 transition-colors">
+          <Link to="/weather" className="bg-gray-900 p-6 rounded-lg border border-gray-700 shadow-lg hover:border-green-500 transition-colors">
             <h3 className="text-blue-400 font-orbitron text-2xl mb-4">☁️ Weather Center</h3>
             <p className="text-white font-openSans text-base leading-relaxed">
               Live conditions. Surface temps. Tire readiness. Torque specs. All in one glance.
