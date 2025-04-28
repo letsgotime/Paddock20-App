@@ -186,6 +186,8 @@ const RoutePlannerPage = () => {
     realTimeTraffic: true,
     avoidHighways: false,
     avoidTolls: false,
+    avoidUnpaved: true,
+    avoidFerries: false,
     preferScenic: false,
     liveSpeedTraps: true,
     livePoliceReports: true,
@@ -198,8 +200,11 @@ const RoutePlannerPage = () => {
     curvyRoads: false,  // For enthusiasts who prefer twisty roads
     curveIntensity: 3,  // 1-5 scale corresponding to TRN/km values (Total Route Number per km)
     motorcycleMode: false,
-    avoidUnpaved: true,
     hov: false,
+    optimizeForSportsCars: false, // Sports car specific optimizations
+    trafficAvoidance: 'moderate', // 'none', 'light', 'moderate', 'aggressive', 'max'
+    roadTypePreference: 'balanced', // 'highways', 'balanced', 'scenic', 'enthusiast'
+    complexityLevel: 3, // 1-5 scale for route complexity
     voiceType: "standard" // standard, premium, celebrity
   });
   
@@ -1546,6 +1551,89 @@ const RoutePlannerPage = () => {
                   onChange={(e) => setStartDate(e.target.value)}
                   className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
                 />
+              </div>
+            </div>
+          </div>
+
+          {/* Pre-Drive Performance Checklist */}
+          <div>
+            <div className="flex items-center justify-between mb-2">
+              <label className="block text-gray-300">Performance Drive Checklist</label>
+              <button 
+                onClick={() => alert("Checklist generated for your specific vehicle and conditions")}
+                className="text-xs text-blue-400 hover:text-blue-300"
+              >
+                Print Checklist
+              </button>
+            </div>
+            <div className="bg-gray-900 p-4 rounded-lg border border-gray-800 mb-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                <div className="bg-black/30 p-2 rounded border border-gray-800">
+                  <h4 className="text-green-400 text-sm font-semibold mb-1">Vehicle Preparation</h4>
+                  <div className="space-y-1">
+                    <label className="flex items-center text-gray-300 text-sm">
+                      <input type="checkbox" className="form-checkbox text-green-500 mr-2" />
+                      Tire pressure set to {selectedTireSetup && tireSetups[selectedTireSetup] ? 
+                        tireSetups[selectedTireSetup]?.pressureVariance || '32' : '32'} PSI (front)
+                    </label>
+                    <label className="flex items-center text-gray-300 text-sm">
+                      <input type="checkbox" className="form-checkbox text-green-500 mr-2" />
+                      Torque setting: {selectedVehicle === 'Ferrari F8' ? '96 ft-lb' : '72-85 ft-lb'}
+                    </label>
+                    <label className="flex items-center text-gray-300 text-sm">
+                      <input type="checkbox" className="form-checkbox text-green-500 mr-2" />
+                      Fluid levels checked
+                    </label>
+                    <label className="flex items-center text-gray-300 text-sm">
+                      <input type="checkbox" className="form-checkbox text-green-500 mr-2" />
+                      Battery charge verified
+                    </label>
+                  </div>
+                </div>
+                
+                <div className="bg-black/30 p-2 rounded border border-gray-800">
+                  <h4 className="text-green-400 text-sm font-semibold mb-1">Electronics & Settings</h4>
+                  <div className="space-y-1">
+                    <label className="flex items-center text-gray-300 text-sm">
+                      <input type="checkbox" className="form-checkbox text-green-500 mr-2" />
+                      {drivingMode.includes('custom:') ? drivingMode.replace('custom:', '') : drivingMode} mode activated
+                    </label>
+                    <label className="flex items-center text-gray-300 text-sm">
+                      <input type="checkbox" className="form-checkbox text-green-500 mr-2" />
+                      Traction control optimized for {drivePurpose === 'celebration' ? 'celebration ride' : 'drive'}
+                    </label>
+                    <label className="flex items-center text-gray-300 text-sm">
+                      <input type="checkbox" className="form-checkbox text-green-500 mr-2" />
+                      Navigation ready: {preferredNavApp}
+                    </label>
+                    <label className="flex items-center text-gray-300 text-sm">
+                      <input type="checkbox" className="form-checkbox text-green-500 mr-2" />
+                      Telemetry recording {driveJournalIntegration ? 'enabled' : 'disabled'}
+                    </label>
+                  </div>
+                </div>
+                
+                <div className="bg-black/30 p-2 rounded border border-gray-800">
+                  <h4 className="text-green-400 text-sm font-semibold mb-1">Weather & Conditions</h4>
+                  <div className="space-y-1">
+                    <label className="flex items-center text-gray-300 text-sm">
+                      <input type="checkbox" className="form-checkbox text-green-500 mr-2" />
+                      {weatherData?.current?.weather?.[0]?.main || 'Weather'} conditions verified
+                    </label>
+                    <label className="flex items-center text-gray-300 text-sm">
+                      <input type="checkbox" className="form-checkbox text-green-500 mr-2" />
+                      Road surface temp: ~{Math.round((weatherData?.current?.temp || 70) - 5)}°F
+                    </label>
+                    <label className="flex items-center text-gray-300 text-sm">
+                      <input type="checkbox" className="form-checkbox text-green-500 mr-2" />
+                      Visibility: {weatherData?.current?.visibility ? Math.round(weatherData.current.visibility / 1609) + ' miles' : '10+ miles'}
+                    </label>
+                    <label className="flex items-center text-gray-300 text-sm">
+                      <input type="checkbox" className="form-checkbox text-green-500 mr-2" />
+                      {drivePurpose === 'celebration' ? 'Celebration route verified' : 'Route conditions verified'}
+                    </label>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
