@@ -20,7 +20,7 @@ interface GoalDetailsModalProps {
 }
 
 // Helper functions
-const getStatusBadgeColor = (status: 'new' | 'in_progress' | 'manifested') => {
+const getStatusBadgeColor = (status: 'new' | 'in_progress' | 'manifested' | 'complete') => {
   switch (status) {
     case 'new':
       return 'bg-blue-900/20 text-blue-400';
@@ -28,12 +28,14 @@ const getStatusBadgeColor = (status: 'new' | 'in_progress' | 'manifested') => {
       return 'bg-yellow-900/20 text-yellow-400';
     case 'manifested':
       return 'bg-green-900/20 text-green-400';
+    case 'complete':
+      return 'bg-purple-900/20 text-purple-400';
     default:
       return 'bg-gray-900/20 text-gray-400';
   }
 };
 
-const getStatusLabel = (status: 'new' | 'in_progress' | 'manifested') => {
+const getStatusLabel = (status: 'new' | 'in_progress' | 'manifested' | 'complete') => {
   switch (status) {
     case 'new':
       return 'New';
@@ -41,6 +43,8 @@ const getStatusLabel = (status: 'new' | 'in_progress' | 'manifested') => {
       return 'In Progress';
     case 'manifested':
       return 'Manifested';
+    case 'complete':
+      return 'Complete';
     default:
       return 'Unknown';
   }

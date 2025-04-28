@@ -435,6 +435,283 @@ const ManifestationStationPage = () => {
           dateAdded: '2025-01-15'
         }
       ]
+    },
+    // 2014 Audi R8 V10
+    {
+      id: 6,
+      goalName: "2014 Audi R8 V10",
+      goalType: "Car",
+      targetAsset: "2014 Audi R8 V10 Coupe",
+      targetDate: "2024-08-30",
+      fundingPlan: "Financing + Trade-in",
+      mindFocus: "Research Audi maintenance schedules",
+      bodyFocus: "Track day preparation",
+      spiritFocus: "Enjoy the journey of ownership",
+      milestones: [],
+      completedMilestones: [
+        {
+          id: 601,
+          name: "Initial research",
+          targetDate: "2023-10-01",
+          notes: "Researched year range, options, and common issues",
+          completed: true
+        },
+        {
+          id: 602,
+          name: "Test drive",
+          targetDate: "2023-11-15",
+          notes: "Test drove R8 V10 at Atlanta dealership",
+          completed: true
+        },
+        {
+          id: 603,
+          name: "Locate specific model",
+          targetDate: "2024-01-05",
+          notes: "Found Ibis White model with red interior",
+          completed: true
+        },
+        {
+          id: 604,
+          name: "Pre-purchase inspection",
+          targetDate: "2024-01-20",
+          notes: "Completed thorough inspection with Audi specialist",
+          completed: true
+        },
+        {
+          id: 605,
+          name: "Purchase completion",
+          targetDate: "2024-02-15",
+          notes: "Finalized purchase and delivery",
+          completed: true
+        }
+      ],
+      manifestStatus: 'complete',
+      progressPercentage: 100,
+      description: "The 2014 Audi R8 V10 represents the perfect balance of performance, handling, and everyday usability. With its naturally-aspirated 5.2L V10 engine producing 525hp, carbon fiber side blades, and timeless design, it delivers a driving experience like no other while maintaining Audi's renowned reliability.",
+      targetAmount: 110000,
+      currentAmount: 110000,
+      budgetEntries: [
+        {
+          id: 701,
+          date: "2023-12-15",
+          amount: 65000,
+          type: 'deposit',
+          description: "Down payment"
+        },
+        {
+          id: 702,
+          date: "2024-01-10",
+          amount: 35000,
+          type: 'deposit',
+          description: "Trade-in value"
+        },
+        {
+          id: 703,
+          date: "2024-02-05",
+          amount: 10000,
+          type: 'deposit',
+          description: "Final payment"
+        }
+      ],
+      mediaGallery: [
+        {
+          id: 801,
+          type: 'image',
+          name: 'Audi R8 V10',
+          url: 'https://images.hgmsites.net/hug/2014-audi-r8_100454657_h.jpg',
+          thumbnail: 'https://images.hgmsites.net/hug/2014-audi-r8_100454657_h.jpg',
+          description: '2014 Audi R8 V10 - Ibis White with red interior',
+          dateAdded: '2024-02-20'
+        },
+        {
+          id: 802,
+          type: 'link',
+          name: 'Audi R8 Owners Forum',
+          url: 'https://www.r8talk.com/',
+          description: 'Online community for R8 owners',
+          dateAdded: '2024-02-25'
+        }
+      ]
+    },
+    // 2021 BMW G80 M3 Competition
+    {
+      id: 7,
+      goalName: "2021 BMW G80 M3 Competition",
+      goalType: "Car",
+      targetAsset: "2021 BMW G80 M3 Competition",
+      targetDate: "2024-05-15",
+      fundingPlan: "Financing",
+      mindFocus: "Study BMW M technology",
+      bodyFocus: "Precision driving techniques",
+      spiritFocus: "Appreciation for engineering excellence",
+      milestones: [],
+      completedMilestones: [
+        {
+          id: 701,
+          name: "Test drive new G80 platform",
+          targetDate: "2023-08-10",
+          notes: "Test drove at BMW of Charlotte",
+          completed: true
+        },
+        {
+          id: 702,
+          name: "Compare packages and options",
+          targetDate: "2023-09-05",
+          notes: "Decided on Competition package with carbon package",
+          completed: true
+        },
+        {
+          id: 703,
+          name: "Color selection",
+          targetDate: "2023-09-20",
+          notes: "Chose Isle of Man Green with Kyalami Orange interior",
+          completed: true
+        },
+        {
+          id: 704,
+          name: "Secure financing approval",
+          targetDate: "2023-11-15",
+          notes: "Secured financing at 3.2% APR",
+          completed: true
+        },
+        {
+          id: 705,
+          name: "Place order",
+          targetDate: "2023-12-01",
+          notes: "Order placed with BMW of Charlotte",
+          completed: true
+        },
+        {
+          id: 706,
+          name: "Delivery day",
+          targetDate: "2024-04-10",
+          notes: "Vehicle delivery and orientation completed",
+          completed: true
+        }
+      ],
+      manifestStatus: 'complete',
+      progressPercentage: 100,
+      description: "The 2021 BMW G80 M3 Competition represents BMW's latest evolution of the iconic M3 lineage. With 503 horsepower from its twin-turbocharged S58 engine, advanced all-wheel drive system, and cutting-edge technology, it delivers extraordinary performance while maintaining daily usability. The carbon fiber accents and M-specific features create a driving experience that honors BMW's motorsport heritage.",
+      targetAmount: 85000,
+      currentAmount: 85000,
+      budgetEntries: [
+        {
+          id: 801,
+          date: "2023-12-15",
+          amount: 20000,
+          type: 'deposit',
+          description: "Down payment"
+        },
+        {
+          id: 802,
+          date: "2024-04-10",
+          amount: 65000,
+          type: 'deposit',
+          description: "Financing"
+        }
+      ],
+      mediaGallery: [
+        {
+          id: 901,
+          type: 'image',
+          name: 'BMW G80 M3 Competition',
+          url: 'https://www.bmwusa.com/content/dam/bmwusa/M-Model-Overview/BMW-m3-sedan-overview-ms-04.jpg',
+          thumbnail: 'https://www.bmwusa.com/content/dam/bmwusa/M-Model-Overview/BMW-m3-sedan-overview-ms-04.jpg',
+          description: '2021 BMW G80 M3 Competition in Isle of Man Green',
+          dateAdded: '2024-04-15'
+        },
+        {
+          id: 902,
+          type: 'link',
+          name: 'BMW M Owner\'s Manual',
+          url: 'https://www.bmwusa.com/owners-manual.html',
+          description: 'Official BMW owner resources',
+          dateAdded: '2024-04-20'
+        }
+      ]
+    },
+    // 2009 BMW E93 M3
+    {
+      id: 8,
+      goalName: "2009 BMW E93 M3",
+      goalType: "Car",
+      targetAsset: "2009 BMW E93 M3 Convertible",
+      targetDate: "2023-09-30",
+      fundingPlan: "Cash Purchase",
+      mindFocus: "Study E9x M3 ownership forums",
+      bodyFocus: "Weekend drive planning",
+      spiritFocus: "Enjoy the open-air driving experience",
+      milestones: [],
+      completedMilestones: [
+        {
+          id: 801,
+          name: "Initial market research",
+          targetDate: "2023-05-01",
+          notes: "Researched prices, common issues, and ownership costs",
+          completed: true
+        },
+        {
+          id: 802,
+          name: "Locate specific models",
+          targetDate: "2023-06-15",
+          notes: "Found several well-maintained examples",
+          completed: true
+        },
+        {
+          id: 803,
+          name: "Inspection of top candidate",
+          targetDate: "2023-07-10",
+          notes: "Completed PPI on Jerez Black model with extended warranty",
+          completed: true
+        },
+        {
+          id: 804,
+          name: "Negotiate purchase",
+          targetDate: "2023-07-25",
+          notes: "Finalized price and terms",
+          completed: true
+        },
+        {
+          id: 805,
+          name: "Complete purchase",
+          targetDate: "2023-08-15",
+          notes: "Finalized purchase and took delivery",
+          completed: true
+        }
+      ],
+      manifestStatus: 'complete',
+      progressPercentage: 100,
+      description: "The 2009 BMW E93 M3 Convertible represents one of BMW's most celebrated M cars. With its naturally-aspirated 4.0L V8 engine producing 414hp, retractable hardtop, and legendary handling dynamics, it delivers an exhilarating open-air driving experience. The last of the naturally-aspirated M3s, this model has become increasingly collectible while still offering tremendous performance value.",
+      targetAmount: 35000,
+      currentAmount: 35000,
+      budgetEntries: [
+        {
+          id: 901,
+          date: "2023-07-01",
+          amount: 35000,
+          type: 'deposit',
+          description: "Full payment"
+        }
+      ],
+      mediaGallery: [
+        {
+          id: 1001,
+          type: 'image',
+          name: 'BMW E93 M3 Convertible',
+          url: 'https://cdn.bmwblog.com/wp-content/uploads/2017/01/BMW-E93-M3-Convertible-1.jpg',
+          thumbnail: 'https://cdn.bmwblog.com/wp-content/uploads/2017/01/BMW-E93-M3-Convertible-1.jpg',
+          description: '2009 BMW E93 M3 Convertible in Jerez Black',
+          dateAdded: '2023-08-20'
+        },
+        {
+          id: 1002,
+          type: 'link',
+          name: 'E9x M3 Maintenance Guide',
+          url: 'https://www.m3post.com',
+          description: 'Comprehensive maintenance and ownership guide',
+          dateAdded: '2023-08-25'
+        }
+      ]
     }
   ]);
 
@@ -795,6 +1072,67 @@ const ManifestationStationPage = () => {
       <div className="mb-8">
         <h1 className="text-3xl font-orbitron text-blue-400 mb-2">🚀 Manifestation Station</h1>
         <p className="text-gray-400">Track and manifest your automotive dreams and goals</p>
+      </div>
+      
+      {/* What You Do, What You Get Section */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg p-6 border border-gray-700">
+          <div className="flex items-center mb-4">
+            <div className="h-6 w-1 bg-green-500 rounded-full mr-3"></div>
+            <h2 className="text-green-400 font-orbitron text-xl">What You Do</h2>
+          </div>
+          <ul className="space-y-3">
+            <li className="flex items-start">
+              <span className="text-green-500 mr-2">✓</span>
+              <span>Identify dream cars, parts, experiences</span>
+            </li>
+            <li className="flex items-start">
+              <span className="text-green-500 mr-2">✓</span>
+              <span>Set concrete financial goals and timelines</span>
+            </li>
+            <li className="flex items-start">
+              <span className="text-green-500 mr-2">✓</span>
+              <span>Track your daily mind-body-spirit disciplines</span>
+            </li>
+            <li className="flex items-start">
+              <span className="text-green-500 mr-2">✓</span>
+              <span>Create visualization boards with dream imagery</span>
+            </li>
+            <li className="flex items-start">
+              <span className="text-green-500 mr-2">✓</span>
+              <span>Record your progress and milestone achievements</span>
+            </li>
+          </ul>
+        </div>
+        
+        <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg p-6 border border-gray-700">
+          <div className="flex items-center mb-4">
+            <div className="h-6 w-1 bg-blue-500 rounded-full mr-3"></div>
+            <h2 className="text-blue-400 font-orbitron text-xl">What You Get</h2>
+          </div>
+          <ul className="space-y-3">
+            <li className="flex items-start">
+              <span className="text-blue-500 mr-2">✓</span>
+              <span>Enhanced focus through goal visualization</span>
+            </li>
+            <li className="flex items-start">
+              <span className="text-blue-500 mr-2">✓</span>
+              <span>Increased motivation and daily discipline</span>
+            </li>
+            <li className="flex items-start">
+              <span className="text-blue-500 mr-2">✓</span>
+              <span>Clear financial planning for dream acquisitions</span>
+            </li>
+            <li className="flex items-start">
+              <span className="text-blue-500 mr-2">✓</span>
+              <span>Trackable progress towards your goals</span>
+            </li>
+            <li className="flex items-start">
+              <span className="text-blue-500 mr-2">✓</span>
+              <span>Faster manifestation of your automotive dreams</span>
+            </li>
+          </ul>
+        </div>
       </div>
       
       {/* Affirmation Card */}
