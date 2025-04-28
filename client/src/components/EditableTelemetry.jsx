@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Save, X, Edit, RotateCcw, Check, Sliders, PlusCircle, 
-  MinusCircle, Eye, EyeOff, Toggle, Info, ChevronDown, ChevronUp,
+  MinusCircle, Eye, EyeOff, Info, ChevronDown, ChevronUp,
   Database, Upload, Download, RefreshCw
 } from 'lucide-react';
 
