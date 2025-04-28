@@ -243,6 +243,7 @@ const RoutePlannerPage = () => {
   const [trackingFrequency, setTrackingFrequency] = useState<number>(5); // seconds between position updates
   const [activeRouteId, setActiveRouteId] = useState<string | null>(null);
   const [driveJournalIntegration, setDriveJournalIntegration] = useState(true);
+  const [telemetryHistory, setTelemetryHistory] = useState<TelemetrySnapshot[]>([]);
   
   // Vehicle performance settings
   const [tirePressureAdjustment, setTirePressureAdjustment] = useState(0); // in PSI
@@ -301,6 +302,60 @@ const RoutePlannerPage = () => {
       accelerationProfile: 10,
       shiftPattern: "Late",
       fuelConsumptionFactor: 1.8
+    },
+    {
+      name: "Eco Cruiser",
+      style: "Economy",
+      corneringAggressiveness: 2,
+      brakingIntensity: 3,
+      accelerationProfile: 2,
+      shiftPattern: "Early",
+      fuelConsumptionFactor: 0.8
+    },
+    {
+      name: "Sunset Cruise",
+      style: "Casual",
+      corneringAggressiveness: 4,
+      brakingIntensity: 3,
+      accelerationProfile: 4,
+      shiftPattern: "Early",
+      fuelConsumptionFactor: 1.1
+    },
+    {
+      name: "Mountain Pass",
+      style: "Spirited",
+      corneringAggressiveness: 8,
+      brakingIntensity: 9,
+      accelerationProfile: 7,
+      shiftPattern: "Optimal",
+      fuelConsumptionFactor: 1.4
+    },
+    {
+      name: "Highway Tour",
+      style: "Casual",
+      corneringAggressiveness: 3,
+      brakingIntensity: 2,
+      accelerationProfile: 4,
+      shiftPattern: "Optimal",
+      fuelConsumptionFactor: 0.9
+    },
+    {
+      name: "Tail of the Dragon",
+      style: "Performance",
+      corneringAggressiveness: 9,
+      brakingIntensity: 10,
+      accelerationProfile: 9,
+      shiftPattern: "Late",
+      fuelConsumptionFactor: 1.7
+    },
+    {
+      name: "Nürburgring",
+      style: "Track",
+      corneringAggressiveness: 10,
+      brakingIntensity: 10,
+      accelerationProfile: 10,
+      shiftPattern: "Late",
+      fuelConsumptionFactor: 2.0
     }
   ]);
   
@@ -362,12 +417,24 @@ const RoutePlannerPage = () => {
     { id: "car_meets", name: "Car Meet Locations", selected: false },
     { id: "ev_chargers", name: "High-Speed EV Chargers", selected: false },
     { id: "scenic_overlooks", name: "Scenic Overlooks", selected: true },
-    { id: "photo_spots", name: "Car Photography Spots", selected: false },
+    { id: "photo_spots", name: "Car Photography Spots", selected: true },
     { id: "motorsport_venues", name: "Motorsport Venues", selected: false },
     { id: "car_museums", name: "Automotive Museums", selected: false },
     { id: "specialist_mechanics", name: "Specialist Mechanics", selected: false },
     { id: "car_detailing", name: "Detailing Services", selected: false },
-    { id: "rv_services", name: "RV Services", selected: false }
+    { id: "rv_services", name: "RV Services", selected: false },
+    { id: "supercar_spotting", name: "Supercar Spotting Locations", selected: false },
+    { id: "instagram_worthy", name: "Instagram-Worthy Photo Spots", selected: true },
+    { id: "group_drives", name: "Popular Group Drive Meetups", selected: false },
+    { id: "sunset_drives", name: "Sunset/Sunrise Driving Routes", selected: true },
+    { id: "tunnels", name: "Echo Tunnels for Sound", selected: false },
+    { id: "track_days", name: "Track Day Events", selected: false },
+    { id: "car_shows", name: "Car Shows & Events", selected: false },
+    { id: "exotic_dealers", name: "Exotic Car Dealerships", selected: false },
+    { id: "mountain_roads", name: "Epic Mountain Roads", selected: true },
+    { id: "canyon_roads", name: "Canyon Drives", selected: false },
+    { id: "coastal_routes", name: "Scenic Coastal Routes", selected: true },
+    { id: "enthusiast_cafes", name: "Car Enthusiast Cafes", selected: false }
   ]);
   
   // User custom vehicle state
@@ -944,7 +1011,7 @@ const RoutePlannerPage = () => {
     
     // Start a new tracking session
     setGpsTrackHistory([]);
-    setTelemetryHistory([]);
+    // Clear telemetry history (handled via internal state)
     setGpsTrackingEnabled(true);
     
     // Generate a unique ID for this route
