@@ -2,6 +2,44 @@
 
 import React, { useState, useRef, useEffect } from "react";
 import { getWeatherData, getOneCallData } from '@/services/openWeatherService';
+import CarEventsExplorer from '@/components/CarEventsExplorer';
+import CarCultureSpotsExplorer from '@/components/CarCultureSpotsExplorer';
+import { StrutEvent } from '@/services/strutAPI';
+import { CarCultureSpot } from '@/services/speedhuntersAPI';
+import { Users } from 'lucide-react';
+
+// Helper functions for weather metrics
+const calculateAirDensity = (tempF: number, pressureHpa: number): string => {
+  // Convert temperature to Kelvin
+  const tempK = (tempF - 32) * 5/9 + 273.15;
+  
+  // Convert pressure from hPa to Pa
+  const pressurePa = pressureHpa * 100;
+  
+  // Standard gas constant for dry air (J/(kg·K))
+  const R = 287.058;
+  
+  // Calculate density (kg/m³)
+  const density = pressurePa / (R * tempK);
+  
+  return density.toFixed(3);
+};
+
+const getAirFuelRatio = (tempF: number, humidity: number): string => {
+  // Base AFR (Air-Fuel Ratio) for optimal combustion is ~14.7:1
+  const baseAFR = 14.7;
+  
+  // Temperature factor: adjusts for air density changes
+  const tempFactor = 1 - (tempF - 70) * 0.001;
+  
+  // Humidity factor: higher humidity decreases oxygen content
+  const humidityFactor = 1 - (humidity / 100) * 0.03;
+  
+  // Calculate adjusted AFR
+  const adjustedAFR = baseAFR * tempFactor * humidityFactor;
+  
+  return adjustedAFR.toFixed(1) + ':1';
+};
 
 // Define interfaces
 interface Location {
@@ -233,6 +271,13 @@ const RoutePlannerPage = () => {
   // Route analysis data
   const [routeAnalysisEnabled, setRouteAnalysisEnabled] = useState(false);
   const [routeSegments, setRouteSegments] = useState<RouteCondition[]>([]);
+  
+  // Waypoints for Strut API and Speedhunters API
+  const [routeWaypoints, setRouteWaypoints] = useState<Array<{lat: number, lng: number}>>([]);
+  
+  // Selected events and spots
+  const [selectedEvents, setSelectedEvents] = useState<StrutEvent[]>([]);
+  const [selectedSpots, setSelectedSpots] = useState<CarCultureSpot[]>([]);
   
   // Auto enthusiast destination options
   const [destinationOptions, setDestinationOptions] = useState([
