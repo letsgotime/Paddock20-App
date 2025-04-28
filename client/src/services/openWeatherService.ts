@@ -156,6 +156,39 @@ export interface AutomotiveWeatherData {
 /**
  * Calculate automotive weather data based on current weather and forecast
  */
+/**
+ * Fetch data from our comprehensive automotive-weather endpoint
+ * This provides integrated F1-style automotive weather data
+ */
+export async function fetchAutomotiveWeather(lat: number, lon: number, units: string = 'metric'): Promise<any> {
+  const cacheKey = `automotive-weather-${lat}-${lon}-${units}`;
+  
+  if (apiCache[cacheKey] && apiCache[cacheKey].expires > Date.now()) {
+    return apiCache[cacheKey].data;
+  }
+  
+  try {
+    const response = await fetch(`/api/automotive-weather?lat=${lat}&lon=${lon}&units=${units}`);
+    
+    if (!response.ok) {
+      throw new Error(`Error ${response.status}: ${await response.text()}`);
+    }
+    
+    const data = await response.json();
+    
+    // Cache the result for 15 minutes
+    apiCache[cacheKey] = {
+      data,
+      expires: Date.now() + 15 * 60 * 1000
+    };
+    
+    return data;
+  } catch (error) {
+    console.error('Error fetching automotive weather data:', error);
+    throw error;
+  }
+}
+
 export async function getAutomotiveWeatherData(lat: number, lon: number): Promise<AutomotiveWeatherData> {
   try {
     // Use our server API endpoints to get the data (these proxy to OpenWeather API)
