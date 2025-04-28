@@ -1,7 +1,7 @@
 import React from 'react';
-import Paddock20WeatherStation from '../components/Paddock20WeatherStation';
+import Paddock20OpenWeatherStation from '../components/Paddock20OpenWeatherStation';
 import { MAIN_CONTENT_ID } from '../lib/accessibility';
-import { WeatherProvider } from '../contexts/WeatherContext';
+import { OpenWeatherProvider } from '@/contexts/OpenWeatherContext';
 
 function Weather() {
   return (
@@ -14,15 +14,15 @@ function Weather() {
         </p>
       </header>
       
-      <WeatherProvider>
+      <OpenWeatherProvider>
         {/* F1-style motorsport weather station */}
         <section className="mb-10" aria-labelledby="paddock-weather-heading">
           <h2 id="paddock-weather-heading" className="apex-header-green text-xl mb-4">Automotive Weather Dashboard</h2>
           <div className="bg-gradient-to-r from-gray-900 to-black border border-gray-800 rounded-lg p-6">
-            <Paddock20WeatherStation />
+            <Paddock20OpenWeatherStation />
           </div>
         </section>
-      </WeatherProvider>
+      </OpenWeatherProvider>
 
       {/* Paddock20 Feature Information */}
       <section className="mt-10 bg-gradient-to-r from-gray-900 to-black border border-gray-800 rounded-lg p-6" aria-labelledby="feature-heading">
