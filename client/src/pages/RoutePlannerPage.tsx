@@ -128,6 +128,11 @@ const RoutePlannerPage = () => {
   const [waypoints, setWaypoints] = useState<string[]>([]);
   const [newWaypoint, setNewWaypoint] = useState("");
   
+  // Travel dates
+  const [departureDate, setDepartureDate] = useState("");
+  const [returnDate, setReturnDate] = useState("");
+  const [useReturnDate, setUseReturnDate] = useState(false);
+  
   // Vehicle and passenger info
   const [selectedVehicle, setSelectedVehicle] = useState("");
   const [passengerInfo, setPassengerInfo] = useState("");
@@ -1289,25 +1294,13 @@ const RoutePlannerPage = () => {
             />
           </div>
 
-          {/* End Location */}
-          <div>
-            <label className="block text-gray-300 mb-1">Destination</label>
-            <input
-              type="text"
-              placeholder="End Location"
-              value={endLocation}
-              onChange={(e) => setEndLocation(e.target.value)}
-              className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
-            />
-          </div>
-
           {/* Waypoints */}
           <div>
-            <label className="block text-gray-300 mb-1">Add a Waypoint</label>
+            <label className="block text-gray-300 mb-1">Additional Stops</label>
             <div className="flex gap-4 mb-3">
               <input
                 type="text"
-                placeholder="Stopover location"
+                placeholder="Add a stopover location"
                 value={newWaypoint}
                 onChange={handleWaypointChange}
                 className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
@@ -1322,11 +1315,11 @@ const RoutePlannerPage = () => {
             
             {waypoints.length > 0 && (
               <div className="my-3">
-                <p className="text-gray-300 mb-2">Waypoints ({waypoints.length})</p>
+                <p className="text-gray-300 mb-2">Route Stops ({waypoints.length})</p>
                 <ul className="space-y-2 max-h-40 overflow-y-auto">
                   {waypoints.map((wp, index) => (
                     <li key={index} className="flex justify-between items-center bg-gray-800 p-2 rounded-lg border border-gray-700">
-                      <span className="text-white font-openSans">{wp}</span>
+                      <span className="text-white font-openSans">{index + 1}. {wp}</span>
                       <button
                         onClick={() => removeWaypoint(index)}
                         className="text-red-400 hover:text-red-300 px-2"
@@ -1338,6 +1331,18 @@ const RoutePlannerPage = () => {
                 </ul>
               </div>
             )}
+          </div>
+          
+          {/* End Location */}
+          <div>
+            <label className="block text-gray-300 mb-1">Final Destination</label>
+            <input
+              type="text"
+              placeholder="End Location"
+              value={endLocation}
+              onChange={(e) => setEndLocation(e.target.value)}
+              className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
+            />
           </div>
 
           {/* Vehicle and Passenger Info */}
@@ -2473,6 +2478,133 @@ const RoutePlannerPage = () => {
                 <div className="bg-green-500 h-1.5 rounded-full" style={{ 
                   width: weatherData ? `${calculateTireGripLevel(weatherData.surfaceTemp, vehicleSpecs[selectedVehicle].optimumTireTemp).percentage}%` : '0%' 
                 }}></div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Pro Enthusiast Tuning Section */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <h3 className="text-blue-400 font-orbitron text-lg flex items-center">
+                <span className="text-yellow-500 mr-2">⚡</span> Pro Enthusiast Settings
+              </h3>
+              <div className="flex gap-2 items-center">
+                <span className="text-xs text-yellow-500">INFLUENCER GRADE</span>
+                <div className="w-4 h-4 rounded-sm bg-yellow-500"></div>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Suspension Tuning */}
+              <div className="bg-black/70 rounded-lg p-3 border border-gray-800">
+                <div className="text-gray-400 text-xs mb-2">FRONT SUSPENSION</div>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-400">Compression</span>
+                    <div className="w-20 bg-gray-800 h-1.5 rounded-full">
+                      <div className="bg-blue-500 h-1.5 rounded-full" style={{width: "65%"}}></div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-400">Rebound</span>
+                    <div className="w-20 bg-gray-800 h-1.5 rounded-full">
+                      <div className="bg-blue-500 h-1.5 rounded-full" style={{width: "55%"}}></div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-400">Anti-Roll</span>
+                    <div className="w-20 bg-gray-800 h-1.5 rounded-full">
+                      <div className="bg-blue-500 h-1.5 rounded-full" style={{width: "70%"}}></div>
+                    </div>
+                  </div>
+                  <button className="mt-2 text-xs bg-gray-800 hover:bg-gray-700 text-white py-1 px-2 rounded">
+                    Fine Tune
+                  </button>
+                </div>
+              </div>
+              
+              {/* Rear Suspension */}
+              <div className="bg-black/70 rounded-lg p-3 border border-gray-800">
+                <div className="text-gray-400 text-xs mb-2">REAR SUSPENSION</div>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-400">Compression</span>
+                    <div className="w-20 bg-gray-800 h-1.5 rounded-full">
+                      <div className="bg-blue-500 h-1.5 rounded-full" style={{width: "75%"}}></div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-400">Rebound</span>
+                    <div className="w-20 bg-gray-800 h-1.5 rounded-full">
+                      <div className="bg-blue-500 h-1.5 rounded-full" style={{width: "60%"}}></div>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-400">Anti-Roll</span>
+                    <div className="w-20 bg-gray-800 h-1.5 rounded-full">
+                      <div className="bg-blue-500 h-1.5 rounded-full" style={{width: "65%"}}></div>
+                    </div>
+                  </div>
+                  <button className="mt-2 text-xs bg-gray-800 hover:bg-gray-700 text-white py-1 px-2 rounded">
+                    Fine Tune
+                  </button>
+                </div>
+              </div>
+              
+              {/* Tire Temperature Management */}
+              <div className="bg-black/70 rounded-lg p-3 border border-gray-800">
+                <div className="text-gray-400 text-xs mb-2">TIRE TEMP MANAGEMENT</div>
+                <div className="flex flex-col gap-2">
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-400">Optimal Window</span>
+                    <span className="text-xs text-white">{vehicleSpecs[selectedVehicle].optimumTireTemp - 10}°F - {vehicleSpecs[selectedVehicle].optimumTireTemp + 10}°F</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-400">Surface Temp</span>
+                    <span className="text-xs text-white">{weatherData?.surfaceTemp || '--'}°F</span>
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-gray-400">Warm-up Time</span>
+                    <span className="text-xs text-white">{weatherData ? Math.max(3, Math.round(10 - weatherData.surfaceTemp / 20)) : '--'} min</span>
+                  </div>
+                  <button className="mt-1 text-xs bg-gray-800 hover:bg-gray-700 text-white py-1 px-2 rounded">
+                    Heating Strategy
+                  </button>
+                </div>
+              </div>
+              
+              {/* Aero Settings */}
+              <div className="bg-black/70 rounded-lg p-3 border border-gray-800">
+                <div className="text-gray-400 text-xs mb-2">AERO SETTINGS</div>
+                <div className="flex flex-col gap-1">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-400">Front Wing</span>
+                    <div className="flex items-center gap-1">
+                      <button className="text-red-500 hover:text-red-400 px-1">-</button>
+                      <span className="text-white">7</span>
+                      <button className="text-green-500 hover:text-green-400 px-1">+</button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-400">Rear Wing</span>
+                    <div className="flex items-center gap-1">
+                      <button className="text-red-500 hover:text-red-400 px-1">-</button>
+                      <span className="text-white">5</span>
+                      <button className="text-green-500 hover:text-green-400 px-1">+</button>
+                    </div>
+                  </div>
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="text-gray-400">Ride Height</span>
+                    <div className="flex items-center gap-1">
+                      <button className="text-red-500 hover:text-red-400 px-1">-</button>
+                      <span className="text-white">3</span>
+                      <button className="text-green-500 hover:text-green-400 px-1">+</button>
+                    </div>
+                  </div>
+                  <div className="mt-1 text-xs text-gray-400 italic">
+                    Wind: {weatherData?.startWeather.wind.speed || '--'} mph
+                  </div>
+                </div>
               </div>
             </div>
           </div>
