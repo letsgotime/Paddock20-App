@@ -163,6 +163,12 @@ const PersonalizedDashboard: React.FC = () => {
             <F1TelemetryWeatherStation />
           </div>
           
+          {/* World Clock Panel - Full Width */}
+          <div className="lg:col-span-3 bts-card">
+            <h2 className="bts-header-green mb-4">F1 Circuit World Clocks</h2>
+            <WorldClockPanel />
+          </div>
+          
           {/* Mood & Energy Tracker - Full Width */}
           <div className="lg:col-span-3 bts-card">
             <h2 className="bts-header-green mb-4">Mood & Energy Tracker</h2>
