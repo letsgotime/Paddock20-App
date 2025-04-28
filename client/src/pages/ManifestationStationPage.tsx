@@ -488,8 +488,8 @@ const ManifestationStationPage = () => {
       manifestStatus: 'complete',
       progressPercentage: 100,
       description: "The 2014 Audi R8 V10 represents the perfect balance of performance, handling, and everyday usability. With its naturally-aspirated 5.2L V10 engine producing 525hp, carbon fiber side blades, and timeless design, it delivers a driving experience like no other while maintaining Audi's renowned reliability.",
-      targetAmount: 110000,
-      currentAmount: 110000,
+      targetAmount: 128000,
+      currentAmount: 128000,
       budgetEntries: [
         {
           id: 701,
@@ -592,8 +592,8 @@ const ManifestationStationPage = () => {
       manifestStatus: 'complete',
       progressPercentage: 100,
       description: "The 2021 BMW G80 M3 Competition represents BMW's latest evolution of the iconic M3 lineage. With 503 horsepower from its twin-turbocharged S58 engine, advanced all-wheel drive system, and cutting-edge technology, it delivers extraordinary performance while maintaining daily usability. The carbon fiber accents and M-specific features create a driving experience that honors BMW's motorsport heritage.",
-      targetAmount: 85000,
-      currentAmount: 85000,
+      targetAmount: 93000,
+      currentAmount: 93000,
       budgetEntries: [
         {
           id: 801,
@@ -1074,6 +1074,21 @@ const ManifestationStationPage = () => {
         <p className="text-gray-400">Track and manifest your automotive dreams and goals</p>
       </div>
       
+      {/* Why You're Here */}
+      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg p-6 border border-gray-700 mb-8">
+        <div className="flex items-center mb-4">
+          <div className="h-6 w-1 bg-yellow-500 rounded-full mr-3"></div>
+          <h2 className="text-yellow-400 font-orbitron text-xl">Why You're Here</h2>
+        </div>
+        <div className="space-y-3 mb-4">
+          <p className="text-white font-medium">Manifestation Station™ isn't about "wishing."</p>
+          <p className="text-white font-medium">It's about <span className="text-green-400">working</span>.</p>
+          <p className="text-white">Every goal you log here — every car, watch, home, or milestone — comes with a plan built the way real winners build:</p>
+          <p className="text-white font-medium">Daily movement. Daily mindset. Daily gratitude.</p>
+          <p className="text-white italic">Because real manifestation isn't magic—it's momentum.</p>
+        </div>
+      </div>
+      
       {/* What You Do, What You Get Section */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
         <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg p-6 border border-gray-700">
@@ -1084,23 +1099,23 @@ const ManifestationStationPage = () => {
           <ul className="space-y-3">
             <li className="flex items-start">
               <span className="text-green-500 mr-2">✓</span>
-              <span>Identify dream cars, parts, experiences</span>
+              <span>Set Goals: Add dream assets or experiences</span>
             </li>
             <li className="flex items-start">
               <span className="text-green-500 mr-2">✓</span>
-              <span>Set concrete financial goals and timelines</span>
+              <span>Link Daily Disciplines: Choose mind, body, spirit focuses</span>
             </li>
             <li className="flex items-start">
               <span className="text-green-500 mr-2">✓</span>
-              <span>Track your daily mind-body-spirit disciplines</span>
+              <span>Track Progress: Update as you advance</span>
             </li>
             <li className="flex items-start">
               <span className="text-green-500 mr-2">✓</span>
-              <span>Create visualization boards with dream imagery</span>
+              <span>Celebrate Completions: Archive manifested goals</span>
             </li>
             <li className="flex items-start">
               <span className="text-green-500 mr-2">✓</span>
-              <span>Record your progress and milestone achievements</span>
+              <span>Level Up: After each goal, raise your standards</span>
             </li>
           </ul>
         </div>
@@ -1113,25 +1128,37 @@ const ManifestationStationPage = () => {
           <ul className="space-y-3">
             <li className="flex items-start">
               <span className="text-blue-500 mr-2">✓</span>
-              <span>Enhanced focus through goal visualization</span>
+              <span>Dream Vault: Log your cars, watches, experiences</span>
             </li>
             <li className="flex items-start">
               <span className="text-blue-500 mr-2">✓</span>
-              <span>Increased motivation and daily discipline</span>
+              <span>Goal Telemetry: Set targets, funding path, and timeline</span>
             </li>
             <li className="flex items-start">
               <span className="text-blue-500 mr-2">✓</span>
-              <span>Clear financial planning for dream acquisitions</span>
+              <span>Milestone Tracking: Break down dreams into steps</span>
             </li>
             <li className="flex items-start">
               <span className="text-blue-500 mr-2">✓</span>
-              <span>Trackable progress towards your goals</span>
+              <span>Daily Discipline Tracker: Mind, Body, Spirit</span>
             </li>
             <li className="flex items-start">
               <span className="text-blue-500 mr-2">✓</span>
-              <span>Faster manifestation of your automotive dreams</span>
+              <span>Proof of Progress System: See your manifestation rate</span>
             </li>
           </ul>
+        </div>
+      </div>
+      
+      {/* Manifesto Statement */}
+      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg p-6 border border-gray-700 mb-8">
+        <p className="text-blue-400 font-orbitron text-center text-lg mb-3">Manifestation Station™ isn't about posting dreams.</p>
+        <p className="text-white text-center">It's about <span className="text-green-400 font-medium">engineering victories</span> — one daily choice at a time.</p>
+        <div className="flex flex-col items-center mt-4 space-y-1">
+          <p className="text-white font-medium">Dream bigger.</p>
+          <p className="text-white font-medium">Work sharper.</p>
+          <p className="text-white font-medium">Drive harder.</p>
+          <p className="text-white font-medium">Live better.</p>
         </div>
       </div>
       
@@ -1559,7 +1586,7 @@ const ManifestationStationPage = () => {
 };
 
 // Helper function to get status badge color
-const getStatusBadgeColor = (status: 'new' | 'in_progress' | 'manifested') => {
+const getStatusBadgeColor = (status: 'new' | 'in_progress' | 'manifested' | 'complete') => {
   switch (status) {
     case 'new':
       return 'bg-blue-900/20 text-blue-400';
@@ -1567,13 +1594,15 @@ const getStatusBadgeColor = (status: 'new' | 'in_progress' | 'manifested') => {
       return 'bg-yellow-900/20 text-yellow-400';
     case 'manifested':
       return 'bg-green-900/20 text-green-400';
+    case 'complete':
+      return 'bg-purple-900/20 text-purple-400';
     default:
       return 'bg-gray-900/20 text-gray-400';
   }
 };
 
 // Helper function to get status text
-const getStatusText = (status: 'new' | 'in_progress' | 'manifested') => {
+const getStatusText = (status: 'new' | 'in_progress' | 'manifested' | 'complete') => {
   switch (status) {
     case 'new':
       return 'New';
@@ -1581,6 +1610,8 @@ const getStatusText = (status: 'new' | 'in_progress' | 'manifested') => {
       return 'In Progress';
     case 'manifested':
       return 'Manifested';
+    case 'complete':
+      return 'Complete';
     default:
       return 'Unknown';
   }
