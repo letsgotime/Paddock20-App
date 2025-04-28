@@ -33,6 +33,14 @@ const apiCache: Record<string, CacheEntry> = {};
  */
 export interface AutomotiveWeatherData {
   timestamp: number;
+  location: {
+    lat: number;
+    lon: number;
+    timezone?: string;
+  };
+  current_time?: string;
+  sunrise_time?: string;
+  sunset_time?: string;
   surfaceConditions: {
     asphalt: {
       temperature: number;
@@ -150,7 +158,45 @@ export interface AutomotiveWeatherData {
       paddleDegradation?: number; // 1-10 scale representing additional wear in these conditions
       brakingPointAdjustment?: number; // feet or meters to adjust typical braking points
     };
-  }
+  };
+  hourly_forecast?: Array<{
+    time: string;
+    temperature: number;
+    conditions: string;
+    precipitation_chance: number;
+  }>;
+  alerts?: Array<any>;
+  conditions?: {
+    summary: string;
+    air_temperature: number;
+    feels_like: number;
+    humidity: number;
+    pressure: number;
+    wind_speed: number;
+    wind_direction: number;
+    cloud_cover: number;
+    uv_index: number;
+  };
+  automotive_metrics?: {
+    track_surface?: {
+      temperature: number;
+      condition: string;
+      grip_level: string;
+    };
+    tire_temperature_estimates?: {
+      soft_compound: number;
+      medium_compound: number;
+      hard_compound: number;
+      street_performance: number;
+      all_season: number;
+    };
+    drive_recommendations?: {
+      tire_warmup: number;
+      surface_assessment: string;
+    };
+    visibility_assessment?: string;
+    sunglare_risk?: string;
+  };
 }
 
 /**
@@ -307,6 +353,11 @@ export async function getAutomotiveWeatherData(lat: number, lon: number): Promis
     // Return automotive weather data
     return {
       timestamp: Date.now(),
+      location: {
+        lat,
+        lon,
+        timezone: 'UTC' // Default timezone
+      },
       surfaceConditions: {
         asphalt: {
           temperature: asphaltTemp,
