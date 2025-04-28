@@ -36,7 +36,7 @@ export interface Goal {
   spiritFocus: string;
   milestones: Milestone[];
   completedMilestones: Milestone[];
-  manifestStatus: 'new' | 'in_progress' | 'manifested';
+  manifestStatus: 'new' | 'in_progress' | 'manifested' | 'complete';
   description?: string;
   progressPercentage: number;
   // Budget tracking
