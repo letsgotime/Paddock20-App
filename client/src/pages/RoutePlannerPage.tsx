@@ -74,6 +74,14 @@ interface TelemetrySnapshot {
   rangeToBoundary?: number; // miles to performance boundary
   gForceVector?: { x: number; y: number; z: number };
   weatherCondition?: string;
+  // F1-grade telemetry additions
+  powerAdjustment?: number; // percentage adjustment due to conditions
+  torqueAdjustment?: number; // ft-lb adjustment
+  tireGripLevel?: 'Optimal' | 'Good' | 'Moderate' | 'Poor';
+  brakingEfficiency?: number; // percentage
+  actualPower?: number; // calculated HP
+  actualTorque?: number; // calculated ft-lb
+  coolingEfficiency?: string; // textual description
 }
 
 interface VehicleSpecs {
@@ -151,6 +159,11 @@ const RoutePlannerPage = () => {
   // Vehicle and passenger info
   const [selectedVehicle, setSelectedVehicle] = useState("");
   const [passengerInfo, setPassengerInfo] = useState("");
+  
+  // F1-grade telemetry and advanced settings
+  const [selectedTireSetup, setSelectedTireSetup] = useState("");
+  const [drivePurpose, setDrivePurpose] = useState("leisure");
+  const [engineModeProfile, setEngineModeProfile] = useState("standard");
   
   // Route customization options
   const [routeCustomizations, setRouteCustomizations] = useState({
@@ -406,7 +419,7 @@ const RoutePlannerPage = () => {
     }
   });
   
-  const [selectedTireSetup, setSelectedTireSetup] = useState<string>("");
+
   
   // Route analysis data
   const [routeAnalysisEnabled, setRouteAnalysisEnabled] = useState(false);
@@ -735,6 +748,61 @@ const RoutePlannerPage = () => {
     }
     
     return 'Optimal Driving Conditions';
+  };
+
+  // Calculate optimal tire temperature range based on selected tire setup and vehicle
+  const calculateOptimalTempRange = () => {
+    const setup = tireSetups[selectedTireSetup];
+    const vehicleData = vehicleSpecs[selectedVehicle];
+    
+    if (setup && vehicleData) {
+      const baseTemp = setup.optimalTemp;
+      return `${baseTemp - 10}-${baseTemp + 10}`;
+    } else if (vehicleData) {
+      return `${vehicleData.optimumTireTemp - 10}-${vehicleData.optimumTireTemp + 10}`;
+    }
+    
+    return "175-195"; // Default range
+  };
+  
+  // Calculate tire grip percentage for visualization
+  const calculateTireGripPercentage = () => {
+    if (!weatherData) return 50; // Default midpoint
+    
+    const currentTemp = weatherData.surfaceTemp;
+    let optimumTemp = 185; // Default
+    
+    // Get optimal temp from tire setup or vehicle
+    if (selectedTireSetup && tireSetups[selectedTireSetup]) {
+      optimumTemp = tireSetups[selectedTireSetup].optimalTemp;
+    } else if (selectedVehicle && vehicleSpecs[selectedVehicle]) {
+      optimumTemp = vehicleSpecs[selectedVehicle].optimumTireTemp;
+    }
+    
+    // Calculate how close we are to optimal temperature
+    const tempDiff = Math.abs(currentTemp - optimumTemp);
+    const maxDiff = 60; // Maximum difference to consider
+    
+    if (tempDiff < 10) {
+      return 85; // Near optimal
+    } else if (tempDiff < 20) {
+      return 70; // Good
+    } else if (tempDiff < 35) {
+      return 50; // Moderate
+    } else {
+      return 30; // Poor
+    }
+  };
+  
+  // Get color class for tire grip visualization based on grip level
+  const getTireGripColorClass = () => {
+    const percentage = calculateTireGripPercentage();
+    
+    if (percentage >= 80) return "bg-green-500";
+    if (percentage >= 65) return "bg-green-400";
+    if (percentage >= 50) return "bg-yellow-400";
+    if (percentage >= 35) return "bg-yellow-500";
+    return "bg-red-500";
   };
 
   // Get vehicle-specific settings based on weather and road conditions
@@ -1671,7 +1739,177 @@ const RoutePlannerPage = () => {
               )}
             </div>
 
-            <div>
+            {/* Advanced F1-Grade Driving Telemetry */}
+            <div className="mt-4 bg-gradient-to-r from-gray-900 to-black p-4 rounded-lg border border-blue-700 shadow-lg">
+              <h3 className="text-blue-400 font-orbitron text-lg mb-3 flex items-center">
+                <span className="h-3 w-3 bg-blue-500 animate-pulse rounded-full mr-2"></span>
+                F1-Grade Performance Telemetry
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                {/* Driving Style */}
+                <div>
+                  <label className="block text-gray-300 text-sm mb-1">Driving Style</label>
+                  <select
+                    value={selectedDrivingProfile}
+                    onChange={(e) => setSelectedDrivingProfile(e.target.value)}
+                    className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                  >
+                    <option value="">Select Driving Style</option>
+                    {drivingProfiles.map((profile, idx) => (
+                      <option key={idx} value={profile.name}>{profile.name} ({profile.style})</option>
+                    ))}
+                  </select>
+                </div>
+                
+                {/* Drive Purpose */}
+                <div>
+                  <label className="block text-gray-300 text-sm mb-1">Drive Purpose</label>
+                  <select
+                    value={drivePurpose}
+                    onChange={(e) => setDrivePurpose(e.target.value)}
+                    className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                  >
+                    <option value="leisure">Leisure Drive</option>
+                    <option value="spirited">Spirited Driving</option>
+                    <option value="touring">Grand Touring</option>
+                    <option value="track">Track Day Prep</option>
+                    <option value="testing">Vehicle Testing</option>
+                    <option value="efficiency">Efficiency Run</option>
+                  </select>
+                </div>
+              </div>
+              
+              {/* Custom Tire Settings */}
+              <div className="mb-4">
+                <h4 className="text-green-400 font-semibold text-sm mb-2 uppercase tracking-wide">Tire Configuration</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-gray-300 text-xs mb-1">Tire Setup</label>
+                    <select
+                      value={selectedTireSetup}
+                      onChange={(e) => setSelectedTireSetup(e.target.value)}
+                      className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                    >
+                      <option value="">Default Vehicle Setup</option>
+                      {Object.keys(tireSetups).map((setup) => (
+                        <option key={setup} value={setup}>{setup}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-gray-300 text-xs mb-1">Tire Pressure Adjustment</label>
+                    <div className="flex items-center">
+                      <input
+                        type="range"
+                        min="-5"
+                        max="5"
+                        step="0.5"
+                        value={tirePressureAdjustment}
+                        onChange={(e) => setTirePressureAdjustment(parseFloat(e.target.value))}
+                        className="flex-grow mr-2"
+                      />
+                      <span className="text-white text-sm w-16 text-right">
+                        {tirePressureAdjustment > 0 ? '+' : ''}{tirePressureAdjustment} PSI
+                      </span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Tire Surface Temperature Optimization */}
+                <div className="mt-3 bg-gray-900 p-2 rounded border border-gray-700">
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="text-gray-300 text-xs">Est. Optimal Temp Range:</span>
+                    <span className="text-yellow-400 text-xs font-mono">{calculateOptimalTempRange()} °F</span>
+                  </div>
+                  <div className="h-2 bg-gray-800 rounded overflow-hidden">
+                    <div 
+                      className={`h-full ${getTireGripColorClass()}`} 
+                      style={{ width: `${calculateTireGripPercentage()}%` }}
+                    ></div>
+                  </div>
+                  <div className="flex justify-between mt-1">
+                    <span className="text-xs text-gray-400">Cold</span>
+                    <span className="text-xs text-green-400">Optimal</span>
+                    <span className="text-xs text-gray-400">Hot</span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Power & Torque Settings */}
+              <div className="mb-4">
+                <h4 className="text-green-400 font-semibold text-sm mb-2 uppercase tracking-wide">Power Configuration</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                  <div>
+                    <label className="block text-gray-300 text-xs mb-1">Torque Adjustment</label>
+                    <div className="flex items-center">
+                      <input
+                        type="range"
+                        min="-10"
+                        max="10"
+                        step="1"
+                        value={torqueAdjustment}
+                        onChange={(e) => setTorqueAdjustment(parseInt(e.target.value))}
+                        className="flex-grow mr-2"
+                      />
+                      <span className="text-white text-sm w-16 text-right">
+                        {torqueAdjustment > 0 ? '+' : ''}{torqueAdjustment} ft-lb
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-gray-300 text-xs mb-1">Driving Mode</label>
+                    <select
+                      value={drivingMode}
+                      onChange={(e) => setDrivingMode(e.target.value)}
+                      className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
+                    >
+                      <option value="Comfort">Comfort</option>
+                      <option value="Sport">Sport</option>
+                      <option value="Sport+">Sport+</option>
+                      <option value="Track">Track</option>
+                      <option value="Eco">Eco</option>
+                      <option value="Wet">Wet Weather</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Weather-Adaptive Performance */}
+              <div>
+                <h4 className="text-green-400 font-semibold text-sm mb-2 uppercase tracking-wide">Weather Impact Analysis</h4>
+                <div className="p-2 bg-gray-900 rounded border border-gray-700 text-sm space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Estimated Surface Temp:</span>
+                    <span className="text-white font-mono">
+                      {weatherData ? `${weatherData.surfaceTemp}°F` : '––'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Road Condition:</span>
+                    <span className="text-white font-mono">
+                      {weatherData ? weatherData.roadCondition : '––'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Power Adjustment:</span>
+                    <span className={`font-mono ${telemetryData?.powerAdjustment > 0 ? 'text-green-400' : telemetryData?.powerAdjustment < 0 ? 'text-red-400' : 'text-white'}`}>
+                      {telemetryData ? `${telemetryData.powerAdjustment > 0 ? '+' : ''}${telemetryData.powerAdjustment}%` : '––'}
+                    </span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-300">Tire Grip Level:</span>
+                    <span className={`font-mono ${telemetryData?.tireGripLevel === 'Optimal' ? 'text-green-400' : telemetryData?.tireGripLevel === 'Good' ? 'text-yellow-400' : 'text-orange-400'}`}>
+                      {telemetryData ? telemetryData.tireGripLevel : '––'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-4">
               <label className="block text-gray-300 mb-1">Passengers</label>
               <input
                 type="text"
