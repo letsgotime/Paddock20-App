@@ -2,8 +2,15 @@ import React, { createContext, useState, useContext, useEffect } from 'react';
 import { queryClient, apiRequest } from '@/lib/queryClient';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from '@/hooks/use-toast';
-import { getWeatherData, getHourlyForecast, getOneCallData, OneCallData } from '@/lib/weather';
-import { WeatherData, ForecastData, Location } from 'shared/schema';
+import { 
+  getWeatherData, 
+  getHourlyForecast, 
+  getOneCallData, 
+  OneCallData,
+  WeatherData,
+  ForecastData,
+  Location
+} from '@/lib/weather';
 
 interface WeatherContextType {
   unit: 'metric' | 'imperial';
