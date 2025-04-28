@@ -32,7 +32,7 @@ const F1TelemetryWeatherStation: React.FC = () => {
           toast({
             title: "Using default location",
             description: "Charlotte, NC - Enable location for your area",
-            variant: "warning",
+            variant: "destructive",
           });
         }
       );
@@ -442,8 +442,7 @@ const F1TelemetryWeatherStation: React.FC = () => {
                   </div>
                   <Progress 
                     value={performanceData.cooling} 
-                    className="h-2 bg-gray-800" 
-                    indicatorClassName={`bg-gradient-to-r ${performanceData.cooling > 70 ? 'from-green-500 to-green-400' : performanceData.cooling > 40 ? 'from-amber-500 to-amber-400' : 'from-red-500 to-red-400'}`}
+                    className={`h-2 bg-gray-800 ${performanceData.cooling > 70 ? 'text-green-500' : performanceData.cooling > 40 ? 'text-amber-500' : 'text-red-500'}`}
                   />
                 </div>
                 
@@ -454,8 +453,7 @@ const F1TelemetryWeatherStation: React.FC = () => {
                   </div>
                   <Progress 
                     value={performanceData.visibility} 
-                    className="h-2 bg-gray-800" 
-                    indicatorClassName={`bg-gradient-to-r ${performanceData.visibility > 70 ? 'from-green-500 to-green-400' : performanceData.visibility > 40 ? 'from-amber-500 to-amber-400' : 'from-red-500 to-red-400'}`}
+                    className={`h-2 bg-gray-800 ${performanceData.visibility > 70 ? 'text-green-500' : performanceData.visibility > 40 ? 'text-amber-500' : 'text-red-500'}`}
                   />
                 </div>
                 
@@ -466,8 +464,7 @@ const F1TelemetryWeatherStation: React.FC = () => {
                   </div>
                   <Progress 
                     value={performanceData.risk} 
-                    className="h-2 bg-gray-800" 
-                    indicatorClassName={`bg-gradient-to-r ${performanceData.risk < 30 ? 'from-green-500 to-green-400' : performanceData.risk < 60 ? 'from-amber-500 to-amber-400' : 'from-red-500 to-red-400'}`}
+                    className={`h-2 bg-gray-800 ${performanceData.risk < 30 ? 'text-green-500' : performanceData.risk < 60 ? 'text-amber-500' : 'text-red-500'}`}
                   />
                 </div>
               </div>
