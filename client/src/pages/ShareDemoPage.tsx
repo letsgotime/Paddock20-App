@@ -1,285 +1,231 @@
-import { useState } from 'react';
+import React, { useState } from 'react';
 import SocialShareButtons from '@/components/ui/SocialShareButtons';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
+import { Card } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
-import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Separator } from '@/components/ui/separator';
+import { Switch } from '@/components/ui/switch';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
-export default function ShareDemoPage() {
-  const [shareData, setShareData] = useState({
-    url: window.location.href,
-    title: document.title,
-    description: 'The exclusive portal for car enthusiasts. Share your passion with the world!',
-    image: 'https://paddock20.replit.app/favicon.png',
-    hashtags: ['Paddock20', 'GoTime', 'Motorsports', 'CarEnthusiasts']
-  });
+// Sample images for demo
+const sampleImages = [
+  'https://images.unsplash.com/photo-1542362567-b07e54358753?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80',
+  'https://images.unsplash.com/photo-1549317661-bd32c8ce0db2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1170&q=80',
+  'https://images.unsplash.com/photo-1580273916550-e323be2ae537?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=764&q=80',
+];
 
-  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
-    const { name, value } = e.target;
-    
-    if (name === 'hashtags') {
-      setShareData({
-        ...shareData,
-        hashtags: value.split(',').map(tag => tag.trim())
-      });
+const ShareDemoPage: React.FC = () => {
+  // Demo state
+  const [url, setUrl] = useState(window.location.href);
+  const [title, setTitle] = useState('Check out this amazing car at Paddock20!');
+  const [description, setDescription] = useState('Explore the exclusive automotive world on Paddock20, the premier destination for true car enthusiasts.');
+  const [image, setImage] = useState(sampleImages[0]);
+  const [size, setSize] = useState<'sm' | 'md' | 'lg'>('md');
+  const [showLabels, setShowLabels] = useState(false);
+  const [selectedPlatforms, setSelectedPlatforms] = useState<string[]>([
+    'facebook', 'twitter', 'linkedin', 'pinterest', 'reddit', 'whatsapp', 'email', 'copy'
+  ]);
+
+  // Toggle platform selection
+  const togglePlatform = (platform: string) => {
+    if (selectedPlatforms.includes(platform)) {
+      setSelectedPlatforms(selectedPlatforms.filter(p => p !== platform));
     } else {
-      setShareData({
-        ...shareData,
-        [name]: value
-      });
+      setSelectedPlatforms([...selectedPlatforms, platform]);
     }
   };
 
   return (
-    <div className="container mx-auto py-8 max-w-5xl">
-      <h1 className="text-4xl font-bold text-primary mb-8 font-orbitron">Social Sharing</h1>
-
-      <Tabs defaultValue="share" className="w-full">
-        <TabsList className="mb-8">
-          <TabsTrigger value="share">Share Content</TabsTrigger>
-          <TabsTrigger value="slack">Slack Integration</TabsTrigger>
-          <TabsTrigger value="settings">Social Settings</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="share">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-            <Card className="bg-black bg-opacity-90 border-gray-800">
-              <CardHeader>
-                <CardTitle className="text-primary">Share Your Content</CardTitle>
-                <CardDescription>Customize what you'd like to share</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-2">
-                  <Label htmlFor="title">Title</Label>
-                  <Input
-                    id="title"
-                    name="title"
-                    value={shareData.title}
-                    onChange={handleInputChange}
-                    className="bg-gray-900 border-gray-700"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description</Label>
-                  <Textarea
-                    id="description"
-                    name="description"
-                    value={shareData.description}
-                    onChange={handleInputChange}
-                    className="bg-gray-900 border-gray-700"
-                    rows={3}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="url">URL</Label>
-                  <Input
-                    id="url"
-                    name="url"
-                    value={shareData.url}
-                    onChange={handleInputChange}
-                    className="bg-gray-900 border-gray-700"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="image">Image URL</Label>
-                  <Input
-                    id="image"
-                    name="image"
-                    value={shareData.image}
-                    onChange={handleInputChange}
-                    className="bg-gray-900 border-gray-700"
-                  />
-                </div>
-                <div className="space-y-2">
-                  <Label htmlFor="hashtags">Hashtags (comma separated)</Label>
-                  <Input
-                    id="hashtags"
-                    name="hashtags"
-                    value={shareData.hashtags.join(', ')}
-                    onChange={handleInputChange}
-                    className="bg-gray-900 border-gray-700"
-                  />
-                </div>
-              </CardContent>
-              <CardFooter className="flex flex-col items-start gap-4">
-                <div className="text-sm text-gray-400">Share this content on your favorite platforms:</div>
-                <SocialShareButtons 
-                  url={shareData.url}
-                  title={shareData.title}
-                  description={shareData.description}
-                  image={shareData.image}
-                  hashtags={shareData.hashtags}
-                  size="lg"
-                />
-              </CardFooter>
-            </Card>
-
-            <Card className="bg-black bg-opacity-90 border-gray-800">
-              <CardHeader>
-                <CardTitle className="text-primary">Preview</CardTitle>
-                <CardDescription>How your content will appear</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div className="rounded-md bg-gray-900 p-4 border border-gray-800">
-                  <h3 className="text-lg font-bold mb-2">{shareData.title}</h3>
-                  <p className="text-gray-400 text-sm mb-4">{shareData.description}</p>
-                  <div className="text-xs text-gray-500 truncate mb-2">{shareData.url}</div>
-                  
-                  {shareData.image && (
-                    <div className="mt-4 rounded overflow-hidden">
-                      <img 
-                        src={shareData.image} 
-                        alt="Share preview" 
-                        className="max-w-full h-auto"
-                        onError={(e) => {
-                          (e.target as HTMLImageElement).src = '/favicon.png';
-                          (e.target as HTMLImageElement).style.width = '64px';
-                          (e.target as HTMLImageElement).style.height = '64px';
-                        }}
-                      />
-                    </div>
-                  )}
-
-                  {shareData.hashtags.length > 0 && (
-                    <div className="mt-4 flex flex-wrap gap-2">
-                      {shareData.hashtags.map((tag, i) => (
-                        <span key={i} className="text-primary text-xs px-2 py-1 bg-gray-800 rounded-full">
-                          #{tag}
-                        </span>
-                      ))}
-                    </div>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-        </TabsContent>
-
-        <TabsContent value="slack">
-          <Card className="bg-black bg-opacity-90 border-gray-800">
-            <CardHeader>
-              <CardTitle className="text-primary">Slack Integration</CardTitle>
-              <CardDescription>Share directly to your Slack workspace</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-6">
-              <div className="p-4 bg-gray-900 rounded-md border border-gray-800">
-                <h3 className="text-amber-400 mb-2">⚠️ Configuration Required</h3>
-                <p className="text-sm text-gray-300 mb-4">
-                  To enable Slack integration, you need to provide your Slack Bot Token and Channel ID in the environment variables.
-                </p>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="slack-token" className="text-gray-400">SLACK_BOT_TOKEN</Label>
-                    <Input
-                      id="slack-token"
-                      type="password"
-                      placeholder="xoxb-..."
-                      className="bg-gray-800 border-gray-700"
-                      disabled
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="slack-channel" className="text-gray-400">SLACK_CHANNEL_ID</Label>
-                    <Input
-                      id="slack-channel"
-                      placeholder="C123456789"
-                      className="bg-gray-800 border-gray-700"
-                      disabled
-                    />
-                  </div>
-                </div>
-                <Separator className="my-4" />
-                <div className="flex justify-end">
-                  <Button variant="outline" disabled>
-                    Check Connection
-                  </Button>
-                </div>
-              </div>
-
-              <div className="p-4 bg-gray-900 rounded-md border border-gray-800">
-                <h3 className="text-lg font-medium mb-2">Share to Slack</h3>
-                <p className="text-sm text-gray-400 mb-4">
-                  Once configured, you can share vehicle profiles and events directly to your Slack workspace.
-                </p>
-                <div className="flex justify-end space-x-4">
-                  <Button variant="outline" disabled>
-                    Share Vehicle
-                  </Button>
-                  <Button variant="outline" disabled>
-                    Share Event
-                  </Button>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-
-        <TabsContent value="settings">
-          <Card className="bg-black bg-opacity-90 border-gray-800">
-            <CardHeader>
-              <CardTitle className="text-primary">Social Media Settings</CardTitle>
-              <CardDescription>Configure your sharing preferences</CardDescription>
-            </CardHeader>
-            <CardContent>
+    <div className="min-h-screen bg-black text-white py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        <div className="text-center mb-12">
+          <h1 className="text-3xl sm:text-4xl font-orbitron text-blue-400 mb-4">
+            Social Sharing Demo
+          </h1>
+          <p className="text-gray-400 max-w-2xl mx-auto">
+            Test our no-authentication social sharing functionality with various configuration options.
+          </p>
+        </div>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
+          {/* Configuration Panel */}
+          <div>
+            <Card className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] border-gray-700 p-6">
+              <h2 className="text-xl font-orbitron text-blue-400 mb-6">Configure Share Options</h2>
+              
               <div className="space-y-6">
                 <div>
-                  <h3 className="text-lg font-medium mb-4">Default Platforms</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {['Facebook', 'Twitter', 'LinkedIn', 'Pinterest', 'Reddit', 'WhatsApp', 'Email', 'Copy'].map((platform) => (
-                      <div key={platform} className="flex items-center space-x-2">
-                        <input
-                          type="checkbox"
-                          id={platform.toLowerCase()}
-                          defaultChecked
-                          className="h-4 w-4 rounded border-gray-300 bg-gray-900 text-primary"
-                        />
-                        <Label htmlFor={platform.toLowerCase()}>{platform}</Label>
-                      </div>
-                    ))}
-                  </div>
+                  <Label htmlFor="share-url">URL to Share</Label>
+                  <Input
+                    id="share-url"
+                    value={url}
+                    onChange={(e) => setUrl(e.target.value)}
+                    placeholder="https://paddock20.replit.app"
+                    className="mt-1 bg-gray-800 border-gray-600"
+                  />
                 </div>
-
-                <Separator />
-
+                
                 <div>
-                  <h3 className="text-lg font-medium mb-4">Default Hashtags</h3>
-                  <div className="flex flex-wrap gap-2 mb-4">
-                    {['Paddock20', 'GoTime', 'Motorsports', 'CarEnthusiasts'].map((tag) => (
-                      <div key={tag} className="flex items-center bg-gray-800 px-3 py-1 rounded-full">
-                        <span className="text-primary text-sm mr-2">#{tag}</span>
-                        <button className="text-gray-400 hover:text-white">
-                          <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <line x1="18" y1="6" x2="6" y2="18"></line>
-                            <line x1="6" y1="6" x2="18" y2="18"></line>
-                          </svg>
-                        </button>
+                  <Label htmlFor="share-title">Title</Label>
+                  <Input
+                    id="share-title"
+                    value={title}
+                    onChange={(e) => setTitle(e.target.value)}
+                    placeholder="Check out this amazing car!"
+                    className="mt-1 bg-gray-800 border-gray-600"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="share-description">Description</Label>
+                  <Textarea
+                    id="share-description"
+                    value={description}
+                    onChange={(e) => setDescription(e.target.value)}
+                    placeholder="A detailed description of what you're sharing..."
+                    className="mt-1 bg-gray-800 border-gray-600 min-h-[100px]"
+                  />
+                </div>
+                
+                <div>
+                  <Label htmlFor="share-image">Image URL</Label>
+                  <div className="grid grid-cols-3 gap-2 mt-2 mb-2">
+                    {sampleImages.map((img, idx) => (
+                      <div 
+                        key={idx}
+                        className={`cursor-pointer border-2 rounded overflow-hidden ${img === image ? 'border-blue-500' : 'border-transparent'}`}
+                        onClick={() => setImage(img)}
+                      >
+                        <img src={img} alt={`Sample ${idx + 1}`} className="w-full h-24 object-cover" />
                       </div>
                     ))}
                   </div>
-                  <div className="flex gap-2">
-                    <Input
-                      placeholder="Add a hashtag"
-                      className="bg-gray-900 border-gray-700"
-                    />
-                    <Button variant="outline">Add</Button>
-                  </div>
+                  <Input
+                    id="share-image"
+                    value={image}
+                    onChange={(e) => setImage(e.target.value)}
+                    placeholder="https://example.com/image.jpg"
+                    className="mt-1 bg-gray-800 border-gray-600"
+                  />
                 </div>
-
-                <Separator />
-
-                <div className="flex justify-end">
-                  <Button className="bg-primary hover:bg-primary/90 text-black">
-                    Save Settings
-                  </Button>
+                
+                <div>
+                  <Label htmlFor="button-size" className="block mb-2">Button Size</Label>
+                  <Select value={size} onValueChange={(val) => setSize(val as any)}>
+                    <SelectTrigger className="bg-gray-800 border-gray-600">
+                      <SelectValue placeholder="Select size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="sm">Small</SelectItem>
+                      <SelectItem value="md">Medium</SelectItem>
+                      <SelectItem value="lg">Large</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                
+                <div className="flex items-center space-x-2">
+                  <Switch
+                    id="show-labels"
+                    checked={showLabels}
+                    onCheckedChange={setShowLabels}
+                  />
+                  <Label htmlFor="show-labels">Show Button Labels</Label>
+                </div>
+                
+                <div>
+                  <Label className="block mb-2">Platforms to Include</Label>
+                  <div className="grid grid-cols-2 gap-2">
+                    {['facebook', 'twitter', 'pinterest', 'linkedin', 'reddit', 'whatsapp', 'email', 'copy'].map(platform => (
+                      <div key={platform} className="flex items-center space-x-2">
+                        <Switch
+                          id={`platform-${platform}`}
+                          checked={selectedPlatforms.includes(platform)}
+                          onCheckedChange={() => togglePlatform(platform)}
+                        />
+                        <Label htmlFor={`platform-${platform}`} className="capitalize">{platform}</Label>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+            </Card>
+          </div>
+          
+          {/* Preview Panel */}
+          <div>
+            <Card className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] border-gray-700 p-6">
+              <h2 className="text-xl font-orbitron text-blue-400 mb-6">Preview</h2>
+              
+              <div className="space-y-8">
+                <div className="bg-black/50 rounded-xl p-6 border border-gray-800">
+                  <div className="aspect-video mb-4 overflow-hidden rounded-lg">
+                    <img 
+                      src={image} 
+                      alt="Share preview" 
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                  
+                  <h3 className="text-xl font-bold text-white mb-2">{title}</h3>
+                  <p className="text-gray-400 mb-4">{description}</p>
+                  
+                  <div className="text-sm text-gray-500 mb-6 truncate">
+                    {url}
+                  </div>
+                  
+                  <div className="pt-4 border-t border-gray-800">
+                    <h4 className="text-lg text-blue-400 mb-4">Share Options</h4>
+                    <SocialShareButtons
+                      url={url}
+                      title={title}
+                      description={description}
+                      image={image}
+                      size={size}
+                      showLabels={showLabels}
+                      platforms={selectedPlatforms as any}
+                    />
+                  </div>
+                </div>
+                
+                <div className="bg-black/50 rounded-xl p-6 border border-gray-800">
+                  <h3 className="text-lg text-blue-400 mb-4">Sample Usage in Other Components</h3>
+                  <div className="mb-6">
+                    <h4 className="text-white font-medium mb-2">Minimal</h4>
+                    <div className="p-4 bg-gray-900 rounded-lg">
+                      <SocialShareButtons
+                        url={url}
+                        title={title}
+                        platforms={['facebook', 'twitter', 'whatsapp', 'copy']}
+                        size="sm"
+                      />
+                    </div>
+                    <div className="mt-2 text-xs text-gray-500">
+                      <code>{'<SocialShareButtons url={url} title={title} platforms={["facebook", "twitter", "whatsapp", "copy"]} size="sm" />'}</code>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <h4 className="text-white font-medium mb-2">With Labels</h4>
+                    <div className="p-4 bg-gray-900 rounded-lg">
+                      <SocialShareButtons
+                        url={url}
+                        title={title}
+                        platforms={['facebook', 'twitter', 'email']}
+                        showLabels={true}
+                      />
+                    </div>
+                    <div className="mt-2 text-xs text-gray-500">
+                      <code>{'<SocialShareButtons url={url} title={title} platforms={["facebook", "twitter", "email"]} showLabels={true} />'}</code>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </Card>
+          </div>
+        </div>
+      </div>
     </div>
   );
-}
+};
+
+export default ShareDemoPage;
