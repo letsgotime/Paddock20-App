@@ -1,10 +1,16 @@
 import { Request, Response } from 'express';
+import axios from 'axios';
+
+// Google OAuth configuration
+const GOOGLE_CLIENT_ID = process.env.VITE_GOOGLE_CLIENT_ID;
+const GOOGLE_CLIENT_SECRET = process.env.GOOGLE_CLIENT_SECRET;
+const GOOGLE_REDIRECT_URI = 'https://paddock20.replit.app/oauth2callback';
 
 /**
  * Handle OAuth2 callback from Google
  * This endpoint will be called by Google after the user authorizes the application
  */
-export function handleGoogleOAuth2Callback(req: Request, res: Response) {
+export async function handleGoogleOAuth2Callback(req: Request, res: Response) {
   try {
     // Get the authorization code from the query parameters
     const code = req.query.code as string;
@@ -13,19 +19,44 @@ export function handleGoogleOAuth2Callback(req: Request, res: Response) {
       return res.status(400).send('Missing authorization code');
     }
     
-    // In a real implementation, we would exchange this code for an access token
-    // The token exchange would look like this:
-    // 1. Make a POST request to https://oauth2.googleapis.com/token
-    // 2. Include client_id, client_secret, code, redirect_uri, and grant_type=authorization_code
-    // 3. Receive access token, refresh token, and expiration
-    
-    // For this demo, we'll set a success message
-    const script = `
-      <script>
-        window.opener.postMessage({ type: 'GOOGLE_AUTH_SUCCESS', code: '${code}' }, '*');
-        window.close();
-      </script>
-    `;
+    // Exchange authorization code for access token
+    let script = '';
+    try {
+      const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
+        code,
+        client_id: GOOGLE_CLIENT_ID,
+        client_secret: GOOGLE_CLIENT_SECRET,
+        redirect_uri: GOOGLE_REDIRECT_URI,
+        grant_type: 'authorization_code'
+      });
+      
+      const tokenData = tokenResponse.data;
+      console.log('Google OAuth token exchange successful');
+      
+      // For security, we don't send the tokens directly to the client
+      // Instead, we'll send the code and handle the exchange server-side
+      script = `
+        <script>
+          window.opener.postMessage({ 
+            type: 'GOOGLE_AUTH_SUCCESS', 
+            code: '${code}'
+          }, window.location.origin);
+          window.close();
+        </script>
+      `;
+    } catch (error) {
+      console.error('Error exchanging Google auth code for token:', error);
+      // We still want to close the popup even if the token exchange fails
+      script = `
+        <script>
+          window.opener.postMessage({ 
+            type: 'GOOGLE_AUTH_ERROR', 
+            error: 'Failed to exchange authorization code for token'
+          }, window.location.origin);
+          window.close();
+        </script>
+      `;
+    }
     
     // Return HTML with a script that communicates with the parent window
     res.send(`
