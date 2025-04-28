@@ -6,11 +6,9 @@ import { Separator } from '@/components/ui/separator';
 
 // Import photo library services
 import {
-  authenticateWithGooglePhotos,
-  isGooglePhotosAuthenticated,
+  initiateGooglePhotosAuth as authenticateWithGooglePhotos,
   getGoogleAlbums,
-  getGooglePhotosFromAlbum,
-  convertGooglePhotoToMediaItem
+  getGoogleAlbumPhotos as getGooglePhotosFromAlbum
 } from '../services/googlePhotosService';
 
 import {
@@ -67,20 +65,18 @@ const PhotoLibraryModal: React.FC<PhotoLibraryModalProps> = ({ isOpen, onClose, 
     // Check for Apple device compatibility
     setApplePhotoSupported(isAppleDeviceWithPhotoSupport());
     
-    // Check existing auth states
-    setGoogleAuthenticated(isGooglePhotosAuthenticated());
+    // Check existing auth states - check if token exists
+    setGoogleAuthenticated(!!localStorage.getItem('googleAccessToken'));
     setAppleAuthenticated(isApplePhotosAuthorized());
   }, []);
   
   // Handle authenticating with Google Photos
   const handleGoogleAuth = async () => {
     try {
-      const success = await authenticateWithGooglePhotos();
-      setGoogleAuthenticated(success);
-      
-      if (success) {
-        loadGoogleAlbums();
-      }
+      await authenticateWithGooglePhotos();
+      // This will be handled through the postMessage in the OAuth flow
+      setGoogleAuthenticated(true);
+      loadGoogleAlbums();
     } catch (error) {
       console.error('Failed to authenticate with Google Photos:', error);
     }
