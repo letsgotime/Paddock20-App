@@ -88,8 +88,8 @@ const ManifestationStationPage = () => {
           id: 301,
           type: 'image',
           name: 'Ferrari 458 Spider - Red',
-          url: 'https://purepng.com/public/uploads/large/purepng.com-ferrari-458-italia-redcarferrarivehicleluxury-carsports-car-1701527409983pmymv.png',
-          thumbnail: 'https://purepng.com/public/uploads/large/purepng.com-ferrari-458-italia-redcarferrarivehicleluxury-carsports-car-1701527409983pmymv.png',
+          url: '/assets/ferrari-458.png',
+          thumbnail: '/assets/ferrari-458.png',
           description: 'Dream configuration - Rosso Corsa with black interior and carbon fiber details',
           dateAdded: '2025-01-15'
         },
@@ -518,8 +518,8 @@ const ManifestationStationPage = () => {
           id: 801,
           type: 'image',
           name: 'Audi R8 V10',
-          url: 'https://www.pngmart.com/files/22/Audi-R8-PNG-Photo.png',
-          thumbnail: 'https://www.pngmart.com/files/22/Audi-R8-PNG-Photo.png',
+          url: '/assets/audi-r8-v10.jpg',
+          thumbnail: '/assets/audi-r8-v10.jpg',
           description: '2014 Audi R8 V10 - Ibis White with red interior',
           dateAdded: '2024-02-20'
         },
@@ -615,8 +615,8 @@ const ManifestationStationPage = () => {
           id: 901,
           type: 'image',
           name: 'BMW G80 M3 Competition',
-          url: 'https://www.ccarprice.com/products/BMW-M3-Competition-Sedan-2021.jpg',
-          thumbnail: 'https://www.ccarprice.com/products/BMW-M3-Competition-Sedan-2021.jpg',
+          url: '/assets/bmw-g80-m3.jpg',
+          thumbnail: '/assets/bmw-g80-m3.jpg',
           description: '2021 BMW G80 M3 Competition in Isle of Man Green',
           dateAdded: '2024-04-15'
         },
@@ -698,8 +698,8 @@ const ManifestationStationPage = () => {
           id: 1001,
           type: 'image',
           name: 'BMW E93 M3 Convertible',
-          url: 'https://www.bmwusa.com/content/dam/bmwusa/M-Model-Vehicles/2018/BMW-M4-Convertible/BMW-MY18-MPerformance-Header-M3-Convertible-Desktop.jpg',
-          thumbnail: 'https://www.bmwusa.com/content/dam/bmwusa/M-Model-Vehicles/2018/BMW-M4-Convertible/BMW-MY18-MPerformance-Header-M3-Convertible-Desktop.jpg',
+          url: '/assets/bmw-e93-m3.jpg',
+          thumbnail: '/assets/bmw-e93-m3.jpg',
           description: '2009 BMW E93 M3 Convertible in Jerez Black',
           dateAdded: '2023-08-20'
         },
