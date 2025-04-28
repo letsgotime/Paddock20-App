@@ -335,7 +335,14 @@ const RoutePlannerPage = () => {
       optimalTirePressureRear: 30, // PSI
       powerOutput: 710, // HP
       weightDistribution: "42/58",
-      aerodynamicProfile: "High Downforce"
+      aerodynamicProfile: "High Downforce",
+      engineType: "Twin-Turbo V8",
+      drivetrainType: "RWD",
+      suspensionType: "Adaptive",
+      transmissionType: "DCT",
+      fuelType: "Premium",
+      brakingDistance: 97,
+      corneringGForce: 1.1
     },
     "Porsche 911 Carrera S": {
       optimumTireTemp: 185,
@@ -344,7 +351,14 @@ const RoutePlannerPage = () => {
       optimalTirePressureRear: 34,
       powerOutput: 443,
       weightDistribution: "38/62",
-      aerodynamicProfile: "Balanced"
+      aerodynamicProfile: "Balanced",
+      engineType: "Twin-Turbo Flat-6",
+      drivetrainType: "RWD",
+      suspensionType: "Adaptive",
+      transmissionType: "PDK",
+      fuelType: "Premium",
+      brakingDistance: 101,
+      corneringGForce: 1.08
     },
     "BMW M4 G82": {
       optimumTireTemp: 175,
