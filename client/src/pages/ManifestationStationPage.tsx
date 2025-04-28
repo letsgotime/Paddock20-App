@@ -1825,7 +1825,10 @@ const ManifestationStationPage = () => {
                     </div>
                     
                     {/* Add Link Button */}
-                    <div className="bg-gradient-to-br from-emerald-900/20 to-emerald-800/10 p-3 rounded-lg border border-emerald-900/30 text-center hover:border-emerald-500/50 cursor-pointer transition-colors">
+                    <div 
+                      onClick={handleAddLink}
+                      className="bg-gradient-to-br from-emerald-900/20 to-emerald-800/10 p-3 rounded-lg border border-emerald-900/30 text-center hover:border-emerald-500/50 cursor-pointer transition-colors"
+                    >
                       <div className="text-3xl mb-2">🔗</div>
                       <h5 className="font-medium text-white mb-1">Add Link</h5>
                       <p className="text-gray-400 text-xs">Save websites, articles, videos</p>
