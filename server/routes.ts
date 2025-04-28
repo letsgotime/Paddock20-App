@@ -9,6 +9,7 @@ import {
   insertGlossTrackingSchema,
   insertGlossLogSchema
 } from "@shared/schema";
+import { handleGoogleOAuth2Callback, handleAppleOAuth2Callback } from "./oauth";
 
 // OpenWeather API key - updated April 28, 2025
 const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY || "2379a18ee0e478c88aa7d4aa1df44410";
@@ -934,6 +935,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: (error as Error).message || 'Failed to initialize demo data' });
     }
   });
+
+  // OAuth callback routes
+  app.get('/oauth2callback', handleGoogleOAuth2Callback);
+  app.get('/apple-oauth2callback', handleAppleOAuth2Callback);
 
   const httpServer = createServer(app);
   return httpServer;
