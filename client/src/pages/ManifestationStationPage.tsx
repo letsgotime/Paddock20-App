@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { getRandomAffirmation } from "../services/affirmationsService";
 import { searchHighResImages, createMediaItemFromSearch } from "../services/imageSearchService";
 import PhotoLibraryModal from "../components/PhotoLibraryModal";
-import { initGooglePhotosApi } from "../services/googlePhotosService";
+import { initiateGooglePhotosAuth } from "../services/googlePhotosService";
 
 // Interface for milestones
 interface Milestone {
