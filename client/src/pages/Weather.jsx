@@ -1,7 +1,6 @@
 import React from 'react';
-import Paddock20OpenWeatherStation from '../components/Paddock20OpenWeatherStation';
+import SimplifiedDrivingConditions from '@/components/SimplifiedDrivingConditions';
 import { MAIN_CONTENT_ID } from '../lib/accessibility';
-import { OpenWeatherProvider } from '@/contexts/OpenWeatherContext';
 
 function Weather() {
   return (
@@ -14,15 +13,13 @@ function Weather() {
         </p>
       </header>
       
-      <OpenWeatherProvider>
-        {/* F1-style motorsport weather station */}
-        <section className="mb-10" aria-labelledby="paddock-weather-heading">
-          <h2 id="paddock-weather-heading" className="apex-header-green text-xl mb-4">Automotive Weather Dashboard</h2>
-          <div className="bg-gradient-to-r from-gray-900 to-black border border-gray-800 rounded-lg p-6">
-            <Paddock20OpenWeatherStation />
-          </div>
-        </section>
-      </OpenWeatherProvider>
+      {/* F1-style motorsport weather station */}
+      <section className="mb-10" aria-labelledby="paddock-weather-heading">
+        <h2 id="paddock-weather-heading" className="apex-header-green text-xl mb-4">Automotive Weather Dashboard</h2>
+        <div className="bg-gradient-to-r from-gray-900 to-black border border-gray-800 rounded-lg p-6">
+          <SimplifiedDrivingConditions />
+        </div>
+      </section>
 
       {/* Paddock20 Feature Information */}
       <section className="mt-10 bg-gradient-to-r from-gray-900 to-black border border-gray-800 rounded-lg p-6" aria-labelledby="feature-heading">

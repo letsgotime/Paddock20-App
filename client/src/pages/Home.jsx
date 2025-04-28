@@ -1,5 +1,5 @@
 import React from "react";
-import WeatherDashboard from "@/components/WeatherDashboard";
+import SimplifiedDrivingConditions from "@/components/SimplifiedDrivingConditions";
 import { OpenWeatherProvider } from "@/contexts/OpenWeatherContext";
 
 function Home() {
@@ -9,9 +9,7 @@ function Home() {
       <p className="text-white text-lg mb-6">Drive Life. Document Legacy. Built for the serious. Designed for the seamless.</p>
       
       <div className="space-y-8">
-        <OpenWeatherProvider>
-          <WeatherDashboard />
-        </OpenWeatherProvider>
+        <SimplifiedDrivingConditions />
         
         {/* Other homepage modules */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
