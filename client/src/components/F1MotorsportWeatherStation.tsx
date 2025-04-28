@@ -340,11 +340,11 @@ const F1MotorsportWeatherStation = () => {
                   automotiveData?.drivingRisk?.traction === "Good" ? 90 :
                   automotiveData?.drivingRisk?.traction === "Reduced" ? 50 : 20
                 } 
-                className="h-1.5 bg-gray-700"
-                indicatorClassName={cn(
-                  automotiveData?.drivingRisk?.traction === "Good" ? "bg-green-500" : 
-                  automotiveData?.drivingRisk?.traction === "Reduced" ? "bg-yellow-500" : 
-                  "bg-red-500"
+                className={cn(
+                  "h-1.5 bg-gray-700",
+                  automotiveData?.drivingRisk?.traction === "Good" ? "text-green-500" : 
+                  automotiveData?.drivingRisk?.traction === "Reduced" ? "text-yellow-500" : 
+                  "text-red-500"
                 )}
               />
             </div>
@@ -367,12 +367,12 @@ const F1MotorsportWeatherStation = () => {
               <Progress 
                 value={uvIndex * 10} 
                 max={100}
-                className="h-1.5 bg-gray-700"
-                indicatorClassName={cn(
-                  uvIndex <= 2 ? "bg-green-500" : 
-                  uvIndex <= 5 ? "bg-yellow-500" : 
-                  uvIndex <= 7 ? "bg-orange-500" : 
-                  "bg-red-500"
+                className={cn(
+                  "h-1.5 bg-gray-700",
+                  uvIndex <= 2 ? "text-green-500" : 
+                  uvIndex <= 5 ? "text-yellow-500" : 
+                  uvIndex <= 7 ? "text-orange-500" : 
+                  "text-red-500"
                 )}
               />
             </div>
@@ -537,9 +537,9 @@ const F1MotorsportWeatherStation = () => {
       </div>
       
       {/* Accessibility Live Region - Screen Reader Announcements */}
-      <LiveRegion>
+      <AccessibilityAnnouncement>
         {statusMessage || `Current weather in ${selectedLocation?.name}: ${tempValue}°${displayUnit}, ${weatherDesc}. Surface temperature: ${surfaceTemp}°${displayUnit}.`}
-      </LiveRegion>
+      </AccessibilityAnnouncement>
     </div>
   );
 };
