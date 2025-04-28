@@ -1,15 +1,83 @@
-import React, { useRef } from 'react';
-import { Watch, Car, Check, Star, Shield, Tag, Search, Clock, ArrowRight } from 'lucide-react';
+import React, { useRef, useState, useEffect } from 'react';
+import { Watch, Car, Check, Star, Shield, Tag, Search, Clock, ArrowRight, ChevronRight, ChevronLeft } from 'lucide-react';
 import ExportOptions from '../components/ExportOptions';
+import TimepiVault from '../components/TimepiVault';
+import TimepieceTelemetry from '../components/TimepieceTelemetry';
+import timepieceDataService from '../services/timepieceDataService';
+import { Battery, Droplet, Activity, Info } from 'lucide-react';
+
+// Define interface for timepiece store state
+interface TimepieceState {
+  timepieces: any[];
+  getActiveTimepiece: () => any;
+  setActiveTimepiece: (id: string) => void;
+}
 
 const TiresTimepieces: React.FC = () => {
   const contentRef = useRef<HTMLDivElement>(null);
+  const [activeTab, setActiveTab] = useState<'overview' | 'timepiece-vault' | 'telemetry'>('overview');
+  const [selectedTimepieceId, setSelectedTimepieceId] = useState<string | null>(null);
+  
+  // Access timepiece data from store
+  const useTimepieceStore = timepieceDataService.useTimepieceStore;
+  const timepieces = useTimepieceStore((state: TimepieceState) => state.timepieces);
+  const activeTimepiece = useTimepieceStore((state: TimepieceState) => state.getActiveTimepiece());
+  const setActiveTimepiece = useTimepieceStore((state: TimepieceState) => state.setActiveTimepiece);
+  
+  // Set initial active timepiece if not already set
+  useEffect(() => {
+    if (timepieces.length > 0 && !activeTimepiece) {
+      setActiveTimepiece(timepieces[0].id);
+      setSelectedTimepieceId(timepieces[0].id);
+    }
+  }, [timepieces, activeTimepiece, setActiveTimepiece]);
 
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="max-w-7xl mx-auto px-4 py-12">
-        {/* Export Options */}
-        <div className="flex justify-end mb-6">
+        {/* Tabs Navigation */}
+        <div className="flex justify-between items-center mb-6">
+          <div className="flex space-x-1 bg-gray-900/50 p-1 rounded-lg border border-gray-800">
+            <button
+              onClick={() => setActiveTab('overview')}
+              className={`px-4 py-2 rounded-md text-sm ${
+                activeTab === 'overview' 
+                  ? 'bg-gradient-to-br from-blue-900/60 to-blue-800/20 text-blue-400' 
+                  : 'text-gray-400 hover:text-gray-200'
+              }`}
+            >
+              <span className="hidden md:inline">T&T</span> Overview
+            </button>
+            <button
+              onClick={() => setActiveTab('timepiece-vault')}
+              className={`px-4 py-2 rounded-md text-sm ${
+                activeTab === 'timepiece-vault' 
+                  ? 'bg-gradient-to-br from-purple-900/60 to-purple-800/20 text-purple-400' 
+                  : 'text-gray-400 hover:text-gray-200'
+              }`}
+            >
+              <Watch className="inline-block h-4 w-4 mr-1 md:mr-2" /> 
+              <span className="hidden md:inline">Timepiece</span> Vault
+            </button>
+            <button
+              onClick={() => {
+                if (selectedTimepieceId || activeTimepiece) {
+                  setSelectedTimepieceId(selectedTimepieceId || activeTimepiece?.id || null);
+                  setActiveTab('telemetry');
+                }
+              }}
+              className={`px-4 py-2 rounded-md text-sm ${
+                activeTab === 'telemetry' 
+                  ? 'bg-gradient-to-br from-green-900/60 to-green-800/20 text-green-400' 
+                  : 'text-gray-400 hover:text-gray-200'
+              } ${(!selectedTimepieceId && !activeTimepiece) ? 'opacity-50 cursor-not-allowed' : ''}`}
+              disabled={!selectedTimepieceId && !activeTimepiece}
+            >
+              <Activity className="inline-block h-4 w-4 mr-1 md:mr-2" /> 
+              <span className="hidden md:inline">Timepiece</span> Telemetry
+            </button>
+          </div>
+          
           <ExportOptions 
             contentRef={contentRef}
             title="Tires & Timepieces Brokerage"
@@ -22,21 +90,41 @@ const TiresTimepieces: React.FC = () => {
           />
         </div>
         
-        <div ref={contentRef}>
-          {/* Header */}
-          <div className="text-center mb-16">
-            <h1 className="text-5xl font-orbitron text-blue-500 mb-4">Tires & Timepieces™</h1>
-            <p className="text-xl text-gray-300 max-w-3xl mx-auto">
-              Powered by GoTime Motorsports™
-            </p>
-            <div className="mt-6 text-lg text-gray-400 max-w-3xl mx-auto">
-              "Where asset passion meets precision execution."
+        {activeTab === 'timepiece-vault' && (
+          <TimepiVault />
+        )}
+        
+        {activeTab === 'telemetry' && selectedTimepieceId && (
+          <div className="mb-6">
+            <div className="flex justify-start mb-4">
+              <button
+                onClick={() => setActiveTab('timepiece-vault')}
+                className="inline-flex items-center text-gray-400 hover:text-white"
+              >
+                <ChevronLeft className="h-5 w-5 mr-1" />
+                Back to Timepiece Vault
+              </button>
             </div>
-            <p className="mt-6 text-gray-300 max-w-3xl mx-auto">
-              We exist for the builders, the collectors, the flippers, and the dreamers who want their next exotic car or timepiece to mean something.<br />
-              Not hype. Not algorithms. Real sourcing. Real strategy. Real movement.
-            </p>
+            <TimepieceTelemetry timepieceId={selectedTimepieceId} />
           </div>
+        )}
+        
+        {activeTab === 'overview' && (
+          <div ref={contentRef}>
+            {/* Header */}
+            <div className="text-center mb-16">
+              <h1 className="text-5xl font-orbitron text-blue-500 mb-4">Tires & Timepieces™</h1>
+              <p className="text-xl text-gray-300 max-w-3xl mx-auto">
+                Powered by GoTime Motorsports™
+              </p>
+              <div className="mt-6 text-lg text-gray-400 max-w-3xl mx-auto">
+                "Where asset passion meets precision execution."
+              </div>
+              <p className="mt-6 text-gray-300 max-w-3xl mx-auto">
+                We exist for the builders, the collectors, the flippers, and the dreamers who want their next exotic car or timepiece to mean something.<br />
+                Not hype. Not algorithms. Real sourcing. Real strategy. Real movement.
+              </p>
+            </div>
 
           {/* What You Get */}
           <div className="mb-16">
@@ -344,6 +432,7 @@ const TiresTimepieces: React.FC = () => {
             </div>
           </div>
         </div>
+        )}
       </div>
     </div>
   );

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Watch, Clock, Calendar, AlertTriangle, CheckCircle, 
-  RefreshCw, FileText, ClipboardCheck, Settings, Tool, 
-  DollarSign, Package, Shield, BarChart
+  RefreshCw, FileText, ClipboardCheck, Settings, Wrench as Tool, 
+  DollarSign, Package, Shield, BarChart, Battery, Droplet, Activity, Info
 } from 'lucide-react';
 import EditableTelemetry from './EditableTelemetry';
 import timepieceDataService from '../services/timepieceDataService';
