@@ -14,47 +14,7 @@ import {
 const OPENWEATHER_API_KEY = "2379a18ee0e478c88aa7d4aa1df44410";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Helper function to get AccuWeather API key
-  function getAccuWeatherApiKey() {
-    // Use the API key from environment variables
-    const apiKey = process.env.VITE_ACCUWEATHER_API_KEY || "CvuAGFLFJfRdLdjXG1QawpoWGXF4alyN";
-    
-    if (!apiKey) {
-      console.error('No AccuWeather API key found. Check your environment variables.');
-    }
-    
-    // Log the first few characters of the key for debugging
-    console.log(`Using AccuWeather API Key: ${apiKey ? apiKey.substring(0, 5) : 'none'}...`);
-    return apiKey;
-  }
-  
-  // Helper to handle AccuWeather API errors with detailed logging
-  async function callAccuWeatherApi(url: string, errorMessage: string) {
-    try {
-      console.log('AccuWeather API Request URL:', url);
-      
-      const response = await fetch(url);
-      console.log('AccuWeather API Response Status:', response.status);
-      
-      // Log headers for debugging
-      const headers = [...response.headers.entries()].reduce((obj, [key, value]) => {
-        obj[key] = value;
-        return obj;
-      }, {} as Record<string, string>);
-      console.log('AccuWeather API Response Headers:', JSON.stringify(headers));
-      
-      if (!response.ok) {
-        const errorText = await response.text();
-        console.error('AccuWeather API Error Response:', errorText);
-        throw new Error(`AccuWeather API error (${response.status}): ${errorText}`);
-      }
-      
-      return await response.json();
-    } catch (error) {
-      console.error('AccuWeather API Error:', error);
-      throw new Error(errorMessage || (error as Error).message);
-    }
-  }
+  // Using only OpenWeather API for all weather services
   
   // Weather API proxy routes
   app.get('/api/weather', async (req, res) => {
