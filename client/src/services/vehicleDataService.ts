@@ -1,5 +1,6 @@
 import supabase from './supabaseClient';
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
 // Define vehicle data types
 export interface Vehicle {
@@ -15,7 +16,23 @@ export interface Vehicle {
   imageUrl?: string;
   mileage?: number;
   notes?: string;
-  // Add any additional fields used in the app
+  purchaseDate?: string;
+  purchasePrice?: number;
+  vin?: string;
+  licensePlate?: string;
+  insurance?: string;
+  registrationExpiry?: string;
+  gallery?: VehicleImage[];
+}
+
+export interface VehicleImage {
+  id: number;
+  vehicleId: number;
+  imageUrl: string;
+  description?: string;
+  category: 'delivery' | 'modification' | 'detail' | 'general' | 'sale';
+  dateAdded: string;
+  isFeatured?: boolean;
 }
 
 export interface VehicleMod {
@@ -28,7 +45,12 @@ export interface VehicleMod {
   cost?: number;
   description?: string;
   images?: string[];
+  beforeImages?: string[];
+  afterImages?: string[];
   status: 'planned' | 'in_progress' | 'completed';
+  category?: 'performance' | 'appearance' | 'utility' | 'electronics' | 'other';
+  warranty?: string;
+  partNumbers?: string[];
 }
 
 export interface VehicleTire {
@@ -42,6 +64,7 @@ export interface VehicleTire {
   speedRating?: string;
   loadRating?: string;
   dateInstalled?: string;
+  datePurchased?: string;
   mileage?: number;
   notes?: string;
   images?: string[];
@@ -78,6 +101,26 @@ export interface GlossTracking {
   notes?: string;
 }
 
+export interface Equipment {
+  id: number;
+  vehicleId: number;
+  name: string;
+  type: 'detailing' | 'tools' | 'emergency' | 'accessories' | 'other';
+  brand?: string;
+  model?: string;
+  purchaseDate?: string;
+  cost?: number;
+  location?: string;  // where it's stored
+  condition?: 'new' | 'good' | 'used' | 'needs_replacement';
+  notes?: string;
+  images?: string[];
+  lastUsedDate?: string;
+  isConsumable?: boolean;
+  stockLevel?: number;  // for consumables
+  link?: string;        // URL to purchase/info
+  warranty?: string;    // Warranty information
+}
+
 // Define the store interface
 interface VehicleStore {
   vehicles: Vehicle[];
@@ -85,6 +128,7 @@ interface VehicleStore {
   tires: VehicleTire[];
   maintenanceRecords: MaintenanceRecord[];
   glossTracking: GlossTracking[];
+  equipment: Equipment[];
   
   // Loading states
   isLoading: boolean;
@@ -117,6 +161,13 @@ interface VehicleStore {
   // Gloss tracking
   getGlossTrackingByVehicleId: (vehicleId: number) => GlossTracking | null;
   updateGlossTracking: (id: number, tracking: Partial<GlossTracking>) => Promise<GlossTracking | null>;
+  
+  // Equipment management
+  getEquipmentByVehicleId: (vehicleId: number) => Equipment[];
+  getEquipmentByType: (type: Equipment['type']) => Equipment[];
+  addEquipment: (equipment: Omit<Equipment, 'id'>) => Promise<Equipment | null>;
+  updateEquipment: (id: number, equipment: Partial<Equipment>) => Promise<Equipment | null>;
+  deleteEquipment: (id: number) => Promise<boolean>;
 }
 
 // Create the store
