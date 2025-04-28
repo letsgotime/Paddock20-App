@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import F1MotorsportWeatherStation from '../components/F1MotorsportWeatherStation.jsx';
+import { Progress } from "@/components/ui/progress";
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 // Mock user data for demo purposes
 const mockUserData = {
@@ -8,43 +10,69 @@ const mockUserData = {
   location: 'Charlotte, NC',
   memberLevel: 'Redline Racer',
   memberPoints: 752,
+  pointsToNextLevel: 248,
+  nextLevel: 'Grid King',
   memberSince: '2023-10-15',
   drivingStyle: 'Track Day Enthusiast',
   bio: 'From daily driver to weekend warrior. Building my dream garage one car at a time. Addicted to the rush of track days and the beauty of fine timepieces.',
   vehicles: [
-    { id: 1, make: 'BMW', model: 'M3', year: 2009, nickname: 'E93', imageUrl: 'https://www.bmwusa.com/content/dam/bmwusa/M-Model-Vehicles/2018/BMW-M4-Convertible/BMW-MY18-MPerformance-Header-M3-Convertible-Desktop.jpg' },
-    { id: 2, make: 'Audi', model: 'R8 V10', year: 2014, nickname: 'Iron Man', imageUrl: 'https://www.pngmart.com/files/22/Audi-R8-PNG-Photo.png' },
-    { id: 3, make: 'BMW', model: 'M3', year: 2021, nickname: 'G80', imageUrl: 'https://www.ccarprice.com/products/BMW-M3-Competition-Sedan-2021.jpg' }
+    { id: 1, make: 'BMW', model: 'M3', year: 2009, nickname: 'E93', imageUrl: 'https://www.bmwusa.com/content/dam/bmwusa/M-Model-Vehicles/2018/BMW-M4-Convertible/BMW-MY18-MPerformance-Header-M3-Convertible-Desktop.jpg', mileage: 85720, lastServiceDate: '2025-03-15', healthScore: 92 },
+    { id: 2, make: 'Audi', model: 'R8 V10', year: 2014, nickname: 'Iron Man', imageUrl: 'https://www.pngmart.com/files/22/Audi-R8-PNG-Photo.png', mileage: 42150, lastServiceDate: '2025-04-02', healthScore: 97 },
+    { id: 3, make: 'BMW', model: 'M3', year: 2021, nickname: 'G80', imageUrl: 'https://www.ccarprice.com/products/BMW-M3-Competition-Sedan-2021.jpg', mileage: 18325, lastServiceDate: '2025-03-28', healthScore: 99 }
   ],
   watches: [
-    { id: 1, brand: 'Rolex', model: 'Daytona', year: 2022, imageUrl: 'https://content.rolex.com/dam/2022-11/upright-bba-with-shadow/m126500ln-0001.png' }
+    { id: 1, brand: 'Rolex', model: 'Daytona', year: 2022, imageUrl: 'https://content.rolex.com/dam/2022-11/upright-bba-with-shadow/m126500ln-0001.png', purchaseDate: '2023-06-15', value: 38500 }
   ],
   upcomingEvents: [
-    { id: 1, title: 'Carolina Cars & Coffee', date: '2025-05-03', location: 'Charlotte, NC' },
-    { id: 2, title: 'Track Day - VIR', date: '2025-05-15', location: 'Virginia International Raceway' }
+    { id: 1, title: 'Carolina Cars & Coffee', date: '2025-05-03', location: 'Charlotte, NC', attending: 'confirmed', attendees: 187 },
+    { id: 2, title: 'Track Day - VIR', date: '2025-05-15', location: 'Virginia International Raceway', attending: 'confirmed', attendees: 42 },
+    { id: 3, title: 'Luxury Timepiece Exhibition', date: '2025-05-22', location: 'Ritz-Carlton, Charlotte', attending: 'pending', attendees: 65 }
   ],
   maintenanceAlerts: [
-    { id: 1, vehicleId: 1, type: 'Oil Change', dueDate: '2025-05-10' },
-    { id: 2, vehicleId: 2, type: 'Tire Rotation', dueDate: '2025-05-05' }
+    { id: 1, vehicleId: 1, type: 'Oil Change', dueDate: '2025-05-10', priority: 'high', estimatedCost: 120 },
+    { id: 2, vehicleId: 2, type: 'Tire Rotation', dueDate: '2025-05-05', priority: 'medium', estimatedCost: 85 }
   ],
   recentManifestationProgress: [
-    { id: 1, goal: 'Beach House', progress: 3, target: 100, emoji: '🏡' },
-    { id: 2, goal: 'Patek Philippe', progress: 32, target: 100, emoji: '⌚' }
+    { id: 1, goal: 'Beach House', progress: 3, target: 100, emoji: '🏡', targetAmount: 1250000, savedAmount: 37500, monthlyContribution: 2500, projectedDate: '2034-06-15' },
+    { id: 2, goal: 'Patek Philippe', progress: 32, target: 100, emoji: '⌚', targetAmount: 72000, savedAmount: 23040, monthlyContribution: 1500, projectedDate: '2026-11-30' }
   ],
   dailyDisciplines: [
-    { id: 1, type: 'Mental', streak: 12, lastCompleted: '2025-04-27' },
-    { id: 2, type: 'Physical', streak: 8, lastCompleted: '2025-04-27' },
-    { id: 3, type: 'Gratitude', streak: 21, lastCompleted: '2025-04-28' }
+    { id: 1, type: 'Mental', streak: 12, lastCompleted: '2025-04-27', totalCompletions: 347 },
+    { id: 2, type: 'Physical', streak: 8, lastCompleted: '2025-04-27', totalCompletions: 256 },
+    { id: 3, type: 'Gratitude', streak: 21, lastCompleted: '2025-04-28', totalCompletions: 412 }
   ],
   recentActivity: [
-    { id: 1, type: 'drive', description: 'Logged 183 mile drive in G80', date: '2025-04-26' },
-    { id: 2, type: 'maintenance', description: 'Added tire rotation for R8', date: '2025-04-24' },
-    { id: 3, type: 'manifestation', description: 'Updated Patek Philippe goal', date: '2025-04-22' }
+    { id: 1, type: 'drive', description: 'Logged 183 mile drive in G80', date: '2025-04-26', details: { route: 'Blue Ridge Parkway', duration: '4.5 hours' } },
+    { id: 2, type: 'maintenance', description: 'Added tire rotation for R8', date: '2025-04-24', details: { cost: 85, location: 'Performance Auto Care' } },
+    { id: 3, type: 'manifestation', description: 'Updated Patek Philippe goal', date: '2025-04-22', details: { oldAmount: 70000, newAmount: 72000 } },
+    { id: 4, type: 'event', description: 'RSVP\'d to Track Day at VIR', date: '2025-04-20', details: { eventDate: '2025-05-15', cost: 350 } },
+    { id: 5, type: 'purchase', description: 'New racing harness for E93', date: '2025-04-18', details: { item: 'Schroth Profi II 6-point', cost: 429 } }
   ],
   badges: [
-    { id: 1, name: 'Track Day Veteran', description: 'Completed 10+ track days', icon: '🏁' },
-    { id: 2, name: '1000 Mile Club', description: 'Logged over 1000 miles in your drives', icon: '🛣️' },
-    { id: 3, name: 'Consistency Champion', description: 'Maintained a 20+ day streak in daily disciplines', icon: '🏆' }
+    { id: 1, name: 'Track Day Veteran', description: 'Completed 10+ track days', icon: '🏁', earnedDate: '2024-09-15', rarity: 'uncommon' },
+    { id: 2, name: '1000 Mile Club', description: 'Logged over 1000 miles in your drives', icon: '🛣️', earnedDate: '2024-12-03', rarity: 'common' },
+    { id: 3, name: 'Consistency Champion', description: 'Maintained a 20+ day streak in daily disciplines', icon: '🏆', earnedDate: '2025-04-26', rarity: 'rare' }
+  ],
+  driveStats: [
+    { month: 'Nov', miles: 423 },
+    { month: 'Dec', miles: 512 },
+    { month: 'Jan', miles: 384 },
+    { month: 'Feb', miles: 290 },
+    { month: 'Mar', miles: 578 },
+    { month: 'Apr', miles: 683 }
+  ],
+  manifestationHistory: [
+    { month: 'Nov', amount: 16250 },
+    { month: 'Dec', amount: 17750 },
+    { month: 'Jan', amount: 19250 },
+    { month: 'Feb', amount: 19500 },
+    { month: 'Mar', amount: 21500 },
+    { month: 'Apr', amount: 23040 }
+  ],
+  favoriteRoutes: [
+    { id: 1, name: 'Blue Ridge Parkway Loop', distance: '187 miles', lastDriven: '2025-04-26', rating: 5 },
+    { id: 2, name: 'Tail of the Dragon', distance: '11 miles', lastDriven: '2025-03-14', rating: 5 },
+    { id: 3, name: 'Charlotte Skyline Drive', distance: '28 miles', lastDriven: '2025-04-15', rating: 4 }
   ]
 };
 
@@ -90,7 +118,7 @@ const PersonalizedDashboard: React.FC = () => {
 
         {/* Member Profile Banner */}
         <div className="bts-card mb-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col md:flex-row md:items-center justify-between">
             <div className="flex items-center">
               <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-green-500 flex items-center justify-center text-white text-xl font-bold overflow-hidden border-2 border-green-400">
                 {userData.name.charAt(0)}
@@ -104,8 +132,20 @@ const PersonalizedDashboard: React.FC = () => {
                 <p className="text-gray-500 text-xs mt-1">Member since {new Date(userData.memberSince).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })} • {userData.memberPoints} Points</p>
               </div>
             </div>
-            <div className="hidden md:flex space-x-2">
-              <Link to="/settings/profile" className="bts-button !py-1 !px-3 text-sm">Edit Profile</Link>
+            <div className="mt-4 md:mt-0 flex flex-col items-end">
+              <div className="flex items-center mb-2">
+                <span className="text-xs text-gray-400 mr-2">{userData.memberPoints} / 1000 Points • {userData.pointsToNextLevel} to {userData.nextLevel}</span>
+                <div className="w-32 h-2 bg-gray-800 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-gradient-to-r from-blue-500 to-green-500" 
+                    style={{ width: `${(userData.memberPoints / 1000) * 100}%` }}
+                  ></div>
+                </div>
+              </div>
+              <div className="flex space-x-2">
+                <Link to="/settings/profile" className="bts-button !py-1 !px-3 text-sm">Edit Profile</Link>
+                <Link to="/membership" className="bg-blue-500/20 text-blue-400 hover:bg-blue-500/30 px-3 py-1 rounded text-sm font-medium">Membership Benefits</Link>
+              </div>
             </div>
           </div>
           <div className="mt-4 bg-black/30 p-3 rounded-lg border border-gray-800">
@@ -149,13 +189,33 @@ const PersonalizedDashboard: React.FC = () => {
             <h2 className="bts-header-green mb-4">Your Garage</h2>
             <div className="space-y-4">
               {userData.vehicles.map(vehicle => (
-                <Link to={`/vehicle/${vehicle.id}`} key={vehicle.id} className="flex items-center p-3 bg-black/40 rounded-lg transition hover:bg-black/60">
-                  <div className="w-16 h-16 rounded-lg overflow-hidden mr-4 flex-shrink-0 border border-gray-700">
-                    <img src={vehicle.imageUrl} alt={`${vehicle.make} ${vehicle.model}`} className="w-full h-full object-cover" />
-                  </div>
-                  <div>
-                    <h3 className="text-white font-medium">{vehicle.nickname || `${vehicle.year} ${vehicle.make} ${vehicle.model}`}</h3>
-                    <p className="text-gray-400 text-sm">{vehicle.nickname ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : ''}</p>
+                <Link to={`/vehicle/${vehicle.id}`} key={vehicle.id} className="block p-3 bg-black/40 rounded-lg transition hover:bg-black/60">
+                  <div className="flex items-center">
+                    <div className="w-16 h-16 rounded-lg overflow-hidden mr-4 flex-shrink-0 border border-gray-700">
+                      <img src={vehicle.imageUrl} alt={`${vehicle.make} ${vehicle.model}`} className="w-full h-full object-cover" />
+                    </div>
+                    <div className="flex-grow">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <h3 className="text-white font-medium">{vehicle.nickname || `${vehicle.year} ${vehicle.make} ${vehicle.model}`}</h3>
+                          <p className="text-gray-400 text-sm">{vehicle.nickname ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : ''}</p>
+                        </div>
+                        <div className="flex items-center bg-black/30 px-2 py-1 rounded">
+                          <span 
+                            className={`w-2 h-2 rounded-full mr-1 ${
+                              vehicle.healthScore > 90 ? 'bg-green-400' : 
+                              vehicle.healthScore > 70 ? 'bg-yellow-400' : 
+                              'bg-red-400'
+                            }`}
+                          ></span>
+                          <span className="text-xs font-mono">{vehicle.healthScore}/100</span>
+                        </div>
+                      </div>
+                      <div className="mt-2 flex items-center justify-between text-xs">
+                        <span className="text-gray-500">{vehicle.mileage.toLocaleString()} miles</span>
+                        <span className="text-gray-500">Last service: {new Date(vehicle.lastServiceDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                      </div>
+                    </div>
                   </div>
                 </Link>
               ))}
@@ -174,17 +234,30 @@ const PersonalizedDashboard: React.FC = () => {
             {userData.watches.length > 0 ? (
               <div className="space-y-4">
                 {userData.watches.map(watch => (
-                  <Link to="/tires-timepieces" key={watch.id} className="block">
-                    <div className="p-3 bg-black/40 rounded-lg flex items-center">
-                      <div className="w-16 h-16 rounded-lg overflow-hidden mr-4 flex-shrink-0 border border-gray-700 bg-gray-900">
-                        {watch.imageUrl && <img src={watch.imageUrl} alt={`${watch.brand} ${watch.model}`} className="w-full h-full object-contain" />}
+                  <div key={watch.id} className="block p-3 bg-black/40 rounded-lg hover:bg-black/60 transition">
+                    <Link to="/tires-timepieces" className="block">
+                      <div className="flex items-center">
+                        <div className="w-16 h-16 rounded-lg overflow-hidden mr-4 flex-shrink-0 border border-gray-700 bg-gray-900">
+                          {watch.imageUrl && <img src={watch.imageUrl} alt={`${watch.brand} ${watch.model}`} className="w-full h-full object-contain" />}
+                        </div>
+                        <div className="flex-grow">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="text-white font-medium">{watch.brand} {watch.model}</h3>
+                              <p className="text-gray-400 text-sm">{watch.year}</p>
+                            </div>
+                            <div className="bg-black/30 px-2 py-1 rounded">
+                              <span className="text-xs font-mono text-blue-300">${(watch.value || 0).toLocaleString()}</span>
+                            </div>
+                          </div>
+                        </div>
                       </div>
-                      <div>
-                        <h3 className="text-white font-medium">{watch.brand} {watch.model}</h3>
-                        <p className="text-gray-400 text-sm">{watch.year}</p>
-                      </div>
+                    </Link>
+                    <div className="mt-3 pt-2 border-t border-gray-800 flex justify-between text-xs">
+                      <span className="text-gray-500">Added: {new Date(watch.purchaseDate || new Date()).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</span>
+                      <Link to="/tires-timepieces" className="text-blue-400 hover:underline">View Details</Link>
                     </div>
-                  </Link>
+                  </div>
                 ))}
                 <Link to="/tires-timepieces" className="flex items-center justify-center p-3 bg-black/20 rounded-lg border border-dashed border-gray-700 transition hover:bg-black/40">
                   <span className="text-green-400">+ Add Timepiece</span>
@@ -347,19 +420,55 @@ const PersonalizedDashboard: React.FC = () => {
                   <div key={goal.id} className="p-3 bg-black/40 rounded-lg">
                     <div className="flex justify-between mb-2">
                       <div className="flex items-center">
-                        <span className="mr-2">{goal.emoji}</span>
+                        <span className="mr-2 text-lg">{goal.emoji}</span>
                         <h3 className="text-white font-medium">{goal.goal}</h3>
                       </div>
-                      <span className="text-blue-400 text-sm">{goal.progress}%</span>
+                      <div className="flex flex-col items-end">
+                        <span className="text-blue-400 text-sm font-medium">{goal.progress}%</span>
+                        <span className="text-xs text-gray-500">Target: ${goal.targetAmount?.toLocaleString() || 0}</span>
+                      </div>
                     </div>
-                    <div className="w-full bg-gray-700 rounded-full h-2.5">
+                    <div className="w-full bg-gray-700 rounded-full h-2.5 mb-2">
                       <div 
-                        className="bg-blue-500 h-2.5 rounded-full" 
+                        className="bg-gradient-to-r from-blue-500 to-blue-400 h-2.5 rounded-full" 
                         style={{ width: `${goal.progress}%` }}
                       ></div>
                     </div>
+                    <div className="flex justify-between mt-3 pt-2 border-t border-gray-800 text-xs">
+                      <div>
+                        <span className="text-gray-400">Saved: </span>
+                        <span className="text-blue-300 font-mono">${goal.savedAmount?.toLocaleString() || 0}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-400">Monthly: </span>
+                        <span className="text-green-400 font-mono">${goal.monthlyContribution?.toLocaleString() || 0}</span>
+                      </div>
+                      <div>
+                        <span className="text-gray-400">ETA: </span>
+                        <span className="text-amber-400">{new Date(goal.projectedDate || new Date()).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
+                      </div>
+                    </div>
                   </div>
                 ))}
+                {userData.manifestationHistory.length > 0 && (
+                  <div className="bg-black/30 p-3 rounded-lg mt-4">
+                    <h3 className="text-gray-400 text-xs mb-2">Patek Philippe Savings History</h3>
+                    <div className="h-28">
+                      <ResponsiveContainer width="100%" height="100%">
+                        <LineChart data={userData.manifestationHistory}>
+                          <XAxis dataKey="month" stroke="#374151" tick={{ fill: '#9CA3AF' }} tickLine={{ stroke: '#374151' }} />
+                          <YAxis stroke="#374151" tick={{ fill: '#9CA3AF' }} tickLine={{ stroke: '#374151' }} tickFormatter={(value) => `$${value/1000}k`} />
+                          <Tooltip 
+                            contentStyle={{ background: '#111111', border: '1px solid #374151' }}
+                            labelStyle={{ color: '#E5E7EB' }}
+                            formatter={(value) => [`$${value.toLocaleString()}`, 'Amount']}
+                          />
+                          <Line type="monotone" dataKey="amount" stroke="#3B82F6" strokeWidth={2} dot={{ stroke: '#3B82F6', strokeWidth: 2, r: 3, fill: '#1F2937' }} />
+                        </LineChart>
+                      </ResponsiveContainer>
+                    </div>
+                  </div>
+                )}
               </div>
             ) : (
               <div className="text-center p-6 bg-black/20 rounded-lg">
