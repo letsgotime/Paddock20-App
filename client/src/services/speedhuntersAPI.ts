@@ -57,14 +57,14 @@ export interface SpeedhuntersResponse {
 
 // This would normally be in an environment variable
 const SPEEDHUNTERS_API_ENDPOINT = 'https://api.speedhunters.com/v1';
-const SPEEDHUNTERS_API_KEY = process.env.VITE_SPEEDHUNTERS_API_KEY;
+const SPEEDHUNTERS_API_KEY = import.meta.env.VITE_SPEEDHUNTERS_API_KEY;
 
 // Helper to configure API requests
 const speedhuntersApi = axios.create({
   baseURL: SPEEDHUNTERS_API_ENDPOINT,
   headers: {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${SPEEDHUNTERS_API_KEY}`
+    'Authorization': `Bearer ${SPEEDHUNTERS_API_KEY || 'demo-key'}`
   }
 });
 

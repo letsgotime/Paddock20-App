@@ -23,6 +23,7 @@ const CarEventsExplorer: React.FC<CarEventsExplorerProps> = ({
   const [error, setError] = useState<string | null>(null);
   const [expandedEventId, setExpandedEventId] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>('all');
+  const [displayCount, setDisplayCount] = useState(maxEvents);
   
   useEffect(() => {
     if (waypoints.length === 0) return;
@@ -65,7 +66,7 @@ const CarEventsExplorer: React.FC<CarEventsExplorerProps> = ({
   const filteredEvents = events.filter(event => {
     if (filter === 'all') return true;
     return event.eventType === filter || event.categories.includes(filter);
-  }).slice(0, maxEvents);
+  }).slice(0, displayCount);
   
   // Get unique event types and categories for filtering
   const eventTypes = Array.from(new Set(events.map(event => event.eventType)));
@@ -303,10 +304,10 @@ const CarEventsExplorer: React.FC<CarEventsExplorerProps> = ({
         ))}
       </div>
       
-      {events.length > maxEvents && (
+      {events.length > displayCount && (
         <button 
           className="w-full mt-3 py-2 text-center text-blue-400 hover:text-blue-300 text-sm"
-          onClick={() => setMaxEvents(prev => prev + 5)}
+          onClick={() => setDisplayCount(prev => prev + 5)}
         >
           Show More Events
         </button>

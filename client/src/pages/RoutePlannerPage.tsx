@@ -541,12 +541,50 @@ const RoutePlannerPage = () => {
     console.log("Preferred Nav App:", preferredNavApp);
     console.log("Weather Data:", weatherData);
 
+    // Set mock waypoints for the APIs (in a real app, we'd convert addresses to coordinates)
+    const mockWaypoints = [
+      { lat: 35.2271, lng: -80.8431 }, // Charlotte
+      { lat: 35.5168, lng: -80.6307 }, // Concord
+      { lat: 35.7796, lng: -78.6382 }  // Raleigh
+    ];
+    
+    // Update route waypoints for the car events and culture spots components
+    setRouteWaypoints(mockWaypoints);
+
     if (weatherLoaded) {
       alert("Route planned with current weather conditions! Ready to navigate.");
     } else {
       alert("Route planned! Weather data could not be loaded.");
     }
     // Implement real app launch logic here
+  };
+  
+  // Handle event selection to add to route
+  const handleEventSelect = (event: StrutEvent) => {
+    if (!selectedEvents.some(e => e.id === event.id)) {
+      setSelectedEvents(prev => [...prev, event]);
+      
+      // Also add the event location as a waypoint
+      setRouteWaypoints(prev => [...prev, event.location.coordinates]);
+      
+      alert(`Added ${event.name} to your route!`);
+    } else {
+      alert("This event is already added to your route.");
+    }
+  };
+  
+  // Handle car culture spot selection to add to route
+  const handleCultureSpotSelect = (spot: CarCultureSpot) => {
+    if (!selectedSpots.some(s => s.id === spot.id)) {
+      setSelectedSpots(prev => [...prev, spot]);
+      
+      // Also add the spot location as a waypoint
+      setRouteWaypoints(prev => [...prev, spot.location.coordinates]);
+      
+      alert(`Added ${spot.name} to your route!`);
+    } else {
+      alert("This spot is already added to your route.");
+    }
   };
 
   // Effect for generating performance recommendations when vehicle selection changes
@@ -1641,10 +1679,82 @@ const RoutePlannerPage = () => {
         </div>
       )}
 
+      {/* Car Events and Culture Spots Discovery */}
+      {routeWaypoints.length > 0 && (
+        <div className="mt-8 space-y-8">
+          <h2 className="text-blue-400 font-orbitron text-2xl">Discover Along Your Route</h2>
+          
+          {/* Car Events Explorer */}
+          <CarEventsExplorer 
+            waypoints={routeWaypoints}
+            radius={25}
+            onSelectEvent={handleEventSelect}
+          />
+          
+          {/* Car Culture Spots Explorer */}
+          <CarCultureSpotsExplorer
+            waypoints={routeWaypoints}
+            radius={15}
+            onSelectSpot={handleCultureSpotSelect}
+          />
+          
+          {/* Selected Events and Spots */}
+          {(selectedEvents.length > 0 || selectedSpots.length > 0) && (
+            <div className="bg-gradient-to-br from-gray-800 to-gray-900 p-4 rounded-lg border border-gray-700 shadow-lg">
+              <h3 className="text-blue-400 font-orbitron text-xl mb-3">Your Custom Route Stops</h3>
+              
+              {selectedEvents.length > 0 && (
+                <div className="mb-4">
+                  <h4 className="text-green-400 font-semibold mb-2">Selected Events</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {selectedEvents.map(event => (
+                      <div key={event.id} className="bg-black/30 p-3 rounded-lg border border-gray-700 flex justify-between">
+                        <div>
+                          <div className="text-white font-medium">{event.name}</div>
+                          <div className="text-gray-400 text-sm">{event.date} at {event.startTime}</div>
+                        </div>
+                        <button 
+                          onClick={() => setSelectedEvents(prev => prev.filter(e => e.id !== event.id))}
+                          className="text-red-400 hover:text-red-300"
+                        >
+                          ✖
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {selectedSpots.length > 0 && (
+                <div>
+                  <h4 className="text-green-400 font-semibold mb-2">Selected Culture Spots</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                    {selectedSpots.map(spot => (
+                      <div key={spot.id} className="bg-black/30 p-3 rounded-lg border border-gray-700 flex justify-between">
+                        <div>
+                          <div className="text-white font-medium">{spot.name}</div>
+                          <div className="text-gray-400 text-sm capitalize">{spot.category.replace('_', ' ')}</div>
+                        </div>
+                        <button 
+                          onClick={() => setSelectedSpots(prev => prev.filter(s => s.id !== spot.id))}
+                          className="text-red-400 hover:text-red-300"
+                        >
+                          ✖
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Submit Button */}
       <button
         onClick={submitRoute}
-        className="bg-blue-500 hover:bg-blue-400 text-black font-montserrat px-8 py-4 rounded w-full"
+        className="bg-blue-500 hover:bg-blue-400 text-black font-montserrat px-8 py-4 rounded w-full mt-8"
       >
         🚀 Plan Route
       </button>
