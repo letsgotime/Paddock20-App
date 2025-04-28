@@ -50,14 +50,14 @@ export interface StrutEventResponse {
 
 // This would normally be in an environment variable
 const STRUT_API_ENDPOINT = 'https://api.strutevents.com/v1';
-const STRUT_API_KEY = process.env.VITE_STRUT_API_KEY;
+const STRUT_API_KEY = import.meta.env.VITE_STRUT_API_KEY;
 
 // Helper to configure API requests
 const strutApi = axios.create({
   baseURL: STRUT_API_ENDPOINT,
   headers: {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${STRUT_API_KEY}`
+    'Authorization': `Bearer ${STRUT_API_KEY || 'demo-key'}`
   }
 });
 

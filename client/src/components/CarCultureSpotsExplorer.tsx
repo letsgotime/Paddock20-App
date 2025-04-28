@@ -1,7 +1,7 @@
 // client/src/components/CarCultureSpotsExplorer.tsx
 import React, { useState, useEffect } from 'react';
 import { findCarCultureSpotsAlongRoute, CarCultureSpot } from '@/services/speedhuntersAPI';
-import { Star, MapPin, Clock, DollarSign, Link, Camera, ChevronRight, ChevronDown, Check, Car, Coffee } from 'lucide-react';
+import { Star, MapPin, Clock, DollarSign, Link, Camera, ChevronRight, ChevronDown, Check, Car, Coffee, Users } from 'lucide-react';
 
 interface CarCultureSpotsExplorerProps {
   waypoints: Array<{lat: number, lng: number}>;
