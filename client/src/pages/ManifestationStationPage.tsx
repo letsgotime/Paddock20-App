@@ -147,6 +147,25 @@ const ManifestationStationPage = () => {
           type: 'deposit',
           description: "Monthly savings plan"
         }
+      ],
+      mediaGallery: [
+        {
+          id: 301,
+          type: 'image',
+          name: 'Ferrari 458 Spider - Red',
+          url: 'https://images.unsplash.com/photo-1614200179396-2bdb77ebf81b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8ZmVycmFyaSUyMDQ1OHxlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80',
+          thumbnail: 'https://images.unsplash.com/photo-1614200179396-2bdb77ebf81b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8ZmVycmFyaSUyMDQ1OHxlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80',
+          description: 'Dream configuration - Rosso Corsa with black interior and carbon fiber details',
+          dateAdded: '2025-01-15'
+        },
+        {
+          id: 302,
+          type: 'link',
+          name: 'Ferrari Official Configurator',
+          url: 'https://www.ferrari.com/en-US/auto/car-configurator',
+          description: 'Official configurator to build my dream specs',
+          dateAdded: '2025-02-01'
+        }
       ]
     },
     {
@@ -211,6 +230,25 @@ const ManifestationStationPage = () => {
           type: 'deposit',
           description: "Sale of vintage watch collection"
         }
+      ],
+      mediaGallery: [
+        {
+          id: 303,
+          type: 'image',
+          name: 'Nautilus 5711 - Blue Dial',
+          url: 'https://images.unsplash.com/photo-1677507270705-9e663fd6abe2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cGF0ZWslMjBwaGlsaXBwZXxlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80',
+          thumbnail: 'https://images.unsplash.com/photo-1677507270705-9e663fd6abe2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8cGF0ZWslMjBwaGlsaXBwZXxlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80',
+          description: 'Iconic blue dial variation - my ultimate goal timepiece',
+          dateAdded: '2025-01-20'
+        },
+        {
+          id: 304,
+          type: 'link',
+          name: 'Nautilus Collection Official Website',
+          url: 'https://www.patek.com/en/collection/nautilus',
+          description: 'Official Patek Philippe Nautilus collection',
+          dateAdded: '2025-02-05'
+        }
       ]
     },
     {
@@ -266,6 +304,33 @@ const ManifestationStationPage = () => {
           amount: 175000,
           type: 'deposit',
           description: "Investment portfolio rebalance"
+        }
+      ],
+      mediaGallery: [
+        {
+          id: 305,
+          type: 'image',
+          name: 'Aspen Mountain View',
+          url: 'https://images.unsplash.com/photo-1568400693779-a271b08cbd8f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8YXNwZW4lMjBjYWJpbnxlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80',
+          thumbnail: 'https://images.unsplash.com/photo-1568400693779-a271b08cbd8f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8YXNwZW4lMjBjYWJpbnxlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80',
+          description: 'Ideal mountain view with private access and privacy',
+          dateAdded: '2025-01-25'
+        },
+        {
+          id: 306,
+          type: 'file',
+          name: 'Cabin Floor Plans',
+          url: '#',
+          description: 'Architect draft of preferred layout (4BR/5BA)',
+          dateAdded: '2025-02-10'
+        },
+        {
+          id: 307,
+          type: 'link',
+          name: 'Aspen Real Estate Portal',
+          url: 'https://www.aspensnowmasssir.com/',
+          description: 'Exclusive property listings in target area',
+          dateAdded: '2025-03-01'
         }
       ]
     },
@@ -330,6 +395,34 @@ const ManifestationStationPage = () => {
           amount: 10000,
           type: 'deposit',
           description: "Unexpected windfall"
+        }
+      ],
+      mediaGallery: [
+        {
+          id: 308,
+          type: 'image',
+          name: 'Monaco Grand Prix - Yacht View',
+          url: 'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8bW9uYWNvJTIweWFjaHR8ZW58MHx8MHx8fDA%3D&w=1000&q=80',
+          thumbnail: 'https://images.unsplash.com/photo-1559128010-7c1ad6e1b6a5?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8M3x8bW9uYWNvJTIweWFjaHR8ZW58MHx8MHx8fDA%3D&w=1000&q=80',
+          description: 'Ideal yacht position along the harbor section',
+          dateAdded: '2025-02-01'
+        },
+        {
+          id: 309,
+          type: 'image',
+          name: 'F1 Monaco Circuit Map',
+          url: 'https://upload.wikimedia.org/wikipedia/commons/3/36/Monte_Carlo_Formula_1_track_map.svg',
+          thumbnail: 'https://upload.wikimedia.org/wikipedia/commons/3/36/Monte_Carlo_Formula_1_track_map.svg',
+          description: 'Circuit layout with yacht viewing areas highlighted',
+          dateAdded: '2025-02-15'
+        },
+        {
+          id: 310,
+          type: 'link',
+          name: 'F1 Hospitality Packages',
+          url: 'https://f1experiences.com/monaco-grand-prix',
+          description: 'Official F1 Experiences options',
+          dateAdded: '2025-03-01'
         }
       ]
     }
@@ -455,7 +548,9 @@ const ManifestationStationPage = () => {
       // Budget tracking
       targetAmount: 0,
       currentAmount: 0,
-      budgetEntries: []
+      budgetEntries: [],
+      // Media gallery
+      mediaGallery: []
     });
   };
 
@@ -1389,54 +1484,296 @@ const ManifestationStationPage = () => {
               
               {/* Milestones */}
               <div className="mb-8">
-                <h3 className="text-blue-400 font-orbitron text-lg mb-3">Milestones</h3>
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-blue-400 font-orbitron text-lg">🚩 Milestone Tracker</h3>
+                  <div className="bg-black/30 px-3 py-1 rounded-md border border-blue-900/30">
+                    <span className="text-gray-400 text-xs">Progress:</span>
+                    <span className="text-blue-400 text-xs ml-2 font-mono">
+                      {selectedGoal.completedMilestones.length} / {selectedGoal.milestones.length + selectedGoal.completedMilestones.length}
+                    </span>
+                  </div>
+                </div>
                 
-                {/* Incomplete Milestones */}
-                {selectedGoal.milestones.length > 0 ? (
+                <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg p-4 border border-gray-700 mb-4">
+                  {/* Incomplete Milestones */}
+                  {selectedGoal.milestones.length > 0 ? (
+                    <div className="mb-6">
+                      <div className="flex items-center mb-3">
+                        <div className="h-2 w-2 bg-yellow-500 rounded-full mr-2"></div>
+                        <h4 className="text-yellow-400 font-medium">Pending Milestones</h4>
+                      </div>
+                      <div className="space-y-3">
+                        {selectedGoal.milestones.map((milestone) => (
+                          <div key={milestone.id} className="bg-black/30 p-4 rounded-lg border border-gray-700 hover:border-yellow-500/30 transition-colors">
+                            <div className="flex justify-between items-start">
+                              <div className="flex-1">
+                                <p className="text-white font-medium">{milestone.name}</p>
+                                <div className="flex items-center text-xs text-gray-400 mt-1">
+                                  <span className="inline-block bg-gray-800 px-2 py-0.5 rounded mr-2">Target: {milestone.targetDate}</span>
+                                  {new Date(milestone.targetDate) < new Date() ? (
+                                    <span className="text-red-400">Overdue</span>
+                                  ) : (
+                                    <span className="text-yellow-400">On track</span>
+                                  )}
+                                </div>
+                                {milestone.notes && (
+                                  <div className="mt-2 text-gray-300 text-sm">
+                                    <p>{milestone.notes}</p>
+                                  </div>
+                                )}
+                              </div>
+                              
+                              <div className="flex flex-col space-y-2">
+                                <button
+                                  onClick={() => handleCompleteMilestone(milestone.id)}
+                                  className="bg-green-600 hover:bg-green-500 text-white text-sm px-3 py-1 rounded flex items-center"
+                                >
+                                  <span className="mr-1">✓</span> Complete
+                                </button>
+                                <button 
+                                  className="bg-gray-700 hover:bg-gray-600 text-white text-sm px-3 py-1 rounded"
+                                  onClick={() => {
+                                    setNewMilestone({
+                                      name: milestone.name,
+                                      targetDate: milestone.targetDate,
+                                      notes: milestone.notes || ""
+                                    });
+                                  }}
+                                >
+                                  Edit
+                                </button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="bg-black/20 p-4 rounded-lg text-center mb-6">
+                      <p className="text-gray-400">No pending milestones</p>
+                    </div>
+                  )}
+                  
+                  {/* Completed Milestones */}
+                  {selectedGoal.completedMilestones.length > 0 && (
+                    <div>
+                      <div className="flex items-center mb-3">
+                        <div className="h-2 w-2 bg-green-500 rounded-full mr-2"></div>
+                        <h4 className="text-green-400 font-medium">Completed Milestones</h4>
+                      </div>
+                      <div className="space-y-3">
+                        {selectedGoal.completedMilestones.map((milestone) => (
+                          <div key={milestone.id} className="bg-black/30 p-4 rounded-lg border border-green-900/30">
+                            <div className="flex items-start">
+                              <span className="text-green-500 mr-2 font-bold">✓</span>
+                              <div>
+                                <p className="text-gray-200 font-medium">{milestone.name}</p>
+                                <p className="text-gray-400 text-xs mt-1">Completed on: {new Date().toLocaleDateString()}</p>
+                                {milestone.notes && <p className="text-gray-400 text-sm mt-2">{milestone.notes}</p>}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Add milestone form */}
+                <div className="bg-black/30 rounded-lg border border-gray-700 p-4">
+                  <h4 className="text-white font-medium mb-3">Add New Milestone</h4>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                    <div>
+                      <label className="block text-gray-300 text-sm mb-1">Name</label>
+                      <input
+                        type="text"
+                        placeholder="e.g., Test drive, Dealer deposit, etc."
+                        value={newMilestone.name}
+                        onChange={(e) => setNewMilestone({...newMilestone, name: e.target.value})}
+                        className="bg-gray-800 text-white px-4 py-2 rounded border border-gray-700 w-full"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-gray-300 text-sm mb-1">Target Date</label>
+                      <input
+                        type="date"
+                        value={newMilestone.targetDate}
+                        onChange={(e) => setNewMilestone({...newMilestone, targetDate: e.target.value})}
+                        className="bg-gray-800 text-white px-4 py-2 rounded border border-gray-700 w-full"
+                      />
+                    </div>
+                  </div>
+                  
                   <div className="mb-4">
-                    <h4 className="text-gray-300 mb-2">Pending:</h4>
-                    <div className="space-y-2">
-                      {selectedGoal.milestones.map((milestone) => (
-                        <div key={milestone.id} className="bg-gray-800 p-3 rounded-lg border border-gray-700 flex justify-between items-center">
-                          <div>
-                            <p className="text-white">{milestone.name}</p>
-                            <p className="text-gray-400 text-xs">Target: {milestone.targetDate}</p>
-                            {milestone.notes && <p className="text-gray-400 text-xs">{milestone.notes}</p>}
-                          </div>
-                          
-                          <button
-                            onClick={() => handleCompleteMilestone(milestone.id)}
-                            className="bg-green-600 hover:bg-green-500 text-white text-sm px-3 py-1 rounded"
-                          >
-                            Mark Complete
-                          </button>
-                        </div>
-                      ))}
-                    </div>
+                    <label className="block text-gray-300 text-sm mb-1">Notes (optional)</label>
+                    <textarea
+                      placeholder="Any additional details about this milestone..."
+                      value={newMilestone.notes}
+                      onChange={(e) => setNewMilestone({...newMilestone, notes: e.target.value})}
+                      className="bg-gray-800 text-white px-4 py-2 rounded border border-gray-700 w-full"
+                      rows={2}
+                    />
                   </div>
-                ) : (
-                  <p className="text-gray-400 mb-4">No pending milestones</p>
-                )}
-                
-                {/* Completed Milestones */}
-                {selectedGoal.completedMilestones.length > 0 && (
-                  <div>
-                    <h4 className="text-gray-300 mb-2">Completed:</h4>
-                    <div className="space-y-2">
-                      {selectedGoal.completedMilestones.map((milestone) => (
-                        <div key={milestone.id} className="bg-gray-800 p-3 rounded-lg border border-green-900/40 flex items-center">
-                          <div className="text-green-400 mr-2">✓</div>
-                          <div>
-                            <p className="text-white">{milestone.name}</p>
-                            <p className="text-gray-400 text-xs">Completed</p>
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+                  
+                  <button
+                    onClick={handleAddMilestone}
+                    disabled={!newMilestone.name || !newMilestone.targetDate}
+                    className={`px-4 py-2 rounded text-white ${
+                      !newMilestone.name || !newMilestone.targetDate 
+                        ? 'bg-gray-600 cursor-not-allowed' 
+                        : 'bg-blue-600 hover:bg-blue-500'
+                    }`}
+                  >
+                    {newMilestone.name && newMilestone.targetDate ? '+ Add Milestone' : 'Name and Date Required'}
+                  </button>
+                </div>
               </div>
               
+              {/* Media Gallery */}
+              <div className="mb-8">
+                <div className="flex justify-between items-center mb-3">
+                  <h3 className="text-blue-400 font-orbitron text-lg">🖼️ Media Gallery</h3>
+                  <div className="bg-black/30 px-3 py-1 rounded-md border border-blue-900/30">
+                    <span className="text-gray-400 text-xs">Files:</span>
+                    <span className="text-blue-400 text-xs ml-2 font-mono">{selectedGoal.mediaGallery.length}</span>
+                  </div>
+                </div>
+                
+                {/* Telemetry-style gallery container */}
+                <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg p-4 border border-gray-700 mb-4">
+                  {selectedGoal.mediaGallery.length > 0 ? (
+                    <div>
+                      {/* Gallery filter tabs */}
+                      <div className="flex mb-4 space-x-2 border-b border-gray-700 pb-2">
+                        <button className="bg-blue-900/40 text-white px-3 py-1 rounded-lg text-sm">All ({selectedGoal.mediaGallery.length})</button>
+                        <button className="hover:bg-gray-700/40 text-gray-300 px-3 py-1 rounded-lg text-sm">Images ({selectedGoal.mediaGallery.filter(m => m.type === 'image').length})</button>
+                        <button className="hover:bg-gray-700/40 text-gray-300 px-3 py-1 rounded-lg text-sm">Files ({selectedGoal.mediaGallery.filter(m => m.type === 'file').length})</button>
+                        <button className="hover:bg-gray-700/40 text-gray-300 px-3 py-1 rounded-lg text-sm">Links ({selectedGoal.mediaGallery.filter(m => m.type === 'link').length})</button>
+                      </div>
+                      
+                      {/* Main grid display of media items */}
+                      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                        {selectedGoal.mediaGallery.map(media => (
+                          <div 
+                            key={media.id} 
+                            className={`bg-black/40 rounded-lg border overflow-hidden hover:shadow-lg hover:border-blue-500/50 transition-all ${
+                              media.type === 'image' ? 'border-indigo-900/30' : 
+                              media.type === 'file' ? 'border-amber-900/30' : 'border-emerald-900/30'
+                            }`}
+                          >
+                            {media.type === 'image' && (
+                              <a href={media.url} target="_blank" rel="noopener noreferrer" className="block">
+                                <div className="relative h-40 overflow-hidden bg-gray-900">
+                                  <img 
+                                    src={media.thumbnail || media.url} 
+                                    alt={media.name}
+                                    className="w-full h-full object-cover transition-transform hover:scale-105"
+                                  />
+                                  <div className="absolute top-2 left-2 bg-black/60 text-xs text-white px-2 py-1 rounded">
+                                    Image
+                                  </div>
+                                </div>
+                                <div className="p-3">
+                                  <h4 className="text-white font-medium truncate">{media.name}</h4>
+                                  <p className="text-gray-400 text-xs mt-1">Added: {new Date(media.dateAdded).toLocaleDateString()}</p>
+                                  {media.description && (
+                                    <p className="text-gray-300 text-sm mt-2 line-clamp-2">{media.description}</p>
+                                  )}
+                                </div>
+                              </a>
+                            )}
+
+                            {media.type === 'link' && (
+                              <a href={media.url} target="_blank" rel="noopener noreferrer" className="p-4 block">
+                                <div className="flex items-center">
+                                  <div className="w-10 h-10 bg-emerald-900/30 rounded-full flex items-center justify-center mr-3">
+                                    <span className="text-emerald-400 text-lg">🔗</span>
+                                  </div>
+                                  <div>
+                                    <h4 className="text-white font-medium">{media.name}</h4>
+                                    <p className="text-emerald-400 text-xs truncate">{media.url}</p>
+                                  </div>
+                                </div>
+                                {media.description && (
+                                  <p className="text-gray-300 text-sm mt-3 line-clamp-2">{media.description}</p>
+                                )}
+                                <p className="text-gray-400 text-xs mt-3">Added: {new Date(media.dateAdded).toLocaleDateString()}</p>
+                              </a>
+                            )}
+
+                            {media.type === 'file' && (
+                              <a href={media.url} target="_blank" rel="noopener noreferrer" className="p-4 block">
+                                <div className="flex items-center">
+                                  <div className="w-10 h-10 bg-amber-900/30 rounded-full flex items-center justify-center mr-3">
+                                    <span className="text-amber-400 text-lg">📄</span>
+                                  </div>
+                                  <div>
+                                    <h4 className="text-white font-medium">{media.name}</h4>
+                                    <p className="text-amber-400 text-xs">Document</p>
+                                  </div>
+                                </div>
+                                {media.description && (
+                                  <p className="text-gray-300 text-sm mt-3 line-clamp-2">{media.description}</p>
+                                )}
+                                <p className="text-gray-400 text-xs mt-3">Added: {new Date(media.dateAdded).toLocaleDateString()}</p>
+                              </a>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center p-8 bg-black/20 rounded-lg">
+                      <div className="text-4xl mb-3">🖼️</div>
+                      <p className="text-gray-400 mb-2">No media added yet</p>
+                      <p className="text-gray-500 text-sm">Add images, documents, or links to visualize your goal</p>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Add new media section */}
+                <div className="bg-black/30 rounded-lg border border-gray-700 p-4">
+                  <h4 className="text-white font-medium mb-3">Add Media</h4>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                    {/* Add Image Button */}
+                    <div className="bg-gradient-to-br from-indigo-900/20 to-indigo-800/10 p-3 rounded-lg border border-indigo-900/30 text-center hover:border-indigo-500/50 cursor-pointer transition-colors">
+                      <div className="text-3xl mb-2">🖼️</div>
+                      <h5 className="font-medium text-white mb-1">Add Image</h5>
+                      <p className="text-gray-400 text-xs">Upload photos of your dream asset</p>
+                    </div>
+                    
+                    {/* Add File Button */}
+                    <div className="bg-gradient-to-br from-amber-900/20 to-amber-800/10 p-3 rounded-lg border border-amber-900/30 text-center hover:border-amber-500/50 cursor-pointer transition-colors">
+                      <div className="text-3xl mb-2">📄</div>
+                      <h5 className="font-medium text-white mb-1">Add Document</h5>
+                      <p className="text-gray-400 text-xs">Upload specs, brochures, PDFs</p>
+                    </div>
+                    
+                    {/* Add Link Button */}
+                    <div className="bg-gradient-to-br from-emerald-900/20 to-emerald-800/10 p-3 rounded-lg border border-emerald-900/30 text-center hover:border-emerald-500/50 cursor-pointer transition-colors">
+                      <div className="text-3xl mb-2">🔗</div>
+                      <h5 className="font-medium text-white mb-1">Add Link</h5>
+                      <p className="text-gray-400 text-xs">Save websites, articles, videos</p>
+                    </div>
+                  </div>
+
+                  {/* Automatic High-Res Photo Search Section */}
+                  <div className="mt-4 bg-gradient-to-br from-blue-900/20 to-blue-900/5 p-4 rounded-lg border border-blue-900/30">
+                    <div className="flex items-center justify-between mb-2">
+                      <h5 className="text-blue-400 font-medium">🔍 Automatic Photo Search</h5>
+                      <button className="bg-blue-600 hover:bg-blue-500 text-white text-sm px-3 py-1 rounded">
+                        Find Photos
+                      </button>
+                    </div>
+                    <p className="text-gray-300 text-sm">
+                      Let us find high-quality images of "{selectedGoal.targetAsset}" to help you visualize your goal.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
               {/* Actions */}
               <div className="flex justify-between mt-8">
                 <button
