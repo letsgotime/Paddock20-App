@@ -44,7 +44,7 @@ function AuthForm() {
   return (
     <div className="apex-card max-w-md mx-auto">
       <h2 className="apex-header-green mb-6 text-center">
-        {isLogin ? 'Login to ApexVault™' : 'Create ApexVault™ Account'}
+        {isLogin ? 'Login to Bespoke Technology Syndicate™' : 'Create Bespoke Technology Syndicate™ Account'}
       </h2>
 
       {message && (
