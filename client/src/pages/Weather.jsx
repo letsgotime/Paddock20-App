@@ -1,6 +1,7 @@
 import React from 'react';
 import { MAIN_CONTENT_ID } from '../lib/accessibility';
 import AutomotiveEnthusiastWeather from '../components/AutomotiveEnthusiastWeather';
+import WorldClockPanel from '../components/WorldClockPanel';
 
 function Weather() {
   return (
@@ -9,9 +10,15 @@ function Weather() {
       <header className="mb-10 text-center">
         <h1 className="apex-header text-3xl mb-2">Paddock20™ Weather Hub</h1>
         <p className="text-gray-400">
-          F1-level automotive weather analytics and drive recommendations
+          F1-inspired automotive weather analytics and drive recommendations
         </p>
       </header>
+      
+      {/* Global Circuit Times & Conditions */}
+      <section className="mb-6" aria-labelledby="global-circuit-heading">
+        <h2 id="global-circuit-heading" className="apex-header-green text-xl mb-4">Global Circuit Times & Conditions</h2>
+        <WorldClockPanel />
+      </section>
       
       {/* F1-style motorsport weather station */}
       <section className="mb-10" aria-labelledby="paddock-weather-heading">
