@@ -8,6 +8,7 @@ import {
   formatTime,
   getWeatherIconUrl
 } from '@/services/openWeatherService';
+import { MapPin, Locate, Search } from 'lucide-react';
 
 const HomeWeatherWidget = () => {
   const [weatherData, setWeatherData] = useState(null);
@@ -15,7 +16,12 @@ const HomeWeatherWidget = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [unit, setUnit] = useState('imperial');
+  const [location, setLocation] = useState(defaultLocation);
+  const [locationInput, setLocationInput] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
 
+  // Fetch weather data based on the selected location
   useEffect(() => {
     async function fetchWeatherData() {
       try {
@@ -23,11 +29,11 @@ const HomeWeatherWidget = () => {
         setError(null);
         
         // Fetch basic weather data
-        const currentWeather = await getWeatherData(defaultLocation, unit);
+        const currentWeather = await getWeatherData(location, unit);
         setWeatherData(currentWeather);
         
         // Fetch one-call data for additional details
-        const oneCallResult = await getOneCallData(defaultLocation, unit);
+        const oneCallResult = await getOneCallData(location, unit);
         setOneCallData(oneCallResult);
         
         setIsLoading(false);
@@ -44,7 +50,78 @@ const HomeWeatherWidget = () => {
     const refreshInterval = setInterval(fetchWeatherData, 15 * 60 * 1000);
     
     return () => clearInterval(refreshInterval);
-  }, [unit]);
+  }, [location, unit]);
+
+  // Handle searching for locations
+  const handleSearch = async () => {
+    if (!locationInput.trim()) return;
+    
+    setIsSearching(true);
+    try {
+      // Call the geocoding API through our backend proxy
+      const response = await fetch(`/api/geocode?q=${encodeURIComponent(locationInput)}`);
+      if (!response.ok) throw new Error('Location search failed');
+      
+      const data = await response.json();
+      setSearchResults(data);
+    } catch (err) {
+      console.error('Error searching for location:', err);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+
+  // Handle selecting a location from search results
+  const selectLocation = (result) => {
+    setLocation({
+      id: `${result.lat},${result.lon}`,
+      name: result.name || result.local_names?.en || 'Unknown',
+      lat: result.lat,
+      lon: result.lon
+    });
+    setSearchResults([]);
+    setLocationInput('');
+  };
+
+  // Get current location from browser
+  const getCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          
+          // Reverse geocode to get location name
+          fetch(`/api/reverse-geocode?lat=${latitude}&lon=${longitude}`)
+            .then(res => res.json())
+            .then(data => {
+              const locationName = data[0]?.name || 'Current Location';
+              setLocation({
+                id: `${latitude},${longitude}`,
+                name: locationName,
+                lat: latitude,
+                lon: longitude
+              });
+            })
+            .catch(err => {
+              console.error('Error getting location name:', err);
+              // Still set the location even if we can't get the name
+              setLocation({
+                id: `${latitude},${longitude}`,
+                name: 'Current Location',
+                lat: latitude,
+                lon: longitude
+              });
+            });
+        },
+        (error) => {
+          console.error('Error getting current location:', error);
+          alert('Unable to get your current location. Please check your browser permissions.');
+        }
+      );
+    } else {
+      alert('Geolocation is not supported by your browser');
+    }
+  };
 
   // Calculate tire pressure recommendation based on temperature
   const getTirePressureRecommendation = (temp) => {
@@ -58,6 +135,39 @@ const HomeWeatherWidget = () => {
     } else {
       return { front: '32-34', rear: '30-32' }; // Moderate weather
     }
+  };
+  
+  // Calculate ideal tire temperature for Ferrari F8 based on ambient temperature
+  const getIdealTireTemperature = (ambientTemp, surfaceTemp) => {
+    // Basic formula for street/sport tires (more complex models would consider surface temp, speed, etc.)
+    // Formula approximation: For street driving, ideal tire temp is ~170-190°F for high-performance tires
+    // Adjustments are made based on ambient and surface temps
+    const baseTemp = 180; // Base temperature in Fahrenheit for high-performance tires
+    
+    // Adjust base temp based on ambient temperature (colder = higher target, hotter = lower target)
+    let adjustedTemp = baseTemp;
+    
+    if (ambientTemp < 50) {
+      adjustedTemp = baseTemp + 10; // Colder weather requires higher target temp
+    } else if (ambientTemp > 85) {
+      adjustedTemp = baseTemp - 10; // Hotter weather requires lower target temp
+    }
+    
+    // Factor in surface temperature to refine the target
+    if (surfaceTemp) {
+      // Surface temperature has a lesser but still significant effect (20% of the adjustment)
+      const surfaceFactor = (surfaceTemp - ambientTemp) * 0.2;
+      adjustedTemp -= surfaceFactor;
+    }
+    
+    // Return a temperature range rather than a single number
+    const minTemp = Math.round(adjustedTemp - 5);
+    const maxTemp = Math.round(adjustedTemp + 5);
+    
+    return {
+      fahrenheit: `${minTemp}-${maxTemp}°F`,
+      celsius: `${Math.round((minTemp - 32) * 5/9)}-${Math.round((maxTemp - 32) * 5/9)}°C`
+    };
   };
 
   // Calculate torque setting recommendation for Ferrari F8 based on conditions
@@ -97,7 +207,7 @@ const HomeWeatherWidget = () => {
     );
   }
 
-  const { name } = defaultLocation;
+  const { name } = location;
   const { main, weather, wind, sys } = weatherData;
   const current = oneCallData.current;
   
@@ -105,6 +215,7 @@ const HomeWeatherWidget = () => {
   const surfaceTemp = (main.temp * 0.9) + (current.uvi * 0.5);
   const tirePressure = getTirePressureRecommendation(main.temp);
   const torqueSetting = getTorqueSettingRecommendation(weather[0].main, main.temp);
+  const idealTireTemp = getIdealTireTemperature(main.temp, surfaceTemp);
 
   return (
     <div className="p-6 bg-gradient-to-r from-gray-900 to-black rounded-lg border border-gray-800 shadow-xl">
@@ -210,6 +321,27 @@ const HomeWeatherWidget = () => {
               </div>
               <div className="mt-1 text-xs text-gray-500 italic">
                 Optimized for current surface temperature
+              </div>
+            </div>
+            
+            <div className="bg-gradient-to-r from-gray-900 to-black/50 p-3 rounded border border-gray-800">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-300 text-sm">Ideal Tire Temp:</span>
+                <span className="text-green-400 font-medium">{idealTireTemp.fahrenheit}</span>
+              </div>
+              <div className="mt-1 text-xs text-gray-500 italic">
+                Ferrari F8 - Performance tire optimal operating range
+              </div>
+              <div className="mt-2 bg-gradient-to-r from-blue-900/30 to-red-900/30 h-2 rounded-full overflow-hidden">
+                <div 
+                  className="bg-gradient-to-r from-blue-500 via-green-500 to-red-500 h-full" 
+                  style={{ width: '100%' }}
+                ></div>
+              </div>
+              <div className="flex justify-between text-[10px] text-gray-400 mt-1">
+                <span>Cold</span>
+                <span>Optimal Zone</span>
+                <span>Overheated</span>
               </div>
             </div>
           </div>
