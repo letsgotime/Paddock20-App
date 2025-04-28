@@ -1,5 +1,80 @@
 export const vehicles = [
   {
+    id: "bmw-g80-m3",
+    make: "BMW",
+    model: "G80 M3 Competition",
+    year: 2021,
+    vin: "WBS03DJ09MCF42157",
+    color: "Brooklyn Grey",
+    purchaseDate: "2022-03-10",
+    mileage: 18500,
+    lastService: "2024-03-05",
+    nextService: "2024-09-05",
+    engineType: "3.0L Twin-Turbo I6",
+    transmission: "8-Speed Automatic",
+    horsepower: 503,
+    torque: "479 lb-ft",
+    driveType: "RWD",
+    fuel: "Premium Unleaded",
+    image: "/assets/bmw-g80-m3.jpg",
+    isModified: true,
+    modifications: [
+      { name: "KW V4 Coilovers", manufacturer: "KW Suspensions" },
+      { name: "Carbon fiber mirrors", manufacturer: "BMW M Performance" },
+      { name: "Titanium exhaust", manufacturer: "Akrapovic" }
+    ],
+    tire: {
+      brand: "Michelin",
+      model: "Pilot Sport 4S",
+      mileageLifeTarget: 25000,
+      currentMileage: 10500,
+      purchaseDate: "2023-05-15",
+      lastTreadDepthCheck: "2024-04-10"
+    },
+    glossTracking: {
+      lastGlossBoost: "2024-04-10",
+      lastFullDecon: "2024-02-15",
+      lastSealantRefresh: "2024-04-10",
+      lastPaintCorrection: "2023-08-12",
+      lastCeramicTopCoat: "2023-08-15",
+      glossGrowthLog: [
+        {
+          date: "2024-02-15",
+          action: "Full Decon + Ceramic Refresh",
+          notes: "Winter protection maintenance before spring."
+        },
+        {
+          date: "2024-04-10",
+          action: "Spring Detail + Gloss Boost",
+          notes: "Thorough wash, decon, and sealant refresh."
+        }
+      ]
+    },
+    maintenance: {
+      lastOilChange: "2024-03-05",
+      lastAirFilterChange: "2024-03-05",
+      lastCabinFilterChange: "2024-03-05",
+      lastCoolantFlush: "2023-09-20",
+      lastBrakeFluidChange: "2023-09-20",
+      lastTransmissionService: "2023-09-20",
+      records: [
+        {
+          date: "2023-09-20",
+          type: "Major Service",
+          mileage: 15000,
+          notes: "Annual maintenance service with fluid flush and brake system check"
+        },
+        {
+          date: "2024-03-05",
+          type: "Oil & Filter Service",
+          mileage: 18500,
+          notes: "Oil change with filter, inspection, and software updates"
+        }
+      ]
+    },
+    isOwned: true
+  },
+  {
     id: "bmw-e93-m3",
     make: "BMW",
     model: "E93 M3",
@@ -162,7 +237,7 @@ export const vehicles = [
     torque: "398 lb-ft",
     driveType: "RWD",
     fuel: "Premium Unleaded",
-    image: "https://images.unsplash.com/photo-1611016186353-9af58c69a533?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1024&q=80",
+    image: "/assets/ferrari-458.png",
     isModified: true,
     modifications: [
       { name: "Custom forged wheels", manufacturer: "HRE" },
@@ -294,24 +369,51 @@ export const vehicleProfile = vehicles[1];
 export const garageVehicles = [
   {
     id: 1,
-    make: "Ferrari",
-    model: "F8 Tributo",
-    year: 2022,
-    image: "https://images.unsplash.com/photo-1614200187524-dc4b892acf16?auto=format&fit=crop&q=80&w=2787&ixlib=rb-4.0.3"
+    make: "BMW",
+    model: "G80 M3 Competition",
+    year: 2021,
+    image: "/assets/bmw-g80-m3.jpg",
+    status: "owned"
   },
   {
     id: 2,
-    make: "Ferrari",
-    model: "458 Italia",
-    year: 2015,
-    image: "https://images.unsplash.com/photo-1611016186353-9af58c69a533?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1024&q=80"
+    make: "BMW",
+    model: "E93 M3",
+    year: 2009,
+    image: "/assets/bmw-e93-m3.jpg",
+    status: "owned"
   },
   {
     id: 3,
+    make: "Audi",
+    model: "R8 V10",
+    year: 2014,
+    image: "/assets/audi-r8-v10.jpg",
+    status: "owned"
+  },
+  {
+    id: 4,
+    make: "Ferrari",
+    model: "F8 Tributo",
+    year: 2022,
+    image: "https://images.unsplash.com/photo-1614200187524-dc4b892acf16?auto=format&fit=crop&q=80&w=2787&ixlib=rb-4.0.3",
+    status: "dream"
+  },
+  {
+    id: 5,
+    make: "Ferrari",
+    model: "458 Italia",
+    year: 2015,
+    image: "/assets/ferrari-458.png",
+    status: "dream"
+  },
+  {
+    id: 6,
     make: "Porsche",
     model: "911 GT3",
     year: 2023,
-    image: "https://images.unsplash.com/photo-1614161439765-a4bfb1462e7b?auto=format&fit=crop&q=80&w=2787&ixlib=rb-4.0.3"
+    image: "https://images.unsplash.com/photo-1614161439765-a4bfb1462e7b?auto=format&fit=crop&q=80&w=2787&ixlib=rb-4.0.3",
+    status: "dream"
   }
 ];
 
