@@ -939,6 +939,35 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // OAuth callback routes
   app.get('/oauth2callback', handleGoogleOAuth2Callback);
   app.get('/apple-oauth2callback', handleAppleOAuth2Callback);
+  
+  // Google OAuth token exchange endpoint
+  app.post('/api/google-auth/token', async (req, res) => {
+    try {
+      const { code, redirectUri } = req.body;
+      
+      if (!code || !redirectUri) {
+        return res.status(400).json({ error: 'Missing required parameters' });
+      }
+      
+      // Import axios for making HTTP requests
+      const axios = require('axios');
+      
+      // Exchange authorization code for tokens
+      const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
+        code,
+        client_id: process.env.VITE_GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: redirectUri,
+        grant_type: 'authorization_code'
+      });
+      
+      // Return tokens to client
+      res.json(tokenResponse.data);
+    } catch (error) {
+      console.error('Error exchanging Google auth code for token:', error.message);
+      res.status(500).json({ error: 'Failed to exchange authorization code for token' });
+    }
+  });
 
   const httpServer = createServer(app);
   return httpServer;
