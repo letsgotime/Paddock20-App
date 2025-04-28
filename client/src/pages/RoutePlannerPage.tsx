@@ -756,6 +756,124 @@ const RoutePlannerPage = () => {
     return 'Normal';
   };
 
+  // Process the complete route plan submission
+  const handleRoutePlanSubmit = () => {
+    if (!startLocation || !endLocation) {
+      alert("Please enter both start and end locations");
+      return;
+    }
+    
+    // Prepare route data summary for Drive Journal auto-logging
+    const routeSummary = {
+      date: new Date().toISOString(),
+      startLocation,
+      endLocation,
+      waypoints,
+      vehicle: selectedVehicle,
+      routeCustomizations,
+      navigationFeatures,
+      weatherConditions: weatherData,
+      performanceSettings: {
+        tirePressureAdjustment,
+        torqueAdjustment,
+        drivingMode,
+        vehicleSpecs: selectedVehicle ? vehicleSpecs[selectedVehicle] : null,
+        tireSetup: selectedTireSetup ? tireSetups[selectedTireSetup] : null,
+        drivingProfile: selectedDrivingProfile ? drivingProfiles.find(p => p.name === selectedDrivingProfile) : null,
+        curvatureMetrics: navigationFeatures.curvyRoads ? {
+          intensity: navigationFeatures.curveIntensity,
+          trnRange: getIntensityTRNRange(navigationFeatures.curveIntensity)
+        } : null
+      },
+      pointsOfInterest: {
+        events: selectedEvents,
+        culturalSpots: selectedSpots
+      }
+    };
+    
+    // Store the route data in local storage temporarily
+    localStorage.setItem('pendingDriveJournal', JSON.stringify(routeSummary));
+    
+    // Launch appropriate navigation app with route data
+    launchNavigationApp();
+    
+    // Show the route summary modal
+    setShowSummaryModal(true);
+  };
+  
+  // Helper function to get TRN range description
+  const getIntensityTRNRange = (intensity: number): string => {
+    switch(intensity) {
+      case 1: return "0-2 TRN/km (Minimal)";
+      case 2: return "2-4 TRN/km (Gentle)";
+      case 3: return "4-6 TRN/km (Moderate)"; 
+      case 4: return "6-8 TRN/km (Spirited)";
+      case 5: 
+      default: return "8-12+ TRN/km (Technical)";
+    }
+  };
+  
+  // Launch the selected navigation app
+  const launchNavigationApp = () => {
+    let navigationUrl = '';
+    
+    // Build the appropriate URL for the selected navigation app
+    switch(preferredNavApp) {
+      case "Google Maps":
+        navigationUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(startLocation)}&destination=${encodeURIComponent(endLocation)}`;
+        
+        // Add waypoints if any
+        if (waypoints.length > 0) {
+          navigationUrl += `&waypoints=${encodeURIComponent(waypoints.join('|'))}`;
+        }
+        
+        // Add avoid tolls parameter if selected
+        if (navigationFeatures.avoidTolls) {
+          navigationUrl += '&avoid=tolls';
+        }
+        
+        // Add avoid highways parameter if selected
+        if (navigationFeatures.avoidHighways) {
+          navigationUrl += navigationUrl.includes('avoid=') 
+            ? ',highways' 
+            : '&avoid=highways';
+        }
+        break;
+        
+      case "Waze":
+        navigationUrl = `https://waze.com/ul?navigate=yes&q=${encodeURIComponent(endLocation)}`;
+        break;
+        
+      case "Apple Maps":
+        // Apple Maps web links have limited functionality, typically used on iOS devices
+        navigationUrl = `maps://?saddr=${encodeURIComponent(startLocation)}&daddr=${encodeURIComponent(endLocation)}`;
+        alert("Apple Maps deep linking works best on iOS devices. Opening a compatible link format.");
+        break;
+    }
+    
+    // Open the navigation URL in a new tab
+    if (navigationUrl) {
+      window.open(navigationUrl, '_blank');
+    }
+  };
+  
+  // State for summary modal
+  const [showSummaryModal, setShowSummaryModal] = useState(false);
+  
+  // Auto-log drive to Journal
+  const handleAutoLogDrive = () => {
+    // In a real app, we would:
+    // 1. Send the data to the backend API to store in the database
+    // 2. Associate the drive with the user's account
+    // 3. Create a new entry in the Drive Journal
+    
+    // For this prototype, we'll simulate the success
+    alert("Drive successfully logged to your Drive Journal! Access it from the Drive Journal section to add photos and notes from your experience.");
+    
+    // Hide the modal
+    setShowSummaryModal(false);
+  };
+
   return (
     <div className="min-h-screen bg-black max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="text-blue-400 font-orbitron text-4xl mb-8">🛣️ Route Planner</h1>
@@ -1963,13 +2081,268 @@ const RoutePlannerPage = () => {
         </div>
       )}
 
-      {/* Submit Button */}
+      {/* Route Planning Button */}
       <button
         onClick={submitRoute}
-        className="bg-blue-500 hover:bg-blue-400 text-black font-montserrat px-8 py-4 rounded w-full mt-8"
+        className="bg-blue-500 hover:bg-blue-400 text-black font-montserrat px-8 py-4 rounded w-full mb-8"
       >
         🚀 Plan Route
       </button>
+      
+      {/* Drive Journal Integration & Navigation Launch Section */}
+      {routeWaypoints.length > 0 && (
+        <div className="mt-12 pt-8 border-t border-gray-700 space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-blue-400 font-orbitron text-2xl">Drive Journal Integration</h2>
+            <div className="bg-gray-800 px-3 py-1 rounded-full text-sm text-green-400 border border-green-600">
+              Route Ready
+            </div>
+          </div>
+          
+          <div className="bg-gray-900 p-5 rounded-lg shadow-xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-green-500 font-semibold mb-3">Telemetry Data to Record</h3>
+                <div className="space-y-3">
+                  <div className="bg-black bg-opacity-40 p-3 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-300">Route Curvature Metrics:</span>
+                      <span className="text-white font-medium">
+                        {navigationFeatures.curvyRoads 
+                          ? getIntensityTRNRange(navigationFeatures.curveIntensity || 3)
+                          : "Standard (2-4 TRN/km)"}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-black bg-opacity-40 p-3 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-300">Weather Conditions:</span>
+                      <span className="text-white font-medium">
+                        {weatherData?.current?.weather[0]?.main || "Unknown"}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-black bg-opacity-40 p-3 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-300">Selected Vehicle:</span>
+                      <span className="text-white font-medium">
+                        {selectedVehicle || "None Selected"}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-black bg-opacity-40 p-3 rounded-lg">
+                    <div className="flex items-center justify-between">
+                      <span className="text-gray-300">Drive Profile:</span>
+                      <span className="text-white font-medium">
+                        {selectedDrivingProfile || drivingMode || "Standard"}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-green-500 font-semibold mb-3">Journal Data & Navigation</h3>
+                <div className="space-y-4">
+                  <div className="bg-black bg-opacity-40 p-4 rounded-lg">
+                    <p className="text-white mb-2">Your route with all performance settings will be automatically recorded in your Drive Journal.</p>
+                    <p className="text-gray-300 text-sm">This includes curvature metrics, weather conditions, vehicle specs, tire data, and all route customizations.</p>
+                  </div>
+                  
+                  <div className="bg-blue-900 bg-opacity-30 p-4 rounded-lg border border-blue-800">
+                    <h4 className="text-blue-400 font-medium mb-2">Enthusiast Edge Data Collection:</h4>
+                    <ul className="text-gray-300 text-sm space-y-1 list-disc pl-5">
+                      <li>Route curvature percentage and TRN metrics</li>
+                      <li>Road surface temperatures and conditions</li>
+                      <li>Elevation changes and gradient percentages</li>
+                      <li>Cornering load factors and g-forces</li>
+                      <li>Weather impact on vehicle performance</li>
+                    </ul>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Launch Button */}
+            <div className="mt-8 flex justify-center">
+              <button
+                onClick={handleRoutePlanSubmit}
+                disabled={!startLocation || !endLocation}
+                className={`flex items-center gap-2 text-lg px-10 py-4 rounded-lg font-orbitron shadow-lg transform transition-all duration-300 ${
+                  !startLocation || !endLocation
+                    ? "bg-gray-600 text-gray-400 cursor-not-allowed"
+                    : "bg-green-600 hover:bg-green-500 text-white hover:scale-105 hover:shadow-xl"
+                }`}
+              >
+                <span>Launch Navigation & Log to Journal</span>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 8l4 4m0 0l-4 4m4-4H3" />
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Route Summary Modal */}
+      {showSummaryModal && (
+        <div className="fixed inset-0 z-50 overflow-y-auto bg-black bg-opacity-75 flex items-center justify-center">
+          <div className="bg-gray-900 border border-blue-500 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto p-6 shadow-2xl">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-blue-400 font-orbitron text-2xl">Drive Journal Entry</h2>
+              <button 
+                onClick={() => setShowSummaryModal(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                </svg>
+              </button>
+            </div>
+            
+            <div className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Route Information */}
+                <div className="bg-black bg-opacity-50 rounded-lg p-4">
+                  <h3 className="text-green-500 font-semibold text-lg mb-3">Route Information</h3>
+                  <div className="space-y-2 text-gray-200">
+                    <p><span className="text-gray-400">From:</span> {startLocation}</p>
+                    <p><span className="text-gray-400">To:</span> {endLocation}</p>
+                    {waypoints.length > 0 && (
+                      <div>
+                        <p className="text-gray-400">Via:</p>
+                        <ul className="list-disc pl-5 text-sm">
+                          {waypoints.map((waypoint, index) => (
+                            <li key={index}>{waypoint}</li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    <p><span className="text-gray-400">Navigation App:</span> {preferredNavApp}</p>
+                    <p><span className="text-gray-400">Journey Type:</span> {routeCustomizations.roundTrip ? 'Round Trip' : 'One Way'}</p>
+                  </div>
+                </div>
+                
+                {/* Vehicle Information */}
+                <div className="bg-black bg-opacity-50 rounded-lg p-4">
+                  <h3 className="text-green-500 font-semibold text-lg mb-3">Vehicle Telemetry</h3>
+                  {selectedVehicle ? (
+                    <div className="space-y-2 text-gray-200">
+                      <p><span className="text-gray-400">Vehicle:</span> {selectedVehicle}</p>
+                      {vehicleSpecs[selectedVehicle] && (
+                        <>
+                          <p><span className="text-gray-400">Torque Setting:</span> {vehicleSpecs[selectedVehicle].torqueSetting} ft-lb</p>
+                          <p><span className="text-gray-400">Optimal Tire Pressure:</span> Front {vehicleSpecs[selectedVehicle].optimalTirePressureFront} PSI / Rear {vehicleSpecs[selectedVehicle].optimalTirePressureRear} PSI</p>
+                          <p><span className="text-gray-400">Drivetrain:</span> {vehicleSpecs[selectedVehicle].drivetrainType}</p>
+                        </>
+                      )}
+                      <p><span className="text-gray-400">Driving Mode:</span> {drivingMode}</p>
+                    </div>
+                  ) : (
+                    <p className="text-gray-400">No vehicle selected</p>
+                  )}
+                </div>
+              </div>
+              
+              {/* Enthusiast Metrics & Route Analytics */}
+              <div className="bg-black bg-opacity-50 rounded-lg p-4">
+                <h3 className="text-green-500 font-semibold text-lg mb-3">Enthusiast Metrics & Analytics</h3>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                  {/* Curvature Analysis */}
+                  <div className="space-y-1">
+                    <p className="text-blue-400 font-medium">Route Curvature Analysis</p>
+                    <p className="text-gray-400">TRN Range:</p>
+                    <p className="text-white">{getIntensityTRNRange(navigationFeatures.curveIntensity || 3)}</p>
+                    <p className="text-gray-400 mt-2">Estimated Corner Count:</p>
+                    <p className="text-white">
+                      {navigationFeatures.curveIntensity === 1 ? "Low (0-20 turns)" :
+                       navigationFeatures.curveIntensity === 2 ? "Moderate (20-45 turns)" :
+                       navigationFeatures.curveIntensity === 3 ? "Medium (45-70 turns)" :
+                       navigationFeatures.curveIntensity === 4 ? "High (70-100 turns)" :
+                       "Very High (100+ turns)"}
+                    </p>
+                  </div>
+                  
+                  {/* Weather Impact */}
+                  <div className="space-y-1">
+                    <p className="text-blue-400 font-medium">Weather Conditions</p>
+                    <p className="text-gray-400">Current Weather:</p>
+                    <p className="text-white">{weatherData?.current?.weather[0]?.description || 'Unknown'} ({weatherData?.current?.temp || '?'}°F)</p>
+                    <p className="text-gray-400 mt-2">Surface Condition:</p>
+                    <p className="text-white">{weatherData?.current?.weather[0]?.main === 'Rain' ? 'Wet' : 'Dry'}</p>
+                  </div>
+                  
+                  {/* Performance Metrics */}
+                  <div className="space-y-1">
+                    <p className="text-blue-400 font-medium">Performance Metrics</p>
+                    <p className="text-gray-400">Tire Performance:</p>
+                    <p className="text-white">
+                      {weatherData?.current?.temp < 50 ? 'Suboptimal - Cold' :
+                       weatherData?.current?.temp > 100 ? 'Suboptimal - Hot' :
+                       'Optimal Range'}
+                    </p>
+                    <p className="text-gray-400 mt-2">Grip Estimate:</p>
+                    <p className="text-white">
+                      {weatherData?.current?.weather[0]?.main === 'Rain' ? 'Reduced (Wet)' :
+                       weatherData?.current?.weather[0]?.main === 'Snow' ? 'Poor (Snow/Ice)' :
+                       weatherData?.current?.humidity > 80 ? 'Moderate (High Humidity)' :
+                       'Optimal (Dry)'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Events & Cultural Spots */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {selectedEvents.length > 0 && (
+                  <div className="bg-black bg-opacity-50 rounded-lg p-4">
+                    <h3 className="text-green-500 font-semibold text-lg mb-3">Selected Events ({selectedEvents.length})</h3>
+                    <ul className="list-disc pl-5 text-sm text-gray-200 space-y-1">
+                      {selectedEvents.map(event => (
+                        <li key={event.id}>{event.name}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+                
+                {selectedSpots.length > 0 && (
+                  <div className="bg-black bg-opacity-50 rounded-lg p-4">
+                    <h3 className="text-green-500 font-semibold text-lg mb-3">Selected Spots ({selectedSpots.length})</h3>
+                    <ul className="list-disc pl-5 text-sm text-gray-200 space-y-1">
+                      {selectedSpots.map(spot => (
+                        <li key={spot.id}>{spot.name}</li>
+                      ))}
+                    </ul>
+                  </div>
+                )}
+              </div>
+              
+              {/* Actions */}
+              <div className="flex justify-center gap-4 mt-6">
+                <button
+                  onClick={handleAutoLogDrive}
+                  className="bg-green-600 hover:bg-green-500 text-white font-montserrat px-6 py-3 rounded-lg flex items-center gap-2"
+                >
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V9a2 2 0 00-2-2h-3m-1 4l-3 3m0 0l-3-3m3 3V4" />
+                  </svg>
+                  Add to Drive Journal
+                </button>
+                
+                <button
+                  onClick={() => setShowSummaryModal(false)}
+                  className="bg-gray-700 hover:bg-gray-600 text-white font-montserrat px-6 py-3 rounded-lg"
+                >
+                  Close
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
