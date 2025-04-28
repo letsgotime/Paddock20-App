@@ -1,32 +1,43 @@
 import React from 'react';
 import WeatherStation from '../components/WeatherStation';
 import ZipWeatherStation from '../components/ZipWeatherStation';
+import Paddock20WeatherStation from '../components/Paddock20WeatherStation';
 import { MAIN_CONTENT_ID } from '../lib/accessibility';
+import { WeatherProvider } from '../contexts/WeatherContext';
 
 function Weather() {
   return (
     <div className="py-8">
       {/* Page header with proper heading hierarchy */}
       <header className="mb-10 text-center">
-        <h1 className="apex-header text-3xl mb-2">Weather Station</h1>
+        <h1 className="apex-header text-3xl mb-2">Paddock20™ Weather Hub</h1>
         <p className="text-gray-400">
-          Track real-time weather conditions and driving recommendations
+          F1-level automotive weather analytics and drive recommendations
         </p>
       </header>
-
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-        {/* Zip code search section */}
-        <section aria-labelledby="zip-weather-heading">
-          <h2 id="zip-weather-heading" className="sr-only">Search Weather by ZIP Code</h2>
-          <ZipWeatherStation />
+      
+      <WeatherProvider>
+        {/* F1-style motorsport weather station */}
+        <section className="mb-10" aria-labelledby="paddock-weather-heading">
+          <h2 id="paddock-weather-heading" className="apex-header-green text-xl mb-4">Live Weather Station</h2>
+          <Paddock20WeatherStation />
         </section>
-
-        {/* Fixed location weather section */}
-        <section aria-labelledby="garage-weather-heading">
-          <h2 id="garage-weather-heading" className="sr-only">Garage Weather Station</h2>
-          <WeatherStation />
-        </section>
-      </div>
+        
+        {/* Original weather stations for comparison */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
+          {/* Zip code search section */}
+          <section aria-labelledby="zip-weather-heading">
+            <h2 id="zip-weather-heading" className="sr-only">Search Weather by ZIP Code</h2>
+            <ZipWeatherStation />
+          </section>
+  
+          {/* Fixed location weather section */}
+          <section aria-labelledby="garage-weather-heading">
+            <h2 id="garage-weather-heading" className="sr-only">Garage Weather Station</h2>
+            <WeatherStation />
+          </section>
+        </div>
+      </WeatherProvider>
 
       {/* Weather accessibility information */}
       <section className="mt-10 bg-gray-900 p-6 rounded-lg" aria-labelledby="accessibility-heading">
