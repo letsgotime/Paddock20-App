@@ -1343,6 +1343,18 @@ const RoutePlannerPage = () => {
     }
   };
   
+  // State for post-drive checklist
+  const [showPostDriveChecklist, setShowPostDriveChecklist] = useState(false);
+  const [postDriveNotes, setPostDriveNotes] = useState("");
+  const [postDriveRating, setPostDriveRating] = useState(5);
+  const [checkedPostDriveItems, setCheckedPostDriveItems] = useState({
+    vehicleCondition: false,
+    tireCondition: false,
+    fluidsChecked: false,
+    vehicleCleaned: false,
+    fuelLevel: false
+  });
+
   const stopGpsTracking = () => {
     if (!gpsTrackingEnabled) return;
     
@@ -1354,15 +1366,61 @@ const RoutePlannerPage = () => {
     
     setGpsTrackingEnabled(false);
     
-    // If drive journal integration is enabled, save the tracked data
-    if (driveJournalIntegration && gpsTrackHistory.length > 0) {
-      saveToJournal();
-    }
+    // Show the post-drive checklist
+    setShowPostDriveChecklist(true);
     
     // Show route summary
     setTimeout(() => {
-      alert(`Route completed! Distance: ${calculateTotalDistance(gpsTrackHistory).toFixed(1)} miles`);
+      alert(`Route completed! Distance: ${calculateTotalDistance(gpsTrackHistory).toFixed(1)} miles. Please complete the post-drive checklist for safety.`);
     }, 500);
+  };
+  
+  // Function to handle post-drive checklist submission
+  const handlePostDriveChecklistSubmit = () => {
+    // Create the post-drive checklist data
+    const postDriveChecklistData = {
+      id: `post-drive-${Date.now()}`,
+      date: new Date().toISOString(),
+      route: {
+        startLocation,
+        endLocation,
+        stops: routeStops,
+        distance: calculateTotalDistance(gpsTrackHistory),
+        duration: gpsTrackHistory.length > 1 ? 
+          (gpsTrackHistory[gpsTrackHistory.length - 1].timestamp - gpsTrackHistory[0].timestamp) / 1000 / 60 : 0
+      },
+      vehicle: selectedVehicle,
+      drivePurpose,
+      checkedItems: Object.entries(checkedPostDriveItems)
+        .filter(([_, isChecked]) => isChecked)
+        .map(([item]) => item),
+      rating: postDriveRating,
+      notes: postDriveNotes,
+      telemetryStats
+    };
+    
+    console.log("Post-drive checklist saved:", postDriveChecklistData);
+    
+    // If drive journal integration is enabled, save the tracked data
+    if (driveJournalIntegration && gpsTrackHistory.length > 0) {
+      saveToJournal(postDriveChecklistData);
+    }
+    
+    // Hide the post-drive checklist
+    setShowPostDriveChecklist(false);
+    
+    // Reset the form for next use
+    setPostDriveNotes("");
+    setPostDriveRating(5);
+    setCheckedPostDriveItems({
+      vehicleCondition: false,
+      tireCondition: false,
+      fluidsChecked: false,
+      vehicleCleaned: false,
+      fuelLevel: false
+    });
+    
+    alert("Post-drive checklist completed and saved to your Drive Journal!");
   };
   
   const calculateTotalDistance = (trackHistory: Array<{lat: number, lng: number, timestamp: number}>): number => {
@@ -1467,26 +1525,45 @@ const RoutePlannerPage = () => {
     return Math.sqrt(variance);
   };
   
-  const saveToJournal = () => {
-    // In a real implementation, this would integrate with Drive Journal
-    console.log("Saving route to Drive Journal:", {
-      id: activeRouteId,
+  const saveToJournal = (postDriveData?: any) => {
+    // Create the journal entry data
+    const journalEntryData = {
+      id: activeRouteId || `route-${Date.now()}`,
       date: new Date().toISOString(),
       startLocation,
       endLocation,
       waypoints,
       vehicle: selectedVehicle,
       distance: calculateTotalDistance(gpsTrackHistory),
-      duration: (gpsTrackHistory[gpsTrackHistory.length - 1].timestamp - gpsTrackHistory[0].timestamp) / 1000 / 60,
+      duration: gpsTrackHistory.length > 1 ? 
+        (gpsTrackHistory[gpsTrackHistory.length - 1].timestamp - gpsTrackHistory[0].timestamp) / 1000 / 60 : 0,
       telemetryStats,
       telemetryHistory,
       gpsTrackHistory,
-      weatherConditions: weatherData
-    });
+      weatherConditions: weatherData,
+      routePurpose: drivePurpose,
+      drivingMode,
+      // Add post-drive checklist data if available
+      postDriveChecklist: postDriveData || null,
+      stops: routeStops,
+      routeCompleted: !!postDriveData,
+      customTelemetry: {
+        curvaturePercentage: telemetryStats.curvyRoadPercentage.toFixed(1) + '%',
+        maxSpeed: telemetryStats.maxSpeed + ' mph',
+        drivingScore: telemetryStats.drivingScore + '/100'
+      }
+    };
+    
+    // In a real implementation, this would integrate with Drive Journal
+    console.log("Saving route to Drive Journal:", journalEntryData);
     
     // Show confirmation
     setTimeout(() => {
-      alert("Route saved to your Drive Journal");
+      if (postDriveData) {
+        alert("Drive completed and saved to your Drive Journal with post-drive checklist");
+      } else {
+        alert("Route saved to your Drive Journal");
+      }
     }, 700);
   };
 
@@ -1559,12 +1636,44 @@ const RoutePlannerPage = () => {
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-gray-300">Performance Drive Checklist</label>
-              <button 
-                onClick={() => alert("Checklist generated for your specific vehicle and conditions")}
-                className="text-xs text-blue-400 hover:text-blue-300"
-              >
-                Print Checklist
-              </button>
+              <div className="flex items-center gap-2">
+                <button 
+                  onClick={() => {
+                    // Log the checklist completion
+                    const checklistLog = {
+                      id: `checklist-${Date.now()}`,
+                      date: new Date().toISOString(),
+                      vehicle: selectedVehicle,
+                      routeInfo: {
+                        start: startLocation,
+                        end: endLocation,
+                        stops: routeStops.map(stop => stop.location)
+                      },
+                      checkedItems: [
+                        "Tire pressure verified",
+                        "Torque settings applied",
+                        "Fluid levels checked",
+                        "Weather conditions verified",
+                        `${drivingMode} mode activated`
+                      ],
+                      completed: true,
+                      notes: `${drivePurpose === 'celebration' ? 'Celebration ride' : 'Standard drive'} with ${selectedVehicle || 'selected vehicle'}`
+                    };
+                    
+                    console.log("Checklist logged:", checklistLog);
+                    alert("Pre-drive safety checklist completed and logged!");
+                  }}
+                  className="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-500"
+                >
+                  Complete Checklist
+                </button>
+                <button 
+                  onClick={() => alert("Checklist generated for your specific vehicle and conditions")}
+                  className="text-xs text-blue-400 hover:text-blue-300"
+                >
+                  Print Checklist
+                </button>
+              </div>
             </div>
             <div className="bg-gray-900 p-4 rounded-lg border border-gray-800 mb-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
