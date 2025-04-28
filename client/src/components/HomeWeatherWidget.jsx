@@ -107,32 +107,59 @@ const HomeWeatherWidget = () => {
   const torqueSetting = getTorqueSettingRecommendation(weather[0].main, main.temp);
 
   return (
-    <div className="p-4 bg-gradient-to-r from-gray-900 to-black rounded-lg border border-gray-800">
+    <div className="p-6 bg-gradient-to-r from-gray-900 to-black rounded-lg border border-gray-800 shadow-xl">
       <div className="flex justify-between items-start mb-3">
-        <p className="text-blue-400 font-orbitron">Paddock20™ Drive Weather</p>
-        <Link to="/weather" className="text-green-500 text-xs hover:text-green-400">
-          Full Details &rarr;
+        <div>
+          <h3 className="text-blue-400 font-orbitron text-xl">Live Weather Station</h3>
+          <p className="text-gray-400 text-xs">Enthusiast-grade automotive metrics</p>
+        </div>
+        <Link to="/weather" className="text-green-500 text-xs hover:text-green-400 bg-black/30 px-3 py-1 rounded-md">
+          Full Weather Center &rarr;
         </Link>
       </div>
       
-      <div className="grid grid-cols-2 gap-4">
-        {/* Left column - Weather data */}
-        <div>
-          <div className="flex items-center mb-2">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        {/* Current conditions panel */}
+        <div className="bg-black/30 p-4 rounded-lg border border-gray-800">
+          <div className="flex items-center mb-3">
             <div>
-              <p className="text-white text-lg font-semibold">{formatTemperature(main.temp, unit)}</p>
-              <p className="text-gray-400 text-xs capitalize">{weather[0].description}</p>
+              <p className="text-white text-2xl font-semibold">{formatTemperature(main.temp, unit)}</p>
+              <p className="text-gray-400 capitalize">{weather[0].description}</p>
             </div>
             {weather[0].icon && (
               <img 
                 src={getWeatherIconUrl(weather[0].icon)} 
                 alt={weather[0].description}
-                className="h-12 w-12 ml-2"
+                className="h-14 w-14 ml-3"
               />
             )}
           </div>
-          
-          <div className="space-y-1 text-sm">
+          <div className="space-y-2 text-sm mt-4">
+            <div className="flex justify-between items-center">
+              <span className="text-gray-400">Current Time:</span>
+              <span className="text-white font-mono">{new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-yellow-400 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 2a1 1 0 011 1v1.586l3.707-3.707a1 1 0 111.414 1.414l-3.707 3.707H14a1 1 0 110 2h-4a1 1 0 01-1-1V4a1 1 0 011-1z" clipRule="evenodd" />
+                </svg>
+                <span className="text-gray-300 text-xs">{formatTime(sys.sunrise)}</span>
+              </div>
+              <div className="flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-orange-400 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 18a1 1 0 01-1-1v-1.586l-3.707 3.707a1 1 0 11-1.414-1.414l3.707-3.707H6a1 1 0 110-2h4a1 1 0 011 1v4a1 1 0 01-1 1z" clipRule="evenodd" />
+                </svg>
+                <span className="text-gray-300 text-xs">{formatTime(sys.sunset)}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Enthusiast metrics panel */}
+        <div className="bg-black/30 p-4 rounded-lg border border-gray-800">
+          <h4 className="text-blue-400 font-medium mb-3">Surface Intelligence</h4>
+          <div className="space-y-2 text-sm">
             <div className="flex justify-between">
               <span className="text-gray-400">Surface Temp:</span>
               <span className="text-white">{formatTemperature(surfaceTemp, unit)}</span>
@@ -149,46 +176,49 @@ const HomeWeatherWidget = () => {
               <span className="text-gray-400">Pressure:</span>
               <span className="text-white">{main.pressure} hPa</span>
             </div>
+            <div className="flex justify-between">
+              <span className="text-gray-400">UV Index:</span>
+              <span className="text-white">{current.uvi || 'N/A'}</span>
+            </div>
           </div>
         </div>
         
-        {/* Right column - Sunrise/Sunset and Drive checklist */}
-        <div>
-          <div className="mb-3">
-            <p className="text-gray-400 text-xs mb-1">Sun Times</p>
-            <div className="grid grid-cols-2 gap-2 text-sm">
-              <div>
-                <p className="text-gray-400">↑ {formatTime(sys.sunrise)}</p>
+        {/* Drive checklist panel */}
+        <div className="bg-black/30 p-4 rounded-lg border border-gray-800">
+          <h4 className="text-green-500 font-medium mb-3">Fun Drive Checklist</h4>
+          <div className="space-y-2">
+            <div className="bg-gradient-to-r from-gray-900 to-black/50 p-3 rounded border border-gray-800">
+              <div className="flex justify-between items-center">
+                <span className="text-gray-300 text-sm">Torque Settings:</span>
+                <span className="text-green-400 font-medium">{torqueSetting}</span>
               </div>
-              <div>
-                <p className="text-gray-400">↓ {formatTime(sys.sunset)}</p>
+              <div className="mt-1 text-xs text-gray-500 italic">
+                {torqueSetting === '100%' ? 'Ideal conditions for full power delivery' : 'Reduced for current surface conditions'}
               </div>
             </div>
-          </div>
-          
-          <div>
-            <p className="text-gray-400 text-xs mb-1">Fun Drive Checklist</p>
-            <div className="space-y-1 text-sm">
-              <div className="flex justify-between">
-                <span className="text-gray-400">Torque Settings:</span>
-                <span className="text-green-500">{torqueSetting}</span>
+            
+            <div className="bg-gradient-to-r from-gray-900 to-black/50 p-3 rounded border border-gray-800">
+              <div className="grid grid-cols-2 gap-2">
+                <div>
+                  <p className="text-gray-300 text-sm">Front Tires:</p>
+                  <p className="text-green-400 font-medium">{tirePressure.front} psi</p>
+                </div>
+                <div>
+                  <p className="text-gray-300 text-sm">Rear Tires:</p>
+                  <p className="text-green-400 font-medium">{tirePressure.rear} psi</p>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Tire PSI (F):</span>
-                <span className="text-green-500">{tirePressure.front} psi</span>
-              </div>
-              <div className="flex justify-between">
-                <span className="text-gray-400">Tire PSI (R):</span>
-                <span className="text-green-500">{tirePressure.rear} psi</span>
+              <div className="mt-1 text-xs text-gray-500 italic">
+                Optimized for current surface temperature
               </div>
             </div>
           </div>
         </div>
       </div>
       
-      <div className="mt-3 pt-2 border-t border-gray-800 text-xs text-gray-500 flex items-center justify-between">
-        <span>{name}</span>
-        <span>Updated: {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+      <div className="mt-4 pt-2 border-t border-gray-800 text-xs text-gray-500 flex items-center justify-between">
+        <span>Location: {name}</span>
+        <span>Last updated: {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
       </div>
     </div>
   );
