@@ -438,7 +438,7 @@ export async function getAutomotiveWeatherData(lat: number, lon: number): Promis
     
     // Engine power effect (very simplified model)
     const powerChange = ((airDensity / standardDensity - 1) * 100).toFixed(1);
-    const powerChangeStr = powerChange > 0 
+    const powerChangeStr = parseFloat(powerChange) > 0 
       ? `+${powerChange}% power potential` 
       : `${powerChange}% power reduction`;
     
@@ -554,7 +554,26 @@ export async function getAutomotiveWeatherData(lat: number, lon: number): Promis
           sport: sportWarmup,
           summer: summerWarmup,
           allSeason: allSeasonWarmup,
-          winter: winterWarmup
+          winter: winterWarmup,
+          // F1-specific tire compounds
+          soft: Math.round(sportWarmup * 0.8),      // Soft heats up faster
+          medium: sportWarmup,                      // Similar to sport road tires
+          hard: Math.round(sportWarmup * 1.2),      // Harder compound takes longer
+          intermediate: Math.round(sportWarmup * 1.5), // Intermediate takes longer
+          wet: Math.round(sportWarmup * 2.0)        // Wet tires take longest
+        },
+        tirePerformance: {
+          optimalCompound: hasRain ? "Wet" : hasSnow ? "Wet" : 
+                           asphaltTemp > 110 ? "Hard" : 
+                           asphaltTemp > 85 ? "Medium" : "Soft",
+          degradationRate: hasRain ? 3 : asphaltTemp > 110 ? 8 : 5,  // 1-10 scale
+          grainingSusceptibility: humidity > 80 ? 7 : asphaltTemp < 60 ? 8 : 4,  // 1-10 risk scale
+          temperatureWindow: {
+            min: asphaltTemp - 20,
+            max: asphaltTemp + 30,
+            current: asphaltTemp
+          },
+          pressureBuildupRate: asphaltTemp > 100 ? 0.5 : 0.3  // PSI increase per lap
         },
         recommendedTirePressure: {
           front: {
@@ -572,16 +591,55 @@ export async function getAutomotiveWeatherData(lat: number, lon: number): Promis
         },
         torqueEffect: {
           description: torqueDescription,
-          percentageAdjustment: torqueAdjustment
+          percentageAdjustment: torqueAdjustment,
+          cornerExitRecommendation: hasRain ? "Progressive" : 
+                                   hasSnow ? "Cautious" : 
+                                   asphaltTemp > 100 ? "Aggressive" : "Progressive",
+          tractionControlSuggestion: hasRain ? 3 : hasSnow ? 5 : humidity > 90 ? 2 : 1
         },
         aerodynamics: {
           dragCoefficient: parseFloat(dragCoefficient.toFixed(3)),
-          downforceEfficiency: downforceEfficiency
+          downforceEfficiency: downforceEfficiency,
+          wingSettings: {
+            front: hasRain ? "High" : windSpeed > 20 ? "Medium" : "Maximum",
+            rear: hasRain ? "Maximum" : windSpeed > 20 ? "Medium" : "Maximum"
+          },
+          airDensityImpact: airDensity > standardDensity ? "Higher drag, more downforce" : "Lower drag, less downforce",
+          crosswindSensitivity: windSpeed > 15 ? 8 : 4
         },
         enginePerformance: {
           airDensityFactor: parseFloat(airDensityFactor),
           coolingEfficiency: coolingEfficiency,
-          estimatedPowerChange: powerChangeStr
+          estimatedPowerChange: powerChangeStr,
+          airIntakeTemperature: Math.round(airTemp * 0.8 + 10),
+          turboEfficiency: airTemp < 50 ? 97 : airTemp > 90 ? 91 : 95,
+          optimalShiftPoints: {
+            increase: airDensity > standardDensity ? 3 : 0,
+            decrease: airDensity < standardDensity ? 2 : 0
+          }
+        },
+        brakingPerformance: {
+          coolingEfficiency: airTemp < 50 ? "Excellent" : airTemp > 90 ? "Poor" : "Good",
+          estimatedOptimalTemperature: 450, // °F for carbon ceramic brakes
+          paddleDegradation: hasRain ? 6 : hasSnow ? 8 : 3,
+          brakingPointAdjustment: hasRain ? 15 : hasSnow ? 40 : 0 // feet earlier
+        },
+        trackSpecificGuidance: {
+          raceLine: {
+            traditional: hasRain || hasSnow ? "Compromised" : "Optimal",
+            alternativeLine: hasRain ? "Use wider turn-in to avoid standing water" : null,
+            wetLine: hasRain ? "Avoid painted lines and kerbs" : null
+          },
+          cornerSpeedAdjustments: [
+            { cornerType: "Slow", speedAdjustment: hasRain ? -10 : hasSnow ? -25 : 0 },
+            { cornerType: "Medium", speedAdjustment: hasRain ? -15 : hasSnow ? -30 : 0 },
+            { cornerType: "Fast", speedAdjustment: hasRain ? -20 : hasSnow ? -35 : 0 }
+          ],
+          grip: {
+            apexGrip: hasRain ? 5 : hasSnow ? 3 : asphaltTemp > 100 ? 9 : 7,
+            exitGrip: hasRain ? 4 : hasSnow ? 2 : asphaltTemp > 100 ? 8 : 7,
+            overallBalance: hasRain ? "Oversteer" : airTemp < 50 ? "Understeer" : "Neutral"
+          }
         }
       }
     };
