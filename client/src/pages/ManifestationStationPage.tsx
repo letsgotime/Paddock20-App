@@ -88,8 +88,8 @@ const ManifestationStationPage = () => {
           id: 301,
           type: 'image',
           name: 'Ferrari 458 Spider - Red',
-          url: 'https://images.unsplash.com/photo-1614200179396-2bdb77ebf81b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8ZmVycmFyaSUyMDQ1OHxlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80',
-          thumbnail: 'https://images.unsplash.com/photo-1614200179396-2bdb77ebf81b?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8Mnx8ZmVycmFyaSUyMDQ1OHxlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80',
+          url: 'https://purepng.com/public/uploads/large/purepng.com-ferrari-458-italia-redcarferrarivehicleluxury-carsports-car-1701527409983pmymv.png',
+          thumbnail: 'https://purepng.com/public/uploads/large/purepng.com-ferrari-458-italia-redcarferrarivehicleluxury-carsports-car-1701527409983pmymv.png',
           description: 'Dream configuration - Rosso Corsa with black interior and carbon fiber details',
           dateAdded: '2025-01-15'
         },
