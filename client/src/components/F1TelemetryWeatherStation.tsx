@@ -335,7 +335,7 @@ const F1TelemetryWeatherStation: React.FC = () => {
     <div className="weather-telemetry text-white">
       {/* Status bar with refresh time */}
       <div className="flex justify-between items-center mb-6 bg-black/40 py-1 px-3 rounded-sm border-b border-green-900 text-xs text-green-400 font-mono">
-        <span>PADDOCK20 WEATHER TELEMETRY</span>
+        <span>PADDOCK20 F1-INSPIRED WEATHER TELEMETRY</span>
         <span>LAST UPDATED: {formatRefreshTime(refreshTime)}</span>
       </div>
 
@@ -577,7 +577,7 @@ const F1TelemetryWeatherStation: React.FC = () => {
 
       {/* Data source attribution */}
       <div className="flex justify-between items-center mt-4 text-xs text-gray-500 border-t border-gray-800 pt-2">
-        <p>Powered by Paddock20 Telemetry System v2.0</p>
+        <p>Powered by Paddock20 F1-Inspired Telemetry System</p>
         <p>Data: OpenWeather API · GoTime Performance Metrics</p>
       </div>
     </div>
