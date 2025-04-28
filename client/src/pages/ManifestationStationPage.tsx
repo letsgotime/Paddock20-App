@@ -255,8 +255,8 @@ const ManifestationStationPage = () => {
           id: 501,
           type: 'image',
           name: 'HRE P101 Wheels - Ferrari 458',
-          url: 'https://butlertire.com/media/uploads/products/HRE_P101_Wheels/HRE-P101-Gloss-Silver.png',
-          thumbnail: 'https://butlertire.com/media/uploads/products/HRE_P101_Wheels/HRE-P101-Gloss-Silver.png',
+          url: '/assets/ferrari-458-hre-p101.jpg',
+          thumbnail: '/assets/ferrari-458-hre-p101.jpg',
           description: 'HRE P101 wheels on a Ferrari 458 - inspiration for my configuration',
           dateAdded: '2025-02-05'
         },
