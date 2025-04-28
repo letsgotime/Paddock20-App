@@ -167,6 +167,16 @@ const RoutePlannerPage = () => {
   const [showCustomDrivePurposeForm, setShowCustomDrivePurposeForm] = useState(false);
   const [engineModeProfile, setEngineModeProfile] = useState("standard");
   
+  // Car club/group and event/rally information
+  const [isGroupDrive, setIsGroupDrive] = useState(false);
+  const [carClubName, setCarClubName] = useState("");
+  const [carClubContactInfo, setCarClubContactInfo] = useState("");
+  const [isEventRally, setIsEventRally] = useState(false);
+  const [eventRallyName, setEventRallyName] = useState("");
+  const [eventRallyOrganizer, setEventRallyOrganizer] = useState("");
+  const [eventMapFile, setEventMapFile] = useState<File | null>(null);
+  const [eventMapUrl, setEventMapUrl] = useState<string | null>(null);
+  
   // Route customization options
   const [routeCustomizations, setRouteCustomizations] = useState({
     roundTrip: false,
@@ -1525,6 +1535,18 @@ const RoutePlannerPage = () => {
     return Math.sqrt(variance);
   };
   
+  // Event map file upload handler
+  const handleEventMapUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const file = e.target.files[0];
+      setEventMapFile(file);
+      
+      // Create a preview URL
+      const objectUrl = URL.createObjectURL(file);
+      setEventMapUrl(objectUrl);
+    }
+  };
+  
   const saveToJournal = (postDriveData?: any) => {
     // Create the journal entry data
     const journalEntryData = {
@@ -1551,7 +1573,17 @@ const RoutePlannerPage = () => {
         curvaturePercentage: telemetryStats.curvyRoadPercentage.toFixed(1) + '%',
         maxSpeed: telemetryStats.maxSpeed + ' mph',
         drivingScore: telemetryStats.drivingScore + '/100'
-      }
+      },
+      // Add car club and event information
+      carClub: isGroupDrive ? {
+        name: carClubName,
+        contactInfo: carClubContactInfo
+      } : null,
+      eventRally: isEventRally ? {
+        name: eventRallyName,
+        organizer: eventRallyOrganizer,
+        hasMap: !!eventMapFile
+      } : null
     };
     
     // In a real implementation, this would integrate with Drive Journal
@@ -2127,6 +2159,133 @@ const RoutePlannerPage = () => {
                       </div>
                     </div>
                   )}
+                  
+                  {/* Car Club/Group Information */}
+                  <div className="mt-4 border-t border-gray-800 pt-4">
+                    <div className="flex items-center mb-2">
+                      <input
+                        type="checkbox"
+                        id="isGroupDrive"
+                        checked={isGroupDrive}
+                        onChange={(e) => setIsGroupDrive(e.target.checked)}
+                        className="form-checkbox text-blue-500 mr-2"
+                      />
+                      <label htmlFor="isGroupDrive" className="text-gray-300 text-sm">
+                        Group/Club Drive
+                      </label>
+                    </div>
+                    
+                    {isGroupDrive && (
+                      <div className="bg-gray-900 p-3 rounded-lg border border-gray-800 space-y-3">
+                        <div>
+                          <label className="block text-gray-400 text-xs mb-1">Club/Group Name</label>
+                          <input
+                            type="text"
+                            value={carClubName}
+                            onChange={(e) => setCarClubName(e.target.value)}
+                            placeholder="Enter car club or group name"
+                            className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-gray-400 text-xs mb-1">Contact Information</label>
+                          <input
+                            type="text"
+                            value={carClubContactInfo}
+                            onChange={(e) => setCarClubContactInfo(e.target.value)}
+                            placeholder="Organizer contact (optional)"
+                            className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                          />
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Event/Rally Information */}
+                  <div className="mt-4 border-t border-gray-800 pt-4">
+                    <div className="flex items-center mb-2">
+                      <input
+                        type="checkbox"
+                        id="isEventRally"
+                        checked={isEventRally}
+                        onChange={(e) => setIsEventRally(e.target.checked)}
+                        className="form-checkbox text-blue-500 mr-2"
+                      />
+                      <label htmlFor="isEventRally" className="text-gray-300 text-sm">
+                        Event/Rally Drive
+                      </label>
+                    </div>
+                    
+                    {isEventRally && (
+                      <div className="bg-gray-900 p-3 rounded-lg border border-gray-800 space-y-3">
+                        <div>
+                          <label className="block text-gray-400 text-xs mb-1">Event/Rally Name</label>
+                          <input
+                            type="text"
+                            value={eventRallyName}
+                            onChange={(e) => setEventRallyName(e.target.value)}
+                            placeholder="Enter event or rally name"
+                            className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-gray-400 text-xs mb-1">Organizer</label>
+                          <input
+                            type="text"
+                            value={eventRallyOrganizer}
+                            onChange={(e) => setEventRallyOrganizer(e.target.value)}
+                            placeholder="Event organizer (optional)"
+                            className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                          />
+                        </div>
+                        
+                        <div>
+                          <label className="block text-gray-400 text-xs mb-1">Upload Event Map</label>
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="file"
+                              onChange={handleEventMapUpload}
+                              className="hidden"
+                              id="event-map-upload"
+                              accept=".jpg,.jpeg,.png,.pdf"
+                            />
+                            <label 
+                              htmlFor="event-map-upload"
+                              className="flex-grow cursor-pointer bg-gray-800 border border-gray-700 rounded p-2 text-sm text-gray-300 hover:bg-gray-700 transition-colors text-center"
+                            >
+                              {eventMapFile ? eventMapFile.name : "Choose Map File"}
+                            </label>
+                            {eventMapFile && (
+                              <button
+                                onClick={() => {
+                                  setEventMapFile(null);
+                                  setEventMapUrl(null);
+                                }}
+                                className="bg-red-600 text-white p-2 rounded hover:bg-red-500 text-xs"
+                              >
+                                Clear
+                              </button>
+                            )}
+                          </div>
+                          
+                          {eventMapUrl && (
+                            <div className="mt-2 p-2 bg-black rounded border border-gray-700">
+                              <p className="text-green-400 text-xs mb-1">Map Uploaded</p>
+                              <div className="aspect-video bg-gray-800 rounded overflow-hidden">
+                                <img 
+                                  src={eventMapUrl} 
+                                  alt="Event Map" 
+                                  className="w-full h-full object-contain"
+                                />
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
               
