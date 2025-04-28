@@ -17,6 +17,7 @@ interface WeatherContextType {
   setUnit: (unit: 'metric' | 'imperial') => void;
   selectedLocation: Location | null;
   setSelectedLocation: (location: Location) => void;
+  setCoordinates: (lat: number, lon: number) => void;
   savedLocations: Location[];
   addSavedLocation: (location: Location) => void;
   removeSavedLocation: (locationId: string) => void;
@@ -132,6 +133,20 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
   const removeSavedLocation = (locationId: string) => {
     setSavedLocations(savedLocations.filter(loc => loc.id !== locationId));
   };
+  
+  // Update location by coordinates
+  const setCoordinates = (lat: number, lon: number) => {
+    if (!selectedLocation || selectedLocation.lat !== lat || selectedLocation.lon !== lon) {
+      // Create a temporary location with the coordinates
+      const tempLocation: Location = {
+        lat,
+        lon,
+        id: `temp-${Date.now()}`, // Generate a temporary ID
+        name: "Loading..." // Will be updated when we get the location name
+      };
+      setSelectedLocation(tempLocation);
+    }
+  };
 
   // Refresh weather data
   const refreshWeather = () => {
@@ -145,6 +160,7 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
     setUnit,
     selectedLocation,
     setSelectedLocation,
+    setCoordinates,
     savedLocations,
     addSavedLocation,
     removeSavedLocation,

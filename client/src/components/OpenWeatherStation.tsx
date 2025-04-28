@@ -89,32 +89,32 @@ const OpenWeatherStation: React.FC = () => {
   }
   
   // Extract data for display
-  const temp = Math.round(weatherData.main.temp);
-  const feelsLike = Math.round(weatherData.main.feels_like);
+  const temp = weatherData ? Math.round(weatherData.main.temp) : 0;
+  const feelsLike = weatherData ? Math.round(weatherData.main.feels_like) : 0;
   const tempUnit = unit === 'metric' ? '°C' : '°F';
   const windUnit = unit === 'metric' ? 'm/s' : 'mph';
-  const windSpeed = Math.round(weatherData.wind.speed);
-  const windDirection = weatherData.wind.deg;
-  const humidity = weatherData.main.humidity;
-  const pressure = weatherData.main.pressure;
-  const visibility = Math.round(weatherData.visibility / 1000);
-  const sunriseTime = new Date(weatherData.sys.sunrise * 1000);
-  const sunsetTime = new Date(weatherData.sys.sunset * 1000);
-  const weatherDesc = weatherData.weather[0]?.description || 'Unknown';
-  const weatherIcon = weatherData.weather[0]?.icon || '01d';
-  const uvIndex = oneCallData.current?.uvi || 0;
+  const windSpeed = weatherData ? Math.round(weatherData.wind.speed) : 0;
+  const windDirection = weatherData ? weatherData.wind.deg : 0;
+  const humidity = weatherData ? weatherData.main.humidity : 0;
+  const pressure = weatherData ? weatherData.main.pressure : 0;
+  const visibility = weatherData ? Math.round(weatherData.visibility / 1000) : 0;
+  const sunriseTime = weatherData ? new Date(weatherData.sys.sunrise * 1000) : new Date();
+  const sunsetTime = weatherData ? new Date(weatherData.sys.sunset * 1000) : new Date();
+  const weatherDesc = weatherData?.weather[0]?.description || 'Unknown';
+  const weatherIcon = weatherData?.weather[0]?.icon || '01d';
+  const uvIndex = oneCallData?.current?.uvi || 0;
   
   // Get hourly forecast
-  const hourlyForecast = oneCallData.hourly?.slice(0, 24) || [];
+  const hourlyForecast = oneCallData?.hourly?.slice(0, 24) || [];
   
   // Get daily forecast
-  const dailyForecast = oneCallData.daily?.slice(0, 7) || [];
+  const dailyForecast = oneCallData?.daily?.slice(0, 7) || [];
   
   // Precipitation chance for the next hour
   const precipChance = hourlyForecast[0]?.pop ? Math.round(hourlyForecast[0].pop * 100) : 0;
   
   // Calculate surface temperature based on air temperature
-  const cloudCover = weatherData.clouds?.all || 0;
+  const cloudCover = weatherData?.clouds?.all || 0;
   const isDaytime = currentTime.getHours() > 6 && currentTime.getHours() < 20;
   const cloudEffect = 1 - (cloudCover / 100);
   const timeEffect = isDaytime ? 1 : 0.2;
@@ -209,7 +209,7 @@ const OpenWeatherStation: React.FC = () => {
               </h2>
               <p className="text-lg text-gray-300 capitalize">{weatherDesc}</p>
               <p className="text-gray-400 text-sm">
-                {selectedLocation?.name}, {weatherData.sys.country}
+                {selectedLocation?.name}{weatherData?.sys?.country ? `, ${weatherData.sys.country}` : ''}
               </p>
             </div>
           </div>
