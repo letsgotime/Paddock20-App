@@ -1,5 +1,7 @@
 import React from "react";
 
+import HomeWeatherWidget from '../components/HomeWeatherWidget';
+
 function Home() {
   return (
     <div>
@@ -7,11 +9,8 @@ function Home() {
       <p className="text-white text-lg mb-6">Drive Life. Document Legacy. Built for the serious. Designed for the seamless.</p>
       
       <div className="space-y-8">
-        {/* Weather module temporarily removed for maintenance */}
-        <div className="p-6 rounded-lg bg-gradient-to-br from-[#111111] to-[#1a1a1a] border border-gray-800">
-          <h2 className="text-blue-400 font-orbitron text-xl">Weather Center</h2>
-          <p className="mt-2 text-gray-400">Visit our <a href="/weather" className="text-green-500 hover:text-green-400">Weather Center</a> for detailed driving conditions and automotive weather analytics</p>
-        </div>
+        {/* Weather widget with automotive metrics and drive recommendations */}
+        <HomeWeatherWidget />
         
         {/* Other homepage modules */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
