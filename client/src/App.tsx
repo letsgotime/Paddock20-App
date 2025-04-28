@@ -40,6 +40,7 @@ import ModPlannerPage from "./pages/ModPlannerPage";
 import ConciergePage from "./pages/ConciergePage";
 import HustlePlannerPage from "./pages/HustlePlannerPage";
 import RoutePlannerPage from "./pages/RoutePlannerPage";
+import DriveJournalPage from "./pages/DriveJournalPage";
 import DiscountsPage from "./pages/DiscountsPage";
 import ContactPage from "./pages/ContactPage";
 import ChatFeedPage from "./pages/ChatFeedPage";
@@ -145,6 +146,7 @@ function App() {
               <Route path="/concierge" element={<ProtectedRoute><ConciergePage /></ProtectedRoute>} />
               <Route path="/hustle-planner" element={<ProtectedRoute><HustlePlannerPage /></ProtectedRoute>} />
               <Route path="/route-planner" element={<ProtectedRoute><RoutePlannerPage /></ProtectedRoute>} />
+              <Route path="/drive-journal" element={<ProtectedRoute><DriveJournalPage /></ProtectedRoute>} />
               <Route path="/ebooks" element={<ProtectedRoute><EBooksPage /></ProtectedRoute>} />
               <Route path="/discounts" element={<ProtectedRoute><DiscountsPage /></ProtectedRoute>} />
               <Route path="/contact" element={<ProtectedRoute><ContactPage /></ProtectedRoute>} />
