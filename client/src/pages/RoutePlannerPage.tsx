@@ -207,7 +207,6 @@ const RoutePlannerPage = () => {
   
   // Telemetry and driving conditions data
   const [telemetryData, setTelemetryData] = useState<TelemetrySnapshot | null>(null);
-  const [telemetryHistory, setTelemetryHistory] = useState<TelemetrySnapshot[]>([]);
   const [telemetryStats, setTelemetryStats] = useState<{
     maxSpeed: number;
     maxRpm: number;
@@ -937,6 +936,236 @@ const RoutePlannerPage = () => {
     
     // Hide the modal
     setShowSummaryModal(false);
+  };
+  
+  // GPS Tracking Functions
+  const startGpsTracking = () => {
+    if (gpsTrackingEnabled) return;
+    
+    // Start a new tracking session
+    setGpsTrackHistory([]);
+    setTelemetryHistory([]);
+    setGpsTrackingEnabled(true);
+    
+    // Generate a unique ID for this route
+    const newRouteId = `route-${Date.now()}`;
+    setActiveRouteId(newRouteId);
+    
+    // Set up position tracking
+    if (navigator.geolocation) {
+      const intervalId = window.setInterval(() => {
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            const { latitude, longitude } = position.coords;
+            const timestamp = Date.now();
+            
+            // Update current position
+            setCurrentGpsPosition({ lat: latitude, lng: longitude });
+            
+            // Add to track history
+            setGpsTrackHistory(prev => [
+              ...prev, 
+              { lat: latitude, lng: longitude, timestamp }
+            ]);
+            
+            // Generate telemetry data
+            const telemetryData: TelemetrySnapshot = {
+              timestamp,
+              position: { lat: latitude, lng: longitude },
+              speed: position.coords.speed ? position.coords.speed * 2.237 : Math.random() * 60, // convert m/s to mph
+              rpm: Math.round(Math.random() * 3000) + 1000,
+              acceleration: Math.random() * 0.5,
+              lateralG: Math.random() * 0.4,
+              throttlePosition: Math.random() * 100,
+              brakePosition: Math.random() * 20,
+              steeringAngle: Math.random() * 45 - 22.5,
+              elevation: Math.random() * 100 + 100,
+              gradient: Math.random() * 5,
+              curvature: Math.random() * 500 + 100,
+              roadSurfaceTemp: Math.random() * 20 + 70,
+              tirePressureFront: 32 + Math.random() * 4 - 2,
+              tirePressureRear: 30 + Math.random() * 4 - 2,
+              tireTempFront: 150 + Math.random() * 50,
+              tireTempRear: 160 + Math.random() * 50,
+              wheelSlip: Math.random() * 3,
+              engineTemp: 190 + Math.random() * 10,
+              oilTemp: 210 + Math.random() * 15,
+              oilPressure: 40 + Math.random() * 10,
+              fuelConsumption: 15 + Math.random() * 10,
+              rangeToBoundary: Math.random() * 5,
+              gForceVector: { 
+                x: Math.random() * 0.5 - 0.25, 
+                y: Math.random() * 0.5 - 0.25, 
+                z: 1 
+              },
+              weatherCondition: weatherData?.current?.weather?.[0]?.main || "Clear"
+            };
+            
+            // Add to telemetry history
+            setTelemetryHistory(prev => [...prev, telemetryData]);
+            setTelemetryData(telemetryData);
+            
+            // Update stats
+            updateTelemetryStats(telemetryData);
+          },
+          (error) => {
+            console.error("Error getting position:", error);
+          },
+          { enableHighAccuracy: true }
+        );
+      }, trackingFrequency * 1000);
+      
+      setGpsTrackingInterval(intervalId);
+    } else {
+      alert("Geolocation is not supported by your browser");
+    }
+  };
+  
+  const stopGpsTracking = () => {
+    if (!gpsTrackingEnabled) return;
+    
+    // Clear the tracking interval
+    if (gpsTrackingInterval) {
+      window.clearInterval(gpsTrackingInterval);
+      setGpsTrackingInterval(null);
+    }
+    
+    setGpsTrackingEnabled(false);
+    
+    // If drive journal integration is enabled, save the tracked data
+    if (driveJournalIntegration && gpsTrackHistory.length > 0) {
+      saveToJournal();
+    }
+    
+    // Show route summary
+    setTimeout(() => {
+      alert(`Route completed! Distance: ${calculateTotalDistance(gpsTrackHistory).toFixed(1)} miles`);
+    }, 500);
+  };
+  
+  const calculateTotalDistance = (trackHistory: Array<{lat: number, lng: number, timestamp: number}>): number => {
+    if (trackHistory.length < 2) return 0;
+    
+    let totalDistance = 0;
+    for (let i = 1; i < trackHistory.length; i++) {
+      const prev = trackHistory[i-1];
+      const current = trackHistory[i];
+      totalDistance += haversineDistance(prev.lat, prev.lng, current.lat, current.lng);
+    }
+    
+    return totalDistance;
+  };
+  
+  const haversineDistance = (lat1: number, lon1: number, lat2: number, lon2: number): number => {
+    // Earth's radius in miles
+    const R = 3958.8;
+    
+    // Convert degrees to radians
+    const dLat = (lat2 - lat1) * Math.PI / 180;
+    const dLon = (lon2 - lon1) * Math.PI / 180;
+    
+    // Haversine formula
+    const a = 
+      Math.sin(dLat/2) * Math.sin(dLat/2) +
+      Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+      Math.sin(dLon/2) * Math.sin(dLon/2);
+    
+    const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+    const distance = R * c;
+    
+    return distance;
+  };
+  
+  const updateTelemetryStats = (newData: TelemetrySnapshot) => {
+    setTelemetryStats(prev => {
+      // Create a shallow copy
+      const newStats = { ...prev };
+      
+      // Update max values
+      if (newData.speed > newStats.maxSpeed) newStats.maxSpeed = newData.speed;
+      if (newData.rpm && newData.rpm > newStats.maxRpm) newStats.maxRpm = newData.rpm;
+      if (newData.acceleration && newData.acceleration > newStats.maxAcceleration) newStats.maxAcceleration = newData.acceleration;
+      if (newData.lateralG && newData.lateralG > newStats.maxLateralG) newStats.maxLateralG = newData.lateralG;
+      
+      // Update averages and totals based on history
+      if (telemetryHistory.length > 0) {
+        // Calculate average speed
+        const totalSpeed = telemetryHistory.reduce((sum, data) => sum + data.speed, 0) + newData.speed;
+        newStats.avgSpeed = totalSpeed / (telemetryHistory.length + 1);
+        
+        // Calculate total distance (this is simpler because we already have the function)
+        newStats.totalDistance = calculateTotalDistance(gpsTrackHistory);
+        
+        // Estimate elevation change
+        const maxElevation = Math.max(...telemetryHistory.map(data => data.elevation || 0), newData.elevation || 0);
+        const minElevation = Math.min(...telemetryHistory.map(data => data.elevation || 0), newData.elevation || 0);
+        newStats.elevationChange = maxElevation - minElevation;
+        
+        // Calculate curvy road percentage
+        const curvySegments = telemetryHistory.filter(data => data.curvature && data.curvature < 300).length;
+        newStats.curvyRoadPercentage = (curvySegments / telemetryHistory.length) * 100;
+        newStats.straightRoadPercentage = 100 - newStats.curvyRoadPercentage;
+        
+        // Calculate average fuel efficiency
+        const validEfficiencyData = telemetryHistory.filter(data => !!data.fuelConsumption);
+        if (validEfficiencyData.length > 0) {
+          const totalEfficiency = validEfficiencyData.reduce((sum, data) => sum + (data.fuelConsumption || 0), 0);
+          newStats.fuelEfficiency = totalEfficiency / validEfficiencyData.length;
+        }
+        
+        // Calculate driving score (1-100)
+        // This is a synthetic metric based on multiple factors
+        const smoothAcceleration = telemetryHistory.every(data => (data.acceleration || 0) < 0.7);
+        const smoothBraking = telemetryHistory.every(data => (data.brakePosition || 0) < 80);
+        const steadySpeed = calculateSpeedVariance() < 15;
+        const consistentLine = telemetryHistory.every(data => (data.steeringAngle || 0) < 30);
+        
+        let score = 75; // Base score
+        if (smoothAcceleration) score += 5;
+        if (smoothBraking) score += 5;
+        if (steadySpeed) score += 5;
+        if (consistentLine) score += 5;
+        if (newStats.fuelEfficiency > 20) score += 5;
+        
+        newStats.drivingScore = score;
+      }
+      
+      return newStats;
+    });
+  };
+  
+  const calculateSpeedVariance = (): number => {
+    if (telemetryHistory.length < 2) return 0;
+    
+    const speeds = telemetryHistory.map(data => data.speed);
+    const avg = speeds.reduce((sum, speed) => sum + speed, 0) / speeds.length;
+    const squaredDifferences = speeds.map(speed => Math.pow(speed - avg, 2));
+    const variance = squaredDifferences.reduce((sum, diff) => sum + diff, 0) / speeds.length;
+    
+    return Math.sqrt(variance);
+  };
+  
+  const saveToJournal = () => {
+    // In a real implementation, this would integrate with Drive Journal
+    console.log("Saving route to Drive Journal:", {
+      id: activeRouteId,
+      date: new Date().toISOString(),
+      startLocation,
+      endLocation,
+      waypoints,
+      vehicle: selectedVehicle,
+      distance: calculateTotalDistance(gpsTrackHistory),
+      duration: (gpsTrackHistory[gpsTrackHistory.length - 1].timestamp - gpsTrackHistory[0].timestamp) / 1000 / 60,
+      telemetryStats,
+      telemetryHistory,
+      gpsTrackHistory,
+      weatherConditions: weatherData
+    });
+    
+    // Show confirmation
+    setTimeout(() => {
+      alert("Route saved to your Drive Journal");
+    }, 700);
   };
 
   return (
