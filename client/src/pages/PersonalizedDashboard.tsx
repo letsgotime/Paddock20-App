@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import F1MotorsportWeatherStation from '../components/F1MotorsportWeatherStation.jsx';
+import MoodEnergyTracker from '../components/MoodEnergyTracker.jsx';
 import { Progress } from "@/components/ui/progress";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -159,6 +160,12 @@ const PersonalizedDashboard: React.FC = () => {
           <div className="lg:col-span-2 bts-card">
             <h2 className="bts-header-green mb-4">Current Weather & Drive Conditions</h2>
             <F1MotorsportWeatherStation />
+          </div>
+          
+          {/* Mood & Energy Tracker - Full Width */}
+          <div className="lg:col-span-3 bts-card">
+            <h2 className="bts-header-green mb-4">Mood & Energy Tracker</h2>
+            <MoodEnergyTracker />
           </div>
 
           {/* Quick Actions Widget */}
