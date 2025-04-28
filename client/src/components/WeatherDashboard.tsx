@@ -1,11 +1,11 @@
 import React, { useEffect, useState } from "react";
-import { getLocationKey, fetchCurrentConditions, fetchDailyForecast, fetchMinuteCast } from "@/services/accuWeatherService";
+import { fetchCurrentWeather, fetchForecast, fetchOneCall } from "@/services/openWeatherService";
 import { Loader2 } from "lucide-react";
 
 const WeatherDashboard = () => {
-  const [currentConditions, setCurrentConditions] = useState<any>(null);
-  const [dailyForecast, setDailyForecast] = useState<any>(null);
-  const [minuteCast, setMinuteCast] = useState<any>(null);
+  const [currentWeather, setCurrentWeather] = useState<any>(null);
+  const [forecast, setForecast] = useState<any>(null);
+  const [oneCallData, setOneCallData] = useState<any>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
 
@@ -27,20 +27,16 @@ const WeatherDashboard = () => {
         const { latitude, longitude } = position.coords;
         console.log('Got user coordinates:', latitude, longitude);
         
-        // Get AccuWeather location key using coordinates
-        const locationKey = await getLocationKey(latitude, longitude);
-        console.log('Got AccuWeather location key:', locationKey);
-        
-        // Fetch all required data in parallel
-        const [current, daily, minute] = await Promise.all([
-          fetchCurrentConditions(locationKey),
-          fetchDailyForecast(locationKey),
-          fetchMinuteCast(latitude, longitude)
+        // Fetch all required data in parallel from OpenWeather
+        const [current, forecastData, oneCall] = await Promise.all([
+          fetchCurrentWeather(latitude, longitude),
+          fetchForecast(latitude, longitude),
+          fetchOneCall(latitude, longitude)
         ]);
         
-        setCurrentConditions(current);
-        setDailyForecast(daily);
-        setMinuteCast(minute);
+        setCurrentWeather(current);
+        setForecast(forecastData);
+        setOneCallData(oneCall);
       } catch (err) {
         console.error('Error fetching weather data:', err);
         setError('Error loading weather data. Please make sure location services are enabled and try again.');
@@ -68,14 +64,14 @@ const WeatherDashboard = () => {
         <div className="text-red-400 p-4 rounded bg-black/30 border border-red-900/50">
           <p>{error}</p>
           <p className="mt-2 text-sm text-gray-400">
-            Please make sure your AccuWeather API key is valid and your location services are enabled.
+            Please make sure your OpenWeather API key is valid and your location services are enabled.
           </p>
         </div>
       </div>
     );
   }
 
-  if (!currentConditions || !dailyForecast) {
+  if (!currentWeather || !forecast || !oneCallData) {
     return (
       <div className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg p-6 border border-gray-700">
         <h2 className="text-blue-400 font-orbitron text-2xl mb-4">Weather Center</h2>
@@ -85,9 +81,9 @@ const WeatherDashboard = () => {
   }
 
   // Calculate surface temperatures based on air temperature
-  const airTemp = currentConditions.Temperature.Imperial.Value;
-  const isDaytime = currentConditions.IsDayTime;
-  const cloudCover = currentConditions.CloudCover || 50;
+  const airTemp = currentWeather.main.temp;
+  const isDaytime = new Date().getHours() > 6 && new Date().getHours() < 20;
+  const cloudCover = currentWeather.clouds?.all || 50;
   
   // Factors affecting surface heating
   const cloudEffect = 1 - (cloudCover / 100);
@@ -100,6 +96,19 @@ const WeatherDashboard = () => {
   const asphaltTemp = Math.round(airTemp + (asphaltFactor * cloudEffect * timeEffect));
   const concreteTemp = Math.round(airTemp + (concreteFactor * cloudEffect * timeEffect));
 
+  // Get weather icon from OpenWeather
+  const weatherIconCode = currentWeather.weather[0]?.icon;
+  const weatherIconUrl = `https://openweathermap.org/img/wn/${weatherIconCode}@2x.png`;
+
+  // Get sunrise and sunset from OneCall data
+  const sunriseTime = oneCallData.current?.sunrise ? 
+    new Date(oneCallData.current.sunrise * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 
+    'N/A';
+  
+  const sunsetTime = oneCallData.current?.sunset ? 
+    new Date(oneCallData.current.sunset * 1000).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'}) : 
+    'N/A';
+
   return (
     <div className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg p-6 border border-gray-700">
       <h2 className="text-blue-400 font-orbitron text-2xl mb-6">☁️ Drive Readiness</h2>
@@ -107,37 +116,34 @@ const WeatherDashboard = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div className="space-y-4">
           <div className="text-white text-3xl font-bold">
-            {currentConditions.Temperature.Imperial.Value}°F
+            {Math.round(currentWeather.main.temp)}°F
           </div>
           <div className="text-gray-300 flex items-center">
             <img 
-              src={currentConditions.WeatherIcon ? 
-                `https://developer.accuweather.com/sites/default/files/${currentConditions.WeatherIcon.toString().padStart(2, '0')}-s.png` : 
-                ''
-              } 
-              alt={currentConditions.WeatherText}
-              className="w-10 h-10 mr-2"
+              src={weatherIconUrl}
+              alt={currentWeather.weather[0]?.description || 'Weather'}
+              className="w-12 h-12 mr-2"
             />
-            <span>{currentConditions.WeatherText}</span>
+            <span className="capitalize">{currentWeather.weather[0]?.description || 'Unknown weather'}</span>
           </div>
           
           <div className="text-white space-y-3 font-light text-sm leading-relaxed mt-4">
             <div className="grid grid-cols-2 gap-2">
               <div>
                 <p className="text-gray-400">Wind</p>
-                <p>{currentConditions.Wind?.Speed?.Imperial?.Value || 0} mph</p>
+                <p>{(currentWeather.wind?.speed || 0).toFixed(1)} mph</p>
               </div>
               <div>
                 <p className="text-gray-400">Humidity</p>
-                <p>{currentConditions.RelativeHumidity}%</p>
+                <p>{currentWeather.main?.humidity || 0}%</p>
               </div>
               <div>
                 <p className="text-gray-400">Pressure</p>
-                <p>{currentConditions.Pressure?.Imperial?.Value || 0} inHg</p>
+                <p>{((currentWeather.main?.pressure || 0) / 33.864).toFixed(2)} inHg</p>
               </div>
               <div>
                 <p className="text-gray-400">UV Index</p>
-                <p>{currentConditions.UVIndexText}</p>
+                <p>{oneCallData.current?.uvi ? Math.round(oneCallData.current.uvi) : 'N/A'}</p>
               </div>
             </div>
           </div>
@@ -160,18 +166,22 @@ const WeatherDashboard = () => {
           <div className="grid grid-cols-2 gap-4">
             <div>
               <p className="text-gray-400 text-sm">Sunrise</p>
-              <p className="text-white">{new Date(dailyForecast.Sun.Rise).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+              <p className="text-white">{sunriseTime}</p>
             </div>
             <div>
               <p className="text-gray-400 text-sm">Sunset</p>
-              <p className="text-white">{new Date(dailyForecast.Sun.Set).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+              <p className="text-white">{sunsetTime}</p>
             </div>
           </div>
           
-          {minuteCast && minuteCast.Summary && (
+          {oneCallData.minutely && (
             <div className="mt-4 p-3 bg-blue-900/20 rounded border border-blue-900/50">
               <p className="text-blue-400 font-medium">Precipitation</p>
-              <p className="text-white text-sm">{minuteCast.Summary.Phrase}</p>
+              <p className="text-white text-sm">
+                {oneCallData.minutely[0]?.precipitation > 0 
+                  ? 'Precipitation expected in the next hour' 
+                  : 'No precipitation expected in the next hour'}
+              </p>
             </div>
           )}
         </div>
