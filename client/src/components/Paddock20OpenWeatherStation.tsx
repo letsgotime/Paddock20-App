@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { useOpenWeather } from '@/contexts/OpenWeatherContext';
+import React, { useState, useContext } from 'react';
+import { OpenWeatherContext } from '@/contexts/OpenWeatherContext';
 import { Loader2, Droplets, Wind, Thermometer, Gauge, Sun, Cloud, Clock, Compass, ArrowUp, Tractor, Wrench } from 'lucide-react';
 import { format } from 'date-fns';
 import {
@@ -86,7 +86,7 @@ const WeatherConditionBadge = ({ condition }: { condition: string }) => {
 };
 
 export default function Paddock20OpenWeatherStation() {
-  const { automotiveWeatherData, isLoading, error, unit } = useOpenWeather();
+  const { weatherData: automotiveWeatherData, loading: isLoading, error, unit = 'imperial' } = useContext(OpenWeatherContext);
   const [activeTab, setActiveTab] = useState("overview");
   
   if (isLoading) {

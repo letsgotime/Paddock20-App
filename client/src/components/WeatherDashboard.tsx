@@ -1,24 +1,6 @@
 import React, { useContext } from "react";
 import { OpenWeatherContext } from "@/contexts/OpenWeatherContext";
 
-// Interface for weather data properties matching OneCall API
-interface OneCallWeatherData {
-  temp: number;
-  feels_like: number;
-  pressure: number;
-  humidity: number;
-  wind_speed: number;
-  sunrise: number;
-  sunset: number;
-  weather: Array<{
-    id: number;
-    main: string;
-    description: string;
-    icon: string;
-  }>;
-  uvi?: number;
-}
-
 const WeatherDashboard = () => {
   const { weatherData, loading, error } = useContext(OpenWeatherContext);
 
@@ -30,9 +12,7 @@ const WeatherDashboard = () => {
     return <p className="text-red-400">Failed to load weather data. Please check your connection or try again later.</p>;
   }
 
-  // Cast to the correct type to match the data from OneCall API
-  const data = weatherData as unknown as OneCallWeatherData;
-  const { temp, feels_like, pressure, humidity, wind_speed, sunrise, sunset, weather } = data;
+  const { temp, feels_like, pressure, humidity, wind_speed, sunrise, sunset, weather } = weatherData;
 
   return (
     <div className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg p-6 border border-gray-700">
@@ -44,9 +24,15 @@ const WeatherDashboard = () => {
         <p>💨 Wind Speed: {wind_speed} mph</p>
         <p>💧 Humidity: {humidity}%</p>
         <p>📈 Barometric Pressure: {pressure} hPa</p>
-        <p>🌅 Sunrise: {new Date(sunrise * 1000).toLocaleTimeString()}</p>
-        <p>🌇 Sunset: {new Date(sunset * 1000).toLocaleTimeString()}</p>
-        <p>☁️ Condition: {weather[0].description}</p>
+        {sunrise && sunset && (
+          <>
+            <p>🌅 Sunrise: {new Date(sunrise * 1000).toLocaleTimeString()}</p>
+            <p>🌇 Sunset: {new Date(sunset * 1000).toLocaleTimeString()}</p>
+          </>
+        )}
+        {weather && weather.length > 0 && (
+          <p>☁️ Condition: {weather[0].description}</p>
+        )}
       </div>
     </div>
   );
