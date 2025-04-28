@@ -158,7 +158,7 @@ const PersonalizedDashboard: React.FC = () => {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Weather Widget - Spans 2 columns on large screens */}
           <div className="lg:col-span-2 bts-card">
-            <h2 className="bts-header-green mb-4">Current Weather & Drive Conditions</h2>
+            <h2 className="bts-header-green mb-4">F1-Inspired Weather & Drive Conditions</h2>
             <F1TelemetryWeatherStation />
           </div>
           
@@ -176,9 +176,9 @@ const PersonalizedDashboard: React.FC = () => {
                 <span className="text-2xl mb-2">📝</span>
                 <span className="text-white text-sm">Log a Drive</span>
               </Link>
-              <Link to="/garage-vault" className="flex flex-col items-center bg-black/40 rounded-lg p-3 transition hover:bg-black/60">
+              <Link to="/maintenance-log" className="flex flex-col items-center bg-black/40 rounded-lg p-3 transition hover:bg-black/60">
                 <span className="text-2xl mb-2">🔧</span>
-                <span className="text-white text-sm">Add Service</span>
+                <span className="text-white text-sm">Log Service</span>
               </Link>
               <Link to="/route-planner" className="flex flex-col items-center bg-black/40 rounded-lg p-3 transition hover:bg-black/60">
                 <span className="text-2xl mb-2">🛣️</span>
