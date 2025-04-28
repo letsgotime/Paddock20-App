@@ -246,6 +246,263 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // OpenWeather Solar Energy API endpoint
+  app.get('/api/solar', async (req, res) => {
+    try {
+      const { lat, lon, date, interval } = req.query;
+      
+      if (!lat || !lon) {
+        return res.status(400).json({ message: 'Latitude and longitude are required' });
+      }
+      
+      // Default to today's date in YYYY-MM-DD format if not provided
+      const requestDate = date || new Date().toISOString().split('T')[0];
+      
+      // Default interval (hourly or daily)
+      const requestInterval = interval || 'hourly';
+      
+      const url = `https://api.openweathermap.org/energy/1.0/solar/interval_data?lat=${lat}&lon=${lon}&date=${requestDate}&interval=${requestInterval}&appid=${OPENWEATHER_API_KEY}`;
+      
+      console.log(`Fetching Solar Energy data for: ${lat},${lon}, date: ${requestDate}, interval: ${requestInterval}`);
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`Solar Energy API error: ${response.status} - ${await response.text()}`);
+      }
+      
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error('OpenWeather Solar Energy API error:', error);
+      res.status(500).json({ message: (error as Error).message || 'Failed to fetch solar energy data' });
+    }
+  });
+  
+  // Advanced F1-style Automotive Weather Data endpoint (combines multiple APIs)
+  app.get('/api/automotive-weather', async (req, res) => {
+    try {
+      const { lat, lon, units } = req.query;
+      
+      if (!lat || !lon) {
+        return res.status(400).json({ message: 'Latitude and longitude are required' });
+      }
+      
+      // Get today's date in YYYY-MM-DD format
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Parallel API requests for maximum efficiency
+      const [oneCallResponse, solarResponse] = await Promise.all([
+        // OneCall API for comprehensive weather data
+        fetch(`https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&units=${units || 'metric'}&appid=${OPENWEATHER_API_KEY}`),
+        // Solar Energy API for radiation and UV data
+        fetch(`https://api.openweathermap.org/energy/1.0/solar/interval_data?lat=${lat}&lon=${lon}&date=${today}&interval=hourly&appid=${OPENWEATHER_API_KEY}`)
+      ]);
+      
+      // Check for errors and process responses
+      if (!oneCallResponse.ok) {
+        const errorText = await oneCallResponse.text();
+        throw new Error(`Weather API error: ${oneCallResponse.status} - ${errorText}`);
+      }
+      
+      const oneCallData = await oneCallResponse.json();
+      
+      // Solar data is optional, so handle possible error
+      let solarData = null;
+      if (solarResponse.ok) {
+        solarData = await solarResponse.json();
+      } else {
+        console.warn(`Solar API error: ${solarResponse.status}. Continuing without solar data.`);
+      }
+      
+      // Current hour to match hourly solar data
+      const currentHour = new Date().getHours();
+      
+      // Extract current solar irradiance if available
+      const currentSolarData = solarData && solarData.interval_data && solarData.interval_data.length > currentHour 
+        ? solarData.interval_data[currentHour] 
+        : null;
+      
+      // Calculate automotive-specific metrics based on weather data
+      const current = oneCallData.current;
+      const airTemp = current.temp;
+      const humidity = current.humidity;
+      const windSpeed = current.wind_speed;
+      const cloudCover = current.clouds;
+      const precipitation = current.rain ? current.rain['1h'] : 0;
+      const uvIndex = current.uvi;
+      
+      // Calculate surface temperature estimates based on air temperature, solar radiation, and other factors
+      // Formula based on simplified heat transfer models
+      const directRadiation = currentSolarData ? currentSolarData.irradiance.ghi : 0;
+      
+      // Tire temperature model using air temperature, track temperature, and previous state
+      // Asphalt generally heats up more than air temperature when exposed to sun
+      const asphaltBaseTemp = airTemp + (directRadiation / 100); // Base calculation
+      const asphaltAdjustment = Math.min(15, directRadiation / 50); // Maximum 15C added from radiation
+      const asphaltFactor = (100 - cloudCover) / 100; // Cloud cover reduces heating
+      const rainCooling = precipitation > 0 ? Math.min(10, precipitation * 5) : 0; // Rain cools surface
+      
+      // Calculate track surface temperature
+      const trackTemperature = Math.max(
+        airTemp, // Can't be cooler than air in most cases
+        asphaltBaseTemp + (asphaltAdjustment * asphaltFactor) - rainCooling
+      );
+      
+      // Tire temperature estimates for different compounds
+      const tireTempBase = trackTemperature * 0.7 + airTemp * 0.3;
+      
+      // Grip level based on track conditions
+      let trackCondition = 'Dry';
+      let trackGrip = 'Optimal';
+      
+      if (precipitation > 0) {
+        trackCondition = precipitation < 0.5 ? 'Damp' : 'Wet';
+        trackGrip = precipitation < 0.5 ? 'Reduced' : 'Poor';
+      } else if (humidity > 90) {
+        trackCondition = 'Humid';
+        trackGrip = 'Slightly Reduced';
+      }
+      
+      // Estimate tire warm-up times (in minutes)
+      const calculateWarmupTime = (baseTime: number) => {
+        let time = baseTime;
+        
+        // Colder temperatures extend warmup
+        if (trackTemperature < 20) {
+          time += (20 - trackTemperature) * 0.3;
+        }
+        
+        // Wet conditions extend warmup
+        if (trackCondition === 'Wet') {
+          time *= 1.5;
+        } else if (trackCondition === 'Damp') {
+          time *= 1.2;
+        }
+        
+        return Math.round(time * 10) / 10; // Round to 1 decimal place
+      };
+      
+      // Recommended torque settings (percentage of maximum) based on conditions
+      const calculateTorqueRecommendation = () => {
+        let baseTorque = 100; // Start at 100%
+        
+        // Reduce for wet conditions
+        if (trackCondition === 'Wet') {
+          baseTorque = 60;
+        } else if (trackCondition === 'Damp') {
+          baseTorque = 80;
+        }
+        
+        // Reduce for cold track
+        if (trackTemperature < 15) {
+          baseTorque -= (15 - trackTemperature);
+        }
+        
+        // Adjust for wind
+        if (windSpeed > 30) {
+          baseTorque -= 5;
+        }
+        
+        return Math.max(40, Math.min(100, baseTorque)); // Clamp between 40% and 100%
+      };
+      
+      // Recommended tire pressure adjustments based on conditions (PSI difference)
+      const calculateTirePressureAdjustment = () => {
+        let adjustment = 0;
+        
+        // Hot conditions need lower pressure
+        if (trackTemperature > 40) {
+          adjustment -= Math.min(3, (trackTemperature - 40) * 0.2);
+        }
+        
+        // Cold conditions need higher pressure
+        if (trackTemperature < 20) {
+          adjustment += Math.min(3, (20 - trackTemperature) * 0.2);
+        }
+        
+        // Wet conditions need higher pressure
+        if (trackCondition === 'Wet') {
+          adjustment += 1.5;
+        } else if (trackCondition === 'Damp') {
+          adjustment += 0.5;
+        }
+        
+        return Math.round(adjustment * 10) / 10; // Round to 1 decimal place
+      };
+      
+      // Combine all data into automotive-focused format
+      const automotiveWeatherData = {
+        location: {
+          lat: Number(lat),
+          lon: Number(lon),
+          timezone: oneCallData.timezone,
+        },
+        current_time: new Date(current.dt * 1000).toISOString(),
+        sunrise_time: new Date(current.sunrise * 1000).toISOString(),
+        sunset_time: new Date(current.sunset * 1000).toISOString(),
+        conditions: {
+          summary: current.weather[0].description,
+          icon: current.weather[0].icon,
+          air_temperature: airTemp,
+          feels_like: current.feels_like,
+          humidity: humidity, // Required
+          pressure: current.pressure, // Required (Barometric pressure)
+          wind_speed: windSpeed, // Required
+          wind_direction: current.wind_deg,
+          cloud_cover: cloudCover,
+          precipitation: precipitation,
+          uv_index: uvIndex, // Required
+          solar_radiation: directRadiation || null,
+        },
+        automotive_metrics: {
+          track_surface: {
+            temperature: Math.round(trackTemperature * 10) / 10,
+            condition: trackCondition,
+            grip_level: trackGrip,
+          },
+          tire_temperature_estimates: {
+            soft_compound: Math.round((tireTempBase + 5) * 10) / 10,
+            medium_compound: Math.round((tireTempBase + 2) * 10) / 10,
+            hard_compound: Math.round(tireTempBase * 10) / 10,
+            street_performance: Math.round((tireTempBase - 2) * 10) / 10,
+            all_season: Math.round((tireTempBase - 5) * 10) / 10,
+          },
+          drive_recommendations: {
+            tire_warmup_minutes: {
+              performance: calculateWarmupTime(3),
+              street: calculateWarmupTime(5),
+              all_season: calculateWarmupTime(8),
+            },
+            torque_management: {
+              recommended_percentage: calculateTorqueRecommendation(),
+              traction_control: trackCondition !== 'Dry' ? 'Recommended' : 'Optional',
+            },
+            tire_pressure_adjustment: calculateTirePressureAdjustment(),
+            braking_points: trackCondition === 'Wet' ? 'Extend by 10-15%' : (trackCondition === 'Damp' ? 'Extend by 5%' : 'Standard'),
+          },
+          visibility_assessment: precipitation > 0 ? 'Reduced' : (cloudCover > 80 ? 'Moderate' : 'Excellent'),
+          sunglare_risk: directRadiation > 600 && cloudCover < 30 ? 'High' : 'Low',
+        },
+        hourly_forecast: oneCallData.hourly.slice(0, 12).map((hour: any) => ({
+          time: new Date(hour.dt * 1000).toISOString(),
+          temperature: hour.temp,
+          conditions: hour.weather[0].description,
+          precipitation_chance: hour.pop * 100,
+        })),
+        alerts: oneCallData.alerts || [],
+        data_sources: {
+          weather: 'OpenWeather OneCall API 3.0',
+          solar: solarData ? 'OpenWeather Solar Energy API' : 'Not available'
+        }
+      };
+      
+      res.json(automotiveWeatherData);
+    } catch (error) {
+      console.error('Automotive Weather API error:', error);
+      res.status(500).json({ message: (error as Error).message || 'Failed to fetch automotive weather data' });
+    }
+  });
+
   app.get('/api/location', async (req, res) => {
     try {
       const { q } = req.query;
