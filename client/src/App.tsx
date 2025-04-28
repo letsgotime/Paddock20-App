@@ -29,7 +29,7 @@ import EBooksPage from "./pages/eBooksPage";
 import Paddock20HomePage from "./pages/Paddock20HomePage";
 import DropdownNavbar from "./components/DropdownNavbar";
 import Footer from "./components/Footer";
-import { WeatherProvider } from "./contexts/WeatherContext";
+// WeatherProvider has been temporarily removed
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import GarageVaultPage from "./pages/GarageVaultPage";
@@ -87,81 +87,79 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <WeatherProvider>
-        <TooltipProvider>
-          {/* Skip link for keyboard navigation */}
-          <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
-            Skip to main content
-          </a>
-          
-          <div className="min-h-screen bg-black font-openSans text-white">
-            {/* Header with navigation */}
-            <header role="banner">
-              {(effectiveSession || previewMode) && (
-                <>
-                  <DropdownNavbar />
-                </>
-              )}
-            </header>
+      <TooltipProvider>
+        {/* Skip link for keyboard navigation */}
+        <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
+          Skip to main content
+        </a>
+        
+        <div className="min-h-screen bg-black font-openSans text-white">
+          {/* Header with navigation */}
+          <header role="banner">
+            {(effectiveSession || previewMode) && (
+              <>
+                <DropdownNavbar />
+              </>
+            )}
+          </header>
 
-            {/* Main content area */}
-            <main id={MAIN_CONTENT_ID} className="container mx-auto px-4" tabIndex={-1}>
-              {/* Toast notifications with ARIA live region built in */}
-              <Toaster />
+          {/* Main content area */}
+          <main id={MAIN_CONTENT_ID} className="container mx-auto px-4" tabIndex={-1}>
+            {/* Toast notifications with ARIA live region built in */}
+            <Toaster />
+            
+            <Routes>
+              {/* Public authentication route */}
+              <Route path="/auth" element={!session && !previewMode ? <AuthPage /> : <Navigate to="/dashboard" replace />} />
               
-              <Routes>
-                {/* Public authentication route */}
-                <Route path="/auth" element={!session && !previewMode ? <AuthPage /> : <Navigate to="/dashboard" replace />} />
-                
-                {/* Protected routes */}
-                <Route path="/" element={<ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
-                <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-                <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-                {/* Main Garage Vault Hub - Central repository for all vehicle data */}
-                <Route path="/garage-vault" element={<ProtectedRoute><GarageVaultPage /></ProtectedRoute>} />
-                {/* Legacy garage route redirects to new Garage Vault structure */}
-                <Route path="/garage" element={<Navigate to="/garage-vault" replace />} />
-                
-                <Route path="/journal" element={<ProtectedRoute><Journal /></ProtectedRoute>} />
-                <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
-                <Route path="/motorsports" element={<ProtectedRoute><Motorsports /></ProtectedRoute>} />
-                <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
-                <Route path="/events-page" element={<ProtectedRoute><EventsPage /></ProtectedRoute>} />
-                <Route path="/motorsports-events" element={<ProtectedRoute><MotorsportsEventsPage /></ProtectedRoute>} />
-                <Route path="/juicebox" element={<ProtectedRoute><JuiceBox /></ProtectedRoute>} />
-                <Route path="/gloss-reset" element={<ProtectedRoute><GlossResetPage /></ProtectedRoute>} />
-                <Route path="/juice-loadouts" element={<ProtectedRoute><LoadoutsPage /></ProtectedRoute>} />
-                <Route path="/gloss-growth" element={<ProtectedRoute><GlossGrowthPage /></ProtectedRoute>} />
-                <Route path="/juicebox-videos" element={<ProtectedRoute><VideoLibraryPage /></ProtectedRoute>} />
-                <Route path="/broker-portal" element={<ProtectedRoute><BrokerPortalPage /></ProtectedRoute>} />
-                <Route path="/weather" element={<ProtectedRoute><Weather /></ProtectedRoute>} />
-                <Route path="/redline" element={<ProtectedRoute><RedlineReportPage /></ProtectedRoute>} />
-                <Route path="/seasonal-checklist" element={<ProtectedRoute><SeasonalChecklistPage /></ProtectedRoute>} />
-                <Route path="/pre-drive-checklist" element={<ProtectedRoute><PreDriveChecklistPage /></ProtectedRoute>} />
-                <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-                <Route path="/vehicle-mods/:id" element={<ProtectedRoute><VehicleModsPage /></ProtectedRoute>} />
-                <Route path="/paddock20-vault" element={<ProtectedRoute><Paddock20VaultPage /></ProtectedRoute>} />
-                <Route path="/manifestation-station" element={<ProtectedRoute><ManifestationStationPage /></ProtectedRoute>} />
-                <Route path="/mod-planner" element={<ProtectedRoute><ModPlannerPage /></ProtectedRoute>} />
-                <Route path="/concierge" element={<ProtectedRoute><ConciergePage /></ProtectedRoute>} />
-                <Route path="/hustle-planner" element={<ProtectedRoute><HustlePlannerPage /></ProtectedRoute>} />
-                <Route path="/route-planner" element={<ProtectedRoute><RoutePlannerPage /></ProtectedRoute>} />
-                <Route path="/ebooks" element={<ProtectedRoute><EBooksPage /></ProtectedRoute>} />
-                <Route path="/discounts" element={<ProtectedRoute><DiscountsPage /></ProtectedRoute>} />
-                <Route path="/contact" element={<ProtectedRoute><ContactPage /></ProtectedRoute>} />
-                <Route path="/chat-feed" element={<ProtectedRoute><ChatFeedPage /></ProtectedRoute>} />
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+              {/* Protected routes */}
+              <Route path="/" element={<ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
+              <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+              {/* Main Garage Vault Hub - Central repository for all vehicle data */}
+              <Route path="/garage-vault" element={<ProtectedRoute><GarageVaultPage /></ProtectedRoute>} />
+              {/* Legacy garage route redirects to new Garage Vault structure */}
+              <Route path="/garage" element={<Navigate to="/garage-vault" replace />} />
               
-              {/* AI Support Chatbot - Available globally */}
-              {(effectiveSession || previewMode) && <SupportChatbot />}
-            </main>
+              <Route path="/journal" element={<ProtectedRoute><Journal /></ProtectedRoute>} />
+              <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
+              <Route path="/motorsports" element={<ProtectedRoute><Motorsports /></ProtectedRoute>} />
+              <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
+              <Route path="/events-page" element={<ProtectedRoute><EventsPage /></ProtectedRoute>} />
+              <Route path="/motorsports-events" element={<ProtectedRoute><MotorsportsEventsPage /></ProtectedRoute>} />
+              <Route path="/juicebox" element={<ProtectedRoute><JuiceBox /></ProtectedRoute>} />
+              <Route path="/gloss-reset" element={<ProtectedRoute><GlossResetPage /></ProtectedRoute>} />
+              <Route path="/juice-loadouts" element={<ProtectedRoute><LoadoutsPage /></ProtectedRoute>} />
+              <Route path="/gloss-growth" element={<ProtectedRoute><GlossGrowthPage /></ProtectedRoute>} />
+              <Route path="/juicebox-videos" element={<ProtectedRoute><VideoLibraryPage /></ProtectedRoute>} />
+              <Route path="/broker-portal" element={<ProtectedRoute><BrokerPortalPage /></ProtectedRoute>} />
+              <Route path="/weather" element={<ProtectedRoute><Weather /></ProtectedRoute>} />
+              <Route path="/redline" element={<ProtectedRoute><RedlineReportPage /></ProtectedRoute>} />
+              <Route path="/seasonal-checklist" element={<ProtectedRoute><SeasonalChecklistPage /></ProtectedRoute>} />
+              <Route path="/pre-drive-checklist" element={<ProtectedRoute><PreDriveChecklistPage /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/vehicle-mods/:id" element={<ProtectedRoute><VehicleModsPage /></ProtectedRoute>} />
+              <Route path="/paddock20-vault" element={<ProtectedRoute><Paddock20VaultPage /></ProtectedRoute>} />
+              <Route path="/manifestation-station" element={<ProtectedRoute><ManifestationStationPage /></ProtectedRoute>} />
+              <Route path="/mod-planner" element={<ProtectedRoute><ModPlannerPage /></ProtectedRoute>} />
+              <Route path="/concierge" element={<ProtectedRoute><ConciergePage /></ProtectedRoute>} />
+              <Route path="/hustle-planner" element={<ProtectedRoute><HustlePlannerPage /></ProtectedRoute>} />
+              <Route path="/route-planner" element={<ProtectedRoute><RoutePlannerPage /></ProtectedRoute>} />
+              <Route path="/ebooks" element={<ProtectedRoute><EBooksPage /></ProtectedRoute>} />
+              <Route path="/discounts" element={<ProtectedRoute><DiscountsPage /></ProtectedRoute>} />
+              <Route path="/contact" element={<ProtectedRoute><ContactPage /></ProtectedRoute>} />
+              <Route path="/chat-feed" element={<ProtectedRoute><ChatFeedPage /></ProtectedRoute>} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            
+            {/* AI Support Chatbot - Available globally */}
+            {(effectiveSession || previewMode) && <SupportChatbot />}
+          </main>
 
-            {/* Footer with links and information */}
-            <Footer />
-          </div>
-        </TooltipProvider>
-      </WeatherProvider>
+          {/* Footer with links and information */}
+          <Footer />
+        </div>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }
