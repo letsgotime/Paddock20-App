@@ -1048,7 +1048,15 @@ const ManifestationStationPage = () => {
                 
                 <div className="flex mt-4 text-xs text-gray-400 justify-between">
                   <span>{goal.completedMilestones.length} / {goal.milestones.length + goal.completedMilestones.length} milestones complete</span>
-                  <span className="text-blue-400">Click for details →</span>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent triggering the parent div's onClick
+                      handleViewGoalDetails(goal);
+                    }}
+                    className="text-blue-400 hover:text-blue-300 transition-colors cursor-pointer font-medium"
+                  >
+                    Click for details →
+                  </button>
                 </div>
               </div>
             ))}
@@ -1118,7 +1126,15 @@ const ManifestationStationPage = () => {
                     <span className="h-2 w-2 bg-green-500 rounded-full mr-2"></span>
                     <span className="text-green-400 text-xs">100% Complete</span>
                   </div>
-                  <span className="text-green-400 text-xs">View details →</span>
+                  <button 
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent triggering the parent div's onClick
+                      handleViewGoalDetails(goal);
+                    }}
+                    className="text-green-400 hover:text-green-300 transition-colors cursor-pointer font-medium text-xs"
+                  >
+                    View details →
+                  </button>
                 </div>
               </div>
             ))}
