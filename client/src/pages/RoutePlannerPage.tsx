@@ -440,11 +440,24 @@ const RoutePlannerPage = () => {
     distance: 0,
     estimatedTime: "",
     notes: "",
+    waypoints: [],
+  });
+  
+  // Route customization options
+  const [routeCustomizations, setRouteCustomizations] = useState({
+    isRoundTrip: false,
+    avoidTolls: false,
+    onlyTolls: false,
+    scenicRoute: false,
+    includeGasStops: false,
+    includeFoodStops: false,
   });
   
   // Location search state
   const [startLocationInput, setStartLocationInput] = useState("");
   const [endLocationInput, setEndLocationInput] = useState("");
+  const [waypointInput, setWaypointInput] = useState("");
+  const [waypoints, setWaypoints] = useState<Location[]>([]);
   const [isSearchingStart, setIsSearchingStart] = useState(false);
   const [isSearchingEnd, setIsSearchingEnd] = useState(false);
   const [startSearchResults, setStartSearchResults] = useState<any[]>([]);
@@ -607,6 +620,188 @@ const RoutePlannerPage = () => {
     }));
   };
   
+  // Handle searching for waypoint
+  const handleWaypointSearch = async () => {
+    if (!waypointInput.trim()) return;
+    
+    try {
+      const response = await fetch(`/api/geocode?q=${encodeURIComponent(waypointInput)}`);
+      if (!response.ok) throw new Error('Location search failed');
+      
+      const data = await response.json();
+      setSearchResults(data);
+    } catch (err) {
+      console.error('Error searching for waypoint:', err);
+    }
+  };
+  
+  // Select waypoint from search results
+  const selectWaypoint = (result: any) => {
+    const location: Location = {
+      id: `${result.lat},${result.lon}`,
+      name: result.name + (result.state ? `, ${result.state}` : ''),
+      lat: result.lat,
+      lon: result.lon,
+      placeId: result.place_id
+    };
+    
+    // Add waypoint to route
+    const updatedWaypoints = [...waypoints, location];
+    setWaypoints(updatedWaypoints);
+    
+    // Update route with waypoints
+    setNewRoute(prev => ({ 
+      ...prev, 
+      waypoints: updatedWaypoints 
+    }));
+    
+    // Clear input and results
+    setWaypointInput('');
+    setSearchResults([]);
+    
+    // Recalculate route if start and end points exist
+    if (newRoute.startPoint && newRoute.endPoint) {
+      updateRouteCalculations(
+        newRoute.startPoint,
+        newRoute.endPoint,
+        updatedWaypoints
+      );
+    }
+  };
+  
+  // Remove waypoint from route
+  const removeWaypoint = (index: number) => {
+    const updatedWaypoints = [...waypoints];
+    updatedWaypoints.splice(index, 1);
+    
+    setWaypoints(updatedWaypoints);
+    setNewRoute(prev => ({ 
+      ...prev, 
+      waypoints: updatedWaypoints 
+    }));
+    
+    // Recalculate route if start and end points exist
+    if (newRoute.startPoint && newRoute.endPoint) {
+      updateRouteCalculations(
+        newRoute.startPoint,
+        newRoute.endPoint,
+        updatedWaypoints
+      );
+    }
+  };
+  
+  // Toggle route customization
+  const toggleRouteCustomization = (field: keyof typeof routeCustomizations) => {
+    // If toggling onlyTolls or avoidTolls, make sure they don't conflict
+    if (field === 'onlyTolls' && routeCustomizations.avoidTolls) {
+      setRouteCustomizations(prev => ({
+        ...prev,
+        onlyTolls: true,
+        avoidTolls: false
+      }));
+    } else if (field === 'avoidTolls' && routeCustomizations.onlyTolls) {
+      setRouteCustomizations(prev => ({
+        ...prev,
+        avoidTolls: true,
+        onlyTolls: false
+      }));
+    } else {
+      // Normal toggle behavior
+      setRouteCustomizations(prev => ({
+        ...prev,
+        [field]: !prev[field]
+      }));
+    }
+    
+    // If toggling isRoundTrip, update the route calculation
+    if (field === 'isRoundTrip' && newRoute.startPoint && newRoute.endPoint) {
+      const willBeRoundTrip = !routeCustomizations.isRoundTrip;
+      
+      if (willBeRoundTrip) {
+        // For round trip, double the distance and recalculate time
+        const updatedDistance = (newRoute.distance || 0) * 2;
+        const timeInMinutes = Math.round(updatedDistance * 1.2);
+        
+        const hours = Math.floor(timeInMinutes / 60);
+        const minutes = timeInMinutes % 60;
+        const formattedTime = hours > 0 
+          ? `${hours}h ${minutes}m` 
+          : `${minutes}m`;
+        
+        setNewRoute(prev => ({
+          ...prev,
+          distance: updatedDistance,
+          estimatedTime: formattedTime
+        }));
+      } else {
+        // Recalculate normal route
+        updateRouteCalculations(
+          newRoute.startPoint,
+          newRoute.endPoint,
+          waypoints
+        );
+      }
+    }
+  };
+  
+  // Update route calculations based on points
+  const updateRouteCalculations = (start: Location, end: Location, via: Location[] = []) => {
+    // Base distance calculation
+    let totalDistance = calculateDistance(start.lat, start.lon, end.lat, end.lon);
+    
+    // Add distances for waypoints
+    if (via.length > 0) {
+      let prevPoint = start;
+      
+      for (const point of via) {
+        totalDistance += calculateDistance(
+          prevPoint.lat, 
+          prevPoint.lon, 
+          point.lat, 
+          point.lon
+        );
+        prevPoint = point;
+      }
+      
+      // Add distance from last waypoint to end
+      totalDistance += calculateDistance(
+        prevPoint.lat, 
+        prevPoint.lon, 
+        end.lat, 
+        end.lon
+      );
+    }
+    
+    // If round trip, double the distance
+    if (routeCustomizations.isRoundTrip) {
+      totalDistance *= 2;
+    }
+    
+    // Calculate time with adjustments for route customizations
+    let timeMultiplier = 1.2; // Base time multiplier
+    
+    // Add time for stops
+    if (routeCustomizations.includeFoodStops) timeMultiplier += 0.2;
+    if (routeCustomizations.includeGasStops) timeMultiplier += 0.1;
+    
+    // Adjust for scenic routes (slower) or toll roads (faster)
+    if (routeCustomizations.scenicRoute) timeMultiplier += 0.3;
+    if (routeCustomizations.onlyTolls) timeMultiplier -= 0.2;
+    
+    const timeInMinutes = Math.round(totalDistance * timeMultiplier);
+    const hours = Math.floor(timeInMinutes / 60);
+    const minutes = timeInMinutes % 60;
+    const formattedTime = hours > 0 
+      ? `${hours}h ${minutes}m` 
+      : `${minutes}m`;
+    
+    setNewRoute(prev => ({
+      ...prev,
+      distance: Math.round(totalDistance),
+      estimatedTime: formattedTime
+    }));
+  };
+  
   // Generate first drive intelligence
   const generateFirstDriveIntelligence = () => {
     if (!newRoute.startPoint || !newRoute.endPoint || !selectedVehicleId) return null;
@@ -652,6 +847,7 @@ const RoutePlannerPage = () => {
       name: newRoute.name || "Unnamed Route",
       startPoint: newRoute.startPoint as Location,
       endPoint: newRoute.endPoint as Location,
+      waypoints: waypoints.length > 0 ? waypoints : undefined,
       distance: newRoute.distance || 0,
       estimatedTime: newRoute.estimatedTime || "0m",
       notes: newRoute.notes || "",
@@ -664,7 +860,16 @@ const RoutePlannerPage = () => {
       startMileage: mileageTracking.startMileage || undefined,
       endMileage: mileageTracking.endMileage || undefined,
       tripMileage: tripMileage || undefined,
-      fuelConsumption: mileageTracking.fuelConsumption || undefined
+      fuelConsumption: mileageTracking.fuelConsumption || undefined,
+      // Save route customizations
+      routeCustomizations: {
+        isRoundTrip: routeCustomizations.isRoundTrip,
+        avoidTolls: routeCustomizations.avoidTolls,
+        onlyTolls: routeCustomizations.onlyTolls,
+        scenicRoute: routeCustomizations.scenicRoute,
+        includeGasStops: routeCustomizations.includeGasStops,
+        includeFoodStops: routeCustomizations.includeFoodStops
+      }
     };
     
     // Add to routes
@@ -690,9 +895,13 @@ const RoutePlannerPage = () => {
       distance: 0,
       estimatedTime: "",
       notes: "",
+      waypoints: [],
     });
     setStartLocationInput("");
     setEndLocationInput("");
+    setWaypointInput("");
+    setWaypoints([]);
+    setSearchResults([]);
     setSelectedVehicleId(null);
     setSelectedPassengerIds([]);
     setIsFirstDrive(false);
@@ -700,6 +909,15 @@ const RoutePlannerPage = () => {
       startMileage: 0,
       endMileage: 0,
       fuelConsumption: 0
+    });
+    // Reset route customizations
+    setRouteCustomizations({
+      isRoundTrip: false,
+      avoidTolls: false,
+      onlyTolls: false,
+      scenicRoute: false,
+      includeGasStops: false,
+      includeFoodStops: false,
     });
   };
   
@@ -976,6 +1194,88 @@ const RoutePlannerPage = () => {
                 )}
               </div>
               
+              {/* Multi-stop Waypoints */}
+              <div className="mt-4 mb-4 relative">
+                <div className="flex items-center justify-between">
+                  <label className="block text-gray-400 text-sm mb-2 flex items-center">
+                    <RouteIcon className="h-4 w-4 text-blue-400 mr-2" />
+                    Multi-stop Waypoints
+                  </label>
+                  {waypoints.length > 0 && (
+                    <span className="text-gray-400 text-sm">{waypoints.length} stop{waypoints.length !== 1 ? 's' : ''}</span>
+                  )}
+                </div>
+                
+                <div className="relative">
+                  <div className="flex">
+                    <div className="relative flex-1">
+                      <input
+                        type="text"
+                        placeholder="Add a stop along the way..."
+                        value={waypointInput}
+                        onChange={(e) => setWaypointInput(e.target.value)}
+                        onKeyDown={(e) => e.key === 'Enter' && handleWaypointSearch()}
+                        className="w-full bg-black text-white p-3 rounded-l border border-gray-700 focus:border-blue-500 focus:outline-none"
+                      />
+                    </div>
+                    <button
+                      onClick={handleWaypointSearch}
+                      className="bg-blue-900/40 text-blue-400 px-3 border border-blue-900 rounded-r hover:bg-blue-900/60"
+                    >
+                      <Search className="h-5 w-5" />
+                    </button>
+                  </div>
+                  
+                  {/* Waypoint search results */}
+                  {searchResults && searchResults.length > 0 && (
+                    <div className="absolute z-50 mt-1 w-full bg-black border border-gray-700 rounded-md shadow-lg">
+                      <ul className="py-1 max-h-60 overflow-auto">
+                        {searchResults.map((result, idx) => (
+                          <li
+                            key={idx}
+                            onClick={() => selectWaypoint(result)}
+                            className="px-4 py-2 hover:bg-gray-800 cursor-pointer flex items-start"
+                          >
+                            <MapPin className="h-4 w-4 text-blue-400 mr-2 mt-1 flex-shrink-0" />
+                            <div>
+                              <p className="text-white">{result.name}</p>
+                              <p className="text-gray-400 text-xs">
+                                {result.state && <span>{result.state}, </span>}
+                                {result.country}
+                              </p>
+                            </div>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Waypoints list */}
+                {waypoints.length > 0 && (
+                  <div className="mt-3 space-y-2">
+                    {waypoints.map((waypoint, index) => (
+                      <div key={index} className="flex items-center justify-between p-2 bg-blue-900/20 border border-blue-900/30 rounded-md group">
+                        <div className="flex items-center">
+                          <div className="flex items-center justify-center h-5 w-5 rounded-full bg-blue-500 text-white text-xs mr-2">
+                            {index + 1}
+                          </div>
+                          <span className="text-blue-300 text-sm">{waypoint.name}</span>
+                        </div>
+                        <button 
+                          onClick={() => removeWaypoint(index)}
+                          className="text-red-400 hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
               {/* End Location with search */}
               <div>
                 <label className="block text-gray-400 text-sm mb-2">Destination</label>
@@ -1036,6 +1336,103 @@ const RoutePlannerPage = () => {
                     <span className="text-green-400 text-sm">{newRoute.endPoint.name}</span>
                   </div>
                 )}
+              </div>
+              
+              {/* Route Customization Options */}
+              <div className="mt-6 mb-6 p-4 bg-blue-900/10 rounded-md border border-blue-900/20">
+                <h3 className="text-blue-400 text-lg mb-3 flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                  </svg>
+                  Route Customizations
+                </h3>
+                
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  <div 
+                    className={`p-3 border ${routeCustomizations.isRoundTrip ? 'border-green-500 bg-green-900/20' : 'border-gray-700 bg-black/30'} rounded-lg cursor-pointer transition-colors flex items-center`}
+                    onClick={() => toggleRouteCustomization('isRoundTrip')}
+                  >
+                    <div className={`h-5 w-5 mr-2 rounded-sm border ${routeCustomizations.isRoundTrip ? 'bg-green-500 border-green-500' : 'border-gray-500'} flex items-center justify-center`}>
+                      {routeCustomizations.isRoundTrip && (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                    <span className="text-white text-sm">Round Trip</span>
+                  </div>
+                  
+                  <div 
+                    className={`p-3 border ${routeCustomizations.includeFoodStops ? 'border-green-500 bg-green-900/20' : 'border-gray-700 bg-black/30'} rounded-lg cursor-pointer transition-colors flex items-center`}
+                    onClick={() => toggleRouteCustomization('includeFoodStops')}
+                  >
+                    <div className={`h-5 w-5 mr-2 rounded-sm border ${routeCustomizations.includeFoodStops ? 'bg-green-500 border-green-500' : 'border-gray-500'} flex items-center justify-center`}>
+                      {routeCustomizations.includeFoodStops && (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                    <span className="text-white text-sm">Food Stops</span>
+                  </div>
+                  
+                  <div 
+                    className={`p-3 border ${routeCustomizations.includeGasStops ? 'border-green-500 bg-green-900/20' : 'border-gray-700 bg-black/30'} rounded-lg cursor-pointer transition-colors flex items-center`}
+                    onClick={() => toggleRouteCustomization('includeGasStops')}
+                  >
+                    <div className={`h-5 w-5 mr-2 rounded-sm border ${routeCustomizations.includeGasStops ? 'bg-green-500 border-green-500' : 'border-gray-500'} flex items-center justify-center`}>
+                      {routeCustomizations.includeGasStops && (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                    <span className="text-white text-sm">Gas Stops</span>
+                  </div>
+                  
+                  <div 
+                    className={`p-3 border ${routeCustomizations.scenicRoute ? 'border-green-500 bg-green-900/20' : 'border-gray-700 bg-black/30'} rounded-lg cursor-pointer transition-colors flex items-center`}
+                    onClick={() => toggleRouteCustomization('scenicRoute')}
+                  >
+                    <div className={`h-5 w-5 mr-2 rounded-sm border ${routeCustomizations.scenicRoute ? 'bg-green-500 border-green-500' : 'border-gray-500'} flex items-center justify-center`}>
+                      {routeCustomizations.scenicRoute && (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                    <span className="text-white text-sm">Scenic Route</span>
+                  </div>
+                  
+                  <div 
+                    className={`p-3 border ${routeCustomizations.avoidTolls ? 'border-green-500 bg-green-900/20' : 'border-gray-700 bg-black/30'} rounded-lg cursor-pointer transition-colors flex items-center`}
+                    onClick={() => toggleRouteCustomization('avoidTolls')}
+                  >
+                    <div className={`h-5 w-5 mr-2 rounded-sm border ${routeCustomizations.avoidTolls ? 'bg-green-500 border-green-500' : 'border-gray-500'} flex items-center justify-center`}>
+                      {routeCustomizations.avoidTolls && (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                    <span className="text-white text-sm">No Tolls</span>
+                  </div>
+                  
+                  <div 
+                    className={`p-3 border ${routeCustomizations.onlyTolls ? 'border-green-500 bg-green-900/20' : 'border-gray-700 bg-black/30'} rounded-lg cursor-pointer transition-colors flex items-center`}
+                    onClick={() => toggleRouteCustomization('onlyTolls')}
+                  >
+                    <div className={`h-5 w-5 mr-2 rounded-sm border ${routeCustomizations.onlyTolls ? 'bg-green-500 border-green-500' : 'border-gray-500'} flex items-center justify-center`}>
+                      {routeCustomizations.onlyTolls && (
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
+                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                        </svg>
+                      )}
+                    </div>
+                    <span className="text-white text-sm">Only Tolls</span>
+                  </div>
+                </div>
               </div>
               
               {/* Route details section */}
