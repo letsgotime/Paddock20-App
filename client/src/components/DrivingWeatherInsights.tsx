@@ -1,146 +1,138 @@
 import React, { useState, useEffect } from 'react';
 import { CarFront, Wind, Droplets, ThermometerSun, AlertTriangle, Sun, CloudRain } from 'lucide-react';
-import { getAutomotiveWeatherData } from '@/services/openWeatherService';
-import { WeatherData, OneCallData, getWeatherData, getOneCallData } from '@/lib/weather';
-
-// Define the interface for automotive weather data specific to this component
-interface AutomotiveWeatherData {
-  surfaceConditions?: {
-    asphalt?: {
-      temperature?: number;
-      condition?: string;
-    }
-  };
-  drivingRisk?: {
-    overall?: string;
-    visibility?: string;
-    traction?: string;
-    score?: number;
-    description?: string;
-  };
-  performance?: {
-    tireWarmupTime?: {
-      sport?: number;
-      summer?: number;
-    };
-    roadSurfaceTemp?: number;
-  };
-}
 
 interface DrivingWeatherInsightsProps {
   latitude: number;
   longitude: number;
 }
 
+// A more direct and robust implementation using the backend API
 export function DrivingWeatherInsights({ latitude, longitude }: DrivingWeatherInsightsProps) {
-  const [currentWeather, setCurrentWeather] = useState<WeatherData | null>(null);
-  const [oneCallData, setOneCallData] = useState<OneCallData | null>(null);
-  const [automotiveData, setAutomotiveData] = useState<AutomotiveWeatherData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [weatherData, setWeatherData] = useState<any>(null);
+  const [oneCallData, setOneCallData] = useState<any>(null);
+  const [automotiveData, setAutomotiveData] = useState<any>(null);
 
   useEffect(() => {
-    async function fetchOpenWeatherData() {
+    async function fetchData() {
       if (!latitude || !longitude) return;
       
       setLoading(true);
       setError(null);
       
       try {
-        // Fetch all needed data in parallel
-        const [weather, oneCall, automotive] = await Promise.all([
-          getWeatherData({ lat: latitude, lon: longitude }, 'metric'),
-          getOneCallData({ lat: latitude, lon: longitude }, 'metric'),
-          getAutomotiveWeatherData(latitude, longitude)
+        // Fetch all needed data directly from our backend endpoints
+        const [weatherResponse, oneCallResponse, automotiveResponse] = await Promise.all([
+          fetch(`/api/weather?lat=${latitude}&lon=${longitude}&units=metric`),
+          fetch(`/api/onecall?lat=${latitude}&lon=${longitude}&units=metric`),
+          fetch(`/api/automotive-weather?lat=${latitude}&lon=${longitude}&units=metric`)
         ]);
         
-        setCurrentWeather(weather);
+        if (!weatherResponse.ok) throw new Error('Failed to fetch weather data');
+        if (!oneCallResponse.ok) throw new Error('Failed to fetch one call data');
+        if (!automotiveResponse.ok) throw new Error('Failed to fetch automotive data');
+        
+        const weather = await weatherResponse.json();
+        const oneCall = await oneCallResponse.json();
+        const automotive = await automotiveResponse.json();
+        
+        setWeatherData(weather);
         setOneCallData(oneCall);
         setAutomotiveData(automotive);
       } catch (err) {
-        console.error('Error fetching OpenWeather data:', err);
-        setError('Unable to fetch enhanced driving weather data. Using standard forecast.');
+        console.error('Error fetching weather data:', err);
+        setError('Unable to fetch driving weather data');
       } finally {
         setLoading(false);
       }
     }
 
-    fetchOpenWeatherData();
+    fetchData();
   }, [latitude, longitude]);
 
   if (loading) {
     return <div className="mt-4 p-4 rounded-lg bg-black/20 animate-pulse h-40"></div>;
   }
 
-  if (error) {
+  if (error || !weatherData || !oneCallData) {
     return (
       <div className="mt-4 p-4 rounded-lg bg-black/20 border border-red-500/30">
         <div className="flex items-center text-red-400 mb-2">
           <AlertTriangle size={18} className="mr-2" />
           <span>Enhanced driving forecast unavailable</span>
         </div>
-        <p className="text-sm text-gray-400">Using standard weather forecast instead.</p>
+        <p className="text-sm text-gray-400">Try refreshing the page or check your connection.</p>
       </div>
     );
   }
 
-  // If no data is available yet, don't render
-  if (!currentWeather || !oneCallData) {
-    return null;
-  }
-
-  // Extract relevant driving data
-  const roadTemp = automotiveData?.surfaceConditions?.asphalt?.temperature || 
-                  currentWeather.main.temp || '—';
-                  
-  const humidity = currentWeather.main.humidity || '—';
-  const uvIndex = oneCallData.current?.uvi || '—';
-  const visibility = (currentWeather.visibility / 1000) || '—'; // Convert from meters to km
+  // Extract basic weather data
+  const airTemp = weatherData.main.temp;
+  const humidity = weatherData.main.humidity || '—';
+  const visibility = (weatherData.visibility / 1000) || '—'; // Convert from meters to km
   const visibilityUnit = 'km';
-  const windGust = currentWeather.wind.gust || currentWeather.wind.speed || '—';
+  const windGust = weatherData.wind.gust || weatherData.wind.speed || '—';
   const windGustUnit = 'km/h';
+  const uvIndex = oneCallData.current?.uvi || '—';
   
-  // Get precipitation data from OpenWeather
+  // Extract precipitation data
   const precipitation1hr = oneCallData.current?.rain?.['1h'] || 0;
-  
-  // Get precipitation probability from hourly forecast
   const precipProbability = oneCallData.hourly && oneCallData.hourly.length > 0 
     ? Math.round(oneCallData.hourly[0].pop * 100) 
-    : '—';
-    
-  // Get driving risk information from automotive data if available
-  const drivingRiskOverall = automotiveData?.drivingRisk?.overall;
+    : 0;
   
-  // Compute driving conditions based on various factors
-  let drivingCondition = drivingRiskOverall || 'Good';
+  // Calculate road surface temperature from automotive data or estimate it
+  const roadTemp = automotiveData.surfaceConditions?.asphalt?.temperature || 
+                  Math.round(airTemp * 1.2); // Simple estimate if no automotive data
+  
+  // Determine driving conditions
+  const weatherCondition = weatherData.weather[0].main;
+  const hasRain = weatherCondition === 'Rain' || weatherCondition === 'Drizzle' || weatherCondition === 'Thunderstorm';
+  const hasSnow = weatherCondition === 'Snow';
+  const hasFog = weatherCondition === 'Fog' || weatherCondition === 'Mist';
+  
+  // Compute driving condition rating
+  let drivingCondition = 'Good';
   let drivingConditionClass = 'text-green-500';
   
-  if (drivingRiskOverall === 'Poor' || 
-      precipitation1hr > 0 || 
-      currentWeather.weather[0].main === 'Rain' || 
-      currentWeather.weather[0].main === 'Snow' ||
-      (typeof visibility === 'number' && visibility < 5)) {
+  if (hasSnow || 
+      (hasRain && precipitation1hr > 5) || 
+      (typeof visibility === 'number' && visibility < 3)) {
     drivingCondition = 'Poor';
     drivingConditionClass = 'text-red-500';
   } else if (
-    drivingRiskOverall === 'Fair' ||
-    (typeof windGust === 'number' && windGust > 20) ||
+    hasFog ||
+    hasRain ||
+    (typeof windGust === 'number' && windGust > 30) ||
     (oneCallData.alerts && oneCallData.alerts.length > 0) ||
-    currentWeather.weather[0].main === 'Fog'
+    (typeof visibility === 'number' && visibility < 7)
   ) {
     drivingCondition = 'Fair';
     drivingConditionClass = 'text-yellow-500';
   }
   
-  // Get tire warmup times from automotive data if available
-  const sportTireWarmup = automotiveData?.performance?.tireWarmupTime?.sport;
+  // Extract sport tire warmup time from automotive data
+  const sportTireWarmup = automotiveData?.performance?.tireWarmupTime?.sport || 
+                         (airTemp < 15 ? 5 : 3); // Simple estimate if missing
   
-  // Check for active weather alerts that would affect road conditions
+  // Check for weather alerts related to road conditions
   const roadAlert = oneCallData.alerts?.find((alert: any) => 
     alert.event.toLowerCase().includes('road') || 
     alert.event.toLowerCase().includes('traffic') ||
     alert.event.toLowerCase().includes('construction')
   );
+  
+  // Generate a description for the current conditions
+  const drivingDescription = hasSnow 
+    ? "Snow on road surfaces. Winter driving precautions required."
+    : hasRain 
+    ? "Precipitation detected. Use caution and reduce speed."
+    : hasFog
+    ? "Reduced visibility conditions. Use headlights and maintain safe distance."
+    : typeof windGust === 'number' && windGust > 30 
+    ? "High wind gusts may affect vehicle stability."
+    : "Normal driving conditions, exercise standard precautions.";
 
   return (
     <div className="mt-4 p-4 rounded-lg bg-gradient-to-br from-gray-900 to-black border border-blue-500/20">
@@ -204,11 +196,9 @@ export function DrivingWeatherInsights({ latitude, longitude }: DrivingWeatherIn
           <div className="mt-2 text-xs text-gray-400">
             Visibility: {visibility} {visibilityUnit}
           </div>
-          {automotiveData?.drivingRisk?.description && (
-            <div className="mt-1 text-xs text-gray-400">
-              {automotiveData.drivingRisk.description}
-            </div>
-          )}
+          <div className="mt-1 text-xs text-gray-400">
+            {drivingDescription}
+          </div>
         </div>
       </div>
       
@@ -216,8 +206,9 @@ export function DrivingWeatherInsights({ latitude, longitude }: DrivingWeatherIn
         <div className="mt-4 p-3 bg-black/30 rounded-lg">
           <p className="text-gray-400 text-xs mb-1">Next Hour Weather</p>
           <p className="text-white text-sm">
-            {oneCallData.hourly[0].weather[0].description} with 
-            {typeof precipProbability === 'number' && precipProbability > 0 ? ` ${precipProbability}% chance of precipitation` : ' no precipitation expected'}
+            {oneCallData.hourly[0].weather[0].description.charAt(0).toUpperCase() + 
+             oneCallData.hourly[0].weather[0].description.slice(1)} with 
+            {precipProbability > 0 ? ` ${precipProbability}% chance of precipitation` : ' no precipitation expected'}
           </p>
         </div>
       )}
@@ -233,14 +224,12 @@ export function DrivingWeatherInsights({ latitude, longitude }: DrivingWeatherIn
         </div>
       )}
       
-      {sportTireWarmup && (
-        <div className="mt-4 p-3 bg-black/30 rounded-lg">
-          <p className="text-gray-400 text-xs mb-1">Tire Performance</p>
-          <p className="text-white text-sm">
-            Sport tires warm-up time: approximately {sportTireWarmup} minutes
-          </p>
-        </div>
-      )}
+      <div className="mt-4 p-3 bg-black/30 rounded-lg">
+        <p className="text-gray-400 text-xs mb-1">Tire Performance</p>
+        <p className="text-white text-sm">
+          Sport tires warm-up time: approximately {sportTireWarmup} minutes
+        </p>
+      </div>
     </div>
   );
 }

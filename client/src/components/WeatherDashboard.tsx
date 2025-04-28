@@ -1,6 +1,24 @@
 import React, { useContext } from "react";
 import { OpenWeatherContext } from "@/contexts/OpenWeatherContext";
 
+// Interface for weather data properties matching OneCall API
+interface OneCallWeatherData {
+  temp: number;
+  feels_like: number;
+  pressure: number;
+  humidity: number;
+  wind_speed: number;
+  sunrise: number;
+  sunset: number;
+  weather: Array<{
+    id: number;
+    main: string;
+    description: string;
+    icon: string;
+  }>;
+  uvi?: number;
+}
+
 const WeatherDashboard = () => {
   const { weatherData, loading, error } = useContext(OpenWeatherContext);
 
@@ -12,27 +30,23 @@ const WeatherDashboard = () => {
     return <p className="text-red-400">Failed to load weather data. Please check your connection or try again later.</p>;
   }
 
-  const { main, wind, sys, weather } = weatherData;
+  // Cast to the correct type to match the data from OneCall API
+  const data = weatherData as unknown as OneCallWeatherData;
+  const { temp, feels_like, pressure, humidity, wind_speed, sunrise, sunset, weather } = data;
 
   return (
     <div className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg p-6 border border-gray-700">
       <h2 className="text-blue-400 font-orbitron text-2xl mb-6">☁️ Drive Readiness — Today's Conditions</h2>
 
       <div className="text-white font-openSans text-base leading-relaxed space-y-3">
-        <p>🌡️ Air Temperature: {main.temp}°F</p>
-        <p>🔥 Surface Temp: {main.feels_like}°F (Feels Like)</p>
-        <p>💨 Wind Speed: {wind.speed} mph</p>
-        <p>💧 Humidity: {main.humidity}%</p>
-        <p>📈 Barometric Pressure: {main.pressure} hPa</p>
-        {sys.sunrise && sys.sunset && (
-          <>
-            <p>🌅 Sunrise: {new Date(sys.sunrise * 1000).toLocaleTimeString()}</p>
-            <p>🌇 Sunset: {new Date(sys.sunset * 1000).toLocaleTimeString()}</p>
-          </>
-        )}
-        {weather && weather.length > 0 && (
-          <p>☁️ Condition: {weather[0].description}</p>
-        )}
+        <p>🌡️ Air Temperature: {temp}°F</p>
+        <p>🔥 Surface Temp: {feels_like}°F (Feels Like)</p>
+        <p>💨 Wind Speed: {wind_speed} mph</p>
+        <p>💧 Humidity: {humidity}%</p>
+        <p>📈 Barometric Pressure: {pressure} hPa</p>
+        <p>🌅 Sunrise: {new Date(sunrise * 1000).toLocaleTimeString()}</p>
+        <p>🌇 Sunset: {new Date(sunset * 1000).toLocaleTimeString()}</p>
+        <p>☁️ Condition: {weather[0].description}</p>
       </div>
     </div>
   );

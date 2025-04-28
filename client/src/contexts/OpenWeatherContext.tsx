@@ -11,27 +11,22 @@ export interface Location {
   country?: string;
 }
 
+// Weather data interface matching OpenWeather OneCall API format
 interface WeatherData {
-  main: {
-    temp: number;
-    feels_like: number;
-    humidity: number;
-    pressure: number;
-  };
-  wind: {
-    speed: number;
-    deg: number;
-  };
-  sys: {
-    sunrise?: number;
-    sunset?: number;
-  };
+  temp: number;
+  feels_like: number;
+  humidity: number;
+  pressure: number;
+  wind_speed: number;
+  sunrise: number;
+  sunset: number;
   weather: Array<{
     id: number;
     main: string;
     description: string;
     icon: string;
   }>;
+  uvi?: number;
 }
 
 interface OpenWeatherContextType {
@@ -89,15 +84,17 @@ export function OpenWeatherProvider({ children }: { children: React.ReactNode })
       setError(null);
       
       try {
-        // Basic weather data
-        const weatherResponse = await fetch(`/api/weather?lat=${selectedLocation.lat}&lon=${selectedLocation.lon}&units=${unit}`);
+        // Fetch OneCall data which has all the weather info we need
+        const oneCallResponse = await fetch(`/api/onecall?lat=${selectedLocation.lat}&lon=${selectedLocation.lon}&units=${unit}`);
         
-        if (!weatherResponse.ok) {
+        if (!oneCallResponse.ok) {
           throw new Error('Failed to fetch weather data');
         }
         
-        const weatherResult = await weatherResponse.json();
-        setWeatherData(weatherResult);
+        const oneCallData = await oneCallResponse.json();
+        
+        // Store only the current weather data in the correct format
+        setWeatherData(oneCallData.current);
         
         // Attempt to fetch automotive weather data
         try {
