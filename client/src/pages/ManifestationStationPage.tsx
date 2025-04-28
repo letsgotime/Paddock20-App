@@ -103,7 +103,339 @@ const ManifestationStationPage = () => {
         }
       ]
     },
-    // Additional example goals can be added here
+    // Titanium Ryft exhaust for Ferrari 458
+    {
+      id: 2,
+      goalName: "Titanium Ryft Exhaust",
+      goalType: "Modification",
+      targetAsset: "Titanium Ryft Exhaust for Ferrari 458",
+      targetDate: "2025-06-30",
+      fundingPlan: "Monthly Payments",
+      mindFocus: "Study sound comparisons and engineering weekly",
+      bodyFocus: "Garage organization and preparation",
+      spiritFocus: "Appreciation for craftsmanship",
+      milestones: [],
+      completedMilestones: [
+        {
+          id: 201,
+          name: "Research options",
+          targetDate: "2024-03-01",
+          notes: "Compared VividRacing and other alternatives",
+          completed: true
+        },
+        {
+          id: 202,
+          name: "Confirm fitment with my vehicle",
+          targetDate: "2024-03-15",
+          notes: "Called Ryft support to verify compatibility",
+          completed: true
+        },
+        {
+          id: 203,
+          name: "Book installation appointment",
+          targetDate: "2025-06-01",
+          notes: "Reserved with specialist shop",
+          completed: true
+        }
+      ],
+      manifestStatus: 'complete',
+      progressPercentage: 100,
+      description: "The Ryft titanium performance exhaust offers improved sound, reduced weight, and enhanced performance for the Ferrari 458. This precision-engineered exhaust provides ~15 hp gain and weighs significantly less than the factory system.",
+      targetAmount: 5275,
+      currentAmount: 5275,
+      budgetEntries: [
+        {
+          id: 301,
+          date: "2024-12-15",
+          amount: 2000,
+          type: 'deposit',
+          description: "Performance parts fund"
+        },
+        {
+          id: 302,
+          date: "2025-01-10",
+          amount: 1000,
+          type: 'deposit',
+          description: "Year-end bonus allocation"
+        },
+        {
+          id: 303,
+          date: "2025-02-05",
+          amount: 2275,
+          type: 'deposit',
+          description: "Final payment from savings"
+        }
+      ],
+      mediaGallery: [
+        {
+          id: 401,
+          type: 'image',
+          name: 'Ryft Titanium Exhaust',
+          url: 'https://www.vividracing.com/images/ryft-ferrari-458-exhaust-1-tn.jpg',
+          thumbnail: 'https://www.vividracing.com/images/ryft-ferrari-458-exhaust-1-tn.jpg',
+          description: 'Titanium Ryft exhaust system for Ferrari 458',
+          dateAdded: '2025-01-15'
+        },
+        {
+          id: 402,
+          type: 'link',
+          name: 'Ryft Exhaust Product Page',
+          url: 'https://www.vividracing.com/titanium-performance-exhaust-ferrari-458-italia-spider-20112015-p-154762309.html',
+          description: 'Official product page with specs and details',
+          dateAdded: '2025-01-20'
+        }
+      ]
+    },
+    // HRE Wheels for Ferrari 458
+    {
+      id: 3,
+      goalName: "HRE P101 Wheels",
+      goalType: "Modification",
+      targetAsset: "HRE P101 Wheels for Ferrari 458",
+      targetDate: "2025-08-15",
+      fundingPlan: "Monthly Savings",
+      mindFocus: "Research wheel fitment and engineering weekly",
+      bodyFocus: "Detailing practice to maintain finish",
+      spiritFocus: "Patience in craftsmanship",
+      milestones: [
+        {
+          id: 301,
+          name: "Choose final finish and color",
+          targetDate: "2025-05-15",
+          notes: "Deciding between brushed dark clear and satin bronze",
+          completed: false
+        },
+        {
+          id: 302,
+          name: "Select tire compound and brand",
+          targetDate: "2025-06-20",
+          notes: "Research Michelin PS4S vs Pirelli P Zero",
+          completed: false
+        }
+      ],
+      completedMilestones: [
+        {
+          id: 303,
+          name: "Confirm fitment specifications",
+          targetDate: "2025-03-01",
+          notes: "Contacted HRE for exact measurements",
+          completed: true
+        }
+      ],
+      manifestStatus: 'in_progress',
+      progressPercentage: 65,
+      description: "HRE P101 forged wheels are the perfect complement to the Ferrari 458, offering reduced unsprung weight, improved handling, and a stunning visual upgrade. The wheel design balances performance, strength, and aesthetics.",
+      targetAmount: 12500,
+      currentAmount: 8125,
+      budgetEntries: [
+        {
+          id: 401,
+          date: "2025-01-15",
+          amount: 4000,
+          type: 'deposit',
+          description: "Initial wheel fund"
+        },
+        {
+          id: 402,
+          date: "2025-02-10",
+          amount: 2500,
+          type: 'deposit',
+          description: "Project bonus allocation"
+        },
+        {
+          id: 403,
+          date: "2025-03-05",
+          amount: 1625,
+          type: 'deposit',
+          description: "Monthly savings"
+        }
+      ],
+      mediaGallery: [
+        {
+          id: 501,
+          type: 'image',
+          name: 'HRE P101 Wheels - Ferrari 458',
+          url: 'https://cdn.shopify.com/s/files/1/0579/3601/1171/products/1620812060fe0a7334bbaa6Ferrari458ItaliaHRER101BlackSilverRobertsonRacing_1.jpg?v=1676569265',
+          thumbnail: 'https://cdn.shopify.com/s/files/1/0579/3601/1171/products/1620812060fe0a7334bbaa6Ferrari458ItaliaHRER101BlackSilverRobertsonRacing_1.jpg?v=1676569265',
+          description: 'HRE P101 wheels on a Ferrari 458 - inspiration for my configuration',
+          dateAdded: '2025-02-05'
+        },
+        {
+          id: 502,
+          type: 'link',
+          name: 'HRE Wheels Official Site',
+          url: 'https://www.hrewheels.com',
+          description: 'HRE website for custom wheel configurations',
+          dateAdded: '2025-02-15'
+        }
+      ]
+    },
+    // Patek Philippe Nautilus 5711
+    {
+      id: 4,
+      goalName: "Patek Philippe Nautilus",
+      goalType: "Watch",
+      targetAsset: "Patek Philippe Nautilus 5711/1A-010",
+      targetDate: "2025-12-31",
+      fundingPlan: "Investment",
+      mindFocus: "Studying horology and craftsmanship",
+      bodyFocus: "Precision dexterity exercises",
+      spiritFocus: "Patience and appreciation for art",
+      milestones: [],
+      completedMilestones: [
+        {
+          id: 401,
+          name: "Meet with authorized dealer",
+          targetDate: "2024-10-15",
+          notes: "Established relationship with Patek AD",
+          completed: true
+        },
+        {
+          id: 402,
+          name: "Secure allocation",
+          targetDate: "2025-01-20",
+          notes: "Received confirmation of purchase opportunity",
+          completed: true
+        },
+        {
+          id: 403,
+          name: "Complete purchase",
+          targetDate: "2025-03-15",
+          notes: "Finalized acquisition of timepiece",
+          completed: true
+        }
+      ],
+      manifestStatus: 'complete',
+      progressPercentage: 100,
+      description: "The Patek Philippe Nautilus 5711/1A-010 with blue dial represents the pinnacle of luxury sports watches. Designed by Gerald Genta in 1976, it combines elegant design with extraordinary craftsmanship and has become one of the most sought-after timepieces in the world.",
+      targetAmount: 140000,
+      currentAmount: 140000,
+      budgetEntries: [
+        {
+          id: 501,
+          date: "2024-11-15",
+          amount: 50000,
+          type: 'deposit',
+          description: "Investment returns"
+        },
+        {
+          id: 502,
+          date: "2025-01-10",
+          amount: 90000,
+          type: 'deposit',
+          description: "Asset reallocation"
+        }
+      ],
+      mediaGallery: [
+        {
+          id: 601,
+          type: 'image',
+          name: 'Patek Philippe Nautilus 5711',
+          url: 'https://hodinkee.imgix.net/uploads/images/1673360778307-fe8f4r2xp5j-ac5a8d2a95f0b10b86dac53a73d796b2/patekphilippe_5711_1awatches.jpg',
+          thumbnail: 'https://hodinkee.imgix.net/uploads/images/1673360778307-fe8f4r2xp5j-ac5a8d2a95f0b10b86dac53a73d796b2/patekphilippe_5711_1awatches.jpg',
+          description: 'The iconic Nautilus 5711 with blue dial',
+          dateAdded: '2025-03-20'
+        },
+        {
+          id: 602,
+          type: 'link',
+          name: 'Patek Philippe Official Site',
+          url: 'https://www.patek.com',
+          description: 'Official Patek Philippe website',
+          dateAdded: '2025-01-05'
+        }
+      ]
+    },
+    // Beach House
+    {
+      id: 5,
+      goalName: "Coastal Beach House",
+      goalType: "Real Estate",
+      targetAsset: "Waterfront Property in Malibu",
+      targetDate: "2027-05-30",
+      fundingPlan: "Investment Portfolio",
+      mindFocus: "Visualize morning ocean views daily",
+      bodyFocus: "Swimming training for ocean enjoyment",
+      spiritFocus: "Gratitude for natural beauty",
+      milestones: [],
+      completedMilestones: [
+        {
+          id: 501,
+          name: "Initial consultation with realtor",
+          targetDate: "2024-09-01",
+          notes: "Discussed requirements and budget",
+          completed: true
+        },
+        {
+          id: 502,
+          name: "Mortgage pre-approval",
+          targetDate: "2024-10-15",
+          notes: "Secured financing options",
+          completed: true
+        },
+        {
+          id: 503,
+          name: "Property viewing tour",
+          targetDate: "2024-11-30",
+          notes: "Viewed potential properties",
+          completed: true
+        },
+        {
+          id: 504,
+          name: "Offer acceptance",
+          targetDate: "2025-01-15",
+          notes: "Offer on dream property accepted",
+          completed: true
+        },
+        {
+          id: 505,
+          name: "Closing completed",
+          targetDate: "2025-02-28",
+          notes: "Finalized purchase and received keys",
+          completed: true
+        }
+      ],
+      manifestStatus: 'complete',
+      progressPercentage: 100,
+      description: "A stunning oceanfront property in Malibu featuring 4 bedrooms, 5 bathrooms, and breathtaking panoramic views of the Pacific. The modern architecture blends seamlessly with the natural surroundings, featuring floor-to-ceiling windows, a private beach access path, and an infinity pool overlooking the ocean.",
+      targetAmount: 8500000,
+      currentAmount: 8500000,
+      budgetEntries: [
+        {
+          id: 601,
+          date: "2024-12-15",
+          amount: 2000000,
+          type: 'deposit',
+          description: "Down payment from investments"
+        },
+        {
+          id: 602,
+          date: "2025-01-10",
+          amount: 6500000,
+          type: 'deposit',
+          description: "Mortgage financing"
+        }
+      ],
+      mediaGallery: [
+        {
+          id: 701,
+          type: 'image',
+          name: 'Malibu Beach House',
+          url: 'https://www.thepinnaclelist.com/wp-content/uploads/2020/09/01-Malibu-Beach-House-33740-Pacific-Coast-Highway-Malibu-CA-USA.jpg',
+          thumbnail: 'https://www.thepinnaclelist.com/wp-content/uploads/2020/09/01-Malibu-Beach-House-33740-Pacific-Coast-Highway-Malibu-CA-USA.jpg',
+          description: 'Modern oceanfront Malibu property',
+          dateAdded: '2025-03-01'
+        },
+        {
+          id: 702,
+          type: 'link',
+          name: 'Architectural Digest Feature',
+          url: 'https://www.architecturaldigest.com',
+          description: 'Similar properties featured in Architectural Digest',
+          dateAdded: '2025-01-15'
+        }
+      ]
+    }
   ]);
 
   // State for selected goal and modals
