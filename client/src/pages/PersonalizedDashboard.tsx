@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import F1TelemetryWeatherStation from '../components/F1TelemetryWeatherStation';
 import MoodEnergyTracker from '../components/MoodEnergyTracker.jsx';
+import WorldClockPanel from '../components/WorldClockPanel';
 import { Progress } from "@/components/ui/progress";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
