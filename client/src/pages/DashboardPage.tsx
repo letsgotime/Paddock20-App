@@ -540,7 +540,7 @@ function DashboardPage() {
             <span className="text-sm text-white">Garage Vault</span>
           </Link>
           <Link to="/weather" className="bg-gradient-to-br from-cyan-900/40 to-cyan-900/10 p-4 rounded-lg text-center hover:from-cyan-800/40 hover:to-cyan-800/10 transition-all group">
-            <ActivityBox size={24} className="mx-auto mb-2 text-cyan-400 group-hover:scale-110 transition-transform" />
+            <Activity size={24} className="mx-auto mb-2 text-cyan-400 group-hover:scale-110 transition-transform" />
             <span className="text-sm text-white">Weather</span>
           </Link>
           <Link to="/broker-portal" className="bg-gradient-to-br from-amber-900/40 to-amber-900/10 p-4 rounded-lg text-center hover:from-amber-800/40 hover:to-amber-800/10 transition-all group">
