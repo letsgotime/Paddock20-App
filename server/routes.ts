@@ -91,6 +91,55 @@ export async function registerRoutes(app: Express): Promise<Server> {
       res.status(500).json({ message: (error as Error).message || 'Failed to fetch OneCall data' });
     }
   });
+  
+  // Geocoding API to search for locations by name
+  app.get('/api/geocode', async (req, res) => {
+    try {
+      const { q } = req.query;
+      
+      if (!q) {
+        return res.status(400).json({ message: 'Search query is required' });
+      }
+
+      const limit = 5; // Limit number of results
+      const url = `https://api.openweathermap.org/geo/1.0/direct?q=${q}&limit=${limit}&appid=${OPENWEATHER_API_KEY}`;
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Geocoding API error: ${response.status} - ${await response.text()}`);
+      }
+      
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error('Geocoding API error:', error);
+      res.status(500).json({ message: (error as Error).message || 'Failed to search location' });
+    }
+  });
+  
+  // Reverse geocoding API to get location name from coordinates
+  app.get('/api/reverse-geocode', async (req, res) => {
+    try {
+      const { lat, lon } = req.query;
+      
+      if (!lat || !lon) {
+        return res.status(400).json({ message: 'Latitude and longitude are required' });
+      }
+
+      const url = `https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${OPENWEATHER_API_KEY}`;
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Reverse geocoding API error: ${response.status} - ${await response.text()}`);
+      }
+      
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error('Reverse geocoding API error:', error);
+      res.status(500).json({ message: (error as Error).message || 'Failed to get location name' });
+    }
+  });
 
   // Advanced Automotive Weather API with F1-level metrics
   app.get('/api/automotive-weather', async (req, res) => {

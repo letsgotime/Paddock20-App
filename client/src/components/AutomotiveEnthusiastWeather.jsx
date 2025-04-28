@@ -8,6 +8,7 @@ import {
   formatTime,
   getWeatherIconUrl
 } from '@/services/openWeatherService';
+import { MapPin, Locate, Search } from 'lucide-react';
 
 /**
  * AutomotiveEnthusiastWeather - Specialized weather station with F1-level 
@@ -22,6 +23,9 @@ const AutomotiveEnthusiastWeather = () => {
   const [unit, setUnit] = useState('imperial');
   const [selectedLocation, setSelectedLocation] = useState(defaultLocation);
   const [activeTab, setActiveTab] = useState('surface');
+  const [locationInput, setLocationInput] = useState('');
+  const [isSearching, setIsSearching] = useState(false);
+  const [searchResults, setSearchResults] = useState([]);
 
   useEffect(() => {
     async function fetchAllWeatherData() {
@@ -54,6 +58,91 @@ const AutomotiveEnthusiastWeather = () => {
   // Toggle between metric and imperial units
   const toggleUnit = () => {
     setUnit(prevUnit => prevUnit === 'imperial' ? 'metric' : 'imperial');
+  };
+  
+  // Search for locations by name
+  const searchLocations = async (query) => {
+    if (!query.trim()) return;
+    
+    try {
+      setIsSearching(true);
+      const response = await fetch(`/api/geocode?q=${encodeURIComponent(query)}`);
+      
+      if (!response.ok) {
+        throw new Error('Failed to search for locations');
+      }
+      
+      const data = await response.json();
+      setSearchResults(data);
+    } catch (err) {
+      console.error('Error searching locations:', err);
+    } finally {
+      setIsSearching(false);
+    }
+  };
+  
+  // Handle search form submission
+  const handleSearchSubmit = (e) => {
+    e.preventDefault();
+    searchLocations(locationInput);
+  };
+  
+  // Select a location from search results
+  const selectLocation = (location) => {
+    setSelectedLocation({
+      lat: location.lat,
+      lon: location.lon,
+      name: location.name + (location.state ? `, ${location.state}` : '') + (location.country ? `, ${location.country}` : '')
+    });
+    setSearchResults([]);
+    setLocationInput('');
+  };
+  
+  // Get user's current location using browser geolocation
+  const getCurrentLocation = () => {
+    if (navigator.geolocation) {
+      setIsLoading(true);
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          try {
+            const { latitude, longitude } = position.coords;
+            
+            // Get location name using reverse geocoding
+            const response = await fetch(`/api/reverse-geocode?lat=${latitude}&lon=${longitude}`);
+            
+            if (!response.ok) {
+              throw new Error('Failed to get location name');
+            }
+            
+            const data = await response.json();
+            if (data && data.length > 0) {
+              const location = data[0];
+              setSelectedLocation({
+                lat: latitude,
+                lon: longitude,
+                name: location.name + (location.state ? `, ${location.state}` : '') + (location.country ? `, ${location.country}` : '')
+              });
+            } else {
+              setSelectedLocation({
+                lat: latitude,
+                lon: longitude,
+                name: 'Current Location'
+              });
+            }
+          } catch (err) {
+            console.error('Error getting current location:', err);
+            setError('Failed to get current location. Please try again.');
+          }
+        },
+        (err) => {
+          console.error('Geolocation error:', err);
+          setError('Unable to access your location. Please enable location services or enter a location manually.');
+          setIsLoading(false);
+        }
+      );
+    } else {
+      setError('Geolocation is not supported by your browser. Please enter a location manually.');
+    }
   };
 
   if (isLoading) {
@@ -99,6 +188,85 @@ const AutomotiveEnthusiastWeather = () => {
 
   return (
     <div className="rounded-lg bg-gradient-to-br from-[#111111] to-[#1a1a1a] border border-gray-800 p-6">
+      {/* Location search and controls */}
+      <div className="mb-4 bg-black/30 p-4 rounded-lg">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+          <div className="mb-3 md:mb-0">
+            <h2 className="text-blue-400 font-orbitron text-xl flex items-center">
+              <MapPin className="w-5 h-5 mr-2" />
+              <span>{name}</span>
+            </h2>
+          </div>
+          
+          <div className="flex flex-col sm:flex-row gap-3">
+            <form onSubmit={handleSearchSubmit} className="flex">
+              <div className="relative">
+                <input
+                  type="text"
+                  value={locationInput}
+                  onChange={(e) => setLocationInput(e.target.value)}
+                  placeholder="Search location..."
+                  className="bg-black/80 text-white border border-gray-700 rounded-l px-3 py-2 text-sm w-full focus:outline-none focus:border-blue-500"
+                  aria-label="Enter a city or location"
+                />
+                {isSearching && (
+                  <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                    <div className="w-4 h-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                  </div>
+                )}
+              </div>
+              <button 
+                type="submit"
+                className="bg-blue-900/60 text-blue-400 px-3 py-2 rounded-r border border-blue-800 hover:bg-blue-900/80"
+                aria-label="Search for location"
+              >
+                <Search className="w-4 h-4" />
+              </button>
+            </form>
+            
+            <button
+              onClick={getCurrentLocation}
+              className="bg-green-900/60 text-green-400 px-3 py-2 rounded border border-green-800 hover:bg-green-900/80 flex items-center justify-center"
+              aria-label="Use current location"
+            >
+              <Locate className="w-4 h-4 mr-1" />
+              <span className="text-sm">Current Location</span>
+            </button>
+            
+            <button 
+              onClick={toggleUnit}
+              className="px-3 py-2 bg-blue-900/30 text-blue-400 rounded border border-blue-800 hover:bg-blue-900/50 transition-colors text-sm"
+              aria-label="Toggle temperature units"
+            >
+              {unit === 'imperial' ? '°F' : '°C'} → {unit === 'imperial' ? '°C' : '°F'}
+            </button>
+          </div>
+        </div>
+        
+        {/* Search results dropdown */}
+        {searchResults.length > 0 && (
+          <div className="mt-2 bg-black/80 border border-gray-800 rounded-md overflow-hidden">
+            <ul className="max-h-60 overflow-y-auto">
+              {searchResults.map((result, index) => (
+                <li 
+                  key={index}
+                  className="border-b border-gray-800 last:border-0 hover:bg-gray-900 transition-colors cursor-pointer"
+                  onClick={() => selectLocation(result)}
+                >
+                  <div className="p-2 text-white flex items-center">
+                    <MapPin className="w-4 h-4 text-blue-400 mr-2 flex-shrink-0" />
+                    <div>
+                      <p>{result.name}{result.state ? `, ${result.state}` : ''}</p>
+                      <p className="text-xs text-gray-400">{result.country}</p>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </div>
+
       <div className="flex justify-between items-start mb-6">
         <div>
           <h2 className="text-blue-400 font-orbitron text-2xl flex items-center">
@@ -119,6 +287,70 @@ const AutomotiveEnthusiastWeather = () => {
         >
           {unit === 'imperial' ? '°F' : '°C'} → {unit === 'imperial' ? '°C' : '°F'}
         </button>
+      </div>
+      
+      {/* Add a small location search bar underneath, subtle but functional */}
+      <div className="bg-black/20 p-2 rounded-lg mb-6 flex flex-col sm:flex-row items-start sm:items-center gap-2">
+        <div className="flex items-center text-gray-400 text-sm">
+          <MapPin className="w-4 h-4 mr-1" />
+          <span>Location:</span>
+        </div>
+        <div className="flex flex-1">
+          <form onSubmit={handleSearchSubmit} className="flex flex-1 max-w-xs">
+            <div className="relative flex-1">
+              <input
+                type="text"
+                value={locationInput}
+                onChange={(e) => setLocationInput(e.target.value)}
+                placeholder="Search location..."
+                className="bg-black/80 w-full text-white border border-gray-800 rounded-l px-2 py-1 text-sm focus:outline-none focus:border-blue-500"
+              />
+              {isSearching && (
+                <div className="absolute right-2 top-1/2 transform -translate-y-1/2">
+                  <div className="w-3 h-3 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              )}
+            </div>
+            <button 
+              type="submit"
+              className="bg-blue-900/40 text-blue-400 px-2 py-1 rounded-r border border-blue-900 text-sm"
+              aria-label="Search for location"
+            >
+              <Search className="w-3 h-3" />
+            </button>
+          </form>
+          <button
+            onClick={getCurrentLocation}
+            className="ml-2 bg-green-900/40 text-green-400 px-2 py-1 rounded border border-green-900 text-sm flex items-center"
+            aria-label="Use current location"
+          >
+            <Locate className="w-3 h-3" />
+            <span className="ml-1 hidden sm:inline">Current</span>
+          </button>
+        </div>
+        
+        {/* Search results dropdown */}
+        {searchResults.length > 0 && (
+          <div className="absolute z-10 mt-16 ml-12 sm:ml-24 bg-black/90 border border-gray-800 rounded-md overflow-hidden shadow-lg">
+            <ul className="max-h-60 overflow-y-auto w-64">
+              {searchResults.map((result, index) => (
+                <li 
+                  key={index}
+                  className="border-b border-gray-800 last:border-0 hover:bg-gray-900 transition-colors cursor-pointer"
+                  onClick={() => selectLocation(result)}
+                >
+                  <div className="p-2 text-white flex items-center">
+                    <MapPin className="w-3 h-3 text-blue-400 mr-2 flex-shrink-0" />
+                    <div>
+                      <p className="text-sm">{result.name}{result.state ? `, ${result.state}` : ''}</p>
+                      <p className="text-xs text-gray-400">{result.country}</p>
+                    </div>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
       </div>
 
       {/* Current conditions summary */}
