@@ -33,7 +33,8 @@ const DropdownNavbar = () => {
             <Link to="/paddock20-vault" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>🏁 Paddock20 Membership</Link>
             <Link to="/garage-vault" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>🚗 Garage Vault</Link>
             <Link to="/tires-timepieces" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>🛞 Tires & Timepieces Brokerage</Link>
-            <Link to="/manifestation-mod-planner" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>🧭 Manifestation Station & Mod Planner</Link>
+            <Link to="/manifestation-station" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>🧭 Manifestation Station™</Link>
+            <Link to="/mod-planner" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>📐 Mod Planner</Link>
             <Link to="/drive-journal" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>📝 Drive Journal</Link>
             <Link to="/hustle-planner" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>🧠 Hustle Planner</Link>
             <Link to="/juicebox" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>🧼 Juice Box</Link>
