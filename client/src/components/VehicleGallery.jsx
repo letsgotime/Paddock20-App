@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
-import { ChevronLeft, ChevronRight, X, Info, Camera, Calendar, MapPin, Clock } from 'lucide-react';
+import { ChevronLeft, ChevronRight, X, Info, Camera, Calendar, MapPin, Clock, Upload } from 'lucide-react';
+import vehicleDataService from '../services/vehicleDataService';
+import modificationDataService from '../services/modificationDataService';
 
 // Gallery types
 const GALLERY_TYPES = {
