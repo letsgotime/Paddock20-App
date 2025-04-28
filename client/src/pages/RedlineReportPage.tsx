@@ -595,7 +595,7 @@ const RedlineReportPage: React.FC = () => {
       
       <footer className="text-center text-gray-500 text-sm mt-8 pt-4 border-t border-gray-800">
         <p>Redline Report - Data refreshes every 30 minutes</p>
-        <p className="mt-1">Weather data provided by OpenWeatherMap & AccuWeather</p>
+        <p className="mt-1">Weather data provided by OpenWeatherMap</p>
       </footer>
     </div>
   );
