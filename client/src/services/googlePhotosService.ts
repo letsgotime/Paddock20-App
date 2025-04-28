@@ -1,287 +1,213 @@
-// Google Photos API integration service
-// Documentation: https://developers.google.com/photos/library/guides/overview
+/**
+ * Google Photos Service
+ * 
+ * This service handles authentication and interaction with the Google Photos API.
+ * It implements the OAuth 2.0 flow to get proper access to a user's Google Photos library.
+ */
 
-// This is a placeholder service until we receive the API credentials
-// To use this service, we need:
-// 1. A Google Cloud Platform project with Photos Library API enabled
-// 2. OAuth 2.0 client credentials configured for web application
+// Configuration - these would typically come from environment variables
+const GOOGLE_API_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+const GOOGLE_API_SCOPE = 'https://www.googleapis.com/auth/photoslibrary.readonly';
+const REDIRECT_URI = `${window.location.origin}/oauth2callback`;
 
-interface GooglePhotosAuth {
-  isAuthenticated: boolean;
-  accessToken: string | null;
-  expiresAt: number | null;
-}
-
-interface GooglePhoto {
-  id: string;
-  baseUrl: string; // URL of the photo
-  productUrl: string; // URL to view the photo in Google Photos
-  mimeType: string;
-  mediaMetadata: {
-    creationTime: string;
-    width: string;
-    height: string;
-  };
-  filename: string;
-}
-
-interface GoogleAlbum {
+interface Album {
   id: string;
   title: string;
-  productUrl: string;
-  mediaItemsCount: string;
   coverPhotoBaseUrl?: string;
+  mediaItemsCount?: number;
 }
 
-// Current authentication state
-let authState: GooglePhotosAuth = {
-  isAuthenticated: false,
-  accessToken: null,
-  expiresAt: null
-};
-
-// Authentication configuration - will be populated when credentials are provided
-let authConfig = {
-  clientId: '', // Will be populated by environment variable
-  apiKey: '',  // Will be populated by environment variable
-  scope: 'https://www.googleapis.com/auth/photoslibrary.readonly',
-  discoveryDocs: ['https://www.googleapis.com/discovery/v1/apis/photoslibrary/v1/rest']
-};
+interface Photo {
+  id: string;
+  baseUrl: string;
+  filename: string;
+  description?: string;
+  mimeType: string;
+  mediaMetadata?: {
+    width: string;
+    height: string;
+    creationTime: string;
+  };
+}
 
 /**
- * Initialize the Google Photos API client
- * This needs to be called before any other functions in this service
+ * Initiates the Google OAuth flow for Photos access
  */
-export async function initGooglePhotosApi(clientId: string, apiKey: string): Promise<void> {
-  if (!clientId || !apiKey) {
-    throw new Error('Google API credentials are required');
+export const initiateGooglePhotosAuth = () => {
+  if (!GOOGLE_API_CLIENT_ID) {
+    throw new Error('Missing Google API Client ID');
   }
-  
-  authConfig.clientId = clientId;
-  authConfig.apiKey = apiKey;
-  
-  // In a real implementation, we would initialize the Google API client here
-  // For now, we'll simulate this behavior
-  console.log('Google Photos API initialized with client ID and API key');
-}
 
-/**
- * Sign in to Google and authorize the app to access Google Photos
- * @returns Promise that resolves when authentication is complete
- */
-export async function authenticateWithGooglePhotos(): Promise<boolean> {
-  try {
-    // In a real implementation, this would trigger the OAuth flow
-    // For demonstration purposes, we'll simulate a successful auth
-    
-    // This function would normally:
-    // 1. Redirect to Google's OAuth consent screen
-    // 2. Get authorization code after user grants permission
-    // 3. Exchange code for access token
-    // 4. Store token in authState
-    
-    console.log('Starting Google Photos authentication flow...');
-    
-    // Simulate successful authentication
-    authState = {
-      isAuthenticated: true,
-      accessToken: 'simulated-access-token',
-      expiresAt: Date.now() + 3600000 // Expire in 1 hour
+  // Store the current URL so we can return to it after authentication
+  localStorage.setItem('googleAuthReturnUrl', window.location.href);
+
+  // Create the OAuth URL
+  const authUrl = new URL('https://accounts.google.com/o/oauth2/v2/auth');
+  
+  // Add query parameters
+  authUrl.searchParams.append('client_id', GOOGLE_API_CLIENT_ID);
+  authUrl.searchParams.append('redirect_uri', REDIRECT_URI);
+  authUrl.searchParams.append('response_type', 'code');
+  authUrl.searchParams.append('scope', GOOGLE_API_SCOPE);
+  authUrl.searchParams.append('access_type', 'offline');
+  authUrl.searchParams.append('prompt', 'consent');
+
+  // Open the authorization URL in a popup window
+  const popup = window.open(
+    authUrl.toString(),
+    'GoogleAuth',
+    'width=600,height=600,menubar=no,toolbar=no,location=no,status=no'
+  );
+
+  // Set up message listener to catch the response
+  return new Promise<string>((resolve, reject) => {
+    const messageListener = (event: MessageEvent) => {
+      // Ensure the message is from our domain
+      if (event.origin !== window.location.origin) return;
+
+      // Check if it's our auth response
+      if (event.data && event.data.type === 'GOOGLE_AUTH_SUCCESS') {
+        // Remove the listener
+        window.removeEventListener('message', messageListener);
+        
+        // Close the popup
+        if (popup) popup.close();
+        
+        // Resolve with the auth code
+        resolve(event.data.code);
+      }
     };
+
+    // Add event listener
+    window.addEventListener('message', messageListener);
     
-    return true;
-  } catch (error) {
-    console.error('Google Photos authentication failed:', error);
-    return false;
-  }
-}
+    // Handle case where popup is closed without completing auth
+    const popupCheckInterval = setInterval(() => {
+      if (popup && popup.closed) {
+        clearInterval(popupCheckInterval);
+        window.removeEventListener('message', messageListener);
+        reject(new Error('Authentication was canceled'));
+      }
+    }, 1000);
+  });
+};
 
 /**
- * Check if the user is currently authenticated with Google Photos
+ * Exchanges an OAuth authorization code for access token
  */
-export function isGooglePhotosAuthenticated(): boolean {
-  if (!authState.accessToken || !authState.expiresAt) {
-    return false;
-  }
-  
-  // Check if token is expired
-  return authState.isAuthenticated && Date.now() < authState.expiresAt;
-}
-
-/**
- * Get a list of the user's Google Photos albums
- * @returns Promise that resolves with the list of albums
- */
-export async function getGoogleAlbums(): Promise<GoogleAlbum[]> {
-  if (!isGooglePhotosAuthenticated()) {
-    throw new Error('Not authenticated with Google Photos. Call authenticateWithGooglePhotos() first.');
-  }
-  
+export const exchangeCodeForToken = async (code: string) => {
   try {
-    // In a real implementation, this would call the Google Photos API
-    // For demonstration, we'll return dummy albums
+    const response = await fetch('/api/google-auth/token', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ code, redirectUri: REDIRECT_URI }),
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to exchange code for token');
+    }
+
+    const data = await response.json();
     
+    // Store the tokens in localStorage (in a real app, consider more secure options)
+    localStorage.setItem('googleAccessToken', data.access_token);
+    localStorage.setItem('googleRefreshToken', data.refresh_token);
+    localStorage.setItem('googleTokenExpiry', (Date.now() + data.expires_in * 1000).toString());
+    
+    return data.access_token;
+  } catch (error) {
+    console.error('Error exchanging code for token:', error);
+    throw error;
+  }
+};
+
+/**
+ * Get a list of Google Photos albums
+ */
+export const getGoogleAlbums = async (): Promise<Album[]> => {
+  try {
+    // For demo purposes, we'll return some mock albums
+    // In a real implementation, this would fetch actual albums from the Google Photos API
     return [
-      {
-        id: 'album1',
-        title: 'My Cars',
-        productUrl: 'https://photos.google.com/album/1',
-        mediaItemsCount: '24',
-        coverPhotoBaseUrl: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70'
+      { 
+        id: 'album1', 
+        title: 'Car Photos', 
+        coverPhotoBaseUrl: 'https://via.placeholder.com/150/0000FF/FFFFFF?text=Car+Photos',
+        mediaItemsCount: 24
       },
-      {
-        id: 'album2',
-        title: 'Dream Watches',
-        productUrl: 'https://photos.google.com/album/2',
-        mediaItemsCount: '12',
-        coverPhotoBaseUrl: 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49'
+      { 
+        id: 'album2', 
+        title: 'Dream Cars', 
+        coverPhotoBaseUrl: 'https://via.placeholder.com/150/FF0000/FFFFFF?text=Dream+Cars',
+        mediaItemsCount: 15
       },
-      {
-        id: 'album3',
-        title: 'Dream Homes',
-        productUrl: 'https://photos.google.com/album/3',
-        mediaItemsCount: '8',
-        coverPhotoBaseUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c'
+      { 
+        id: 'album3', 
+        title: 'Track Days', 
+        coverPhotoBaseUrl: 'https://via.placeholder.com/150/00FF00/FFFFFF?text=Track+Days',
+        mediaItemsCount: 32
       }
     ];
   } catch (error) {
-    console.error('Failed to fetch Google Photos albums:', error);
+    console.error('Error fetching Google Photos albums:', error);
     throw error;
   }
-}
+};
 
 /**
- * Get photos from a specific album
- * @param albumId The ID of the album to get photos from
- * @returns Promise that resolves with the list of photos
+ * Get photos from a specific Google Photos album
  */
-export async function getGooglePhotosFromAlbum(albumId: string): Promise<GooglePhoto[]> {
-  if (!isGooglePhotosAuthenticated()) {
-    throw new Error('Not authenticated with Google Photos. Call authenticateWithGooglePhotos() first.');
-  }
-  
+export const getGoogleAlbumPhotos = async (albumId: string): Promise<Photo[]> => {
   try {
-    // In a real implementation, this would call the Google Photos API
-    // For demonstration, we'll return dummy photos
-    
-    // This function should use:
-    // GET https://photoslibrary.googleapis.com/v1/mediaItems:search
-    
-    // Example photos for different albums
-    const photosByAlbum: Record<string, GooglePhoto[]> = {
-      'album1': [
-        {
-          id: 'photo1',
-          baseUrl: 'https://images.unsplash.com/photo-1592198084033-aade902d1aae',
-          productUrl: 'https://photos.google.com/photo/1',
-          mimeType: 'image/jpeg',
-          mediaMetadata: {
-            creationTime: '2023-01-15T12:30:00Z',
-            width: '1200',
-            height: '800'
-          },
-          filename: 'ferrari.jpg'
-        },
-        {
-          id: 'photo2',
-          baseUrl: 'https://images.unsplash.com/photo-1503376780353-7e6692767b70',
-          productUrl: 'https://photos.google.com/photo/2',
-          mimeType: 'image/jpeg',
-          mediaMetadata: {
-            creationTime: '2023-02-20T15:45:00Z',
-            width: '1200',
-            height: '800'
-          },
-          filename: 'porsche.jpg'
-        }
-      ],
-      'album2': [
-        {
-          id: 'photo3',
-          baseUrl: 'https://images.unsplash.com/photo-1523170335258-f5ed11844a49',
-          productUrl: 'https://photos.google.com/photo/3',
-          mimeType: 'image/jpeg',
-          mediaMetadata: {
-            creationTime: '2023-03-10T09:15:00Z',
-            width: '1000',
-            height: '1000'
-          },
-          filename: 'watch1.jpg'
-        },
-        {
-          id: 'photo4',
-          baseUrl: 'https://images.unsplash.com/photo-1614164185128-e4ec99c436d7',
-          productUrl: 'https://photos.google.com/photo/4',
-          mimeType: 'image/jpeg',
-          mediaMetadata: {
-            creationTime: '2023-04-05T14:20:00Z',
-            width: '1000',
-            height: '1000'
-          },
-          filename: 'watch2.jpg'
-        }
-      ],
-      'album3': [
-        {
-          id: 'photo5',
-          baseUrl: 'https://images.unsplash.com/photo-1506126944674-00c6c192e0a3',
-          productUrl: 'https://photos.google.com/photo/5',
-          mimeType: 'image/jpeg',
-          mediaMetadata: {
-            creationTime: '2023-05-18T11:30:00Z',
-            width: '1600',
-            height: '1200'
-          },
-          filename: 'house1.jpg'
-        },
-        {
-          id: 'photo6',
-          baseUrl: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c',
-          productUrl: 'https://photos.google.com/photo/6',
-          mimeType: 'image/jpeg',
-          mediaMetadata: {
-            creationTime: '2023-06-22T16:40:00Z',
-            width: '1600',
-            height: '1200'
-          },
-          filename: 'house2.jpg'
-        }
-      ]
-    };
-    
-    return photosByAlbum[albumId] || [];
+    // For demo purposes, return mock photos
+    // In a real implementation, this would fetch actual photos from the Google Photos API
+    return Array(8).fill(null).map((_, index) => ({
+      id: `photo-${albumId}-${index}`,
+      baseUrl: `https://via.placeholder.com/800x600/333333/FFFFFF?text=Photo+${index}`,
+      filename: `photo_${index}.jpg`,
+      mimeType: 'image/jpeg',
+      mediaMetadata: {
+        width: '800',
+        height: '600',
+        creationTime: new Date().toISOString()
+      }
+    }));
   } catch (error) {
-    console.error(`Failed to fetch photos from album ${albumId}:`, error);
+    console.error('Error fetching album photos:', error);
     throw error;
   }
-}
+};
 
 /**
- * Convert a Google Photo to a format compatible with the Media Gallery
- * @param photo The Google Photo to convert
- * @returns A media item for the gallery
+ * Search Google Photos
  */
-export function convertGooglePhotoToMediaItem(photo: GooglePhoto): any {
-  return {
-    id: Date.now(), // Generate a new ID for the media gallery
-    type: 'image',
-    name: photo.filename,
-    url: photo.baseUrl,
-    thumbnail: `${photo.baseUrl}=w200-h200`, // Add Google Photos resize parameter
-    description: `Imported from Google Photos (${new Date(photo.mediaMetadata.creationTime).toLocaleDateString()})`,
-    dateAdded: new Date().toISOString().split('T')[0]
-  };
-}
+export const searchGooglePhotos = async (query: string): Promise<Photo[]> => {
+  try {
+    // For demo purposes, return mock search results
+    // In a real implementation, this would search Google Photos API with the query
+    return Array(5).fill(null).map((_, index) => ({
+      id: `search-${query}-${index}`,
+      baseUrl: `https://via.placeholder.com/800x600/222222/FFFFFF?text=${query}+${index}`,
+      filename: `${query}_${index}.jpg`,
+      mimeType: 'image/jpeg',
+      mediaMetadata: {
+        width: '800',
+        height: '600',
+        creationTime: new Date().toISOString()
+      }
+    }));
+  } catch (error) {
+    console.error('Error searching Google Photos:', error);
+    throw error;
+  }
+};
 
-/**
- * Sign out from Google Photos
- */
-export function signOutFromGooglePhotos(): void {
-  authState = {
-    isAuthenticated: false,
-    accessToken: null,
-    expiresAt: null
-  };
-  
-  console.log('Signed out from Google Photos');
-}
+export default {
+  initiateGooglePhotosAuth,
+  exchangeCodeForToken,
+  getGoogleAlbums,
+  getGoogleAlbumPhotos,
+  searchGooglePhotos
+};
