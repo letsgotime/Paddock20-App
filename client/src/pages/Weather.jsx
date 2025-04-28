@@ -1,9 +1,10 @@
 import React from 'react';
 import { MAIN_CONTENT_ID } from '../lib/accessibility';
+import AutomotiveEnthusiastWeather from '../components/AutomotiveEnthusiastWeather';
 
 function Weather() {
   return (
-    <div className="py-8">
+    <div className="py-8" id={MAIN_CONTENT_ID}>
       {/* Page header with proper heading hierarchy */}
       <header className="mb-10 text-center">
         <h1 className="apex-header text-3xl mb-2">Paddock20™ Weather Hub</h1>
@@ -15,18 +16,7 @@ function Weather() {
       {/* F1-style motorsport weather station */}
       <section className="mb-10" aria-labelledby="paddock-weather-heading">
         <h2 id="paddock-weather-heading" className="apex-header-green text-xl mb-4">Automotive Weather Dashboard</h2>
-        <div className="bg-gradient-to-r from-gray-900 to-black border border-gray-800 rounded-lg p-6">
-          <div className="text-center p-4">
-            <h3 className="text-blue-400 font-orbitron text-xl mb-4">Advanced Weather Integration</h3>
-            <p className="text-gray-300 mb-6">
-              Our advanced automotive weather station is currently being upgraded to provide more 
-              accurate surface temperature readings and detailed driving condition analytics.
-            </p>
-            <div className="inline-block px-4 py-2 bg-blue-600/20 border border-blue-600/40 rounded-md text-blue-400">
-              Coming May 2025
-            </div>
-          </div>
-        </div>
+        <AutomotiveEnthusiastWeather />
       </section>
 
       {/* Paddock20 Feature Information */}
