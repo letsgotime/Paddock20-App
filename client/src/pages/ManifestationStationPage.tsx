@@ -5,6 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { getRandomAffirmation } from "../services/affirmationsService";
 import { searchHighResImages, createMediaItemFromSearch } from "../services/imageSearchService";
 import PhotoUploadModal from "../components/PhotoUploadModal";
+import GoalDetailsModal from "../components/GoalDetailsModal";
 import SocialShareButtons from "@/components/ui/SocialShareButtons";
 
 // Interface for milestones
@@ -1370,149 +1371,95 @@ const ManifestationStationPage = () => {
 
       {/* Goal Details Modal */}
       {showGoalDetailsModal && selectedGoal && (
-        <Dialog open={showGoalDetailsModal} onOpenChange={setShowGoalDetailsModal}>
-          <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-70">
-            <div className="bg-gray-900 rounded-lg shadow-lg max-w-5xl w-full mx-4 p-8">
-              {/* Modal Header */}
-              <div className="flex justify-between items-center mb-6">
-                <h2 className="text-blue-400 font-orbitron text-2xl">Dream Details</h2>
-                <button
-                  onClick={() => setShowGoalDetailsModal(false)}
-                  className="text-white hover:text-red-400 text-2xl"
-                >
-                  ✖
-                </button>
-              </div>
-
-              {/* Tabs */}
-              <div className="flex space-x-4 border-b border-gray-700 mb-6">
-                <button
-                  onClick={() => setActiveTab("overview")}
-                  className={`pb-2 ${activeTab === "overview" ? "border-b-2 border-blue-400 text-blue-400" : "text-white"}`}
-                >
-                  Overview
-                </button>
-                <button
-                  onClick={() => setActiveTab("finances")}
-                  className={`pb-2 ${activeTab === "finances" ? "border-b-2 border-blue-400 text-blue-400" : "text-white"}`}
-                >
-                  Finances
-                </button>
-                <button
-                  onClick={() => setActiveTab("checkins")}
-                  className={`pb-2 ${activeTab === "checkins" ? "border-b-2 border-blue-400 text-blue-400" : "text-white"}`}
-                >
-                  Check-Ins
-                </button>
-                <button
-                  onClick={() => setActiveTab("media")}
-                  className={`pb-2 ${activeTab === "media" ? "border-b-2 border-blue-400 text-blue-400" : "text-white"}`}
-                >
-                  Media
-                </button>
-              </div>
-
-              {/* Tab Content */}
-
-              {/* Overview Tab */}
-              {activeTab === "overview" && (
-                <div className="space-y-4">
-                  {/* Overview content here */}
-                  <p className="text-white">Overview details about the dream...</p>
-                </div>
-              )}
-
+        <GoalDetailsModal 
+          isOpen={showGoalDetailsModal}
+          setIsOpen={setShowGoalDetailsModal}
+          goal={selectedGoal}
+          setGoal={setSelectedGoal}
+          activeTab={activeTab}
+          setActiveTab={setActiveTab}
+          newCheckIn={newCheckIn}
+          setNewCheckIn={setNewCheckIn}
+          newBudgetEntry={newBudgetEntry}
+          setNewBudgetEntry={setNewBudgetEntry}
+          handleDailyCheckIn={handleDailyCheckIn}
+          handleAddBudgetEntry={handleAddBudgetEntry}
+          setShowPhotoUploadModal={setShowPhotoUploadModal}
+        />
+      )}
+      
+      {/* Photo Upload Modal */}
+      {showPhotoUploadModal && selectedGoal && (
+        <PhotoUploadModal
+          onClose={() => setShowPhotoUploadModal(false)}
+          onSave={(photoUrl) => {
+            // Add the new photo to the goal's media gallery
+            const newMedia: GoalMedia = {
+              id: Date.now(),
+              type: 'image',
+              name: 'Dream Photo',
+              url: photoUrl,
+              thumbnail: photoUrl,
+              description: 'Visualization of my dream',
+              dateAdded: new Date().toISOString().slice(0, 10)
+            };
+            
+            setSelectedGoal({
+              ...selectedGoal,
+              mediaGallery: [...selectedGoal.mediaGallery, newMedia]
+            });
+            
+            setShowPhotoUploadModal(false);
+          }}
+        />
+      )}
+              
               {/* Finances Tab */}
               {activeTab === "finances" && (
-                <div className="space-y-4">
-                  {/* Finances content here */}
-                  <p className="text-white">Finance tracking for your dream...</p>
-                </div>
-              )}
-
-              {/* Check-Ins Tab */}
-              {activeTab === "checkins" && (
-                <div className="space-y-4">
-                  {/* Check-in system */}
-                  <p className="text-white">Mind/Body Check-Ins for staying on track...</p>
-                </div>
-              )}
-              
-              {/* Media Tab */}
-              {activeTab === "media" && (
                 <div className="space-y-6">
-                  {/* Photo Gallery */}
-                  <div>
-                    <h3 className="text-blue-400 font-orbitron text-xl mb-4">📸 Media Gallery</h3>
-                    <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                      {selectedGoal.mediaGallery.map((media, index) => (
-                        <img
-                          key={index}
-                          src={media.url}
-                          alt="Dream Photo"
-                          className="rounded-lg object-cover w-full h-48 border border-gray-700"
-                        />
-                      ))}
+                  <div className="bg-black bg-opacity-30 rounded-lg border border-gray-700 p-4">
+                    <div className="flex items-center mb-4">
+                      <div className="h-5 w-1 bg-green-400 rounded-full mr-2"></div>
+                      <h3 className="text-green-400 font-orbitron text-lg">Financial Progress</h3>
                     </div>
-                  </div>
-
-                  {/* Add Photo */}
-                  <div className="flex justify-center mt-6">
-                    <button
-                      onClick={() => setShowPhotoUploadModal(true)}
-                      className="bg-green-500 hover:bg-green-400 text-black font-orbitron px-6 py-3 rounded"
-                    >
-                      ➕ Add Media
-                    </button>
-                  </div>
-                </div>
-              )}
-              
-              {/* Photo Upload Modal */}
-              {showPhotoUploadModal && (
-                <PhotoUploadModal
-                  onClose={() => setShowPhotoUploadModal(false)}
-                  onUpload={(photoUrl) => {
-                    // Clone mediaGallery and add the new photo
-                    const updatedMediaGallery = [...selectedGoal.mediaGallery, {
-                      id: Date.now(),
-                      type: 'image',
-                      name: 'New Media',
-                      url: photoUrl,
-                      thumbnail: photoUrl,
-                      description: 'Newly added media',
-                      dateAdded: new Date().toISOString().slice(0, 10)
-                    }];
                     
-                    // Update the selected goal with the new media gallery
-                    setSelectedGoal({
-                      ...selectedGoal,
-                      mediaGallery: updatedMediaGallery
-                    });
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                      <div className="bg-gray-800 bg-opacity-50 p-3 rounded border border-gray-700">
+                        <div className="text-gray-400 text-xs mb-1">Target Amount</div>
+                        <div className="text-green-400 text-xl font-mono">${selectedGoal.targetAmount.toLocaleString()}</div>
+                      </div>
+                      
+                      <div className="bg-gray-800 bg-opacity-50 p-3 rounded border border-gray-700">
+                        <div className="text-gray-400 text-xs mb-1">Current Balance</div>
+                        <div className="text-blue-400 text-xl font-mono">${selectedGoal.currentAmount.toLocaleString()}</div>
+                      </div>
+                      
+                      <div className="bg-gray-800 bg-opacity-50 p-3 rounded border border-gray-700">
+                        <div className="text-gray-400 text-xs mb-1">Remaining</div>
+                        <div className="text-gray-300 text-xl font-mono">${(selectedGoal.targetAmount - selectedGoal.currentAmount).toLocaleString()}</div>
+                      </div>
+                    </div>
                     
-                    setShowPhotoUploadModal(false);
-                  }}
-                />
-              )}
-              
-              {/* Budget Tracker */}
-              <div className="mb-8">
-                <h3 className="text-green-400 font-orbitron text-lg mb-3">💰 Financial Telemetry</h3>
-                <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg p-4 border border-gray-700">
-                  <div className="flex justify-between items-center mb-4">
-                    <div className="bg-black/30 px-4 py-2 rounded-lg border border-green-900/20">
-                      <div className="text-gray-400 text-xs">Target Amount</div>
-                      <div className="text-green-400 text-xl font-mono font-medium">${selectedGoal.targetAmount.toLocaleString()}</div>
-                    </div>
-                    <div className="bg-black/30 px-4 py-2 rounded-lg border border-blue-900/20">
-                      <div className="text-gray-400 text-xs">Current Balance</div>
-                      <div className="text-blue-400 text-xl font-mono font-medium">${selectedGoal.currentAmount.toLocaleString()}</div>
-                    </div>
-                    <div className="bg-black/30 px-4 py-2 rounded-lg border border-gray-900/20">
-                      <div className="text-gray-400 text-xs">Remaining</div>
-                      <div className="text-gray-200 text-xl font-mono font-medium">${(selectedGoal.targetAmount - selectedGoal.currentAmount).toLocaleString()}</div>
+                    <div className="mt-4">
+                      <div className="flex justify-between text-xs text-gray-400 mb-1">
+                        <span>Progress</span>
+                        <span>{Math.min(100, Math.round((selectedGoal.currentAmount / selectedGoal.targetAmount) * 100))}%</span>
+                      </div>
+                      <div className="h-3 bg-gray-700 rounded-full overflow-hidden">
+                        <div 
+                          className="h-full bg-gradient-to-r from-green-500 to-blue-500 rounded-full"
+                          style={{ width: `${Math.min(100, Math.round((selectedGoal.currentAmount / selectedGoal.targetAmount) * 100))}%` }}
+                        ></div>
+                      </div>
                     </div>
                   </div>
+                  
+                  {/* Transaction History */}
+                  <div className="bg-black bg-opacity-30 rounded-lg border border-gray-700 p-4">
+                    <div className="flex items-center mb-4">
+                      <div className="h-5 w-1 bg-blue-400 rounded-full mr-2"></div>
+                      <h3 className="text-blue-400 font-orbitron text-lg">Transaction History</h3>
+                    </div>
                   
                   <div className="mb-4">
                     <div className="flex justify-between text-xs text-gray-400 mb-1">
