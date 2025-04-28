@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useWeather } from '@/contexts/WeatherContext';
-import { getLocationKey, fetchAutomotiveData } from '@/services/accuweatherService';
 import { CarFront, Droplets, Sun, Wind, Thermometer, AlertTriangle, Gauge } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
+import axios from 'axios';
 
 interface SurfaceCondition {
   temperature: number;
@@ -55,7 +55,7 @@ const AutomotiveWeatherPanel: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
 
-  // Fetch automotive weather data when coordinates change
+  // Fetch automotive weather data using OpenWeather API when coordinates change
   useEffect(() => {
     const fetchData = async () => {
       if (!weatherData || !weatherData.coord) return;
@@ -64,43 +64,95 @@ const AutomotiveWeatherPanel: React.FC = () => {
         setLoading(true);
         setError(null);
         
-        // First get the AccuWeather location key
-        try {
-          const locationKeyData = await getLocationKey(
-            weatherData.coord.lat, 
-            weatherData.coord.lon
-          );
-          
-          // Check if we have a valid location key response
-          if (!locationKeyData) {
-            throw new Error('No data received from AccuWeather location API');
+        // Get data from our OpenWeather automotive endpoint
+        const response = await axios.get('/api/automotive-weather', {
+          params: {
+            lat: weatherData.coord.lat,
+            lon: weatherData.coord.lon
           }
-          
-          // The response should be an object with a Key property
-          const locationKey = typeof locationKeyData === 'object' && 
-                             locationKeyData !== null && 
-                             'Key' in locationKeyData ? 
-                             String(locationKeyData.Key) : null;
-          
-          if (!locationKey) {
-            throw new Error('Invalid location key format received from AccuWeather');
-          }
-          
-          // Then get the automotive-specific data
-          const data = await fetchAutomotiveData(locationKey);
-          setAutomotiveData(data);
-        } catch (locationErr) {
-          console.error('Error fetching AccuWeather location key:', locationErr);
-          
-          // Since AccuWeather API is failing, use a fallback error message
-          throw new Error('AccuWeather services currently unavailable');
+        });
+        
+        if (!response.data) {
+          throw new Error('No data received from OpenWeather API');
         }
+        
+        // Process the OpenWeather data to match our display format
+        const openWeatherData = response.data;
+        const current = openWeatherData.current;
+        const daily = openWeatherData.daily?.[0];
+        
+        // Determine surface conditions based on weather
+        const getCondition = () => {
+          if (current.rain) return 'Wet';
+          if (current.snow) return 'Snow';
+          if (current.humidity > 90) return 'Damp';
+          return 'Dry';
+        };
+        
+        // Calculate surface temperatures (asphalt heats up more than air)
+        const airTemp = current.temp;
+        const isDaytime = current.dt > openWeatherData.current.sunrise && 
+                         current.dt < openWeatherData.current.sunset;
+        const cloudCover = current.clouds;
+        const uvIndex = current.uvi;
+        
+        // Surface temperature adjustments
+        const sunEffect = isDaytime ? (100 - cloudCover) / 100 : 0;
+        const asphaltTemp = airTemp + (sunEffect * 15); // Asphalt can be up to 15° warmer in full sun
+        const concreteTemp = airTemp + (sunEffect * 10); // Concrete about 10° warmer
+        const gravelTemp = airTemp + (sunEffect * 5);    // Gravel somewhat warmer
+        
+        // Create a synthetic automotive data object using OpenWeather data
+        const condition = getCondition();
+        const formattedData: AutomotiveWeatherData = {
+          locationKey: `${weatherData.coord.lat},${weatherData.coord.lon}`,
+          timestamp: current.dt,
+          surfaceConditions: {
+            asphalt: { temperature: asphaltTemp, condition },
+            concrete: { temperature: concreteTemp, condition },
+            gravel: { temperature: gravelTemp, condition }
+          },
+          drivingRisk: {
+            overall: uvIndex > 8 ? 'High' : 
+                    current.wind_speed > 30 ? 'Moderate' : 
+                    condition !== 'Dry' ? 'Moderate' : 'Low',
+            visibility: current.visibility > 9000 ? 'Good' : 
+                      current.visibility > 5000 ? 'Moderate' : 'Poor',
+            traction: condition === 'Dry' ? 'Good' : 
+                     condition === 'Damp' ? 'Moderate' : 'Poor',
+            score: condition === 'Dry' ? 2 : 
+                  condition === 'Damp' ? 5 : 8,
+            description: `Weather conditions suggest ${condition.toLowerCase()} surfaces with ${current.weather[0].description}.`
+          },
+          washConditions: {
+            recommended: !current.rain && !current.snow && current.humidity < 80,
+            uv: uvIndex < 3 ? 'Low' : uvIndex < 6 ? 'Moderate' : 'High',
+            pollen: 'Moderate', // OpenWeather doesn't provide pollen data
+            drying: current.humidity < 60 ? 'Excellent' : 
+                   current.humidity < 75 ? 'Good' : 'Fair',
+            rainProbabilityNext24h: daily ? Math.round(daily.pop * 100) : 0
+          },
+          detailingConditions: {
+            recommended: !current.rain && !current.snow && 
+                         current.humidity < 70 && 
+                         current.wind_speed < 15 &&
+                         current.clouds > 30 && current.clouds < 80,
+            humidity: `${current.humidity}%`,
+            temperature: `${Math.round(current.temp)}${unit === 'metric' ? '°C' : '°F'}`,
+            wind: `${Math.round(current.wind_speed)} ${unit === 'metric' ? 'm/s' : 'mph'}`,
+            lighting: current.clouds > 30 && current.clouds < 80 ? 
+                     'Good diffused light' : 
+                     (current.clouds <= 30 ? 'Direct sunlight' : 'Overcast')
+          }
+        };
+        
+        setAutomotiveData(formattedData);
       } catch (err) {
         console.error('Error fetching automotive weather data:', err);
         setError(err as Error);
         toast({
           title: 'Unable to load automotive weather data',
-          description: 'AccuWeather API services currently unavailable',
+          description: 'Weather API error: ' + (err as Error).message,
           variant: 'destructive'
         });
       } finally {
@@ -109,7 +161,7 @@ const AutomotiveWeatherPanel: React.FC = () => {
     };
 
     fetchData();
-  }, [weatherData]);
+  }, [weatherData, unit]);
 
   if (loading) {
     return (
