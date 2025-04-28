@@ -8,7 +8,7 @@ import {
   formatTime,
   getWeatherIconUrl
 } from '@/services/openWeatherService';
-import { MapPin, Locate, Search } from 'lucide-react';
+import { MapPin, Locate, Search, AlertTriangle, ThermometerSun, Droplets, Wind, Sunrise, Sunset, Calendar } from 'lucide-react';
 
 const HomeWeatherWidget = () => {
   const [weatherData, setWeatherData] = useState(null);
