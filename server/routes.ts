@@ -10,6 +10,7 @@ import {
   insertGlossLogSchema
 } from "@shared/schema";
 import { handleGoogleOAuth2Callback, handleAppleOAuth2Callback } from "./oauth";
+import { checkSlackIntegration, initializeSlackClient, shareCarProfileToSlack, shareEventToSlack } from "./slack";
 
 // OpenWeather API key - updated April 28, 2025
 const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY || "2379a18ee0e478c88aa7d4aa1df44410";
