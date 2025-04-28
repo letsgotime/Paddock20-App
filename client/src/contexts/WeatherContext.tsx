@@ -11,6 +11,73 @@ import {
   ForecastData,
   Location
 } from '@/lib/weather';
+import { fetchAutomotiveWeather } from '@/services/openWeatherService';
+
+// Define interface for our automotive weather data
+export interface AutomotiveWeatherData {
+  location: {
+    lat: number;
+    lon: number;
+    timezone: string;
+  };
+  current_time: string;
+  sunrise_time: string;
+  sunset_time: string;
+  conditions: {
+    summary: string;
+    icon: string;
+    air_temperature: number;
+    feels_like: number;
+    humidity: number;
+    pressure: number;
+    wind_speed: number;
+    wind_direction: number;
+    cloud_cover: number;
+    precipitation: number;
+    uv_index: number;
+    solar_radiation: number | null;
+  };
+  automotive_metrics: {
+    track_surface: {
+      temperature: number;
+      condition: string;
+      grip_level: string;
+    };
+    tire_temperature_estimates: {
+      soft_compound: number;
+      medium_compound: number;
+      hard_compound: number;
+      street_performance: number;
+      all_season: number;
+    };
+    drive_recommendations: {
+      tire_warmup_minutes: {
+        performance: number;
+        street: number;
+        all_season: number;
+      };
+      torque_management: {
+        recommended_percentage: number;
+        traction_control: string;
+      };
+      tire_pressure_adjustment: number;
+      braking_points: string;
+    };
+    visibility_assessment: string;
+    sunglare_risk: string;
+  };
+  hourly_forecast: Array<{
+    time: string;
+    temperature: number;
+    conditions: string;
+    precipitation_chance: number;
+  }>;
+  alerts: Array<any>;
+  data_sources: {
+    weather: string;
+    solar: string;
+  };
+}
 
 interface WeatherContextType {
   unit: 'metric' | 'imperial';
@@ -26,6 +93,7 @@ interface WeatherContextType {
   weatherData: WeatherData | null;
   forecastData: ForecastData | null;
   oneCallData: OneCallData | null;
+  automotiveWeatherData: AutomotiveWeatherData | null; // New automotive weather data
   refreshWeather: () => void;
 }
 
@@ -91,6 +159,27 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
       return getOneCallData(selectedLocation, unit);
     },
   });
+  
+  // Get F1-style automotive weather data
+  const { 
+    data: automotiveWeatherData, 
+    isLoading: isAutomotiveWeatherLoading, 
+    error: automotiveWeatherError,
+    refetch: refetchAutomotiveWeather
+  } = useQuery<AutomotiveWeatherData | null>({
+    queryKey: ['automotive-weather', selectedLocation?.name, unit],
+    enabled: !!selectedLocation,
+    queryFn: async () => {
+      if (!selectedLocation) return null;
+      try {
+        const data = await fetchAutomotiveWeather(selectedLocation.lat, selectedLocation.lon, unit);
+        return data;
+      } catch (error) {
+        console.error("Error fetching automotive weather data:", error);
+        return null;
+      }
+    },
+  });
 
   // Handle errors
   useEffect(() => {
@@ -118,7 +207,15 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
         variant: "destructive",
       });
     }
-  }, [weatherError, forecastError, oneCallError]);
+    if (automotiveWeatherError) {
+      console.error("Automotive Weather API error:", automotiveWeatherError);
+      toast({
+        title: "Error fetching automotive weather data",
+        description: "Unable to load F1-style driving metrics. Please try again.",
+        variant: "destructive",
+      });
+    }
+  }, [weatherError, forecastError, oneCallError, automotiveWeatherError]);
 
   // Add a location to saved locations
   const addSavedLocation = (location: Location) => {
@@ -153,6 +250,7 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
     refetchWeather();
     refetchForecast();
     refetchOneCall();
+    refetchAutomotiveWeather();
   };
 
   const value: WeatherContextType = {
@@ -164,11 +262,12 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
     savedLocations,
     addSavedLocation,
     removeSavedLocation,
-    isLoading: isWeatherLoading || isForecastLoading || isOneCallLoading,
-    error: weatherError || forecastError || oneCallError || null,
+    isLoading: isWeatherLoading || isForecastLoading || isOneCallLoading || isAutomotiveWeatherLoading,
+    error: weatherError || forecastError || oneCallError || automotiveWeatherError || null,
     weatherData: weatherData || null,
     forecastData: forecastData || null,
     oneCallData: oneCallData || null,
+    automotiveWeatherData: automotiveWeatherData || null,
     refreshWeather
   };
 
