@@ -122,16 +122,31 @@ interface DrivingProfile {
 }
 
 const RoutePlannerPage = () => {
-  // Basic route inputs
-  const [startLocation, setStartLocation] = useState("");
-  const [endLocation, setEndLocation] = useState("");
-  const [waypoints, setWaypoints] = useState<string[]>([]);
-  const [newWaypoint, setNewWaypoint] = useState("");
+  // Enhanced route inputs with multi-leg journey support
+  interface RouteStop {
+    location: string;
+    arrivalDate: string;
+    departureDate: string;
+    stayDuration: number; // in days
+    notes: string;
+    isOvernight: boolean;
+  }
   
-  // Travel dates
-  const [departureDate, setDepartureDate] = useState("");
-  const [returnDate, setReturnDate] = useState("");
-  const [useReturnDate, setUseReturnDate] = useState(false);
+  const [startLocation, setStartLocation] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [endLocation, setEndLocation] = useState("");
+  const [endDate, setEndDate] = useState("");
+  
+  // Multi-city style waypoints with dates
+  const [routeStops, setRouteStops] = useState<RouteStop[]>([]);
+  const [newStopLocation, setNewStopLocation] = useState("");
+  const [newStopDate, setNewStopDate] = useState("");
+  const [stayDuration, setStayDuration] = useState(0);
+  const [stopNotes, setStopNotes] = useState("");
+  const [isOvernight, setIsOvernight] = useState(false);
+  
+  // Legacy support for old waypoints data structure
+  const [waypoints, setWaypoints] = useState<string[]>([]);
   
   // Vehicle and passenger info
   const [selectedVehicle, setSelectedVehicle] = useState("");
