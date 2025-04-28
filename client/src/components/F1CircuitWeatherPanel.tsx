@@ -803,7 +803,7 @@ const F1CircuitWeatherPanel: React.FC<F1CircuitWeatherPanelProps> = ({
     }
   };
 
-  // Add custom CSS for hiding scrollbars while keeping scroll functionality
+  // Add custom CSS for hiding scrollbars and F1 telemetry animations
   useEffect(() => {
     // Only add once
     if (!document.getElementById('circuit-panel-styles')) {
@@ -818,6 +818,34 @@ const F1CircuitWeatherPanel: React.FC<F1CircuitWeatherPanelProps> = ({
         .hide-scrollbar {
           -ms-overflow-style: none;
           scrollbar-width: none;
+        }
+        
+        /* F1 Telemetry Scanning Effect */
+        @keyframes scan {
+          0% {
+            transform: translateX(-100%);
+          }
+          100% {
+            transform: translateX(1000%);
+          }
+        }
+        
+        .animate-scan {
+          animation: scan 5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+        }
+        
+        /* F1 Telemetry Blinking Effect */
+        @keyframes telemetry-blink {
+          0%, 100% {
+            opacity: 1;
+          }
+          50% {
+            opacity: 0.3;
+          }
+        }
+        
+        .animate-telemetry-blink {
+          animation: telemetry-blink 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
         }
       `;
       document.head.appendChild(style);
@@ -989,9 +1017,28 @@ const F1CircuitWeatherPanel: React.FC<F1CircuitWeatherPanelProps> = ({
             <div className="text-gray-500 text-xs">DATA SOURCE</div>
             <div className="text-blue-400">OpenWeather</div>
           </div>
-          <div className="bg-black/40 border border-gray-800 rounded p-2 text-center">
-            <div className="text-gray-500 text-xs">REFRESH</div>
-            <div className="text-blue-400">Auto</div>
+          <div 
+            onClick={toggleLocationPermission}
+            className="relative bg-black/40 border border-gray-800 rounded p-2 text-center cursor-pointer hover:bg-black/60 transition group"
+          >
+            <div className="text-gray-500 text-xs">LOCATION</div>
+            <div className={`flex justify-center items-center ${locationPermission === "granted" ? "text-green-400" : "text-red-400"}`}>
+              <span className="mr-1">{locationPermission === "granted" ? "ON" : "OFF"}</span>
+              <div className={`h-2 w-2 rounded-full ${locationPermission === "granted" ? "bg-green-500" : "bg-red-500"}`}></div>
+            </div>
+            
+            {/* Tooltip */}
+            <div className="absolute bottom-full left-1/2 transform -translate-x-1/2 mb-2 w-44 bg-black border border-blue-500 rounded p-2 text-xs text-white opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-20">
+              <div className="text-center mb-1 text-blue-400 font-bold">
+                {locationPermission === "granted" ? "Location Enabled" : "Location Disabled"}
+              </div>
+              <p className="text-gray-300 text-[10px]">
+                {locationPermission === "granted" 
+                  ? "Your local weather data will be shown alongside F1 circuits." 
+                  : "Only F1 circuit data will be shown. Click to enable your location."}
+              </p>
+              <div className="absolute bottom-0 left-1/2 transform -translate-x-1/2 translate-y-1/2 rotate-45 w-2 h-2 bg-black border-r border-b border-blue-500"></div>
+            </div>
           </div>
         </div>
       )}
