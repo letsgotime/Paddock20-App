@@ -45,6 +45,7 @@ import DriveJournalPage from "./pages/DriveJournalPage";
 import DiscountsPage from "./pages/DiscountsPage";
 import ContactPage from "./pages/ContactPage";
 import ChatFeedPage from "./pages/ChatFeedPage";
+import ShareDemoPage from "./pages/ShareDemoPage";
 import SupportChatbot from "./components/SupportChatbot";
 import HomePage from "./pages/Home";
 import { useAuth } from "./hooks/useAuth";
@@ -154,6 +155,7 @@ function App() {
               <Route path="/discounts" element={<ProtectedRoute><DiscountsPage /></ProtectedRoute>} />
               <Route path="/contact" element={<ProtectedRoute><ContactPage /></ProtectedRoute>} />
               <Route path="/chat-feed" element={<ProtectedRoute><ChatFeedPage /></ProtectedRoute>} />
+              <Route path="/share" element={<ProtectedRoute><ShareDemoPage /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             
