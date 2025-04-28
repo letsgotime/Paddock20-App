@@ -186,6 +186,123 @@ const HomeWeatherWidget = () => {
       return '96 ft-lb'; // Ideal conditions (100%)
     }
   };
+  
+  // Get driving tip based on current weather conditions
+  const getDrivingTip = (weather, temp, windSpeed, humidity) => {
+    const weatherType = weather?.toLowerCase() || '';
+    const tips = [];
+    
+    // Weather-based tips
+    if (weatherType.includes('rain') || weatherType.includes('drizzle')) {
+      tips.push('Reduce speed and increase following distance on wet roads.');
+      tips.push('Avoid sudden acceleration and hard braking to prevent hydroplaning.');
+    } else if (weatherType.includes('snow') || weatherType.includes('sleet')) {
+      tips.push('Use gentle, progressive inputs on all controls (steering, brake, throttle).');
+      tips.push('Brake early and gently before corners, avoid braking during turns.');
+    } else if (weatherType.includes('fog') || weatherType.includes('mist')) {
+      tips.push('Use low-beam headlights, not high-beams which can reflect back and reduce visibility.');
+      tips.push('Reduce speed and use the right edge of the road as a guide.');
+    } else if (weatherType.includes('thunder') || weatherType.includes('storm')) {
+      tips.push('Be aware of potential flash flooding and downed power lines.');
+      tips.push('If lightning is severe, consider pulling over safely away from trees.');
+    }
+    
+    // Temperature-based tips
+    if (temp < 40) {
+      tips.push('Watch for black ice, especially on bridges and in shaded areas.');
+      tips.push('Allow extra warm-up time for tires to reach optimal temperature.');
+    } else if (temp > 90) {
+      tips.push('Monitor tire pressure as heat can cause pressure to increase.');
+      tips.push('Be mindful of potential engine overheating during stop-and-go traffic.');
+    }
+    
+    // Wind-based tips
+    if (windSpeed > 20) {
+      tips.push('Be prepared for crosswind gusts, especially when passing large vehicles.');
+      tips.push('Maintain a firm grip on the steering wheel with both hands.');
+    }
+    
+    // Humidity-based tips
+    if (humidity > 80 && temp > 70) {
+      tips.push('Windows may fog more easily; use A/C to reduce interior humidity.');
+    } else if (humidity < 30 && temp > 75) {
+      tips.push('Dry conditions may reduce grip, especially on dusty roads.');
+    }
+    
+    // Return 2 tips maximum, prioritizing weather-specific ones
+    return tips.slice(0, 2);
+  };
+  
+  // Get weather alert severity and message based on conditions
+  const getWeatherAlert = (weather, temp, windSpeed, visibility) => {
+    const weatherType = weather?.toLowerCase() || '';
+    let alert = null;
+    
+    // Check for severe weather conditions
+    if (weatherType.includes('thunder') || weatherType.includes('storm')) {
+      alert = {
+        severity: 'high',
+        message: 'Thunderstorm conditions - drive with extreme caution',
+        icon: 'thunder'
+      };
+    } else if (weatherType.includes('snow') || weatherType.includes('blizzard')) {
+      alert = {
+        severity: 'high',
+        message: 'Snow accumulation - reduced traction and visibility',
+        icon: 'snow'
+      };
+    } else if (weatherType.includes('fog') && visibility < 1) {
+      alert = {
+        severity: 'high',
+        message: 'Dense fog - greatly reduced visibility',
+        icon: 'fog'
+      };
+    } else if (weatherType.includes('rain') && windSpeed > 20) {
+      alert = {
+        severity: 'high',
+        message: 'Heavy rain with strong winds - reduced stability',
+        icon: 'rain'
+      };
+    } else if (weatherType.includes('rain')) {
+      alert = {
+        severity: 'moderate',
+        message: 'Rain present - wet roads may reduce traction',
+        icon: 'rain'
+      };
+    } else if (weatherType.includes('fog')) {
+      alert = {
+        severity: 'moderate',
+        message: 'Foggy conditions - reduced visibility',
+        icon: 'fog'
+      };
+    } else if (temp < 32) {
+      alert = {
+        severity: 'high',
+        message: 'Freezing temperatures - watch for ice patches',
+        icon: 'cold'
+      };
+    } else if (windSpeed > 30) {
+      alert = {
+        severity: 'high',
+        message: 'Strong crosswinds - vehicle stability affected',
+        icon: 'wind'
+      };
+    } else if (windSpeed > 20) {
+      alert = {
+        severity: 'moderate',
+        message: 'Moderate crosswinds - may affect high-profile vehicles',
+        icon: 'wind'
+      };
+    } else if (temp > 95) {
+      alert = {
+        severity: 'moderate',
+        message: 'Extreme heat - monitor tire pressure and cooling',
+        icon: 'hot'
+      };
+    }
+    
+    return alert;
+  };
 
   if (isLoading) {
     return (
@@ -348,9 +465,64 @@ const HomeWeatherWidget = () => {
         </div>
       </div>
       
-      <div className="mt-4 pt-2 border-t border-gray-800 text-xs text-gray-500 flex items-center justify-between">
-        <span>Location: {name}</span>
-        <span>Last updated: {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+      {/* Weather alert section - only appears when there's an alert */}
+      {getWeatherAlert(weather[0].main, main.temp, wind.speed, current.visibility/1000) && (
+        <div className={`mt-4 p-3 rounded-lg border ${
+          getWeatherAlert(weather[0].main, main.temp, wind.speed, current.visibility/1000).severity === 'high' 
+            ? 'bg-red-900/20 border-red-700' 
+            : 'bg-amber-900/20 border-amber-700'
+        }`}>
+          <div className="flex items-center">
+            <AlertTriangle className={`h-5 w-5 mr-2 ${
+              getWeatherAlert(weather[0].main, main.temp, wind.speed, current.visibility/1000).severity === 'high'
+                ? 'text-red-500' 
+                : 'text-amber-500'
+            }`} />
+            <div>
+              <p className="text-white text-sm font-medium">
+                {getWeatherAlert(weather[0].main, main.temp, wind.speed, current.visibility/1000).message}
+              </p>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Driving tips section */}
+      <div className="mt-4 p-4 bg-gradient-to-r from-blue-900/10 to-black/20 rounded-lg border border-blue-900/40">
+        <h4 className="text-blue-400 font-medium mb-2 flex items-center">
+          <Calendar className="h-4 w-4 mr-2" />
+          Driver Advisory
+        </h4>
+        
+        {getDrivingTip(weather[0].main, main.temp, wind.speed, main.humidity).length > 0 ? (
+          <ul className="space-y-2">
+            {getDrivingTip(weather[0].main, main.temp, wind.speed, main.humidity).map((tip, index) => (
+              <li key={index} className="text-gray-300 text-sm pl-3 border-l-2 border-blue-500">
+                {tip}
+              </li>
+            ))}
+          </ul>
+        ) : (
+          <p className="text-gray-300 text-sm pl-3 border-l-2 border-blue-500">
+            Ideal driving conditions. Enjoy your drive while maintaining standard safety protocols.
+          </p>
+        )}
+      </div>
+
+      <div className="mt-4 pt-3 border-t border-gray-800 text-xs flex flex-col sm:flex-row sm:justify-between gap-2">
+        <div className="flex items-center text-gray-500">
+          <MapPin className="h-3 w-3 mr-1" /> 
+          <span>Location: {name}</span>
+        </div>
+        <div className="flex items-center justify-between sm:justify-end gap-4">
+          <div className="flex items-center text-gray-500">
+            <Calendar className="h-3 w-3 mr-1" />
+            <span>{new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+          </div>
+          <div className="flex items-center text-gray-500">
+            <span className="opacity-70">Updated: {new Date().toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</span>
+          </div>
+        </div>
       </div>
     </div>
   );
