@@ -185,6 +185,25 @@ const RoutePlannerPage = () => {
   const [torqueAdjustment, setTorqueAdjustment] = useState(0); // in ft-lb
   const [drivingMode, setDrivingMode] = useState("Sport");
   
+  // Rally/Event Import Data
+  const [isRallyEvent, setIsRallyEvent] = useState(false);
+  const [rallyEventData, setRallyEventData] = useState<any>({
+    rallyName: "",
+    organizerId: "",
+    eventId: "",
+    officialRoute: [],
+    eventDate: "",
+    isPaddock20Event: false,
+    eventDescription: "",
+    participantCount: 0,
+    startTime: "",
+    endTime: "",
+    difficultyLevel: "",
+    recommendedVehicles: [],
+    checkpoints: [],
+    eventType: "Rally" // Rally, TrackDay, GroupDrive, Paddock20Official
+  });
+  
   // OpenWeather integration and advanced weather data
   const [weatherImpacts, setWeatherImpacts] = useState<any>(null);
   const [openWeatherSettings, setOpenWeatherSettings] = useState({
@@ -576,6 +595,7 @@ const RoutePlannerPage = () => {
     console.log("Customizations:", routeCustomizations);
     console.log("Preferred Nav App:", preferredNavApp);
     console.log("Weather Data:", weatherData);
+    console.log("Rally Event:", isRallyEvent ? rallyEventData : "None");
 
     // Set mock waypoints for the APIs (in a real app, we'd convert addresses to coordinates)
     const mockWaypoints = [
@@ -586,13 +606,60 @@ const RoutePlannerPage = () => {
     
     // Update route waypoints for the car events and culture spots components
     setRouteWaypoints(mockWaypoints);
+    
+    // Calculate simulated metrics for demo purposes
+    const simulatedDistance = Math.floor(Math.random() * 50) + 30; // 30-80 miles
+    const simulatedDuration = Math.floor(Math.random() * 90) + 30; // 30-120 minutes
+    const simulatedCurvature = parseFloat((Math.random() * 12).toFixed(1)); // 0-12 TRN/km
+    
+    // Create a comprehensive route data object to save for Drive Journal
+    const routeData = {
+      start: startLocation,
+      end: endLocation,
+      waypoints: waypoints,
+      vehicle: selectedVehicle,
+      customizations: routeCustomizations,
+      preferredNavApp: preferredNavApp,
+      // Add telemetry data
+      curvatureTRN: simulatedCurvature,
+      distance: simulatedDistance,
+      duration: simulatedDuration,
+      // Add weather and surface data if available
+      surfaceTemp: weatherData?.main?.temp ? Math.floor(weatherData.main.temp - 5).toString() : "",
+      weatherImpact: weatherData?.weather?.[0]?.main || "",
+      // Add vehicle performance data if selectedVehicle exists in vehicleSpecs
+      tirePressure: selectedVehicle && vehicleSpecs[selectedVehicle] ? 
+        `${vehicleSpecs[selectedVehicle].optimalTirePressureFront}/${vehicleSpecs[selectedVehicle].optimalTirePressureRear}` : "",
+      torqueSetting: selectedVehicle && vehicleSpecs[selectedVehicle] ? 
+        vehicleSpecs[selectedVehicle].torqueSetting.toString() : "",
+      // Add rally/event data if applicable
+      isRallyEvent: isRallyEvent,
+      rallyEventData: isRallyEvent ? rallyEventData : null
+    };
+    
+    // Save route data to localStorage for Drive Journal to access
+    localStorage.setItem("plannedDrive", JSON.stringify(routeData));
 
     if (weatherLoaded) {
-      alert("Route planned with current weather conditions! Ready to navigate.");
+      // Display a more detailed confirmation with drive journal option
+      const navigateNow = window.confirm("Route planned with current weather conditions! Ready to navigate.\n\nWould you like to record this route in your Drive Journal?");
+      
+      if (navigateNow) {
+        // Navigate to drive journal
+        window.location.href = "/drive-journal";
+      } else {
+        alert("Route saved. You can access it later from your Drive Journal.");
+      }
     } else {
-      alert("Route planned! Weather data could not be loaded.");
+      const navigateAnyway = window.confirm("Route planned! Weather data could not be loaded.\n\nWould you like to record this route in your Drive Journal?");
+      
+      if (navigateAnyway) {
+        // Navigate to drive journal
+        window.location.href = "/drive-journal";
+      } else {
+        alert("Route saved. You can access it later from your Drive Journal.");
+      }
     }
-    // Implement real app launch logic here
   };
   
   // Handle event selection to add to route
@@ -881,6 +948,157 @@ const RoutePlannerPage = () => {
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-6">
           {/* Start Location */}
+          {/* Rally/Event Import Section */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-2">
+              <div className="flex items-center">
+                <button
+                  onClick={() => setIsRallyEvent(!isRallyEvent)}
+                  className={`mr-2 w-5 h-5 rounded ${isRallyEvent ? 'bg-green-500' : 'bg-gray-700'} flex-shrink-0`}
+                >
+                  {isRallyEvent && (
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-white" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                    </svg>
+                  )}
+                </button>
+                <span className="text-white font-medium">Rally/Event Import Mode</span>
+              </div>
+              
+              {isRallyEvent && (
+                <div className="text-xs px-2 py-1 bg-blue-900 text-blue-300 rounded-full">
+                  Paddock20 Integration Active
+                </div>
+              )}
+            </div>
+            
+            {isRallyEvent && (
+              <div className="bg-gradient-to-r from-[#111111] to-[#1a1a1a] p-4 rounded-lg border border-blue-900 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-300 text-sm mb-1">Rally/Event Name</label>
+                    <input
+                      type="text"
+                      value={rallyEventData.rallyName}
+                      onChange={(e) => setRallyEventData({...rallyEventData, rallyName: e.target.value})}
+                      className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                      placeholder="e.g., Mountain Run 2025"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-gray-300 text-sm mb-1">Event Type</label>
+                    <select
+                      value={rallyEventData.eventType}
+                      onChange={(e) => setRallyEventData({...rallyEventData, eventType: e.target.value})}
+                      className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                    >
+                      <option value="Rally">Rally</option>
+                      <option value="TrackDay">Track Day</option>
+                      <option value="GroupDrive">Group Drive</option>
+                      <option value="Paddock20Official">Paddock20 Official Event</option>
+                      <option value="CarShow">Car Show</option>
+                      <option value="RaceEvent">Race Event</option>
+                    </select>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div>
+                    <label className="block text-gray-300 text-sm mb-1">Event Date</label>
+                    <input
+                      type="date"
+                      value={rallyEventData.eventDate}
+                      onChange={(e) => setRallyEventData({...rallyEventData, eventDate: e.target.value})}
+                      className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-gray-300 text-sm mb-1">Start Time</label>
+                    <input
+                      type="time"
+                      value={rallyEventData.startTime}
+                      onChange={(e) => setRallyEventData({...rallyEventData, startTime: e.target.value})}
+                      className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                    />
+                  </div>
+                  
+                  <div>
+                    <label className="block text-gray-300 text-sm mb-1">Expected End Time</label>
+                    <input
+                      type="time"
+                      value={rallyEventData.endTime}
+                      onChange={(e) => setRallyEventData({...rallyEventData, endTime: e.target.value})}
+                      className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                    />
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-gray-300 text-sm mb-1">Event Description</label>
+                  <textarea
+                    value={rallyEventData.eventDescription}
+                    onChange={(e) => setRallyEventData({...rallyEventData, eventDescription: e.target.value})}
+                    className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700 h-20"
+                    placeholder="Describe the event, special route features, etc."
+                  />
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-gray-300 text-sm mb-1">Difficulty Level</label>
+                    <select
+                      value={rallyEventData.difficultyLevel}
+                      onChange={(e) => setRallyEventData({...rallyEventData, difficultyLevel: e.target.value})}
+                      className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                    >
+                      <option value="">Select Difficulty</option>
+                      <option value="Beginner">Beginner - Easy and accessible</option>
+                      <option value="Intermediate">Intermediate - Some driving skill required</option>
+                      <option value="Advanced">Advanced - Experienced drivers only</option>
+                      <option value="Expert">Expert - Technical and challenging</option>
+                      <option value="Pro">Pro - Track-level skills required</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-gray-300 text-sm mb-1">Participant Count</label>
+                    <input
+                      type="number"
+                      value={rallyEventData.participantCount}
+                      onChange={(e) => setRallyEventData({...rallyEventData, participantCount: parseInt(e.target.value)})}
+                      className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                      min="0"
+                      placeholder="Expected number of participants"
+                    />
+                  </div>
+                </div>
+                
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={rallyEventData.isPaddock20Event}
+                    onChange={(e) => setRallyEventData({...rallyEventData, isPaddock20Event: e.target.checked})}
+                    className="form-checkbox text-blue-500 rounded h-4 w-4"
+                  />
+                  <label className="ml-2 text-blue-300 text-sm font-medium">
+                    This is an official Paddock20 event
+                  </label>
+                </div>
+                
+                <div className="mt-2 p-3 bg-blue-900 bg-opacity-20 border border-blue-800 rounded text-sm text-blue-200">
+                  <p className="flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 text-blue-400" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                    </svg>
+                    All event information will be saved in the Drive Journal and synchronized with other Paddock20 members attending this event.
+                  </p>
+                </div>
+              </div>
+            )}
+          </div>
+          
           <div>
             <label className="block text-gray-300 mb-1">Starting Point</label>
             <input

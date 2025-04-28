@@ -1,1243 +1,590 @@
-import React, { useState, useEffect } from 'react';
-import { format } from 'date-fns';
+// /client/src/pages/DriveJournalPage.tsx
 
-// Define interfaces for type safety
-interface DriveEntry {
-  id: string;
-  date: string;
-  title: string;
-  startLocation: string;
-  endLocation: string;
-  waypoints: string[];
-  vehicle: string;
-  distanceMiles: number;
-  durationMinutes: number;
-  weatherConditions: any;
-  routeCustomizations: any;
-  performanceSettings: {
-    tirePressureAdjustment: number;
-    torqueAdjustment: number;
-    drivingMode: string;
-    vehicleSpecs?: any;
-    tireSetup?: any;
-    drivingProfile?: any;
-    curvatureMetrics?: {
-      intensity: number;
-      trnRange: string;
-    };
-  };
-  pointsOfInterest?: {
-    events: any[];
-    culturalSpots: any[];
-  };
-  notes?: string;
-  photos?: string[];
-  rating?: number;
-  isFromRoutePlanner: boolean;
+import React, { useState, useEffect } from "react";
+
+interface RallyEventData {
+  rallyName: string;
+  organizerId: string;
+  eventId: string;
+  officialRoute: any[];
+  eventDate: string;
+  isPaddock20Event: boolean;
+  eventDescription: string;
+  participantCount: number;
+  startTime: string;
+  endTime: string;
+  difficultyLevel: string;
+  recommendedVehicles: string[];
+  checkpoints: any[];
+  eventType: string;
 }
 
-// Mock data for the wireframe
-const mockDriveEntries: DriveEntry[] = [
-  {
-    id: "1",
-    date: "2025-04-28T10:30:00.000Z",
-    title: "Blue Ridge Parkway Run",
-    startLocation: "Asheville, NC",
-    endLocation: "Blowing Rock, NC",
-    waypoints: ["Craggy Gardens", "Linville Falls"],
-    vehicle: "Ferrari F8 Tributo",
-    distanceMiles: 82.5,
-    durationMinutes: 124,
-    weatherConditions: {
-      temperature: 72,
-      condition: "Sunny",
-      humidity: 45,
-      windSpeed: 5
-    },
-    routeCustomizations: {
-      roundTrip: false,
-      includeScenic: true,
-      avoidTraffic: true
-    },
-    performanceSettings: {
-      tirePressureAdjustment: 2,
-      torqueAdjustment: 5,
-      drivingMode: "Sport+",
-      curvatureMetrics: {
-        intensity: 4,
-        trnRange: "6-8 TRN/km (Spirited)"
-      }
-    },
-    pointsOfInterest: {
-      events: [],
-      culturalSpots: [
-        { id: "cs1", name: "Mast General Store", category: "historic" }
-      ]
-    },
-    notes: "Amazing drive with perfect weather. The F8 handled the curves beautifully.",
-    photos: [
-      "/assets/mockdrive1_photo1.jpg",
-      "/assets/mockdrive1_photo2.jpg"
-    ],
-    rating: 5,
-    isFromRoutePlanner: true
-  },
-  {
-    id: "2",
-    date: "2025-04-25T14:15:00.000Z",
-    title: "Mountain to Coast",
-    startLocation: "Boone, NC",
-    endLocation: "Wilmington, NC",
-    waypoints: ["Winston-Salem", "Raleigh"],
-    vehicle: "Porsche 911 Carrera S",
-    distanceMiles: 330,
-    durationMinutes: 315,
-    weatherConditions: {
-      temperature: 68,
-      condition: "Partly Cloudy",
-      humidity: 60,
-      windSpeed: 8
-    },
-    routeCustomizations: {
-      roundTrip: false,
-      includeScenic: false,
-      avoidTraffic: true
-    },
-    performanceSettings: {
-      tirePressureAdjustment: 0,
-      torqueAdjustment: 0,
-      drivingMode: "Normal",
-      curvatureMetrics: {
-        intensity: 2,
-        trnRange: "2-4 TRN/km (Gentle)"
-      }
-    },
-    pointsOfInterest: {
-      events: [],
-      culturalSpots: []
-    },
-    notes: "Long drive but the Porsche was comfortable the entire way.",
-    photos: [],
-    rating: 4,
-    isFromRoutePlanner: true
-  }
-];
+interface CustomVehicle {
+  id: string;
+  name: string;
+  make: string;
+  model: string;
+  year: number;
+  frontTirePSI: number;
+  rearTirePSI: number;
+}
 
-const DriveJournalPage: React.FC = () => {
-  // State for drive entries, selected entry, and edit mode
-  const [driveEntries, setDriveEntries] = useState<DriveEntry[]>([]);
-  const [selectedDriveId, setSelectedDriveId] = useState<string | null>(null);
-  const [isEditMode, setIsEditMode] = useState(false);
-  const [isAddingNew, setIsAddingNew] = useState(false);
+const DriveJournalPage = () => {
+  const [startLocation, setStartLocation] = useState("");
+  const [endLocation, setEndLocation] = useState("");
+  const [waypoints, setWaypoints] = useState<string[]>([]);
+  const [vehicleUsed, setVehicleUsed] = useState("");
+  const [curvatureRating, setCurvatureRating] = useState("Minimal");
+  const [curvatureTRN, setCurvatureTRN] = useState<number | null>(null);
+  const [surfaceTemp, setSurfaceTemp] = useState("");
+  const [gripLevel, setGripLevel] = useState("");
+  const [weatherImpact, setWeatherImpact] = useState("");
+  const [tirePressure, setTirePressure] = useState("");
+  const [torqueSetting, setTorqueSetting] = useState("");
+  const [photos, setPhotos] = useState<File[]>([]);
+  const [notes, setNotes] = useState("");
+  const [rating, setRating] = useState(5);
+  const [poiLog, setPoiLog] = useState("");
+  const [distance, setDistance] = useState<number | null>(null);
+  const [estimatedDuration, setEstimatedDuration] = useState<number | null>(null);
   
-  // State for new/edited entry form
-  const [editForm, setEditForm] = useState<Partial<DriveEntry>>({
-    title: "",
-    startLocation: "",
-    endLocation: "",
-    waypoints: [],
-    vehicle: "",
-    distanceMiles: 0,
-    durationMinutes: 0,
-    notes: "",
-    rating: 0,
-    performanceSettings: {
-      tirePressureAdjustment: 0,
-      torqueAdjustment: 0,
-      drivingMode: "Normal",
-    }
-  });
+  // Rally/Event Data
+  const [isRallyEvent, setIsRallyEvent] = useState(false);
+  const [rallyEventData, setRallyEventData] = useState<RallyEventData | null>(null);
   
-  // State for vehicle selection
-  const [selectedVehicle, setSelectedVehicle] = useState("");
+  // Custom Vehicle Form State
+  const [showAddVehicleForm, setShowAddVehicleForm] = useState(false);
+  const [newVehicleName, setNewVehicleName] = useState("");
+  const [newVehicleMake, setNewVehicleMake] = useState("");
+  const [newVehicleModel, setNewVehicleModel] = useState("");
+  const [newVehicleYear, setNewVehicleYear] = useState<number>(2023);
+  const [newVehicleFrontPSI, setNewVehicleFrontPSI] = useState<number>(32);
+  const [newVehicleRearPSI, setNewVehicleRearPSI] = useState<number>(30);
+  const [customVehicles, setCustomVehicles] = useState<CustomVehicle[]>([]);
   
-  // State for telemetry options
-  const [showTelemetryOptions, setShowTelemetryOptions] = useState(false);
-  
-  // State for weather data
-  const [weatherData, setWeatherData] = useState<any>(null);
-  
-  // State for photos
-  const [photos, setPhotos] = useState<string[]>([]);
-  
-  // Filter options
-  const [filterOptions, setFilterOptions] = useState({
-    dateFrom: "",
-    dateTo: "",
-    vehicle: "",
-    routeType: "",
-    minRating: 0
-  });
-  
-  // Load data on component mount
+  // Load any saved custom vehicles from localStorage
   useEffect(() => {
-    // Check for any pending drive from the Route Planner
-    const pendingDrive = localStorage.getItem('pendingDriveJournal');
-    
-    if (pendingDrive) {
-      // In a real app, we would process this data and save it to the database
-      console.log("Found pending drive from Route Planner:", JSON.parse(pendingDrive));
-      // Clear the pending drive after processing
-      localStorage.removeItem('pendingDriveJournal');
-    }
-    
-    // Load mock data
-    setDriveEntries(mockDriveEntries);
-    
-    // If there are entries, select the first one by default
-    if (mockDriveEntries.length > 0) {
-      setSelectedDriveId(mockDriveEntries[0].id);
+    const savedVehicles = localStorage.getItem("customVehicles");
+    if (savedVehicles) {
+      try {
+        setCustomVehicles(JSON.parse(savedVehicles));
+      } catch (error) {
+        console.error("Error loading custom vehicles:", error);
+      }
     }
   }, []);
   
-  // Get the currently selected drive
-  const selectedDrive = driveEntries.find(drive => drive.id === selectedDriveId) || null;
-  
-  // Format date function
-  const formatDate = (dateString: string) => {
-    try {
-      return format(new Date(dateString), 'MMM d, yyyy h:mm a');
-    } catch (error) {
-      return dateString;
-    }
-  };
-  
-  // Handle form changes
-  const handleFormChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    
-    // Handle nested properties
-    if (name.includes('.')) {
-      const [parent, child] = name.split('.');
-      setEditForm(prev => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent as keyof Partial<DriveEntry>],
-          [child]: value
-        }
-      }));
-    } else {
-      setEditForm(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    }
-  };
-  
-  // Handle waypoint changes
-  const handleWaypointChange = (index: number, value: string) => {
-    setEditForm(prev => {
-      const updatedWaypoints = [...(prev.waypoints || [])];
-      updatedWaypoints[index] = value;
-      return {
-        ...prev,
-        waypoints: updatedWaypoints
-      };
-    });
-  };
-  
-  // Add waypoint
-  const addWaypoint = () => {
-    setEditForm(prev => ({
-      ...prev,
-      waypoints: [...(prev.waypoints || []), ""]
-    }));
-  };
-  
-  // Remove waypoint
-  const removeWaypoint = (index: number) => {
-    setEditForm(prev => {
-      const updatedWaypoints = [...(prev.waypoints || [])];
-      updatedWaypoints.splice(index, 1);
-      return {
-        ...prev,
-        waypoints: updatedWaypoints
-      };
-    });
-  };
-  
-  // Initialize edit form with selected drive data
-  const initializeEditForm = () => {
-    if (selectedDrive) {
-      setEditForm(selectedDrive);
-      setSelectedVehicle(selectedDrive.vehicle);
-    }
-    setIsEditMode(true);
-  };
-  
-  // Initialize new drive form
-  const initializeNewDriveForm = () => {
-    setEditForm({
-      title: "",
-      startLocation: "",
-      endLocation: "",
-      waypoints: [],
-      vehicle: "",
-      distanceMiles: 0,
-      durationMinutes: 0,
-      notes: "",
-      rating: 0,
-      performanceSettings: {
-        tirePressureAdjustment: 0,
-        torqueAdjustment: 0,
-        drivingMode: "Normal",
-      },
-      weatherConditions: null,
-      isFromRoutePlanner: false,
-      date: new Date().toISOString()
-    });
-    setIsAddingNew(true);
-    setIsEditMode(true);
-  };
-  
-  // Save drive entry (edit or new)
-  const saveDriveEntry = () => {
-    if (isAddingNew) {
-      // Generate a new ID and add to entries
-      const newDrive = {
-        ...editForm,
-        id: `${driveEntries.length + 1}`
-      } as DriveEntry;
-      
-      setDriveEntries([newDrive, ...driveEntries]);
-      setSelectedDriveId(newDrive.id);
-    } else {
-      // Update existing entry
-      setDriveEntries(driveEntries.map(drive => 
-        drive.id === selectedDriveId ? { ...drive, ...editForm } as DriveEntry : drive
-      ));
+  // Function to add a custom vehicle
+  const addCustomVehicle = () => {
+    if (!newVehicleName.trim()) {
+      alert("Please enter a vehicle name");
+      return;
     }
     
-    setIsEditMode(false);
-    setIsAddingNew(false);
+    const newVehicle: CustomVehicle = {
+      id: `vehicle-${Date.now()}`,
+      name: newVehicleName,
+      make: newVehicleMake,
+      model: newVehicleModel,
+      year: newVehicleYear || 2023,
+      frontTirePSI: newVehicleFrontPSI || 32,
+      rearTirePSI: newVehicleRearPSI || 30,
+    };
+    
+    const updatedVehicles = [...customVehicles, newVehicle];
+    
+    // Save to state and localStorage
+    setCustomVehicles(updatedVehicles);
+    localStorage.setItem("customVehicles", JSON.stringify(updatedVehicles));
+    
+    // Select the new vehicle
+    setVehicleUsed(newVehicleName);
+    
+    // Update tire pressure field with the new vehicle's values
+    setTirePressure(`${newVehicleFrontPSI}/${newVehicleRearPSI}`);
+    
+    // Reset form and hide it
+    setNewVehicleName("");
+    setNewVehicleMake("");
+    setNewVehicleModel("");
+    setNewVehicleYear(2023);
+    setNewVehicleFrontPSI(32);
+    setNewVehicleRearPSI(30);
+    setShowAddVehicleForm(false);
   };
-  
-  // Cancel edit
-  const cancelEdit = () => {
-    setIsEditMode(false);
-    setIsAddingNew(false);
-  };
-  
-  // Delete drive entry
-  const deleteDriveEntry = () => {
-    if (selectedDriveId && confirm("Are you sure you want to delete this drive?")) {
-      const updatedEntries = driveEntries.filter(drive => drive.id !== selectedDriveId);
-      setDriveEntries(updatedEntries);
-      
-      if (updatedEntries.length > 0) {
-        setSelectedDriveId(updatedEntries[0].id);
-      } else {
-        setSelectedDriveId(null);
-      }
-    }
-  };
-  
-  // Handle rating change
-  const handleRatingChange = (rating: number) => {
-    setEditForm(prev => ({
-      ...prev,
-      rating
-    }));
-  };
-  
-  // Get TRN description based on intensity
-  const getTrnDescription = (intensity: number) => {
-    switch(intensity) {
-      case 1: return "0-2 TRN/km (Minimal)";
-      case 2: return "2-4 TRN/km (Gentle)";
-      case 3: return "4-6 TRN/km (Moderate)"; 
-      case 4: return "6-8 TRN/km (Spirited)";
-      case 5: return "8-12+ TRN/km (Technical)";
-      default: return "4-6 TRN/km (Moderate)";
-    }
-  };
-  
-  // Handle curvature intensity change
-  const handleCurvatureIntensityChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const intensity = parseInt(e.target.value);
-    setEditForm(prev => ({
-      ...prev,
-      performanceSettings: {
-        ...prev.performanceSettings!,
-        curvatureMetrics: {
-          intensity,
-          trnRange: getTrnDescription(intensity)
+
+  useEffect(() => {
+    // Auto-import route planner saved drives from localStorage
+    const storedDrive = localStorage.getItem("plannedDrive");
+    if (storedDrive) {
+      try {
+        const parsed = JSON.parse(storedDrive);
+        setStartLocation(parsed.start || "");
+        setEndLocation(parsed.end || "");
+        setWaypoints(parsed.waypoints || []);
+        setVehicleUsed(parsed.vehicle || "");
+        
+        // Import curvature metrics if available
+        if (parsed.curvatureTRN) {
+          setCurvatureTRN(parsed.curvatureTRN);
+          
+          // Set curvature rating based on TRN/km value
+          if (parsed.curvatureTRN < 2) {
+            setCurvatureRating("Minimal");
+          } else if (parsed.curvatureTRN < 4) {
+            setCurvatureRating("Light");
+          } else if (parsed.curvatureTRN < 7) {
+            setCurvatureRating("Moderate");
+          } else if (parsed.curvatureTRN < 10) {
+            setCurvatureRating("Technical");
+          } else {
+            setCurvatureRating("Extreme");
+          }
         }
+        
+        // Import distance and duration if available
+        if (parsed.distance) {
+          setDistance(parsed.distance);
+        }
+        
+        if (parsed.duration) {
+          setEstimatedDuration(parsed.duration);
+        }
+        
+        // Import weather/road conditions if available
+        if (parsed.surfaceTemp) {
+          setSurfaceTemp(parsed.surfaceTemp);
+        }
+        
+        if (parsed.gripLevel) {
+          setGripLevel(parsed.gripLevel);
+        }
+        
+        if (parsed.weatherImpact) {
+          setWeatherImpact(parsed.weatherImpact);
+        }
+        
+        // Import vehicle performance settings if available
+        if (parsed.tirePressure) {
+          setTirePressure(parsed.tirePressure);
+        }
+        
+        if (parsed.torqueSetting) {
+          setTorqueSetting(parsed.torqueSetting);
+        }
+        
+        // Import rally/event data if available
+        if (parsed.isRallyEvent && parsed.rallyEventData) {
+          setIsRallyEvent(true);
+          setRallyEventData(parsed.rallyEventData);
+        }
+      } catch (error) {
+        console.error("Error parsing saved drive:", error);
       }
-    }));
+    }
+  }, []);
+
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files) {
+      setPhotos([...photos, ...Array.from(e.target.files)]);
+    }
   };
-  
+
+  const submitDriveLog = () => {
+    const driveEntry = {
+      startLocation,
+      waypoints,
+      endLocation,
+      vehicleUsed,
+      curvatureRating,
+      curvatureTRN,
+      surfaceTemp,
+      gripLevel,
+      weatherImpact,
+      tirePressure,
+      torqueSetting,
+      photos: photos.map(p => p.name), // Just store names for now
+      notes,
+      rating,
+      poiLog,
+      distance,
+      estimatedDuration,
+      isRallyEvent,
+      rallyEventData,
+      timestamp: new Date().toISOString(),
+      id: `drive-${Date.now()}`
+    };
+    
+    console.log(driveEntry);
+    
+    // Store in localStorage for demo purposes
+    const existingEntries = JSON.parse(localStorage.getItem("driveJournalEntries") || "[]");
+    localStorage.setItem("driveJournalEntries", JSON.stringify([driveEntry, ...existingEntries]));
+    
+    // Clear the planned drive data since it's now been logged
+    localStorage.removeItem("plannedDrive");
+    
+    alert("Drive journal entry submitted!");
+  };
+
   return (
     <div className="min-h-screen bg-black max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-blue-400 font-orbitron text-4xl mb-8">📔 Drive Journal</h1>
+      <h1 className="text-blue-400 font-orbitron text-4xl mb-8">📓 Drive Journal</h1>
       
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Left Sidebar - Drive Entries List */}
-        <div className="lg:col-span-1 space-y-6">
-          {/* Controls */}
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-white font-orbitron text-xl">Drive Log</h2>
-            <button
-              onClick={initializeNewDriveForm}
-              className="bg-green-500 hover:bg-green-400 text-black font-medium px-4 py-2 rounded flex items-center gap-1"
-            >
-              <span>New Entry</span>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-              </svg>
-            </button>
-          </div>
-          
-          {/* Filter Options - Collapsed by default */}
-          <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
-            <button
-              className="flex justify-between items-center w-full text-white font-medium mb-2"
-              onClick={() => document.getElementById('filterOptions')?.classList.toggle('hidden')}
-            >
-              <span>Filter Drives</span>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
-              </svg>
-            </button>
+      {/* Rally/Event Data Display */}
+      {isRallyEvent && rallyEventData && (
+        <div className="mb-8 bg-gradient-to-r from-[#111111] to-[#1a1a1a] p-6 rounded-lg border border-blue-900">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-blue-400 font-orbitron text-xl flex items-center">
+              <span className="mr-2">🏁</span>
+              {rallyEventData.isPaddock20Event ? "Official Paddock20 Event" : "Rally/Event Entry"}
+            </h2>
             
-            <div id="filterOptions" className="hidden space-y-3 pt-2">
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-gray-400 text-sm mb-1">Date From</label>
-                  <input
-                    type="date"
-                    className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
-                    value={filterOptions.dateFrom}
-                    onChange={(e) => setFilterOptions({...filterOptions, dateFrom: e.target.value})}
-                  />
-                </div>
-                <div>
-                  <label className="block text-gray-400 text-sm mb-1">Date To</label>
-                  <input
-                    type="date"
-                    className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
-                    value={filterOptions.dateTo}
-                    onChange={(e) => setFilterOptions({...filterOptions, dateTo: e.target.value})}
-                  />
-                </div>
-              </div>
-              
-              <div>
-                <label className="block text-gray-400 text-sm mb-1">Vehicle</label>
-                <select
-                  className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
-                  value={filterOptions.vehicle}
-                  onChange={(e) => setFilterOptions({...filterOptions, vehicle: e.target.value})}
-                >
-                  <option value="">All Vehicles</option>
-                  <option value="Ferrari F8 Tributo">Ferrari F8 Tributo</option>
-                  <option value="Porsche 911 Carrera S">Porsche 911 Carrera S</option>
-                  <option value="BMW M4 G82">BMW M4 G82</option>
-                </select>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <label className="block text-gray-400 text-sm mb-1">Route Type</label>
-                  <select
-                    className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
-                    value={filterOptions.routeType}
-                    onChange={(e) => setFilterOptions({...filterOptions, routeType: e.target.value})}
-                  >
-                    <option value="">All Types</option>
-                    <option value="Scenic">Scenic</option>
-                    <option value="Track">Track Day</option>
-                    <option value="Highway">Highway</option>
-                    <option value="Urban">Urban</option>
-                  </select>
-                </div>
-                <div>
-                  <label className="block text-gray-400 text-sm mb-1">Min Rating</label>
-                  <select
-                    className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
-                    value={filterOptions.minRating}
-                    onChange={(e) => setFilterOptions({...filterOptions, minRating: Number(e.target.value)})}
-                  >
-                    <option value="0">All Ratings</option>
-                    <option value="3">3+ Stars</option>
-                    <option value="4">4+ Stars</option>
-                    <option value="5">5 Stars</option>
-                  </select>
-                </div>
-              </div>
-              
-              <div className="pt-2 flex justify-end">
-                <button className="bg-blue-500 text-white px-3 py-1 rounded text-sm">
-                  Apply Filters
-                </button>
-              </div>
-            </div>
-          </div>
-          
-          {/* Drive Entries List */}
-          <div className="space-y-2 max-h-[60vh] overflow-y-auto pr-2">
-            {driveEntries.length > 0 ? (
-              driveEntries.map(drive => (
-                <div
-                  key={drive.id}
-                  className={`p-4 rounded-lg cursor-pointer transition-all ${
-                    selectedDriveId === drive.id
-                      ? 'bg-blue-900 border border-blue-700'
-                      : 'bg-gray-900 border border-gray-800 hover:bg-gray-800'
-                  }`}
-                  onClick={() => setSelectedDriveId(drive.id)}
-                >
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-white font-medium">{drive.title}</h3>
-                      <p className="text-gray-400 text-sm">{formatDate(drive.date)}</p>
-                    </div>
-                    {drive.isFromRoutePlanner && (
-                      <span className="bg-green-900 text-green-300 text-xs px-2 py-1 rounded-full">
-                        Route Planner
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-2 text-sm">
-                    <p className="text-gray-300 truncate">{drive.startLocation} to {drive.endLocation}</p>
-                    <p className="text-gray-400">{drive.vehicle} • {drive.distanceMiles} miles</p>
-                    <div className="mt-1 flex items-center">
-                      {[1, 2, 3, 4, 5].map(star => (
-                        <svg
-                          key={star}
-                          xmlns="http://www.w3.org/2000/svg"
-                          className={`h-4 w-4 ${
-                            star <= (drive.rating || 0) ? 'text-yellow-400' : 'text-gray-600'
-                          }`}
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
-                        >
-                          <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                        </svg>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-              ))
-            ) : (
-              <div className="bg-gray-900 p-4 rounded-lg border border-gray-800 text-center">
-                <p className="text-gray-400">No drive entries yet</p>
-                <button
-                  onClick={initializeNewDriveForm}
-                  className="mt-2 text-blue-400 hover:text-blue-300"
-                >
-                  Create your first entry
-                </button>
+            {rallyEventData.isPaddock20Event && (
+              <div className="bg-blue-900 text-xs text-blue-200 px-3 py-1 rounded-full">
+                Paddock20 Official
               </div>
             )}
           </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+            <div>
+              <h3 className="text-white font-semibold text-lg">{rallyEventData.rallyName}</h3>
+              <p className="text-gray-400 text-sm">{rallyEventData.eventType}</p>
+            </div>
+            
+            <div className="text-right">
+              <p className="text-white">{rallyEventData.eventDate}</p>
+              <p className="text-gray-400 text-sm">
+                {rallyEventData.startTime} - {rallyEventData.endTime}
+              </p>
+            </div>
+          </div>
+          
+          <p className="text-gray-300 mb-4 text-sm">{rallyEventData.eventDescription}</p>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+            <div>
+              <p className="text-gray-500">Difficulty</p>
+              <p className="text-white">{rallyEventData.difficultyLevel || "Not specified"}</p>
+            </div>
+            
+            <div>
+              <p className="text-gray-500">Participants</p>
+              <p className="text-white">{rallyEventData.participantCount || "Unknown"}</p>
+            </div>
+            
+            <div className="col-span-2">
+              <p className="text-gray-500">Event ID</p>
+              <p className="text-white font-mono text-xs">{rallyEventData.eventId || `rally-${Date.now()}`}</p>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Start / End Locations */}
+      <div className="space-y-6 mb-8">
+        <div>
+          <label className="block text-gray-400 text-sm mb-1">Start Location</label>
+          <input
+            type="text"
+            placeholder="Start Location"
+            value={startLocation}
+            onChange={(e) => setStartLocation(e.target.value)}
+            className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
+          />
         </div>
         
-        {/* Right Section - Selected Drive Details or Edit Form */}
-        <div className="lg:col-span-2">
-          {isEditMode ? (
-            // Edit Form
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-800 space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-blue-400 font-orbitron text-2xl">
-                  {isAddingNew ? "New Drive Entry" : "Edit Drive Entry"}
-                </h2>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={saveDriveEntry}
-                    className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded"
-                  >
-                    Save
-                  </button>
-                  <button
-                    onClick={cancelEdit}
-                    className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded"
-                  >
-                    Cancel
-                  </button>
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Basic Info */}
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-gray-300 mb-1">Drive Title</label>
-                    <input
-                      type="text"
-                      name="title"
-                      value={editForm.title || ""}
-                      onChange={handleFormChange}
-                      className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
-                      placeholder="e.g., Mountain Drive Weekend"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-gray-300 mb-1">Date</label>
-                    <input
-                      type="datetime-local"
-                      name="date"
-                      value={editForm.date ? new Date(editForm.date).toISOString().slice(0, 16) : ""}
-                      onChange={handleFormChange}
-                      className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-gray-300 mb-1">Starting Point</label>
-                    <input
-                      type="text"
-                      name="startLocation"
-                      value={editForm.startLocation || ""}
-                      onChange={handleFormChange}
-                      className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
-                      placeholder="e.g., Charlotte, NC"
-                    />
-                  </div>
-                  
-                  <div>
-                    <label className="block text-gray-300 mb-1">Destination</label>
-                    <input
-                      type="text"
-                      name="endLocation"
-                      value={editForm.endLocation || ""}
-                      onChange={handleFormChange}
-                      className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
-                      placeholder="e.g., Asheville, NC"
-                    />
-                  </div>
-                  
-                  <div>
-                    <div className="flex justify-between items-center mb-1">
-                      <label className="block text-gray-300">Waypoints</label>
-                      <button
-                        onClick={addWaypoint}
-                        className="text-xs text-blue-400 hover:text-blue-300 flex items-center"
-                      >
-                        + Add Waypoint
-                      </button>
-                    </div>
-                    {(editForm.waypoints || []).length === 0 ? (
-                      <p className="text-gray-500 text-sm italic">No waypoints added</p>
-                    ) : (
-                      <div className="space-y-2 max-h-40 overflow-y-auto">
-                        {(editForm.waypoints || []).map((waypoint, index) => (
-                          <div key={index} className="flex items-center gap-2">
-                            <input
-                              type="text"
-                              value={waypoint}
-                              onChange={(e) => handleWaypointChange(index, e.target.value)}
-                              className="flex-1 p-2 bg-gray-800 text-white rounded border border-gray-700"
-                              placeholder="e.g., Hickory, NC"
-                            />
-                            <button
-                              onClick={() => removeWaypoint(index)}
-                              className="text-red-400 hover:text-red-300"
-                            >
-                              ✖
-                            </button>
-                          </div>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                {/* Vehicle and Trip Details */}
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-gray-300 mb-1">Vehicle</label>
-                    <select
-                      name="vehicle"
-                      value={editForm.vehicle || ""}
-                      onChange={handleFormChange}
-                      className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
-                    >
-                      <option value="">Select Vehicle</option>
-                      <option value="Ferrari F8 Tributo">Ferrari F8 Tributo</option>
-                      <option value="Porsche 911 Carrera S">Porsche 911 Carrera S</option>
-                      <option value="BMW M4 G82">BMW M4 G82</option>
-                    </select>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-gray-300 mb-1">Distance (miles)</label>
-                      <input
-                        type="number"
-                        name="distanceMiles"
-                        value={editForm.distanceMiles || ""}
-                        onChange={handleFormChange}
-                        className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
-                        placeholder="0.0"
-                        min="0"
-                        step="0.1"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-gray-300 mb-1">Duration (minutes)</label>
-                      <input
-                        type="number"
-                        name="durationMinutes"
-                        value={editForm.durationMinutes || ""}
-                        onChange={handleFormChange}
-                        className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
-                        placeholder="0"
-                        min="0"
-                      />
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-gray-300 mb-1">Your Rating</label>
-                    <div className="flex items-center space-x-1">
-                      {[1, 2, 3, 4, 5].map((star) => (
-                        <button
-                          key={star}
-                          type="button"
-                          onClick={() => handleRatingChange(star)}
-                          className="focus:outline-none"
-                        >
-                          <svg
-                            className={`w-8 h-8 ${
-                              (editForm.rating || 0) >= star
-                                ? "text-yellow-400"
-                                : "text-gray-600"
-                            }`}
-                            fill="currentColor"
-                            viewBox="0 0 20 20"
-                            xmlns="http://www.w3.org/2000/svg"
-                          >
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        </button>
-                      ))}
-                    </div>
-                  </div>
-                  
-                  <div>
-                    <label className="block text-gray-300 mb-1">Notes</label>
-                    <textarea
-                      name="notes"
-                      value={editForm.notes || ""}
-                      onChange={handleFormChange}
-                      className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700 h-32"
-                      placeholder="Your thoughts, experiences, or notes about this drive..."
-                    />
-                  </div>
-                </div>
-              </div>
-              
-              {/* Telemetry and Performance Metrics */}
-              <div>
-                <button
-                  type="button"
-                  onClick={() => setShowTelemetryOptions(!showTelemetryOptions)}
-                  className="flex items-center justify-between w-full p-3 bg-blue-900 bg-opacity-30 text-white rounded-lg border border-blue-800"
-                >
-                  <span className="font-semibold">Enthusiast Performance Metrics</span>
-                  <svg
-                    className={`w-5 h-5 transition-transform ${showTelemetryOptions ? "rotate-180" : ""}`}
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
-                  </svg>
-                </button>
-                
-                {showTelemetryOptions && (
-                  <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-gray-900 rounded-lg border border-gray-700">
-                    {/* Driving Dynamics */}
-                    <div className="space-y-4">
-                      <h3 className="text-green-500 font-semibold">Driving Dynamics</h3>
-                      
-                      <div>
-                        <label className="block text-gray-300 text-sm mb-1">Driving Mode</label>
-                        <select
-                          name="performanceSettings.drivingMode"
-                          value={editForm.performanceSettings?.drivingMode || "Normal"}
-                          onChange={handleFormChange}
-                          className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
-                        >
-                          <option value="Eco">Eco</option>
-                          <option value="Normal">Normal</option>
-                          <option value="Sport">Sport</option>
-                          <option value="Sport+">Sport+</option>
-                          <option value="Track">Track</option>
-                          <option value="Custom">Custom</option>
-                        </select>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-gray-300 text-sm mb-1">
-                          Curvature Intensity (TRN/km)
-                        </label>
-                        <div className="space-y-2">
-                          <input
-                            type="range"
-                            min="1"
-                            max="5"
-                            value={(editForm.performanceSettings?.curvatureMetrics?.intensity) || 3}
-                            onChange={handleCurvatureIntensityChange}
-                            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                          />
-                          <div className="flex justify-between text-xs text-gray-400">
-                            <span>Minimal</span>
-                            <span>Gentle</span>
-                            <span>Moderate</span>
-                            <span>Spirited</span>
-                            <span>Technical</span>
-                          </div>
-                          <div className="text-right text-xs text-blue-400">
-                            {getTrnDescription((editForm.performanceSettings?.curvatureMetrics?.intensity) || 3)}
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-gray-300 text-sm mb-1">
-                            Tire Pressure Adj. (PSI)
-                          </label>
-                          <input
-                            type="number"
-                            name="performanceSettings.tirePressureAdjustment"
-                            value={editForm.performanceSettings?.tirePressureAdjustment || 0}
-                            onChange={handleFormChange}
-                            className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
-                            min="-5"
-                            max="5"
-                            step="0.5"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-gray-300 text-sm mb-1">
-                            Torque Adj. (ft-lb)
-                          </label>
-                          <input
-                            type="number"
-                            name="performanceSettings.torqueAdjustment"
-                            value={editForm.performanceSettings?.torqueAdjustment || 0}
-                            onChange={handleFormChange}
-                            className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
-                            min="-20"
-                            max="20"
-                          />
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Weather and Environment */}
-                    <div className="space-y-4">
-                      <h3 className="text-green-500 font-semibold">Weather Conditions</h3>
-                      
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-gray-300 text-sm mb-1">
-                            Temperature (°F)
-                          </label>
-                          <input
-                            type="number"
-                            name="weatherConditions.temperature"
-                            value={editForm.weatherConditions?.temperature || ""}
-                            onChange={handleFormChange}
-                            className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-gray-300 text-sm mb-1">
-                            Weather Condition
-                          </label>
-                          <select
-                            name="weatherConditions.condition"
-                            value={editForm.weatherConditions?.condition || ""}
-                            onChange={handleFormChange}
-                            className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
-                          >
-                            <option value="">Select Condition</option>
-                            <option value="Sunny">Sunny</option>
-                            <option value="Partly Cloudy">Partly Cloudy</option>
-                            <option value="Cloudy">Cloudy</option>
-                            <option value="Light Rain">Light Rain</option>
-                            <option value="Heavy Rain">Heavy Rain</option>
-                            <option value="Fog">Fog</option>
-                            <option value="Snow">Snow</option>
-                          </select>
-                        </div>
-                      </div>
-                      
-                      <div className="grid grid-cols-2 gap-3">
-                        <div>
-                          <label className="block text-gray-300 text-sm mb-1">
-                            Humidity (%)
-                          </label>
-                          <input
-                            type="number"
-                            name="weatherConditions.humidity"
-                            value={editForm.weatherConditions?.humidity || ""}
-                            onChange={handleFormChange}
-                            className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
-                            min="0"
-                            max="100"
-                          />
-                        </div>
-                        <div>
-                          <label className="block text-gray-300 text-sm mb-1">
-                            Wind Speed (mph)
-                          </label>
-                          <input
-                            type="number"
-                            name="weatherConditions.windSpeed"
-                            value={editForm.weatherConditions?.windSpeed || ""}
-                            onChange={handleFormChange}
-                            className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
-                            min="0"
-                          />
-                        </div>
-                      </div>
-                      
-                      <div>
-                        <label className="block text-gray-300 text-sm mb-1">
-                          Road Surface Type
-                        </label>
-                        <select
-                          name="weatherConditions.roadSurface"
-                          value={editForm.weatherConditions?.roadSurface || ""}
-                          onChange={handleFormChange}
-                          className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
-                        >
-                          <option value="">Select Surface</option>
-                          <option value="Asphalt">Asphalt</option>
-                          <option value="Concrete">Concrete</option>
-                          <option value="Composite">Composite</option>
-                          <option value="Gravel">Gravel</option>
-                          <option value="Dirt">Dirt</option>
-                          <option value="Mixed">Mixed</option>
-                        </select>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </div>
-              
-              {/* Photos Section */}
-              <div>
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="text-white font-semibold">Drive Photos</h3>
-                  <button
-                    type="button"
-                    className="text-blue-400 hover:text-blue-300 text-sm flex items-center"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M4 5a2 2 0 00-2 2v8a2 2 0 002 2h12a2 2 0 002-2V7a2 2 0 00-2-2h-1.586a1 1 0 01-.707-.293l-1.121-1.121A2 2 0 0011.172 3H8.828a2 2 0 00-1.414.586L6.293 4.707A1 1 0 015.586 5H4zm6 9a3 3 0 100-6 3 3 0 000 6z" clipRule="evenodd" />
-                    </svg>
-                    Add Photos
-                  </button>
-                </div>
-                
-                <div className="bg-gray-800 rounded-lg p-4 border border-dashed border-gray-600 text-center text-gray-400">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mx-auto mb-2 text-gray-500" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
-                  </svg>
-                  <p>Drag and drop photos here, or click to select files</p>
-                  <p className="text-xs mt-1">Maximum 10 photos, 5MB each</p>
-                </div>
-              </div>
-            </div>
-          ) : selectedDrive ? (
-            // Drive Details View
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-800 space-y-6">
-              <div className="flex justify-between items-center">
-                <h2 className="text-blue-400 font-orbitron text-2xl">{selectedDrive.title}</h2>
-                <div className="flex space-x-2">
-                  <button
-                    onClick={initializeEditForm}
-                    className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded"
-                  >
-                    Edit
-                  </button>
-                  <button
-                    onClick={deleteDriveEntry}
-                    className="bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </div>
-              
-              {/* Basic Info Card */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <div className="bg-black bg-opacity-50 p-4 rounded-lg">
-                  <h3 className="text-green-500 font-semibold mb-3">Route Details</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center text-white">
-                      <span className="text-gray-400">Date:</span>
-                      <span>{formatDate(selectedDrive.date)}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-white">
-                      <span className="text-gray-400">From:</span>
-                      <span>{selectedDrive.startLocation}</span>
-                    </div>
-                    <div className="flex justify-between items-center text-white">
-                      <span className="text-gray-400">To:</span>
-                      <span>{selectedDrive.endLocation}</span>
-                    </div>
-                    
-                    {selectedDrive.waypoints && selectedDrive.waypoints.length > 0 && (
-                      <div className="pt-1">
-                        <p className="text-gray-400 mb-1">Waypoints:</p>
-                        <ul className="list-disc pl-5 text-white text-sm">
-                          {selectedDrive.waypoints.map((waypoint, index) => (
-                            <li key={index}>{waypoint}</li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    
-                    <div className="flex justify-between items-center text-white pt-2">
-                      <span className="text-gray-400">Distance:</span>
-                      <span>{selectedDrive.distanceMiles} miles</span>
-                    </div>
-                    <div className="flex justify-between items-center text-white">
-                      <span className="text-gray-400">Duration:</span>
-                      <span>{Math.floor(selectedDrive.durationMinutes / 60)}h {selectedDrive.durationMinutes % 60}m</span>
-                    </div>
-                    
-                    {selectedDrive.isFromRoutePlanner && (
-                      <div className="mt-3 p-2 bg-green-900 bg-opacity-30 rounded border border-green-800">
-                        <p className="text-green-400 text-sm flex items-center">
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-                          </svg>
-                          Route generated by Route Planner
-                        </p>
-                      </div>
-                    )}
-                  </div>
-                </div>
-                
-                <div className="bg-black bg-opacity-50 p-4 rounded-lg">
-                  <h3 className="text-green-500 font-semibold mb-3">Vehicle & Performance</h3>
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center text-white">
-                      <span className="text-gray-400">Vehicle:</span>
-                      <span>{selectedDrive.vehicle}</span>
-                    </div>
-                    
-                    {selectedDrive.performanceSettings && (
-                      <>
-                        <div className="flex justify-between items-center text-white">
-                          <span className="text-gray-400">Driving Mode:</span>
-                          <span>{selectedDrive.performanceSettings.drivingMode}</span>
-                        </div>
-                        
-                        {selectedDrive.performanceSettings.curvatureMetrics && (
-                          <div className="flex justify-between items-center text-white">
-                            <span className="text-gray-400">Route Curvature:</span>
-                            <span>{selectedDrive.performanceSettings.curvatureMetrics.trnRange}</span>
-                          </div>
-                        )}
-                        
-                        <div className="flex justify-between items-center text-white">
-                          <span className="text-gray-400">Tire Pressure Adj:</span>
-                          <span>{selectedDrive.performanceSettings.tirePressureAdjustment > 0 ? "+" : ""}{selectedDrive.performanceSettings.tirePressureAdjustment} PSI</span>
-                        </div>
-                        
-                        <div className="flex justify-between items-center text-white">
-                          <span className="text-gray-400">Torque Adj:</span>
-                          <span>{selectedDrive.performanceSettings.torqueAdjustment > 0 ? "+" : ""}{selectedDrive.performanceSettings.torqueAdjustment} ft-lb</span>
-                        </div>
-                      </>
-                    )}
-                    
-                    <div className="pt-2">
-                      <div className="text-gray-400 mb-1">Your Rating:</div>
-                      <div className="flex items-center">
-                        {[1, 2, 3, 4, 5].map(star => (
-                          <svg
-                            key={star}
-                            xmlns="http://www.w3.org/2000/svg"
-                            className={`h-5 w-5 ${
-                              star <= (selectedDrive.rating || 0) ? 'text-yellow-400' : 'text-gray-600'
-                            }`}
-                            viewBox="0 0 20 20"
-                            fill="currentColor"
-                          >
-                            <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
-                          </svg>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              {/* Enthusiast Metrics */}
-              {selectedDrive.performanceSettings && selectedDrive.performanceSettings.curvatureMetrics && (
-                <div className="bg-blue-900 bg-opacity-20 p-5 rounded-lg border border-blue-800">
-                  <h3 className="text-blue-400 font-semibold mb-3">Enthusiast Edge Metrics</h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                    <div className="space-y-2">
-                      <div className="text-gray-300 text-sm font-medium">Curvature Analysis</div>
-                      <div className="bg-black bg-opacity-50 p-3 rounded">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-400">TRN Rating:</span>
-                          <span className="text-white">{selectedDrive.performanceSettings.curvatureMetrics.trnRange}</span>
-                        </div>
-                        <div className="flex justify-between text-sm mt-1">
-                          <span className="text-gray-400">Est. Turns:</span>
-                          <span className="text-white">
-                            {selectedDrive.performanceSettings.curvatureMetrics.intensity === 1 ? "0-20 turns" :
-                             selectedDrive.performanceSettings.curvatureMetrics.intensity === 2 ? "20-45 turns" :
-                             selectedDrive.performanceSettings.curvatureMetrics.intensity === 3 ? "45-70 turns" :
-                             selectedDrive.performanceSettings.curvatureMetrics.intensity === 4 ? "70-100 turns" :
-                             "100+ turns"}
-                          </span>
-                        </div>
-                        <div className="mt-2 pt-2 border-t border-gray-700">
-                          <div className="w-full bg-gray-700 rounded-full h-1.5">
-                            <div 
-                              className="bg-blue-500 h-1.5 rounded-full" 
-                              style={{ width: `${(selectedDrive.performanceSettings.curvatureMetrics.intensity / 5) * 100}%` }}
-                            ></div>
-                          </div>
-                          <div className="flex justify-between text-xs text-gray-500 mt-1">
-                            <span>Straight</span>
-                            <span>Technical</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="text-gray-300 text-sm font-medium">Weather Impact</div>
-                      <div className="bg-black bg-opacity-50 p-3 rounded">
-                        {selectedDrive.weatherConditions ? (
-                          <>
-                            <div className="flex justify-between text-sm">
-                              <span className="text-gray-400">Condition:</span>
-                              <span className="text-white">{selectedDrive.weatherConditions.condition}</span>
-                            </div>
-                            <div className="flex justify-between text-sm mt-1">
-                              <span className="text-gray-400">Temperature:</span>
-                              <span className="text-white">{selectedDrive.weatherConditions.temperature}°F</span>
-                            </div>
-                            <div className="flex justify-between text-sm mt-1">
-                              <span className="text-gray-400">Grip Level:</span>
-                              <span className="text-white">
-                                {selectedDrive.weatherConditions.condition === 'Rain' || selectedDrive.weatherConditions.condition === 'Light Rain' 
-                                  ? 'Reduced (Wet)' 
-                                  : selectedDrive.weatherConditions.condition === 'Snow' 
-                                  ? 'Poor (Snow/Ice)' 
-                                  : selectedDrive.weatherConditions.humidity > 80 
-                                  ? 'Moderate (High Humidity)' 
-                                  : 'Optimal (Dry)'}
-                              </span>
-                            </div>
-                          </>
-                        ) : (
-                          <p className="text-gray-500 text-sm">Weather data not available</p>
-                        )}
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <div className="text-gray-300 text-sm font-medium">Performance Insights</div>
-                      <div className="bg-black bg-opacity-50 p-3 rounded">
-                        <div className="flex justify-between text-sm">
-                          <span className="text-gray-400">Optimal Temp Range:</span>
-                          <span className="text-white">68°F - 85°F</span>
-                        </div>
-                        <div className="flex justify-between text-sm mt-1">
-                          <span className="text-gray-400">Surface Condition:</span>
-                          <span className="text-white">
-                            {selectedDrive.weatherConditions && selectedDrive.weatherConditions.condition === 'Rain' 
-                              ? 'Wet Asphalt' 
-                              : 'Dry Asphalt'}
-                          </span>
-                        </div>
-                        <div className="flex justify-between text-sm mt-1">
-                          <span className="text-gray-400">Ideal Tire Pressure:</span>
-                          <span className="text-white">Front: 32 PSI / Rear: 30 PSI</span>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-              
-              {/* Notes Section */}
-              {selectedDrive.notes && (
-                <div className="bg-black bg-opacity-40 p-5 rounded-lg">
-                  <h3 className="text-green-500 font-semibold mb-3">Your Notes</h3>
-                  <p className="text-white">{selectedDrive.notes}</p>
-                </div>
-              )}
-              
-              {/* Photos Section */}
-              {selectedDrive.photos && selectedDrive.photos.length > 0 && (
-                <div>
-                  <h3 className="text-green-500 font-semibold mb-3">Photos</h3>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {selectedDrive.photos.map((photo, index) => (
-                      <div key={index} className="relative h-40 overflow-hidden rounded-lg">
-                        <div className="absolute inset-0 bg-gray-800 flex items-center justify-center">
-                          <p className="text-gray-500">[Photo Preview]</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              )}
-              
-              {/* Points of Interest */}
-              {selectedDrive.pointsOfInterest && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  {selectedDrive.pointsOfInterest.events && selectedDrive.pointsOfInterest.events.length > 0 && (
-                    <div className="bg-black bg-opacity-40 p-4 rounded-lg">
-                      <h3 className="text-green-500 font-semibold mb-3">Events Along Route</h3>
-                      <ul className="list-disc pl-5 text-gray-300 space-y-1">
-                        {selectedDrive.pointsOfInterest.events.map((event: any, index: number) => (
-                          <li key={index}>{event.name}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                  
-                  {selectedDrive.pointsOfInterest.culturalSpots && selectedDrive.pointsOfInterest.culturalSpots.length > 0 && (
-                    <div className="bg-black bg-opacity-40 p-4 rounded-lg">
-                      <h3 className="text-green-500 font-semibold mb-3">Car Culture Spots</h3>
-                      <ul className="list-disc pl-5 text-gray-300 space-y-1">
-                        {selectedDrive.pointsOfInterest.culturalSpots.map((spot: any, index: number) => (
-                          <li key={index}>{spot.name}</li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-          ) : (
-            // No drive selected view
-            <div className="bg-gray-900 rounded-lg p-6 border border-gray-800 text-center h-64 flex flex-col items-center justify-center">
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-16 w-16 text-gray-600 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 20l-5.447-2.724A1 1 0 013 16.382V5.618a1 1 0 011.447-.894L9 7m0 13l6-3m-6 3V7m6 10l4.553 2.276A1 1 0 0021 18.382V7.618a1 1 0 00-.553-.894L15 4m0 13V4m0 0L9 7" />
-              </svg>
-              <h3 className="text-white text-xl mb-2">No Drive Selected</h3>
-              <p className="text-gray-400">Select a drive from the list or create a new entry</p>
-              <button
-                onClick={initializeNewDriveForm}
-                className="mt-4 bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded"
-              >
-                Create New Drive Entry
-              </button>
-            </div>
-          )}
+        <div>
+          <label className="block text-gray-400 text-sm mb-1">End Location</label>
+          <input
+            type="text"
+            placeholder="End Location"
+            value={endLocation}
+            onChange={(e) => setEndLocation(e.target.value)}
+            className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
+          />
         </div>
       </div>
+
+      {/* Route Statistics */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="bg-gray-800 p-4 rounded-lg">
+          <p className="text-gray-400 text-xs mb-1">Distance</p>
+          <p className="text-white text-xl">{distance ? `${distance.toFixed(1)} mi` : "Not calculated"}</p>
+        </div>
+        
+        <div className="bg-gray-800 p-4 rounded-lg">
+          <p className="text-gray-400 text-xs mb-1">Duration</p>
+          <p className="text-white text-xl">
+            {estimatedDuration ? `${Math.floor(estimatedDuration / 60)} hr ${estimatedDuration % 60} min` : "Not calculated"}
+          </p>
+        </div>
+        
+        <div className="bg-gray-800 p-4 rounded-lg">
+          <p className="text-gray-400 text-xs mb-1">Curvature Rating</p>
+          <div className="flex items-center justify-between">
+            <p className="text-white text-xl">{curvatureRating}</p>
+            {curvatureTRN && <p className="text-gray-400 text-xs">{curvatureTRN.toFixed(1)} TRN/km</p>}
+          </div>
+        </div>
+      </div>
+
+      {/* Vehicle Used */}
+      <div className="mb-6">
+        <div className="flex justify-between items-center mb-1">
+          <label className="block text-gray-400 text-sm">Vehicle Used</label>
+          <button 
+            onClick={() => setShowAddVehicleForm(!showAddVehicleForm)}
+            className="text-green-500 hover:text-green-400 text-xs"
+          >
+            {showAddVehicleForm ? 'Cancel' : '+ Add Custom Vehicle'}
+          </button>
+        </div>
+        
+        {showAddVehicleForm ? (
+          <div className="bg-gray-900 p-4 rounded-lg border border-gray-700 mb-4 space-y-4">
+            <h3 className="text-blue-400 font-medium text-base">Add Custom Vehicle</h3>
+            
+            <div>
+              <label className="block text-gray-400 text-xs mb-1">Vehicle Name</label>
+              <input
+                type="text"
+                value={newVehicleName}
+                onChange={(e) => setNewVehicleName(e.target.value)}
+                placeholder="e.g., My McLaren 720S"
+                className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+              />
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+              <div>
+                <label className="block text-gray-400 text-xs mb-1">Make</label>
+                <input
+                  type="text"
+                  value={newVehicleMake}
+                  onChange={(e) => setNewVehicleMake(e.target.value)}
+                  placeholder="e.g., McLaren"
+                  className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-gray-400 text-xs mb-1">Model</label>
+                <input
+                  type="text"
+                  value={newVehicleModel}
+                  onChange={(e) => setNewVehicleModel(e.target.value)}
+                  placeholder="e.g., 720S"
+                  className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-gray-400 text-xs mb-1">Year</label>
+                <input
+                  type="number"
+                  value={newVehicleYear}
+                  onChange={(e) => setNewVehicleYear(parseInt(e.target.value) || 2023)}
+                  placeholder="e.g., 2023"
+                  className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <div>
+                <label className="block text-gray-400 text-xs mb-1">Front Tire Pressure (PSI)</label>
+                <input
+                  type="number"
+                  value={newVehicleFrontPSI}
+                  onChange={(e) => setNewVehicleFrontPSI(parseInt(e.target.value) || 32)}
+                  placeholder="e.g., 32"
+                  className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                />
+              </div>
+              
+              <div>
+                <label className="block text-gray-400 text-xs mb-1">Rear Tire Pressure (PSI)</label>
+                <input
+                  type="number"
+                  value={newVehicleRearPSI}
+                  onChange={(e) => setNewVehicleRearPSI(parseInt(e.target.value) || 30)}
+                  placeholder="e.g., 30"
+                  className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                />
+              </div>
+            </div>
+            
+            <button
+              onClick={addCustomVehicle}
+              className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded w-full"
+            >
+              Save Vehicle
+            </button>
+          </div>
+        ) : (
+          <select
+            value={vehicleUsed}
+            onChange={(e) => setVehicleUsed(e.target.value)}
+            className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
+          >
+            <option value="">Select Vehicle Used</option>
+            <option value="Ferrari F8 Tributo">Ferrari F8 Tributo</option>
+            <option value="Porsche 911 Carrera S">Porsche 911 Carrera S</option>
+            <option value="BMW M4 G82">BMW M4 G82</option>
+            {customVehicles.map(vehicle => (
+              <option key={vehicle.id} value={vehicle.name}>
+                {vehicle.name}
+              </option>
+            ))}
+          </select>
+        )}
+      </div>
+
+      {/* Surface Temperature, Grip, Weather Impact */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        <div>
+          <label className="block text-gray-400 text-sm mb-1">Surface Temperature</label>
+          <input
+            type="text"
+            placeholder="°F"
+            value={surfaceTemp}
+            onChange={(e) => setSurfaceTemp(e.target.value)}
+            className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
+          />
+        </div>
+        
+        <div>
+          <label className="block text-gray-400 text-sm mb-1">Grip Level</label>
+          <select
+            value={gripLevel}
+            onChange={(e) => setGripLevel(e.target.value)}
+            className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
+          >
+            <option value="">Select Grip Level</option>
+            <option value="Dry">Dry</option>
+            <option value="Damp">Damp</option>
+            <option value="Wet">Wet</option>
+            <option value="Variable">Variable</option>
+          </select>
+        </div>
+        
+        <div>
+          <label className="block text-gray-400 text-sm mb-1">Weather Impact</label>
+          <select
+            value={weatherImpact}
+            onChange={(e) => setWeatherImpact(e.target.value)}
+            className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
+          >
+            <option value="">Select Weather Impact</option>
+            <option value="None">None</option>
+            <option value="Windy">Windy</option>
+            <option value="Hot">Hot</option>
+            <option value="Cold">Cold</option>
+            <option value="Rainy">Rainy</option>
+            <option value="Snow">Snow</option>
+            <option value="Fog">Fog</option>
+          </select>
+        </div>
+      </div>
+
+      {/* Tire Pressure, Torque Setting */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div>
+          <label className="block text-gray-400 text-sm mb-1">Tire Pressure</label>
+          <input
+            type="text"
+            placeholder="PSI (front/rear)"
+            value={tirePressure}
+            onChange={(e) => setTirePressure(e.target.value)}
+            className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
+          />
+        </div>
+        
+        <div>
+          <label className="block text-gray-400 text-sm mb-1">Torque Setting</label>
+          <input
+            type="text"
+            placeholder="e.g., 96 ft-lb for F8"
+            value={torqueSetting}
+            onChange={(e) => setTorqueSetting(e.target.value)}
+            className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
+          />
+        </div>
+      </div>
+
+      {/* Upload Photos */}
+      <div className="mb-6">
+        <label className="block text-gray-400 text-sm mb-1">Upload Photos</label>
+        <input
+          type="file"
+          multiple
+          onChange={handlePhotoUpload}
+          className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+        />
+        {photos.length > 0 && (
+          <p className="mt-2 text-sm text-gray-400">{photos.length} photo(s) selected</p>
+        )}
+      </div>
+
+      {/* Notes Field */}
+      <div className="mb-6">
+        <label className="block text-gray-400 text-sm mb-1">Drive Notes</label>
+        <textarea
+          placeholder="Record your experience, conditions, performance notes..."
+          value={notes}
+          onChange={(e) => setNotes(e.target.value)}
+          rows={4}
+          className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
+        />
+      </div>
+
+      {/* Personal Rating */}
+      <div className="mb-6">
+        <label className="block text-gray-400 text-sm mb-1">Personal Rating (1-10)</label>
+        <input
+          type="range"
+          min="1"
+          max="10"
+          value={rating}
+          onChange={(e) => setRating(Number(e.target.value))}
+          className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+        />
+        <div className="flex justify-between text-xs text-gray-500 mt-1">
+          <span>1</span>
+          <span>2</span>
+          <span>3</span>
+          <span>4</span>
+          <span>5</span>
+          <span>6</span>
+          <span>7</span>
+          <span>8</span>
+          <span>9</span>
+          <span>10</span>
+        </div>
+        <p className="text-center text-2xl text-white mt-2">{rating}</p>
+      </div>
+
+      {/* Points of Interest Log */}
+      <div className="mb-8">
+        <label className="block text-gray-400 text-sm mb-1">Points of Interest / Events</label>
+        <textarea
+          placeholder="Note any interesting stops, events, or highlights along the route..."
+          value={poiLog}
+          onChange={(e) => setPoiLog(e.target.value)}
+          rows={2}
+          className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
+        />
+      </div>
+
+      {/* Submit Button */}
+      <button
+        onClick={submitDriveLog}
+        className="bg-green-500 hover:bg-green-400 text-black font-montserrat px-8 py-4 rounded w-full"
+      >
+        🏁 Save Drive Entry
+      </button>
     </div>
   );
 };
