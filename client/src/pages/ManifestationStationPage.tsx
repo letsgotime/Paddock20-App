@@ -13,6 +13,15 @@ interface Milestone {
   completed: boolean;
 }
 
+// Interface for budget entries
+interface BudgetEntry {
+  id: number;
+  date: string;
+  amount: number;
+  type: 'deposit' | 'expense';
+  description: string;
+}
+
 // Interface for goals/dreams
 interface Goal {
   id: number;
@@ -29,6 +38,10 @@ interface Goal {
   manifestStatus: 'new' | 'in_progress' | 'manifested';
   description?: string;
   progressPercentage: number;
+  // Budget tracking
+  targetAmount: number;
+  currentAmount: number;
+  budgetEntries: BudgetEntry[];
 }
 
 // Interface for daily check-ins
@@ -42,8 +55,264 @@ interface DailyCheckin {
 }
 
 const ManifestationStationPage = () => {
-  // State for goals
-  const [goals, setGoals] = useState<Goal[]>([]);
+  // State for goals with example data
+  const [goals, setGoals] = useState<Goal[]>([
+    {
+      id: 1,
+      goalName: "Ferrari 458 Italia",
+      goalType: "Car",
+      targetAsset: "Ferrari 458 Italia Spider",
+      targetDate: "2026-09-30",
+      fundingPlan: "Save",
+      mindFocus: "Visualize driving through Monaco daily",
+      bodyFocus: "Track day fitness training 3x weekly",
+      spiritFocus: "Gratitude for current achievements",
+      milestones: [
+        {
+          id: 101,
+          name: "Meet with Ferrari specialist",
+          targetDate: "2025-06-15",
+          notes: "Discuss specs and options",
+          completed: false
+        },
+        {
+          id: 102,
+          name: "Test drive similar model",
+          targetDate: "2025-07-30",
+          notes: "Schedule at Atlanta dealership",
+          completed: false
+        }
+      ],
+      completedMilestones: [
+        {
+          id: 103,
+          name: "Financial consultation",
+          targetDate: "2025-05-01",
+          notes: "Reviewed savings strategy",
+          completed: true
+        }
+      ],
+      manifestStatus: 'in_progress',
+      progressPercentage: 35,
+      description: "The ultimate driving machine that represents true craftsmanship and passion for performance.",
+      targetAmount: 275000,
+      currentAmount: 96250,
+      budgetEntries: [
+        {
+          id: 201,
+          date: "2025-01-15",
+          amount: 50000,
+          type: 'deposit',
+          description: "Annual bonus"
+        },
+        {
+          id: 202,
+          date: "2025-02-10",
+          amount: 25000,
+          type: 'deposit',
+          description: "Investment returns"
+        },
+        {
+          id: 203,
+          date: "2025-03-05",
+          amount: 15000,
+          type: 'deposit',
+          description: "Stock sale"
+        },
+        {
+          id: 204,
+          date: "2025-04-01",
+          amount: 6250,
+          type: 'deposit',
+          description: "Monthly savings plan"
+        }
+      ]
+    },
+    {
+      id: 2,
+      goalName: "Patek Philippe Nautilus",
+      goalType: "Watch",
+      targetAsset: "Patek Philippe Nautilus 5711/1A-010",
+      targetDate: "2025-12-25",
+      fundingPlan: "Save",
+      mindFocus: "Study horology and craftsmanship",
+      bodyFocus: "Morning routine centered on time management",
+      spiritFocus: "Practice patience and appreciation for detail",
+      milestones: [
+        {
+          id: 104,
+          name: "Join waitlist",
+          targetDate: "2025-06-01",
+          notes: "Contact authorized dealers",
+          completed: false
+        }
+      ],
+      completedMilestones: [
+        {
+          id: 105,
+          name: "Research authentication process",
+          targetDate: "2025-04-15",
+          notes: "Understand certificates and documentation",
+          completed: true
+        },
+        {
+          id: 106,
+          name: "Visit boutique for sizing",
+          targetDate: "2025-05-01",
+          notes: "Try on similar models for wrist fit",
+          completed: true
+        }
+      ],
+      manifestStatus: 'in_progress',
+      progressPercentage: 58,
+      description: "The legendary stainless steel sports watch that represents timeless design and exceptional craftsmanship.",
+      targetAmount: 140000,
+      currentAmount: 84000,
+      budgetEntries: [
+        {
+          id: 205,
+          date: "2025-01-10",
+          amount: 40000,
+          type: 'deposit',
+          description: "Year-end bonus"
+        },
+        {
+          id: 206,
+          date: "2025-02-15",
+          amount: 24000,
+          type: 'deposit',
+          description: "Crypto investment gains"
+        },
+        {
+          id: 207,
+          date: "2025-03-20",
+          amount: 20000,
+          type: 'deposit',
+          description: "Sale of vintage watch collection"
+        }
+      ]
+    },
+    {
+      id: 3,
+      goalName: "Mountain Retreat",
+      goalType: "House",
+      targetAsset: "Luxury Cabin in Aspen",
+      targetDate: "2027-10-01",
+      fundingPlan: "Finance",
+      mindFocus: "Visualize entertaining friends in the space",
+      bodyFocus: "Train for mountain activities",
+      spiritFocus: "Daily gratitude for nature and solitude",
+      milestones: [
+        {
+          id: 107,
+          name: "Property search phase 1",
+          targetDate: "2025-08-15",
+          notes: "Connect with specialized real estate agent",
+          completed: false
+        },
+        {
+          id: 108,
+          name: "Visit top 3 locations",
+          targetDate: "2025-10-01",
+          notes: "Schedule travel for property viewings",
+          completed: false
+        },
+        {
+          id: 109,
+          name: "Get pre-approved for financing",
+          targetDate: "2025-11-15",
+          notes: "Prepare financial documents",
+          completed: false
+        }
+      ],
+      completedMilestones: [],
+      manifestStatus: 'new',
+      progressPercentage: 15,
+      description: "A tranquil mountain sanctuary for weekend retreats and seasonal getaways.",
+      targetAmount: 3500000,
+      currentAmount: 525000,
+      budgetEntries: [
+        {
+          id: 208,
+          date: "2025-02-01",
+          amount: 350000,
+          type: 'deposit',
+          description: "Property sale proceeds"
+        },
+        {
+          id: 209,
+          date: "2025-03-15",
+          amount: 175000,
+          type: 'deposit',
+          description: "Investment portfolio rebalance"
+        }
+      ]
+    },
+    {
+      id: 4,
+      goalName: "Monaco Grand Prix VIP",
+      goalType: "Other",
+      targetAsset: "Monaco F1 Grand Prix Yacht Hospitality Package",
+      targetDate: "2026-05-30",
+      fundingPlan: "Save",
+      mindFocus: "Visualize the race day experience",
+      bodyFocus: "Learn about F1 driving techniques",
+      spiritFocus: "Appreciate racing heritage",
+      milestones: [
+        {
+          id: 110,
+          name: "Research best hospitality packages",
+          targetDate: "2025-06-01",
+          notes: "Compare yacht options and locations",
+          completed: false
+        },
+        {
+          id: 111,
+          name: "Contact concierge for early booking options",
+          targetDate: "2025-09-15",
+          notes: "Work through Paddock20 connections",
+          completed: false
+        }
+      ],
+      completedMilestones: [
+        {
+          id: 112,
+          name: "Join waitlist for priority access",
+          targetDate: "2025-05-01",
+          notes: "Through Formula 1 Paddock Club™",
+          completed: true
+        }
+      ],
+      manifestStatus: 'manifested',
+      progressPercentage: 100,
+      description: "The ultimate motorsport experience, witnessing the most prestigious race in the world from a luxury yacht.",
+      targetAmount: 45000,
+      currentAmount: 45000,
+      budgetEntries: [
+        {
+          id: 210,
+          date: "2025-01-05",
+          amount: 15000,
+          type: 'deposit',
+          description: "Bonus allocation"
+        },
+        {
+          id: 211,
+          date: "2025-02-10",
+          amount: 20000,
+          type: 'deposit',
+          description: "Business proceeds"
+        },
+        {
+          id: 212,
+          date: "2025-03-15",
+          amount: 10000,
+          type: 'deposit',
+          description: "Unexpected windfall"
+        }
+      ]
+    }
+  ]);
   const [selectedGoal, setSelectedGoal] = useState<Goal | null>(null);
   
   // State for modals
@@ -63,7 +332,11 @@ const ManifestationStationPage = () => {
     milestones: [],
     completedMilestones: [],
     manifestStatus: 'new',
-    description: ""
+    description: "",
+    // Budget tracking
+    targetAmount: 0,
+    currentAmount: 0,
+    budgetEntries: []
   });
   
   // State for affirmations
@@ -84,6 +357,14 @@ const ManifestationStationPage = () => {
     mindCompleted: false,
     bodyCompleted: false,
     spiritCompleted: false
+  });
+  
+  // State for budget entry
+  const [newBudgetEntry, setNewBudgetEntry] = useState<Omit<BudgetEntry, 'id'>>({
+    date: new Date().toISOString().split('T')[0],
+    amount: 0,
+    type: 'deposit',
+    description: ''
   });
 
   // Load a new affirmation on component mount
@@ -147,7 +428,11 @@ const ManifestationStationPage = () => {
       milestones: [],
       completedMilestones: [],
       manifestStatus: 'new',
-      description: ""
+      description: "",
+      // Budget tracking
+      targetAmount: 0,
+      currentAmount: 0,
+      budgetEntries: []
     });
   };
 
@@ -218,6 +503,69 @@ const ManifestationStationPage = () => {
     setSelectedGoal(updatedGoal);
     setGoals(prevGoals => prevGoals.map(g => g.id === selectedGoal.id ? updatedGoal : g));
     setShowGoalDetailsModal(false);
+  };
+
+  // Handle adding a budget entry
+  const handleAddBudgetEntry = () => {
+    if (!selectedGoal || newBudgetEntry.amount <= 0 || !newBudgetEntry.description) return;
+    
+    const entry: BudgetEntry = {
+      id: Date.now(),
+      ...newBudgetEntry
+    };
+    
+    // Calculate new current amount
+    let newCurrentAmount = selectedGoal.currentAmount;
+    if (entry.type === 'deposit') {
+      newCurrentAmount += entry.amount;
+    } else {
+      newCurrentAmount -= entry.amount;
+    }
+    
+    // Update goal with new budget entry and current amount
+    const updatedGoal = {
+      ...selectedGoal,
+      budgetEntries: [...selectedGoal.budgetEntries, entry],
+      currentAmount: newCurrentAmount
+    };
+    
+    setSelectedGoal(updatedGoal);
+    setGoals(prevGoals => prevGoals.map(g => g.id === selectedGoal.id ? updatedGoal : g));
+    
+    // Reset form
+    setNewBudgetEntry({
+      date: new Date().toISOString().split('T')[0],
+      amount: 0,
+      type: 'deposit',
+      description: ''
+    });
+  };
+  
+  // Handle removing a budget entry
+  const handleRemoveBudgetEntry = (entryId: number) => {
+    if (!selectedGoal) return;
+    
+    // Find the entry to remove
+    const entryToRemove = selectedGoal.budgetEntries.find(entry => entry.id === entryId);
+    if (!entryToRemove) return;
+    
+    // Calculate new current amount
+    let newCurrentAmount = selectedGoal.currentAmount;
+    if (entryToRemove.type === 'deposit') {
+      newCurrentAmount -= entryToRemove.amount;
+    } else {
+      newCurrentAmount += entryToRemove.amount;
+    }
+    
+    // Update goal with entry removed and new current amount
+    const updatedGoal = {
+      ...selectedGoal,
+      budgetEntries: selectedGoal.budgetEntries.filter(entry => entry.id !== entryId),
+      currentAmount: newCurrentAmount
+    };
+    
+    setSelectedGoal(updatedGoal);
+    setGoals(prevGoals => prevGoals.map(g => g.id === selectedGoal.id ? updatedGoal : g));
   };
 
   // Handle daily check-in
