@@ -4,6 +4,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getRandomAffirmation } from "../services/affirmationsService";
 import { searchHighResImages, createMediaItemFromSearch } from "../services/imageSearchService";
+import PhotoLibraryModal from "../components/PhotoLibraryModal";
+import { initGooglePhotosApi } from "../services/googlePhotosService";
 
 // Interface for milestones
 interface Milestone {
@@ -488,6 +490,9 @@ const ManifestationStationPage = () => {
   const [isSearchingImages, setIsSearchingImages] = useState(false);
   const [searchResults, setSearchResults] = useState<any[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  
+  // State for photo library selection
+  const [showPhotoLibraryModal, setShowPhotoLibraryModal] = useState(false);
 
   // Load a new affirmation on component mount
   useEffect(() => {
@@ -720,6 +725,20 @@ const ManifestationStationPage = () => {
     const mediaItem = createMediaItemFromSearch(imageData);
     
     // Add to the selected goal's media gallery
+    const updatedGoal = {
+      ...selectedGoal,
+      mediaGallery: [...selectedGoal.mediaGallery, mediaItem]
+    };
+    
+    setSelectedGoal(updatedGoal);
+    setGoals(prevGoals => prevGoals.map(g => g.id === selectedGoal.id ? updatedGoal : g));
+  };
+  
+  // Handle selecting a photo from the user's photo library
+  const handlePhotoFromLibrary = (mediaItem: any) => {
+    if (!selectedGoal) return;
+    
+    // Add the media item to the selected goal's media gallery
     const updatedGoal = {
       ...selectedGoal,
       mediaGallery: [...selectedGoal.mediaGallery, mediaItem]
@@ -1811,7 +1830,10 @@ const ManifestationStationPage = () => {
                   
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     {/* Add Image Button */}
-                    <div className="bg-gradient-to-br from-indigo-900/20 to-indigo-800/10 p-3 rounded-lg border border-indigo-900/30 text-center hover:border-indigo-500/50 cursor-pointer transition-colors">
+                    <div 
+                      onClick={() => setShowPhotoLibraryModal(true)}
+                      className="bg-gradient-to-br from-indigo-900/20 to-indigo-800/10 p-3 rounded-lg border border-indigo-900/30 text-center hover:border-indigo-500/50 cursor-pointer transition-colors"
+                    >
                       <div className="text-3xl mb-2">🖼️</div>
                       <h5 className="font-medium text-white mb-1">Add Image</h5>
                       <p className="text-gray-400 text-xs">Upload photos of your dream asset</p>
@@ -1909,6 +1931,13 @@ const ManifestationStationPage = () => {
                   )}
                 </div>
               </div>
+
+              {/* Photo Library Modal */}
+              <PhotoLibraryModal
+                isOpen={showPhotoLibraryModal}
+                onClose={() => setShowPhotoLibraryModal(false)}
+                onPhotoSelect={handlePhotoFromLibrary}
+              />
 
               {/* Actions */}
               <div className="flex justify-between mt-8">
