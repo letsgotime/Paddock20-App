@@ -1,5 +1,4 @@
 import React from 'react';
-import SimplifiedDrivingConditions from '@/components/SimplifiedDrivingConditions';
 import { MAIN_CONTENT_ID } from '../lib/accessibility';
 
 function Weather() {
@@ -17,7 +16,16 @@ function Weather() {
       <section className="mb-10" aria-labelledby="paddock-weather-heading">
         <h2 id="paddock-weather-heading" className="apex-header-green text-xl mb-4">Automotive Weather Dashboard</h2>
         <div className="bg-gradient-to-r from-gray-900 to-black border border-gray-800 rounded-lg p-6">
-          <SimplifiedDrivingConditions />
+          <div className="text-center p-4">
+            <h3 className="text-blue-400 font-orbitron text-xl mb-4">Advanced Weather Integration</h3>
+            <p className="text-gray-300 mb-6">
+              Our advanced automotive weather station is currently being upgraded to provide more 
+              accurate surface temperature readings and detailed driving condition analytics.
+            </p>
+            <div className="inline-block px-4 py-2 bg-blue-600/20 border border-blue-600/40 rounded-md text-blue-400">
+              Coming May 2025
+            </div>
+          </div>
         </div>
       </section>
 
