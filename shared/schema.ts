@@ -1,355 +1,155 @@
-import { pgTable, text, serial, integer, boolean, numeric, timestamp, json, varchar } from "drizzle-orm/pg-core";
-import { createInsertSchema } from "drizzle-zod";
-import { z } from "zod";
-import { relations } from "drizzle-orm";
+import { pgTable, serial, text, timestamp, varchar, integer, boolean, pgEnum, real, jsonb } from 'drizzle-orm/pg-core';
+import { createInsertSchema } from 'drizzle-zod';
+import { z } from 'zod';
 
-// Location table for storing saved locations
-export const locations = pgTable("locations", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  lat: numeric("lat").notNull(),
-  lon: numeric("lon").notNull(),
-  userId: integer("user_id").notNull(),
+// Users table
+export const users = pgTable('users', {
+  id: serial('id').primaryKey(),
+  username: varchar('username', { length: 50 }).notNull().unique(),
+  password: varchar('password', { length: 255 }).notNull(),
+  email: varchar('email', { length: 100 }),
+  firstName: varchar('first_name', { length: 50 }),
+  lastName: varchar('last_name', { length: 50 }),
+  preferredUnit: varchar('preferred_unit', { length: 10 }).default('metric'), // metric or imperial
+  createdAt: timestamp('created_at').defaultNow(),
 });
 
-export const insertLocationSchema = createInsertSchema(locations).pick({
-  name: true,
-  lat: true,
-  lon: true,
-  userId: true,
+// Saved Locations table
+export const savedLocations = pgTable('saved_locations', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id).notNull(),
+  name: varchar('name', { length: 100 }).notNull(),
+  state: varchar('state', { length: 100 }),
+  country: varchar('country', { length: 100 }).notNull(),
+  lat: real('lat').notNull(),
+  lon: real('lon').notNull(),
+  isPrimary: boolean('is_primary').default(false),
+  createdAt: timestamp('created_at').defaultNow(),
+  lastAccessed: timestamp('last_accessed'),
+  notes: text('notes'),
+  customName: varchar('custom_name', { length: 100 }),
 });
-
-export type InsertLocation = z.infer<typeof insertLocationSchema>;
-export type Location = {
-  id: string;
-  name: string;
-  lat: number;
-  lon: number;
-};
-
-// User table from existing schema
-export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  username: text("username").notNull().unique(),
-  password: text("password").notNull(),
-});
-
-export const insertUserSchema = createInsertSchema(users).pick({
-  username: true,
-  password: true,
-});
-
-export type InsertUser = z.infer<typeof insertUserSchema>;
-export type User = typeof users.$inferSelect;
-
-// Weather data types
-export interface WeatherData {
-  coord: {
-    lon: number;
-    lat: number;
-  };
-  weather: Array<{
-    id: number;
-    main: string;
-    description: string;
-    icon: string;
-  }>;
-  base: string;
-  main: {
-    temp: number;
-    feels_like: number;
-    temp_min: number;
-    temp_max: number;
-    pressure: number;
-    humidity: number;
-    sea_level?: number;
-    grnd_level?: number;
-  };
-  visibility: number;
-  wind: {
-    speed: number;
-    deg: number;
-    gust?: number;
-  };
-  rain?: {
-    '1h'?: number;
-    '3h'?: number;
-  };
-  snow?: {
-    '1h'?: number;
-    '3h'?: number;
-  };
-  clouds: {
-    all: number;
-  };
-  dt: number;
-  sys: {
-    type?: number;
-    id?: number;
-    country: string;
-    sunrise: number;
-    sunset: number;
-  };
-  timezone: number;
-  id: number;
-  name: string;
-  cod: number;
-}
-
-export interface ForecastData {
-  cod: string;
-  message: number;
-  cnt: number;
-  list: Array<{
-    dt: number;
-    main: {
-      temp: number;
-      feels_like: number;
-      temp_min: number;
-      temp_max: number;
-      pressure: number;
-      sea_level: number;
-      grnd_level: number;
-      humidity: number;
-      temp_kf: number;
-    };
-    weather: Array<{
-      id: number;
-      main: string;
-      description: string;
-      icon: string;
-    }>;
-    clouds: {
-      all: number;
-    };
-    wind: {
-      speed: number;
-      deg: number;
-      gust: number;
-    };
-    visibility: number;
-    pop: number;
-    rain?: {
-      '3h': number;
-    };
-    snow?: {
-      '3h': number;
-    };
-    sys: {
-      pod: string;
-    };
-    dt_txt: string;
-  }>;
-  city: {
-    id: number;
-    name: string;
-    coord: {
-      lat: number;
-      lon: number;
-    };
-    country: string;
-    population: number;
-    timezone: number;
-    sunrise: number;
-    sunset: number;
-  };
-}
-
-// Vehicle Management Database Schema
 
 // Vehicles table
-export const vehicles = pgTable("vehicles", {
-  id: serial("id").primaryKey(),
-  userId: integer("user_id").notNull(),
-  make: text("make").notNull(),
-  model: text("model").notNull(),
-  year: text("year").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+export const vehicles = pgTable('vehicles', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id).notNull(),
+  make: varchar('make', { length: 50 }).notNull(),
+  model: varchar('model', { length: 50 }).notNull(),
+  year: integer('year').notNull(),
+  trim: varchar('trim', { length: 50 }),
+  color: varchar('color', { length: 30 }),
+  vinLast6: varchar('vin_last_6', { length: 6 }),
+  nickname: varchar('nickname', { length: 50 }),
+  imageUrl: varchar('image_url', { length: 255 }),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
 });
 
-export const vehiclesRelations = relations(vehicles, ({ one, many }) => ({
-  user: one(users, {
-    fields: [vehicles.userId],
-    references: [users.id],
-  }),
-  tires: many(tires),
-  maintenance: one(maintenanceRecords),
-  maintenanceFlags: one(maintenanceFlags),
-  glossTracking: one(glossTrackings),
-}));
-
-// Tires table
-export const tires = pgTable("tires", {
-  id: serial("id").primaryKey(),
-  vehicleId: integer("vehicle_id").notNull(),
-  brand: text("brand").notNull(),
-  model: text("model").notNull(),
-  mileageLifeTarget: integer("mileage_life_target").notNull(),
-  currentMileage: integer("current_mileage").notNull(),
-  purchaseDate: timestamp("purchase_date").notNull(),
-  lastTreadDepthCheck: timestamp("last_tread_depth_check").notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+// Tire tracking table
+export const tires = pgTable('tires', {
+  id: serial('id').primaryKey(),
+  vehicleId: integer('vehicle_id').references(() => vehicles.id).notNull(),
+  brand: varchar('brand', { length: 50 }),
+  model: varchar('model', { length: 50 }),
+  type: varchar('type', { length: 30 }), // summer, all-season, winter, sport, etc.
+  frontSize: varchar('front_size', { length: 20 }),
+  rearSize: varchar('rear_size', { length: 20 }),
+  installDate: timestamp('install_date'),
+  recommendedPressureFront: real('recommended_pressure_front'),
+  recommendedPressureRear: real('recommended_pressure_rear'),
+  currentPressureFront: real('current_pressure_front'),
+  currentPressureRear: real('current_pressure_rear'),
+  pressureUnit: varchar('pressure_unit', { length: 5 }).default('psi'),
+  mileage: integer('mileage'),
+  notes: text('notes'),
+  updatedAt: timestamp('updated_at').defaultNow(),
 });
-
-export const tiresRelations = relations(tires, ({ one }) => ({
-  vehicle: one(vehicles, {
-    fields: [tires.vehicleId],
-    references: [vehicles.id],
-  }),
-}));
 
 // Maintenance Records table
-export const maintenanceRecords = pgTable("maintenance_records", {
-  id: serial("id").primaryKey(),
-  vehicleId: integer("vehicle_id").notNull(),
-  lastOilChange: timestamp("last_oil_change"),
-  lastAirFilterChange: timestamp("last_air_filter_change"),
-  lastCabinFilterChange: timestamp("last_cabin_filter_change"),
-  lastCoolantFlush: timestamp("last_coolant_flush"),
-  lastBrakeFluidChange: timestamp("last_brake_fluid_change"),
-  lastTransmissionService: timestamp("last_transmission_service"),
-  lastQuarterlyReset: timestamp("last_quarterly_reset"),
-  lastMonthlyMaintenance: timestamp("last_monthly_maintenance"),
-  lastWeeklyQuickCheck: timestamp("last_weekly_quick_check"),
-  lastPreDriveCheck: timestamp("last_pre_drive_check"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+export const maintenanceRecords = pgTable('maintenance_records', {
+  id: serial('id').primaryKey(),
+  vehicleId: integer('vehicle_id').references(() => vehicles.id).notNull(),
+  serviceType: varchar('service_type', { length: 100 }).notNull(),
+  serviceDate: timestamp('service_date').notNull(),
+  mileage: integer('mileage'),
+  serviceCost: real('service_cost'),
+  serviceProvider: varchar('service_provider', { length: 100 }),
+  notes: text('notes'),
+  receipts: jsonb('receipts').default([]),
+  createdAt: timestamp('created_at').defaultNow(),
 });
-
-export const maintenanceRecordsRelations = relations(maintenanceRecords, ({ one }) => ({
-  vehicle: one(vehicles, {
-    fields: [maintenanceRecords.vehicleId],
-    references: [vehicles.id],
-  }),
-}));
 
 // Maintenance Flags table
-export const maintenanceFlags = pgTable("maintenance_flags", {
-  id: serial("id").primaryKey(),
-  vehicleId: integer("vehicle_id").notNull(),
-  missedWeekly: boolean("missed_weekly").default(false).notNull(),
-  missedMonthly: boolean("missed_monthly").default(false).notNull(),
-  missedQuarterly: boolean("missed_quarterly").default(false).notNull(),
-  missedSeasonal: boolean("missed_seasonal").default(false).notNull(),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+export const maintenanceFlags = pgTable('maintenance_flags', {
+  id: serial('id').primaryKey(),
+  vehicleId: integer('vehicle_id').references(() => vehicles.id).notNull(),
+  flagType: varchar('flag_type', { length: 50 }).notNull(), // oil, tires, brakes, etc.
+  dueDate: timestamp('due_date'),
+  dueMileage: integer('due_mileage'),
+  isDue: boolean('is_due').default(false),
+  isUrgent: boolean('is_urgent').default(false),
+  notes: text('notes'),
+  updatedAt: timestamp('updated_at').defaultNow(),
 });
-
-export const maintenanceFlagsRelations = relations(maintenanceFlags, ({ one }) => ({
-  vehicle: one(vehicles, {
-    fields: [maintenanceFlags.vehicleId],
-    references: [vehicles.id],
-  }),
-}));
 
 // Gloss Tracking table
-export const glossTrackings = pgTable("gloss_trackings", {
-  id: serial("id").primaryKey(),
-  vehicleId: integer("vehicle_id").notNull(),
-  lastGlossBoost: timestamp("last_gloss_boost"),
-  lastFullDecon: timestamp("last_full_decon"),
-  lastSealantRefresh: timestamp("last_sealant_refresh"),
-  lastPaintCorrection: timestamp("last_paint_correction"),
-  lastCeramicTopCoat: timestamp("last_ceramic_top_coat"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
-  updatedAt: timestamp("updated_at").defaultNow().notNull(),
+export const glossTracking = pgTable('gloss_tracking', {
+  id: serial('id').primaryKey(),
+  vehicleId: integer('vehicle_id').references(() => vehicles.id).notNull(),
+  currentProduct: varchar('current_product', { length: 100 }),
+  appliedDate: timestamp('applied_date'),
+  nextWaxDate: timestamp('next_wax_date'),
+  protectionLevel: integer('protection_level'), // 1-10
+  glossLevel: integer('gloss_level'), // 1-10
+  beadingRating: integer('beading_rating'), // 1-10
+  notes: text('notes'),
+  updatedAt: timestamp('updated_at').defaultNow(),
 });
 
-export const glossTrackingsRelations = relations(glossTrackings, ({ one, many }) => ({
-  vehicle: one(vehicles, {
-    fields: [glossTrackings.vehicleId],
-    references: [vehicles.id],
-  }),
-  glossLogs: many(glossLogs),
-}));
-
-// Gloss Logs table for tracking individual gloss treatments
-export const glossLogs = pgTable("gloss_logs", {
-  id: serial("id").primaryKey(),
-  glossTrackingId: integer("gloss_tracking_id").notNull(),
-  date: timestamp("date").notNull(),
-  action: text("action").notNull(),
-  notes: text("notes"),
-  createdAt: timestamp("created_at").defaultNow().notNull(),
+// Gloss Logs table
+export const glossLogs = pgTable('gloss_logs', {
+  id: serial('id').primaryKey(),
+  glossTrackingId: integer('gloss_tracking_id').references(() => glossTracking.id).notNull(),
+  logDate: timestamp('log_date').defaultNow().notNull(),
+  productUsed: varchar('product_used', { length: 100 }),
+  processType: varchar('process_type', { length: 50 }), // wash, decontamination, polish, seal, etc.
+  beforeImages: jsonb('before_images').default([]),
+  afterImages: jsonb('after_images').default([]),
+  notes: text('notes'),
 });
 
-export const glossLogsRelations = relations(glossLogs, ({ one }) => ({
-  glossTracking: one(glossTrackings, {
-    fields: [glossLogs.glossTrackingId],
-    references: [glossTrackings.id],
-  }),
-}));
+// Insert Types
+export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
+export const insertSavedLocationSchema = createInsertSchema(savedLocations).omit({ id: true, createdAt: true, lastAccessed: true });
+export const insertVehicleSchema = createInsertSchema(vehicles).omit({ id: true, createdAt: true, updatedAt: true });
+export const insertTireSchema = createInsertSchema(tires).omit({ id: true, updatedAt: true });
+export const insertMaintenanceRecordSchema = createInsertSchema(maintenanceRecords).omit({ id: true, createdAt: true });
+export const insertMaintenanceFlagSchema = createInsertSchema(maintenanceFlags).omit({ id: true, updatedAt: true });
+export const insertGlossTrackingSchema = createInsertSchema(glossTracking).omit({ id: true, updatedAt: true });
+export const insertGlossLogSchema = createInsertSchema(glossLogs).omit({ id: true });
 
-// Insert Schemas
-export const insertVehicleSchema = createInsertSchema(vehicles).pick({
-  userId: true,
-  make: true,
-  model: true,
-  year: true,
-});
+// Types
+export type User = typeof users.$inferSelect;
+export type InsertUser = z.infer<typeof insertUserSchema>;
 
-export const insertTireSchema = createInsertSchema(tires).pick({
-  vehicleId: true,
-  brand: true,
-  model: true,
-  mileageLifeTarget: true,
-  currentMileage: true,
-  purchaseDate: true,
-  lastTreadDepthCheck: true,
-});
+export type SavedLocation = typeof savedLocations.$inferSelect;
+export type InsertSavedLocation = z.infer<typeof insertSavedLocationSchema>;
 
-export const insertMaintenanceRecordSchema = createInsertSchema(maintenanceRecords).pick({
-  vehicleId: true,
-  lastOilChange: true,
-  lastAirFilterChange: true,
-  lastCabinFilterChange: true,
-  lastCoolantFlush: true,
-  lastBrakeFluidChange: true,
-  lastTransmissionService: true,
-  lastQuarterlyReset: true,
-  lastMonthlyMaintenance: true,
-  lastWeeklyQuickCheck: true,
-  lastPreDriveCheck: true,
-});
-
-export const insertMaintenanceFlagSchema = createInsertSchema(maintenanceFlags).pick({
-  vehicleId: true,
-  missedWeekly: true,
-  missedMonthly: true,
-  missedQuarterly: true,
-  missedSeasonal: true,
-});
-
-export const insertGlossTrackingSchema = createInsertSchema(glossTrackings).pick({
-  vehicleId: true,
-  lastGlossBoost: true,
-  lastFullDecon: true,
-  lastSealantRefresh: true,
-  lastPaintCorrection: true,
-  lastCeramicTopCoat: true,
-});
-
-export const insertGlossLogSchema = createInsertSchema(glossLogs).pick({
-  glossTrackingId: true,
-  date: true,
-  action: true,
-  notes: true,
-});
-
-// Types for insert operations
-export type InsertVehicle = z.infer<typeof insertVehicleSchema>;
-export type InsertTire = z.infer<typeof insertTireSchema>;
-export type InsertMaintenanceRecord = z.infer<typeof insertMaintenanceRecordSchema>;
-export type InsertMaintenanceFlag = z.infer<typeof insertMaintenanceFlagSchema>;
-export type InsertGlossTracking = z.infer<typeof insertGlossTrackingSchema>;
-export type InsertGlossLog = z.infer<typeof insertGlossLogSchema>;
-
-// Types for select operations
 export type Vehicle = typeof vehicles.$inferSelect;
+export type InsertVehicle = z.infer<typeof insertVehicleSchema>;
+
 export type Tire = typeof tires.$inferSelect;
+export type InsertTire = z.infer<typeof insertTireSchema>;
+
 export type MaintenanceRecord = typeof maintenanceRecords.$inferSelect;
+export type InsertMaintenanceRecord = z.infer<typeof insertMaintenanceRecordSchema>;
+
 export type MaintenanceFlag = typeof maintenanceFlags.$inferSelect;
-export type GlossTracking = typeof glossTrackings.$inferSelect;
+export type InsertMaintenanceFlag = z.infer<typeof insertMaintenanceFlagSchema>;
+
+export type GlossTracking = typeof glossTracking.$inferSelect;
+export type InsertGlossTracking = z.infer<typeof insertGlossTrackingSchema>;
+
 export type GlossLog = typeof glossLogs.$inferSelect;
+export type InsertGlossLog = z.infer<typeof insertGlossLogSchema>;

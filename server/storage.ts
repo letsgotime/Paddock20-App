@@ -1,15 +1,16 @@
 import { 
   users, type User, type InsertUser, 
+  savedLocations, type SavedLocation, type InsertSavedLocation,
   vehicles, type Vehicle, type InsertVehicle,
   tires, type Tire, type InsertTire,
   maintenanceRecords, type MaintenanceRecord, type InsertMaintenanceRecord,
   maintenanceFlags, type MaintenanceFlag, type InsertMaintenanceFlag, 
-  glossTrackings, type GlossTracking, type InsertGlossTracking,
+  glossTracking, type GlossTracking, type InsertGlossTracking,
   glossLogs, type GlossLog, type InsertGlossLog 
 } from "@shared/schema";
 
 import { db } from "./db";
-import { eq, and } from "drizzle-orm";
+import { eq, and, sql } from "drizzle-orm";
 
 // IStorage interface with all CRUD methods
 export interface IStorage {
@@ -17,6 +18,15 @@ export interface IStorage {
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  
+  // Saved Locations methods
+  getSavedLocation(id: number): Promise<SavedLocation | undefined>;
+  getSavedLocationsByUserId(userId: number): Promise<SavedLocation[]>;
+  createSavedLocation(location: InsertSavedLocation): Promise<SavedLocation>;
+  updateSavedLocation(id: number, location: Partial<InsertSavedLocation>): Promise<SavedLocation | undefined>;
+  deleteSavedLocation(id: number): Promise<void>;
+  getPrimarySavedLocation(userId: number): Promise<SavedLocation | undefined>;
+  countSavedLocationsByUserId(userId: number): Promise<number>;
   
   // Vehicle methods
   getVehicle(id: number): Promise<Vehicle | undefined>;
@@ -69,6 +79,92 @@ export class DatabaseStorage implements IStorage {
   async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
+  }
+  
+  // Saved Location methods
+  async getSavedLocation(id: number): Promise<SavedLocation | undefined> {
+    const [location] = await db.select().from(savedLocations).where(eq(savedLocations.id, id));
+    return location;
+  }
+  
+  async getSavedLocationsByUserId(userId: number): Promise<SavedLocation[]> {
+    return await db.select().from(savedLocations).where(eq(savedLocations.userId, userId));
+  }
+  
+  async createSavedLocation(location: InsertSavedLocation): Promise<SavedLocation> {
+    // If this is marked as primary, first unset any existing primary location
+    if (location.isPrimary) {
+      await db
+        .update(savedLocations)
+        .set({ isPrimary: false })
+        .where(and(
+          eq(savedLocations.userId, location.userId),
+          eq(savedLocations.isPrimary, true)
+        ));
+    }
+    
+    const [newLocation] = await db.insert(savedLocations).values({
+      ...location,
+      lastAccessed: new Date(),
+    }).returning();
+    
+    return newLocation;
+  }
+  
+  async updateSavedLocation(id: number, location: Partial<InsertSavedLocation>): Promise<SavedLocation | undefined> {
+    // If this is being set as primary, first unset any existing primary
+    if (location.isPrimary) {
+      const [currentLocation] = await db.select().from(savedLocations).where(eq(savedLocations.id, id));
+      
+      if (currentLocation) {
+        await db
+          .update(savedLocations)
+          .set({ isPrimary: false })
+          .where(
+            and(
+              eq(savedLocations.userId, currentLocation.userId),
+              eq(savedLocations.isPrimary, true),
+              sql`${savedLocations.id} != ${id}`
+            )
+          );
+      }
+    }
+    
+    const [updatedLocation] = await db
+      .update(savedLocations)
+      .set({
+        ...location,
+        lastAccessed: new Date(),
+      })
+      .where(eq(savedLocations.id, id))
+      .returning();
+      
+    return updatedLocation;
+  }
+  
+  async deleteSavedLocation(id: number): Promise<void> {
+    await db.delete(savedLocations).where(eq(savedLocations.id, id));
+  }
+  
+  async getPrimarySavedLocation(userId: number): Promise<SavedLocation | undefined> {
+    const [location] = await db
+      .select()
+      .from(savedLocations)
+      .where(and(
+        eq(savedLocations.userId, userId),
+        eq(savedLocations.isPrimary, true)
+      ));
+      
+    return location;
+  }
+  
+  async countSavedLocationsByUserId(userId: number): Promise<number> {
+    const result = await db
+      .select({ count: sql`count(*)` })
+      .from(savedLocations)
+      .where(eq(savedLocations.userId, userId));
+      
+    return Number(result[0].count);
   }
   
   // Vehicle methods
@@ -139,7 +235,7 @@ export class DatabaseStorage implements IStorage {
   async updateMaintenanceRecord(id: number, record: Partial<InsertMaintenanceRecord>): Promise<MaintenanceRecord | undefined> {
     const [updatedRecord] = await db
       .update(maintenanceRecords)
-      .set({ ...record, updatedAt: new Date() })
+      .set(record)
       .where(eq(maintenanceRecords.id, id))
       .returning();
     return updatedRecord;
@@ -172,25 +268,25 @@ export class DatabaseStorage implements IStorage {
   
   // Gloss Tracking methods
   async getGlossTracking(id: number): Promise<GlossTracking | undefined> {
-    const [tracking] = await db.select().from(glossTrackings).where(eq(glossTrackings.id, id));
+    const [tracking] = await db.select().from(glossTracking).where(eq(glossTracking.id, id));
     return tracking;
   }
   
   async getGlossTrackingByVehicleId(vehicleId: number): Promise<GlossTracking | undefined> {
-    const [tracking] = await db.select().from(glossTrackings).where(eq(glossTrackings.vehicleId, vehicleId));
+    const [tracking] = await db.select().from(glossTracking).where(eq(glossTracking.vehicleId, vehicleId));
     return tracking;
   }
   
   async createGlossTracking(tracking: InsertGlossTracking): Promise<GlossTracking> {
-    const [newTracking] = await db.insert(glossTrackings).values(tracking).returning();
+    const [newTracking] = await db.insert(glossTracking).values(tracking).returning();
     return newTracking;
   }
   
   async updateGlossTracking(id: number, tracking: Partial<InsertGlossTracking>): Promise<GlossTracking | undefined> {
     const [updatedTracking] = await db
-      .update(glossTrackings)
+      .update(glossTracking)
       .set({ ...tracking, updatedAt: new Date() })
-      .where(eq(glossTrackings.id, id))
+      .where(eq(glossTracking.id, id))
       .returning();
     return updatedTracking;
   }
@@ -201,7 +297,7 @@ export class DatabaseStorage implements IStorage {
       .select()
       .from(glossLogs)
       .where(eq(glossLogs.glossTrackingId, glossTrackingId))
-      .orderBy(glossLogs.date);
+      .orderBy(glossLogs.logDate);
   }
   
   async createGlossLog(log: InsertGlossLog): Promise<GlossLog> {

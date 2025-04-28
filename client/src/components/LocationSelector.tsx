@@ -1,114 +1,181 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useWeather } from '@/contexts/WeatherContext';
-import { Search, MapPin, Plus } from 'lucide-react';
-import { Input } from '@/components/ui/input';
+import { 
+  LocationSearchResult, 
+  searchLocationsByName, 
+  getLocationNameByCoordinates 
+} from '@/services/openWeatherService';
+import { Command } from '@/components/ui/command';
+import { 
+  Popover, 
+  PopoverContent, 
+  PopoverTrigger 
+} from '@/components/ui/popover';
 import { Button } from '@/components/ui/button';
-import { toast } from '@/hooks/use-toast';
-import { searchLocation } from '@/lib/weather';
-import { Location } from 'shared/schema';
+import { Search, MapPin, Loader2 } from 'lucide-react';
+import { Badge } from '@/components/ui/badge';
 
-const LocationSelector: React.FC = () => {
+const LocationSelector = () => {
   const { 
-    selectedLocation, 
-    setSelectedLocation, 
-    savedLocations, 
-    addSavedLocation 
+    selectedLocation,
+    setSelectedLocation,
+    setCoordinates
   } = useWeather();
   
-  const [searchQuery, setSearchQuery] = useState('');
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState('');
+  const [searchResults, setSearchResults] = useState<LocationSearchResult[]>([]);
   const [isSearching, setIsSearching] = useState(false);
-
+  const [searchError, setSearchError] = useState<string | null>(null);
+  
+  // Handle search input
   const handleSearch = async () => {
-    if (!searchQuery.trim()) {
-      toast({
-        title: "Search Error",
-        description: "Please enter a location to search",
-        variant: "destructive",
-      });
-      return;
-    }
-
+    if (!query.trim()) return;
+    
     setIsSearching(true);
+    setSearchError(null);
+    
     try {
-      const locationData = await searchLocation(searchQuery);
-      if (locationData) {
-        addSavedLocation(locationData);
-        setSearchQuery('');
-      }
+      const results = await searchLocationsByName(query);
+      // Format location names with city, state (if available), and country
+      const formattedResults = results.map(loc => ({
+        ...loc,
+        formattedName: loc.state 
+          ? `${loc.name}, ${loc.state}, ${loc.country}` 
+          : `${loc.name}, ${loc.country}`
+      }));
+      setSearchResults(formattedResults);
     } catch (error) {
-      toast({
-        title: "Location Search Failed",
-        description: (error as Error).message || "Could not find the specified location",
-        variant: "destructive",
-      });
+      console.error('Error searching for locations:', error);
+      setSearchError('Error searching for locations. Please try again.');
+      setSearchResults([]);
     } finally {
       setIsSearching(false);
     }
   };
-
+  
+  // Use current location
+  const handleUseCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const { latitude, longitude } = position.coords;
+          setCoordinates(latitude, longitude);
+          
+          try {
+            const locationInfo = await getLocationNameByCoordinates(latitude, longitude);
+            if (locationInfo) {
+              setSelectedLocation(locationInfo);
+            }
+          } catch (error) {
+            console.error('Error fetching location name:', error);
+          }
+        },
+        (error) => {
+          console.error('Geolocation error:', error);
+        }
+      );
+    }
+  };
+  
+  // Handle location selection
+  const selectLocation = (location: LocationSearchResult) => {
+    setSelectedLocation(location);
+    setCoordinates(location.lat, location.lon);
+    setOpen(false);
+    setQuery('');
+  };
+  
+  // Handle input keydown events
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleSearch();
+    }
+  };
+  
   return (
-    <div className="bg-gray-900 rounded-xl p-6 mb-8 shadow-lg">
-      <div className="flex flex-col md:flex-row md:items-center gap-4">
-        <div className="flex-grow">
-          <label htmlFor="location-search" className="block text-sm font-medium mb-2">Location</label>
-          <div className="relative">
-            <div className="absolute inset-y-0 left-0 flex items-center pl-3">
-              <Search className="h-5 w-5 text-gray-400" />
-            </div>
-            <Input
-              id="location-search"
-              placeholder="Search for a city..."
-              className="w-full pl-10 pr-4 py-3 bg-black text-white rounded-lg border border-gray-700 focus:border-blue-500"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-            />
-          </div>
-        </div>
-        <div>
-          <Button
-            onClick={handleSearch}
-            disabled={isSearching}
-            className="w-full md:w-auto px-6 py-6 bg-blue-500 hover:bg-blue-600 transition-colors text-white rounded-lg font-medium flex items-center justify-center h-11"
+    <div className="flex items-center justify-center">
+      <Popover open={open} onOpenChange={setOpen}>
+        <PopoverTrigger asChild>
+          <Button 
+            variant="outline" 
+            className="w-full max-w-md border-gray-700 bg-black/50 hover:bg-black hover:border-blue-500 flex justify-between"
           >
-            {isSearching ? (
-              <div className="flex items-center">
-                <span className="animate-spin mr-2">
-                  <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24">
-                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                  </svg>
-                </span>
-                Searching...
-              </div>
-            ) : (
-              <>
-                <Plus className="h-5 w-5 mr-2" />
-                Add Location
-              </>
-            )}
+            <span className="flex items-center text-gray-300">
+              <MapPin className="mr-2 h-4 w-4 text-blue-400" />
+              {selectedLocation?.name 
+                ? selectedLocation.state 
+                  ? `${selectedLocation.name}, ${selectedLocation.state}` 
+                  : selectedLocation.name
+                : "Select location"
+              }
+            </span>
+            <Badge variant="outline" className="ml-2 text-xs">
+              {selectedLocation?.country || ""}
+            </Badge>
           </Button>
-        </div>
-      </div>
-
-      {/* Saved Locations */}
-      <div className="mt-4">
-        <h3 className="text-sm font-medium text-gray-400 mb-2">Saved Locations</h3>
-        <div className="flex flex-wrap gap-2">
-          {savedLocations.map((location) => (
-            <button
-              key={location.id}
-              onClick={() => setSelectedLocation(location)}
-              className={`location-item ${
-                selectedLocation?.id === location.id ? 'bg-blue-500 bg-opacity-20' : 'bg-black'
-              } px-4 py-2 rounded-full text-sm flex items-center hover:bg-blue-500 hover:bg-opacity-20 transition-colors`}
-            >
-              <MapPin className="h-4 w-4 text-blue-400 mr-1" />
-              {location.name}
-            </button>
-          ))}
-        </div>
-      </div>
+        </PopoverTrigger>
+        <PopoverContent className="p-0 w-[300px] border-gray-700 bg-gradient-to-br from-gray-900 to-black">
+          <Command className="bg-transparent">
+            <div className="flex items-center border-b border-gray-800 p-2">
+              <Search className="mr-2 h-4 w-4 shrink-0 text-gray-500" />
+              <input
+                className="flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-gray-500 text-white"
+                placeholder="Search locations..."
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                onKeyDown={handleKeyDown}
+              />
+              <Button 
+                size="sm" 
+                variant="ghost" 
+                className="h-8 px-2 text-xs" 
+                onClick={handleSearch}
+                disabled={isSearching}
+              >
+                {isSearching ? (
+                  <Loader2 className="h-4 w-4 animate-spin text-blue-400" />
+                ) : "Search"}
+              </Button>
+            </div>
+            <div className="max-h-60 overflow-auto p-2">
+              {searchError && (
+                <p className="text-red-400 text-sm p-2">{searchError}</p>
+              )}
+              
+              {searchResults.length > 0 ? (
+                <div className="space-y-1">
+                  {searchResults.map((location) => (
+                    <div
+                      key={`${location.lat}-${location.lon}`}
+                      className="flex cursor-pointer items-center rounded-md px-2 py-2 hover:bg-gray-800 text-white"
+                      onClick={() => selectLocation(location)}
+                    >
+                      <MapPin className="mr-2 h-4 w-4 text-blue-400" />
+                      <span>{location.formattedName}</span>
+                    </div>
+                  ))}
+                </div>
+              ) : !isSearching && query.trim() !== "" && !searchError ? (
+                <p className="text-sm text-gray-400 p-2">No locations found. Try another search term.</p>
+              ) : null}
+              
+              <div className="mt-4 pt-4 border-t border-gray-800">
+                <Button 
+                  variant="ghost" 
+                  size="sm"
+                  className="w-full justify-start text-blue-400 hover:text-blue-500 hover:bg-gray-800"
+                  onClick={handleUseCurrentLocation}
+                >
+                  <MapPin className="mr-2 h-4 w-4" />
+                  Use my current location
+                </Button>
+              </div>
+            </div>
+          </Command>
+        </PopoverContent>
+      </Popover>
     </div>
   );
 };
