@@ -177,6 +177,14 @@ const RoutePlannerPage = () => {
   const [eventMapFile, setEventMapFile] = useState<File | null>(null);
   const [eventMapUrl, setEventMapUrl] = useState<string | null>(null);
   
+  // Drive companions state
+  const [hasFriendsJoining, setHasFriendsJoining] = useState<boolean>(false);
+  const [drivingCompanions, setDrivingCompanions] = useState<Array<{name: string, vehicle: string, vehicleDetails?: string}>>([]);
+  const [newCompanionName, setNewCompanionName] = useState<string>('');
+  const [newCompanionVehicle, setNewCompanionVehicle] = useState<string>('');
+  const [newCompanionVehicleDetails, setNewCompanionVehicleDetails] = useState<string>('');
+  const [companionsListView, setCompanionsListView] = useState<'grid' | 'list'>('grid');
+  
   // Route customization options
   const [routeCustomizations, setRouteCustomizations] = useState({
     roundTrip: false,
@@ -1547,6 +1555,37 @@ const RoutePlannerPage = () => {
     }
   };
   
+  // Drive companions handlers
+  const addCompanion = () => {
+    if (!newCompanionName || !newCompanionVehicle || drivingCompanions.length >= 50) return;
+    
+    setDrivingCompanions([
+      ...drivingCompanions,
+      {
+        name: newCompanionName,
+        vehicle: newCompanionVehicle,
+        vehicleDetails: newCompanionVehicleDetails || undefined
+      }
+    ]);
+    
+    // Reset form fields
+    setNewCompanionName('');
+    setNewCompanionVehicle('');
+    setNewCompanionVehicleDetails('');
+  };
+  
+  const removeCompanion = (index: number) => {
+    const updatedCompanions = [...drivingCompanions];
+    updatedCompanions.splice(index, 1);
+    setDrivingCompanions(updatedCompanions);
+  };
+  
+  const clearAllCompanions = () => {
+    if (window.confirm('Are you sure you want to remove all companions?')) {
+      setDrivingCompanions([]);
+    }
+  };
+  
   const saveToJournal = (postDriveData?: any) => {
     // Create the journal entry data
     const journalEntryData = {
@@ -1583,7 +1622,9 @@ const RoutePlannerPage = () => {
         name: eventRallyName,
         organizer: eventRallyOrganizer,
         hasMap: !!eventMapFile
-      } : null
+      } : null,
+      // Add driving companions
+      companions: hasFriendsJoining ? drivingCompanions : []
     };
     
     // In a real implementation, this would integrate with Drive Journal
@@ -1667,7 +1708,10 @@ const RoutePlannerPage = () => {
           {/* Pre-Drive Performance Checklist */}
           <div>
             <div className="flex items-center justify-between mb-2">
-              <label className="block text-gray-300">Performance Drive Checklist</label>
+              <div className="flex items-center">
+                <span className="text-blue-400 font-orbitron text-xl">🏁 Pre-Drive Checklist</span>
+                <span className="ml-2 bg-green-600 text-xs text-black font-bold px-2 py-0.5 rounded">SAFETY REQUIRED</span>
+              </div>
               <div className="flex items-center gap-2">
                 <button 
                   onClick={() => {
@@ -1695,85 +1739,336 @@ const RoutePlannerPage = () => {
                     console.log("Checklist logged:", checklistLog);
                     alert("Pre-drive safety checklist completed and logged!");
                   }}
-                  className="text-xs bg-green-600 text-white px-2 py-1 rounded hover:bg-green-500"
+                  className="bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded-lg shadow-md transition-all flex items-center gap-1"
                 >
-                  Complete Checklist
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                  </svg>
+                  <span className="font-semibold">Verify Complete</span>
                 </button>
                 <button 
                   onClick={() => alert("Checklist generated for your specific vehicle and conditions")}
-                  className="text-xs text-blue-400 hover:text-blue-300"
+                  className="bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 px-3 py-2 rounded-lg transition-all flex items-center gap-1"
                 >
-                  Print Checklist
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z" />
+                  </svg>
+                  <span>Print</span>
                 </button>
               </div>
             </div>
-            <div className="bg-gray-900 p-4 rounded-lg border border-gray-800 mb-4">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                <div className="bg-black/30 p-2 rounded border border-gray-800">
-                  <h4 className="text-green-400 text-sm font-semibold mb-1">Vehicle Preparation</h4>
-                  <div className="space-y-1">
-                    <label className="flex items-center text-gray-300 text-sm">
-                      <input type="checkbox" className="form-checkbox text-green-500 mr-2" />
-                      Tire pressure set to {selectedTireSetup && tireSetups[selectedTireSetup] ? 
-                        tireSetups[selectedTireSetup]?.pressureVariance || '32' : '32'} PSI (front)
+            <div className="bg-gradient-to-b from-gray-900 to-black/80 p-5 rounded-lg border border-blue-900/50 mb-4 shadow-lg">
+              <p className="text-gray-300 text-sm mb-4 italic border-l-2 border-blue-500 pl-3">
+                Complete this mandatory safety checklist before starting your {drivePurpose === 'celebration' ? 'celebration ride' : 'performance drive'}.
+                Items are tailored specifically for your {selectedVehicle || 'vehicle'} and current conditions.
+              </p>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div className="bg-black/40 p-3 rounded-lg border border-green-900/30 shadow-inner transition-all hover:border-green-500/30 group relative">
+                  <div className="absolute top-0 right-0 bg-green-600/20 text-green-400 text-xs px-2 py-0.5 rounded-bl">
+                    Critical
+                  </div>
+                  <h4 className="text-green-400 font-orbitron text-base mb-3 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
+                    </svg>
+                    Vehicle Preparation
+                  </h4>
+                  <div className="space-y-3">
+                    <label className="relative flex items-center text-gray-200 text-sm group cursor-pointer p-3 rounded-lg border border-transparent hover:border-green-500/30 hover:bg-green-900/10 transition-all duration-200 hover:shadow-md">
+                      <div className="relative mr-4 min-w-10">
+                        <input 
+                          type="checkbox" 
+                          className="peer sr-only" 
+                        />
+                        <div className="h-6 w-6 bg-black/60 rounded-md border border-green-500/50 shadow-inner peer-checked:bg-green-600 peer-checked:border-green-400 transition-all duration-200"></div>
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          className="absolute top-1 left-1 h-4 w-4 text-black opacity-0 peer-checked:opacity-100 transition-opacity duration-200" 
+                          fill="none" 
+                          viewBox="0 0 24 24" 
+                          stroke="currentColor"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <div className="absolute inset-0 rounded-md opacity-0 peer-checked:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                          <span className="text-xs font-bold text-black opacity-0 peer-checked:opacity-100 transition-opacity delay-150 duration-200">
+                            DONE
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <span className="block font-medium text-base text-green-400">Tire Pressure</span>
+                        <div className="mt-1 p-1.5 bg-black/20 border border-green-900/20 rounded-md">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-300">
+                              {selectedTireSetup && tireSetups[selectedTireSetup] ? 
+                              <span>✓ {tireSetups[selectedTireSetup]?.pressureVariance || '32'} PSI (front) / {Number(tireSetups[selectedTireSetup]?.pressureVariance || 32) - 1} PSI (rear)</span> : 
+                              <span>Setting: 32 PSI (front) / 31 PSI (rear)</span>}
+                            </span>
+                            <span className="text-xs text-green-500 font-semibold">OPTIMAL</span>
+                          </div>
+                          <div className="w-full h-1.5 bg-gray-800 rounded-full mt-1 overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-green-600 to-green-400 w-3/4 rounded-full"></div>
+                          </div>
+                        </div>
+                      </div>
                     </label>
-                    <label className="flex items-center text-gray-300 text-sm">
-                      <input type="checkbox" className="form-checkbox text-green-500 mr-2" />
-                      Torque setting: {selectedVehicle === 'Ferrari F8' ? '96 ft-lb' : '72-85 ft-lb'}
+                    
+                    <label className="relative flex items-center text-gray-200 text-sm group cursor-pointer p-3 rounded-lg border border-transparent hover:border-green-500/30 hover:bg-green-900/10 transition-all duration-200 hover:shadow-md">
+                      <div className="relative mr-4 min-w-10">
+                        <input 
+                          type="checkbox" 
+                          className="peer sr-only" 
+                        />
+                        <div className="h-6 w-6 bg-black/60 rounded-md border border-green-500/50 shadow-inner peer-checked:bg-green-600 peer-checked:border-green-400 transition-all duration-200"></div>
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          className="absolute top-1 left-1 h-4 w-4 text-black opacity-0 peer-checked:opacity-100 transition-opacity duration-200" 
+                          fill="none" 
+                          viewBox="0 0 24 24" 
+                          stroke="currentColor"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <div className="absolute inset-0 rounded-md opacity-0 peer-checked:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                          <span className="text-xs font-bold text-black opacity-0 peer-checked:opacity-100 transition-opacity delay-150 duration-200">
+                            DONE
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <span className="block font-medium text-base text-green-400">Torque Settings</span>
+                        <div className="mt-1 p-1.5 bg-black/20 border border-green-900/20 rounded-md">
+                          <div className="flex items-center justify-between">
+                            <span className="text-xs text-gray-300">
+                              {selectedVehicle === 'Ferrari F8' ? 
+                              <span>✓ 96 ft-lb (factory spec for Ferrari F8)</span> : 
+                              <span>✓ {72 + torqueAdjustment}-{85 + torqueAdjustment} ft-lb (recommended range)</span>}
+                            </span>
+                            <span className="text-xs text-green-500 font-semibold">SET</span>
+                          </div>
+                          <div className="w-full h-1.5 bg-gray-800 rounded-full mt-1 overflow-hidden">
+                            <div className="h-full bg-gradient-to-r from-green-600 to-green-400 w-full rounded-full"></div>
+                          </div>
+                        </div>
+                      </div>
                     </label>
-                    <label className="flex items-center text-gray-300 text-sm">
-                      <input type="checkbox" className="form-checkbox text-green-500 mr-2" />
-                      Fluid levels checked
+                    
+                    <label className="relative flex items-center text-gray-200 text-sm group cursor-pointer p-3 rounded-lg border border-transparent hover:border-green-500/30 hover:bg-green-900/10 transition-all duration-200 hover:shadow-md">
+                      <div className="relative mr-4 min-w-10">
+                        <input 
+                          type="checkbox" 
+                          className="peer sr-only" 
+                        />
+                        <div className="h-6 w-6 bg-black/60 rounded-md border border-green-500/50 shadow-inner peer-checked:bg-green-600 peer-checked:border-green-400 transition-all duration-200"></div>
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          className="absolute top-1 left-1 h-4 w-4 text-black opacity-0 peer-checked:opacity-100 transition-opacity duration-200" 
+                          fill="none" 
+                          viewBox="0 0 24 24" 
+                          stroke="currentColor"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <div className="absolute inset-0 rounded-md opacity-0 peer-checked:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                          <span className="text-xs font-bold text-black opacity-0 peer-checked:opacity-100 transition-opacity delay-150 duration-200">
+                            DONE
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <span className="block font-medium text-base text-green-400">Fluid Levels</span>
+                        <div className="mt-1 grid grid-cols-4 gap-1">
+                          <div className="p-1 bg-black/20 border border-green-900/20 rounded-md text-center">
+                            <div className="w-full h-4 bg-gradient-to-t from-amber-600 to-amber-400 rounded-sm"></div>
+                            <span className="text-xs text-gray-400">Oil</span>
+                          </div>
+                          <div className="p-1 bg-black/20 border border-green-900/20 rounded-md text-center">
+                            <div className="w-full h-4 bg-gradient-to-t from-blue-600 to-blue-400 rounded-sm"></div>
+                            <span className="text-xs text-gray-400">Coolant</span>
+                          </div>
+                          <div className="p-1 bg-black/20 border border-green-900/20 rounded-md text-center">
+                            <div className="w-full h-4 bg-gradient-to-t from-red-600 to-red-400 rounded-sm"></div>
+                            <span className="text-xs text-gray-400">Brake</span>
+                          </div>
+                          <div className="p-1 bg-black/20 border border-green-900/20 rounded-md text-center">
+                            <div className="w-full h-4 bg-gradient-to-t from-sky-600 to-sky-400 rounded-sm"></div>
+                            <span className="text-xs text-gray-400">Washer</span>
+                          </div>
+                        </div>
+                      </div>
                     </label>
-                    <label className="flex items-center text-gray-300 text-sm">
-                      <input type="checkbox" className="form-checkbox text-green-500 mr-2" />
-                      Battery charge verified
+                    
+                    <label className="relative flex items-center text-gray-200 text-sm group cursor-pointer p-3 rounded-lg border border-transparent hover:border-green-500/30 hover:bg-green-900/10 transition-all duration-200 hover:shadow-md">
+                      <div className="relative mr-4 min-w-10">
+                        <input 
+                          type="checkbox" 
+                          className="peer sr-only" 
+                        />
+                        <div className="h-6 w-6 bg-black/60 rounded-md border border-green-500/50 shadow-inner peer-checked:bg-green-600 peer-checked:border-green-400 transition-all duration-200"></div>
+                        <svg 
+                          xmlns="http://www.w3.org/2000/svg" 
+                          className="absolute top-1 left-1 h-4 w-4 text-black opacity-0 peer-checked:opacity-100 transition-opacity duration-200" 
+                          fill="none" 
+                          viewBox="0 0 24 24" 
+                          stroke="currentColor"
+                        >
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                        <div className="absolute inset-0 rounded-md opacity-0 peer-checked:opacity-100 transition-opacity duration-200 flex items-center justify-center">
+                          <span className="text-xs font-bold text-black opacity-0 peer-checked:opacity-100 transition-opacity delay-150 duration-200">
+                            DONE
+                          </span>
+                        </div>
+                      </div>
+                      <div className="flex-1">
+                        <span className="block font-medium text-base text-green-400">Battery & Electrics</span>
+                        <div className="mt-1 flex items-center gap-3">
+                          <div className="flex-1 p-1.5 bg-black/20 border border-green-900/20 rounded-md">
+                            <div className="flex justify-between items-center">
+                              <span className="text-xs text-gray-400">Charge Level</span>
+                              <span className="text-xs text-green-500 font-semibold">95%</span>
+                            </div>
+                            <div className="w-full h-1.5 bg-gray-800 rounded-full mt-1 overflow-hidden">
+                              <div className="h-full bg-gradient-to-r from-green-600 to-green-400 w-[95%] rounded-full"></div>
+                            </div>
+                          </div>
+                          <div className="p-1.5 bg-black/20 border border-green-900/20 rounded-md flex items-center">
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 text-green-500 mr-1" viewBox="0 0 20 20" fill="currentColor">
+                              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+                            </svg>
+                            <span className="text-xs text-gray-300">Secure</span>
+                          </div>
+                        </div>
+                      </div>
                     </label>
                   </div>
                 </div>
                 
-                <div className="bg-black/30 p-2 rounded border border-gray-800">
-                  <h4 className="text-green-400 text-sm font-semibold mb-1">Electronics & Settings</h4>
-                  <div className="space-y-1">
-                    <label className="flex items-center text-gray-300 text-sm">
-                      <input type="checkbox" className="form-checkbox text-green-500 mr-2" />
-                      {drivingMode.includes('custom:') ? drivingMode.replace('custom:', '') : drivingMode} mode activated
+                <div className="bg-black/40 p-3 rounded-lg border border-blue-900/30 shadow-inner transition-all hover:border-blue-500/30 group relative">
+                  <div className="absolute top-0 right-0 bg-blue-600/20 text-blue-400 text-xs px-2 py-0.5 rounded-bl">
+                    Performance
+                  </div>
+                  <h4 className="text-blue-400 font-orbitron text-base mb-3 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                    Electronics & Settings
+                  </h4>
+                  <div className="space-y-3">
+                    <label className="flex items-center text-gray-200 text-sm group cursor-pointer p-2 hover:bg-blue-900/10 rounded transition-colors">
+                      <input type="checkbox" className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5" />
+                      <div>
+                        <span className="block font-medium">Driving Mode</span>
+                        <span className="text-xs text-gray-400">
+                          {drivingMode.includes('custom:') ? 
+                          <span>Custom: {drivingMode.replace('custom:', '')}</span> : 
+                          <span>{drivingMode} mode ready</span>}
+                        </span>
+                      </div>
                     </label>
-                    <label className="flex items-center text-gray-300 text-sm">
-                      <input type="checkbox" className="form-checkbox text-green-500 mr-2" />
-                      Traction control optimized for {drivePurpose === 'celebration' ? 'celebration ride' : 'drive'}
+                    <label className="flex items-center text-gray-200 text-sm group cursor-pointer p-2 hover:bg-blue-900/10 rounded transition-colors">
+                      <input type="checkbox" className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5" />
+                      <div>
+                        <span className="block font-medium">Traction Systems</span>
+                        <span className="text-xs text-gray-400">
+                          {drivePurpose === 'celebration' ? 
+                          'Optimized for celebration ride (more forgiving)' : 
+                          'Configured for performance driving'}
+                        </span>
+                      </div>
                     </label>
-                    <label className="flex items-center text-gray-300 text-sm">
-                      <input type="checkbox" className="form-checkbox text-green-500 mr-2" />
-                      Navigation ready: {preferredNavApp}
+                    <label className="flex items-center text-gray-200 text-sm group cursor-pointer p-2 hover:bg-blue-900/10 rounded transition-colors">
+                      <input type="checkbox" className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5" />
+                      <div>
+                        <span className="block font-medium">Navigation</span>
+                        <span className="text-xs text-gray-400">
+                          {preferredNavApp} {routeStops.length > 0 ? `with ${routeStops.length} stops` : 'direct route'}
+                        </span>
+                      </div>
                     </label>
-                    <label className="flex items-center text-gray-300 text-sm">
-                      <input type="checkbox" className="form-checkbox text-green-500 mr-2" />
-                      Telemetry recording {driveJournalIntegration ? 'enabled' : 'disabled'}
+                    <label className="flex items-center text-gray-200 text-sm group cursor-pointer p-2 hover:bg-blue-900/10 rounded transition-colors">
+                      <input type="checkbox" className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5" />
+                      <div>
+                        <span className="block font-medium">Data Recording</span>
+                        <span className="text-xs text-gray-400">
+                          Telemetry {driveJournalIntegration ? 'enabled with Drive Journal sync' : 'disabled'}
+                        </span>
+                      </div>
                     </label>
                   </div>
                 </div>
                 
-                <div className="bg-black/30 p-2 rounded border border-gray-800">
-                  <h4 className="text-green-400 text-sm font-semibold mb-1">Weather & Conditions</h4>
-                  <div className="space-y-1">
-                    <label className="flex items-center text-gray-300 text-sm">
-                      <input type="checkbox" className="form-checkbox text-green-500 mr-2" />
-                      {weatherData?.current?.weather?.[0]?.main || 'Weather'} conditions verified
+                <div className="bg-black/40 p-3 rounded-lg border border-purple-900/30 shadow-inner transition-all hover:border-purple-500/30 group relative">
+                  <div className="absolute top-0 right-0 bg-purple-600/20 text-purple-400 text-xs px-2 py-0.5 rounded-bl">
+                    Environment
+                  </div>
+                  <h4 className="text-purple-400 font-orbitron text-base mb-3 flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 15a4 4 0 004 4h9a5 5 0 10-.1-9.999 5.002 5.002 0 10-9.78 2.096A4.001 4.001 0 003 15z" />
+                    </svg>
+                    Weather & Conditions
+                  </h4>
+                  <div className="space-y-3">
+                    <label className="flex items-center text-gray-200 text-sm group cursor-pointer p-2 hover:bg-purple-900/10 rounded transition-colors">
+                      <input type="checkbox" className="form-checkbox text-purple-500 rounded mr-3 h-5 w-5" />
+                      <div>
+                        <span className="block font-medium">Current Weather</span>
+                        <span className="text-xs text-gray-400">
+                          {weatherData?.current?.weather?.[0]?.main || 'Weather'} | {Math.round(weatherData?.current?.temp || 70)}°F Air Temp
+                        </span>
+                      </div>
                     </label>
-                    <label className="flex items-center text-gray-300 text-sm">
-                      <input type="checkbox" className="form-checkbox text-green-500 mr-2" />
-                      Road surface temp: ~{Math.round((weatherData?.current?.temp || 70) - 5)}°F
+                    <label className="flex items-center text-gray-200 text-sm group cursor-pointer p-2 hover:bg-purple-900/10 rounded transition-colors">
+                      <input type="checkbox" className="form-checkbox text-purple-500 rounded mr-3 h-5 w-5" />
+                      <div>
+                        <span className="block font-medium">Surface Temperature</span>
+                        <span className="text-xs text-gray-400">
+                          ~{Math.round((weatherData?.current?.temp || 70) - 5)}°F | {
+                            Math.round((weatherData?.current?.temp || 70) - 5) < 50 ? 'Cold: Limited grip' : 
+                            Math.round((weatherData?.current?.temp || 70) - 5) > 90 ? 'Hot: Possible overheating' :
+                            'Optimal driving conditions'
+                          }
+                        </span>
+                      </div>
                     </label>
-                    <label className="flex items-center text-gray-300 text-sm">
-                      <input type="checkbox" className="form-checkbox text-green-500 mr-2" />
-                      Visibility: {weatherData?.current?.visibility ? Math.round(weatherData.current.visibility / 1609) + ' miles' : '10+ miles'}
+                    <label className="flex items-center text-gray-200 text-sm group cursor-pointer p-2 hover:bg-purple-900/10 rounded transition-colors">
+                      <input type="checkbox" className="form-checkbox text-purple-500 rounded mr-3 h-5 w-5" />
+                      <div>
+                        <span className="block font-medium">Visibility Conditions</span>
+                        <span className="text-xs text-gray-400">
+                          {weatherData?.current?.visibility ? Math.round(weatherData.current.visibility / 1609) + ' miles' : '10+ miles'} | {
+                            (weatherData?.current?.visibility || 16090) < 5000 ? 'Reduced - Drive with caution' : 'Clear visibility'
+                          }
+                        </span>
+                      </div>
                     </label>
-                    <label className="flex items-center text-gray-300 text-sm">
-                      <input type="checkbox" className="form-checkbox text-green-500 mr-2" />
-                      {drivePurpose === 'celebration' ? 'Celebration route verified' : 'Route conditions verified'}
+                    <label className="flex items-center text-gray-200 text-sm group cursor-pointer p-2 hover:bg-purple-900/10 rounded transition-colors">
+                      <input type="checkbox" className="form-checkbox text-purple-500 rounded mr-3 h-5 w-5" />
+                      <div>
+                        <span className="block font-medium">Route Assessment</span>
+                        <span className="text-xs text-gray-400">
+                          {drivePurpose === 'celebration' ? 'Celebration route verified & secure' : 
+                          navigationFeatures.curvyRoads ? 'Performance route with curves verified' : 'Standard route conditions verified'}
+                        </span>
+                      </div>
                     </label>
                   </div>
+                </div>
+              </div>
+              
+              <div className="mt-5 pt-3 border-t border-gray-800 flex justify-between items-center">
+                <div className="text-gray-400 text-xs italic">
+                  {selectedVehicle ? `Vehicle profile: ${selectedVehicle}` : 'No vehicle selected'} | 
+                  Checklist updated: {new Date().toLocaleDateString()}
+                </div>
+                <div className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-500 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z" />
+                  </svg>
+                  <span className="text-xs text-green-500 font-semibold">VERIFIED BY PADDOCK20</span>
                 </div>
               </div>
             </div>
@@ -2198,6 +2493,185 @@ const RoutePlannerPage = () => {
                             className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
                           />
                         </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  {/* Who's Joining Section */}
+                  <div className="mt-4 border-t border-gray-800 pt-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          id="hasFriendsJoining"
+                          checked={hasFriendsJoining}
+                          onChange={(e) => setHasFriendsJoining(e.target.checked)}
+                          className="form-checkbox text-blue-500 mr-2"
+                        />
+                        <label htmlFor="hasFriendsJoining" className="text-gray-300 text-sm font-medium">
+                          Who's Joining the Drive?
+                        </label>
+                      </div>
+                      {hasFriendsJoining && drivingCompanions.length > 0 && (
+                        <span className="text-xs text-green-400 font-medium">
+                          {drivingCompanions.length} {drivingCompanions.length === 1 ? 'companion' : 'companions'} added
+                        </span>
+                      )}
+                    </div>
+                    
+                    {hasFriendsJoining && (
+                      <div className="bg-gray-900 p-3 rounded-lg border border-gray-800 space-y-3">
+                        <p className="text-gray-300 text-xs italic mb-2">
+                          Add friends and their vehicles who will be joining you on this drive (up to 50).
+                        </p>
+                        
+                        {/* Add new companion form */}
+                        <div className="bg-black/30 p-3 rounded border border-blue-900/30">
+                          <h4 className="font-medium text-blue-400 text-sm mb-2">Add New Companion</h4>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mb-3">
+                            <div>
+                              <label className="block text-gray-400 text-xs mb-1">Friend's Name</label>
+                              <input
+                                type="text"
+                                value={newCompanionName}
+                                onChange={(e) => setNewCompanionName(e.target.value)}
+                                placeholder="Enter name"
+                                className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-gray-400 text-xs mb-1">Friend's Vehicle</label>
+                              <input
+                                type="text"
+                                value={newCompanionVehicle}
+                                onChange={(e) => setNewCompanionVehicle(e.target.value)}
+                                placeholder="Enter vehicle make/model"
+                                className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                              />
+                            </div>
+                          </div>
+                          
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                            <div>
+                              <label className="block text-gray-400 text-xs mb-1">Vehicle Details (optional)</label>
+                              <input
+                                type="text"
+                                value={newCompanionVehicleDetails}
+                                onChange={(e) => setNewCompanionVehicleDetails(e.target.value)}
+                                placeholder="Year, color, modifications, etc."
+                                className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                              />
+                            </div>
+                            <div className="flex items-end">
+                              <button
+                                onClick={addCompanion}
+                                disabled={!newCompanionName || !newCompanionVehicle || drivingCompanions.length >= 50}
+                                className={`w-full p-2 rounded flex items-center justify-center gap-1
+                                  ${(!newCompanionName || !newCompanionVehicle || drivingCompanions.length >= 50) 
+                                    ? 'bg-gray-700 text-gray-400 cursor-not-allowed' 
+                                    : 'bg-blue-600 hover:bg-blue-500 text-white'}`}
+                              >
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                                </svg>
+                                <span>Add to Drive</span>
+                              </button>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {/* List of companions */}
+                        {drivingCompanions.length > 0 && (
+                          <div className="mt-3">
+                            <div className="flex justify-between items-center mb-2">
+                              <h4 className="font-medium text-blue-400 text-sm">Drive Companions</h4>
+                              <div className="flex gap-2">
+                                <button
+                                  onClick={() => setCompanionsListView(companionsListView === 'grid' ? 'list' : 'grid')}
+                                  className="text-xs bg-gray-800 hover:bg-gray-700 text-gray-300 p-1 rounded"
+                                >
+                                  {companionsListView === 'grid' ? 'List View' : 'Grid View'}
+                                </button>
+                                <button
+                                  onClick={clearAllCompanions}
+                                  className="text-xs bg-red-900/30 hover:bg-red-900/50 text-red-400 p-1 rounded flex items-center gap-1"
+                                >
+                                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                                  </svg>
+                                  Clear All
+                                </button>
+                              </div>
+                            </div>
+                            
+                            <div className={`mt-2 max-h-60 overflow-y-auto scrollbar-thin pr-1 
+                              ${companionsListView === 'grid' ? 'grid grid-cols-1 md:grid-cols-2 gap-2' : 'space-y-2'}`}>
+                              {drivingCompanions.map((companion, index) => (
+                                <div 
+                                  key={index} 
+                                  className={`relative bg-black/40 border border-gray-800 rounded-lg 
+                                  ${companionsListView === 'grid' ? 'p-3' : 'p-2 flex items-center gap-3'}`}
+                                >
+                                  {companionsListView === 'grid' ? (
+                                    // Grid View
+                                    <>
+                                      <div className="flex justify-between items-start mb-1">
+                                        <h5 className="font-medium text-white">{companion.name}</h5>
+                                        <button
+                                          onClick={() => removeCompanion(index)}
+                                          className="text-red-400 hover:text-red-300 p-1"
+                                        >
+                                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                          </svg>
+                                        </button>
+                                      </div>
+                                      <div className="border-l-2 border-blue-500 pl-2 py-0.5">
+                                        <div className="text-sm text-blue-300">{companion.vehicle}</div>
+                                        {companion.vehicleDetails && (
+                                          <div className="text-xs text-gray-400">{companion.vehicleDetails}</div>
+                                        )}
+                                      </div>
+                                    </>
+                                  ) : (
+                                    // List View
+                                    <>
+                                      <div className="w-8 h-8 bg-blue-900/20 rounded-full flex items-center justify-center text-blue-400 font-bold">
+                                        {companion.name.charAt(0).toUpperCase()}
+                                      </div>
+                                      <div className="flex-grow">
+                                        <div className="flex justify-between">
+                                          <h5 className="font-medium text-white text-sm">{companion.name}</h5>
+                                        </div>
+                                        <div className="text-xs text-blue-300">{companion.vehicle}</div>
+                                        {companion.vehicleDetails && (
+                                          <div className="text-xs text-gray-400">{companion.vehicleDetails}</div>
+                                        )}
+                                      </div>
+                                      <button
+                                        onClick={() => removeCompanion(index)}
+                                        className="text-red-400 hover:text-red-300 p-1"
+                                      >
+                                        <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                                        </svg>
+                                      </button>
+                                    </>
+                                  )}
+                                </div>
+                              ))}
+                            </div>
+                            
+                            {drivingCompanions.length >= 50 && (
+                              <div className="text-amber-400 text-xs mt-2 flex items-center gap-1">
+                                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                </svg>
+                                <span>Maximum limit of 50 companions reached</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
