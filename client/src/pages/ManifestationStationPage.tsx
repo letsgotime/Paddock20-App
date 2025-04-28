@@ -495,6 +495,16 @@ const ManifestationStationPage = () => {
   const [showPhotoUploadModal, setShowPhotoUploadModal] = useState(false);
   const [isSharingOpen, setIsSharingOpen] = useState(false);
   const [shareableGoal, setShareableGoal] = useState<Goal | null>(null);
+  
+  // State for goal details modal navigation
+  const [activeTab, setActiveTab] = useState('overview');
+  const [showSections, setShowSections] = useState({
+    overview: true,
+    milestones: true,
+    financials: true,
+    disciplines: true,
+    media: true
+  });
 
   // Load a new affirmation on component mount
   useEffect(() => {
