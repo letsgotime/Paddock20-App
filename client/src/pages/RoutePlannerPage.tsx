@@ -8,6 +8,7 @@ import {
 import { Link } from "react-router-dom";
 import { getWeatherData, getOneCallData, formatTemperature } from '@/services/openWeatherService';
 
+// Interface definitions
 interface Location {
   id: string;
   name: string;
@@ -34,6 +35,15 @@ interface Passenger {
   notes?: string;
 }
 
+interface RouteCustomizationOptions {
+  isRoundTrip: boolean;
+  avoidTolls: boolean;
+  onlyTolls: boolean;
+  scenicRoute: boolean;
+  includeGasStops: boolean;
+  includeFoodStops: boolean;
+}
+
 interface Route {
   id: number;
   name: string;
@@ -55,9 +65,10 @@ interface Route {
   startMileage?: number; // Vehicle odometer at trip start
   endMileage?: number;   // Vehicle odometer at trip end
   fuelConsumption?: number; // Fuel used in trip (gallons/liters)
+  routeCustomizations?: RouteCustomizationOptions; // Route customization options
 }
 
-// Simulate road condition data based on weather and temperature
+// Helper functions
 const getRoadConditionForLocation = (weather: any, temp: number) => {
   const description = weather?.description?.toLowerCase() || '';
   let status = 'optimal';
@@ -155,6 +166,14 @@ const getTrafficLikelihood = (distance: number) => {
   }
 };
 
+// Format time from minutes to hours and minutes
+const formatTime = (minutes: number): string => {
+  const hours = Math.floor(minutes / 60);
+  const mins = minutes % 60;
+  return hours > 0 ? `${hours}h ${mins}m` : `${mins}m`;
+};
+
+// Route categories and sample data
 const ROUTE_CATEGORIES = [
   { id: 'scenic', label: 'Scenic Drive', icon: '🌄' },
   { id: 'track', label: 'Track Day', icon: '🏁' },
@@ -167,137 +186,13 @@ const ROUTE_CATEGORIES = [
   { id: 'first_drive', label: 'First Time Drive', icon: '🔍' },
 ];
 
-// Featured Routes Database
-const NATIONAL_PARKS_ROUTES = [
-  {
-    id: 'np_blue_ridge',
-    name: 'Blue Ridge Parkway',
-    description: 'America\'s longest linear park running through 29 Virginia and North Carolina counties',
-    length: 469,
-    highlights: ['Linn Cove Viaduct', 'Grandfather Mountain', 'Mount Mitchell'],
-    difficulty: 'Easy to Moderate',
-    bestSeason: 'Fall',
-    startLocation: { name: 'Waynesboro, VA', lat: 38.0685, lon: -78.8896 },
-    endLocation: { name: 'Cherokee, NC', lat: 35.4732, lon: -83.3136 }
-  },
-  {
-    id: 'np_going_to_sun',
-    name: 'Going-to-the-Sun Road',
-    description: 'The only road that crosses Glacier National Park, Montana',
-    length: 50,
-    highlights: ['Logan Pass', 'Lake McDonald', 'St. Mary Lake'],
-    difficulty: 'Moderate',
-    bestSeason: 'Summer',
-    startLocation: { name: 'West Glacier, MT', lat: 48.5128, lon: -113.9954 },
-    endLocation: { name: 'St. Mary, MT', lat: 48.7396, lon: -113.4305 }
-  },
-  {
-    id: 'np_yosemite_loop',
-    name: 'Yosemite Valley Loop',
-    description: 'Scenic drive through Yosemite Valley with iconic landmark views',
-    length: 13,
-    highlights: ['El Capitan', 'Half Dome', 'Yosemite Falls'],
-    difficulty: 'Easy',
-    bestSeason: 'Spring',
-    startLocation: { name: 'Yosemite Valley Visitor Center', lat: 37.7485, lon: -119.5873 },
-    endLocation: { name: 'Yosemite Valley Visitor Center', lat: 37.7485, lon: -119.5873 }
-  },
-];
-
-const FAMOUS_RACETRACKS = [
-  {
-    id: 'track_nurburgring',
-    name: 'Nürburgring Nordschleife',
-    description: 'Legendary 12.9-mile track known as "The Green Hell"',
-    length: 12.9,
-    corners: 154,
-    country: 'Germany',
-    location: { name: 'Nürburg, Germany', lat: 50.3356, lon: 6.9479 },
-    lapRecord: {
-      time: '6:43.300',
-      driver: 'Lars Kern',
-      vehicle: 'Porsche 911 GT2 RS Manthey Racing',
-      year: 2021
-    }
-  },
-  {
-    id: 'track_laguna_seca',
-    name: 'WeatherTech Raceway Laguna Seca',
-    description: 'Famous for the Corkscrew turn with 18% elevation change',
-    length: 2.238,
-    corners: 11,
-    country: 'USA',
-    location: { name: 'Monterey, CA', lat: 36.5858, lon: -121.7547 },
-    lapRecord: {
-      time: '1:05.786',
-      driver: 'Marc Gené',
-      vehicle: 'Ferrari F2003-GA',
-      year: 2012
-    }
-  },
-  {
-    id: 'track_spa',
-    name: 'Circuit de Spa-Francorchamps',
-    description: 'Home to the famous Eau Rouge corner',
-    length: 4.352,
-    corners: 20,
-    country: 'Belgium',
-    location: { name: 'Stavelot, Belgium', lat: 50.4372, lon: 5.9715 },
-    lapRecord: {
-      time: '1:41.252',
-      driver: 'Lewis Hamilton',
-      vehicle: 'Mercedes W11',
-      year: 2020
-    }
-  },
-];
-
-const LEGENDARY_ROADS = [
-  {
-    id: 'road_stelvio',
-    name: 'Stelvio Pass',
-    description: 'One of the highest paved mountain passes in the Eastern Alps',
-    country: 'Italy',
-    length: 47,
-    elevation: 9045,
-    hairpins: 48,
-    difficulty: 'Advanced',
-    bestSeason: 'Summer',
-    location: { name: 'Stelvio, Italy', lat: 46.5453, lon: 10.4683 }
-  },
-  {
-    id: 'road_transfagarasan',
-    name: 'Transfăgărășan Highway',
-    description: 'Romania\'s most dramatic road, climbing through the Carpathian Mountains',
-    country: 'Romania',
-    length: 56,
-    elevation: 6699,
-    hairpins: 27,
-    difficulty: 'Moderate',
-    bestSeason: 'Summer/Fall',
-    location: { name: 'Cartisoara, Romania', lat: 45.6527, lon: 24.6135 }
-  },
-  {
-    id: 'road_tail_of_dragon',
-    name: 'Tail of the Dragon',
-    description: '318 curves in 11 miles at Deal\'s Gap',
-    country: 'USA',
-    length: 11,
-    elevation: 1800,
-    curves: 318,
-    difficulty: 'Advanced',
-    bestSeason: 'Spring/Fall',
-    location: { name: 'Robbinsville, NC', lat: 35.4734, lon: -83.9210 }
-  },
-];
-
 // Navigation services
 const NAVIGATION_SERVICES = [
   { 
     id: 'google', 
     name: 'Google Maps', 
     logo: '🌎',
-    getDirectionsUrl: (startLat: number, startLon: number, endLat: number, endLon: number, waypoints?: any[]) => {
+    getDirectionsUrl: (startLat: number, startLon: number, endLat: number, endLon: number, waypoints?: Location[]) => {
       let url = `https://www.google.com/maps/dir/?api=1&origin=${startLat},${startLon}&destination=${endLat},${endLon}&travelmode=driving`;
       
       if (waypoints && waypoints.length > 0) {
@@ -356,37 +251,37 @@ const SAMPLE_VEHICLES: Vehicle[] = [
     nickname: 'British Elegance',
     color: 'Magnetic Silver',
     image: '/assets/aston-db11.jpg',
-    currentMileage: 12540
+    currentMileage: 12405
   }
 ];
 
-// Sample passengers
+// Sample passengers for demonstration
 const SAMPLE_PASSENGERS: Passenger[] = [
   { id: 1, name: 'Alex Johnson', relationship: 'Co-Driver', notes: 'Experienced navigator' },
   { id: 2, name: 'Morgan Smith', relationship: 'Spouse', notes: 'Prefers scenic routes' },
-  { id: 3, name: 'Jamie Williams', relationship: 'Friend', notes: 'Car enthusiast, loves technical discussions' },
-  { id: 4, name: 'Taylor Brown', relationship: 'Business Associate', notes: 'Prefers comfort over speed' }
+  { id: 3, name: 'Jamie Williams', relationship: 'Friend', notes: 'Motorsport enthusiast' },
+  { id: 4, name: 'Taylor Reed', relationship: 'Car Club Member', notes: 'Professional photographer' }
 ];
 
-// Sample data for demonstration purposes
+// Sample routes for demonstration
 const SAMPLE_ROUTES: Route[] = [
   {
     id: 1,
-    name: "Mountain Drive - Blue Ridge Parkway",
+    name: "Mountain Sunrise Run",
     startPoint: { id: "asheville", name: "Asheville, NC", lat: 35.5951, lon: -82.5515 },
-    endPoint: { id: "blowing_rock", name: "Blowing Rock, NC", lat: 36.1354, lon: -81.6764 },
-    distance: 93,
-    estimatedTime: "2h 15m",
-    notes: "Beautiful mountain scenery with numerous overlooks. Watch for fog in early morning.",
+    endPoint: { id: "blueridge", name: "Blue Ridge Parkway MM 355", lat: 35.7168, lon: -82.2274 },
+    distance: 28,
+    estimatedTime: "45m",
+    notes: "Beautiful morning drive with sunrise views. Best between 6-8 AM.",
     category: "scenic",
     favorite: true,
-    lastDriven: "2023-09-15"
+    lastDriven: "2023-11-15"
   },
   {
     id: 2,
     name: "Charlotte Motor Speedway Loop",
     startPoint: { id: "concord", name: "Concord, NC", lat: 35.4088, lon: -80.5795 },
-    endPoint: { id: "concord", name: "Concord, NC", lat: 35.4088, lon: -80.5795 },
+    endPoint: { id: "harrisburg", name: "Harrisburg, NC", lat: 35.3224, lon: -80.6542 },
     distance: 42,
     estimatedTime: "55m",
     notes: "Great weekend drive with sweeping curves and good pavement. Stop at the speedway visitor center.",
@@ -409,13 +304,14 @@ const SAMPLE_ROUTES: Route[] = [
 ];
 
 const RoutePlannerPage = () => {
+  // State for route management
   const [routes, setRoutes] = useState<Route[]>(SAMPLE_ROUTES);
   const [activeTab, setActiveTab] = useState('create');
   const [selectedRoute, setSelectedRoute] = useState<Route | null>(null);
-  const [searchResults, setSearchResults] = useState<any[]>([]);
-  const [isLoadingWeather, setIsLoadingWeather] = useState(false);
   const [weatherData, setWeatherData] = useState<any>(null);
   const [activeActionTab, setActiveActionTab] = useState('overview');
+  
+  // Navigation preferences
   const [preferredNavService, setPreferredNavService] = useState('google');
   const [showNavOptions, setShowNavOptions] = useState(false);
   
@@ -425,10 +321,27 @@ const RoutePlannerPage = () => {
   const [selectedVehicleId, setSelectedVehicleId] = useState<number | null>(null);
   const [selectedPassengerIds, setSelectedPassengerIds] = useState<number[]>([]);
   const [isFirstDrive, setIsFirstDrive] = useState(false);
+  
+  // Mileage tracking
   const [mileageTracking, setMileageTracking] = useState({
     startMileage: 0,
     endMileage: 0,
     fuelConsumption: 0
+  });
+  
+  // Waypoints for multi-stop routes
+  const [waypoints, setWaypoints] = useState<Location[]>([]);
+  const [waypointInput, setWaypointInput] = useState('');
+  const [isSearchingWaypoint, setIsSearchingWaypoint] = useState(false);
+  
+  // Route customization options
+  const [routeCustomizations, setRouteCustomizations] = useState<RouteCustomizationOptions>({
+    isRoundTrip: false,
+    avoidTolls: false,
+    onlyTolls: false,
+    scenicRoute: false,
+    includeGasStops: false,
+    includeFoodStops: false,
   });
   
   // New route state
@@ -443,25 +356,15 @@ const RoutePlannerPage = () => {
     waypoints: [],
   });
   
-  // Route customization options
-  const [routeCustomizations, setRouteCustomizations] = useState({
-    isRoundTrip: false,
-    avoidTolls: false,
-    onlyTolls: false,
-    scenicRoute: false,
-    includeGasStops: false,
-    includeFoodStops: false,
-  });
-  
   // Location search state
   const [startLocationInput, setStartLocationInput] = useState("");
   const [endLocationInput, setEndLocationInput] = useState("");
-  const [waypointInput, setWaypointInput] = useState("");
-  const [waypoints, setWaypoints] = useState<Location[]>([]);
   const [isSearchingStart, setIsSearchingStart] = useState(false);
   const [isSearchingEnd, setIsSearchingEnd] = useState(false);
   const [startSearchResults, setStartSearchResults] = useState<any[]>([]);
   const [endSearchResults, setEndSearchResults] = useState<any[]>([]);
+  const [searchResults, setSearchResults] = useState<any[]>([]);
+  const [isLoadingWeather, setIsLoadingWeather] = useState(false);
   
   // Form focus refs
   const startInputRef = useRef<HTMLInputElement>(null);
@@ -473,14 +376,17 @@ const RoutePlannerPage = () => {
     
     setIsSearchingStart(true);
     try {
-      const response = await fetch(`/api/geocode?q=${encodeURIComponent(startLocationInput)}`);
-      if (!response.ok) throw new Error('Location search failed');
-      
-      const data = await response.json();
-      setStartSearchResults(data);
+      // Mock geocoding API response for demo
+      setTimeout(() => {
+        setStartSearchResults([
+          { name: 'Charlotte', state: 'NC', lat: 35.2271, lon: -80.8431, place_id: 'charlotte_nc' },
+          { name: 'Raleigh', state: 'NC', lat: 35.7796, lon: -78.6382, place_id: 'raleigh_nc' },
+          { name: 'Asheville', state: 'NC', lat: 35.5951, lon: -82.5515, place_id: 'asheville_nc' }
+        ]);
+        setIsSearchingStart(false);
+      }, 800);
     } catch (err) {
       console.error('Error searching for start location:', err);
-    } finally {
       setIsSearchingStart(false);
     }
   };
@@ -491,15 +397,39 @@ const RoutePlannerPage = () => {
     
     setIsSearchingEnd(true);
     try {
-      const response = await fetch(`/api/geocode?q=${encodeURIComponent(endLocationInput)}`);
-      if (!response.ok) throw new Error('Location search failed');
-      
-      const data = await response.json();
-      setEndSearchResults(data);
+      // Mock geocoding API response for demo
+      setTimeout(() => {
+        setEndSearchResults([
+          { name: 'Blue Ridge Parkway', state: 'NC', lat: 35.7168, lon: -82.2274, place_id: 'brp_nc' },
+          { name: 'Boone', state: 'NC', lat: 36.2168, lon: -81.6746, place_id: 'boone_nc' },
+          { name: 'Wilmington', state: 'NC', lat: 34.2104, lon: -77.8868, place_id: 'wilmington_nc' }
+        ]);
+        setIsSearchingEnd(false);
+      }, 800);
     } catch (err) {
       console.error('Error searching for end location:', err);
-    } finally {
       setIsSearchingEnd(false);
+    }
+  };
+  
+  // Handle waypoint search
+  const handleWaypointSearch = async () => {
+    if (!waypointInput.trim()) return;
+    
+    setIsSearchingWaypoint(true);
+    try {
+      // Mock geocoding API response for demo
+      setTimeout(() => {
+        setSearchResults([
+          { name: 'Winston-Salem', state: 'NC', lat: 36.0999, lon: -80.2442, place_id: 'ws_nc' },
+          { name: 'Greensboro', state: 'NC', lat: 36.0726, lon: -79.7920, place_id: 'greensboro_nc' },
+          { name: 'Durham', state: 'NC', lat: 35.9940, lon: -78.8986, place_id: 'durham_nc' }
+        ]);
+        setIsSearchingWaypoint(false);
+      }, 800);
+    } catch (err) {
+      console.error('Error searching for waypoint:', err);
+      setIsSearchingWaypoint(false);
     }
   };
   
@@ -537,28 +467,57 @@ const RoutePlannerPage = () => {
     setEndLocationInput(location.name);
     setEndSearchResults([]);
     
-    // Calculate estimated distance and time (simplified)
+    // Calculate route if we have start and end points
     if (newRoute.startPoint) {
-      const startLat = newRoute.startPoint.lat;
-      const startLon = newRoute.startPoint.lon;
-      const endLat = location.lat;
-      const endLon = location.lon;
-      
-      // Simplified distance calculation using Haversine formula
-      const distance = calculateDistance(startLat, startLon, endLat, endLon);
-      const timeInMinutes = Math.round(distance * 1.2); // Simplified time calculation
-      
-      const hours = Math.floor(timeInMinutes / 60);
-      const minutes = timeInMinutes % 60;
-      const formattedTime = hours > 0 
-        ? `${hours}h ${minutes}m` 
-        : `${minutes}m`;
-      
-      setNewRoute(prev => ({ 
-        ...prev, 
-        distance: Math.round(distance), 
-        estimatedTime: formattedTime
-      }));
+      updateRouteCalculations(
+        newRoute.startPoint as Location,
+        location,
+        waypoints
+      );
+    }
+  };
+  
+  // Select waypoint from search results
+  const selectWaypoint = (result: any) => {
+    const waypoint: Location = {
+      id: `waypoint-${result.lat},${result.lon}`,
+      name: result.name + (result.state ? `, ${result.state}` : ''),
+      lat: result.lat,
+      lon: result.lon,
+      placeId: result.place_id
+    };
+    
+    // Add to waypoints list
+    const updatedWaypoints = [...waypoints, waypoint];
+    setWaypoints(updatedWaypoints);
+    
+    // Update route calculations if start and end points exist
+    if (newRoute.startPoint && newRoute.endPoint) {
+      updateRouteCalculations(
+        newRoute.startPoint as Location,
+        newRoute.endPoint as Location,
+        updatedWaypoints
+      );
+    }
+    
+    // Clear waypoint input and search results
+    setWaypointInput('');
+    setSearchResults([]);
+  };
+  
+  // Remove waypoint from list
+  const removeWaypoint = (index: number) => {
+    const updatedWaypoints = [...waypoints];
+    updatedWaypoints.splice(index, 1);
+    setWaypoints(updatedWaypoints);
+    
+    // Recalculate route if needed
+    if (newRoute.startPoint && newRoute.endPoint) {
+      updateRouteCalculations(
+        newRoute.startPoint as Location,
+        newRoute.endPoint as Location,
+        updatedWaypoints
+      );
     }
   };
   
@@ -573,6 +532,34 @@ const RoutePlannerPage = () => {
       Math.sin(dLon/2) * Math.sin(dLon/2);
     const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
     return R * c;
+  };
+  
+  // Calculate total distance with waypoints
+  const calculateTotalDistanceWithWaypoints = (start: Location, end: Location, via: Location[] = []): number => {
+    if (via.length === 0) {
+      return calculateDistance(start.lat, start.lon, end.lat, end.lon);
+    }
+    
+    let totalDistance = 0;
+    
+    // Start to first waypoint
+    totalDistance += calculateDistance(start.lat, start.lon, via[0].lat, via[0].lon);
+    
+    // Between waypoints
+    for (let i = 0; i < via.length - 1; i++) {
+      totalDistance += calculateDistance(
+        via[i].lat, via[i].lon,
+        via[i+1].lat, via[i+1].lon
+      );
+    }
+    
+    // Last waypoint to end
+    totalDistance += calculateDistance(
+      via[via.length - 1].lat, via[via.length - 1].lon,
+      end.lat, end.lon
+    );
+    
+    return totalDistance;
   };
   
   // Get selected vehicle
@@ -620,157 +607,47 @@ const RoutePlannerPage = () => {
     }));
   };
   
-  // Handle searching for waypoint
-  const handleWaypointSearch = async () => {
-    if (!waypointInput.trim()) return;
-    
-    try {
-      const response = await fetch(`/api/geocode?q=${encodeURIComponent(waypointInput)}`);
-      if (!response.ok) throw new Error('Location search failed');
-      
-      const data = await response.json();
-      setSearchResults(data);
-    } catch (err) {
-      console.error('Error searching for waypoint:', err);
-    }
-  };
-  
-  // Select waypoint from search results
-  const selectWaypoint = (result: any) => {
-    const location: Location = {
-      id: `${result.lat},${result.lon}`,
-      name: result.name + (result.state ? `, ${result.state}` : ''),
-      lat: result.lat,
-      lon: result.lon,
-      placeId: result.place_id
-    };
-    
-    // Add waypoint to route
-    const updatedWaypoints = [...waypoints, location];
-    setWaypoints(updatedWaypoints);
-    
-    // Update route with waypoints
-    setNewRoute(prev => ({ 
-      ...prev, 
-      waypoints: updatedWaypoints 
-    }));
-    
-    // Clear input and results
-    setWaypointInput('');
-    setSearchResults([]);
-    
-    // Recalculate route if start and end points exist
-    if (newRoute.startPoint && newRoute.endPoint) {
-      updateRouteCalculations(
-        newRoute.startPoint,
-        newRoute.endPoint,
-        updatedWaypoints
-      );
-    }
-  };
-  
-  // Remove waypoint from route
-  const removeWaypoint = (index: number) => {
-    const updatedWaypoints = [...waypoints];
-    updatedWaypoints.splice(index, 1);
-    
-    setWaypoints(updatedWaypoints);
-    setNewRoute(prev => ({ 
-      ...prev, 
-      waypoints: updatedWaypoints 
-    }));
-    
-    // Recalculate route if start and end points exist
-    if (newRoute.startPoint && newRoute.endPoint) {
-      updateRouteCalculations(
-        newRoute.startPoint,
-        newRoute.endPoint,
-        updatedWaypoints
-      );
-    }
-  };
-  
-  // Toggle route customization
-  const toggleRouteCustomization = (field: keyof typeof routeCustomizations) => {
-    // If toggling onlyTolls or avoidTolls, make sure they don't conflict
-    if (field === 'onlyTolls' && routeCustomizations.avoidTolls) {
-      setRouteCustomizations(prev => ({
-        ...prev,
-        onlyTolls: true,
-        avoidTolls: false
-      }));
-    } else if (field === 'avoidTolls' && routeCustomizations.onlyTolls) {
-      setRouteCustomizations(prev => ({
-        ...prev,
-        avoidTolls: true,
+  // Toggle route customization options
+  const toggleRouteCustomization = (option: keyof RouteCustomizationOptions) => {
+    // Handle mutually exclusive options
+    if (option === 'avoidTolls' && routeCustomizations.onlyTolls) {
+      setRouteCustomizations({
+        ...routeCustomizations,
+        [option]: !routeCustomizations[option],
         onlyTolls: false
-      }));
-    } else {
-      // Normal toggle behavior
-      setRouteCustomizations(prev => ({
-        ...prev,
-        [field]: !prev[field]
-      }));
+      });
+      return;
     }
     
-    // If toggling isRoundTrip, update the route calculation
-    if (field === 'isRoundTrip' && newRoute.startPoint && newRoute.endPoint) {
-      const willBeRoundTrip = !routeCustomizations.isRoundTrip;
-      
-      if (willBeRoundTrip) {
-        // For round trip, double the distance and recalculate time
-        const updatedDistance = (newRoute.distance || 0) * 2;
-        const timeInMinutes = Math.round(updatedDistance * 1.2);
-        
-        const hours = Math.floor(timeInMinutes / 60);
-        const minutes = timeInMinutes % 60;
-        const formattedTime = hours > 0 
-          ? `${hours}h ${minutes}m` 
-          : `${minutes}m`;
-        
-        setNewRoute(prev => ({
-          ...prev,
-          distance: updatedDistance,
-          estimatedTime: formattedTime
-        }));
-      } else {
-        // Recalculate normal route
-        updateRouteCalculations(
-          newRoute.startPoint,
-          newRoute.endPoint,
-          waypoints
-        );
-      }
+    if (option === 'onlyTolls' && routeCustomizations.avoidTolls) {
+      setRouteCustomizations({
+        ...routeCustomizations,
+        [option]: !routeCustomizations[option],
+        avoidTolls: false
+      });
+      return;
+    }
+    
+    // Regular toggle for other options
+    setRouteCustomizations({
+      ...routeCustomizations,
+      [option]: !routeCustomizations[option]
+    });
+    
+    // Recalculate route if start and end points exist
+    if (newRoute.startPoint && newRoute.endPoint) {
+      updateRouteCalculations(
+        newRoute.startPoint as Location,
+        newRoute.endPoint as Location,
+        waypoints
+      );
     }
   };
   
   // Update route calculations based on points
   const updateRouteCalculations = (start: Location, end: Location, via: Location[] = []) => {
     // Base distance calculation
-    let totalDistance = calculateDistance(start.lat, start.lon, end.lat, end.lon);
-    
-    // Add distances for waypoints
-    if (via.length > 0) {
-      let prevPoint = start;
-      
-      for (const point of via) {
-        totalDistance += calculateDistance(
-          prevPoint.lat, 
-          prevPoint.lon, 
-          point.lat, 
-          point.lon
-        );
-        prevPoint = point;
-      }
-      
-      // Add distance from last waypoint to end
-      totalDistance += calculateDistance(
-        prevPoint.lat, 
-        prevPoint.lon, 
-        end.lat, 
-        end.lon
-      );
-    }
+    let totalDistance = calculateTotalDistanceWithWaypoints(start, end, via);
     
     // If round trip, double the distance
     if (routeCustomizations.isRoundTrip) {
@@ -789,16 +666,11 @@ const RoutePlannerPage = () => {
     if (routeCustomizations.onlyTolls) timeMultiplier -= 0.2;
     
     const timeInMinutes = Math.round(totalDistance * timeMultiplier);
-    const hours = Math.floor(timeInMinutes / 60);
-    const minutes = timeInMinutes % 60;
-    const formattedTime = hours > 0 
-      ? `${hours}h ${minutes}m` 
-      : `${minutes}m`;
     
     setNewRoute(prev => ({
       ...prev,
       distance: Math.round(totalDistance),
-      estimatedTime: formattedTime
+      estimatedTime: formatTime(timeInMinutes)
     }));
   };
   
@@ -869,7 +741,7 @@ const RoutePlannerPage = () => {
         scenicRoute: routeCustomizations.scenicRoute,
         includeGasStops: routeCustomizations.includeGasStops,
         includeFoodStops: routeCustomizations.includeFoodStops
-      }
+      } as RouteCustomizationOptions
     };
     
     // Add to routes
@@ -1072,7 +944,7 @@ const RoutePlannerPage = () => {
         return <Compass className="h-5 w-5 text-green-500" />;
     }
   };
-
+  
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 bg-black min-h-screen">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
@@ -1085,7 +957,7 @@ const RoutePlannerPage = () => {
         {activeTab === 'details' && selectedRoute && (
           <button 
             onClick={handleBackToList}
-            className="bg-blue-900/30 text-blue-400 px-4 py-2 rounded flex items-center text-sm"
+            className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded flex items-center"
           >
             <CornerUpRight className="h-4 w-4 mr-2" />
             Back to Routes
@@ -1093,1250 +965,1167 @@ const RoutePlannerPage = () => {
         )}
       </div>
       
-      {activeTab === 'create' && (
-        <>
-          {/* Route Creation Form */}
-          <section className="bg-gradient-to-r from-gray-900 to-black rounded-lg shadow-lg p-6 mb-8 border border-gray-800">
-            <h2 className="text-blue-400 font-orbitron text-2xl mb-6 flex items-center">
-              <RouteIcon className="mr-3 h-6 w-6" />
-              Create New Route
-            </h2>
-            
-            <div className="space-y-6">
-              {/* Route Name and Category */}
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-gray-400 text-sm mb-2">Route Name</label>
-                  <input
-                    type="text"
-                    placeholder="e.g., Mountain View Run"
-                    value={newRoute.name}
-                    onChange={(e) => setNewRoute({ ...newRoute, name: e.target.value })}
-                    className="w-full bg-black text-white p-3 rounded border border-gray-700 focus:border-blue-500 focus:outline-none"
-                  />
-                </div>
-                
-                <div>
-                  <label className="block text-gray-400 text-sm mb-2">Category</label>
-                  <select
-                    value={newRoute.category}
-                    onChange={(e) => setNewRoute({ ...newRoute, category: e.target.value })}
-                    className="w-full bg-black text-white p-3 rounded border border-gray-700 focus:border-blue-500 focus:outline-none"
-                  >
-                    {ROUTE_CATEGORIES.map(cat => (
-                      <option key={cat.id} value={cat.id}>
-                        {cat.icon} {cat.label}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              </div>
-              
-              {/* Start Location with search */}
-              <div>
-                <label className="block text-gray-400 text-sm mb-2">Starting Point</label>
-                <div className="relative">
-                  <div className="flex">
-                    <div className="relative flex-1">
-                      <input
-                        ref={startInputRef}
-                        type="text"
-                        placeholder="Search for starting location..."
-                        value={startLocationInput}
-                        onChange={(e) => setStartLocationInput(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleStartLocationSearch()}
-                        className="w-full bg-black text-white p-3 rounded-l border border-gray-700 focus:border-blue-500 focus:outline-none"
-                      />
-                      {isSearchingStart && (
-                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                          <div className="h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-                        </div>
-                      )}
-                    </div>
-                    <button
-                      onClick={handleStartLocationSearch}
-                      className="bg-blue-900/40 text-blue-400 px-3 border border-blue-900 rounded-r hover:bg-blue-900/60"
-                    >
-                      <Search className="h-5 w-5" />
-                    </button>
-                  </div>
+      {/* Main content area */}
+      <div className="bg-gradient-to-b from-gray-900 to-black rounded-lg border border-gray-800 shadow-xl overflow-hidden">
+        {/* Create new route form */}
+        {activeTab === 'create' && (
+          <div className="p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Left column: New Route Form */}
+              <div className="lg:col-span-2 space-y-6">
+                <div className="bg-black bg-opacity-60 p-6 rounded-lg border border-gray-800">
+                  <h2 className="text-xl text-blue-500 font-orbitron mb-4 flex items-center">
+                    <RouteIcon className="mr-2 h-5 w-5" />
+                    Create New Route
+                  </h2>
                   
-                  {/* Start location search results dropdown */}
-                  {startSearchResults.length > 0 && (
-                    <div className="absolute z-50 mt-1 w-full bg-black border border-gray-700 rounded-md shadow-lg">
-                      <ul className="py-1 max-h-60 overflow-auto">
-                        {startSearchResults.map((result, idx) => (
-                          <li
-                            key={idx}
-                            onClick={() => selectStartLocation(result)}
-                            className="px-4 py-2 hover:bg-gray-800 cursor-pointer flex items-start"
-                          >
-                            <MapPin className="h-4 w-4 text-blue-400 mr-2 mt-1 flex-shrink-0" />
-                            <div>
-                              <p className="text-white">{result.name}</p>
-                              <p className="text-gray-400 text-xs">
-                                {result.state && <span>{result.state}, </span>}
-                                {result.country}
-                              </p>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-                
-                {newRoute.startPoint && (
-                  <div className="mt-2 px-3 py-2 bg-green-900/20 border border-green-900/30 rounded-md flex items-center">
-                    <MapPin className="h-4 w-4 text-green-500 mr-2" />
-                    <span className="text-green-400 text-sm">{newRoute.startPoint.name}</span>
-                  </div>
-                )}
-              </div>
-              
-              {/* Multi-stop Waypoints */}
-              <div className="mt-4 mb-4 relative">
-                <div className="flex items-center justify-between">
-                  <label className="block text-gray-400 text-sm mb-2 flex items-center">
-                    <RouteIcon className="h-4 w-4 text-blue-400 mr-2" />
-                    Multi-stop Waypoints
-                  </label>
-                  {waypoints.length > 0 && (
-                    <span className="text-gray-400 text-sm">{waypoints.length} stop{waypoints.length !== 1 ? 's' : ''}</span>
-                  )}
-                </div>
-                
-                <div className="relative">
-                  <div className="flex">
-                    <div className="relative flex-1">
+                  <div className="space-y-4">
+                    {/* Route name input */}
+                    <div>
+                      <label className="block text-gray-300 mb-1">Route Name</label>
                       <input
                         type="text"
-                        placeholder="Add a stop along the way..."
-                        value={waypointInput}
-                        onChange={(e) => setWaypointInput(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleWaypointSearch()}
-                        className="w-full bg-black text-white p-3 rounded-l border border-gray-700 focus:border-blue-500 focus:outline-none"
+                        value={newRoute.name || ''}
+                        onChange={(e) => setNewRoute(prev => ({ ...prev, name: e.target.value }))}
+                        className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded text-white"
+                        placeholder="Weekend Mountain Drive"
                       />
                     </div>
-                    <button
-                      onClick={handleWaypointSearch}
-                      className="bg-blue-900/40 text-blue-400 px-3 border border-blue-900 rounded-r hover:bg-blue-900/60"
-                    >
-                      <Search className="h-5 w-5" />
-                    </button>
-                  </div>
-                  
-                  {/* Waypoint search results */}
-                  {searchResults && searchResults.length > 0 && (
-                    <div className="absolute z-50 mt-1 w-full bg-black border border-gray-700 rounded-md shadow-lg">
-                      <ul className="py-1 max-h-60 overflow-auto">
-                        {searchResults.map((result, idx) => (
-                          <li
-                            key={idx}
-                            onClick={() => selectWaypoint(result)}
-                            className="px-4 py-2 hover:bg-gray-800 cursor-pointer flex items-start"
-                          >
-                            <MapPin className="h-4 w-4 text-blue-400 mr-2 mt-1 flex-shrink-0" />
-                            <div>
-                              <p className="text-white">{result.name}</p>
-                              <p className="text-gray-400 text-xs">
-                                {result.state && <span>{result.state}, </span>}
-                                {result.country}
-                              </p>
-                            </div>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
-                  )}
-                </div>
-                
-                {/* Waypoints list */}
-                {waypoints.length > 0 && (
-                  <div className="mt-3 space-y-2">
-                    {waypoints.map((waypoint, index) => (
-                      <div key={index} className="flex items-center justify-between p-2 bg-blue-900/20 border border-blue-900/30 rounded-md group">
-                        <div className="flex items-center">
-                          <div className="flex items-center justify-center h-5 w-5 rounded-full bg-blue-500 text-white text-xs mr-2">
-                            {index + 1}
-                          </div>
-                          <span className="text-blue-300 text-sm">{waypoint.name}</span>
-                        </div>
-                        <button 
-                          onClick={() => removeWaypoint(index)}
-                          className="text-red-400 hover:text-red-300 opacity-0 group-hover:opacity-100 transition-opacity"
+                    
+                    {/* Start location */}
+                    <div className="relative">
+                      <label className="block text-gray-300 mb-1">Starting Location</label>
+                      <div className="flex">
+                        <input
+                          ref={startInputRef}
+                          type="text"
+                          value={startLocationInput}
+                          onChange={(e) => setStartLocationInput(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleStartLocationSearch()}
+                          className="flex-grow px-4 py-2 bg-gray-900 border border-gray-700 rounded-l text-white"
+                          placeholder="City or address"
+                        />
+                        <button
+                          onClick={handleStartLocationSearch}
+                          className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-r"
                         >
-                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                          </svg>
+                          {isSearchingStart ? (
+                            <div className="animate-spin h-5 w-5 border-2 border-blue-500 rounded-full border-t-transparent"></div>
+                          ) : (
+                            <Search className="h-5 w-5 text-gray-400" />
+                          )}
                         </button>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-              
-              {/* End Location with search */}
-              <div>
-                <label className="block text-gray-400 text-sm mb-2">Destination</label>
-                <div className="relative">
-                  <div className="flex">
-                    <div className="relative flex-1">
-                      <input
-                        ref={endInputRef}
-                        type="text"
-                        placeholder="Search for destination..."
-                        value={endLocationInput}
-                        onChange={(e) => setEndLocationInput(e.target.value)}
-                        onKeyDown={(e) => e.key === 'Enter' && handleEndLocationSearch()}
-                        className="w-full bg-black text-white p-3 rounded-l border border-gray-700 focus:border-blue-500 focus:outline-none"
-                      />
-                      {isSearchingEnd && (
-                        <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
-                          <div className="h-4 w-4 border-2 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+                      
+                      {/* Search results dropdown for start location */}
+                      {startSearchResults.length > 0 && (
+                        <div className="absolute z-10 mt-1 w-full bg-gray-900 border border-gray-700 rounded-md shadow-lg">
+                          <ul className="py-1">
+                            {startSearchResults.map((result, index) => (
+                              <li 
+                                key={index}
+                                onClick={() => selectStartLocation(result)}
+                                className="px-4 py-2 hover:bg-gray-800 cursor-pointer flex items-center"
+                              >
+                                <MapPin className="h-4 w-4 text-gray-400 mr-2" />
+                                <span className="text-white">
+                                  {result.name}{result.state && `, ${result.state}`}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
                         </div>
                       )}
                     </div>
-                    <button
-                      onClick={handleEndLocationSearch}
-                      className="bg-blue-900/40 text-blue-400 px-3 border border-blue-900 rounded-r hover:bg-blue-900/60"
-                    >
-                      <Search className="h-5 w-5" />
-                    </button>
-                  </div>
-                  
-                  {/* End location search results dropdown */}
-                  {endSearchResults.length > 0 && (
-                    <div className="absolute z-50 mt-1 w-full bg-black border border-gray-700 rounded-md shadow-lg">
-                      <ul className="py-1 max-h-60 overflow-auto">
-                        {endSearchResults.map((result, idx) => (
-                          <li
-                            key={idx}
-                            onClick={() => selectEndLocation(result)}
-                            className="px-4 py-2 hover:bg-gray-800 cursor-pointer flex items-start"
-                          >
-                            <MapPin className="h-4 w-4 text-blue-400 mr-2 mt-1 flex-shrink-0" />
-                            <div>
-                              <p className="text-white">{result.name}</p>
-                              <p className="text-gray-400 text-xs">
-                                {result.state && <span>{result.state}, </span>}
-                                {result.country}
-                              </p>
+                    
+                    {/* End location */}
+                    <div className="relative">
+                      <label className="block text-gray-300 mb-1">Destination</label>
+                      <div className="flex">
+                        <input
+                          ref={endInputRef}
+                          type="text"
+                          value={endLocationInput}
+                          onChange={(e) => setEndLocationInput(e.target.value)}
+                          onKeyDown={(e) => e.key === 'Enter' && handleEndLocationSearch()}
+                          className="flex-grow px-4 py-2 bg-gray-900 border border-gray-700 rounded-l text-white"
+                          placeholder="City or address"
+                        />
+                        <button
+                          onClick={handleEndLocationSearch}
+                          className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-r"
+                        >
+                          {isSearchingEnd ? (
+                            <div className="animate-spin h-5 w-5 border-2 border-blue-500 rounded-full border-t-transparent"></div>
+                          ) : (
+                            <Search className="h-5 w-5 text-gray-400" />
+                          )}
+                        </button>
+                      </div>
+                      
+                      {/* Search results dropdown for end location */}
+                      {endSearchResults.length > 0 && (
+                        <div className="absolute z-10 mt-1 w-full bg-gray-900 border border-gray-700 rounded-md shadow-lg">
+                          <ul className="py-1">
+                            {endSearchResults.map((result, index) => (
+                              <li 
+                                key={index}
+                                onClick={() => selectEndLocation(result)}
+                                className="px-4 py-2 hover:bg-gray-800 cursor-pointer flex items-center"
+                              >
+                                <MapPin className="h-4 w-4 text-gray-400 mr-2" />
+                                <span className="text-white">
+                                  {result.name}{result.state && `, ${result.state}`}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Waypoints section - Only show if start and end are selected */}
+                    {newRoute.startPoint && newRoute.endPoint && (
+                      <div className="mt-6 border-t border-gray-800 pt-4">
+                        <h3 className="text-lg text-blue-400 mb-3">Waypoints</h3>
+                        
+                        {/* Waypoint input */}
+                        <div className="relative">
+                          <div className="flex mb-2">
+                            <input
+                              type="text"
+                              value={waypointInput}
+                              onChange={(e) => setWaypointInput(e.target.value)}
+                              onKeyDown={(e) => e.key === 'Enter' && handleWaypointSearch()}
+                              className="flex-grow px-4 py-2 bg-gray-900 border border-gray-700 rounded-l text-white"
+                              placeholder="Add a stop along the way"
+                            />
+                            <button
+                              onClick={handleWaypointSearch}
+                              className="px-4 py-2 bg-gray-800 hover:bg-gray-700 border border-gray-700 rounded-r"
+                            >
+                              {isSearchingWaypoint ? (
+                                <div className="animate-spin h-5 w-5 border-2 border-blue-500 rounded-full border-t-transparent"></div>
+                              ) : (
+                                <Search className="h-5 w-5 text-gray-400" />
+                              )}
+                            </button>
+                          </div>
+                          
+                          {/* Search results dropdown for waypoints */}
+                          {searchResults.length > 0 && (
+                            <div className="absolute z-10 mt-1 w-full bg-gray-900 border border-gray-700 rounded-md shadow-lg">
+                              <ul className="py-1">
+                                {searchResults.map((result, index) => (
+                                  <li 
+                                    key={index}
+                                    onClick={() => selectWaypoint(result)}
+                                    className="px-4 py-2 hover:bg-gray-800 cursor-pointer flex items-center"
+                                  >
+                                    <MapPin className="h-4 w-4 text-gray-400 mr-2" />
+                                    <span className="text-white">
+                                      {result.name}{result.state && `, ${result.state}`}
+                                    </span>
+                                  </li>
+                                ))}
+                              </ul>
                             </div>
-                          </li>
+                          )}
+                        </div>
+                        
+                        {/* Waypoints list */}
+                        {waypoints.length > 0 && (
+                          <div className="mt-3">
+                            <p className="text-sm text-green-400 mb-2">
+                              {waypoints.length} {waypoints.length === 1 ? 'waypoint' : 'waypoints'} added
+                            </p>
+                            <ul className="space-y-2">
+                              {waypoints.map((waypoint, index) => (
+                                <li key={waypoint.id} className="flex items-center justify-between bg-gray-800 rounded-md p-2">
+                                  <div className="flex items-center">
+                                    <span className="w-6 h-6 flex items-center justify-center bg-blue-500 rounded-full text-white text-xs mr-2">
+                                      {index + 1}
+                                    </span>
+                                    <span className="text-white">{waypoint.name}</span>
+                                  </div>
+                                  <button 
+                                    onClick={() => removeWaypoint(index)}
+                                    className="text-gray-400 hover:text-red-400"
+                                  >
+                                    &times;
+                                  </button>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Route customization options */}
+                    {newRoute.startPoint && newRoute.endPoint && (
+                      <div className="mt-6 border-t border-gray-800 pt-4">
+                        <h3 className="text-lg text-blue-400 mb-3">Route Customization</h3>
+                        
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                          {/* Round Trip */}
+                          <div 
+                            className={`cursor-pointer p-3 rounded-md flex flex-col items-center border ${routeCustomizations.isRoundTrip ? 'border-green-500 bg-green-900 bg-opacity-20' : 'border-gray-700'}`}
+                            onClick={() => toggleRouteCustomization('isRoundTrip')}
+                          >
+                            <Infinity className="h-6 w-6 mb-1 text-gray-300" />
+                            <span className="text-sm text-gray-300">Round Trip</span>
+                          </div>
+                          
+                          {/* Avoid Tolls */}
+                          <div 
+                            className={`cursor-pointer p-3 rounded-md flex flex-col items-center border ${routeCustomizations.avoidTolls ? 'border-green-500 bg-green-900 bg-opacity-20' : 'border-gray-700'}`}
+                            onClick={() => toggleRouteCustomization('avoidTolls')}
+                          >
+                            <AlertTriangle className="h-6 w-6 mb-1 text-gray-300" />
+                            <span className="text-sm text-gray-300">Avoid Tolls</span>
+                          </div>
+                          
+                          {/* Only Tolls (Fastest) */}
+                          <div 
+                            className={`cursor-pointer p-3 rounded-md flex flex-col items-center border ${routeCustomizations.onlyTolls ? 'border-green-500 bg-green-900 bg-opacity-20' : 'border-gray-700'}`}
+                            onClick={() => toggleRouteCustomization('onlyTolls')}
+                          >
+                            <Clock className="h-6 w-6 mb-1 text-gray-300" />
+                            <span className="text-sm text-gray-300">Prefer Tolls</span>
+                          </div>
+                          
+                          {/* Scenic Route */}
+                          <div 
+                            className={`cursor-pointer p-3 rounded-md flex flex-col items-center border ${routeCustomizations.scenicRoute ? 'border-green-500 bg-green-900 bg-opacity-20' : 'border-gray-700'}`}
+                            onClick={() => toggleRouteCustomization('scenicRoute')}
+                          >
+                            <MapIcon className="h-6 w-6 mb-1 text-gray-300" />
+                            <span className="text-sm text-gray-300">Scenic Route</span>
+                          </div>
+                          
+                          {/* Include Gas Stops */}
+                          <div 
+                            className={`cursor-pointer p-3 rounded-md flex flex-col items-center border ${routeCustomizations.includeGasStops ? 'border-green-500 bg-green-900 bg-opacity-20' : 'border-gray-700'}`}
+                            onClick={() => toggleRouteCustomization('includeGasStops')}
+                          >
+                            <Locate className="h-6 w-6 mb-1 text-gray-300" />
+                            <span className="text-sm text-gray-300">Gas Stops</span>
+                          </div>
+                          
+                          {/* Include Food Stops */}
+                          <div 
+                            className={`cursor-pointer p-3 rounded-md flex flex-col items-center border ${routeCustomizations.includeFoodStops ? 'border-green-500 bg-green-900 bg-opacity-20' : 'border-gray-700'}`}
+                            onClick={() => toggleRouteCustomization('includeFoodStops')}
+                          >
+                            <MapPin className="h-6 w-6 mb-1 text-gray-300" />
+                            <span className="text-sm text-gray-300">Food Stops</span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Category selection */}
+                    <div>
+                      <label className="block text-gray-300 mb-1">Route Category</label>
+                      <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                        {ROUTE_CATEGORIES.map(category => (
+                          <div
+                            key={category.id}
+                            onClick={() => setNewRoute(prev => ({ ...prev, category: category.id }))}
+                            className={`cursor-pointer p-2 rounded border ${
+                              newRoute.category === category.id 
+                                ? 'border-blue-500 bg-blue-900 bg-opacity-20' 
+                                : 'border-gray-700'
+                            } flex items-center`}
+                          >
+                            <span className="mr-2">{category.icon}</span>
+                            <span className="text-sm text-gray-300">{category.label}</span>
+                          </div>
                         ))}
-                      </ul>
+                      </div>
+                    </div>
+                    
+                    {/* Notes */}
+                    <div>
+                      <label className="block text-gray-300 mb-1">Notes</label>
+                      <textarea
+                        value={newRoute.notes || ''}
+                        onChange={(e) => setNewRoute(prev => ({ ...prev, notes: e.target.value }))}
+                        className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded text-white"
+                        placeholder="Any special instructions or reminders about this route"
+                        rows={3}
+                      ></textarea>
+                    </div>
+                    
+                    {/* Favorite toggle */}
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="checkbox"
+                        id="favorite"
+                        checked={newRoute.favorite || false}
+                        onChange={(e) => setNewRoute(prev => ({ ...prev, favorite: e.target.checked }))}
+                        className="w-4 h-4 bg-gray-900 border-gray-700 rounded text-blue-500 focus:ring-blue-500"
+                      />
+                      <label htmlFor="favorite" className="text-gray-300">Add to Favorites</label>
+                    </div>
+                    
+                    {/* Vehicle selection */}
+                    <div>
+                      <label className="block text-gray-300 mb-1">Vehicle for this Route</label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {vehicles.map(vehicle => (
+                          <div
+                            key={vehicle.id}
+                            onClick={() => handleVehicleChange(vehicle.id)}
+                            className={`cursor-pointer p-3 rounded-md border ${
+                              selectedVehicleId === vehicle.id 
+                                ? 'border-green-500 bg-green-900 bg-opacity-20' 
+                                : 'border-gray-700'
+                            }`}
+                          >
+                            <div className="flex items-center">
+                              <Car className="h-5 w-5 text-gray-400 mr-2" />
+                              <div>
+                                <p className="text-white">{vehicle.year} {vehicle.make} {vehicle.model}</p>
+                                {vehicle.nickname && (
+                                  <p className="text-sm text-gray-400">"{vehicle.nickname}"</p>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    {/* Passengers */}
+                    {selectedVehicleId && (
+                      <div>
+                        <label className="block text-gray-300 mb-1">Passengers</label>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                          {passengers.map(passenger => (
+                            <div
+                              key={passenger.id}
+                              onClick={() => togglePassenger(passenger.id)}
+                              className={`cursor-pointer p-2 rounded border ${
+                                selectedPassengerIds.includes(passenger.id) 
+                                  ? 'border-blue-500 bg-blue-900 bg-opacity-20' 
+                                  : 'border-gray-700'
+                              } flex items-center justify-between`}
+                            >
+                              <span className="text-gray-300">{passenger.name}</span>
+                              {passenger.relationship && (
+                                <span className="text-xs text-gray-500">{passenger.relationship}</span>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* First Drive checkbox */}
+                    {selectedVehicleId && (
+                      <div className="flex items-center space-x-2">
+                        <input
+                          type="checkbox"
+                          id="firstDrive"
+                          checked={isFirstDrive}
+                          onChange={(e) => setIsFirstDrive(e.target.checked)}
+                          className="w-4 h-4 bg-gray-900 border-gray-700 rounded text-blue-500 focus:ring-blue-500"
+                        />
+                        <label htmlFor="firstDrive" className="text-gray-300">This is my first time on this route</label>
+                      </div>
+                    )}
+                    
+                    {/* First drive intelligence */}
+                    {selectedVehicleId && isFirstDrive && newRoute.startPoint && newRoute.endPoint && (
+                      <div className="mt-4 bg-gray-850 rounded-md p-4 border border-blue-900">
+                        <h3 className="text-blue-400 font-medium mb-2 flex items-center">
+                          <BarChart className="h-5 w-5 mr-2" />
+                          First Drive Intelligence
+                        </h3>
+                        
+                        <div className="space-y-4">
+                          <div>
+                            <h4 className="text-green-400 text-sm mb-1">Vehicle Recommendations</h4>
+                            <ul className="list-disc list-inside text-sm text-gray-300 space-y-1">
+                              {generateFirstDriveIntelligence()?.vehicleRecommendations.map((rec, idx) => (
+                                <li key={idx}>{rec}</li>
+                              ))}
+                            </ul>
+                          </div>
+                          
+                          <div>
+                            <h4 className="text-blue-400 text-sm mb-1">Route Insights</h4>
+                            <ul className="list-disc list-inside text-sm text-gray-300 space-y-1">
+                              {generateFirstDriveIntelligence()?.routeInsights.map((insight, idx) => (
+                                <li key={idx}>{insight}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    
+                    {/* Mileage tracking - only show if vehicle is selected */}
+                    {selectedVehicleId && (
+                      <div className="mt-6 border-t border-gray-800 pt-4">
+                        <h3 className="text-lg text-blue-400 mb-3">Mileage Tracking</h3>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          <div>
+                            <label className="block text-gray-300 text-sm mb-1">Start Mileage</label>
+                            <input
+                              type="number"
+                              value={mileageTracking.startMileage || ''}
+                              onChange={(e) => handleMileageChange('startMileage', parseInt(e.target.value) || 0)}
+                              className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded text-white"
+                              placeholder="Starting odometer reading"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-gray-300 text-sm mb-1">End Mileage</label>
+                            <input
+                              type="number"
+                              value={mileageTracking.endMileage || ''}
+                              onChange={(e) => handleMileageChange('endMileage', parseInt(e.target.value) || 0)}
+                              className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded text-white"
+                              placeholder="Ending odometer reading"
+                            />
+                          </div>
+                          
+                          <div>
+                            <label className="block text-gray-300 text-sm mb-1">Fuel Used (gal)</label>
+                            <input
+                              type="number"
+                              step="0.1"
+                              value={mileageTracking.fuelConsumption || ''}
+                              onChange={(e) => handleMileageChange('fuelConsumption', parseFloat(e.target.value) || 0)}
+                              className="w-full px-4 py-2 bg-gray-900 border border-gray-700 rounded text-white"
+                              placeholder="Gallons of fuel used"
+                            />
+                          </div>
+                        </div>
+                        
+                        {/* Display calculated trip mileage if both start and end are provided */}
+                        {mileageTracking.startMileage > 0 && mileageTracking.endMileage > 0 && (
+                          <div className="mt-2 p-2 bg-blue-900 bg-opacity-20 rounded-md text-center">
+                            <span className="text-blue-400">Trip Mileage: </span>
+                            <span className="text-white font-medium">
+                              {mileageTracking.endMileage - mileageTracking.startMileage} miles
+                            </span>
+                            
+                            {mileageTracking.fuelConsumption > 0 && (
+                              <span className="ml-3 text-gray-300">
+                                (
+                                <span className="text-green-400">
+                                  {((mileageTracking.endMileage - mileageTracking.startMileage) / mileageTracking.fuelConsumption).toFixed(1)}
+                                </span> MPG)
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Submit button */}
+                    <div className="mt-6">
+                      <button
+                        onClick={handleAddRoute}
+                        disabled={!newRoute.name || !newRoute.startPoint || !newRoute.endPoint}
+                        className={`w-full py-3 px-4 rounded-md text-white font-medium 
+                          ${(!newRoute.name || !newRoute.startPoint || !newRoute.endPoint)
+                            ? 'bg-gray-700 cursor-not-allowed'
+                            : 'bg-gradient-to-r from-blue-600 to-green-500 hover:from-blue-700 hover:to-green-600'
+                          }`}
+                      >
+                        Add to My Routes
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Right column: Route details preview */}
+              <div>
+                <div className="bg-black bg-opacity-60 p-6 rounded-lg border border-gray-800 mb-6">
+                  <h2 className="text-xl text-blue-500 font-orbitron mb-4">Route Information</h2>
+                  
+                  {/* Route preview info */}
+                  {newRoute.startPoint && newRoute.endPoint ? (
+                    <div className="space-y-4">
+                      {/* Map placeholder */}
+                      <div className="aspect-video bg-gray-800 rounded-md flex items-center justify-center">
+                        <div className="text-center">
+                          <MapIcon className="h-12 w-12 text-gray-600 mx-auto mb-2" />
+                          <p className="text-gray-400 text-sm">Interactive map will be shown here</p>
+                        </div>
+                      </div>
+                      
+                      {/* Start to End summary */}
+                      <div className="bg-gray-900 rounded-md p-3">
+                        <div className="flex items-start mb-3">
+                          <div className="mt-1">
+                            <div className="w-4 h-4 rounded-full bg-green-500"></div>
+                            <div className="w-0.5 h-full bg-gray-700 mx-auto my-1"></div>
+                            <div className="w-4 h-4 rounded-full bg-red-500"></div>
+                          </div>
+                          <div className="ml-3 flex-1">
+                            <p className="text-white">{newRoute.startPoint.name}</p>
+                            <div className="my-2 text-gray-500 text-sm">
+                              {waypoints.length > 0 && (
+                                <div className="flex items-center my-1">
+                                  <span className="text-blue-400 text-xs mr-1">{waypoints.length} stops</span>
+                                  <span className="text-gray-400">•</span>
+                                  <span className="ml-1 text-gray-400">
+                                    {waypoints.map(wp => wp.name.split(',')[0]).join(' → ')}
+                                  </span>
+                                </div>
+                              )}
+                            </div>
+                            <p className="text-white">{newRoute.endPoint.name}</p>
+                          </div>
+                        </div>
+                        
+                        {/* Route metrics */}
+                        <div className="grid grid-cols-2 gap-3 mt-3 border-t border-gray-800 pt-3">
+                          <div>
+                            <p className="text-gray-400 text-xs">Distance</p>
+                            <p className="text-white text-lg">
+                              {newRoute.distance} {newRoute.distance === 1 ? 'mile' : 'miles'}
+                            </p>
+                          </div>
+                          <div>
+                            <p className="text-gray-400 text-xs">Est. Time</p>
+                            <p className="text-white text-lg">{newRoute.estimatedTime}</p>
+                          </div>
+                          
+                          {routeCustomizations.isRoundTrip && (
+                            <div className="col-span-2 mt-1">
+                              <p className="text-blue-400 text-sm">Round trip included in calculations</p>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="text-center py-10 text-gray-400">
+                      <MapPin className="h-12 w-12 mx-auto mb-4 text-gray-600" />
+                      <p>Select start and end points <br/>to preview route details</p>
                     </div>
                   )}
                 </div>
                 
-                {newRoute.endPoint && (
-                  <div className="mt-2 px-3 py-2 bg-green-900/20 border border-green-900/30 rounded-md flex items-center">
-                    <MapPin className="h-4 w-4 text-green-500 mr-2" />
-                    <span className="text-green-400 text-sm">{newRoute.endPoint.name}</span>
-                  </div>
-                )}
-              </div>
-              
-              {/* Route Customization Options */}
-              <div className="mt-6 mb-6 p-4 bg-blue-900/10 rounded-md border border-blue-900/20">
-                <h3 className="text-blue-400 text-lg mb-3 flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                  </svg>
-                  Route Customizations
-                </h3>
-                
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  <div 
-                    className={`p-3 border ${routeCustomizations.isRoundTrip ? 'border-green-500 bg-green-900/20' : 'border-gray-700 bg-black/30'} rounded-lg cursor-pointer transition-colors flex items-center`}
-                    onClick={() => toggleRouteCustomization('isRoundTrip')}
-                  >
-                    <div className={`h-5 w-5 mr-2 rounded-sm border ${routeCustomizations.isRoundTrip ? 'bg-green-500 border-green-500' : 'border-gray-500'} flex items-center justify-center`}>
-                      {routeCustomizations.isRoundTrip && (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                    </div>
-                    <span className="text-white text-sm">Round Trip</span>
-                  </div>
+                {/* Saved routes list */}
+                <div className="bg-black bg-opacity-60 p-6 rounded-lg border border-gray-800">
+                  <h2 className="text-xl text-blue-500 font-orbitron mb-4">My Routes</h2>
                   
-                  <div 
-                    className={`p-3 border ${routeCustomizations.includeFoodStops ? 'border-green-500 bg-green-900/20' : 'border-gray-700 bg-black/30'} rounded-lg cursor-pointer transition-colors flex items-center`}
-                    onClick={() => toggleRouteCustomization('includeFoodStops')}
-                  >
-                    <div className={`h-5 w-5 mr-2 rounded-sm border ${routeCustomizations.includeFoodStops ? 'bg-green-500 border-green-500' : 'border-gray-500'} flex items-center justify-center`}>
-                      {routeCustomizations.includeFoodStops && (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      )}
+                  {routes.length > 0 ? (
+                    <div className="space-y-3">
+                      {routes.map(route => (
+                        <div 
+                          key={route.id}
+                          onClick={() => handleSelectRoute(route)}
+                          className="bg-gray-900 hover:bg-gray-800 rounded-md p-3 cursor-pointer transition-colors"
+                        >
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h3 className="text-white text-lg font-medium">
+                                {route.name}
+                                {route.favorite && (
+                                  <span className="ml-2 text-yellow-400 text-sm">★</span>
+                                )}
+                              </h3>
+                              <p className="text-gray-400 text-sm mt-1">
+                                {route.distance} miles • {route.estimatedTime}
+                              </p>
+                            </div>
+                            <div className="text-right">
+                              {ROUTE_CATEGORIES.find(c => c.id === route.category)?.icon}
+                            </div>
+                          </div>
+                          
+                          <div className="mt-2 text-sm">
+                            <p className="text-gray-500 truncate">{route.startPoint.name} → {route.endPoint.name}</p>
+                          </div>
+                          
+                          {route.lastDriven && (
+                            <div className="mt-2 text-xs text-gray-500 flex items-center">
+                              <CalendarClock className="h-3 w-3 mr-1" />
+                              Last driven: {new Date(route.lastDriven).toLocaleDateString()}
+                            </div>
+                          )}
+                        </div>
+                      ))}
                     </div>
-                    <span className="text-white text-sm">Food Stops</span>
-                  </div>
-                  
-                  <div 
-                    className={`p-3 border ${routeCustomizations.includeGasStops ? 'border-green-500 bg-green-900/20' : 'border-gray-700 bg-black/30'} rounded-lg cursor-pointer transition-colors flex items-center`}
-                    onClick={() => toggleRouteCustomization('includeGasStops')}
-                  >
-                    <div className={`h-5 w-5 mr-2 rounded-sm border ${routeCustomizations.includeGasStops ? 'bg-green-500 border-green-500' : 'border-gray-500'} flex items-center justify-center`}>
-                      {routeCustomizations.includeGasStops && (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      )}
+                  ) : (
+                    <div className="text-center py-8 text-gray-400">
+                      <RouteIcon className="h-10 w-10 mx-auto mb-3 text-gray-600" />
+                      <p>No saved routes yet</p>
                     </div>
-                    <span className="text-white text-sm">Gas Stops</span>
-                  </div>
-                  
-                  <div 
-                    className={`p-3 border ${routeCustomizations.scenicRoute ? 'border-green-500 bg-green-900/20' : 'border-gray-700 bg-black/30'} rounded-lg cursor-pointer transition-colors flex items-center`}
-                    onClick={() => toggleRouteCustomization('scenicRoute')}
-                  >
-                    <div className={`h-5 w-5 mr-2 rounded-sm border ${routeCustomizations.scenicRoute ? 'bg-green-500 border-green-500' : 'border-gray-500'} flex items-center justify-center`}>
-                      {routeCustomizations.scenicRoute && (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                    </div>
-                    <span className="text-white text-sm">Scenic Route</span>
-                  </div>
-                  
-                  <div 
-                    className={`p-3 border ${routeCustomizations.avoidTolls ? 'border-green-500 bg-green-900/20' : 'border-gray-700 bg-black/30'} rounded-lg cursor-pointer transition-colors flex items-center`}
-                    onClick={() => toggleRouteCustomization('avoidTolls')}
-                  >
-                    <div className={`h-5 w-5 mr-2 rounded-sm border ${routeCustomizations.avoidTolls ? 'bg-green-500 border-green-500' : 'border-gray-500'} flex items-center justify-center`}>
-                      {routeCustomizations.avoidTolls && (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                    </div>
-                    <span className="text-white text-sm">No Tolls</span>
-                  </div>
-                  
-                  <div 
-                    className={`p-3 border ${routeCustomizations.onlyTolls ? 'border-green-500 bg-green-900/20' : 'border-gray-700 bg-black/30'} rounded-lg cursor-pointer transition-colors flex items-center`}
-                    onClick={() => toggleRouteCustomization('onlyTolls')}
-                  >
-                    <div className={`h-5 w-5 mr-2 rounded-sm border ${routeCustomizations.onlyTolls ? 'bg-green-500 border-green-500' : 'border-gray-500'} flex items-center justify-center`}>
-                      {routeCustomizations.onlyTolls && (
-                        <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-white" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                        </svg>
-                      )}
-                    </div>
-                    <span className="text-white text-sm">Only Tolls</span>
-                  </div>
+                  )}
                 </div>
-              </div>
-              
-              {/* Route details section */}
-              {newRoute.startPoint && newRoute.endPoint && (
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-6 p-4 bg-blue-900/10 rounded-md border border-blue-900/20">
-                  <div>
-                    <p className="text-gray-400 text-sm mb-1">Estimated Distance:</p>
-                    <p className="text-white text-lg">{newRoute.distance} miles</p>
-                  </div>
-                  <div>
-                    <p className="text-gray-400 text-sm mb-1">Estimated Drive Time:</p>
-                    <p className="text-white text-lg">{newRoute.estimatedTime}</p>
-                  </div>
-                </div>
-              )}
-              
-              {/* Additional details */}
-              <div>
-                <label className="block text-gray-400 text-sm mb-2">Route Notes</label>
-                <textarea
-                  placeholder="Road conditions, scenic viewpoints, rest stops, etc."
-                  value={newRoute.notes}
-                  onChange={(e) => setNewRoute({ ...newRoute, notes: e.target.value })}
-                  className="w-full bg-black text-white p-3 rounded border border-gray-700 focus:border-blue-500 focus:outline-none min-h-[100px]"
-                ></textarea>
-              </div>
-              
-              {/* Favorite toggle */}
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="favorite"
-                  checked={newRoute.favorite}
-                  onChange={(e) => setNewRoute({ ...newRoute, favorite: e.target.checked })}
-                  className="mr-2 h-4 w-4 text-blue-500 focus:ring-blue-500 rounded"
-                />
-                <label htmlFor="favorite" className="text-white">Add to favorites</label>
-              </div>
-              
-              {/* Save button */}
-              <div className="pt-4">
-                <button
-                  onClick={handleAddRoute}
-                  disabled={!newRoute.name || !newRoute.startPoint || !newRoute.endPoint}
-                  className={`w-full py-3 rounded-md font-medium ${
-                    !newRoute.name || !newRoute.startPoint || !newRoute.endPoint
-                      ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                      : 'bg-green-600 hover:bg-green-500 text-black'
-                  }`}
-                >
-                  Save New Route
-                </button>
               </div>
             </div>
-          </section>
-          
-          {/* Saved Routes */}
-          <section className="bg-gradient-to-r from-gray-900 to-black rounded-lg shadow-lg p-6 border border-gray-800">
-            <h2 className="text-blue-400 font-orbitron text-2xl mb-6 flex items-center">
-              <MapIcon className="mr-3 h-6 w-6" />
-              Your Routes
-            </h2>
-            
-            {routes.length === 0 ? (
-              <div className="text-center py-8">
-                <p className="text-gray-400">No routes saved yet. Create your first route to get started.</p>
-              </div>
-            ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {routes.map((route) => {
-                  const categoryObj = ROUTE_CATEGORIES.find(cat => cat.id === route.category) || ROUTE_CATEGORIES[0];
-                  
-                  return (
-                    <div 
-                      key={route.id} 
-                      className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg shadow-md border border-gray-700 overflow-hidden transition-all hover:border-blue-500 cursor-pointer"
-                      onClick={() => handleSelectRoute(route)}
-                    >
-                      <div className="p-5">
-                        <div className="flex items-start justify-between mb-3">
-                          <h3 className="text-blue-400 font-orbitron text-lg">{route.name}</h3>
-                          <div className="flex space-x-2">
-                            <span className="text-xl">{categoryObj.icon}</span>
-                            {route.favorite && <span className="text-yellow-400">⭐</span>}
-                          </div>
-                        </div>
+          </div>
+        )}
+        
+        {/* Route details view */}
+        {activeTab === 'details' && selectedRoute && (
+          <div className="p-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+              {/* Left column - Route details */}
+              <div className="lg:col-span-2 space-y-6">
+                <div className="bg-black bg-opacity-60 p-6 rounded-lg border border-gray-800">
+                  {/* Header with name and actions */}
+                  <div className="flex justify-between items-start mb-4">
+                    <div>
+                      <div className="flex items-center">
+                        <h2 className="text-2xl text-blue-500 font-orbitron mr-2">
+                          {selectedRoute.name}
+                        </h2>
+                        {selectedRoute.favorite && (
+                          <span className="text-yellow-400 text-lg">★</span>
+                        )}
+                      </div>
+                      <p className="text-gray-400 text-sm mt-1">
+                        {selectedRoute.category && ROUTE_CATEGORIES.find(c => c.id === selectedRoute.category)?.label} • 
+                        {selectedRoute.distance} miles • {selectedRoute.estimatedTime}
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-center">
+                      {/* Navigation button */}
+                      <div className="relative">
+                        <button
+                          onClick={() => setShowNavOptions(!showNavOptions)}
+                          className="p-2 bg-blue-600 hover:bg-blue-700 rounded-md text-white mr-2 flex items-center"
+                        >
+                          <Navigation className="h-5 w-5 mr-1" />
+                          Navigate
+                        </button>
                         
-                        <div className="space-y-2 mb-4">
-                          <div className="flex items-center text-sm">
-                            <MapPin className="h-4 w-4 text-green-500 mr-2" />
-                            <p className="text-white">{route.startPoint.name}</p>
-                          </div>
-                          <div className="border-l-2 border-dotted border-blue-500 h-4 ml-2"></div>
-                          <div className="flex items-center text-sm">
-                            <MapPin className="h-4 w-4 text-red-500 mr-2" />
-                            <p className="text-white">{route.endPoint.name}</p>
-                          </div>
-                        </div>
-                        
-                        <div className="grid grid-cols-2 gap-4 text-sm">
-                          <div>
-                            <p className="text-gray-400">Distance</p>
-                            <p className="text-white font-medium">{route.distance} miles</p>
-                          </div>
-                          <div>
-                            <p className="text-gray-400">Est. Time</p>
-                            <p className="text-white font-medium">{route.estimatedTime}</p>
-                          </div>
-                        </div>
-                        
-                        {route.notes && (
-                          <div className="mt-3 pt-3 border-t border-gray-700">
-                            <p className="text-gray-400 text-xs line-clamp-2">{route.notes}</p>
+                        {/* Navigation service options dropdown */}
+                        {showNavOptions && (
+                          <div className="absolute right-0 mt-1 w-48 bg-gray-900 border border-gray-700 rounded-md shadow-lg z-10">
+                            <ul className="py-1">
+                              {NAVIGATION_SERVICES.map(service => (
+                                <li 
+                                  key={service.id}
+                                  onClick={() => openNavigation(service.id)}
+                                  className="px-4 py-2 hover:bg-gray-800 cursor-pointer flex items-center"
+                                >
+                                  <span className="mr-2">{service.logo}</span>
+                                  <span className="text-white">{service.name}</span>
+                                </li>
+                              ))}
+                            </ul>
                           </div>
                         )}
                       </div>
                       
-                      <div className="bg-gray-900 px-5 py-2 text-xs flex justify-between items-center">
-                        <span className="text-gray-400">
-                          {route.lastDriven ? `Last driven: ${new Date(route.lastDriven).toLocaleDateString()}` : 'Never driven'}
-                        </span>
-                        <span className="text-blue-400 hover:text-blue-300">View Details →</span>
+                      {/* Share button */}
+                      <button
+                        className="p-2 bg-gray-800 hover:bg-gray-700 rounded-md text-white flex items-center"
+                      >
+                        <Share2 className="h-5 w-5 mr-1" />
+                        Share
+                      </button>
+                    </div>
+                  </div>
+                  
+                  {/* Map placeholder */}
+                  <div className="aspect-video bg-gray-800 rounded-md flex items-center justify-center mb-6">
+                    <div className="text-center">
+                      <MapIcon className="h-12 w-12 text-gray-600 mx-auto mb-2" />
+                      <p className="text-gray-400 text-sm">Interactive map will be shown here</p>
+                    </div>
+                  </div>
+                  
+                  {/* Start to End summary */}
+                  <div className="bg-gray-900 rounded-md p-4 mb-6">
+                    <div className="flex items-start">
+                      <div className="mt-1">
+                        <div className="w-4 h-4 rounded-full bg-green-500"></div>
+                        <div className="w-0.5 h-full bg-gray-700 mx-auto my-1"></div>
+                        <div className="w-4 h-4 rounded-full bg-red-500"></div>
+                      </div>
+                      <div className="ml-3 flex-1">
+                        <p className="text-white">{selectedRoute.startPoint.name}</p>
+                        <div className="my-2 text-gray-500 text-sm">
+                          {selectedRoute.waypoints && selectedRoute.waypoints.length > 0 && (
+                            <div className="flex items-center my-1">
+                              <span className="text-blue-400 text-xs mr-1">{selectedRoute.waypoints.length} stops</span>
+                              <span className="text-gray-400">•</span>
+                              <span className="ml-1 text-gray-400">
+                                {selectedRoute.waypoints.map(wp => wp.name.split(',')[0]).join(' → ')}
+                              </span>
+                            </div>
+                          )}
+                        </div>
+                        <p className="text-white">{selectedRoute.endPoint.name}</p>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </section>
-        </>
-      )}
-      
-      {/* Route Details View */}
-      {activeTab === 'details' && selectedRoute && (
-        <div className="space-y-6">
-          {/* Route Header */}
-          <section className="bg-gradient-to-r from-gray-900 to-black rounded-lg shadow-lg p-6 border border-gray-800">
-            <div className="flex flex-col md:flex-row justify-between">
-              <div>
-                <div className="flex items-center mb-4">
-                  <h2 className="text-blue-400 font-orbitron text-2xl mr-3">{selectedRoute.name}</h2>
-                  {selectedRoute.favorite && <span className="text-yellow-400 text-xl">⭐</span>}
-                  <span className="ml-2 px-3 py-1 bg-gray-800 rounded-full text-gray-300 text-xs">
-                    {ROUTE_CATEGORIES.find(cat => cat.id === selectedRoute.category)?.label || 'Route'}
-                  </span>
-                </div>
-                
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                  <div className="flex flex-col">
-                    <span className="text-gray-400 text-sm">Starting Point</span>
-                    <span className="text-white flex items-center">
-                      <MapPin className="h-4 w-4 text-green-500 mr-1" />
-                      {selectedRoute.startPoint.name}
-                    </span>
                   </div>
                   
-                  <div className="flex flex-col">
-                    <span className="text-gray-400 text-sm">Destination</span>
-                    <span className="text-white flex items-center">
-                      <MapPin className="h-4 w-4 text-red-500 mr-1" />
-                      {selectedRoute.endPoint.name}
-                    </span>
+                  {/* Action Tabs */}
+                  <div className="border-b border-gray-800 mb-4">
+                    <div className="flex space-x-4">
+                      <button
+                        onClick={() => setActiveActionTab('overview')}
+                        className={`pb-2 px-1 font-medium text-sm ${
+                          activeActionTab === 'overview' 
+                            ? 'text-blue-400 border-b-2 border-blue-400' 
+                            : 'text-gray-400 hover:text-gray-300'
+                        }`}
+                      >
+                        Overview
+                      </button>
+                      <button
+                        onClick={() => setActiveActionTab('weather')}
+                        className={`pb-2 px-1 font-medium text-sm ${
+                          activeActionTab === 'weather' 
+                            ? 'text-blue-400 border-b-2 border-blue-400' 
+                            : 'text-gray-400 hover:text-gray-300'
+                        }`}
+                      >
+                        Weather & Road Conditions
+                      </button>
+                      <button
+                        onClick={() => setActiveActionTab('vehicle')}
+                        className={`pb-2 px-1 font-medium text-sm ${
+                          activeActionTab === 'vehicle' 
+                            ? 'text-blue-400 border-b-2 border-blue-400' 
+                            : 'text-gray-400 hover:text-gray-300'
+                        }`}
+                      >
+                        Vehicle & Passengers
+                      </button>
+                    </div>
                   </div>
                   
-                  <div className="flex flex-col">
-                    <span className="text-gray-400 text-sm">Last Driven</span>
-                    <span className="text-white flex items-center">
-                      <CalendarClock className="h-4 w-4 text-blue-400 mr-1" />
-                      {selectedRoute.lastDriven ? new Date(selectedRoute.lastDriven).toLocaleDateString() : 'Never driven'}
-                    </span>
+                  {/* Tab content */}
+                  <div>
+                    {/* Overview tab */}
+                    {activeActionTab === 'overview' && (
+                      <div className="space-y-6">
+                        {/* Notes section */}
+                        {selectedRoute.notes && (
+                          <div>
+                            <h3 className="text-gray-300 font-medium mb-2">Notes</h3>
+                            <p className="text-gray-400">{selectedRoute.notes}</p>
+                          </div>
+                        )}
+                        
+                        {/* Route customization details */}
+                        {selectedRoute.routeCustomizations && (
+                          <div>
+                            <h3 className="text-gray-300 font-medium mb-2">Route Customizations</h3>
+                            <div className="flex flex-wrap gap-2">
+                              {selectedRoute.routeCustomizations.isRoundTrip && (
+                                <span className="px-2 py-1 bg-gray-800 rounded-md text-xs text-blue-400">Round Trip</span>
+                              )}
+                              {selectedRoute.routeCustomizations.avoidTolls && (
+                                <span className="px-2 py-1 bg-gray-800 rounded-md text-xs text-blue-400">Avoiding Tolls</span>
+                              )}
+                              {selectedRoute.routeCustomizations.onlyTolls && (
+                                <span className="px-2 py-1 bg-gray-800 rounded-md text-xs text-blue-400">Preferring Tolls</span>
+                              )}
+                              {selectedRoute.routeCustomizations.scenicRoute && (
+                                <span className="px-2 py-1 bg-gray-800 rounded-md text-xs text-green-400">Scenic Route</span>
+                              )}
+                              {selectedRoute.routeCustomizations.includeGasStops && (
+                                <span className="px-2 py-1 bg-gray-800 rounded-md text-xs text-green-400">Gas Stops Included</span>
+                              )}
+                              {selectedRoute.routeCustomizations.includeFoodStops && (
+                                <span className="px-2 py-1 bg-gray-800 rounded-md text-xs text-green-400">Food Stops Included</span>
+                              )}
+                            </div>
+                          </div>
+                        )}
+                        
+                        {/* Mileage Tracking */}
+                        {selectedRoute.tripMileage || selectedRoute.startMileage || selectedRoute.endMileage ? (
+                          <div>
+                            <h3 className="text-gray-300 font-medium mb-2">Mileage Tracking</h3>
+                            <div className="grid grid-cols-3 gap-4 bg-gray-900 p-3 rounded-md">
+                              {selectedRoute.startMileage && (
+                                <div>
+                                  <p className="text-gray-400 text-xs">Start</p>
+                                  <p className="text-white">{selectedRoute.startMileage.toLocaleString()} mi</p>
+                                </div>
+                              )}
+                              {selectedRoute.endMileage && (
+                                <div>
+                                  <p className="text-gray-400 text-xs">End</p>
+                                  <p className="text-white">{selectedRoute.endMileage.toLocaleString()} mi</p>
+                                </div>
+                              )}
+                              {selectedRoute.tripMileage && (
+                                <div>
+                                  <p className="text-gray-400 text-xs">Trip</p>
+                                  <p className="text-white">{selectedRoute.tripMileage.toLocaleString()} mi</p>
+                                </div>
+                              )}
+                              {selectedRoute.fuelConsumption && (
+                                <div>
+                                  <p className="text-gray-400 text-xs">Fuel Used</p>
+                                  <p className="text-white">{selectedRoute.fuelConsumption} gal</p>
+                                </div>
+                              )}
+                              {selectedRoute.fuelConsumption && selectedRoute.tripMileage && (
+                                <div>
+                                  <p className="text-gray-400 text-xs">Fuel Economy</p>
+                                  <p className="text-green-400">
+                                    {(selectedRoute.tripMileage / selectedRoute.fuelConsumption).toFixed(1)} MPG
+                                  </p>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                        ) : null}
+                      </div>
+                    )}
+                    
+                    {/* Weather tab */}
+                    {activeActionTab === 'weather' && (
+                      <div>
+                        {isLoadingWeather ? (
+                          <div className="flex justify-center items-center py-10">
+                            <div className="animate-spin h-10 w-10 border-4 border-blue-500 rounded-full border-t-transparent"></div>
+                          </div>
+                        ) : weatherData ? (
+                          <div className="space-y-6">
+                            {/* Weather summary */}
+                            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                              {/* Starting point weather */}
+                              <div className="bg-gray-900 p-4 rounded-md">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <h3 className="text-sm font-medium text-gray-300">Starting Point</h3>
+                                    <p className="text-xs text-gray-500">{selectedRoute.startPoint.name}</p>
+                                  </div>
+                                  <div className="flex items-center">
+                                    {renderConditionIcon(weatherData.startPoint.condition.icon)}
+                                    <span className={`ml-1 text-xs ${getStatusColor(weatherData.startPoint.condition.status)}`}>
+                                      {weatherData.startPoint.condition.status}
+                                    </span>
+                                  </div>
+                                </div>
+                                
+                                <div className="mt-3">
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-lg text-white">
+                                      {formatTemperature(weatherData.startPoint.weather.main.temp)}
+                                    </span>
+                                    <img 
+                                      src={`http://openweathermap.org/img/wn/${weatherData.startPoint.weather.weather[0].icon}@2x.png`} 
+                                      alt={weatherData.startPoint.weather.weather[0].description}
+                                      className="w-10 h-10"
+                                    />
+                                  </div>
+                                  <p className="text-sm text-gray-400 capitalize">
+                                    {weatherData.startPoint.weather.weather[0].description}
+                                  </p>
+                                </div>
+                                
+                                <div className="mt-2 text-xs text-gray-400 border-t border-gray-800 pt-2">
+                                  {weatherData.startPoint.condition.detail}
+                                </div>
+                              </div>
+                              
+                              {/* Mid-route weather */}
+                              <div className="bg-gray-900 p-4 rounded-md">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <h3 className="text-sm font-medium text-gray-300">Mid-Route</h3>
+                                    <p className="text-xs text-gray-500">Halfway Point</p>
+                                  </div>
+                                  <div className="flex items-center">
+                                    {renderConditionIcon(weatherData.midPoint.condition.icon)}
+                                    <span className={`ml-1 text-xs ${getStatusColor(weatherData.midPoint.condition.status)}`}>
+                                      {weatherData.midPoint.condition.status}
+                                    </span>
+                                  </div>
+                                </div>
+                                
+                                <div className="mt-3">
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-lg text-white">
+                                      {formatTemperature(weatherData.midPoint.weather.main.temp)}
+                                    </span>
+                                    <img 
+                                      src={`http://openweathermap.org/img/wn/${weatherData.midPoint.weather.weather[0].icon}@2x.png`} 
+                                      alt={weatherData.midPoint.weather.weather[0].description}
+                                      className="w-10 h-10"
+                                    />
+                                  </div>
+                                  <p className="text-sm text-gray-400 capitalize">
+                                    {weatherData.midPoint.weather.weather[0].description}
+                                  </p>
+                                </div>
+                                
+                                <div className="mt-2 text-xs text-gray-400 border-t border-gray-800 pt-2">
+                                  {weatherData.midPoint.condition.detail}
+                                </div>
+                              </div>
+                              
+                              {/* Destination weather */}
+                              <div className="bg-gray-900 p-4 rounded-md">
+                                <div className="flex justify-between items-start">
+                                  <div>
+                                    <h3 className="text-sm font-medium text-gray-300">Destination</h3>
+                                    <p className="text-xs text-gray-500">{selectedRoute.endPoint.name}</p>
+                                  </div>
+                                  <div className="flex items-center">
+                                    {renderConditionIcon(weatherData.endPoint.condition.icon)}
+                                    <span className={`ml-1 text-xs ${getStatusColor(weatherData.endPoint.condition.status)}`}>
+                                      {weatherData.endPoint.condition.status}
+                                    </span>
+                                  </div>
+                                </div>
+                                
+                                <div className="mt-3">
+                                  <div className="flex justify-between items-center">
+                                    <span className="text-lg text-white">
+                                      {formatTemperature(weatherData.endPoint.weather.main.temp)}
+                                    </span>
+                                    <img 
+                                      src={`http://openweathermap.org/img/wn/${weatherData.endPoint.weather.weather[0].icon}@2x.png`} 
+                                      alt={weatherData.endPoint.weather.weather[0].description}
+                                      className="w-10 h-10"
+                                    />
+                                  </div>
+                                  <p className="text-sm text-gray-400 capitalize">
+                                    {weatherData.endPoint.weather.weather[0].description}
+                                  </p>
+                                </div>
+                                
+                                <div className="mt-2 text-xs text-gray-400 border-t border-gray-800 pt-2">
+                                  {weatherData.endPoint.condition.detail}
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Route performance metrics */}
+                            <div className="mt-6">
+                              <h3 className="text-gray-300 font-medium mb-3">Performance Metrics</h3>
+                              
+                              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                                <div className="bg-gray-900 p-4 rounded-md">
+                                  <h4 className="text-sm font-medium text-blue-400">Efficiency Impact</h4>
+                                  <div className="flex items-center mt-2">
+                                    <span className="text-xl text-white">
+                                      {weatherData.performance.fuelEfficiencyImpact > 0 ? "+" : ""}
+                                      {weatherData.performance.fuelEfficiencyImpact}%
+                                    </span>
+                                    <span className="ml-2 text-xs text-gray-400">
+                                      Fuel efficiency impact based on conditions
+                                    </span>
+                                  </div>
+                                </div>
+                                
+                                <div className="bg-gray-900 p-4 rounded-md">
+                                  <h4 className="text-sm font-medium text-blue-400">Traffic Likelihood</h4>
+                                  <div className="flex items-center mt-2">
+                                    <span className="text-xl text-white">
+                                      {weatherData.performance.trafficLikelihood}
+                                    </span>
+                                    <span className="ml-2 text-xs text-gray-400">
+                                      Based on route type and distance
+                                    </span>
+                                  </div>
+                                </div>
+                                
+                                <div className="bg-gray-900 p-4 rounded-md md:col-span-2">
+                                  <h4 className="text-sm font-medium text-blue-400">Departure Recommendation</h4>
+                                  <p className="text-sm text-gray-300 mt-2">
+                                    {weatherData.performance.optimalDepartureTime}
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Additional weather data for start location */}
+                            <div className="mt-6">
+                              <h3 className="text-gray-300 font-medium mb-3">Detailed Weather at Starting Point</h3>
+                              
+                              <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                                <div className="bg-gray-900 p-3 rounded-md">
+                                  <p className="text-xs text-gray-400">Feels Like</p>
+                                  <p className="text-lg text-white">
+                                    {formatTemperature(weatherData.startPoint.weather.main.feels_like)}
+                                  </p>
+                                </div>
+                                
+                                <div className="bg-gray-900 p-3 rounded-md">
+                                  <p className="text-xs text-gray-400">Humidity</p>
+                                  <p className="text-lg text-white">
+                                    {weatherData.startPoint.weather.main.humidity}%
+                                  </p>
+                                </div>
+                                
+                                <div className="bg-gray-900 p-3 rounded-md">
+                                  <p className="text-xs text-gray-400">Wind</p>
+                                  <p className="text-lg text-white">
+                                    {Math.round(weatherData.startPoint.weather.wind.speed)} mph
+                                  </p>
+                                </div>
+                                
+                                <div className="bg-gray-900 p-3 rounded-md">
+                                  <p className="text-xs text-gray-400">Pressure</p>
+                                  <p className="text-lg text-white">
+                                    {weatherData.startPoint.weather.main.pressure} hPa
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
+                        ) : (
+                          <div className="text-center py-10 text-gray-400">
+                            <Cloud className="h-12 w-12 mx-auto mb-2 text-gray-600" />
+                            <p>Weather data unavailable</p>
+                            <button
+                              onClick={() => handleSelectRoute(selectedRoute)}
+                              className="mt-3 px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md text-white text-sm"
+                            >
+                              Fetch Weather Data
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    )}
+                    
+                    {/* Vehicle tab */}
+                    {activeActionTab === 'vehicle' && (
+                      <div>
+                        {selectedRoute.vehicle ? (
+                          <div className="space-y-6">
+                            {/* Vehicle info */}
+                            <div className="bg-gray-900 p-4 rounded-md">
+                              <h3 className="text-gray-300 font-medium mb-3">Vehicle</h3>
+                              
+                              <div className="flex items-start">
+                                <div className="w-16 h-16 bg-gray-800 rounded-md flex items-center justify-center mr-4">
+                                  <Car className="h-8 w-8 text-gray-500" />
+                                </div>
+                                
+                                <div>
+                                  <h4 className="text-white text-lg">
+                                    {selectedRoute.vehicle.year} {selectedRoute.vehicle.make} {selectedRoute.vehicle.model}
+                                  </h4>
+                                  
+                                  {selectedRoute.vehicle.nickname && (
+                                    <p className="text-gray-400">"{selectedRoute.vehicle.nickname}"</p>
+                                  )}
+                                  
+                                  {selectedRoute.vehicle.color && (
+                                    <p className="text-gray-500 text-sm">{selectedRoute.vehicle.color}</p>
+                                  )}
+                                  
+                                  <p className="text-gray-500 text-sm mt-1">
+                                    Mileage: {selectedRoute.vehicle.currentMileage.toLocaleString()} mi
+                                  </p>
+                                </div>
+                              </div>
+                            </div>
+                            
+                            {/* Passengers */}
+                            {selectedRoute.passengers && selectedRoute.passengers.length > 0 && (
+                              <div className="bg-gray-900 p-4 rounded-md">
+                                <h3 className="text-gray-300 font-medium mb-3">Passengers</h3>
+                                
+                                <ul className="space-y-2">
+                                  {selectedRoute.passengers.map(passenger => (
+                                    <li key={passenger.id} className="flex justify-between items-center">
+                                      <span className="text-white">{passenger.name}</span>
+                                      {passenger.relationship && (
+                                        <span className="text-gray-500 text-sm">{passenger.relationship}</span>
+                                      )}
+                                    </li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
+                          </div>
+                        ) : (
+                          <div className="text-center py-10 text-gray-400">
+                            <Car className="h-12 w-12 mx-auto mb-2 text-gray-600" />
+                            <p>No vehicle selected for this route</p>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
               
-              <div className="mt-6 md:mt-0 flex flex-col items-end">
-                <div className="flex space-x-4 items-center">
-                  <div className="text-right">
-                    <p className="text-gray-400 text-sm">Distance</p>
-                    <p className="text-white text-xl font-medium">{selectedRoute.distance} miles</p>
-                  </div>
-                  <div className="text-right">
-                    <p className="text-gray-400 text-sm">Est. Time</p>
-                    <p className="text-white text-xl font-medium">{selectedRoute.estimatedTime}</p>
+              {/* Right column - sidebar */}
+              <div className="space-y-6">
+                {/* Quick actions */}
+                <div className="bg-black bg-opacity-60 p-6 rounded-lg border border-gray-800">
+                  <h2 className="text-xl text-blue-500 font-orbitron mb-4">Quick Actions</h2>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => openNavigation()}
+                      className="p-3 bg-blue-600 hover:bg-blue-700 rounded-md text-white flex flex-col items-center"
+                    >
+                      <Navigation className="h-6 w-6 mb-1" />
+                      <span className="text-sm">Navigate</span>
+                    </button>
+                    
+                    <button className="p-3 bg-gray-800 hover:bg-gray-700 rounded-md text-white flex flex-col items-center">
+                      <Share className="h-6 w-6 mb-1" />
+                      <span className="text-sm">Share</span>
+                    </button>
+                    
+                    <button className="p-3 bg-gray-800 hover:bg-gray-700 rounded-md text-white flex flex-col items-center">
+                      <Smartphone className="h-6 w-6 mb-1" />
+                      <span className="text-sm">Send to Phone</span>
+                    </button>
+                    
+                    <button className="p-3 bg-gray-800 hover:bg-gray-700 rounded-md text-white flex flex-col items-center">
+                      <ExternalLink className="h-6 w-6 mb-1" />
+                      <span className="text-sm">Open in Maps</span>
+                    </button>
                   </div>
                 </div>
                 
-                <div className="mt-4 flex flex-wrap gap-2">
-                  <Link to="/journal" className="px-3 py-1 bg-gray-800 text-gray-300 rounded-md text-sm hover:bg-gray-700 transition-colors">
-                    Log Drive
-                  </Link>
+                {/* Similar routes */}
+                <div className="bg-black bg-opacity-60 p-6 rounded-lg border border-gray-800">
+                  <h2 className="text-xl text-blue-500 font-orbitron mb-4">Similar Routes</h2>
                   
-                  <div className="relative">
-                    <button 
-                      onClick={() => setShowNavOptions(!showNavOptions)}
-                      className="px-3 py-1 bg-green-600 text-black rounded-md text-sm hover:bg-green-500 transition-colors flex items-center"
-                    >
-                      <Navigation className="h-4 w-4 mr-2" />
-                      Navigate
-                    </button>
-                    
-                    {showNavOptions && (
-                      <div className="absolute mt-1 right-0 w-44 bg-black border border-gray-700 rounded-md shadow-lg p-2 z-50">
-                        <p className="text-gray-400 text-xs mb-2">Choose Navigation App:</p>
-                        {NAVIGATION_SERVICES.map(service => (
-                          <button 
-                            key={service.id}
-                            onClick={() => openNavigation(service.id)}
-                            className={`w-full text-left px-3 py-2 rounded-md text-sm mb-1 flex items-center ${
-                              preferredNavService === service.id 
-                                ? 'bg-blue-900/50 text-blue-300' 
-                                : 'hover:bg-gray-800 text-white'
-                            }`}
-                          >
-                            <span className="mr-2">{service.logo}</span>
-                            {service.name}
-                            {preferredNavService === service.id && (
-                              <span className="ml-auto text-blue-400 text-xs">default</span>
-                            )}
-                          </button>
-                        ))}
+                  <div className="space-y-3">
+                    {routes
+                      .filter(r => r.id !== selectedRoute.id && r.category === selectedRoute.category)
+                      .slice(0, 3)
+                      .map(route => (
+                        <div 
+                          key={route.id}
+                          onClick={() => handleSelectRoute(route)}
+                          className="bg-gray-900 hover:bg-gray-800 rounded-md p-3 cursor-pointer transition-colors"
+                        >
+                          <h3 className="text-white">{route.name}</h3>
+                          <p className="text-gray-400 text-sm mt-1">
+                            {route.distance} miles • {route.estimatedTime}
+                          </p>
+                        </div>
+                      ))}
+                      
+                    {routes.filter(r => r.id !== selectedRoute.id && r.category === selectedRoute.category).length === 0 && (
+                      <div className="text-center py-4 text-gray-400">
+                        <p>No similar routes found</p>
                       </div>
                     )}
                   </div>
-                  
-                  <button className="px-3 py-1 bg-blue-900/30 text-blue-400 rounded-md text-sm hover:bg-blue-900/50 transition-colors flex items-center">
-                    <Share2 className="h-4 w-4 mr-2" />
-                    Share Route
-                  </button>
                 </div>
               </div>
             </div>
-            
-            {/* Route notes */}
-            {selectedRoute.notes && (
-              <div className="mt-6 pt-4 border-t border-gray-700">
-                <p className="text-gray-400 text-sm">Notes</p>
-                <p className="text-white mt-1">{selectedRoute.notes}</p>
-              </div>
-            )}
-          </section>
-          
-          {/* Route Tabs */}
-          <div className="flex border-b border-gray-800">
-            <button
-              className={`px-4 py-2 font-medium ${
-                activeActionTab === 'overview' 
-                  ? 'text-blue-400 border-b-2 border-blue-400' 
-                  : 'text-gray-400 hover:text-gray-300'
-              }`}
-              onClick={() => setActiveActionTab('overview')}
-            >
-              Overview
-            </button>
-            <button
-              className={`px-4 py-2 font-medium ${
-                activeActionTab === 'conditions' 
-                  ? 'text-blue-400 border-b-2 border-blue-400' 
-                  : 'text-gray-400 hover:text-gray-300'
-              }`}
-              onClick={() => setActiveActionTab('conditions')}
-            >
-              Road Conditions
-            </button>
-            <button
-              className={`px-4 py-2 font-medium ${
-                activeActionTab === 'performance' 
-                  ? 'text-blue-400 border-b-2 border-blue-400' 
-                  : 'text-gray-400 hover:text-gray-300'
-              }`}
-              onClick={() => setActiveActionTab('performance')}
-            >
-              Drive Performance
-            </button>
           </div>
-          
-          {/* Tab content */}
-          <div>
-            {isLoadingWeather ? (
-              <div className="bg-gradient-to-r from-gray-900 to-black rounded-lg shadow-lg p-6 border border-gray-800 flex justify-center items-center py-16">
-                <div className="flex flex-col items-center">
-                  <div className="h-10 w-10 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mb-4"></div>
-                  <p className="text-gray-400">Loading route intelligence...</p>
-                </div>
-              </div>
-            ) : weatherData ? (
-              <>
-                {/* Overview Tab */}
-                {activeActionTab === 'overview' && (
-                  <section className="bg-gradient-to-r from-gray-900 to-black rounded-lg shadow-lg p-6 border border-gray-800">
-                    <h3 className="text-blue-400 font-orbitron text-xl mb-6">Route Intelligence</h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-                      {/* Start Point Weather */}
-                      <div className="bg-black/30 p-4 rounded-lg border border-gray-800">
-                        <h4 className="text-green-500 font-medium mb-3 flex items-center">
-                          <MapPin className="h-4 w-4 mr-2" />
-                          Starting Point Weather
-                        </h4>
-                        
-                        <div className="flex items-center mb-4">
-                          <div>
-                            <p className="text-white text-2xl font-medium">
-                              {formatTemperature(weatherData.startPoint.weather.main.temp, 'imperial')}
-                            </p>
-                            <p className="text-gray-400 capitalize">{weatherData.startPoint.weather.weather[0].description}</p>
-                          </div>
-                          {weatherData.startPoint.weather.weather[0].icon && (
-                            <img
-                              src={`http://openweathermap.org/img/wn/${weatherData.startPoint.weather.weather[0].icon}@2x.png`}
-                              alt={weatherData.startPoint.weather.weather[0].description}
-                              className="h-16 w-16 ml-auto"
-                            />
-                          )}
-                        </div>
-                        
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">Humidity:</span>
-                            <span className="text-white">{weatherData.startPoint.weather.main.humidity}%</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">Wind:</span>
-                            <span className="text-white">{Math.round(weatherData.startPoint.weather.wind.speed)} mph</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">Visibility:</span>
-                            <span className="text-white">{(weatherData.startPoint.weather.visibility / 1609).toFixed(1)} mi</span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* End Point Weather */}
-                      <div className="bg-black/30 p-4 rounded-lg border border-gray-800">
-                        <h4 className="text-red-500 font-medium mb-3 flex items-center">
-                          <MapPin className="h-4 w-4 mr-2" />
-                          Destination Weather
-                        </h4>
-                        
-                        <div className="flex items-center mb-4">
-                          <div>
-                            <p className="text-white text-2xl font-medium">
-                              {formatTemperature(weatherData.endPoint.weather.main.temp, 'imperial')}
-                            </p>
-                            <p className="text-gray-400 capitalize">{weatherData.endPoint.weather.weather[0].description}</p>
-                          </div>
-                          {weatherData.endPoint.weather.weather[0].icon && (
-                            <img
-                              src={`http://openweathermap.org/img/wn/${weatherData.endPoint.weather.weather[0].icon}@2x.png`}
-                              alt={weatherData.endPoint.weather.weather[0].description}
-                              className="h-16 w-16 ml-auto"
-                            />
-                          )}
-                        </div>
-                        
-                        <div className="space-y-2 text-sm">
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">Humidity:</span>
-                            <span className="text-white">{weatherData.endPoint.weather.main.humidity}%</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">Wind:</span>
-                            <span className="text-white">{Math.round(weatherData.endPoint.weather.wind.speed)} mph</span>
-                          </div>
-                          <div className="flex justify-between">
-                            <span className="text-gray-400">Visibility:</span>
-                            <span className="text-white">{(weatherData.endPoint.weather.visibility / 1609).toFixed(1)} mi</span>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Route Timing Intelligence */}
-                      <div className="bg-black/30 p-4 rounded-lg border border-gray-800">
-                        <h4 className="text-blue-400 font-medium mb-3 flex items-center">
-                          <Clock className="h-4 w-4 mr-2" />
-                          Optimal Departure
-                        </h4>
-                        
-                        <p className="text-gray-300 text-sm mb-4">
-                          {weatherData.performance.optimalDepartureTime}
-                        </p>
-                        
-                        <div className="space-y-4">
-                          <div>
-                            <p className="text-gray-400 text-xs">Expected Traffic</p>
-                            <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden mt-1">
-                              <div 
-                                className={`h-full ${
-                                  weatherData.performance.trafficLikelihood === 'Low' 
-                                    ? 'w-1/4 bg-green-500' 
-                                    : weatherData.performance.trafficLikelihood === 'Moderate'
-                                      ? 'w-1/2 bg-yellow-500'
-                                      : 'w-3/4 bg-red-500'
-                                }`}
-                              ></div>
-                            </div>
-                            <div className="flex justify-between text-xs text-gray-500 mt-1">
-                              <span>Low</span>
-                              <span>Moderate</span>
-                              <span>High</span>
-                            </div>
-                          </div>
-                          
-                          <div className="pt-3 border-t border-gray-800">
-                            <p className="text-gray-400 text-xs mb-1">Time Impact</p>
-                            <p className="text-white flex items-center">
-                              <span className="text-green-500 mr-2">↓</span>
-                              Save up to {weatherData.performance.potentialTimeSavings} min with optimal conditions
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Road condition summary */}
-                    <div className="mt-8 p-4 bg-gradient-to-r from-blue-900/10 to-black/10 rounded-lg border border-blue-900/30">
-                      <h4 className="text-blue-400 font-medium mb-4">Road Condition Summary</h4>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className={`p-3 rounded-lg flex items-center ${
-                          weatherData.startPoint.condition.status === 'optimal' 
-                            ? 'bg-green-900/20 border border-green-900/30' 
-                            : weatherData.startPoint.condition.status === 'caution'
-                              ? 'bg-amber-900/20 border border-amber-900/30'
-                              : 'bg-red-900/20 border border-red-900/30'
-                        }`}>
-                          {renderConditionIcon(weatherData.startPoint.condition.icon)}
-                          <div className="ml-3">
-                            <p className={`text-sm font-medium ${getStatusColor(weatherData.startPoint.condition.status)}`}>
-                              Start: {weatherData.startPoint.condition.status === 'optimal' ? 'Optimal' : weatherData.startPoint.condition.status === 'caution' ? 'Use Caution' : 'Warning'}
-                            </p>
-                            <p className="text-xs text-gray-400">{weatherData.startPoint.condition.detail}</p>
-                          </div>
-                        </div>
-                        
-                        <div className={`p-3 rounded-lg flex items-center ${
-                          weatherData.midPoint.condition.status === 'optimal' 
-                            ? 'bg-green-900/20 border border-green-900/30' 
-                            : weatherData.midPoint.condition.status === 'caution'
-                              ? 'bg-amber-900/20 border border-amber-900/30'
-                              : 'bg-red-900/20 border border-red-900/30'
-                        }`}>
-                          {renderConditionIcon(weatherData.midPoint.condition.icon)}
-                          <div className="ml-3">
-                            <p className={`text-sm font-medium ${getStatusColor(weatherData.midPoint.condition.status)}`}>
-                              Midpoint: {weatherData.midPoint.condition.status === 'optimal' ? 'Optimal' : weatherData.midPoint.condition.status === 'caution' ? 'Use Caution' : 'Warning'}
-                            </p>
-                            <p className="text-xs text-gray-400">{weatherData.midPoint.condition.detail}</p>
-                          </div>
-                        </div>
-                        
-                        <div className={`p-3 rounded-lg flex items-center ${
-                          weatherData.endPoint.condition.status === 'optimal' 
-                            ? 'bg-green-900/20 border border-green-900/30' 
-                            : weatherData.endPoint.condition.status === 'caution'
-                              ? 'bg-amber-900/20 border border-amber-900/30'
-                              : 'bg-red-900/20 border border-red-900/30'
-                        }`}>
-                          {renderConditionIcon(weatherData.endPoint.condition.icon)}
-                          <div className="ml-3">
-                            <p className={`text-sm font-medium ${getStatusColor(weatherData.endPoint.condition.status)}`}>
-                              Destination: {weatherData.endPoint.condition.status === 'optimal' ? 'Optimal' : weatherData.endPoint.condition.status === 'caution' ? 'Use Caution' : 'Warning'}
-                            </p>
-                            <p className="text-xs text-gray-400">{weatherData.endPoint.condition.detail}</p>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  </section>
-                )}
-                
-                {/* Conditions Tab */}
-                {activeActionTab === 'conditions' && (
-                  <section className="bg-gradient-to-r from-gray-900 to-black rounded-lg shadow-lg p-6 border border-gray-800">
-                    <h3 className="text-blue-400 font-orbitron text-xl mb-6">Detailed Road Conditions</h3>
-                    
-                    <div className="space-y-6">
-                      {/* Route visualization */}
-                      <div className="relative p-4 bg-black/30 rounded-lg border border-gray-800">
-                        <div className="flex items-center justify-between mb-4">
-                          <div className="flex items-center">
-                            <div className="h-4 w-4 rounded-full bg-green-500 mr-2"></div>
-                            <span className="text-sm text-white">{selectedRoute.startPoint.name}</span>
-                          </div>
-                          <div className="text-xs text-gray-400">
-                            {selectedRoute.distance} miles
-                          </div>
-                          <div className="flex items-center">
-                            <span className="text-sm text-white">{selectedRoute.endPoint.name}</span>
-                            <div className="h-4 w-4 rounded-full bg-red-500 ml-2"></div>
-                          </div>
-                        </div>
-                        
-                        <div className="relative h-4 bg-gray-800 rounded-full overflow-hidden">
-                          {/* Start marker */}
-                          <div className="absolute left-0 top-0 bottom-0 w-1/3 bg-gradient-to-r from-green-500 to-yellow-500"></div>
-                          
-                          {/* Mid marker */}
-                          <div className="absolute left-1/3 top-0 bottom-0 w-1/3 bg-gradient-to-r from-yellow-500 to-orange-500"></div>
-                          
-                          {/* End marker */}
-                          <div className="absolute right-0 top-0 bottom-0 w-1/3 bg-gradient-to-r from-orange-500 to-red-500"></div>
-                          
-                          {/* Condition markers */}
-                          <div className="absolute left-0 top-0 h-1 w-full flex">
-                            <div className={`h-full w-1/3 ${
-                              weatherData.startPoint.condition.status === 'optimal' ? 'bg-green-500/70' : 
-                              weatherData.startPoint.condition.status === 'caution' ? 'bg-amber-500/70' : 'bg-red-500/70'
-                            }`}></div>
-                            <div className={`h-full w-1/3 ${
-                              weatherData.midPoint.condition.status === 'optimal' ? 'bg-green-500/70' : 
-                              weatherData.midPoint.condition.status === 'caution' ? 'bg-amber-500/70' : 'bg-red-500/70'
-                            }`}></div>
-                            <div className={`h-full w-1/3 ${
-                              weatherData.endPoint.condition.status === 'optimal' ? 'bg-green-500/70' : 
-                              weatherData.endPoint.condition.status === 'caution' ? 'bg-amber-500/70' : 'bg-red-500/70'
-                            }`}></div>
-                          </div>
-                        </div>
-                        
-                        <div className="mt-2 flex justify-between text-xs text-gray-500">
-                          <span>0 mi</span>
-                          <span>{Math.round(selectedRoute.distance / 2)} mi</span>
-                          <span>{selectedRoute.distance} mi</span>
-                        </div>
-                      </div>
-                      
-                      {/* Segment details */}
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        {/* Start segment */}
-                        <div className="bg-black/30 p-4 rounded-lg border border-gray-800">
-                          <h4 className="text-blue-400 font-medium mb-3 flex items-center">
-                            <span className="h-3 w-3 rounded-full bg-green-500 mr-2"></span>
-                            Start Segment
-                          </h4>
-                          
-                          <div className={`mb-4 p-3 rounded-lg ${
-                            weatherData.startPoint.condition.status === 'optimal' ? 'bg-green-900/20 border border-green-900/30' : 
-                            weatherData.startPoint.condition.status === 'caution' ? 'bg-amber-900/20 border border-amber-900/30' : 
-                            'bg-red-900/20 border border-red-900/30'
-                          }`}>
-                            <div className="flex items-center">
-                              {renderConditionIcon(weatherData.startPoint.condition.icon)}
-                              <div className="ml-3">
-                                <p className={`text-sm font-medium ${getStatusColor(weatherData.startPoint.condition.status)}`}>
-                                  {weatherData.startPoint.condition.status === 'optimal' ? 'Optimal Conditions' : 
-                                   weatherData.startPoint.condition.status === 'caution' ? 'Use Caution' : 'Warning'}
-                                </p>
-                                <p className="text-xs text-gray-400">{weatherData.startPoint.condition.detail}</p>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="space-y-2 text-sm">
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">Temp:</span>
-                              <span className="text-white">{formatTemperature(weatherData.startPoint.weather.main.temp, 'imperial')}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">Weather:</span>
-                              <span className="text-white capitalize">{weatherData.startPoint.weather.weather[0].description}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">Visibility:</span>
-                              <span className="text-white">{(weatherData.startPoint.weather.visibility / 1609).toFixed(1)} mi</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">Wind:</span>
-                              <span className="text-white">{Math.round(weatherData.startPoint.weather.wind.speed)} mph</span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* Mid segment */}
-                        <div className="bg-black/30 p-4 rounded-lg border border-gray-800">
-                          <h4 className="text-blue-400 font-medium mb-3 flex items-center">
-                            <span className="h-3 w-3 rounded-full bg-yellow-500 mr-2"></span>
-                            Mid Segment
-                          </h4>
-                          
-                          <div className={`mb-4 p-3 rounded-lg ${
-                            weatherData.midPoint.condition.status === 'optimal' ? 'bg-green-900/20 border border-green-900/30' : 
-                            weatherData.midPoint.condition.status === 'caution' ? 'bg-amber-900/20 border border-amber-900/30' : 
-                            'bg-red-900/20 border border-red-900/30'
-                          }`}>
-                            <div className="flex items-center">
-                              {renderConditionIcon(weatherData.midPoint.condition.icon)}
-                              <div className="ml-3">
-                                <p className={`text-sm font-medium ${getStatusColor(weatherData.midPoint.condition.status)}`}>
-                                  {weatherData.midPoint.condition.status === 'optimal' ? 'Optimal Conditions' : 
-                                   weatherData.midPoint.condition.status === 'caution' ? 'Use Caution' : 'Warning'}
-                                </p>
-                                <p className="text-xs text-gray-400">{weatherData.midPoint.condition.detail}</p>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="space-y-2 text-sm">
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">Temp:</span>
-                              <span className="text-white">{formatTemperature(weatherData.midPoint.weather.main.temp, 'imperial')}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">Weather:</span>
-                              <span className="text-white capitalize">{weatherData.midPoint.weather.weather[0].description}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">Visibility:</span>
-                              <span className="text-white">{(weatherData.midPoint.weather.visibility / 1609).toFixed(1)} mi</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">Wind:</span>
-                              <span className="text-white">{Math.round(weatherData.midPoint.weather.wind.speed)} mph</span>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        {/* End segment */}
-                        <div className="bg-black/30 p-4 rounded-lg border border-gray-800">
-                          <h4 className="text-blue-400 font-medium mb-3 flex items-center">
-                            <span className="h-3 w-3 rounded-full bg-red-500 mr-2"></span>
-                            End Segment
-                          </h4>
-                          
-                          <div className={`mb-4 p-3 rounded-lg ${
-                            weatherData.endPoint.condition.status === 'optimal' ? 'bg-green-900/20 border border-green-900/30' : 
-                            weatherData.endPoint.condition.status === 'caution' ? 'bg-amber-900/20 border border-amber-900/30' : 
-                            'bg-red-900/20 border border-red-900/30'
-                          }`}>
-                            <div className="flex items-center">
-                              {renderConditionIcon(weatherData.endPoint.condition.icon)}
-                              <div className="ml-3">
-                                <p className={`text-sm font-medium ${getStatusColor(weatherData.endPoint.condition.status)}`}>
-                                  {weatherData.endPoint.condition.status === 'optimal' ? 'Optimal Conditions' : 
-                                   weatherData.endPoint.condition.status === 'caution' ? 'Use Caution' : 'Warning'}
-                                </p>
-                                <p className="text-xs text-gray-400">{weatherData.endPoint.condition.detail}</p>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          <div className="space-y-2 text-sm">
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">Temp:</span>
-                              <span className="text-white">{formatTemperature(weatherData.endPoint.weather.main.temp, 'imperial')}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">Weather:</span>
-                              <span className="text-white capitalize">{weatherData.endPoint.weather.weather[0].description}</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">Visibility:</span>
-                              <span className="text-white">{(weatherData.endPoint.weather.visibility / 1609).toFixed(1)} mi</span>
-                            </div>
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">Wind:</span>
-                              <span className="text-white">{Math.round(weatherData.endPoint.weather.wind.speed)} mph</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Driving advisory */}
-                      <div className="mt-6 p-4 bg-blue-900/10 border border-blue-900/30 rounded-lg">
-                        <h4 className="text-blue-400 font-medium mb-3">Driving Advisory</h4>
-                        
-                        <ul className="space-y-3">
-                          {weatherData.startPoint.condition.status !== 'optimal' && (
-                            <li className="flex items-start">
-                              <AlertTriangle className={`h-5 w-5 mr-2 ${getStatusColor(weatherData.startPoint.condition.status)}`} />
-                              <p className="text-gray-300">
-                                <span className="font-medium">Start Segment:</span> {weatherData.startPoint.condition.detail}. 
-                                Adjust driving style accordingly.
-                              </p>
-                            </li>
-                          )}
-                          
-                          {weatherData.midPoint.condition.status !== 'optimal' && (
-                            <li className="flex items-start">
-                              <AlertTriangle className={`h-5 w-5 mr-2 ${getStatusColor(weatherData.midPoint.condition.status)}`} />
-                              <p className="text-gray-300">
-                                <span className="font-medium">Mid Segment:</span> {weatherData.midPoint.condition.detail}. 
-                                Consider route alternatives if conditions are severe.
-                              </p>
-                            </li>
-                          )}
-                          
-                          {weatherData.endPoint.condition.status !== 'optimal' && (
-                            <li className="flex items-start">
-                              <AlertTriangle className={`h-5 w-5 mr-2 ${getStatusColor(weatherData.endPoint.condition.status)}`} />
-                              <p className="text-gray-300">
-                                <span className="font-medium">End Segment:</span> {weatherData.endPoint.condition.detail}. 
-                                Prepare for these conditions as you approach your destination.
-                              </p>
-                            </li>
-                          )}
-                          
-                          {weatherData.startPoint.condition.status === 'optimal' && 
-                           weatherData.midPoint.condition.status === 'optimal' && 
-                           weatherData.endPoint.condition.status === 'optimal' && (
-                            <li className="flex items-start">
-                              <div className="h-5 w-5 mr-2 text-green-500">✓</div>
-                              <p className="text-gray-300">
-                                All segments show optimal driving conditions. Enjoy your journey with standard safety precautions.
-                              </p>
-                            </li>
-                          )}
-                        </ul>
-                      </div>
-                    </div>
-                  </section>
-                )}
-                
-                {/* Performance Tab */}
-                {activeActionTab === 'performance' && (
-                  <section className="bg-gradient-to-r from-gray-900 to-black rounded-lg shadow-lg p-6 border border-gray-800">
-                    <h3 className="text-blue-400 font-orbitron text-xl mb-6">Vehicle Performance Intelligence</h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                      {/* Fuel efficiency & emissions panel */}
-                      <div className="bg-black/30 p-4 rounded-lg border border-gray-800">
-                        <h4 className="text-green-500 font-medium mb-3 flex items-center">
-                          <Car className="h-4 w-4 mr-2" />
-                          Performance Impact
-                        </h4>
-                        
-                        <div className="space-y-4">
-                          {/* Fuel efficiency */}
-                          <div>
-                            <div className="flex justify-between items-center mb-1">
-                              <p className="text-sm text-gray-400">Fuel Efficiency Impact</p>
-                              <p className="text-sm text-white font-medium">
-                                {weatherData.performance.fuelEfficiencyImpact <= 0 
-                                  ? `${weatherData.performance.fuelEfficiencyImpact}%` 
-                                  : `+${weatherData.performance.fuelEfficiencyImpact}%`
-                                }
-                              </p>
-                            </div>
-                            
-                            <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
-                              <div className={`h-full ${
-                                weatherData.performance.fuelEfficiencyImpact >= 0
-                                  ? 'bg-green-500'
-                                  : 'bg-amber-500'
-                              }`} style={{ 
-                                width: `${Math.min(100, 50 + (weatherData.performance.fuelEfficiencyImpact * 5))}%` 
-                              }}></div>
-                            </div>
-                            
-                            <p className="mt-2 text-xs text-gray-500">
-                              {weatherData.performance.fuelEfficiencyImpact <= -2
-                                ? "Current conditions may reduce fuel efficiency."
-                                : "Minimal impact on fuel efficiency expected."
-                              }
-                            </p>
-                          </div>
-                          
-                          {/* Temperature difference */}
-                          <div className="pt-3 border-t border-gray-800">
-                            <p className="text-sm text-gray-400 mb-2">Temperature Change</p>
-                            
-                            <div className="flex items-center justify-between">
-                              <div className="text-center">
-                                <p className="text-xs text-gray-500">Start</p>
-                                <p className="text-white font-medium">{formatTemperature(weatherData.startPoint.weather.main.temp, 'imperial')}</p>
-                              </div>
-                              
-                              <div className="flex-1 mx-4 h-1 bg-gradient-to-r from-blue-500 to-red-500 rounded"></div>
-                              
-                              <div className="text-center">
-                                <p className="text-xs text-gray-500">End</p>
-                                <p className="text-white font-medium">{formatTemperature(weatherData.endPoint.weather.main.temp, 'imperial')}</p>
-                              </div>
-                            </div>
-                            
-                            <p className="mt-2 text-xs text-gray-500">
-                              {Math.abs(weatherData.endPoint.weather.main.temp - weatherData.startPoint.weather.main.temp) > 10
-                                ? `Significant temperature variation of ${Math.abs(Math.round(weatherData.endPoint.weather.main.temp - weatherData.startPoint.weather.main.temp))}°F along route.`
-                                : "Minimal temperature variation along route."
-                              }
-                            </p>
-                          </div>
-                        </div>
-                      </div>
-                      
-                      {/* Route & traffic intel panel */}
-                      <div className="bg-black/30 p-4 rounded-lg border border-gray-800">
-                        <h4 className="text-blue-400 font-medium mb-3 flex items-center">
-                          <BarChart className="h-4 w-4 mr-2" />
-                          Route Optimization
-                        </h4>
-                        
-                        <div className="space-y-4">
-                          {/* Travel time impact */}
-                          <div>
-                            <div className="flex justify-between items-center mb-1">
-                              <p className="text-sm text-gray-400">Potential Time Savings</p>
-                              <p className="text-sm text-white font-medium">
-                                Up to {weatherData.performance.potentialTimeSavings} min
-                              </p>
-                            </div>
-                            
-                            <div className="w-full h-10 bg-gray-800 rounded-lg overflow-hidden relative">
-                              <div className="absolute inset-0 flex items-center px-3">
-                                <p className="text-xs text-white z-10">Expected: {selectedRoute.estimatedTime}</p>
-                              </div>
-                              <div className="absolute right-0 h-full bg-green-500/30 flex items-center justify-end px-3"
-                                style={{ width: `${Math.min(30, weatherData.performance.potentialTimeSavings)}%` }}>
-                                <p className="text-xs text-green-300 z-10">
-                                  Optimized: -{weatherData.performance.potentialTimeSavings} min
-                                </p>
-                              </div>
-                            </div>
-                            
-                            <p className="mt-2 text-xs text-gray-500">
-                              Optimization through traffic avoidance and ideal departure timing.
-                            </p>
-                          </div>
-                          
-                          {/* Traffic likelihood */}
-                          <div className="pt-3 border-t border-gray-800">
-                            <p className="text-sm text-gray-400 mb-2">Traffic Analysis</p>
-                            
-                            <div className="bg-gray-800 p-3 rounded flex items-center">
-                              <div className={`h-3 w-3 rounded-full mr-2 ${
-                                weatherData.performance.trafficLikelihood === 'Low' 
-                                  ? 'bg-green-500' 
-                                  : weatherData.performance.trafficLikelihood === 'Moderate'
-                                    ? 'bg-yellow-500'
-                                    : 'bg-red-500'
-                              }`}></div>
-                              <div>
-                                <p className="text-white text-sm">{weatherData.performance.trafficLikelihood} likelihood of congestion</p>
-                                <p className="text-xs text-gray-500">Based on route length, time of day, and weather</p>
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    {/* Advanced analytics */}
-                    <div className="bg-black/30 p-4 rounded-lg border border-gray-800 mt-6">
-                      <h4 className="text-blue-400 font-medium mb-4 flex items-center">
-                        <Infinity className="h-4 w-4 mr-2" />
-                        Performance Recommendations
-                      </h4>
-                      
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <div className="border border-gray-700 rounded-lg p-3">
-                          <h5 className="text-green-500 text-sm font-medium mb-2">Driving Mode</h5>
-                          <p className="text-white">
-                            {weatherData.startPoint.condition.status === 'optimal' && weatherData.endPoint.condition.status === 'optimal'
-                              ? "Sport mode suitable for entire route"
-                              : weatherData.startPoint.condition.status === 'warning' || weatherData.endPoint.condition.status === 'warning'
-                                ? "Recommend comfort/eco mode for safety"
-                                : "Mixed mode: adapt based on segment conditions"
-                            }
-                          </p>
-                        </div>
-                        
-                        <div className="border border-gray-700 rounded-lg p-3">
-                          <h5 className="text-green-500 text-sm font-medium mb-2">Tire Pressure</h5>
-                          <p className="text-white">
-                            {Math.abs(weatherData.endPoint.weather.main.temp - weatherData.startPoint.weather.main.temp) > 15
-                              ? "Check tire pressure before return trip due to significant temperature change"
-                              : "Standard tire pressure suitable for route conditions"
-                            }
-                          </p>
-                        </div>
-                        
-                        <div className="border border-gray-700 rounded-lg p-3">
-                          <h5 className="text-green-500 text-sm font-medium mb-2">Route Timing</h5>
-                          <p className="text-white">{weatherData.performance.optimalDepartureTime}</p>
-                        </div>
-                        
-                        <div className="border border-gray-700 rounded-lg p-3">
-                          <h5 className="text-green-500 text-sm font-medium mb-2">Vehicle Settings</h5>
-                          <p className="text-white">
-                            {weatherData.startPoint.weather.weather[0].main.toLowerCase().includes('rain') || 
-                             weatherData.endPoint.weather.weather[0].main.toLowerCase().includes('rain')
-                              ? "Auto wipers recommended for intermittent precipitation"
-                              : weatherData.startPoint.weather.main.temp > 85 || weatherData.endPoint.weather.main.temp > 85
-                                ? "Pre-cool vehicle before departure"
-                                : weatherData.startPoint.weather.main.temp < 40 || weatherData.endPoint.weather.main.temp < 40
-                                  ? "Pre-heat vehicle before departure"
-                                  : "Standard climate control settings recommended"
-                            }
-                          </p>
-                        </div>
-                      </div>
-                    </div>
-                  </section>
-                )}
-              </>
-            ) : (
-              <div className="bg-gradient-to-r from-gray-900 to-black rounded-lg shadow-lg p-6 border border-gray-800">
-                <p className="text-gray-400 text-center py-8">
-                  Route intelligence data is currently unavailable. Please try again later.
-                </p>
-              </div>
-            )}
-          </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   );
 };
