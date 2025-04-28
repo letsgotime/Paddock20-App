@@ -38,6 +38,24 @@ export const getRandomAffirmation = (): string => {
   return affirmations[randomIndex];
 };
 
+// Function to get a daily affirmation that changes based on the calendar day
+export const getDailyAffirmation = (): string => {
+  // Get the current date in format YYYY-MM-DD
+  const today = new Date().toISOString().split('T')[0];
+  
+  // Use the date string to create a consistent "random" index for the day
+  // by summing the character codes of the date string
+  let dateSum = 0;
+  for (let i = 0; i < today.length; i++) {
+    dateSum += today.charCodeAt(i);
+  }
+  
+  // Use the date sum to determine the affirmation index for today
+  const todayIndex = dateSum % affirmations.length;
+  
+  return affirmations[todayIndex];
+};
+
 // Function to get a set of three different affirmations
 export const getThreeAffirmations = (): string[] => {
   const shuffled = [...affirmations].sort(() => 0.5 - Math.random());
@@ -74,6 +92,7 @@ export const getAffirmationByCategory = (category: string): string => {
 
 export default {
   getRandomAffirmation,
+  getDailyAffirmation,
   getThreeAffirmations,
   getAffirmationByCategory
 };
