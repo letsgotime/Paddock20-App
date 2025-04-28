@@ -1151,14 +1151,14 @@ const ManifestationStationPage = () => {
       </div>
       
       {/* Manifesto Statement */}
-      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg p-6 border border-gray-700 mb-8">
-        <p className="text-blue-400 font-orbitron text-center text-lg mb-3">Manifestation Station™ isn't about posting dreams.</p>
-        <p className="text-white text-center">It's about <span className="text-green-400 font-medium">engineering victories</span> — one daily choice at a time.</p>
-        <div className="flex flex-col items-center mt-4 space-y-1">
-          <p className="text-white font-medium">Dream bigger.</p>
-          <p className="text-white font-medium">Work sharper.</p>
-          <p className="text-white font-medium">Drive harder.</p>
-          <p className="text-white font-medium">Live better.</p>
+      <div className="bg-gradient-to-br from-gray-900 to-gray-800 rounded-lg p-8 border border-gray-700 mb-8">
+        <p className="text-blue-400 font-orbitron text-center text-xl mb-4">Manifestation Station™ isn't about posting dreams.</p>
+        <p className="text-white text-center text-lg mb-6">It's about <span className="text-green-400 font-medium">engineering victories</span> — one daily choice at a time.</p>
+        <div className="flex flex-col items-center mt-6 space-y-3">
+          <p className="text-white font-medium text-lg py-1">Dream bigger.</p>
+          <p className="text-white font-medium text-lg py-1">Work sharper.</p>
+          <p className="text-white font-medium text-lg py-1">Drive harder.</p>
+          <p className="text-white font-medium text-lg py-1">Live better.</p>
         </div>
       </div>
       
