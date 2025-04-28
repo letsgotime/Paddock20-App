@@ -305,25 +305,25 @@ const ManifestationStationPage = () => {
           completed: true
         }
       ],
-      manifestStatus: 'complete',
-      progressPercentage: 100,
+      manifestStatus: 'in_progress',
+      progressPercentage: 32,
       description: "The Patek Philippe Nautilus 5711/1A-010 with blue dial represents the pinnacle of luxury sports watches. Designed by Gerald Genta in 1976, it combines elegant design with extraordinary craftsmanship and has become one of the most sought-after timepieces in the world.",
       targetAmount: 140000,
-      currentAmount: 140000,
+      currentAmount: 44800,
       budgetEntries: [
         {
           id: 501,
           date: "2024-11-15",
-          amount: 50000,
+          amount: 20000,
           type: 'deposit',
           description: "Investment returns"
         },
         {
           id: 502,
           date: "2025-01-10",
-          amount: 90000,
+          amount: 24800,
           type: 'deposit',
-          description: "Asset reallocation"
+          description: "Bonus allocation"
         }
       ],
       mediaGallery: [
@@ -395,25 +395,25 @@ const ManifestationStationPage = () => {
           completed: true
         }
       ],
-      manifestStatus: 'complete',
-      progressPercentage: 100,
+      manifestStatus: 'in_progress',
+      progressPercentage: 3,
       description: "A stunning oceanfront property in Malibu featuring 4 bedrooms, 5 bathrooms, and breathtaking panoramic views of the Pacific. The modern architecture blends seamlessly with the natural surroundings, featuring floor-to-ceiling windows, a private beach access path, and an infinity pool overlooking the ocean.",
       targetAmount: 8500000,
-      currentAmount: 8500000,
+      currentAmount: 255000,
       budgetEntries: [
         {
           id: 601,
           date: "2024-12-15",
-          amount: 2000000,
+          amount: 150000,
           type: 'deposit',
-          description: "Down payment from investments"
+          description: "Initial investment allocation"
         },
         {
           id: 602,
           date: "2025-01-10",
-          amount: 6500000,
+          amount: 105000,
           type: 'deposit',
-          description: "Mortgage financing"
+          description: "Year-end portfolio gains"
         }
       ],
       mediaGallery: [
