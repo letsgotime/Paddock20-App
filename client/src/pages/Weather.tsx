@@ -2,6 +2,7 @@ import React from "react";
 import OpenWeatherStation from "@/components/OpenWeatherStation";
 import OpenWeatherAutomotivePanel from "@/components/OpenWeatherAutomotivePanel";
 import DrivingWeatherInsights from "@/components/DrivingWeatherInsights";
+import WorldClockPanel from "@/components/WorldClockPanel";
 import { WeatherProvider } from "@/contexts/WeatherContext";
 import { useWeather } from "@/contexts/WeatherContext";
 
@@ -12,6 +13,9 @@ const WeatherPageContent = () => {
   return (
     <>
       <OpenWeatherStation />
+      
+      {/* Global Circuit Times & Conditions */}
+      <WorldClockPanel />
       
       {selectedLocation && (
         <div className="mt-8 space-y-8">
