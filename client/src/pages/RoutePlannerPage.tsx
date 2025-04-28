@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import { 
   MapPin, Locate, Search, Navigation, MapIcon, Cloud, CloudRain, 
   Thermometer, Wind, Clock, Car, CalendarClock, AlertTriangle, 
-  CornerUpRight, Compass, BarChart, Infinity, Route as RouteIcon
+  CornerUpRight, Compass, BarChart, Infinity, Route as RouteIcon,
+  Share2, ExternalLink, Share, Smartphone
 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { getWeatherData, getOneCallData, formatTemperature } from '@/services/openWeatherService';
@@ -137,6 +138,41 @@ const ROUTE_CATEGORIES = [
   { id: 'enthusiast', label: 'Enthusiast Run', icon: '🏎️' },
 ];
 
+// Navigation services
+const NAVIGATION_SERVICES = [
+  { 
+    id: 'google', 
+    name: 'Google Maps', 
+    logo: '🌎',
+    getDirectionsUrl: (startLat: number, startLon: number, endLat: number, endLon: number, waypoints?: any[]) => {
+      let url = `https://www.google.com/maps/dir/?api=1&origin=${startLat},${startLon}&destination=${endLat},${endLon}&travelmode=driving`;
+      
+      if (waypoints && waypoints.length > 0) {
+        const waypointsStr = waypoints.map(wp => `${wp.lat},${wp.lon}`).join('|');
+        url += `&waypoints=${waypointsStr}`;
+      }
+      
+      return url;
+    }
+  },
+  { 
+    id: 'waze', 
+    name: 'Waze', 
+    logo: '🧭',
+    getDirectionsUrl: (startLat: number, startLon: number, endLat: number, endLon: number) => {
+      return `https://www.waze.com/ul?ll=${endLat}%2C${endLon}&navigate=yes&zoom=17`;
+    }
+  },
+  { 
+    id: 'apple', 
+    name: 'Apple Maps', 
+    logo: '🗺️',
+    getDirectionsUrl: (startLat: number, startLon: number, endLat: number, endLon: number) => {
+      return `http://maps.apple.com/?saddr=${startLat},${startLon}&daddr=${endLat},${endLon}&dirflg=d`;
+    }
+  }
+];
+
 // Sample data for demonstration purposes
 const SAMPLE_ROUTES: Route[] = [
   {
@@ -185,6 +221,8 @@ const RoutePlannerPage = () => {
   const [isLoadingWeather, setIsLoadingWeather] = useState(false);
   const [weatherData, setWeatherData] = useState<any>(null);
   const [activeActionTab, setActiveActionTab] = useState('overview');
+  const [preferredNavService, setPreferredNavService] = useState('google');
+  const [showNavOptions, setShowNavOptions] = useState(false);
   
   // New route state
   const [newRoute, setNewRoute] = useState<Partial<Route>>({
@@ -444,6 +482,34 @@ const RoutePlannerPage = () => {
     setActiveTab('create');
     setSelectedRoute(null);
     setWeatherData(null);
+  };
+  
+  // Open navigation app with directions
+  const openNavigation = (navServiceId?: string) => {
+    if (!selectedRoute) return;
+    
+    const service = navServiceId 
+      ? NAVIGATION_SERVICES.find(s => s.id === navServiceId) 
+      : NAVIGATION_SERVICES.find(s => s.id === preferredNavService);
+    
+    if (!service) return;
+    
+    const url = service.getDirectionsUrl(
+      selectedRoute.startPoint.lat,
+      selectedRoute.startPoint.lon,
+      selectedRoute.endPoint.lat,
+      selectedRoute.endPoint.lon,
+      selectedRoute.waypoints
+    );
+    
+    // Save preference if different from current
+    if (navServiceId && navServiceId !== preferredNavService) {
+      setPreferredNavService(navServiceId);
+      setShowNavOptions(false);
+    }
+    
+    // Open in new tab
+    window.open(url, '_blank');
   };
   
   // Get status color based on road condition
@@ -847,11 +913,46 @@ const RoutePlannerPage = () => {
                   </div>
                 </div>
                 
-                <div className="mt-4 flex space-x-2">
+                <div className="mt-4 flex flex-wrap gap-2">
                   <Link to="/journal" className="px-3 py-1 bg-gray-800 text-gray-300 rounded-md text-sm hover:bg-gray-700 transition-colors">
                     Log Drive
                   </Link>
-                  <button className="px-3 py-1 bg-blue-900/30 text-blue-400 rounded-md text-sm hover:bg-blue-900/50 transition-colors">
+                  
+                  <div className="relative">
+                    <button 
+                      onClick={() => setShowNavOptions(!showNavOptions)}
+                      className="px-3 py-1 bg-green-600 text-black rounded-md text-sm hover:bg-green-500 transition-colors flex items-center"
+                    >
+                      <Navigation className="h-4 w-4 mr-2" />
+                      Navigate
+                    </button>
+                    
+                    {showNavOptions && (
+                      <div className="absolute mt-1 right-0 w-44 bg-black border border-gray-700 rounded-md shadow-lg p-2 z-50">
+                        <p className="text-gray-400 text-xs mb-2">Choose Navigation App:</p>
+                        {NAVIGATION_SERVICES.map(service => (
+                          <button 
+                            key={service.id}
+                            onClick={() => openNavigation(service.id)}
+                            className={`w-full text-left px-3 py-2 rounded-md text-sm mb-1 flex items-center ${
+                              preferredNavService === service.id 
+                                ? 'bg-blue-900/50 text-blue-300' 
+                                : 'hover:bg-gray-800 text-white'
+                            }`}
+                          >
+                            <span className="mr-2">{service.logo}</span>
+                            {service.name}
+                            {preferredNavService === service.id && (
+                              <span className="ml-auto text-blue-400 text-xs">default</span>
+                            )}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                  
+                  <button className="px-3 py-1 bg-blue-900/30 text-blue-400 rounded-md text-sm hover:bg-blue-900/50 transition-colors flex items-center">
+                    <Share2 className="h-4 w-4 mr-2" />
                     Share Route
                   </button>
                 </div>
