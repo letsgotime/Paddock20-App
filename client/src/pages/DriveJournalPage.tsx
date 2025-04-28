@@ -1,6 +1,5 @@
-// /client/src/pages/DriveJournalPage.tsx
-
 import React, { useState, useEffect } from "react";
+import { Link } from "react-router-dom";
 
 interface RallyEventData {
   rallyName: string;
@@ -17,6 +16,7 @@ interface RallyEventData {
   recommendedVehicles: string[];
   checkpoints: any[];
   eventType: string;
+  host?: string;
 }
 
 interface CustomVehicle {
@@ -30,15 +30,22 @@ interface CustomVehicle {
 }
 
 const DriveJournalPage = () => {
+  // Base location data
   const [startLocation, setStartLocation] = useState("");
   const [endLocation, setEndLocation] = useState("");
   const [waypoints, setWaypoints] = useState<string[]>([]);
+  
+  // Vehicle data
   const [vehicleUsed, setVehicleUsed] = useState("");
-  const [curvatureRating, setCurvatureRating] = useState("Minimal");
-  const [curvatureTRN, setCurvatureTRN] = useState<number | null>(null);
+  
+  // Road conditions and assessment
+  const [curvatureRating, setCurvatureRating] = useState("Moderate");
+  const [curvatureTRN, setCurvatureTRN] = useState<number>(5.8);
   const [surfaceTemp, setSurfaceTemp] = useState("");
-  const [gripLevel, setGripLevel] = useState("");
-  const [weatherImpact, setWeatherImpact] = useState("");
+  const [gripLevel, setGripLevel] = useState("Dry");
+  const [weatherImpact, setWeatherImpact] = useState("Clear");
+  
+  // Performance adjustments
   const [tirePressure, setTirePressure] = useState("");
   const [torqueSetting, setTorqueSetting] = useState("");
   const [photos, setPhotos] = useState<File[]>([]);
@@ -61,6 +68,19 @@ const DriveJournalPage = () => {
   const [newVehicleFrontPSI, setNewVehicleFrontPSI] = useState<number>(32);
   const [newVehicleRearPSI, setNewVehicleRearPSI] = useState<number>(30);
   const [customVehicles, setCustomVehicles] = useState<CustomVehicle[]>([]);
+  
+  // Advanced Telemetry & F1 Data
+  const [showAdvancedTelemetry, setShowAdvancedTelemetry] = useState(false);
+  const [drivingMode, setDrivingMode] = useState("sport");
+  const [drivingStyle, setDrivingStyle] = useState("Dynamic");
+  
+  // F1-level extended telemetry data
+  const [corneringG, setCorneringG] = useState<number>(0.85);
+  const [maxSpeed, setMaxSpeed] = useState<number>(110);
+  const [avgSpeed, setAvgSpeed] = useState<number>(65);
+  const [maxBraking, setMaxBraking] = useState<number>(0.8);
+  const [peakTireTemp, setPeakTireTemp] = useState<number>(170);
+  const [tirePressureVariance, setTirePressureVariance] = useState<number>(2);
   
   // Load any saved custom vehicles from localStorage
   useEffect(() => {
@@ -190,7 +210,168 @@ const DriveJournalPage = () => {
     }
   };
 
+  // Generate F1-grade telemetry data based on input parameters
+  const generateTelemetryData = () => {
+    // Start with base telemetry values based on vehicle type
+    let baseCorneringG = 0.7;
+    let baseBrakingG = 0.7;
+    let baseAcceleration = 6.5; // 0-60 time in seconds
+    
+    // Adjust based on vehicle selection
+    if (vehicleUsed.includes('Ferrari')) {
+      baseCorneringG = 0.95;
+      baseBrakingG = 1.0;
+      baseAcceleration = 3.0;
+    } else if (vehicleUsed.includes('Porsche')) {
+      baseCorneringG = 0.9;
+      baseBrakingG = 0.95;
+      baseAcceleration = 3.5;
+    } else if (vehicleUsed.includes('BMW')) {
+      baseCorneringG = 0.85;
+      baseBrakingG = 0.9;
+      baseAcceleration = 4.0;
+    }
+    
+    // Adjust based on driving style
+    const styleMultiplier = drivingStyle === 'Aggressive' ? 1.1 : 
+                          drivingStyle === 'Dynamic' ? 1.05 : 
+                          drivingStyle === 'Balanced' ? 1.0 : 0.9;
+    
+    // Adjust based on surface conditions
+    const surfaceMultiplier = gripLevel === 'Dry' ? 1.0 : 
+                            gripLevel === 'Damp' ? 0.85 : 
+                            gripLevel === 'Wet' ? 0.7 : 0.9;
+    
+    // Calculate final telemetry values
+    const finalCorneringG = baseCorneringG * styleMultiplier * surfaceMultiplier;
+    const finalBrakingG = baseBrakingG * styleMultiplier * surfaceMultiplier;
+    const finalAcceleration = baseAcceleration / (styleMultiplier * surfaceMultiplier);
+    
+    // Calculate tire temperatures based on driving style and surface temp
+    const baseTireTemp = surfaceTemp ? parseInt(surfaceTemp) + 40 : 140;
+    const frontLeftTemp = baseTireTemp + (drivingStyle === 'Aggressive' ? 15 : 5);
+    const frontRightTemp = baseTireTemp + (drivingStyle === 'Aggressive' ? 20 : 8);
+    const rearLeftTemp = baseTireTemp + (drivingStyle === 'Aggressive' ? 10 : 3);
+    const rearRightTemp = baseTireTemp + (drivingStyle === 'Aggressive' ? 18 : 6);
+    
+    return {
+      corneringData: {
+        maxLateralG: finalCorneringG,
+        turnInRate: drivingStyle === 'Aggressive' ? 8.5 : 
+                  drivingStyle === 'Dynamic' ? 7.5 : 
+                  drivingStyle === 'Balanced' ? 6.5 : 5.5,
+        apexSpeed: 60 + (finalCorneringG * 20),
+        exitStability: drivingStyle === 'Aggressive' ? 6.0 : 
+                     drivingStyle === 'Dynamic' ? 7.0 : 
+                     drivingStyle === 'Balanced' ? 8.0 : 9.0,
+      },
+      accelerationData: {
+        zeroToSixty: finalAcceleration,
+        quarterMile: finalAcceleration * 2.2,
+        quarterMileSpeed: 80 + (finalAcceleration * 6),
+        topSpeed: 130 + (120 / finalAcceleration),
+      },
+      brakingData: {
+        sixtyToZero: 120 - (finalBrakingG * 20),
+        maxBrakingG: finalBrakingG,
+        brakingDistance: 120 - (finalBrakingG * 20),
+        brakingTemperature: 600 + (finalBrakingG * 200) + (drivingStyle === 'Aggressive' ? 150 : 0),
+      },
+      tireData: {
+        frontLeftTemp,
+        frontRightTemp,
+        rearLeftTemp,
+        rearRightTemp,
+        wear: {
+          frontLeft: drivingStyle === 'Aggressive' ? 35 : 
+                   drivingStyle === 'Dynamic' ? 25 : 15,
+          frontRight: drivingStyle === 'Aggressive' ? 45 : 
+                    drivingStyle === 'Dynamic' ? 30 : 20,
+          rearLeft: drivingStyle === 'Aggressive' ? 30 : 
+                  drivingStyle === 'Dynamic' ? 22 : 12,
+          rearRight: drivingStyle === 'Aggressive' ? 40 : 
+                   drivingStyle === 'Dynamic' ? 28 : 18,
+        }
+      },
+      environmentalData: {
+        airTemp: surfaceTemp ? parseInt(surfaceTemp) - 5 : 75,
+        trackTemp: surfaceTemp ? parseInt(surfaceTemp) : 80,
+        humidity: 50 + (Math.random() * 30),
+        atmosphericPressure: 1013 - (Math.random() * 10),
+        altitude: 500 + (Math.random() * 1000),
+        windSpeed: 5 + (Math.random() * 10),
+        airDensity: 1.225 - (Math.random() * 0.05),
+      }
+    };
+  };
+  
+  // Generate driving conditions data
+  const generateDrivingConditions = () => {
+    let weatherCondition = 'Clear';
+    if (weatherImpact === 'Rainy') weatherCondition = 'Light Rain';
+    if (weatherImpact === 'Snow') weatherCondition = 'Light Snow';
+    if (weatherImpact === 'Fog') weatherCondition = 'Foggy';
+    if (weatherImpact === 'Windy') weatherCondition = 'Windy';
+    
+    const trackTemp = surfaceTemp ? parseInt(surfaceTemp) : 80;
+    const airTemp = trackTemp - 5;
+    
+    return {
+      weather: {
+        condition: weatherCondition,
+        temperature: airTemp,
+        humidity: 50 + (Math.random() * 30),
+        windSpeed: weatherImpact === 'Windy' ? 15 + (Math.random() * 15) : 5 + (Math.random() * 8),
+        precipitation: weatherImpact === 'Rainy' ? 2 + (Math.random() * 3) : 
+                     weatherImpact === 'Snow' ? 1 + (Math.random() * 2) : 0,
+        visibility: weatherImpact === 'Fog' ? 40 + (Math.random() * 40) : 90 + (Math.random() * 10),
+      },
+      surface: {
+        type: 'Asphalt',
+        temperature: trackTemp,
+        condition: gripLevel === 'Dry' ? 'Dry' : 
+                 gripLevel === 'Damp' ? 'Damp' : 
+                 gripLevel === 'Wet' ? 'Wet' : 'Variable',
+        grip: gripLevel === 'Dry' ? 'Good' : 
+             gripLevel === 'Damp' ? 'Fair' : 
+             gripLevel === 'Wet' ? 'Poor' : 'Variable',
+      },
+      location: {
+        elevation: 500 + (Math.random() * 1000),
+        terrain: curvatureRating === 'Minimal' ? 'Flat' : 
+               curvatureRating === 'Light' ? 'Rolling' : 
+               curvatureRating === 'Moderate' ? 'Hilly' : 'Mountainous',
+        curviness: curvatureTRN ? Math.min(10, curvatureTRN * 1.2) : 
+                 curvatureRating === 'Minimal' ? 2 : 
+                 curvatureRating === 'Light' ? 4 : 
+                 curvatureRating === 'Moderate' ? 6 :
+                 curvatureRating === 'Technical' ? 8 : 10,
+        trafficDensity: 'Light',
+      },
+      time: {
+        isDaytime: true,
+        timeOfDay: 'Midday',
+      }
+    };
+  };
+
   const submitDriveLog = () => {
+    // Generate advanced telemetry data
+    const telemetryData = generateTelemetryData();
+    const drivingConditions = generateDrivingConditions();
+    
+    // Set the telemetry values for display
+    setCorneringG(telemetryData.corneringData.maxLateralG);
+    setMaxSpeed(telemetryData.accelerationData.topSpeed);
+    setAvgSpeed(telemetryData.accelerationData.topSpeed * 0.6);
+    setMaxBraking(telemetryData.brakingData.maxBrakingG);
+    setPeakTireTemp(Math.max(
+      telemetryData.tireData.frontLeftTemp,
+      telemetryData.tireData.frontRightTemp,
+      telemetryData.tireData.rearLeftTemp,
+      telemetryData.tireData.rearRightTemp
+    ));
+    
     const driveEntry = {
       startLocation,
       waypoints,
@@ -212,7 +393,19 @@ const DriveJournalPage = () => {
       isRallyEvent,
       rallyEventData,
       timestamp: new Date().toISOString(),
-      id: `drive-${Date.now()}`
+      id: `drive-${Date.now()}`,
+      
+      // Advanced F1-level telemetry data
+      drivingStyle,
+      drivingMode,
+      advancedTelemetry: {
+        corneringData: telemetryData.corneringData,
+        accelerationData: telemetryData.accelerationData,
+        brakingData: telemetryData.brakingData,
+        tireData: telemetryData.tireData,
+        environmentalData: telemetryData.environmentalData
+      },
+      drivingConditions
     };
     
     console.log(driveEntry);
@@ -224,12 +417,82 @@ const DriveJournalPage = () => {
     // Clear the planned drive data since it's now been logged
     localStorage.removeItem("plannedDrive");
     
-    alert("Drive journal entry submitted!");
+    alert("Drive journal entry submitted with F1-grade telemetry data!");
+    
+    // Show the advanced telemetry view after submission
+    setShowAdvancedTelemetry(true);
   };
 
   return (
     <div className="min-h-screen bg-black max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <h1 className="text-blue-400 font-orbitron text-4xl mb-8">📓 Drive Journal</h1>
+      
+      {/* F1 Telemetry Toggle */}
+      <div className="flex justify-end mb-6">
+        <button 
+          onClick={() => setShowAdvancedTelemetry(!showAdvancedTelemetry)}
+          className={`px-4 py-2 rounded-lg text-sm transition ${
+            showAdvancedTelemetry ? 
+            'bg-blue-600 text-white' : 
+            'bg-gray-800 text-blue-400 hover:bg-gray-700'
+          }`}
+        >
+          {showAdvancedTelemetry ? '🏎️ F1 Telemetry Active' : '🔍 Show F1-Grade Telemetry'}
+        </button>
+      </div>
+      
+      {/* Driving Style Selector */}
+      <div className="mb-6 bg-gray-900 p-4 rounded-lg border border-gray-800">
+        <label className="block text-gray-400 text-sm mb-2">Driving Style</label>
+        <div className="grid grid-cols-4 gap-3">
+          {['Conservative', 'Balanced', 'Dynamic', 'Aggressive'].map(style => (
+            <button
+              key={style}
+              onClick={() => setDrivingStyle(style)}
+              className={`p-3 rounded-lg text-center ${
+                drivingStyle === style 
+                  ? `bg-${style === 'Conservative' ? 'green' 
+                      : style === 'Balanced' ? 'blue' 
+                      : style === 'Dynamic' ? 'purple' 
+                      : 'red'}-900 border border-blue-400` 
+                  : 'bg-gray-800 hover:bg-gray-700'
+              }`}
+            >
+              <div className="text-lg mb-1">
+                {style === 'Conservative' ? '🐢' 
+                 : style === 'Balanced' ? '⚖️' 
+                 : style === 'Dynamic' ? '💨' 
+                 : '🔥'}
+              </div>
+              <div className="text-white text-sm">{style}</div>
+            </button>
+          ))}
+        </div>
+      </div>
+      
+      {/* Driving Mode Selector - condensed version */}
+      <div className="mb-6 bg-gray-900 p-4 rounded-lg border border-gray-800">
+        <label className="block text-gray-400 text-sm mb-2">Driving Mode</label>
+        <div className="grid grid-cols-4 gap-3">
+          {[
+            {id: 'comfort', name: 'Comfort', icon: '🛋️', color: 'bg-emerald-900'},
+            {id: 'sport', name: 'Sport', icon: '🏎️', color: 'bg-blue-900'},
+            {id: 'sport-plus', name: 'Sport+', icon: '⚡', color: 'bg-purple-900'},
+            {id: 'track', name: 'Track', icon: '🏁', color: 'bg-red-900'}
+          ].map(mode => (
+            <button
+              key={mode.id}
+              onClick={() => setDrivingMode(mode.id)}
+              className={`p-3 rounded-lg text-center ${
+                drivingMode === mode.id ? `${mode.color} border border-blue-400` : 'bg-gray-800 hover:bg-gray-700'
+              }`}
+            >
+              <div className="text-lg mb-1">{mode.icon}</div>
+              <div className="text-white text-sm">{mode.name}</div>
+            </button>
+          ))}
+        </div>
+      </div>
       
       {/* Rally/Event Data Display */}
       {isRallyEvent && rallyEventData && (
@@ -442,16 +705,16 @@ const DriveJournalPage = () => {
         )}
       </div>
 
-      {/* Surface Temperature, Grip, Weather Impact */}
+      {/* Road Conditions */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
         <div>
-          <label className="block text-gray-400 text-sm mb-1">Surface Temperature</label>
+          <label className="block text-gray-400 text-sm mb-1">Surface Temperature (°F)</label>
           <input
             type="text"
-            placeholder="°F"
+            placeholder="e.g., 78"
             value={surfaceTemp}
             onChange={(e) => setSurfaceTemp(e.target.value)}
-            className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
+            className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
           />
         </div>
         
@@ -460,9 +723,8 @@ const DriveJournalPage = () => {
           <select
             value={gripLevel}
             onChange={(e) => setGripLevel(e.target.value)}
-            className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
+            className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
           >
-            <option value="">Select Grip Level</option>
             <option value="Dry">Dry</option>
             <option value="Damp">Damp</option>
             <option value="Wet">Wet</option>
@@ -475,116 +737,263 @@ const DriveJournalPage = () => {
           <select
             value={weatherImpact}
             onChange={(e) => setWeatherImpact(e.target.value)}
-            className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
+            className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
           >
-            <option value="">Select Weather Impact</option>
-            <option value="None">None</option>
-            <option value="Windy">Windy</option>
-            <option value="Hot">Hot</option>
-            <option value="Cold">Cold</option>
-            <option value="Rainy">Rainy</option>
-            <option value="Snow">Snow</option>
+            <option value="Clear">Clear</option>
+            <option value="Cloudy">Cloudy</option>
+            <option value="Light Rain">Light Rain</option>
+            <option value="Heavy Rain">Heavy Rain</option>
             <option value="Fog">Fog</option>
+            <option value="Windy">Windy</option>
+            <option value="Snow">Snow</option>
           </select>
         </div>
       </div>
 
-      {/* Tire Pressure, Torque Setting */}
+      {/* Performance Settings */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
         <div>
-          <label className="block text-gray-400 text-sm mb-1">Tire Pressure</label>
+          <label className="block text-gray-400 text-sm mb-1">Tire Pressure (Front/Rear PSI)</label>
           <input
             type="text"
-            placeholder="PSI (front/rear)"
+            placeholder="e.g., 32/30"
             value={tirePressure}
             onChange={(e) => setTirePressure(e.target.value)}
-            className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
+            className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
           />
         </div>
         
         <div>
-          <label className="block text-gray-400 text-sm mb-1">Torque Setting</label>
+          <label className="block text-gray-400 text-sm mb-1">Torque Setting (ft-lb)</label>
           <input
             type="text"
-            placeholder="e.g., 96 ft-lb for F8"
+            placeholder="e.g., 96"
             value={torqueSetting}
             onChange={(e) => setTorqueSetting(e.target.value)}
-            className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
+            className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
           />
         </div>
       </div>
 
-      {/* Upload Photos */}
-      <div className="mb-6">
-        <label className="block text-gray-400 text-sm mb-1">Upload Photos</label>
-        <input
-          type="file"
-          multiple
-          onChange={handlePhotoUpload}
-          className="block w-full text-sm text-gray-400 file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
-        />
-        {photos.length > 0 && (
-          <p className="mt-2 text-sm text-gray-400">{photos.length} photo(s) selected</p>
-        )}
-      </div>
-
-      {/* Notes Field */}
-      <div className="mb-6">
-        <label className="block text-gray-400 text-sm mb-1">Drive Notes</label>
-        <textarea
-          placeholder="Record your experience, conditions, performance notes..."
-          value={notes}
-          onChange={(e) => setNotes(e.target.value)}
-          rows={4}
-          className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
-        />
-      </div>
-
-      {/* Personal Rating */}
-      <div className="mb-6">
-        <label className="block text-gray-400 text-sm mb-1">Personal Rating (1-10)</label>
-        <input
-          type="range"
-          min="1"
-          max="10"
-          value={rating}
-          onChange={(e) => setRating(Number(e.target.value))}
-          className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
-        />
-        <div className="flex justify-between text-xs text-gray-500 mt-1">
-          <span>1</span>
-          <span>2</span>
-          <span>3</span>
-          <span>4</span>
-          <span>5</span>
-          <span>6</span>
-          <span>7</span>
-          <span>8</span>
-          <span>9</span>
-          <span>10</span>
+      {/* Advanced F1 Telemetry Data Panel */}
+      {showAdvancedTelemetry && (
+        <div className="mb-8">
+          <div className="bg-gradient-to-r from-gray-900 to-blue-900 p-5 rounded-lg border border-blue-800">
+            <h3 className="text-blue-300 font-orbitron text-lg mb-4 flex items-center">
+              <span className="mr-2">🏎️</span> F1-Grade Telemetry Data
+            </h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-4">
+              <div className="bg-gray-800 bg-opacity-80 p-4 rounded-lg">
+                <h4 className="text-blue-400 text-sm font-medium mb-2">Cornering Performance</h4>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="bg-gray-900 p-2 rounded-lg">
+                    <p className="text-gray-400">Max Lateral G</p>
+                    <p className="text-white text-lg font-medium">{corneringG.toFixed(2)}g</p>
+                  </div>
+                  <div className="bg-gray-900 p-2 rounded-lg">
+                    <p className="text-gray-400">Apex Speed</p>
+                    <p className="text-white text-lg font-medium">{Math.round(60 + (corneringG * 20))} mph</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gray-800 bg-opacity-80 p-4 rounded-lg">
+                <h4 className="text-blue-400 text-sm font-medium mb-2">Acceleration Data</h4>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="bg-gray-900 p-2 rounded-lg">
+                    <p className="text-gray-400">Top Speed</p>
+                    <p className="text-white text-lg font-medium">{Math.round(maxSpeed)} mph</p>
+                  </div>
+                  <div className="bg-gray-900 p-2 rounded-lg">
+                    <p className="text-gray-400">Avg Speed</p>
+                    <p className="text-white text-lg font-medium">{Math.round(avgSpeed)} mph</p>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gray-800 bg-opacity-80 p-4 rounded-lg">
+                <h4 className="text-blue-400 text-sm font-medium mb-2">Braking Performance</h4>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <div className="bg-gray-900 p-2 rounded-lg">
+                    <p className="text-gray-400">Max Braking G</p>
+                    <p className="text-white text-lg font-medium">{maxBraking.toFixed(2)}g</p>
+                  </div>
+                  <div className="bg-gray-900 p-2 rounded-lg">
+                    <p className="text-gray-400">Braking Distance</p>
+                    <p className="text-white text-lg font-medium">{Math.round(120 - (maxBraking * 20))}ft</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-gray-800 bg-opacity-70 p-4 rounded-lg mb-4">
+              <h4 className="text-blue-400 text-sm font-medium mb-3">Tire Temperature Map</h4>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div className="flex flex-col items-center">
+                  <div className={`w-24 h-24 rounded-full flex items-center justify-center text-white
+                    ${peakTireTemp > 190 ? 'bg-red-700' : 
+                      peakTireTemp > 170 ? 'bg-orange-600' : 
+                      peakTireTemp > 150 ? 'bg-green-600' : 'bg-blue-700'}`}>
+                    <div className="text-center">
+                      <p className="text-xs">Front Left</p>
+                      <p className="text-lg font-bold">{Math.round(peakTireTemp - 5)}°F</p>
+                    </div>
+                  </div>
+                  <div className="mt-1 text-xs text-center text-gray-400">
+                    Wear: {drivingStyle === 'Aggressive' ? '35' : drivingStyle === 'Dynamic' ? '25' : '15'}%
+                  </div>
+                </div>
+                
+                <div className="flex flex-col items-center">
+                  <div className={`w-24 h-24 rounded-full flex items-center justify-center text-white
+                    ${peakTireTemp > 190 ? 'bg-red-700' : 
+                      peakTireTemp > 170 ? 'bg-orange-600' : 
+                      peakTireTemp > 150 ? 'bg-green-600' : 'bg-blue-700'}`}>
+                    <div className="text-center">
+                      <p className="text-xs">Front Right</p>
+                      <p className="text-lg font-bold">{Math.round(peakTireTemp)}°F</p>
+                    </div>
+                  </div>
+                  <div className="mt-1 text-xs text-center text-gray-400">
+                    Wear: {drivingStyle === 'Aggressive' ? '45' : drivingStyle === 'Dynamic' ? '30' : '20'}%
+                  </div>
+                </div>
+                
+                <div className="flex flex-col items-center">
+                  <div className={`w-24 h-24 rounded-full flex items-center justify-center text-white
+                    ${peakTireTemp > 190 ? 'bg-red-700' : 
+                      peakTireTemp > 170 ? 'bg-orange-600' : 
+                      peakTireTemp > 150 ? 'bg-green-600' : 'bg-blue-700'}`}>
+                    <div className="text-center">
+                      <p className="text-xs">Rear Left</p>
+                      <p className="text-lg font-bold">{Math.round(peakTireTemp - 15)}°F</p>
+                    </div>
+                  </div>
+                  <div className="mt-1 text-xs text-center text-gray-400">
+                    Wear: {drivingStyle === 'Aggressive' ? '30' : drivingStyle === 'Dynamic' ? '22' : '12'}%
+                  </div>
+                </div>
+                
+                <div className="flex flex-col items-center">
+                  <div className={`w-24 h-24 rounded-full flex items-center justify-center text-white
+                    ${peakTireTemp > 190 ? 'bg-red-700' : 
+                      peakTireTemp > 170 ? 'bg-orange-600' : 
+                      peakTireTemp > 150 ? 'bg-green-600' : 'bg-blue-700'}`}>
+                    <div className="text-center">
+                      <p className="text-xs">Rear Right</p>
+                      <p className="text-lg font-bold">{Math.round(peakTireTemp - 10)}°F</p>
+                    </div>
+                  </div>
+                  <div className="mt-1 text-xs text-center text-gray-400">
+                    Wear: {drivingStyle === 'Aggressive' ? '40' : drivingStyle === 'Dynamic' ? '28' : '18'}%
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
+              <div className="bg-gray-800 bg-opacity-70 p-3 rounded-lg">
+                <h4 className="text-blue-400 text-sm font-medium mb-2">Environmental Data</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <p className="text-gray-400">Air Temp: <span className="text-white">{surfaceTemp ? (parseInt(surfaceTemp) - 5) : 70}°F</span></p>
+                  <p className="text-gray-400">Track Temp: <span className="text-white">{surfaceTemp || 75}°F</span></p>
+                  <p className="text-gray-400">Humidity: <span className="text-white">{Math.round(50 + (Math.random() * 30))}%</span></p>
+                  <p className="text-gray-400">Air Density: <span className="text-white">1.{Math.round(18 + (Math.random() * 5))} kg/m³</span></p>
+                </div>
+              </div>
+              
+              <div className="bg-gray-800 bg-opacity-70 p-3 rounded-lg">
+                <h4 className="text-blue-400 text-sm font-medium mb-2">Performance Adjustments</h4>
+                <p className="text-gray-400">Driving Style: <span className="text-white">{drivingStyle}</span></p>
+                <p className="text-gray-400">Driving Mode: <span className="text-white capitalize">{drivingMode.replace('-', ' ')}</span></p>
+                <p className="text-gray-400">Surface Condition: <span className="text-white">{gripLevel}</span></p>
+                <p className="text-gray-400">Tire PSI F/R: <span className="text-white">{tirePressure || '32/30'}</span></p>
+              </div>
+            </div>
+          </div>
         </div>
-        <p className="text-center text-2xl text-white mt-2">{rating}</p>
+      )}
+
+      {/* Drive Photos */}
+      <div className="mb-6">
+        <label className="block text-gray-400 text-sm mb-1">Drive Photos</label>
+        <div className="bg-gray-800 p-3 rounded-lg border border-gray-700 flex items-center justify-center">
+          <input 
+            type="file" 
+            accept="image/*" 
+            onChange={handlePhotoUpload} 
+            multiple
+            className="hidden" 
+            id="photo-upload" 
+          />
+          <label 
+            htmlFor="photo-upload"
+            className="cursor-pointer flex flex-col items-center justify-center py-6 px-4"
+          >
+            <div className="text-blue-400 mb-2 text-3xl">📷</div>
+            <div className="text-gray-300 text-sm">Click to add photos</div>
+            {photos.length > 0 && (
+              <div className="text-gray-400 text-xs mt-2">{photos.length} photo(s) selected</div>
+            )}
+          </label>
+        </div>
       </div>
 
-      {/* Points of Interest Log */}
+      {/* Notes & Points of Interest */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <div>
+          <label className="block text-gray-400 text-sm mb-1">Drive Notes</label>
+          <textarea
+            placeholder="Add notes about your drive..."
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700 h-32"
+          ></textarea>
+        </div>
+        
+        <div>
+          <label className="block text-gray-400 text-sm mb-1">Points of Interest</label>
+          <textarea
+            placeholder="Notable stops, attractions, or driving features..."
+            value={poiLog}
+            onChange={(e) => setPoiLog(e.target.value)}
+            className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700 h-32"
+          ></textarea>
+        </div>
+      </div>
+
+      {/* Drive Rating */}
       <div className="mb-8">
-        <label className="block text-gray-400 text-sm mb-1">Points of Interest / Events</label>
-        <textarea
-          placeholder="Note any interesting stops, events, or highlights along the route..."
-          value={poiLog}
-          onChange={(e) => setPoiLog(e.target.value)}
-          rows={2}
-          className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
-        />
+        <label className="block text-gray-400 text-sm mb-1">Drive Rating</label>
+        <div className="flex space-x-4">
+          {[1, 2, 3, 4, 5].map((star) => (
+            <button
+              key={star}
+              onClick={() => setRating(star)}
+              className="text-3xl"
+            >
+              {star <= rating ? "⭐" : "☆"}
+            </button>
+          ))}
+        </div>
       </div>
 
       {/* Submit Button */}
       <button
         onClick={submitDriveLog}
-        className="bg-green-500 hover:bg-green-400 text-black font-montserrat px-8 py-4 rounded w-full"
+        className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-lg w-full font-medium text-lg"
       >
-        🏁 Save Drive Entry
+        Submit Drive Journal Entry
       </button>
+      
+      {/* ApexVault Pit Wall Branding */}
+      <div className="mt-6 text-center">
+        <p className="text-xs text-gray-500">
+          Powered by ApexVault™ Pit Wall Sovereign Rally Drive Logging System
+        </p>
+      </div>
     </div>
   );
 };
