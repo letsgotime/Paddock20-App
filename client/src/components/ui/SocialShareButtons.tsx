@@ -17,6 +17,8 @@ import {
 } from "@/components/ui/tooltip";
 import { useToast } from '@/hooks/use-toast';
 
+type SharePlatform = 'facebook' | 'twitter' | 'pinterest' | 'linkedin' | 'reddit' | 'whatsapp' | 'email' | 'copy';
+
 interface SocialShareButtonsProps {
   url?: string; // URL to share (defaults to current URL)
   title?: string; // Title to share (defaults to document title)
@@ -25,7 +27,7 @@ interface SocialShareButtonsProps {
   hashtags?: string[]; // Hashtags to include (for platforms that support it)
   size?: 'sm' | 'md' | 'lg'; // Icon size
   className?: string; // Additional CSS classes
-  platforms?: ('facebook' | 'twitter' | 'pinterest' | 'linkedin' | 'reddit' | 'whatsapp' | 'email' | 'copy')[]; // Platforms to include
+  platforms?: SharePlatform[]; // Platforms to include
 }
 
 const SocialShareButtons = ({
@@ -51,12 +53,32 @@ const SocialShareButtons = ({
   const iconSize = sizeMap[size];
 
   // Handle sharing
-  const handleShare = (platform: string) => {
+  const handleShare = (platform: SharePlatform) => {
     let shareUrl = '';
     const encodedUrl = encodeURIComponent(url);
     const encodedTitle = encodeURIComponent(title);
     const encodedDescription = encodeURIComponent(description);
     const encodedHashtags = hashtags.join(',');
+    
+    if (platform === 'copy') {
+      navigator.clipboard.writeText(url).then(() => {
+        setCopied(true);
+        toast({
+          title: "Link Copied!",
+          description: "The link has been copied to your clipboard.",
+          duration: 3000,
+        });
+        setTimeout(() => setCopied(false), 3000);
+      }).catch(err => {
+        console.error('Failed to copy: ', err);
+        toast({
+          title: "Copy Failed",
+          description: "Failed to copy the link to clipboard.",
+          variant: "destructive",
+        });
+      });
+      return;
+    }
     
     switch (platform) {
       case 'facebook':
@@ -80,24 +102,6 @@ const SocialShareButtons = ({
       case 'email':
         shareUrl = `mailto:?subject=${encodedTitle}&body=${encodedDescription}%20${url}`;
         break;
-      case 'copy':
-        navigator.clipboard.writeText(url).then(() => {
-          setCopied(true);
-          toast({
-            title: "Link Copied!",
-            description: "The link has been copied to your clipboard.",
-            duration: 3000,
-          });
-          setTimeout(() => setCopied(false), 3000);
-        }).catch(err => {
-          console.error('Failed to copy: ', err);
-          toast({
-            title: "Copy Failed",
-            description: "Failed to copy the link to clipboard.",
-            variant: "destructive",
-          });
-        });
-        return;
       default:
         return;
     }
@@ -111,7 +115,7 @@ const SocialShareButtons = ({
   };
 
   // Platform icons and labels mapping
-  const platformConfig = {
+  const platformConfig: Record<string, { icon: React.ReactNode, label: string }> = {
     facebook: { icon: <FaFacebook className={iconSize} />, label: 'Share on Facebook' },
     twitter: { icon: <FaTwitter className={iconSize} />, label: 'Share on Twitter' },
     pinterest: { icon: <FaPinterest className={iconSize} />, label: 'Pin on Pinterest' },

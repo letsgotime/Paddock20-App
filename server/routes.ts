@@ -970,6 +970,78 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Social Media Integration Routes
+  
+  // Check if Slack integration is configured
+  app.get('/api/social/slack/status', async (req, res) => {
+    const isConfigured = await checkSlackIntegration();
+    res.json({ 
+      configured: isConfigured,
+      message: isConfigured ? 
+        'Slack integration is configured and working.' : 
+        'Slack integration is not configured. Please add your SLACK_BOT_TOKEN and SLACK_CHANNEL_ID to environment variables.'
+    });
+  });
+  
+  // Share vehicle to Slack
+  app.post('/api/social/slack/share-vehicle', async (req, res) => {
+    try {
+      const { vehicleId } = req.body;
+      
+      if (!vehicleId) {
+        return res.status(400).json({ message: 'Vehicle ID is required' });
+      }
+      
+      const vehicle = await storage.getVehicle(vehicleId);
+      
+      if (!vehicle) {
+        return res.status(404).json({ message: 'Vehicle not found' });
+      }
+      
+      const result = await shareCarProfileToSlack(vehicle);
+      
+      if (result) {
+        res.json({ success: true, message: 'Vehicle shared to Slack successfully' });
+      } else {
+        res.status(500).json({ success: false, message: 'Failed to share vehicle to Slack. Check your Slack integration.' });
+      }
+    } catch (error) {
+      console.error('Error sharing vehicle to Slack:', error);
+      res.status(500).json({ success: false, message: 'An error occurred while sharing to Slack' });
+    }
+  });
+  
+  // Share event to Slack
+  app.post('/api/social/slack/share-event', async (req, res) => {
+    try {
+      const { eventId } = req.body;
+      
+      if (!eventId) {
+        return res.status(400).json({ message: 'Event ID is required' });
+      }
+      
+      // Retrieve event from storage (once implemented)
+      // const event = await storage.getEvent(eventId);
+      
+      // For now, use the provided event data directly
+      const event = req.body;
+      
+      const result = await shareEventToSlack(event);
+      
+      if (result) {
+        res.json({ success: true, message: 'Event shared to Slack successfully' });
+      } else {
+        res.status(500).json({ success: false, message: 'Failed to share event to Slack. Check your Slack integration.' });
+      }
+    } catch (error) {
+      console.error('Error sharing event to Slack:', error);
+      res.status(500).json({ success: false, message: 'An error occurred while sharing to Slack' });
+    }
+  });
+
+  // Initialize Slack client on server startup
+  initializeSlackClient();
+
   const httpServer = createServer(app);
   return httpServer;
 }

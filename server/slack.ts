@@ -76,6 +76,7 @@ export async function shareCarProfileToSlack(carProfile: any): Promise<string | 
     const { make, model, year, trim, color, nickname } = carProfile;
     
     const message: ChatPostMessageArguments = {
+      channel: process.env.SLACK_CHANNEL_ID || '',
       text: `New Car Profile Shared: ${year} ${make} ${model}`,
       blocks: [
         {
@@ -122,6 +123,7 @@ export async function shareEventToSlack(event: any): Promise<string | null> {
     const { title, date, location, description } = event;
     
     const message: ChatPostMessageArguments = {
+      channel: process.env.SLACK_CHANNEL_ID || '',
       text: `New Event Shared: ${title}`,
       blocks: [
         {
