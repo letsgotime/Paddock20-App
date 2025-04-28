@@ -1,7 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { toast } from '@/hooks/use-toast';
-import { fetchAutomotiveWeather, AutomotiveWeatherData } from '@/services/openWeatherService';
-import { useQuery } from '@tanstack/react-query';
+import { AutomotiveWeatherData } from '@/services/openWeatherService';
 
 // Define interfaces for location data
 export interface Location {
@@ -12,23 +11,60 @@ export interface Location {
   country?: string;
 }
 
-export interface OpenWeatherContextType {
+interface WeatherData {
+  main: {
+    temp: number;
+    feels_like: number;
+    humidity: number;
+    pressure: number;
+  };
+  wind: {
+    speed: number;
+    deg: number;
+  };
+  sys: {
+    sunrise?: number;
+    sunset?: number;
+  };
+  weather: Array<{
+    id: number;
+    main: string;
+    description: string;
+    icon: string;
+  }>;
+}
+
+interface OpenWeatherContextType {
+  weatherData: WeatherData | null;
+  automotiveWeatherData: AutomotiveWeatherData | null;
+  loading: boolean;
+  error: Error | null;
   unit: 'metric' | 'imperial';
   setUnit: (unit: 'metric' | 'imperial') => void;
   selectedLocation: Location | null;
   setSelectedLocation: (location: Location) => void;
   savedLocations: Location[];
-  addSavedLocation: (location: Location) => void;
-  removeSavedLocation: (locationId: string) => void;
-  isLoading: boolean;
-  error: Error | null;
-  automotiveWeatherData: AutomotiveWeatherData | null;
   refreshWeather: () => void;
 }
 
-const OpenWeatherContext = createContext<OpenWeatherContextType | undefined>(undefined);
+export const OpenWeatherContext = createContext<OpenWeatherContextType>({
+  weatherData: null,
+  automotiveWeatherData: null,
+  loading: false,
+  error: null,
+  unit: 'imperial',
+  setUnit: () => {},
+  selectedLocation: null,
+  setSelectedLocation: () => {},
+  savedLocations: [],
+  refreshWeather: () => {}
+});
 
 export function OpenWeatherProvider({ children }: { children: React.ReactNode }) {
+  const [weatherData, setWeatherData] = useState<WeatherData | null>(null);
+  const [automotiveWeatherData, setAutomotiveWeatherData] = useState<AutomotiveWeatherData | null>(null);
+  const [loading, setLoading] = useState<boolean>(true);
+  const [error, setError] = useState<Error | null>(null);
   const [unit, setUnit] = useState<'metric' | 'imperial'>('imperial');
   const [selectedLocation, setSelectedLocation] = useState<Location | null>(null);
   const [savedLocations, setSavedLocations] = useState<Location[]>([
@@ -44,69 +80,71 @@ export function OpenWeatherProvider({ children }: { children: React.ReactNode })
     }
   }, [selectedLocation, savedLocations]);
 
-  // Get automotive weather data
-  const { 
-    data: automotiveWeatherData, 
-    isLoading: isAutomotiveWeatherLoading, 
-    error: automotiveWeatherError,
-    refetch: refetchAutomotiveWeather
-  } = useQuery<AutomotiveWeatherData | null>({
-    queryKey: ['automotive-weather', selectedLocation?.lat, selectedLocation?.lon, unit],
-    enabled: !!selectedLocation,
-    queryFn: async () => {
-      if (!selectedLocation) return null;
-      try {
-        const data = await fetchAutomotiveWeather(selectedLocation.lat, selectedLocation.lon, unit);
-        return data;
-      } catch (error) {
-        console.error("Error fetching automotive weather data:", error);
-        throw error;
-      }
-    },
-  });
-
-  // Handle errors
+  // Fetch weather data when location or unit changes
   useEffect(() => {
-    if (automotiveWeatherError) {
-      console.error("Automotive Weather API error:", automotiveWeatherError);
-      toast({
-        title: "Error fetching automotive weather data",
-        description: "Unable to load F1-style driving metrics. Please try again.",
-        variant: "destructive",
-      });
-    }
-  }, [automotiveWeatherError]);
-
-  // Add a location to saved locations
-  const addSavedLocation = (location: Location) => {
-    if (!savedLocations.some(loc => loc.name === location.name)) {
-      setSavedLocations([...savedLocations, location]);
-      // Auto-select the new location
-      setSelectedLocation(location);
-    }
-  };
-
-  // Remove a location from saved locations
-  const removeSavedLocation = (locationId: string) => {
-    setSavedLocations(savedLocations.filter(loc => loc.id !== locationId));
-  };
+    if (!selectedLocation) return;
+    
+    const fetchWeatherData = async () => {
+      setLoading(true);
+      setError(null);
+      
+      try {
+        // Basic weather data
+        const weatherResponse = await fetch(`/api/weather?lat=${selectedLocation.lat}&lon=${selectedLocation.lon}&units=${unit}`);
+        
+        if (!weatherResponse.ok) {
+          throw new Error('Failed to fetch weather data');
+        }
+        
+        const weatherResult = await weatherResponse.json();
+        setWeatherData(weatherResult);
+        
+        // Attempt to fetch automotive weather data
+        try {
+          const automotiveResponse = await fetch(`/api/automotive-weather?lat=${selectedLocation.lat}&lon=${selectedLocation.lon}&units=${unit}`);
+          
+          if (automotiveResponse.ok) {
+            const automotiveResult = await automotiveResponse.json();
+            setAutomotiveWeatherData(automotiveResult);
+          }
+        } catch (autoError) {
+          console.error('Could not load advanced automotive data, using basic weather only');
+        }
+        
+      } catch (err) {
+        console.error('Error fetching weather data:', err);
+        setError(err instanceof Error ? err : new Error('Unknown error fetching weather data'));
+        toast({
+          title: "Error fetching weather data",
+          description: "Unable to load weather information. Please try again.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    
+    fetchWeatherData();
+  }, [selectedLocation, unit]);
 
   // Refresh weather data
   const refreshWeather = () => {
-    refetchAutomotiveWeather();
+    if (selectedLocation) {
+      // Force a re-fetch by setting loading state
+      setLoading(true);
+    }
   };
 
-  const value: OpenWeatherContextType = {
+  const value = {
+    weatherData,
+    automotiveWeatherData,
+    loading,
+    error,
     unit,
     setUnit,
     selectedLocation,
     setSelectedLocation,
     savedLocations,
-    addSavedLocation,
-    removeSavedLocation,
-    isLoading: isAutomotiveWeatherLoading,
-    error: automotiveWeatherError || null,
-    automotiveWeatherData: automotiveWeatherData || null,
     refreshWeather
   };
 
@@ -119,7 +157,7 @@ export function OpenWeatherProvider({ children }: { children: React.ReactNode })
 
 export function useOpenWeather() {
   const context = useContext(OpenWeatherContext);
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useOpenWeather must be used within an OpenWeatherProvider');
   }
   return context;
