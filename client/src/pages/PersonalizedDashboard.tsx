@@ -338,6 +338,67 @@ const PersonalizedDashboard: React.FC = () => {
             )}
           </div>
 
+          {/* Drive Stats & Analytics */}
+          <div className="bts-card">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="bts-header-green">Drive Analytics</h2>
+              <Link to="/drive-journal" className="text-sm text-green-400 hover:underline">View History</Link>
+            </div>
+            <div className="bg-black/30 p-3 rounded-lg mb-4 border border-gray-800">
+              <h3 className="text-white text-sm mb-2">Monthly Mileage - 6 Month Trend</h3>
+              <div className="h-32">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart data={userData.driveStats}>
+                    <XAxis dataKey="month" stroke="#374151" tick={{ fill: '#9CA3AF' }} tickLine={{ stroke: '#374151' }} />
+                    <YAxis stroke="#374151" tick={{ fill: '#9CA3AF' }} tickLine={{ stroke: '#374151' }} />
+                    <Tooltip 
+                      contentStyle={{ background: '#111111', border: '1px solid #374151' }}
+                      labelStyle={{ color: '#E5E7EB' }}
+                      formatter={(value) => [`${value} miles`, 'Distance']}
+                    />
+                    <Line type="monotone" dataKey="miles" stroke="#22c55e" strokeWidth={2} dot={{ stroke: '#22c55e', strokeWidth: 2, r: 3, fill: '#1F2937' }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+            <div className="grid grid-cols-2 gap-3 mb-4">
+              <div className="bg-black/30 p-3 rounded-lg border border-gray-800 flex flex-col">
+                <span className="text-gray-400 text-xs">This Month</span>
+                <span className="text-green-400 text-xl font-medium mt-1">683 miles</span>
+                <span className="text-xs text-green-300 mt-1">↑ 18% from last month</span>
+              </div>
+              <div className="bg-black/30 p-3 rounded-lg border border-gray-800 flex flex-col">
+                <span className="text-gray-400 text-xs">2025 Total</span>
+                <span className="text-blue-400 text-xl font-medium mt-1">1,935 miles</span>
+                <span className="text-xs text-blue-300 mt-1">37% of yearly goal</span>
+              </div>
+            </div>
+            <h3 className="text-white text-sm mb-2">Favorite Routes</h3>
+            <div className="space-y-2">
+              {userData.favoriteRoutes.map(route => (
+                <div key={route.id} className="p-3 bg-black/40 rounded-lg">
+                  <div className="flex justify-between">
+                    <div>
+                      <div className="flex items-center">
+                        <h4 className="text-white text-sm font-medium">{route.name}</h4>
+                        <div className="ml-2 flex items-center">
+                          {[...Array(route.rating)].map((_, i) => (
+                            <span key={i} className="text-yellow-400 text-xs">★</span>
+                          ))}
+                        </div>
+                      </div>
+                      <p className="text-gray-400 text-xs">{route.distance}</p>
+                    </div>
+                    <div className="text-right">
+                      <span className="text-gray-500 text-xs">Last driven</span>
+                      <p className="text-gray-300 text-xs">{new Date(route.lastDriven).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+          
           {/* Recent Activity */}
           <div className="bts-card">
             <div className="flex justify-between items-center mb-4">
@@ -351,10 +412,48 @@ const PersonalizedDashboard: React.FC = () => {
                       {activity.type === 'drive' && <span>🚗</span>}
                       {activity.type === 'maintenance' && <span>🔧</span>}
                       {activity.type === 'manifestation' && <span>⭐</span>}
+                      {activity.type === 'event' && <span>📅</span>}
+                      {activity.type === 'purchase' && <span>🛒</span>}
                     </div>
-                    <div>
-                      <p className="text-white text-sm">{activity.description}</p>
-                      <p className="text-gray-500 text-xs">{new Date(activity.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                    <div className="flex-grow">
+                      <div className="flex justify-between">
+                        <p className="text-white text-sm">{activity.description}</p>
+                        <p className="text-gray-500 text-xs ml-2">{new Date(activity.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                      </div>
+                      {activity.details && (
+                        <div className="mt-1 text-xs px-2 py-1 bg-black/30 rounded border border-gray-800">
+                          {activity.type === 'drive' && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-400">Route: {activity.details.route}</span>
+                              <span className="text-gray-400">Duration: {activity.details.duration}</span>
+                            </div>
+                          )}
+                          {activity.type === 'maintenance' && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-400">At: {activity.details.location}</span>
+                              <span className="text-gray-400">Cost: ${activity.details.cost}</span>
+                            </div>
+                          )}
+                          {activity.type === 'purchase' && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-400">{activity.details.item}</span>
+                              <span className="text-gray-400">Cost: ${activity.details.cost}</span>
+                            </div>
+                          )}
+                          {activity.type === 'event' && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-400">Date: {new Date(activity.details.eventDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
+                              <span className="text-gray-400">Fee: ${activity.details.cost}</span>
+                            </div>
+                          )}
+                          {activity.type === 'manifestation' && (
+                            <div className="flex justify-between">
+                              <span className="text-gray-400">Previous: ${activity.details.oldAmount.toLocaleString()}</span>
+                              <span className="text-gray-400">New: ${activity.details.newAmount.toLocaleString()}</span>
+                            </div>
+                          )}
+                        </div>
+                      )}
                     </div>
                   </div>
                 </div>
