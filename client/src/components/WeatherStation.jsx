@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import WeatherMoodEmoji from './WeatherMoodEmoji';
 import DrivingConditionEmoji from './DrivingConditionEmoji';
 import WeatherVoiceOver from './WeatherVoiceOver';
+import WeatherLocationSelector from './WeatherLocationSelector';
 import { Droplets, Wind, Sun, CloudRain } from 'lucide-react';
 
 function WeatherStation() {
@@ -12,10 +13,11 @@ function WeatherStation() {
   const [apiKey, setApiKey] = useState('');
   const [oneCallData, setOneCallData] = useState(null);
   const [forecastData, setForecastData] = useState(null);
-  
-  // Using coordinates instead of city name
-  const latitude = 34.0522; // Los Angeles latitude
-  const longitude = -118.2437; // Los Angeles longitude
+  const [location, setLocation] = useState({
+    lat: 35.2271, // Default to Charlotte, NC
+    lon: -80.8431,
+    name: 'Loading location...'
+  });
   
   // Helper to determine if it's night time
   const isNightTime = () => {
@@ -39,25 +41,30 @@ function WeatherStation() {
     getApiKey();
   }, []);
 
-  // Then, fetch weather data once we have the API key
+  // Handle location change from the selector
+  const handleLocationChange = (newLocation) => {
+    setLocation(newLocation);
+  };
+  
+  // Then, fetch weather data once we have the API key and location
   useEffect(() => {
-    if (!apiKey) return; // Skip if we don't have an API key yet
+    if (!location.lat || !location.lon) return; // Skip if location is not available
     
     async function fetchWeatherData() {
       setLoading(true);
       try {
         // Fetch basic weather data
-        const weatherResponse = await fetch(`/api/weather?lat=${latitude}&lon=${longitude}&units=imperial`);
+        const weatherResponse = await fetch(`/api/weather?lat=${location.lat}&lon=${location.lon}&units=imperial`);
         const weatherResult = await weatherResponse.json();
         setWeatherData(weatherResult);
         
         // Fetch OneCall data with hourly and daily forecasts
-        const oneCallResponse = await fetch(`/api/onecall?lat=${latitude}&lon=${longitude}&units=imperial`);
+        const oneCallResponse = await fetch(`/api/onecall?lat=${location.lat}&lon=${location.lon}&units=imperial`);
         const oneCallResult = await oneCallResponse.json();
         setOneCallData(oneCallResult);
         
         // Fetch 5-day forecast
-        const forecastResponse = await fetch(`/api/forecast?lat=${latitude}&lon=${longitude}&units=imperial`);
+        const forecastResponse = await fetch(`/api/forecast?lat=${location.lat}&lon=${location.lon}&units=imperial`);
         const forecastResult = await forecastResponse.json();
         setForecastData(forecastResult);
         
@@ -69,7 +76,7 @@ function WeatherStation() {
     }
     
     fetchWeatherData();
-  }, [latitude, longitude, apiKey]);
+  }, [location.lat, location.lon]);
 
   const toggleUnit = () => {
     setTempUnit(tempUnit === 'F' ? 'C' : 'F');

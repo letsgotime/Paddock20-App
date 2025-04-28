@@ -1380,43 +1380,114 @@ const ManifestationStationPage = () => {
                 </div>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                <div>
-                  <h3 className="text-gray-300 text-sm mb-1">Goal Type</h3>
-                  <p className="text-white font-medium">{selectedGoal.goalType}</p>
-                </div>
-                
-                <div>
-                  <h3 className="text-gray-300 text-sm mb-1">Target Asset</h3>
-                  <p className="text-white font-medium">{selectedGoal.targetAsset}</p>
-                </div>
-                
-                <div>
-                  <h3 className="text-gray-300 text-sm mb-1">Target Date</h3>
-                  <p className="text-white font-medium">{selectedGoal.targetDate}</p>
-                </div>
-                
-                <div>
-                  <h3 className="text-gray-300 text-sm mb-1">Funding Plan</h3>
-                  <p className="text-white font-medium">{selectedGoal.fundingPlan}</p>
+              {/* Navigation Tabs */}
+              <div className="mb-6 border-b border-gray-700">
+                <div className="flex flex-wrap -mb-px">
+                  <button
+                    onClick={() => setActiveTab('overview')}
+                    className={`mr-4 py-2 px-4 border-b-2 font-medium text-sm ${
+                      activeTab === 'overview'
+                        ? 'border-blue-500 text-blue-400'
+                        : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700'
+                    }`}
+                  >
+                    Overview
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('finances')}
+                    className={`mr-4 py-2 px-4 border-b-2 font-medium text-sm ${
+                      activeTab === 'finances'
+                        ? 'border-green-500 text-green-400'
+                        : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700'
+                    }`}
+                  >
+                    Finances
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('milestones')}
+                    className={`mr-4 py-2 px-4 border-b-2 font-medium text-sm ${
+                      activeTab === 'milestones'
+                        ? 'border-yellow-500 text-yellow-400'
+                        : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700'
+                    }`}
+                  >
+                    Milestones
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('disciplines')}
+                    className={`mr-4 py-2 px-4 border-b-2 font-medium text-sm ${
+                      activeTab === 'disciplines'
+                        ? 'border-purple-500 text-purple-400'
+                        : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700'
+                    }`}
+                  >
+                    Daily Disciplines
+                  </button>
+                  <button
+                    onClick={() => setActiveTab('media')}
+                    className={`mr-4 py-2 px-4 border-b-2 font-medium text-sm ${
+                      activeTab === 'media'
+                        ? 'border-indigo-500 text-indigo-400'
+                        : 'border-transparent text-gray-400 hover:text-gray-300 hover:border-gray-700'
+                    }`}
+                  >
+                    Media Gallery
+                  </button>
                 </div>
               </div>
               
-              {/* Progress Section */}
-              <div className="mb-8">
-                <h3 className="text-blue-400 font-orbitron text-lg mb-3">Progress</h3>
-                <div className="bg-gray-700 h-4 w-full rounded-full mb-2">
-                  <div
-                    style={{ width: `${selectedGoal.progressPercentage}%` }}
-                    className="bg-green-500 h-4 rounded-full"
-                  ></div>
-                </div>
-                <div className="flex justify-between text-sm text-gray-300">
-                  <span>0%</span>
-                  <span>{selectedGoal.progressPercentage}% Complete</span>
-                  <span>100%</span>
-                </div>
-              </div>
+              {/* Overview Tab */}
+              {activeTab === 'overview' && (
+                <>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div>
+                      <h3 className="text-gray-300 text-sm mb-1">Goal Type</h3>
+                      <p className="text-white font-medium">{selectedGoal.goalType}</p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-gray-300 text-sm mb-1">Target Asset</h3>
+                      <p className="text-white font-medium">{selectedGoal.targetAsset}</p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-gray-300 text-sm mb-1">Target Date</h3>
+                      <p className="text-white font-medium">{selectedGoal.targetDate}</p>
+                    </div>
+                    
+                    <div>
+                      <h3 className="text-gray-300 text-sm mb-1">Funding Plan</h3>
+                      <p className="text-white font-medium">{selectedGoal.fundingPlan}</p>
+                    </div>
+                  </div>
+                  
+                  {/* Progress Section */}
+                  <div className="mb-8">
+                    <h3 className="text-blue-400 font-orbitron text-lg mb-3">Progress</h3>
+                    <div className="bg-gray-700 h-4 w-full rounded-full mb-2">
+                      <div
+                        style={{ width: `${selectedGoal.progressPercentage}%` }}
+                        className="bg-green-500 h-4 rounded-full"
+                      ></div>
+                    </div>
+                    <div className="flex justify-between text-sm text-gray-300">
+                      <span>0%</span>
+                      <span>{selectedGoal.progressPercentage}% Complete</span>
+                      <span>100%</span>
+                    </div>
+                  </div>
+                  
+                  {/* Description and Notes */}
+                  {selectedGoal.description && (
+                    <div className="mb-8">
+                      <h3 className="text-blue-400 font-orbitron text-lg mb-3">Description</h3>
+                      <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
+                        <p className="text-white">{selectedGoal.description}</p>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
               
               {/* Budget Tracker */}
               <div className="mb-8">
