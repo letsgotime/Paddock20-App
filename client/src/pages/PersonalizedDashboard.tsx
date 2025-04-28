@@ -196,7 +196,7 @@ const PersonalizedDashboard: React.FC = () => {
             <h2 className="bts-header-green mb-4">Your Garage</h2>
             <div className="space-y-4">
               {userData.vehicles.map(vehicle => (
-                <Link to={`/vehicle/${vehicle.id}`} key={vehicle.id} className="block p-3 bg-black/40 rounded-lg transition hover:bg-black/60">
+                <Link to={`/vehicle-mods/${vehicle.id}`} key={vehicle.id} className="block p-3 bg-black/40 rounded-lg transition hover:bg-black/60">
                   <div className="flex items-center">
                     <div className="w-16 h-16 rounded-lg overflow-hidden mr-4 flex-shrink-0 border border-gray-700">
                       <img src={vehicle.imageUrl} alt={`${vehicle.make} ${vehicle.model}`} className="w-full h-full object-cover" />
@@ -472,14 +472,14 @@ const PersonalizedDashboard: React.FC = () => {
           <div className="bts-card">
             <div className="flex justify-between items-center mb-4">
               <h2 className="bts-header-green">Maintenance Alerts</h2>
-              <Link to="/maintenance" className="text-sm text-green-400 hover:underline">View All</Link>
+              <Link to="/garage-vault" className="text-sm text-green-400 hover:underline">View All</Link>
             </div>
             {userData.maintenanceAlerts.length > 0 ? (
               <div className="space-y-3">
                 {userData.maintenanceAlerts.map(alert => {
                   const vehicle = getVehicleById(alert.vehicleId);
                   return (
-                    <div key={alert.id} className="p-3 bg-black/40 rounded-lg">
+                    <Link to={`/vehicle-mods/${alert.vehicleId}`} key={alert.id} className="block p-3 bg-black/40 rounded-lg hover:bg-black/60 transition">
                       <div className="flex justify-between">
                         <h3 className="text-white font-medium">{alert.type}</h3>
                         <span className="text-red-400 text-sm">
@@ -487,7 +487,7 @@ const PersonalizedDashboard: React.FC = () => {
                         </span>
                       </div>
                       <p className="text-gray-400 text-sm">{vehicle?.nickname || `${vehicle?.year} ${vehicle?.make} ${vehicle?.model}`}</p>
-                    </div>
+                    </Link>
                   );
                 })}
               </div>
