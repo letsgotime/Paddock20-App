@@ -1,5 +1,151 @@
 export const vehicles = [
   {
+    id: "bmw-e93-m3",
+    make: "BMW",
+    model: "E93 M3",
+    year: 2009,
+    vin: "WBSWD93519PY52147",
+    color: "Jet Black",
+    purchaseDate: "2020-05-15",
+    mileage: 62500,
+    lastService: "2024-02-22",
+    nextService: "2024-08-22",
+    engineType: "4.0L V8",
+    transmission: "7-Speed DCT",
+    horsepower: 414,
+    torque: "295 lb-ft",
+    driveType: "RWD",
+    fuel: "Premium Unleaded",
+    image: "/assets/bmw-e93-m3.jpg",
+    isModified: true,
+    modifications: [
+      { name: "Performance exhaust", manufacturer: "Akrapovic" },
+      { name: "Lowering springs", manufacturer: "H&R" },
+      { name: "Carbon fiber trim", manufacturer: "BMW M Performance" }
+    ],
+    tire: {
+      brand: "Michelin",
+      model: "Pilot Sport 4S",
+      mileageLifeTarget: 25000,
+      currentMileage: 15000,
+      purchaseDate: "2023-03-10",
+      lastTreadDepthCheck: "2024-03-15"
+    },
+    glossTracking: {
+      lastGlossBoost: "2024-03-15",
+      lastFullDecon: "2023-11-05",
+      lastSealantRefresh: "2024-03-15", 
+      lastPaintCorrection: "2023-05-20",
+      lastCeramicTopCoat: "2023-05-25",
+      glossGrowthLog: [
+        {
+          date: "2023-11-05",
+          action: "Full Decon + Paint Refresh",
+          notes: "Winter preparation and protection."
+        },
+        {
+          date: "2024-03-15",
+          action: "Sealant Refresh + Gloss Boost",
+          notes: "Spring detail after winter storage."
+        }
+      ]
+    },
+    maintenance: {
+      lastOilChange: "2024-02-22",
+      lastAirFilterChange: "2024-02-22",
+      lastCabinFilterChange: "2024-02-22",
+      lastCoolantFlush: "2023-06-10",
+      lastBrakeFluidChange: "2023-06-10",
+      lastTransmissionService: "2023-06-10",
+      records: [
+        {
+          date: "2023-06-10",
+          type: "Major Service",
+          mileage: 60000,
+          notes: "Comprehensive service including cooling system, transmission, and brake system"
+        },
+        {
+          date: "2024-02-22",
+          type: "Oil & Filter Service",
+          mileage: 62500,
+          notes: "Regular maintenance with filter replacement and inspection"
+        }
+      ]
+    },
+    isOwned: true
+  },
+  {
+    id: "audi-r8-v10",
+    make: "Audi",
+    model: "R8 V10",
+    year: 2014,
+    vin: "WUAENAFG5EN001125",
+    color: "Ibis White",
+    purchaseDate: "2021-09-18",
+    mileage: 31200,
+    lastService: "2024-01-15",
+    nextService: "2024-07-15",
+    engineType: "5.2L V10",
+    transmission: "7-Speed S-Tronic",
+    horsepower: 525,
+    torque: "391 lb-ft",
+    driveType: "AWD",
+    fuel: "Premium Unleaded",
+    image: "/assets/audi-r8-v10.jpg",
+    isModified: false,
+    modifications: [],
+    tire: {
+      brand: "Pirelli",
+      model: "P Zero",
+      mileageLifeTarget: 20000,
+      currentMileage: 8500,
+      purchaseDate: "2023-04-12",
+      lastTreadDepthCheck: "2024-02-10"
+    },
+    glossTracking: {
+      lastGlossBoost: "2024-04-05",
+      lastFullDecon: "2024-02-10",
+      lastSealantRefresh: "2024-02-15",
+      lastPaintCorrection: "2023-09-20",
+      lastCeramicTopCoat: "2022-10-10",
+      glossGrowthLog: [
+        {
+          date: "2024-02-10",
+          action: "Full Decon + Ceramic Refresh",
+          notes: "Complete detail with iron remover and clay bar treatment."
+        },
+        {
+          date: "2024-04-05",
+          action: "Gloss Boost Detail",
+          notes: "Spring preparation with quick detail and protection."
+        }
+      ]
+    },
+    maintenance: {
+      lastOilChange: "2024-01-15",
+      lastAirFilterChange: "2023-08-10",
+      lastCabinFilterChange: "2023-08-10",
+      lastCoolantFlush: "2022-11-05",
+      lastBrakeFluidChange: "2023-08-10",
+      lastTransmissionService: "2022-11-05",
+      records: [
+        {
+          date: "2023-08-10",
+          type: "Mid-Year Service",
+          mileage: 29000,
+          notes: "Air filters, brake fluid, and inspection"
+        },
+        {
+          date: "2024-01-15",
+          type: "Oil Change",
+          mileage: 31200,
+          notes: "Regular oil service with OEM filter and multi-point inspection"
+        }
+      ]
+    },
+    isOwned: true
+  },
+  {
     id: "ferrari-458",
     make: "Ferrari",
     model: "458 Italia",
@@ -16,7 +162,7 @@ export const vehicles = [
     torque: "398 lb-ft",
     driveType: "RWD",
     fuel: "Premium Unleaded",
-    image: "/assets/ferrari458.png",
+    image: "https://images.unsplash.com/photo-1611016186353-9af58c69a533?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1024&q=80",
     isModified: true,
     modifications: [
       { name: "Custom forged wheels", manufacturer: "HRE" },
@@ -158,7 +304,7 @@ export const garageVehicles = [
     make: "Ferrari",
     model: "458 Italia",
     year: 2015,
-    image: "/assets/ferrari458.png"
+    image: "https://images.unsplash.com/photo-1611016186353-9af58c69a533?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1024&q=80"
   },
   {
     id: 3,
