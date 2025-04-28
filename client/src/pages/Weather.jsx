@@ -1,6 +1,4 @@
 import React from 'react';
-import WeatherStation from '../components/WeatherStation';
-import ZipWeatherStation from '../components/ZipWeatherStation';
 import Paddock20WeatherStation from '../components/Paddock20WeatherStation';
 import { MAIN_CONTENT_ID } from '../lib/accessibility';
 import { WeatherProvider } from '../contexts/WeatherContext';
@@ -19,28 +17,34 @@ function Weather() {
       <WeatherProvider>
         {/* F1-style motorsport weather station */}
         <section className="mb-10" aria-labelledby="paddock-weather-heading">
-          <h2 id="paddock-weather-heading" className="apex-header-green text-xl mb-4">Live Weather Station</h2>
-          <Paddock20WeatherStation />
+          <h2 id="paddock-weather-heading" className="apex-header-green text-xl mb-4">Automotive Weather Dashboard</h2>
+          <div className="bg-gradient-to-r from-gray-900 to-black border border-gray-800 rounded-lg p-6">
+            <Paddock20WeatherStation />
+          </div>
         </section>
-        
-        {/* Original weather stations for comparison */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mt-12">
-          {/* Zip code search section */}
-          <section aria-labelledby="zip-weather-heading">
-            <h2 id="zip-weather-heading" className="sr-only">Search Weather by ZIP Code</h2>
-            <ZipWeatherStation />
-          </section>
-  
-          {/* Fixed location weather section */}
-          <section aria-labelledby="garage-weather-heading">
-            <h2 id="garage-weather-heading" className="sr-only">Garage Weather Station</h2>
-            <WeatherStation />
-          </section>
-        </div>
       </WeatherProvider>
 
+      {/* Paddock20 Feature Information */}
+      <section className="mt-10 bg-gradient-to-r from-gray-900 to-black border border-gray-800 rounded-lg p-6" aria-labelledby="feature-heading">
+        <h2 id="feature-heading" className="apex-header text-xl mb-4">Paddock20™ Weather Intelligence</h2>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          <div className="bg-black/40 p-4 rounded-lg border border-gray-800">
+            <h3 className="text-green-500 font-semibold mb-2">Surface Intelligence</h3>
+            <p className="text-gray-300 text-sm">Track surface temperature monitoring with F1-level precision metrics for optimal tire selection and performance tuning</p>
+          </div>
+          <div className="bg-black/40 p-4 rounded-lg border border-gray-800">
+            <h3 className="text-green-500 font-semibold mb-2">Drive Recommendations</h3>
+            <p className="text-gray-300 text-sm">Real-time driving adjustments based on surface conditions, tire warmup estimates, and advanced weather modeling</p>
+          </div>
+          <div className="bg-black/40 p-4 rounded-lg border border-gray-800">
+            <h3 className="text-green-500 font-semibold mb-2">Performance Analytics</h3>
+            <p className="text-gray-300 text-sm">Detailed torque management, traction control, and tire pressure recommendations for optimal driving experience</p>
+          </div>
+        </div>
+      </section>
+
       {/* Weather accessibility information */}
-      <section className="mt-10 bg-gray-900 p-6 rounded-lg" aria-labelledby="accessibility-heading">
+      <section className="mt-10 bg-gradient-to-r from-gray-900 to-black border border-gray-800 rounded-lg p-6" aria-labelledby="accessibility-heading">
         <h2 id="accessibility-heading" className="apex-header-green text-xl mb-4">Accessibility Features</h2>
         <ul className="list-disc list-inside text-gray-300 space-y-2">
           <li>Weather data is fully accessible to screen readers</li>
