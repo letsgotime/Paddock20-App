@@ -34,7 +34,8 @@ import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import GarageVaultPage from "./pages/GarageVaultPage";
 import VehicleModsPage from "./pages/VehicleModsPage";
-import Paddock20VaultPage from "./pages/Paddock20VaultPage";
+import MembershipPage from "./pages/MembershipPage";
+import TiresTimepieces from "./pages/TiresTimepieces";
 import ManifestationStationPage from "./pages/ManifestationStationPage";
 import ModPlannerPage from "./pages/ModPlannerPage";
 import ConciergePage from "./pages/ConciergePage";
@@ -140,7 +141,9 @@ function App() {
               <Route path="/pre-drive-checklist" element={<ProtectedRoute><PreDriveChecklistPage /></ProtectedRoute>} />
               <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
               <Route path="/vehicle-mods/:id" element={<ProtectedRoute><VehicleModsPage /></ProtectedRoute>} />
-              <Route path="/paddock20-vault" element={<ProtectedRoute><Paddock20VaultPage /></ProtectedRoute>} />
+              <Route path="/membership" element={<ProtectedRoute><MembershipPage /></ProtectedRoute>} />
+              <Route path="/paddock20-vault" element={<Navigate to="/membership" replace />} />
+              <Route path="/tires-timepieces" element={<ProtectedRoute><TiresTimepieces /></ProtectedRoute>} />
               <Route path="/manifestation-station" element={<ProtectedRoute><ManifestationStationPage /></ProtectedRoute>} />
               <Route path="/mod-planner" element={<ProtectedRoute><ModPlannerPage /></ProtectedRoute>} />
               <Route path="/concierge" element={<ProtectedRoute><ConciergePage /></ProtectedRoute>} />

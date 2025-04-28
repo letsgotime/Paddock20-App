@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { DownloadCloud, FileJson, FilePdf, Share2, Mail, FileSpreadsheet, Printer, Smartphone } from 'lucide-react';
+import { DownloadCloud, FileJson, FileText, Share2, Mail, FileSpreadsheet, Printer, Smartphone } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
 
@@ -173,7 +173,7 @@ const ExportOptions: React.FC<ExportOptionsProps> = ({ contentRef, data, title, 
                 onClick={exportToPDF}
                 className="flex items-center gap-2 hover:bg-gray-800 text-white p-2 rounded-md text-sm transition-colors w-full text-left"
               >
-                <FilePdf size={16} />
+                <FileText size={16} />
                 <span>Export as PDF</span>
               </button>
               
