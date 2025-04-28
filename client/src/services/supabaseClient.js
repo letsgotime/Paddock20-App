@@ -35,10 +35,16 @@ const supabase = {
       match: (criteria) => Promise.resolve({ data: [{ id: 1, name: 'Sample Data' }], error: null }),
       order: () => ({ limit: () => Promise.resolve({ data: [{ id: 1, name: 'Sample Data' }], error: null }) }),
     }),
-    insert: (data) => Promise.resolve({ data: [{ ...data, id: 1 }], error: null }),
+    insert: (data) => ({
+      select: () => Promise.resolve({ data: [{ ...data[0], id: Date.now() }], error: null }),
+    }),
     update: (data) => ({
-      eq: (column, value) => Promise.resolve({ data: [{ ...data, id: value }], error: null }),
-      match: (criteria) => Promise.resolve({ data: [{ ...data, id: 1 }], error: null }),
+      eq: (column, value) => ({
+        select: () => Promise.resolve({ data: [{ ...data, id: value }], error: null })
+      }),
+      match: (criteria) => ({
+        select: () => Promise.resolve({ data: [{ ...data, id: 1 }], error: null })
+      }),
     }),
     delete: () => ({
       eq: (column, value) => Promise.resolve({ data: null, error: null }),

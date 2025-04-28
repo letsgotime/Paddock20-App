@@ -3,6 +3,7 @@ import supabase from '../services/supabaseClient';
 import { Link } from 'react-router-dom';
 import { exportToPdf, exportToCsv, printElement } from '../utils/exportUtils';
 import TireTracker from '../components/TireTracker';
+import TireManagementDashboard from '../components/TireManagementDashboard';
 import GlossTracker from '../components/GlossTracker';
 import PreDriveChecklist from '../components/PreDriveChecklist';
 import WeeklyChecklist from '../components/WeeklyChecklist';
@@ -591,7 +592,7 @@ function GarageVaultPage() {
                 {activeSection === 'tires' && (
                   <div className="apex-card p-6">
                     <h3 className="text-blue-400 font-orbitron text-xl mb-4">Tire Management</h3>
-                    <TireTracker />
+                    <TireManagementDashboard />
                   </div>
                 )}
                 
