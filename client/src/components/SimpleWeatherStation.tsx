@@ -198,7 +198,7 @@ const SimpleWeatherStation: React.FC = () => {
         <div className="flex flex-col sm:flex-row justify-between items-center text-sm text-gray-500">
           <div className="mb-4 sm:mb-0">
             <p>Weather data provided by OpenWeatherMap</p>
-            <p className="mt-1">Enhanced automotive data powered by AccuWeather</p>
+            <p className="mt-1">Enhanced automotive data powered by OpenWeatherMap</p>
           </div>
           <div className="flex items-center">
             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-1" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">

@@ -8,6 +8,7 @@ export interface Location {
   formattedName?: string;
   country?: string;
   state?: string;
+  id?: string; // Added to support savedLocations
 }
 
 export interface WeatherData {
