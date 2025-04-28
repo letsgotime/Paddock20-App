@@ -133,6 +133,7 @@ const RoutePlannerPage = () => {
     constructionZones: true,
     alternateRoutes: true,
     curvyRoads: false,  // For enthusiasts who prefer twisty roads
+    curveIntensity: 3,  // 1-5 scale corresponding to TRN/km values (Total Route Number per km)
     motorcycleMode: false,
     avoidUnpaved: true,
     hov: false,
@@ -1140,21 +1141,55 @@ const RoutePlannerPage = () => {
               <div className="bg-gray-900 p-3 rounded-lg border border-gray-700">
                 <h3 className="text-green-500 font-semibold mb-2 text-sm uppercase tracking-wide">Advanced Features</h3>
                 <div className="space-y-2">
-                  <label className="flex items-center p-2 hover:bg-gray-800 rounded transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={navigationFeatures.curvyRoads}
-                      onChange={(e) => setNavigationFeatures(prev => ({
-                        ...prev,
-                        curvyRoads: e.target.checked
-                      }))}
-                      className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5"
-                    />
-                    <div>
-                      <span className="text-white font-medium">Driving Experience</span>
-                      <p className="text-gray-400 text-xs">Prefer twisty, enjoyable roads</p>
+                  <div className="space-y-1 p-2 hover:bg-gray-800 rounded transition-colors">
+                    <div className="flex items-center">
+                      <input
+                        type="checkbox"
+                        checked={navigationFeatures.curvyRoads}
+                        onChange={(e) => setNavigationFeatures(prev => ({
+                          ...prev,
+                          curvyRoads: e.target.checked
+                        }))}
+                        className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5"
+                      />
+                      <div>
+                        <span className="text-white font-medium">Curvature Preference</span>
+                        <p className="text-gray-400 text-xs">Routes with higher % of curves (TRN value)</p>
+                      </div>
                     </div>
-                  </label>
+                    
+                    {navigationFeatures.curvyRoads && (
+                      <div className="pl-8 pt-2">
+                        <div className="mb-1">
+                          <span className="text-xs text-gray-300">Curvature Intensity (TRN/km):</span>
+                        </div>
+                        <div className="flex items-center space-x-1 text-xs">
+                          <span className="text-blue-300">Gentle (2-4)</span>
+                          <input
+                            type="range"
+                            min="1"
+                            max="5"
+                            value={navigationFeatures.curveIntensity || 3}
+                            onChange={(e) => setNavigationFeatures(prev => ({
+                              ...prev,
+                              curveIntensity: parseInt(e.target.value)
+                            }))}
+                            className="w-24 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                          />
+                          <span className="text-blue-300">Twisty (8-12+)</span>
+                        </div>
+                        <div className="text-right text-xs text-gray-400 mt-1">
+                          {
+                            navigationFeatures.curveIntensity === 1 ? "Minimal (0-2 TRN/km)" :
+                            navigationFeatures.curveIntensity === 2 ? "Gentle (2-4 TRN/km)" :
+                            navigationFeatures.curveIntensity === 3 ? "Moderate (4-6 TRN/km)" :
+                            navigationFeatures.curveIntensity === 4 ? "Spirited (6-8 TRN/km)" :
+                            "Technical (8-12+ TRN/km)"
+                          }
+                        </div>
+                      </div>
+                    )}
+                  </div>
                   <label className="flex items-center p-2 hover:bg-gray-800 rounded transition-colors">
                     <input
                       type="checkbox"
