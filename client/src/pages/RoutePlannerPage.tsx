@@ -1152,6 +1152,89 @@ const RoutePlannerPage = () => {
     }
   };
   
+  // Enhanced multi-stop navigation app integration
+  const launchNavigationAppWithMultiStops = () => {
+    let navigationUrl = '';
+    
+    // Build the appropriate URL for the selected navigation app with all route stops
+    switch(preferredNavApp) {
+      case "Google Maps":
+        // Google Maps supports multiple waypoints
+        // Format: https://www.google.com/maps/dir/?api=1&origin=START&destination=END&waypoints=STOP1|STOP2|STOP3
+        navigationUrl = `https://www.google.com/maps/dir/?api=1&origin=${encodeURIComponent(startLocation)}&destination=${encodeURIComponent(endLocation)}`;
+        
+        // Add all route stops as waypoints
+        if (routeStops.length > 0) {
+          const waypointList = routeStops.map(stop => encodeURIComponent(stop.location)).join('|');
+          navigationUrl += `&waypoints=${waypointList}`;
+        }
+        
+        // Add routing preferences
+        const avoidParams = [];
+        if (navigationFeatures.avoidTolls) avoidParams.push('tolls');
+        if (navigationFeatures.avoidHighways) avoidParams.push('highways');
+        if (navigationFeatures.avoidUnpaved) avoidParams.push('unpaved');
+        
+        if (avoidParams.length > 0) {
+          navigationUrl += `&avoid=${avoidParams.join(',')}`;
+        }
+        
+        // Add travel mode
+        navigationUrl += `&travelmode=driving`;
+        
+        break;
+        
+      case "Waze":
+        // Waze supports multiple stops using the "to" parameter
+        // Format: https://waze.com/ul?navigate=yes&to=STOP1&to=STOP2&to=FINAL_DESTINATION
+        
+        // Start with the initial location
+        navigationUrl = `https://waze.com/ul?navigate=yes`;
+        
+        // Add all stops in sequence
+        if (routeStops.length > 0) {
+          routeStops.forEach(stop => {
+            navigationUrl += `&to=${encodeURIComponent(stop.location)}`;
+          });
+        }
+        
+        // Add final destination
+        navigationUrl += `&to=${encodeURIComponent(endLocation)}`;
+        
+        // Add avoid tolls if selected
+        if (navigationFeatures.avoidTolls) {
+          navigationUrl += '&avoid=tolls';
+        }
+        
+        break;
+        
+      case "Apple Maps":
+        // Apple Maps supports multiple destinations with the daddr parameter, but it's limited
+        // Format: maps://?saddr=START&daddr=STOP1&daddr=STOP2&daddr=FINAL
+        navigationUrl = `maps://?saddr=${encodeURIComponent(startLocation)}`;
+        
+        // Add intermediate stops
+        if (routeStops.length > 0) {
+          routeStops.forEach(stop => {
+            navigationUrl += `&daddr=${encodeURIComponent(stop.location)}`;
+          });
+        }
+        
+        // Add final destination
+        navigationUrl += `&daddr=${encodeURIComponent(endLocation)}`;
+        
+        // Alert user about iOS compatibility
+        alert("Apple Maps deep linking works best on iOS devices. Opening a compatible link format with all stops included.");
+        break;
+    }
+    
+    // Open the navigation URL in a new tab
+    if (navigationUrl) {
+      console.log("Launching navigation with URL:", navigationUrl);
+      window.open(navigationUrl, '_blank');
+    }
+  };
+  
   // State for summary modal
   const [showSummaryModal, setShowSummaryModal] = useState(false);
   
@@ -1171,6 +1254,9 @@ const RoutePlannerPage = () => {
   
   // GPS Tracking Functions
   const startGpsTracking = () => {
+    // CRITICAL - Launch the navigation app first, then start telemetry tracking
+    launchNavigationAppWithMultiStops();
+    
     if (gpsTrackingEnabled) return;
     
     // Start a new tracking session
@@ -1814,6 +1900,9 @@ const RoutePlannerPage = () => {
                     <option value="scenic">Scenic Route</option>
                     <option value="photography">Car Photography</option>
                     <option value="efficiency">Efficiency Run</option>
+                    <option value="celebration">Celebration Ride</option>
+                    <option value="milestone">Milestone Achievement</option>
+                    <option value="firstdrive">First Drive</option>
                     <option value="custom">Custom Purpose...</option>
                   </select>
                   
