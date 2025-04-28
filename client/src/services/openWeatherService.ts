@@ -523,7 +523,7 @@ export async function fetchAllWeatherData(latitude: number, longitude: number) {
     
     return {
       currentConditions: {
-        WeatherText: current.weather[0]?.description,
+        WeatherText: current.weather[0]?.description || 'Unknown',
         WeatherIcon: current.weather[0]?.icon,
         HasPrecipitation: current.weather.some((w: any) => w.main === 'Rain' || w.main === 'Drizzle' || w.main === 'Snow'),
         PrecipitationType: current.weather.some((w: any) => w.main === 'Snow') ? 'Snow' : 
@@ -563,7 +563,6 @@ export async function fetchAllWeatherData(latitude: number, longitude: number) {
             Unit: 'inHg'
           }
         },
-        WeatherText: current.weather[0]?.description || 'Unknown',
         TemperatureApparent: {
           Imperial: {
             Value: current.main.feels_like,
