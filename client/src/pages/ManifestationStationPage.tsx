@@ -22,6 +22,17 @@ interface BudgetEntry {
   description: string;
 }
 
+// Interface for goal media
+interface GoalMedia {
+  id: number;
+  type: 'image' | 'file' | 'link';
+  name: string;
+  url: string;
+  thumbnail?: string;
+  description?: string;
+  dateAdded: string;
+}
+
 // Interface for goals/dreams
 interface Goal {
   id: number;
@@ -42,6 +53,8 @@ interface Goal {
   targetAmount: number;
   currentAmount: number;
   budgetEntries: BudgetEntry[];
+  // Media gallery
+  mediaGallery: GoalMedia[];
 }
 
 // Interface for daily check-ins
@@ -52,6 +65,14 @@ interface DailyCheckin {
   mindCompleted: boolean;
   bodyCompleted: boolean;
   spiritCompleted: boolean;
+  // Track time spent on each activity
+  mindMinutes?: number;
+  bodyMinutes?: number;
+  spiritMinutes?: number;
+  // Notes for each activity
+  mindNotes?: string;
+  bodyNotes?: string;
+  spiritNotes?: string;
 }
 
 const ManifestationStationPage = () => {
@@ -336,7 +357,9 @@ const ManifestationStationPage = () => {
     // Budget tracking
     targetAmount: 0,
     currentAmount: 0,
-    budgetEntries: []
+    budgetEntries: [],
+    // Media gallery
+    mediaGallery: []
   });
   
   // State for affirmations
@@ -1180,9 +1203,146 @@ const ManifestationStationPage = () => {
                 </div>
               </div>
               
+              {/* Budget Tracker */}
+              <div className="mb-8">
+                <h3 className="text-green-400 font-orbitron text-lg mb-3">💰 Financial Telemetry</h3>
+                <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg p-4 border border-gray-700">
+                  <div className="flex justify-between items-center mb-4">
+                    <div className="bg-black/30 px-4 py-2 rounded-lg border border-green-900/20">
+                      <div className="text-gray-400 text-xs">Target Amount</div>
+                      <div className="text-green-400 text-xl font-mono font-medium">${selectedGoal.targetAmount.toLocaleString()}</div>
+                    </div>
+                    <div className="bg-black/30 px-4 py-2 rounded-lg border border-blue-900/20">
+                      <div className="text-gray-400 text-xs">Current Balance</div>
+                      <div className="text-blue-400 text-xl font-mono font-medium">${selectedGoal.currentAmount.toLocaleString()}</div>
+                    </div>
+                    <div className="bg-black/30 px-4 py-2 rounded-lg border border-gray-900/20">
+                      <div className="text-gray-400 text-xs">Remaining</div>
+                      <div className="text-gray-200 text-xl font-mono font-medium">${(selectedGoal.targetAmount - selectedGoal.currentAmount).toLocaleString()}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="mb-4">
+                    <div className="flex justify-between text-xs text-gray-400 mb-1">
+                      <span>Financial Progress</span>
+                      <span>{Math.min(100, Math.round((selectedGoal.currentAmount / selectedGoal.targetAmount) * 100))}%</span>
+                    </div>
+                    <div className="bg-gray-700 h-3 w-full rounded-full">
+                      <div 
+                        style={{ width: `${Math.min(100, (selectedGoal.currentAmount / selectedGoal.targetAmount) * 100)}%` }}
+                        className="bg-gradient-to-r from-green-500 to-green-400 h-3 rounded-full"
+                      ></div>
+                    </div>
+                  </div>
+
+                  {/* Transaction History */}
+                  <div className="mt-6 mb-4">
+                    <h4 className="text-white font-medium mb-2">Transaction History</h4>
+                    <div className="max-h-48 overflow-y-auto">
+                      <table className="w-full">
+                        <thead className="text-left bg-black/40 text-gray-300 text-sm">
+                          <tr>
+                            <th className="py-2 px-3 rounded-tl-md">Date</th>
+                            <th className="py-2 px-3">Description</th>
+                            <th className="py-2 px-3">Type</th>
+                            <th className="py-2 px-3 rounded-tr-md text-right">Amount</th>
+                          </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-800">
+                          {selectedGoal.budgetEntries.length === 0 ? (
+                            <tr>
+                              <td colSpan={4} className="py-4 text-center text-gray-500">No transactions yet</td>
+                            </tr>
+                          ) : (
+                            selectedGoal.budgetEntries.map(entry => (
+                              <tr key={entry.id} className="hover:bg-black/20">
+                                <td className="py-2 px-3 text-gray-300 text-sm">{entry.date}</td>
+                                <td className="py-2 px-3 text-white">{entry.description}</td>
+                                <td className="py-2 px-3">
+                                  <span className={`px-2 py-1 rounded-full text-xs ${entry.type === 'deposit' ? 'bg-green-900/20 text-green-400' : 'bg-red-900/20 text-red-400'}`}>
+                                    {entry.type === 'deposit' ? 'Deposit' : 'Expense'}
+                                  </span>
+                                </td>
+                                <td className="py-2 px-3 text-right font-mono">
+                                  <span className={entry.type === 'deposit' ? 'text-green-400' : 'text-red-400'}>
+                                    {entry.type === 'deposit' ? '+' : '-'}${entry.amount.toLocaleString()}
+                                  </span>
+                                </td>
+                              </tr>
+                            ))
+                          )}
+                        </tbody>
+                      </table>
+                    </div>
+                  </div>
+
+                  {/* Add Transaction Form */}
+                  <div className="mt-6 p-4 bg-black/30 rounded-lg border border-gray-700">
+                    <h4 className="text-white font-medium mb-3">Add Transaction</h4>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label className="block text-gray-300 text-sm mb-1">Type</label>
+                        <select 
+                          value={newBudgetEntry.type}
+                          onChange={(e) => setNewBudgetEntry({...newBudgetEntry, type: e.target.value as 'deposit' | 'expense'})}
+                          className="bg-gray-800 text-white px-3 py-2 rounded border border-gray-700 w-full"
+                        >
+                          <option value="deposit">Deposit</option>
+                          <option value="expense">Expense</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block text-gray-300 text-sm mb-1">Amount ($)</label>
+                        <input
+                          type="number"
+                          value={newBudgetEntry.amount}
+                          onChange={(e) => setNewBudgetEntry({...newBudgetEntry, amount: parseFloat(e.target.value) || 0})}
+                          className="bg-gray-800 text-white px-3 py-2 rounded border border-gray-700 w-full"
+                          min="0"
+                        />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                      <div>
+                        <label className="block text-gray-300 text-sm mb-1">Date</label>
+                        <input
+                          type="date"
+                          value={newBudgetEntry.date}
+                          onChange={(e) => setNewBudgetEntry({...newBudgetEntry, date: e.target.value})}
+                          className="bg-gray-800 text-white px-3 py-2 rounded border border-gray-700 w-full"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-gray-300 text-sm mb-1">Description</label>
+                        <input
+                          type="text"
+                          value={newBudgetEntry.description}
+                          onChange={(e) => setNewBudgetEntry({...newBudgetEntry, description: e.target.value})}
+                          className="bg-gray-800 text-white px-3 py-2 rounded border border-gray-700 w-full"
+                          placeholder="e.g., Bonus, Investment, etc."
+                        />
+                      </div>
+                    </div>
+                    <button
+                      onClick={handleAddBudgetEntry}
+                      disabled={newBudgetEntry.amount <= 0 || !newBudgetEntry.description}
+                      className={`px-4 py-2 rounded text-white ${
+                        newBudgetEntry.amount <= 0 || !newBudgetEntry.description
+                          ? 'bg-gray-600 cursor-not-allowed'
+                          : newBudgetEntry.type === 'deposit' 
+                            ? 'bg-green-600 hover:bg-green-500' 
+                            : 'bg-red-600 hover:bg-red-500'
+                      }`}
+                    >
+                      {newBudgetEntry.type === 'deposit' ? 'Add Deposit' : 'Record Expense'}
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               {/* Daily Tracker Check-in */}
               <div className="mb-8">
-                <h3 className="text-blue-400 font-orbitron text-lg mb-3">Daily Discipline Tracker</h3>
+                <h3 className="text-blue-400 font-orbitron text-lg mb-3">🧠 Daily Discipline Tracker</h3>
                 <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
                   <p className="text-white mb-4">Check in on your daily activities to advance your goal:</p>
                   
