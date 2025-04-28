@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { CarFront, Wind, Droplets, ThermometerSun, AlertTriangle, Sun, CloudRain } from 'lucide-react';
-import { getLocationKey, fetchCurrentConditions, fetchDailyForecast, fetchMinuteCast, fetchHourlyForecast, fetchDrivingIndices } from '../services/accuweatherService';
+import { getAutomotiveWeatherData } from '@/services/openWeatherService';
+import { WeatherData, OneCallData } from '@/lib/weather';
+import { fetchCurrentWeather, fetchOneCall } from '@/lib/weather';
 
 interface DrivingWeatherInsightsProps {
   latitude: number;
@@ -8,52 +10,39 @@ interface DrivingWeatherInsightsProps {
 }
 
 export function DrivingWeatherInsights({ latitude, longitude }: DrivingWeatherInsightsProps) {
-  const [locationKey, setLocationKey] = useState<string | null>(null);
-  const [currentConditions, setCurrentConditions] = useState<any>(null);
-  const [forecast, setForecast] = useState<any>(null);
-  const [minutecast, setMinutecast] = useState<any>(null);
-  const [hourlyForecast, setHourlyForecast] = useState<any[]>([]);
-  const [drivingIndices, setDrivingIndices] = useState<any[]>([]);
+  const [currentWeather, setCurrentWeather] = useState<WeatherData | null>(null);
+  const [oneCallData, setOneCallData] = useState<OneCallData | null>(null);
+  const [automotiveData, setAutomotiveData] = useState<AutomotiveWeatherData | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    async function fetchAccuWeatherData() {
+    async function fetchOpenWeatherData() {
       if (!latitude || !longitude) return;
       
       setLoading(true);
       setError(null);
       
       try {
-        // Get AccuWeather location key first
-        const key = await getLocationKey(latitude, longitude);
-        setLocationKey(key);
+        // Fetch all needed data in parallel
+        const [weather, oneCall, automotive] = await Promise.all([
+          fetchCurrentWeather({ lat: latitude, lon: longitude }, 'metric'),
+          fetchOneCall({ lat: latitude, lon: longitude }, 'metric'),
+          getAutomotiveWeatherData(latitude, longitude)
+        ]);
         
-        if (key) {
-          // Fetch all needed data in parallel
-          const [conditions, dailyForecast, minuteData, hourlyData, indices] = await Promise.all([
-            fetchCurrentConditions(key),
-            fetchDailyForecast(key),
-            fetchMinuteCast(key).catch(() => ({ Summary: "Minute forecast not available for your location" })),
-            fetchHourlyForecast(key).catch(() => []),
-            fetchDrivingIndices(key).catch(() => [])
-          ]);
-          
-          setCurrentConditions(conditions);
-          setForecast(dailyForecast);
-          setMinutecast(minuteData);
-          setHourlyForecast(hourlyData);
-          setDrivingIndices(indices);
-        }
+        setCurrentWeather(weather);
+        setOneCallData(oneCall);
+        setAutomotiveData(automotive);
       } catch (err) {
-        console.error('Error fetching AccuWeather data:', err);
+        console.error('Error fetching OpenWeather data:', err);
         setError('Unable to fetch enhanced driving weather data. Using standard forecast.');
       } finally {
         setLoading(false);
       }
     }
 
-    fetchAccuWeatherData();
+    fetchOpenWeatherData();
   }, [latitude, longitude]);
 
   if (loading) {
@@ -73,28 +62,54 @@ export function DrivingWeatherInsights({ latitude, longitude }: DrivingWeatherIn
   }
 
   // If no data is available yet, don't render
-  if (!currentConditions) {
+  if (!currentWeather || !oneCallData) {
     return null;
   }
 
   // Extract relevant driving data
-  const roadTemp = currentConditions.RoadSurface?.Temperature?.Metric?.Value || 
-                  currentConditions.Temperature?.Metric?.Value || '—';
+  const roadTemp = automotiveData?.roadSurfaceTemp || 
+                  currentWeather.main.temp || '—';
                   
-  const humidity = currentConditions.RelativeHumidity || '—';
-  const uvIndex = currentConditions.UVIndex || '—';
-  const visibility = currentConditions.Visibility?.Metric?.Value || '—';
-  const visibilityUnit = currentConditions.Visibility?.Metric?.Unit || 'km';
-  const windGust = currentConditions.WindGust?.Speed?.Metric?.Value || '—';
-  const windGustUnit = currentConditions.WindGust?.Speed?.Metric?.Unit || 'km/h';
-  const precipitation1hr = currentConditions.Precip1hr?.Metric?.Value || 0;
+  const humidity = currentWeather.main.humidity || '—';
+  const uvIndex = oneCallData.current?.uvi || '—';
+  const visibility = (currentWeather.visibility / 1000) || '—'; // Convert from meters to km
+  const visibilityUnit = 'km';
+  const windGust = currentWeather.wind.gust || currentWeather.wind.speed || '—';
+  const windGustUnit = 'km/h';
   
-  // Get driving index and road construction index if available
-  const drivingIndex = drivingIndices.find(idx => idx.ID === 1);
-  const roadConstructionIndex = drivingIndices.find(idx => idx.ID === 10);
-
-  // Get minute cast precipitation probability
-  const precipProbability = minutecast?.PrecipitationProbability || '—';
+  // Get precipitation data from OpenWeather
+  const precipitation1hr = oneCallData.current?.rain?.['1h'] || 0;
+  
+  // Get precipitation probability from hourly forecast
+  const precipProbability = oneCallData.hourly && oneCallData.hourly.length > 0 
+    ? Math.round(oneCallData.hourly[0].pop * 100) 
+    : '—';
+    
+  // Compute driving conditions based on various factors
+  let drivingCondition = 'Good';
+  let drivingConditionClass = 'text-green-500';
+  
+  if (precipitation1hr > 0 || 
+      currentWeather.weather[0].main === 'Rain' || 
+      currentWeather.weather[0].main === 'Snow' ||
+      visibility < 5) {
+    drivingCondition = 'Poor';
+    drivingConditionClass = 'text-red-500';
+  } else if (
+    windGust > 20 ||
+    oneCallData.alerts?.length > 0 ||
+    currentWeather.weather[0].main === 'Fog'
+  ) {
+    drivingCondition = 'Fair';
+    drivingConditionClass = 'text-yellow-500';
+  }
+  
+  // Check for active weather alerts that would affect road conditions
+  const roadAlert = oneCallData.alerts?.find(alert => 
+    alert.event.toLowerCase().includes('road') || 
+    alert.event.toLowerCase().includes('traffic') ||
+    alert.event.toLowerCase().includes('construction')
+  );
 
   return (
     <div className="mt-4 p-4 rounded-lg bg-gradient-to-br from-gray-900 to-black border border-blue-500/20">
