@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import F1MotorsportWeatherStation from '../components/F1MotorsportWeatherStation';
+import F1MotorsportWeatherStation from '../components/F1MotorsportWeatherStation.jsx';
 
 // Mock user data for demo purposes
 const mockUserData = {
