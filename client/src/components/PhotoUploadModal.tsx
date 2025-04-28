@@ -128,15 +128,16 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose, on
   };
   
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
       <div className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center p-4 sm:p-6">
         <div className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-xl shadow-2xl border border-gray-700 w-full max-w-5xl max-h-[85vh] overflow-hidden">
           <div className="flex flex-col h-full">
             {/* Header */}
             <div className="flex justify-between items-center p-6 border-b border-gray-700">
-              <h2 className="text-xl font-orbitron text-blue-400">Add Image</h2>
+              <h2 className="text-xl font-orbitron text-blue-400">Add Media to Your Dream</h2>
               <button 
-                onClick={onClose}
+                type="button"
+                onClick={() => onClose()}
                 className="text-gray-400 hover:text-white"
               >
                 ✕
@@ -270,6 +271,18 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose, on
                   </form>
                 </TabsContent>
               </Tabs>
+              
+              {/* Footer with Close Button */}
+              <div className="mt-6 pt-4 border-t border-gray-700 flex justify-end">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => onClose()}
+                  className="bg-transparent border-gray-600 text-gray-300 hover:text-white hover:border-gray-500"
+                >
+                  Close
+                </Button>
+              </div>
             </div>
           </div>
         </div>
