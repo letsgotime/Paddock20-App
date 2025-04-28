@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import { exportToPdf, exportToCsv, printElement } from '../utils/exportUtils';
 import TireTracker from '../components/TireTracker';
 import TireManagementDashboard from '../components/TireManagementDashboard';
+import VehicleTelemetry from '../components/VehicleTelemetry';
+import VehicleGallery from '../components/VehicleGallery';
 import GlossTracker from '../components/GlossTracker';
 import PreDriveChecklist from '../components/PreDriveChecklist';
 import WeeklyChecklist from '../components/WeeklyChecklist';
