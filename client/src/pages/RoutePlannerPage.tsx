@@ -1,12 +1,12 @@
 // /client/src/pages/RoutePlannerPage.tsx
 
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef, useEffect, useCallback } from "react";
 import { getWeatherData, getOneCallData } from '@/services/openWeatherService';
 import CarEventsExplorer from '@/components/CarEventsExplorer';
 import CarCultureSpotsExplorer from '@/components/CarCultureSpotsExplorer';
 import { StrutEvent } from '@/services/strutAPI';
 import { CarCultureSpot } from '@/services/speedhuntersAPI';
-import { Users } from 'lucide-react';
+import { Users, MapPin, Wind, Thermometer, Droplets, Sun, CloudRain, BarChart3, Compass, Mountain, Clock, RotateCw } from 'lucide-react';
 
 // Helper functions for weather metrics
 const calculateAirDensity = (tempF: number, pressureHpa: number): string => {
@@ -46,6 +46,34 @@ interface Location {
   lat: number;
   lon: number;
   placeId?: string;
+}
+
+interface TelemetrySnapshot {
+  timestamp: number;
+  position: { lat: number; lng: number };
+  speed: number; // mph
+  rpm?: number;
+  acceleration?: number; // G-forces
+  lateralG?: number; // G-forces
+  throttlePosition?: number; // 0-100%
+  brakePosition?: number; // 0-100%
+  steeringAngle?: number; // degrees
+  elevation?: number; // meters
+  gradient?: number; // percent
+  curvature?: number; // radius in meters
+  roadSurfaceTemp?: number; // F
+  tirePressureFront?: number; // PSI
+  tirePressureRear?: number; // PSI
+  tireTempFront?: number; // F
+  tireTempRear?: number; // F
+  wheelSlip?: number; // percent
+  engineTemp?: number; // F
+  oilTemp?: number; // F
+  oilPressure?: number; // PSI
+  fuelConsumption?: number; // mpg
+  rangeToBoundary?: number; // miles to performance boundary
+  gForceVector?: { x: number; y: number; z: number };
+  weatherCondition?: string;
 }
 
 interface VehicleSpecs {
@@ -178,7 +206,44 @@ const RoutePlannerPage = () => {
   const [weatherData, setWeatherData] = useState<any>(null);
   
   // Telemetry and driving conditions data
-  const [telemetryData, setTelemetryData] = useState<any>(null);
+  const [telemetryData, setTelemetryData] = useState<TelemetrySnapshot | null>(null);
+  const [telemetryHistory, setTelemetryHistory] = useState<TelemetrySnapshot[]>([]);
+  const [telemetryStats, setTelemetryStats] = useState<{
+    maxSpeed: number;
+    maxRpm: number;
+    maxAcceleration: number;
+    maxLateralG: number;
+    avgSpeed: number;
+    totalDistance: number;
+    curvyRoadPercentage: number;
+    straightRoadPercentage: number;
+    roadTypeBreakdown: Record<string, number>;
+    elevationChange: number;
+    fuelEfficiency: number;
+    drivingScore: number;
+  }>({
+    maxSpeed: 0,
+    maxRpm: 0,
+    maxAcceleration: 0,
+    maxLateralG: 0,
+    avgSpeed: 0,
+    totalDistance: 0,
+    curvyRoadPercentage: 0,
+    straightRoadPercentage: 0,
+    roadTypeBreakdown: {},
+    elevationChange: 0,
+    fuelEfficiency: 0,
+    drivingScore: 0
+  });
+  
+  // GPS and real-time tracking data
+  const [currentGpsPosition, setCurrentGpsPosition] = useState<{lat: number, lng: number} | null>(null);
+  const [gpsTrackingEnabled, setGpsTrackingEnabled] = useState(false);
+  const [gpsTrackingInterval, setGpsTrackingInterval] = useState<number | null>(null);
+  const [gpsTrackHistory, setGpsTrackHistory] = useState<Array<{lat: number, lng: number, timestamp: number}>>([]);
+  const [trackingFrequency, setTrackingFrequency] = useState<number>(5); // seconds between position updates
+  const [activeRouteId, setActiveRouteId] = useState<string | null>(null);
+  const [driveJournalIntegration, setDriveJournalIntegration] = useState(true);
   
   // Vehicle performance settings
   const [tirePressureAdjustment, setTirePressureAdjustment] = useState(0); // in PSI
