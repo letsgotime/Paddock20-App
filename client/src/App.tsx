@@ -30,7 +30,6 @@ import Paddock20HomePage from "./pages/Paddock20HomePage";
 import DropdownNavbar from "./components/DropdownNavbar";
 import Footer from "./components/Footer";
 import { WeatherProvider } from "./contexts/WeatherContext";
-import { OpenWeatherProvider } from "./contexts/OpenWeatherContext";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import GarageVaultPage from "./pages/GarageVaultPage";
@@ -88,9 +87,8 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <OpenWeatherProvider>
-        <WeatherProvider>
-          <TooltipProvider>
+      <WeatherProvider>
+        <TooltipProvider>
           {/* Skip link for keyboard navigation */}
           <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
             Skip to main content
@@ -163,8 +161,7 @@ function App() {
             <Footer />
           </div>
         </TooltipProvider>
-        </WeatherProvider>
-      </OpenWeatherProvider>
+      </WeatherProvider>
     </QueryClientProvider>
   );
 }
