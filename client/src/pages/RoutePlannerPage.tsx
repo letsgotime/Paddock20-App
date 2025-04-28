@@ -163,6 +163,8 @@ const RoutePlannerPage = () => {
   // F1-grade telemetry and advanced settings
   const [selectedTireSetup, setSelectedTireSetup] = useState("");
   const [drivePurpose, setDrivePurpose] = useState("leisure");
+  const [customDrivePurpose, setCustomDrivePurpose] = useState("");
+  const [showCustomDrivePurposeForm, setShowCustomDrivePurposeForm] = useState(false);
   const [engineModeProfile, setEngineModeProfile] = useState("standard");
   
   // Route customization options
@@ -1767,7 +1769,12 @@ const RoutePlannerPage = () => {
                   <label className="block text-gray-300 text-sm mb-1">Drive Purpose</label>
                   <select
                     value={drivePurpose}
-                    onChange={(e) => setDrivePurpose(e.target.value)}
+                    onChange={(e) => {
+                      setDrivePurpose(e.target.value);
+                      if (e.target.value === "custom") {
+                        setShowCustomDrivePurposeForm(true);
+                      }
+                    }}
                     className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
                   >
                     <option value="leisure">Leisure Drive</option>
@@ -1775,8 +1782,39 @@ const RoutePlannerPage = () => {
                     <option value="touring">Grand Touring</option>
                     <option value="track">Track Day Prep</option>
                     <option value="testing">Vehicle Testing</option>
+                    <option value="commute">Daily Commute</option>
+                    <option value="business">Business Travel</option>
+                    <option value="roadtrip">Road Trip</option>
+                    <option value="scenic">Scenic Route</option>
+                    <option value="photography">Car Photography</option>
                     <option value="efficiency">Efficiency Run</option>
+                    <option value="custom">Custom Purpose...</option>
                   </select>
+                  
+                  {showCustomDrivePurposeForm && (
+                    <div className="mt-2 p-2 bg-gray-900 rounded border border-gray-700">
+                      <div className="flex">
+                        <input
+                          type="text"
+                          placeholder="Enter custom drive purpose"
+                          value={customDrivePurpose}
+                          onChange={(e) => setCustomDrivePurpose(e.target.value)}
+                          className="flex-grow p-2 bg-gray-800 text-white rounded-l border border-gray-700"
+                        />
+                        <button
+                          onClick={() => {
+                            if (customDrivePurpose.trim()) {
+                              setDrivePurpose(`custom:${customDrivePurpose}`);
+                              setShowCustomDrivePurposeForm(false);
+                            }
+                          }}
+                          className="bg-blue-600 text-white px-3 rounded-r hover:bg-blue-500"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               
@@ -1788,14 +1826,73 @@ const RoutePlannerPage = () => {
                     <label className="block text-gray-300 text-xs mb-1">Tire Setup</label>
                     <select
                       value={selectedTireSetup}
-                      onChange={(e) => setSelectedTireSetup(e.target.value)}
+                      onChange={(e) => {
+                        setSelectedTireSetup(e.target.value);
+                        if (e.target.value === "custom") {
+                          setShowCustomTireSetupForm(true);
+                        }
+                      }}
                       className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
                     >
                       <option value="">Default Vehicle Setup</option>
                       {Object.keys(tireSetups).map((setup) => (
                         <option key={setup} value={setup}>{setup}</option>
                       ))}
+                      <option value="custom">Custom Tire Setup...</option>
                     </select>
+                    
+                    {showCustomTireSetupForm && (
+                      <div className="mt-2 p-2 bg-gray-900 rounded border border-gray-700">
+                        <div className="grid gap-2">
+                          <input
+                            type="text"
+                            placeholder="Setup Name"
+                            value={customTireSetup.name}
+                            onChange={(e) => setCustomTireSetup({...customTireSetup, name: e.target.value})}
+                            className="p-2 bg-gray-800 text-white rounded border border-gray-700"
+                          />
+                          <div className="grid grid-cols-2 gap-2">
+                            <input
+                              type="text"
+                              placeholder="Compound"
+                              value={customTireSetup.compound}
+                              onChange={(e) => setCustomTireSetup({...customTireSetup, compound: e.target.value})}
+                              className="p-2 bg-gray-800 text-white rounded border border-gray-700"
+                            />
+                            <input
+                              type="number"
+                              placeholder="Optimal Temp (°F)"
+                              value={customTireSetup.optimalTemp.toString()}
+                              onChange={(e) => setCustomTireSetup({...customTireSetup, optimalTemp: Number(e.target.value)})}
+                              className="p-2 bg-gray-800 text-white rounded border border-gray-700"
+                            />
+                          </div>
+                          <div className="flex mt-1">
+                            <button
+                              onClick={() => {
+                                if (customTireSetup.name.trim() && customTireSetup.compound.trim()) {
+                                  setTireSetups({
+                                    ...tireSetups,
+                                    [customTireSetup.name]: customTireSetup
+                                  });
+                                  setSelectedTireSetup(customTireSetup.name);
+                                  setShowCustomTireSetupForm(false);
+                                }
+                              }}
+                              className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-500 mr-2"
+                            >
+                              Add
+                            </button>
+                            <button
+                              onClick={() => setShowCustomTireSetupForm(false)}
+                              className="bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-500"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                   
                   <div>
