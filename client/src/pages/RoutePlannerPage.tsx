@@ -941,7 +941,43 @@ const RoutePlannerPage = () => {
 
   return (
     <div className="min-h-screen bg-black max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-blue-400 font-orbitron text-4xl mb-8">🛣️ Route Planner</h1>
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-blue-400 font-orbitron text-4xl">🛣️ Route Planner</h1>
+        
+        {/* Live Telemetry Controls */}
+        <div className="flex items-center space-x-4">
+          {!gpsTrackingEnabled ? (
+            <button 
+              onClick={startGpsTracking}
+              className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 hover:scale-105"
+            >
+              <MapPin className="h-5 w-5" />
+              <span className="font-orbitron">Start GPS Tracking</span>
+            </button>
+          ) : (
+            <div className="flex items-center gap-4">
+              <div className="bg-black/40 rounded-lg border border-blue-500/30 px-4 py-2 flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full bg-green-500 animate-pulse"></div>
+                  <span className="text-green-400 font-orbitron text-sm">TRACKING ACTIVE</span>
+                </div>
+                <div className="text-gray-300 text-sm">
+                  {gpsTrackHistory.length > 0 && (
+                    <span>{calculateTotalDistance(gpsTrackHistory).toFixed(1)} mi</span>
+                  )}
+                </div>
+              </div>
+              <button 
+                onClick={stopGpsTracking}
+                className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 hover:scale-105"
+              >
+                <RotateCw className="h-5 w-5" />
+                <span className="font-orbitron">End & Save</span>
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-6">
@@ -2071,6 +2107,166 @@ const RoutePlannerPage = () => {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* Advanced Ferrari Telemetry Panel */}
+      {selectedVehicle && (
+        <div className="mt-6 p-6 rounded-xl bg-gradient-to-br from-gray-900 to-black border border-gray-800 shadow-xl">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="text-red-500 font-orbitron text-2xl">Ferrari Performance Telemetry</h2>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-green-500 animate-pulse"></div>
+              <span className="text-green-400 text-xs font-medium">LIVE</span>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+            <div className="bg-black rounded-lg p-3 border border-gray-800">
+              <div className="text-gray-400 text-xs mb-1">TIRE PRESSURE ADJ</div>
+              <div className="flex items-center justify-between">
+                <span className="text-white font-medium">{tirePressureAdjustment >= 0 ? '+' : ''}{tirePressureAdjustment} PSI</span>
+                <button 
+                  onClick={() => setTirePressureAdjustment(prev => Math.min(prev + 0.5, 3))}
+                  className="text-green-500 hover:text-green-400 px-2 py-1 rounded"
+                >+</button>
+                <button 
+                  onClick={() => setTirePressureAdjustment(prev => Math.max(prev - 0.5, -3))}
+                  className="text-red-500 hover:text-red-400 px-2 py-1 rounded"
+                >-</button>
+              </div>
+            </div>
+            
+            <div className="bg-black rounded-lg p-3 border border-gray-800">
+              <div className="text-gray-400 text-xs mb-1">TORQUE MAP</div>
+              <div className="flex items-center justify-between">
+                <span className="text-white font-medium">{torqueAdjustment >= 0 ? '+' : ''}{torqueAdjustment} ft-lb</span>
+                <button 
+                  onClick={() => setTorqueAdjustment(prev => Math.min(prev + 1, 10))}
+                  className="text-green-500 hover:text-green-400 px-2 py-1 rounded"
+                >+</button>
+                <button 
+                  onClick={() => setTorqueAdjustment(prev => Math.max(prev - 1, -10))}
+                  className="text-red-500 hover:text-red-400 px-2 py-1 rounded"
+                >-</button>
+              </div>
+            </div>
+            
+            <div className="bg-black rounded-lg p-3 border border-gray-800">
+              <div className="text-gray-400 text-xs mb-1">MANETTINO MODE</div>
+              <select
+                value={drivingMode}
+                onChange={(e) => setDrivingMode(e.target.value)}
+                className="w-full bg-transparent text-white border-0 p-0 focus:ring-0"
+              >
+                <option value="Wet">WET</option>
+                <option value="Comfort">COMFORT</option>
+                <option value="Sport">SPORT</option>
+                <option value="Sport+">SPORT+</option>
+                <option value="Race">RACE</option>
+                <option value="ESC Off">ESC OFF</option>
+              </select>
+            </div>
+            
+            <div className="bg-black rounded-lg p-3 border border-gray-800">
+              <div className="text-gray-400 text-xs mb-1">CURRENT GRIP LEVEL</div>
+              <div className="text-white font-medium">
+                {weatherData ? calculateTireGripLevel(weatherData.surfaceTemp, vehicleSpecs[selectedVehicle].optimumTireTemp).level : 'Unknown'}
+              </div>
+              <div className="w-full bg-gray-800 rounded-full h-1.5 mt-1">
+                <div className="bg-green-500 h-1.5 rounded-full" style={{ 
+                  width: weatherData ? `${calculateTireGripLevel(weatherData.surfaceTemp, vehicleSpecs[selectedVehicle].optimumTireTemp).percentage}%` : '0%' 
+                }}></div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+            <div className="bg-gradient-to-r from-gray-900 to-black rounded-lg p-4 border border-gray-800">
+              <h3 className="text-blue-400 text-sm font-semibold mb-2">ROAD CONDITIONS</h3>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                <div>
+                  <div className="text-gray-400 text-xs">Surface Type</div>
+                  <div className="text-white">{weatherData?.roadCondition?.includes('Wet') ? 'Wet Asphalt' : 'Dry Asphalt'}</div>
+                </div>
+                <div>
+                  <div className="text-gray-400 text-xs">Surface Temp</div>
+                  <div className="text-white">{weatherData?.surfaceTemp}°F</div>
+                </div>
+                <div>
+                  <div className="text-gray-400 text-xs">Air Temp</div>
+                  <div className="text-white">{weatherData?.startWeather.main.temp}°F</div>
+                </div>
+                <div>
+                  <div className="text-gray-400 text-xs">Wind</div>
+                  <div className="text-white">{weatherData?.startWeather.wind.speed} mph</div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-gradient-to-r from-gray-900 to-black rounded-lg p-4 border border-gray-800">
+              <h3 className="text-blue-400 text-sm font-semibold mb-2">PERFORMANCE IMPACT</h3>
+              <div className="grid grid-cols-2 gap-x-6 gap-y-2">
+                <div>
+                  <div className="text-gray-400 text-xs">Power Delivery</div>
+                  <div className="text-white">
+                    {weatherData ? (
+                      <>
+                        {calculatePowerAdjustment(weatherData.startWeather.main.temp, weatherData.startWeather.main.humidity)}% 
+                        {calculatePowerAdjustment(weatherData.startWeather.main.temp, weatherData.startWeather.main.humidity) > 0 ? '↑' : '↓'}
+                      </>
+                    ) : 'N/A'}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-gray-400 text-xs">Torque Output</div>
+                  <div className="text-white">
+                    {weatherData ? (
+                      <>
+                        {calculateTorqueAdjustment(weatherData.surfaceTemp, weatherData.startWeather.main.humidity)}% 
+                        {calculateTorqueAdjustment(weatherData.surfaceTemp, weatherData.startWeather.main.humidity) > 0 ? '↑' : '↓'}
+                      </>
+                    ) : 'N/A'}
+                  </div>
+                </div>
+                <div>
+                  <div className="text-gray-400 text-xs">Braking Distance</div>
+                  <div className="text-white">{weatherData ? `${calculateBrakingEfficiency(weatherData.surfaceTemp, weatherData.startWeather.main.humidity)}%` : 'Unknown'}</div>
+                </div>
+                <div>
+                  <div className="text-gray-400 text-xs">Cooling</div>
+                  <div className="text-white">{weatherData ? calculateCoolingEfficiency(weatherData.startWeather.main.temp, weatherData.startWeather.wind.speed, weatherData.startWeather.main.humidity) : 'Unknown'}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* CarWow Style Recommendations */}
+          <div className="mt-6 bg-black/40 rounded-lg p-4 border border-blue-900/30">
+            <h3 className="text-blue-400 text-sm font-semibold mb-2">CARWOW PRO RECOMMENDATIONS</h3>
+            <ul className="space-y-2">
+              {performanceRecommendations.map((rec, index) => (
+                <li key={index} className="flex items-start gap-2">
+                  <span className="text-green-500 mt-0.5">✓</span>
+                  <span className="text-white text-sm">{rec}</span>
+                </li>
+              ))}
+              <li className="flex items-start gap-2">
+                <span className="text-green-500 mt-0.5">✓</span>
+                <span className="text-white text-sm">
+                  Record your drive footage to share on social media with built-in route overlay
+                </span>
+              </li>
+              <li className="flex items-start gap-2">
+                <span className="text-yellow-500 mt-0.5">→</span>
+                <span className="text-white text-sm">
+                  {drivingMode === 'Sport+' || drivingMode === 'Race' ? 
+                    'Race mode activated - telemetry data will be saved for lap time analysis' : 
+                    'Switch to Race mode for full telemetry recording and lap time analysis'}
+                </span>
+              </li>
+            </ul>
+          </div>
         </div>
       )}
 
