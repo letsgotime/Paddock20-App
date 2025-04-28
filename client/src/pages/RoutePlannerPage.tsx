@@ -18,6 +18,41 @@ interface VehicleSpecs {
   powerOutput: number;
   weightDistribution: string;
   aerodynamicProfile: string;
+  engineType?: string;
+  drivetrainType?: string;
+  suspensionType?: string;
+  transmissionType?: string;
+  fuelType?: string;
+  brakingDistance?: number; // feet from 60-0 mph
+  corneringGForce?: number; // in G's
+}
+
+interface TireSetup {
+  compound: string;
+  treadPattern: string;
+  heatingCycle: number; // minutes to reach optimal temp
+  pressureVariance: number; // PSI change per 10°F
+  optimalTemp: number; // °F
+}
+
+interface RouteCondition {
+  location: string;
+  surfaceType: string; // asphalt, concrete, paved, gravel
+  surfaceTemp: number;
+  elevation: number;
+  corneringLoad: number; // 1-10 scale
+  straightaway: boolean;
+  gradientPercent: number;
+}
+
+interface DrivingProfile {
+  name: string;
+  style: 'Casual' | 'Spirited' | 'Performance' | 'Track' | 'Economy';
+  corneringAggressiveness: number; // 1-10
+  brakingIntensity: number; // 1-10
+  accelerationProfile: number; // 1-10
+  shiftPattern: 'Early' | 'Optimal' | 'Late';
+  fuelConsumptionFactor: number; // adjustment factor
 }
 
 const RoutePlannerPage = () => {
@@ -41,8 +76,63 @@ const RoutePlannerPage = () => {
     allowTolls: false,
   });
   
-  // Navigation and display options
+  // Navigation app settings and integrations
   const [preferredNavApp, setPreferredNavApp] = useState("Google Maps");
+  
+  // Advanced navigation features
+  const [navigationFeatures, setNavigationFeatures] = useState({
+    realTimeTraffic: true,
+    avoidHighways: false,
+    avoidTolls: false,
+    preferScenic: false,
+    liveSpeedTraps: true,
+    livePoliceReports: true,
+    favoriteRoutes: true,
+    trafficCamerasLayer: false,
+    weatherAlerts: true,
+    roadClosures: true,
+    constructionZones: true,
+    alternateRoutes: true,
+    curvyRoads: false,  // For enthusiasts who prefer twisty roads
+    motorcycleMode: false,
+    avoidUnpaved: true,
+    hov: false,
+    voiceType: "standard" // standard, premium, celebrity
+  });
+  
+  // Integration-specific features
+  const [googleMapsOptions, setGoogleMapsOptions] = useState({
+    trafficLayer: true,
+    satelliteView: false,
+    streetView: true,
+    terrainView: false,
+    evChargingStations: false,
+    gasPriceLayer: true,
+    placeDetailsEnabled: true
+  });
+  
+  const [wazeOptions, setWazeOptions] = useState({
+    showHazards: true,
+    showPolice: true,
+    showCameras: true,
+    showTraffic: true,
+    showClosures: true,
+    carmaMode: true, // Specialized carpool mode
+    personalMood: "Speedy",
+    showGasStations: true,
+    showFavoriteLocations: true,
+    driveLaterTime: null
+  });
+  
+  const [appleMapsOptions, setAppleMapsOptions] = useState({
+    useIndoorMapping: false,
+    useAirQualityIndex: true,
+    useLookAroundView: true,
+    useRealityView: false,
+    showFlyoverTour: false,
+    useCarPlayMode: true,
+    showGuideInfo: true
+  });
   const [showAdvancedSettings, setShowAdvancedSettings] = useState(false);
   
   // Weather and conditions data
@@ -56,11 +146,119 @@ const RoutePlannerPage = () => {
   const [torqueAdjustment, setTorqueAdjustment] = useState(0); // in ft-lb
   const [drivingMode, setDrivingMode] = useState("Sport");
   
-  // Weather impact on vehicle performance
+  // OpenWeather integration and advanced weather data
   const [weatherImpacts, setWeatherImpacts] = useState<any>(null);
+  const [openWeatherSettings, setOpenWeatherSettings] = useState({
+    showRoadSurfaceTemp: true,
+    showAirDensity: true,
+    showVehicleSpecificData: true,
+    showWeatherAlerts: true,
+    showHourlyForecast: true,
+    showVisibilityConditions: true,
+    showRadar: false,
+    showRainIntensity: true,
+    showSnowIntensity: true,
+    trackBarometricPressure: true,
+    showWindVector: true,
+    showUVIndex: true,
+    enablePerformanceImpactAlerts: true,
+    routeWeatherVarianceWarnings: true,
+    trackSunPositionGlare: true,
+    showMicroclimateData: false
+  });
   
   // Performance recommendations
   const [performanceRecommendations, setPerformanceRecommendations] = useState<string[]>([]);
+  
+  // Driving profiles
+  const [drivingProfiles, setDrivingProfiles] = useState<DrivingProfile[]>([
+    {
+      name: "Daily Driver",
+      style: "Casual",
+      corneringAggressiveness: 3,
+      brakingIntensity: 4,
+      accelerationProfile: 3,
+      shiftPattern: "Early",
+      fuelConsumptionFactor: 1.0
+    },
+    {
+      name: "Canyon Run",
+      style: "Spirited",
+      corneringAggressiveness: 7,
+      brakingIntensity: 8,
+      accelerationProfile: 8,
+      shiftPattern: "Optimal",
+      fuelConsumptionFactor: 1.3
+    },
+    {
+      name: "Track Day",
+      style: "Performance",
+      corneringAggressiveness: 9,
+      brakingIntensity: 9,
+      accelerationProfile: 10,
+      shiftPattern: "Late",
+      fuelConsumptionFactor: 1.8
+    }
+  ]);
+  
+  const [selectedDrivingProfile, setSelectedDrivingProfile] = useState<string>("");
+  
+  // Tire data
+  const [tireSetups, setTireSetups] = useState<Record<string, TireSetup>>({
+    "Summer Performance": {
+      compound: "Soft",
+      treadPattern: "Asymmetric",
+      heatingCycle: 5,
+      pressureVariance: 1.2,
+      optimalTemp: 190
+    },
+    "All Season": {
+      compound: "Medium",
+      treadPattern: "Symmetric",
+      heatingCycle: 9,
+      pressureVariance: 0.9,
+      optimalTemp: 170
+    },
+    "Track Day": {
+      compound: "Extra Soft",
+      treadPattern: "Slick",
+      heatingCycle: 3,
+      pressureVariance: 1.8,
+      optimalTemp: 210
+    }
+  });
+  
+  const [selectedTireSetup, setSelectedTireSetup] = useState<string>("");
+  
+  // Route analysis data
+  const [routeAnalysisEnabled, setRouteAnalysisEnabled] = useState(false);
+  const [routeSegments, setRouteSegments] = useState<RouteCondition[]>([]);
+  
+  // Auto enthusiast destination options
+  const [destinationOptions, setDestinationOptions] = useState([
+    { name: "Tail of the Dragon", description: "Famous 318 curves in 11 miles - US 129", coordinates: { lat: 35.4660, lon: -83.9210 }, type: "Driving Road" },
+    { name: "Nürburgring", description: "The Green Hell - legendary racing circuit", coordinates: { lat: 50.3356, lon: 6.9475 }, type: "Race Track" },
+    { name: "Pacific Coast Highway", description: "Scenic coastal route - California", coordinates: { lat: 36.3615, lon: -121.8563 }, type: "Scenic Route" },
+    { name: "Stelvio Pass", description: "One of the highest paved roads in Europe", coordinates: { lat: 46.5294, lon: 10.4565 }, type: "Mountain Pass" },
+    { name: "Circuit of the Americas", description: "F1 track in Austin", coordinates: { lat: 30.1345, lon: -97.6358 }, type: "Race Track" },
+    { name: "Laguna Seca", description: "Famous for the Corkscrew - California", coordinates: { lat: 36.5841, lon: -121.7532 }, type: "Race Track" },
+    { name: "Angeles Crest Highway", description: "Winding mountain road in Los Angeles", coordinates: { lat: 34.2573, lon: -118.1010 }, type: "Driving Road" }
+  ]);
+  
+  // Enthusiast points of interest
+  const [poiCategories, setPoiCategories] = useState([
+    { id: "premium_fuel", name: "Premium Fuel Stations", selected: true },
+    { id: "performance_shops", name: "Performance Shops", selected: true },
+    { id: "car_meets", name: "Car Meet Locations", selected: false },
+    { id: "ev_chargers", name: "High-Speed EV Chargers", selected: false },
+    { id: "scenic_overlooks", name: "Scenic Overlooks", selected: true },
+    { id: "photo_spots", name: "Car Photography Spots", selected: false },
+    { id: "motorsport_venues", name: "Motorsport Venues", selected: false },
+    { id: "car_museums", name: "Automotive Museums", selected: false },
+    { id: "specialist_mechanics", name: "Specialist Mechanics", selected: false },
+    { id: "car_detailing", name: "Detailing Services", selected: false },
+    { id: "rv_services", name: "RV Services", selected: false }
+  ]);
   
   // User custom vehicle state
   const [customVehicles, setCustomVehicles] = useState<Record<string, VehicleSpecs>>({});
@@ -73,7 +271,14 @@ const RoutePlannerPage = () => {
     optimalTirePressureRear: 32,
     powerOutput: 400,
     weightDistribution: "50/50",
-    aerodynamicProfile: "Balanced"
+    aerodynamicProfile: "Balanced",
+    engineType: "V8 Naturally Aspirated",
+    drivetrainType: "RWD",
+    suspensionType: "Adaptive",
+    transmissionType: "DCT",
+    fuelType: "Premium",
+    brakingDistance: 105,
+    corneringGForce: 1.05
   });
 
   // Vehicle database - default vehicles plus custom user vehicles
@@ -710,18 +915,331 @@ const RoutePlannerPage = () => {
             </div>
           </div>
 
-          {/* Navigation Preference */}
-          <div>
-            <h2 className="text-blue-400 font-orbitron text-xl mb-3">Preferred Navigation App</h2>
-            <select
-              value={preferredNavApp}
-              onChange={(e) => setPreferredNavApp(e.target.value)}
-              className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
+          {/* Navigation Preference and Advanced Features */}
+          <div className="space-y-4">
+            <h2 className="text-blue-400 font-orbitron text-xl mb-3">Navigation Integration</h2>
+            
+            {/* Navigation App Selection */}
+            <div>
+              <label className="block text-gray-300 mb-1">Preferred Navigation App</label>
+              <select
+                value={preferredNavApp}
+                onChange={(e) => setPreferredNavApp(e.target.value)}
+                className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
+              >
+                <option value="Google Maps">Google Maps</option>
+                <option value="Waze">Waze</option>
+                <option value="Apple Maps">Apple Maps</option>
+              </select>
+            </div>
+            
+            {/* Toggle Advanced Settings */}
+            <button 
+              onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
+              className="text-blue-400 hover:text-blue-300 flex items-center gap-1 text-sm"
             >
-              <option>Google Maps</option>
-              <option>Waze</option>
-              <option>Apple Maps</option>
-            </select>
+              {showAdvancedSettings ? "Hide" : "Show"} Advanced Navigation Features 
+              {showAdvancedSettings ? 
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 15l7-7 7 7" />
+                </svg> :
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+                </svg>
+              }
+            </button>
+            
+            {/* Advanced Navigation Settings */}
+            {showAdvancedSettings && (
+              <div className="bg-gray-900 p-4 rounded-lg border border-gray-800 space-y-5">
+                {/* Common Navigation Features - show for any app */}
+                <div>
+                  <h3 className="text-green-400 font-orbitron text-md mb-2">Universal Features</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    <label className="flex items-center space-x-2 text-white text-sm">
+                      <input
+                        type="checkbox"
+                        checked={navigationFeatures.realTimeTraffic}
+                        onChange={(e) => setNavigationFeatures({...navigationFeatures, realTimeTraffic: e.target.checked})}
+                        className="form-checkbox text-green-500"
+                      />
+                      <span>Real-Time Traffic</span>
+                    </label>
+                    
+                    <label className="flex items-center space-x-2 text-white text-sm">
+                      <input
+                        type="checkbox"
+                        checked={navigationFeatures.avoidHighways}
+                        onChange={(e) => setNavigationFeatures({...navigationFeatures, avoidHighways: e.target.checked})}
+                        className="form-checkbox text-green-500"
+                      />
+                      <span>Avoid Highways</span>
+                    </label>
+                    
+                    <label className="flex items-center space-x-2 text-white text-sm">
+                      <input
+                        type="checkbox"
+                        checked={navigationFeatures.avoidTolls}
+                        onChange={(e) => setNavigationFeatures({...navigationFeatures, avoidTolls: e.target.checked})}
+                        className="form-checkbox text-green-500"
+                      />
+                      <span>Avoid Tolls</span>
+                    </label>
+                    
+                    <label className="flex items-center space-x-2 text-white text-sm">
+                      <input
+                        type="checkbox"
+                        checked={navigationFeatures.preferScenic}
+                        onChange={(e) => setNavigationFeatures({...navigationFeatures, preferScenic: e.target.checked})}
+                        className="form-checkbox text-green-500"
+                      />
+                      <span>Prefer Scenic Routes</span>
+                    </label>
+                    
+                    <label className="flex items-center space-x-2 text-white text-sm">
+                      <input
+                        type="checkbox"
+                        checked={navigationFeatures.curvyRoads}
+                        onChange={(e) => setNavigationFeatures({...navigationFeatures, curvyRoads: e.target.checked})}
+                        className="form-checkbox text-green-500"
+                      />
+                      <span>Prefer Curvy Roads</span>
+                    </label>
+                    
+                    <label className="flex items-center space-x-2 text-white text-sm">
+                      <input
+                        type="checkbox"
+                        checked={navigationFeatures.avoidUnpaved}
+                        onChange={(e) => setNavigationFeatures({...navigationFeatures, avoidUnpaved: e.target.checked})}
+                        className="form-checkbox text-green-500"
+                      />
+                      <span>Avoid Unpaved Roads</span>
+                    </label>
+                  </div>
+                </div>
+                
+                {/* App-specific settings */}
+                {preferredNavApp === "Google Maps" && (
+                  <div>
+                    <h3 className="text-green-400 font-orbitron text-md mb-2">Google Maps Features</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      <label className="flex items-center space-x-2 text-white text-sm">
+                        <input
+                          type="checkbox"
+                          checked={googleMapsOptions.trafficLayer}
+                          onChange={(e) => setGoogleMapsOptions({...googleMapsOptions, trafficLayer: e.target.checked})}
+                          className="form-checkbox text-green-500"
+                        />
+                        <span>Traffic Layer</span>
+                      </label>
+                      
+                      <label className="flex items-center space-x-2 text-white text-sm">
+                        <input
+                          type="checkbox"
+                          checked={googleMapsOptions.satelliteView}
+                          onChange={(e) => setGoogleMapsOptions({...googleMapsOptions, satelliteView: e.target.checked})}
+                          className="form-checkbox text-green-500"
+                        />
+                        <span>Satellite View</span>
+                      </label>
+                      
+                      <label className="flex items-center space-x-2 text-white text-sm">
+                        <input
+                          type="checkbox"
+                          checked={googleMapsOptions.streetView}
+                          onChange={(e) => setGoogleMapsOptions({...googleMapsOptions, streetView: e.target.checked})}
+                          className="form-checkbox text-green-500"
+                        />
+                        <span>Street View Access</span>
+                      </label>
+                      
+                      <label className="flex items-center space-x-2 text-white text-sm">
+                        <input
+                          type="checkbox"
+                          checked={googleMapsOptions.terrainView}
+                          onChange={(e) => setGoogleMapsOptions({...googleMapsOptions, terrainView: e.target.checked})}
+                          className="form-checkbox text-green-500"
+                        />
+                        <span>Terrain View</span>
+                      </label>
+                      
+                      <label className="flex items-center space-x-2 text-white text-sm">
+                        <input
+                          type="checkbox"
+                          checked={googleMapsOptions.evChargingStations}
+                          onChange={(e) => setGoogleMapsOptions({...googleMapsOptions, evChargingStations: e.target.checked})}
+                          className="form-checkbox text-green-500"
+                        />
+                        <span>EV Charging Stations</span>
+                      </label>
+                      
+                      <label className="flex items-center space-x-2 text-white text-sm">
+                        <input
+                          type="checkbox"
+                          checked={googleMapsOptions.gasPriceLayer}
+                          onChange={(e) => setGoogleMapsOptions({...googleMapsOptions, gasPriceLayer: e.target.checked})}
+                          className="form-checkbox text-green-500"
+                        />
+                        <span>Gas Price Layer</span>
+                      </label>
+                    </div>
+                  </div>
+                )}
+                
+                {preferredNavApp === "Waze" && (
+                  <div>
+                    <h3 className="text-green-400 font-orbitron text-md mb-2">Waze Community Features</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      <label className="flex items-center space-x-2 text-white text-sm">
+                        <input
+                          type="checkbox"
+                          checked={wazeOptions.showHazards}
+                          onChange={(e) => setWazeOptions({...wazeOptions, showHazards: e.target.checked})}
+                          className="form-checkbox text-green-500"
+                        />
+                        <span>Road Hazards</span>
+                      </label>
+                      
+                      <label className="flex items-center space-x-2 text-white text-sm">
+                        <input
+                          type="checkbox"
+                          checked={wazeOptions.showPolice}
+                          onChange={(e) => setWazeOptions({...wazeOptions, showPolice: e.target.checked})}
+                          className="form-checkbox text-green-500"
+                        />
+                        <span>Police Reports</span>
+                      </label>
+                      
+                      <label className="flex items-center space-x-2 text-white text-sm">
+                        <input
+                          type="checkbox"
+                          checked={wazeOptions.showCameras}
+                          onChange={(e) => setWazeOptions({...wazeOptions, showCameras: e.target.checked})}
+                          className="form-checkbox text-green-500"
+                        />
+                        <span>Speed Cameras</span>
+                      </label>
+                      
+                      <label className="flex items-center space-x-2 text-white text-sm">
+                        <input
+                          type="checkbox"
+                          checked={wazeOptions.showTraffic}
+                          onChange={(e) => setWazeOptions({...wazeOptions, showTraffic: e.target.checked})}
+                          className="form-checkbox text-green-500"
+                        />
+                        <span>Live Traffic</span>
+                      </label>
+                      
+                      <label className="flex items-center space-x-2 text-white text-sm">
+                        <input
+                          type="checkbox"
+                          checked={wazeOptions.showClosures}
+                          onChange={(e) => setWazeOptions({...wazeOptions, showClosures: e.target.checked})}
+                          className="form-checkbox text-green-500"
+                        />
+                        <span>Road Closures</span>
+                      </label>
+                      
+                      <label className="flex items-center space-x-2 text-white text-sm">
+                        <input
+                          type="checkbox"
+                          checked={wazeOptions.carmaMode}
+                          onChange={(e) => setWazeOptions({...wazeOptions, carmaMode: e.target.checked})}
+                          className="form-checkbox text-green-500"
+                        />
+                        <span>Carma Carpool</span>
+                      </label>
+                    </div>
+                    
+                    <div className="mt-2">
+                      <label className="block text-gray-300 text-sm mb-1">Driving Mood</label>
+                      <select
+                        value={wazeOptions.personalMood}
+                        onChange={(e) => setWazeOptions({...wazeOptions, personalMood: e.target.value})}
+                        className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                      >
+                        <option value="Speedy">Speedy</option>
+                        <option value="Relaxed">Relaxed</option>
+                        <option value="Eco">Eco-Friendly</option>
+                        <option value="Moderate">Moderate</option>
+                      </select>
+                    </div>
+                  </div>
+                )}
+                
+                {preferredNavApp === "Apple Maps" && (
+                  <div>
+                    <h3 className="text-green-400 font-orbitron text-md mb-2">Apple Maps Features</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      <label className="flex items-center space-x-2 text-white text-sm">
+                        <input
+                          type="checkbox"
+                          checked={appleMapsOptions.useIndoorMapping}
+                          onChange={(e) => setAppleMapsOptions({...appleMapsOptions, useIndoorMapping: e.target.checked})}
+                          className="form-checkbox text-green-500"
+                        />
+                        <span>Indoor Mapping</span>
+                      </label>
+                      
+                      <label className="flex items-center space-x-2 text-white text-sm">
+                        <input
+                          type="checkbox"
+                          checked={appleMapsOptions.useAirQualityIndex}
+                          onChange={(e) => setAppleMapsOptions({...appleMapsOptions, useAirQualityIndex: e.target.checked})}
+                          className="form-checkbox text-green-500"
+                        />
+                        <span>Air Quality Data</span>
+                      </label>
+                      
+                      <label className="flex items-center space-x-2 text-white text-sm">
+                        <input
+                          type="checkbox"
+                          checked={appleMapsOptions.useLookAroundView}
+                          onChange={(e) => setAppleMapsOptions({...appleMapsOptions, useLookAroundView: e.target.checked})}
+                          className="form-checkbox text-green-500"
+                        />
+                        <span>Look Around View</span>
+                      </label>
+                      
+                      <label className="flex items-center space-x-2 text-white text-sm">
+                        <input
+                          type="checkbox"
+                          checked={appleMapsOptions.useRealityView}
+                          onChange={(e) => setAppleMapsOptions({...appleMapsOptions, useRealityView: e.target.checked})}
+                          className="form-checkbox text-green-500"
+                        />
+                        <span>AR Reality View</span>
+                      </label>
+                      
+                      <label className="flex items-center space-x-2 text-white text-sm">
+                        <input
+                          type="checkbox"
+                          checked={appleMapsOptions.showFlyoverTour}
+                          onChange={(e) => setAppleMapsOptions({...appleMapsOptions, showFlyoverTour: e.target.checked})}
+                          className="form-checkbox text-green-500"
+                        />
+                        <span>Flyover Tour</span>
+                      </label>
+                      
+                      <label className="flex items-center space-x-2 text-white text-sm">
+                        <input
+                          type="checkbox"
+                          checked={appleMapsOptions.useCarPlayMode}
+                          onChange={(e) => setAppleMapsOptions({...appleMapsOptions, useCarPlayMode: e.target.checked})}
+                          className="form-checkbox text-green-500"
+                        />
+                        <span>CarPlay Mode</span>
+                      </label>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Deep linking explanation */}
+                <div className="bg-gray-950 p-3 rounded border border-gray-700 text-xs text-gray-300">
+                  <p>For app-specific features, Paddock20 uses custom launch parameters through deep linking. Your preferences will be automatically configured when opening your preferred navigation app.</p>
+                </div>
+              </div>
+            )}
           </div>
 
           {/* Vehicle Performance Settings (shown when vehicle selected) */}
