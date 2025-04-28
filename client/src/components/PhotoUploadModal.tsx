@@ -134,7 +134,7 @@ const PhotoUploadModal: React.FC<PhotoUploadModalProps> = ({ isOpen, onClose, on
           <div className="flex flex-col h-full">
             {/* Header */}
             <div className="flex justify-between items-center p-6 border-b border-gray-700">
-              <h2 className="text-xl font-orbitron text-blue-400">Add Media to Your Dream</h2>
+              <h2 className="text-xl font-orbitron text-blue-400">Add Image</h2>
               <button 
                 onClick={onClose}
                 className="text-gray-400 hover:text-white"
