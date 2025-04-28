@@ -4,8 +4,8 @@ import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { getRandomAffirmation } from "../services/affirmationsService";
 import { searchHighResImages, createMediaItemFromSearch } from "../services/imageSearchService";
-import PhotoLibraryModal from "../components/PhotoLibraryModal";
-import { initiateGooglePhotosAuth } from "../services/googlePhotosService";
+import PhotoUploadModal from "../components/PhotoUploadModal";
+import SocialShareButtons from "@/components/ui/SocialShareButtons";
 
 // Interface for milestones
 interface Milestone {
