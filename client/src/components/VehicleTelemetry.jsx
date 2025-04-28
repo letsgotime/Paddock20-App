@@ -1,569 +1,629 @@
-import React, { useState } from 'react';
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
-import { Thermometer, Gauge, Droplets, Activity, Battery, Clock, RefreshCw, Zap, Calendar } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { 
+  Car, Gauge, Droplets, Battery, Thermometer, ArrowRight, CheckCircle, 
+  AlertTriangle, XCircle, Wrench, Calendar, Activity, Clock
+} from 'lucide-react';
+import vehicleDataService from '../services/vehicleDataService';
+import serviceDataService from '../services/serviceDataService';
+import ModificationGallery from './ModificationGallery';
 
-// F1-style telemetry colors
-const TELEMETRY_COLORS = {
-  cold: '#3b82f6', // blue
-  optimal: '#22c55e', // green
-  hot: '#ef4444',   // red
-  warning: '#f59e0b', // amber
-  neutral: '#94a3b8', // slate
+// Utility function to format dates
+const formatDate = (dateString) => {
+  if (!dateString) return 'N/A';
+  const date = new Date(dateString);
+  return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
-function VehicleTelemetry({ vehicle }) {
-  const [activeSensor, setActiveSensor] = useState('engine');
-  const [timeRange, setTimeRange] = useState('1d');
-
-  // Mock data for vehicle sensors - in a real app, this would come from databases or IoT devices
-  const engineData = [
-    { time: '09:00', temperature: 180, pressure: 28, rpm: 1200 },
-    { time: '10:00', temperature: 190, pressure: 30, rpm: 3500 },
-    { time: '11:00', temperature: 210, pressure: 32, rpm: 4200 },
-    { time: '12:00', temperature: 205, pressure: 31, rpm: 2800 },
-    { time: '13:00', temperature: 195, pressure: 29, rpm: 1500 },
-    { time: '14:00', temperature: 188, pressure: 28, rpm: 1200 },
-    { time: '15:00', temperature: 192, pressure: 30, rpm: 2500 },
-  ];
-
-  const drivingData = [
-    { name: 'Cruising', value: 65 },
-    { name: 'Spirited', value: 25 },
-    { name: 'Track', value: 10 },
-  ];
+function VehicleTelemetry({ vehicleId, compact = false }) {
+  // Get vehicle data from the vehicle store
+  const useVehicleStore = vehicleDataService.useVehicleStore;
+  const vehicle = useVehicleStore(state => 
+    state.vehicles.find(v => v.id === vehicleId) || null
+  );
   
-  const performanceData = [
-    { name: 'Acceleration', current: 8.5, baseline: 9.2 },
-    { name: 'Braking', current: 9.2, baseline: 8.8 },
-    { name: 'Handling', current: 8.9, baseline: 8.5 },
-    { name: 'Power', current: 8.7, baseline: 8.2 },
-    { name: 'Efficiency', current: 7.8, baseline: 8.1 },
-  ];
-
-  const fuelEconomyData = [
-    { period: 'Jan', mpg: 26.4 },
-    { period: 'Feb', mpg: 25.8 },
-    { period: 'Mar', mpg: 27.1 },
-    { period: 'Apr', mpg: 28.3 },
-    { period: 'May', mpg: 26.9 },
-    { period: 'Jun', mpg: 25.4 },
-    { period: 'Jul', mpg: 24.8 },
-  ];
-
-  const maintenanceScores = [
-    { name: 'Engine', score: 92 },
-    { name: 'Transmission', score: 88 },
-    { name: 'Suspension', score: 95 },
-    { name: 'Brakes', score: 85 },
-    { name: 'Electrical', score: 97 },
-  ];
-
-  // Colors for the driving style pie chart
-  const DRIVING_STYLE_COLORS = ['#22c55e', '#3b82f6', '#ef4444'];
-
-  // Determine gauge value colors based on the value
-  const getGaugeColor = (value, thresholds = { low: 33, high: 66 }) => {
-    if (value < thresholds.low) return TELEMETRY_COLORS.cold;
-    if (value > thresholds.high) return TELEMETRY_COLORS.hot;
-    return TELEMETRY_COLORS.optimal;
+  // Get service data from the service store
+  const useServiceStore = serviceDataService.useServiceStore;
+  const vehicleHealth = useServiceStore(state => 
+    state.getVehicleSystemHealth(vehicleId)
+  );
+  
+  const upcomingServices = useServiceStore(state => 
+    state.getUpcomingServiceNeeds(vehicleId)
+  );
+  
+  // State for the telemetry display
+  const [selectedView, setSelectedView] = useState('overview');
+  const [showModGallery, setShowModGallery] = useState(false);
+  const [selectedMod, setSelectedMod] = useState(null);
+  
+  // Metrics that are calculated based on the vehicle data
+  const metrics = {
+    daysSinceLastService: vehicle?.lastService 
+      ? serviceDataService.getDaysSinceLastService(vehicle)
+      : null,
+    daysUntilNextService: vehicle?.nextService 
+      ? serviceDataService.getDaysUntilNextService(vehicle)
+      : null,
+    serviceStatus: vehicle?.nextService 
+      ? serviceDataService.getServiceStatusDescription(vehicle)
+      : 'No service scheduled',
+    serviceStatusColor: vehicle?.nextService 
+      ? serviceDataService.getServiceStatusColor(vehicle)
+      : 'gray',
+    tireHealth: vehicle?.tire 
+      ? vehicleDataService.getTireHealthPercentage(vehicle)
+      : null,
+    daysSinceLastGlossBoost: vehicle?.glossTracking?.lastGlossBoost
+      ? vehicleDataService.getDaysSinceLastGlossBoost(vehicle)
+      : null
   };
-
-  // Calculate percentage from current value, min and max
-  const calculatePercentage = (current, min, max) => {
-    return ((current - min) / (max - min)) * 100;
-  };
-
-  // Render different content based on active sensor
-  const renderSensorContent = () => {
-    switch (activeSensor) {
-      case 'engine':
-        return (
-          <div className="space-y-6">
-            <div className="bg-gradient-to-r from-gray-900 to-black p-4 rounded-lg border border-gray-800">
-              <h4 className="text-blue-400 font-orbitron mb-4">ENGINE TELEMETRY</h4>
-              <ResponsiveContainer width="100%" height={200}>
-                <LineChart data={engineData} margin={{ top: 5, right: 20, bottom: 5, left: 0 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                  <XAxis dataKey="time" stroke="#888" />
-                  <YAxis yAxisId="left" stroke="#f44336" />
-                  <YAxis yAxisId="right" orientation="right" stroke="#8884d8" />
-                  <Tooltip 
-                    contentStyle={{ backgroundColor: '#111', borderColor: '#333' }} 
-                    itemStyle={{ color: '#fff' }}
-                    labelStyle={{ color: '#aaa' }}
-                  />
-                  <Line yAxisId="left" type="monotone" dataKey="temperature" stroke="#f44336" dot={false} />
-                  <Line yAxisId="right" type="monotone" dataKey="rpm" stroke="#8884d8" dot={false} />
-                </LineChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-gradient-to-r from-gray-900 to-black p-4 rounded-lg border border-gray-800">
-                <h5 className="text-sm text-gray-400 mb-2">OIL TEMPERATURE</h5>
-                <div className="flex items-center">
-                  <Thermometer className="text-red-500 mr-3" size={24} />
-                  <div>
-                    <p className="text-2xl font-mono font-bold text-white">195°F</p>
-                    <p className="text-xs text-green-500">Optimal range</p>
-                  </div>
-                </div>
-                <div className="mt-2 h-2 bg-gray-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-green-500" style={{ width: '60%' }}></div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-r from-gray-900 to-black p-4 rounded-lg border border-gray-800">
-                <h5 className="text-sm text-gray-400 mb-2">OIL PRESSURE</h5>
-                <div className="flex items-center">
-                  <Gauge className="text-blue-500 mr-3" size={24} />
-                  <div>
-                    <p className="text-2xl font-mono font-bold text-white">29 PSI</p>
-                    <p className="text-xs text-green-500">Optimal range</p>
-                  </div>
-                </div>
-                <div className="mt-2 h-2 bg-gray-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-green-500" style={{ width: '70%' }}></div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-r from-gray-900 to-black p-4 rounded-lg border border-gray-800">
-                <h5 className="text-sm text-gray-400 mb-2">COOLANT TEMP</h5>
-                <div className="flex items-center">
-                  <Droplets className="text-blue-500 mr-3" size={24} />
-                  <div>
-                    <p className="text-2xl font-mono font-bold text-white">188°F</p>
-                    <p className="text-xs text-green-500">Optimal range</p>
-                  </div>
-                </div>
-                <div className="mt-2 h-2 bg-gray-800 rounded-full overflow-hidden">
-                  <div className="h-full bg-green-500" style={{ width: '55%' }}></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'performance':
-        return (
-          <div className="space-y-6">
-            <div className="bg-gradient-to-r from-gray-900 to-black p-4 rounded-lg border border-gray-800">
-              <h4 className="text-blue-400 font-orbitron mb-4">PERFORMANCE ANALYSIS</h4>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={performanceData} layout="vertical" margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                  <XAxis type="number" domain={[0, 10]} stroke="#888" />
-                  <YAxis dataKey="name" type="category" stroke="#888" width={100} />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#111', borderColor: '#333' }}
-                    itemStyle={{ color: '#fff' }}
-                    labelStyle={{ color: '#aaa' }}
-                  />
-                  <Bar dataKey="baseline" fill="#8884d8" name="Before Mods" />
-                  <Bar dataKey="current" fill="#22c55e" name="Current" />
-                </BarChart>
-              </ResponsiveContainer>
-              <p className="text-xs text-gray-400 mt-2 text-center">Performance metrics on scale of 1-10 before and after modifications</p>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-gradient-to-r from-gray-900 to-black p-4 rounded-lg border border-gray-800">
-                <h5 className="text-sm text-gray-400 mb-2">0-60 MPH TIME</h5>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Activity className="text-green-500 mr-3" size={24} />
-                    <div>
-                      <p className="text-2xl font-mono font-bold text-white">4.8s</p>
-                      <p className="text-xs text-green-500">-0.7s from stock</p>
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-400">
-                    <p>Stock: 5.5s</p>
-                    <p>Best: 4.7s</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-r from-gray-900 to-black p-4 rounded-lg border border-gray-800">
-                <h5 className="text-sm text-gray-400 mb-2">QUARTER MILE</h5>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Activity className="text-blue-500 mr-3" size={24} />
-                    <div>
-                      <p className="text-2xl font-mono font-bold text-white">13.1s</p>
-                      <p className="text-xs text-green-500">-0.9s from stock</p>
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-400">
-                    <p>Stock: 14.0s</p>
-                    <p>Best: 13.0s</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-gradient-to-r from-gray-900 to-black p-4 rounded-lg border border-gray-800">
-                <h5 className="text-sm text-gray-400 mb-2">BRAKING 60-0 MPH</h5>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Activity className="text-red-500 mr-3" size={24} />
-                    <div>
-                      <p className="text-2xl font-mono font-bold text-white">112 ft</p>
-                      <p className="text-xs text-green-500">-15 ft from stock</p>
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-400">
-                    <p>Stock: 127 ft</p>
-                    <p>Best: 110 ft</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-r from-gray-900 to-black p-4 rounded-lg border border-gray-800">
-                <h5 className="text-sm text-gray-400 mb-2">MAX LATERAL G'S</h5>
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center">
-                    <Activity className="text-yellow-500 mr-3" size={24} />
-                    <div>
-                      <p className="text-2xl font-mono font-bold text-white">0.94 G</p>
-                      <p className="text-xs text-green-500">+0.11 G from stock</p>
-                    </div>
-                  </div>
-                  <div className="text-xs text-gray-400">
-                    <p>Stock: 0.83 G</p>
-                    <p>Best: 0.96 G</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'driving':
-        return (
-          <div className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div className="bg-gradient-to-r from-gray-900 to-black p-4 rounded-lg border border-gray-800">
-                <h4 className="text-blue-400 font-orbitron mb-4">DRIVING STYLE ANALYSIS</h4>
-                <div className="flex justify-center">
-                  <ResponsiveContainer width="100%" height={200}>
-                    <PieChart>
-                      <Pie
-                        data={drivingData}
-                        cx="50%"
-                        cy="50%"
-                        innerRadius={60}
-                        outerRadius={80}
-                        paddingAngle={2}
-                        dataKey="value"
-                      >
-                        {drivingData.map((entry, index) => (
-                          <Cell key={`cell-${index}`} fill={DRIVING_STYLE_COLORS[index % DRIVING_STYLE_COLORS.length]} />
-                        ))}
-                      </Pie>
-                      <Tooltip
-                        contentStyle={{ backgroundColor: '#111', borderColor: '#333' }}
-                        itemStyle={{ color: '#fff' }}
-                        formatter={(value) => [`${value}%`, 'Usage']}
-                      />
-                    </PieChart>
-                  </ResponsiveContainer>
-                </div>
-                <div className="flex justify-center mt-2">
-                  <div className="grid grid-cols-3 gap-4 text-center">
-                    {drivingData.map((item, index) => (
-                      <div key={index} className="flex flex-col items-center">
-                        <div className="w-3 h-3 rounded-full mb-1" style={{ backgroundColor: DRIVING_STYLE_COLORS[index] }}></div>
-                        <span className="text-xs text-gray-400">{item.name}</span>
-                        <span className="text-sm text-white">{item.value}%</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-r from-gray-900 to-black p-4 rounded-lg border border-gray-800">
-                <h4 className="text-blue-400 font-orbitron mb-4">FUEL ECONOMY HISTORY</h4>
-                <ResponsiveContainer width="100%" height={200}>
-                  <LineChart data={fuelEconomyData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                    <XAxis dataKey="period" stroke="#888" />
-                    <YAxis stroke="#888" />
-                    <Tooltip
-                      contentStyle={{ backgroundColor: '#111', borderColor: '#333' }}
-                      itemStyle={{ color: '#fff' }}
-                      labelStyle={{ color: '#aaa' }}
-                    />
-                    <Line type="monotone" dataKey="mpg" stroke="#22c55e" />
-                  </LineChart>
-                </ResponsiveContainer>
-                <div className="mt-4 flex justify-between items-center text-center">
-                  <div>
-                    <h5 className="text-xs text-gray-400">AVERAGE MPG</h5>
-                    <p className="text-xl font-mono font-bold text-white">26.4</p>
-                  </div>
-                  <div>
-                    <h5 className="text-xs text-gray-400">BEST MPG</h5>
-                    <p className="text-xl font-mono font-bold text-white">28.3</p>
-                  </div>
-                  <div>
-                    <h5 className="text-xs text-gray-400">WORST MPG</h5>
-                    <p className="text-xl font-mono font-bold text-white">24.8</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-gradient-to-r from-gray-900 to-black p-4 rounded-lg border border-gray-800">
-                <h5 className="text-sm text-gray-400 mb-2">AVERAGE TRIP LENGTH</h5>
-                <div className="flex items-center">
-                  <Clock className="text-blue-500 mr-3" size={24} />
-                  <div>
-                    <p className="text-2xl font-mono font-bold text-white">18.7 mi</p>
-                    <p className="text-xs text-gray-400">Across 142 recorded trips</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-r from-gray-900 to-black p-4 rounded-lg border border-gray-800">
-                <h5 className="text-sm text-gray-400 mb-2">HARD ACCELERATION EVENTS</h5>
-                <div className="flex items-center">
-                  <Zap className="text-yellow-500 mr-3" size={24} />
-                  <div>
-                    <p className="text-2xl font-mono font-bold text-white">47</p>
-                    <p className="text-xs text-gray-400">Last 30 days (12% decrease)</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-r from-gray-900 to-black p-4 rounded-lg border border-gray-800">
-                <h5 className="text-sm text-gray-400 mb-2">HARD BRAKING EVENTS</h5>
-                <div className="flex items-center">
-                  <Zap className="text-red-500 mr-3" size={24} />
-                  <div>
-                    <p className="text-2xl font-mono font-bold text-white">23</p>
-                    <p className="text-xs text-gray-400">Last 30 days (8% increase)</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
-      case 'maintenance':
-        return (
-          <div className="space-y-6">
-            <div className="bg-gradient-to-r from-gray-900 to-black p-4 rounded-lg border border-gray-800">
-              <h4 className="text-blue-400 font-orbitron mb-4">VEHICLE HEALTH SCORES</h4>
-              <ResponsiveContainer width="100%" height={200}>
-                <BarChart data={maintenanceScores} margin={{ top: 5, right: 30, left: 20, bottom: 5 }}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#444" />
-                  <XAxis dataKey="name" stroke="#888" />
-                  <YAxis domain={[0, 100]} stroke="#888" />
-                  <Tooltip
-                    contentStyle={{ backgroundColor: '#111', borderColor: '#333' }}
-                    itemStyle={{ color: '#fff' }}
-                    labelStyle={{ color: '#aaa' }}
-                    formatter={(value) => [`${value}/100`, 'Health Score']}
-                  />
-                  <Bar dataKey="score">
-                    {maintenanceScores.map((entry, index) => (
-                      <Cell 
-                        key={`cell-${index}`} 
-                        fill={
-                          entry.score > 90 ? '#22c55e' : 
-                          entry.score > 75 ? '#3b82f6' : 
-                          entry.score > 60 ? '#f59e0b' : '#ef4444'
-                        } 
-                      />
-                    ))}
-                  </Bar>
-                </BarChart>
-              </ResponsiveContainer>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="bg-gradient-to-r from-gray-900 to-black p-4 rounded-lg border border-gray-800">
-                <h5 className="text-sm text-gray-400 mb-2">UPCOMING MAINTENANCE</h5>
-                <ul className="space-y-3">
-                  <li className="flex justify-between items-center p-2 bg-gray-800/50 rounded">
-                    <div className="flex items-center">
-                      <RefreshCw className="text-yellow-500 mr-3" size={16} />
-                      <span className="text-white">Oil Change</span>
-                    </div>
-                    <div className="text-sm">
-                      <span className="text-yellow-500">Due in 1,240 miles</span>
-                    </div>
-                  </li>
-                  <li className="flex justify-between items-center p-2 bg-gray-800/50 rounded">
-                    <div className="flex items-center">
-                      <RefreshCw className="text-green-500 mr-3" size={16} />
-                      <span className="text-white">Tire Rotation</span>
-                    </div>
-                    <div className="text-sm">
-                      <span className="text-green-500">Due in 3,580 miles</span>
-                    </div>
-                  </li>
-                  <li className="flex justify-between items-center p-2 bg-gray-800/50 rounded">
-                    <div className="flex items-center">
-                      <RefreshCw className="text-green-500 mr-3" size={16} />
-                      <span className="text-white">Brake Fluid</span>
-                    </div>
-                    <div className="text-sm">
-                      <span className="text-green-500">Due in 5,120 miles</span>
-                    </div>
-                  </li>
-                </ul>
-              </div>
-
-              <div className="bg-gradient-to-r from-gray-900 to-black p-4 rounded-lg border border-gray-800">
-                <h5 className="text-sm text-gray-400 mb-2">COMPONENT LIFESPANS</h5>
-                <ul className="space-y-3">
-                  <li className="p-2 bg-gray-800/50 rounded">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-white">Brake Pads (Front)</span>
-                      <span className="text-sm text-gray-400">65% remaining</span>
-                    </div>
-                    <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-                      <div className="h-full bg-green-500" style={{ width: '65%' }}></div>
-                    </div>
-                  </li>
-                  <li className="p-2 bg-gray-800/50 rounded">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-white">Air Filter</span>
-                      <span className="text-sm text-gray-400">42% remaining</span>
-                    </div>
-                    <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-                      <div className="h-full bg-yellow-500" style={{ width: '42%' }}></div>
-                    </div>
-                  </li>
-                  <li className="p-2 bg-gray-800/50 rounded">
-                    <div className="flex justify-between items-center mb-1">
-                      <span className="text-white">Battery</span>
-                      <span className="text-sm text-gray-400">88% health</span>
-                    </div>
-                    <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-                      <div className="h-full bg-green-500" style={{ width: '88%' }}></div>
-                    </div>
-                  </li>
-                </ul>
-              </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="bg-gradient-to-r from-gray-900 to-black p-4 rounded-lg border border-gray-800">
-                <h5 className="text-sm text-gray-400 mb-2">BATTERY HEALTH</h5>
-                <div className="flex items-center">
-                  <Battery className="text-green-500 mr-3" size={24} />
-                  <div>
-                    <p className="text-2xl font-mono font-bold text-white">88%</p>
-                    <p className="text-xs text-gray-400">Est. replacement: 22 months</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-r from-gray-900 to-black p-4 rounded-lg border border-gray-800">
-                <h5 className="text-sm text-gray-400 mb-2">LAST SERVICE</h5>
-                <div className="flex items-center">
-                  <Calendar className="text-blue-500 mr-3" size={24} />
-                  <div>
-                    <p className="text-2xl font-mono font-bold text-white">43 days ago</p>
-                    <p className="text-xs text-gray-400">Oil change & inspection</p>
-                  </div>
-                </div>
-              </div>
-
-              <div className="bg-gradient-to-r from-gray-900 to-black p-4 rounded-lg border border-gray-800">
-                <h5 className="text-sm text-gray-400 mb-2">SERVICE COUNT</h5>
-                <div className="flex items-center">
-                  <RefreshCw className="text-blue-500 mr-3" size={24} />
-                  <div>
-                    <p className="text-2xl font-mono font-bold text-white">8</p>
-                    <p className="text-xs text-gray-400">Recorded services in system</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        );
-
+  
+  // Return placeholder if vehicle not found
+  if (!vehicle) {
+    return (
+      <div className="apex-card p-4 text-center">
+        <Car className="mx-auto h-12 w-12 mb-2 text-gray-500" />
+        <h3 className="text-xl text-gray-400">Vehicle Not Found</h3>
+        <p className="text-gray-500 mt-2">Unable to load telemetry data</p>
+      </div>
+    );
+  }
+  
+  // Determine status icon for service
+  const getStatusIcon = (status) => {
+    switch (status) {
+      case 'ok':
+        return <CheckCircle className="text-green-500 w-4 h-4" />;
+      case 'upcoming':
+        return <AlertTriangle className="text-yellow-500 w-4 h-4" />;
+      case 'due soon':
+        return <AlertTriangle className="text-orange-500 w-4 h-4" />;
+      case 'overdue':
+        return <XCircle className="text-red-500 w-4 h-4" />;
       default:
-        return <div className="text-gray-400 p-4">Select a telemetry category</div>;
+        return <CheckCircle className="text-gray-500 w-4 h-4" />;
     }
   };
-
-  return (
-    <div className="space-y-6">
-      {/* Sensor selector */}
-      <div className="flex flex-wrap gap-2">
-        <button
-          onClick={() => setActiveSensor('engine')}
-          className={`px-4 py-2 rounded-lg flex items-center text-sm ${
-            activeSensor === 'engine' ? 'bg-blue-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-          }`}
-        >
-          <Thermometer size={16} className="mr-2" /> Engine
-        </button>
-        <button
-          onClick={() => setActiveSensor('performance')}
-          className={`px-4 py-2 rounded-lg flex items-center text-sm ${
-            activeSensor === 'performance' ? 'bg-green-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-          }`}
-        >
-          <Activity size={16} className="mr-2" /> Performance
-        </button>
-        <button
-          onClick={() => setActiveSensor('driving')}
-          className={`px-4 py-2 rounded-lg flex items-center text-sm ${
-            activeSensor === 'driving' ? 'bg-yellow-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-          }`}
-        >
-          <Gauge size={16} className="mr-2" /> Driving Style
-        </button>
-        <button
-          onClick={() => setActiveSensor('maintenance')}
-          className={`px-4 py-2 rounded-lg flex items-center text-sm ${
-            activeSensor === 'maintenance' ? 'bg-red-600 text-white' : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-          }`}
-        >
-          <RefreshCw size={16} className="mr-2" /> Maintenance
-        </button>
-      </div>
-
-      {/* Time range selector - disabled for now but can be used for historical data */}
-      <div className="flex justify-end">
-        <div className="flex rounded-lg overflow-hidden text-sm border border-gray-800">
+  
+  // Function to handle opening modification gallery
+  const handleShowModGallery = (mod) => {
+    setSelectedMod(mod);
+    setShowModGallery(true);
+  };
+  
+  // Render compact version if requested
+  if (compact) {
+    return (
+      <div className="apex-card">
+        <div className="bg-gradient-to-r from-gray-900 to-black p-3 border-b border-gray-800">
+          <h3 className="font-orbitron text-blue-400 text-lg flex items-center">
+            <Car className="mr-2" /> Vehicle Telemetry
+          </h3>
+        </div>
+        
+        <div className="p-4">
+          <div className="grid grid-cols-2 gap-3 mb-4">
+            <div className="bg-gray-900 p-3 rounded-lg">
+              <div className="text-gray-400 text-xs mb-1">Mileage</div>
+              <div className="text-white text-lg font-bold">{vehicle.mileage?.toLocaleString() || 'N/A'} mi</div>
+            </div>
+            
+            <div className="bg-gray-900 p-3 rounded-lg">
+              <div className="text-gray-400 text-xs mb-1">Service Status</div>
+              <div className="text-white text-lg font-bold flex items-center">
+                <span className={`w-2 h-2 rounded-full mr-2 bg-${metrics.serviceStatusColor}-500`}></span>
+                {metrics.daysUntilNextService === null ? 'Unknown' : 
+                  metrics.daysUntilNextService < 0 ? 'Overdue' : 
+                  metrics.daysUntilNextService === 0 ? 'Due Today' : 
+                  metrics.daysUntilNextService <= 30 ? 'Due Soon' : 'Good'}
+              </div>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-gray-900 p-3 rounded-lg">
+              <div className="text-gray-400 text-xs mb-1">Tire Health</div>
+              <div className="relative w-full h-2 bg-gray-800 rounded overflow-hidden">
+                <div 
+                  className="absolute top-0 left-0 h-full bg-green-500" 
+                  style={{ width: `${metrics.tireHealth || 0}%` }}
+                ></div>
+              </div>
+              <div className="text-white text-xs mt-1">{metrics.tireHealth || 0}%</div>
+            </div>
+            
+            <div className="bg-gray-900 p-3 rounded-lg">
+              <div className="text-gray-400 text-xs mb-1">Overall Health</div>
+              <div className="relative w-full h-2 bg-gray-800 rounded overflow-hidden">
+                <div 
+                  className="absolute top-0 left-0 h-full bg-blue-500" 
+                  style={{ width: `${vehicleHealth?.overall || 0}%` }}
+                ></div>
+              </div>
+              <div className="text-white text-xs mt-1">{vehicleHealth?.overall || 0}%</div>
+            </div>
+          </div>
+          
           <button 
-            className={`px-3 py-1 ${timeRange === '1d' ? 'bg-gray-700 text-white' : 'bg-gray-900 text-gray-400'}`}
-            onClick={() => setTimeRange('1d')}
+            onClick={() => {/* Navigate to detailed telemetry */}}
+            className="mt-3 text-xs text-blue-400 hover:text-blue-300 w-full text-center"
           >
-            1D
-          </button>
-          <button 
-            className={`px-3 py-1 ${timeRange === '1w' ? 'bg-gray-700 text-white' : 'bg-gray-900 text-gray-400'}`}
-            onClick={() => setTimeRange('1w')}
-          >
-            1W
-          </button>
-          <button 
-            className={`px-3 py-1 ${timeRange === '1m' ? 'bg-gray-700 text-white' : 'bg-gray-900 text-gray-400'}`}
-            onClick={() => setTimeRange('1m')}
-          >
-            1M
-          </button>
-          <button 
-            className={`px-3 py-1 ${timeRange === 'all' ? 'bg-gray-700 text-white' : 'bg-gray-900 text-gray-400'}`}
-            onClick={() => setTimeRange('all')}
-          >
-            ALL
+            View Full Telemetry <ArrowRight className="inline-block w-3 h-3 ml-1" />
           </button>
         </div>
       </div>
-
-      {/* Sensor content display */}
-      {renderSensorContent()}
+    );
+  }
+  
+  // Render full telemetry view
+  return (
+    <div className="apex-card">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-gray-900 to-black p-4 border-b border-gray-800">
+        <h3 className="font-orbitron text-blue-400 text-xl flex items-center">
+          <Car className="mr-2" /> {vehicle.year} {vehicle.make} {vehicle.model} Telemetry
+        </h3>
+        <p className="text-gray-400 text-sm mt-1">
+          VIN: {vehicle.vin || 'Not Available'} | Mileage: {vehicle.mileage?.toLocaleString() || 'N/A'} miles
+        </p>
+      </div>
+      
+      {/* Navigation Tabs */}
+      <div className="flex border-b border-gray-800 bg-black">
+        <button
+          onClick={() => setSelectedView('overview')}
+          className={`px-4 py-2 text-sm font-medium ${
+            selectedView === 'overview' 
+              ? 'text-green-500 border-b-2 border-green-500' 
+              : 'text-gray-400 hover:text-white'
+          }`}
+        >
+          Overview
+        </button>
+        <button
+          onClick={() => setSelectedView('service')}
+          className={`px-4 py-2 text-sm font-medium ${
+            selectedView === 'service' 
+              ? 'text-green-500 border-b-2 border-green-500' 
+              : 'text-gray-400 hover:text-white'
+          }`}
+        >
+          Service History
+        </button>
+        <button
+          onClick={() => setSelectedView('mods')}
+          className={`px-4 py-2 text-sm font-medium ${
+            selectedView === 'mods' 
+              ? 'text-green-500 border-b-2 border-green-500' 
+              : 'text-gray-400 hover:text-white'
+          }`}
+        >
+          Modifications
+        </button>
+        <button
+          onClick={() => setSelectedView('tires')}
+          className={`px-4 py-2 text-sm font-medium ${
+            selectedView === 'tires' 
+              ? 'text-green-500 border-b-2 border-green-500' 
+              : 'text-gray-400 hover:text-white'
+          }`}
+        >
+          Tires
+        </button>
+      </div>
+      
+      {/* Content Area */}
+      <div className="p-4">
+        {/* Overview View */}
+        {selectedView === 'overview' && (
+          <div>
+            {/* Health and Status Metrics */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              {/* Overall Health */}
+              <div className="bg-gray-900 p-4 rounded-lg">
+                <h4 className="text-gray-400 text-sm mb-2 flex items-center">
+                  <Activity className="mr-2 w-4 h-4" /> Overall Vehicle Health
+                </h4>
+                <div className="flex items-center">
+                  <div className="w-16 h-16 rounded-full border-4 border-blue-500 flex items-center justify-center mr-4">
+                    <span className="text-xl font-bold text-blue-400">{vehicleHealth.overall}%</span>
+                  </div>
+                  <div className="flex-1">
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <div className="text-xs text-gray-500">Engine</div>
+                        <div className="relative w-full h-2 bg-gray-800 rounded overflow-hidden mt-1">
+                          <div className="absolute top-0 left-0 h-full bg-green-500" style={{ width: `${vehicleHealth.engine}%` }}></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-500">Transmission</div>
+                        <div className="relative w-full h-2 bg-gray-800 rounded overflow-hidden mt-1">
+                          <div className="absolute top-0 left-0 h-full bg-green-500" style={{ width: `${vehicleHealth.transmission}%` }}></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-500">Brakes</div>
+                        <div className="relative w-full h-2 bg-gray-800 rounded overflow-hidden mt-1">
+                          <div className="absolute top-0 left-0 h-full bg-green-500" style={{ width: `${vehicleHealth.brakes}%` }}></div>
+                        </div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-500">Cooling</div>
+                        <div className="relative w-full h-2 bg-gray-800 rounded overflow-hidden mt-1">
+                          <div className="absolute top-0 left-0 h-full bg-green-500" style={{ width: `${vehicleHealth.cooling}%` }}></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Service Status */}
+              <div className="bg-gray-900 p-4 rounded-lg">
+                <h4 className="text-gray-400 text-sm mb-2 flex items-center">
+                  <Calendar className="mr-2 w-4 h-4" /> Service Status
+                </h4>
+                <div className="flex items-center">
+                  <div className={`w-16 h-16 rounded-full border-4 border-${metrics.serviceStatusColor}-500 flex items-center justify-center mr-4`}>
+                    <span className={`text-xl font-bold text-${metrics.serviceStatusColor}-400`}>
+                      {metrics.daysUntilNextService === null ? '?' : 
+                       metrics.daysUntilNextService < 0 ? '!' : 
+                       metrics.daysUntilNextService}
+                    </span>
+                  </div>
+                  <div className="flex-1">
+                    <p className="text-white">{metrics.serviceStatus}</p>
+                    <div className="text-gray-400 text-sm mt-1">
+                      Last service: {formatDate(vehicle.lastService)}
+                    </div>
+                    <div className="text-gray-400 text-sm">
+                      Next service: {formatDate(vehicle.nextService)}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Vehicle Info and Key Stats */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
+              <div className="bg-gray-900 p-3 rounded-lg">
+                <div className="text-gray-400 text-xs mb-1">Purchase Date</div>
+                <div className="text-white font-medium">{formatDate(vehicle.purchaseDate)}</div>
+              </div>
+              
+              <div className="bg-gray-900 p-3 rounded-lg">
+                <div className="text-gray-400 text-xs mb-1">Ownership</div>
+                <div className="text-white font-medium">
+                  {vehicle.purchaseDate ? 
+                    `${Math.floor((new Date() - new Date(vehicle.purchaseDate)) / (1000 * 60 * 60 * 24 * 30))} months` : 
+                    'N/A'}
+                </div>
+              </div>
+              
+              <div className="bg-gray-900 p-3 rounded-lg">
+                <div className="text-gray-400 text-xs mb-1">Horsepower</div>
+                <div className="text-white font-medium">{vehicle.horsepower || 'N/A'} hp</div>
+              </div>
+              
+              <div className="bg-gray-900 p-3 rounded-lg">
+                <div className="text-gray-400 text-xs mb-1">Torque</div>
+                <div className="text-white font-medium">{vehicle.torque || 'N/A'}</div>
+              </div>
+            </div>
+            
+            {/* Upcoming Maintenance */}
+            <div className="mb-6">
+              <h4 className="text-blue-400 font-orbitron text-lg mb-3">Upcoming Maintenance</h4>
+              
+              <div className="space-y-2">
+                {upcomingServices.filter(service => 
+                  service.status === 'overdue' || service.status === 'due soon'
+                ).slice(0, 3).map((service, index) => (
+                  <div key={index} className="bg-gray-900 p-3 rounded-lg flex items-center">
+                    <div className="mr-3">
+                      {getStatusIcon(service.status)}
+                    </div>
+                    <div className="flex-1">
+                      <div className="text-white">{service.serviceType}</div>
+                      <div className="text-gray-400 text-xs">
+                        {service.status === 'overdue' ? 'Overdue since ' : 'Due on '} 
+                        {formatDate(service.nextDueDate)}
+                      </div>
+                    </div>
+                    <div>
+                      <button className="px-3 py-1 text-xs bg-blue-500 text-white rounded">
+                        Schedule
+                      </button>
+                    </div>
+                  </div>
+                ))}
+                
+                {upcomingServices.filter(service => 
+                  service.status === 'overdue' || service.status === 'due soon'
+                ).length === 0 && (
+                  <div className="text-center text-gray-400 py-4">
+                    No immediate maintenance needed
+                  </div>
+                )}
+              </div>
+            </div>
+            
+            {/* Key Specifications */}
+            <div className="mb-6">
+              <h4 className="text-blue-400 font-orbitron text-lg mb-3">Key Specifications</h4>
+              
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="bg-gray-900 p-3 rounded-lg">
+                  <div className="text-gray-400 text-xs mb-1">Engine</div>
+                  <div className="text-white text-sm">{vehicle.engineType || 'N/A'}</div>
+                </div>
+                
+                <div className="bg-gray-900 p-3 rounded-lg">
+                  <div className="text-gray-400 text-xs mb-1">Transmission</div>
+                  <div className="text-white text-sm">{vehicle.transmission || 'N/A'}</div>
+                </div>
+                
+                <div className="bg-gray-900 p-3 rounded-lg">
+                  <div className="text-gray-400 text-xs mb-1">Drive Type</div>
+                  <div className="text-white text-sm">{vehicle.driveType || 'N/A'}</div>
+                </div>
+                
+                <div className="bg-gray-900 p-3 rounded-lg">
+                  <div className="text-gray-400 text-xs mb-1">Fuel Type</div>
+                  <div className="text-white text-sm">{vehicle.fuel || 'N/A'}</div>
+                </div>
+                
+                <div className="bg-gray-900 p-3 rounded-lg">
+                  <div className="text-gray-400 text-xs mb-1">Color</div>
+                  <div className="text-white text-sm">{vehicle.color || 'N/A'}</div>
+                </div>
+                
+                <div className="bg-gray-900 p-3 rounded-lg">
+                  <div className="text-gray-400 text-xs mb-1">Modified</div>
+                  <div className="text-white text-sm">{vehicle.isModified ? 'Yes' : 'No'}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {/* Service History View */}
+        {selectedView === 'service' && (
+          <div>
+            <h4 className="text-blue-400 font-orbitron text-lg mb-3">Service History</h4>
+            
+            {/* Service Records */}
+            <div className="space-y-4">
+              {useServiceStore.getState().getVehicleServiceRecords(vehicleId).length > 0 ? (
+                useServiceStore.getState().getVehicleServiceRecords(vehicleId)
+                .sort((a, b) => new Date(b.date) - new Date(a.date))
+                .map((record, index) => (
+                  <div key={index} className="bg-gray-900 p-4 rounded-lg">
+                    <div className="flex justify-between items-start mb-2">
+                      <h5 className="text-white font-medium">{record.type}</h5>
+                      <span className="text-sm text-gray-400">{formatDate(record.date)}</span>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2 text-sm mb-3">
+                      <div>
+                        <span className="text-gray-400">Mileage:</span>{' '}
+                        <span className="text-white">{record.mileage?.toLocaleString() || 'N/A'}</span>
+                      </div>
+                      
+                      <div>
+                        <span className="text-gray-400">Provider:</span>{' '}
+                        <span className="text-white">{record.serviceProvider || 'N/A'}</span>
+                      </div>
+                      
+                      <div>
+                        <span className="text-gray-400">Cost:</span>{' '}
+                        <span className="text-white">${record.cost?.toLocaleString() || 'N/A'}</span>
+                      </div>
+                      
+                      <div>
+                        <span className="text-gray-400">Next Due:</span>{' '}
+                        <span className="text-white">{formatDate(record.nextServiceDue)}</span>
+                      </div>
+                    </div>
+                    
+                    {record.description && (
+                      <div className="text-sm text-gray-300 mb-3">
+                        {record.description}
+                      </div>
+                    )}
+                    
+                    {record.partsReplaced && record.partsReplaced.length > 0 && (
+                      <div className="mb-3">
+                        <h6 className="text-sm text-gray-400 mb-1">Parts Replaced:</h6>
+                        <div className="grid grid-cols-2 gap-1 text-xs">
+                          {record.partsReplaced.map((part, i) => (
+                            <div key={i} className="text-gray-300">
+                              {part.name} {part.partNumber && <span className="text-gray-500">({part.partNumber})</span>}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    
+                    {record.notes && (
+                      <div className="text-xs text-gray-400 italic mt-2">
+                        Notes: {record.notes}
+                      </div>
+                    )}
+                    
+                    {record.invoiceImage && (
+                      <div className="mt-3">
+                        <button className="text-xs text-blue-400">
+                          View Invoice
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                ))
+              ) : (
+                <div className="text-center text-gray-400 py-10">
+                  No service records available
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {/* Modifications View */}
+        {selectedView === 'mods' && (
+          <div>
+            <h4 className="text-blue-400 font-orbitron text-lg mb-3">Vehicle Modifications</h4>
+            
+            {/* Modifications List */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {vehicle.modifications && vehicle.modifications.length > 0 ? (
+                vehicle.modifications.map((mod, index) => (
+                  <div key={index} className="bg-gray-900 p-4 rounded-lg flex">
+                    <div className="mr-4 flex-shrink-0">
+                      <div className="w-20 h-20 bg-gray-800 rounded-lg flex items-center justify-center overflow-hidden">
+                        {/* Mod image would go here if available */}
+                        <Tool className="w-8 h-8 text-gray-600" />
+                      </div>
+                    </div>
+                    
+                    <div className="flex-1">
+                      <h5 className="text-white font-medium">{mod.name}</h5>
+                      <p className="text-gray-400 text-sm">{mod.manufacturer}</p>
+                      
+                      <button 
+                        onClick={() => handleShowModGallery(mod)}
+                        className="text-xs text-blue-400 hover:text-blue-300 mt-3"
+                      >
+                        View Photos
+                      </button>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <div className="col-span-2 text-center text-gray-400 py-10">
+                  No modifications installed
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+        
+        {/* Tires View */}
+        {selectedView === 'tires' && (
+          <div>
+            <h4 className="text-blue-400 font-orbitron text-lg mb-3">Tire Information</h4>
+            
+            {vehicle.tire ? (
+              <div>
+                <div className="bg-gray-900 p-4 rounded-lg mb-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <h5 className="text-white font-medium mb-2">{vehicle.tire.brand} {vehicle.tire.model}</h5>
+                      <div className="grid grid-cols-2 gap-2 text-sm">
+                        <div>
+                          <span className="text-gray-400">Purchased:</span>{' '}
+                          <span className="text-white">{formatDate(vehicle.tire.purchaseDate)}</span>
+                        </div>
+                        
+                        <div>
+                          <span className="text-gray-400">Current Miles:</span>{' '}
+                          <span className="text-white">{vehicle.tire.currentMileage?.toLocaleString() || 'N/A'}</span>
+                        </div>
+                        
+                        <div>
+                          <span className="text-gray-400">Target Life:</span>{' '}
+                          <span className="text-white">{vehicle.tire.mileageLifeTarget?.toLocaleString() || 'N/A'} miles</span>
+                        </div>
+                        
+                        <div>
+                          <span className="text-gray-400">Last Check:</span>{' '}
+                          <span className="text-white">{formatDate(vehicle.tire.lastTreadDepthCheck)}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="flex flex-col justify-center">
+                      <div className="text-gray-400 text-sm mb-1">Tire Health</div>
+                      <div className="relative w-full h-4 bg-gray-800 rounded-full overflow-hidden">
+                        <div 
+                          className={`absolute top-0 left-0 h-full ${
+                            metrics.tireHealth > 70 ? 'bg-green-500' : 
+                            metrics.tireHealth > 30 ? 'bg-yellow-500' : 
+                            'bg-red-500'
+                          }`}
+                          style={{ width: `${metrics.tireHealth || 0}%` }}
+                        ></div>
+                      </div>
+                      <div className="flex justify-between text-xs mt-1">
+                        <span className="text-gray-400">{metrics.tireHealth || 0}% Remaining</span>
+                        <span className="text-gray-400">
+                          ~{Math.floor(((vehicle.tire.mileageLifeTarget - vehicle.tire.currentMileage) / 
+                            (vehicle.mileage - vehicle.tire.currentMileage + vehicle.mileage)) * 12)} months left
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-gray-900 p-4 rounded-lg">
+                    <h5 className="text-white font-medium mb-3">Rotation Schedule</h5>
+                    
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <div className="text-gray-400 text-sm">Next Rotation Due</div>
+                        <div className="text-white">
+                          {vehicle.tire.currentMileage ? `${vehicle.tire.currentMileage + 5000} miles` : 'N/A'}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <button className="px-3 py-1 text-xs bg-blue-500 text-white rounded">
+                          Log Rotation
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-900 p-4 rounded-lg">
+                    <h5 className="text-white font-medium mb-3">Pressure Check</h5>
+                    
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <div className="text-gray-400 text-sm">Last Check</div>
+                        <div className="text-white">
+                          {formatDate(vehicle.tire.lastTreadDepthCheck) || 'N/A'}
+                        </div>
+                      </div>
+                      
+                      <div>
+                        <button className="px-3 py-1 text-xs bg-blue-500 text-white rounded">
+                          Log Pressure
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <div className="text-center text-gray-400 py-10">
+                No tire information available
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+      
+      {/* Modification Gallery Modal */}
+      {showModGallery && selectedMod && (
+        <ModificationGallery 
+          modification={selectedMod}
+          vehicleId={vehicleId}
+          isFullscreen={true}
+          onClose={() => setShowModGallery(false)}
+        />
+      )}
     </div>
   );
 }
