@@ -275,7 +275,7 @@ const ManifestationStationPage = () => {
       id: 4,
       goalName: "Patek Philippe Nautilus",
       goalType: "Watch",
-      targetAsset: "Patek Philippe Nautilus 5711/1A-010",
+      targetAsset: "Patek Philippe Nautilus 5711/1A-014",
       targetDate: "2025-12-31",
       fundingPlan: "Investment",
       mindFocus: "Studying horology and craftsmanship",
@@ -307,7 +307,7 @@ const ManifestationStationPage = () => {
       ],
       manifestStatus: 'in_progress',
       progressPercentage: 32,
-      description: "The Patek Philippe Nautilus 5711/1A-010 with blue dial represents the pinnacle of luxury sports watches. Designed by Gerald Genta in 1976, it combines elegant design with extraordinary craftsmanship and has become one of the most sought-after timepieces in the world.",
+      description: "The Patek Philippe Nautilus 5711/1A-014 with olive green dial represents the pinnacle of luxury sports watches. Designed by Gerald Genta in 1976, it combines elegant design with extraordinary craftsmanship and has become one of the most sought-after timepieces in the world. The rare olive green dial variant is especially coveted by collectors.",
       targetAmount: 140000,
       currentAmount: 44800,
       budgetEntries: [
@@ -331,9 +331,9 @@ const ManifestationStationPage = () => {
           id: 601,
           type: 'image',
           name: 'Patek Philippe Nautilus 5711',
-          url: 'https://media.bossluxurywatch.vn/2021/04/patek-philippe-nautilus-5711-1a-010.jpg',
-          thumbnail: 'https://media.bossluxurywatch.vn/2021/04/patek-philippe-nautilus-5711-1a-010.jpg',
-          description: 'The iconic Nautilus 5711 with blue dial',
+          url: '/assets/patek-philippe-5711.jpg',
+          thumbnail: '/assets/patek-philippe-5711.jpg',
+          description: 'The iconic Nautilus 5711 with olive green dial',
           dateAdded: '2025-03-20'
         },
         {
