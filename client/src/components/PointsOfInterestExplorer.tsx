@@ -38,7 +38,10 @@ export type POICategory =
   'food' | 'drives' | 'hikes' | 'camping' | 'fishing' | 'restrooms' |
   'driving_schools' | 'body_shops' | 'photo_spots' | 'lakes' | 'parks' |
   'dog_parks' | 'sunset_spots' | 'sunrise_spots' | 'beaches' |
-  'tacos' | 'pizza' | 'bbq' | 'rv_stations' | 'rv_dump_stations' | 'waste_services';
+  'tacos' | 'pizza' | 'bbq' | 'rv_stations' | 'rv_dump_stations' | 'waste_services' |
+  'detailing_supplies' | 'performance_shops' | 'dyno_tuners' | 'exhaust_shops' |
+  'vinyl_wraps' | 'car_washes' | 'ceramic_coating' | 'race_tracks' | 'car_shows' |
+  'car_museums' | 'motorcycles' | 'exotic_rentals' | 'drag_strips' | 'drift_parks';
 
 interface POI {
   id: string;
@@ -254,6 +257,90 @@ const POI_CATEGORIES: POICategoryDetails[] = [
     icon: <Utensils className="w-5 h-5" />, 
     description: 'Best taco restaurants and food trucks',
     color: 'text-yellow-500'
+  },
+  { 
+    id: 'detailing_supplies', 
+    name: 'Detailing Supplies', 
+    icon: <Droplet className="w-5 h-5" />, 
+    description: 'Auto detailing supplies and specialty products',
+    color: 'text-blue-500'
+  },
+  { 
+    id: 'performance_shops', 
+    name: 'Performance Shops', 
+    icon: <Cpu className="w-5 h-5" />, 
+    description: 'Performance parts, upgrades, and tuning shops',
+    color: 'text-red-600'
+  },
+  { 
+    id: 'dyno_tuners', 
+    name: 'Dyno Tuners', 
+    icon: <Wrench className="w-5 h-5" />, 
+    description: 'Professional dyno tuning and ECU calibration',
+    color: 'text-purple-500'
+  },
+  { 
+    id: 'exhaust_shops', 
+    name: 'Exhaust Specialists', 
+    icon: <Wrench className="w-5 h-5" />, 
+    description: 'Custom exhaust fabrication and installation',
+    color: 'text-orange-600'
+  },
+  { 
+    id: 'vinyl_wraps', 
+    name: 'Vinyl Wrap Shops', 
+    icon: <Wrench className="w-5 h-5" />, 
+    description: 'Professional vinyl wrapping services',
+    color: 'text-green-500'
+  },
+  { 
+    id: 'body_shops', 
+    name: 'Body Shops', 
+    icon: <Wrench className="w-5 h-5" />, 
+    description: 'High-end body work and paint specialists',
+    color: 'text-pink-500'
+  },
+  { 
+    id: 'ceramic_coating', 
+    name: 'Ceramic Coating', 
+    icon: <Droplet className="w-5 h-5" />, 
+    description: 'Professional ceramic coating application',
+    color: 'text-sky-400'
+  },
+  { 
+    id: 'race_tracks', 
+    name: 'Race Tracks', 
+    icon: <Route className="w-5 h-5" />, 
+    description: 'Local race tracks and track day venues',
+    color: 'text-red-500'
+  },
+  { 
+    id: 'car_shows', 
+    name: 'Car Shows', 
+    icon: <Car className="w-5 h-5" />, 
+    description: 'Upcoming car shows and automotive events',
+    color: 'text-amber-500'
+  },
+  { 
+    id: 'car_museums', 
+    name: 'Automotive Museums', 
+    icon: <Store className="w-5 h-5" />, 
+    description: 'Automotive history and collections on display',
+    color: 'text-blue-700'
+  },
+  { 
+    id: 'exotic_rentals', 
+    name: 'Exotic Rentals', 
+    icon: <Car className="w-5 h-5" />, 
+    description: 'Luxury and exotic vehicle rentals',
+    color: 'text-yellow-400'
+  },
+  { 
+    id: 'driving_schools', 
+    name: 'Driving Schools', 
+    icon: <Car className="w-5 h-5" />, 
+    description: 'Performance driving schools and instruction',
+    color: 'text-indigo-500'
   }
 ];
 
