@@ -16,8 +16,7 @@ import {
   requestApplePhotoAccess,
   isApplePhotosAuthorized,
   getAppleAlbums,
-  getApplePhotosFromAlbum,
-  convertApplePhotoToMediaItem
+  getApplePhotosFromAlbum
 } from '../services/applePhotosService';
 
 interface PhotoLibraryModalProps {
@@ -281,6 +280,7 @@ const PhotoLibraryModal: React.FC<PhotoLibraryModalProps> = ({ isOpen, onClose, 
                               size="sm"
                               onClick={loadGoogleAlbums}
                               disabled={isLoadingAlbums}
+                              className="bg-gray-800 text-white hover:bg-gray-700 border-gray-600"
                             >
                               {isLoadingAlbums ? 'Loading...' : 'Refresh'}
                             </Button>
@@ -407,6 +407,7 @@ const PhotoLibraryModal: React.FC<PhotoLibraryModalProps> = ({ isOpen, onClose, 
                               size="sm"
                               onClick={loadAppleAlbums}
                               disabled={isLoadingAlbums}
+                              className="bg-gray-800 text-white hover:bg-gray-700 border-gray-600"
                             >
                               {isLoadingAlbums ? 'Loading...' : 'Refresh'}
                             </Button>
@@ -501,7 +502,11 @@ const PhotoLibraryModal: React.FC<PhotoLibraryModalProps> = ({ isOpen, onClose, 
                 <p className="text-gray-400 text-sm">
                   Select photos to add to your dream asset gallery
                 </p>
-                <Button onClick={onClose} variant="outline">
+                <Button 
+                  onClick={onClose} 
+                  variant="outline"
+                  className="bg-gray-800 text-white hover:bg-gray-700 border-gray-600"
+                >
                   Cancel
                 </Button>
               </div>
