@@ -1,4 +1,5 @@
 import { Location, WeatherData, ForecastData } from 'shared/schema';
+import { AutomotiveWeatherData } from '@/services/openWeatherService';
 
 // Define interface for OneCall API response
 export interface OneCallData {
