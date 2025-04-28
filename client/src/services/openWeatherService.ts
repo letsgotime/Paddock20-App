@@ -145,7 +145,7 @@ export async function fetchDailyForecast(lat: number, lon: number) {
 }
 
 /**
- * Interface for F1-level automotive weather data with performance metrics
+ * Interface for F1-level automotive weather data with enhanced performance metrics
  */
 export interface AutomotiveWeatherData {
   timestamp: number;
@@ -153,14 +153,33 @@ export interface AutomotiveWeatherData {
     asphalt: {
       temperature: number;
       condition: string;
+      gripLevel?: string; // "Low", "Medium", "High", "Optimal"
+      dryingRate?: number; // minutes until surface dries after precipitation
     };
     concrete: {
       temperature: number;
       condition: string;
+      gripLevel?: string;
     };
     gravel: {
       temperature: number;
       condition: string;
+      dustFactor?: number; // visibility impact when driving on gravel
+    };
+    // Additional track surface types
+    trackSpecific?: {
+      curbs: {
+        gripDifferential: number; // percentage difference in grip from main surface
+        moistureRetention: number; // 1-10 scale of how much moisture they retain
+      };
+      runoffAreas: {
+        condition: string;
+        temperature: number;
+      };
+      pitLane: {
+        temperature: number;
+        condition: string;
+      };
     };
   };
   drivingRisk: {
@@ -170,6 +189,13 @@ export interface AutomotiveWeatherData {
     score: number;
     index?: number;
     description?: string;
+    crosswindRisk?: string; // "Low", "Moderate", "High", "Extreme"
+    aquaplaningRisk?: string; // "Low", "Moderate", "High", "Extreme" 
+    // F1-specific risks
+    trackLimits?: {
+      adherence: string; // "Difficult", "Moderate", "Easy"
+      runoffSafety: string; // "Hazardous", "Compromised", "Safe"
+    };
   };
   washConditions: {
     recommended: boolean;
@@ -177,6 +203,8 @@ export interface AutomotiveWeatherData {
     pollen: string;
     drying: string;
     rainProbabilityNext24h?: number;
+    spotFreeWashing?: boolean; // Is it suitable for spot-free drying
+    protectionLongevity?: string; // How weather affects protection products
   };
   detailingConditions: {
     recommended: boolean;
@@ -184,14 +212,33 @@ export interface AutomotiveWeatherData {
     temperature?: string;
     wind?: string;
     lighting?: string;
+    polishingConditions?: string; // "Ideal", "Good", "Fair", "Poor"
+    coatingCuringFactor?: number; // Multiplier for recommended curing time
   };
-  // F1-level performance metrics
+  // Enhanced F1-level performance metrics
   performance: {
     tireWarmupTime: {
       sport: number;     // minutes to optimal temperature for sport tires
       summer: number;    // minutes to optimal temperature for summer tires
       allSeason: number; // minutes to optimal temperature for all-season tires
       winter: number;    // minutes to optimal temperature for winter tires
+      // F1-specific tire compounds
+      soft?: number;
+      medium?: number;
+      hard?: number;
+      intermediate?: number;
+      wet?: number;
+    };
+    tirePerformance: {
+      optimalCompound: string; // Recommended compound for conditions
+      degradationRate: number; // 1-10 scale (1 = minimal, 10 = severe)
+      grainingSusceptibility: number; // 1-10 risk scale
+      temperatureWindow: {
+        min: number; // Minimum optimal operating temperature
+        max: number; // Maximum optimal operating temperature
+        current: number; // Estimated temperature in current conditions
+      };
+      pressureBuildupRate?: number; // PSI increase per lap
     };
     recommendedTirePressure: {
       front: {
@@ -210,15 +257,54 @@ export interface AutomotiveWeatherData {
     torqueEffect: {
       description: string;
       percentageAdjustment: number;
+      // Added fields
+      cornerExitRecommendation?: string; // "Progressive", "Aggressive", "Cautious"
+      tractionControlSuggestion?: number; // 0-5 scale, 0 = off, 5 = maximum
     };
     aerodynamics: {
       dragCoefficient: number; // Estimated based on wind and conditions
       downforceEfficiency: number; // Percentage effectiveness
+      // Added fields
+      wingSettings?: {
+        front: string; // "Minimum", "Low", "Medium", "High", "Maximum"
+        rear: string; // "Minimum", "Low", "Medium", "High", "Maximum"
+      };
+      airDensityImpact?: string; // Effect on aerodynamic performance
+      crosswindSensitivity?: number; // 1-10 scale of vulnerability to crosswinds
     };
     enginePerformance: {
       airDensityFactor: number; // Multiplication factor
       coolingEfficiency: string;
       estimatedPowerChange: string;
+      // Added fields
+      airIntakeTemperature?: number; // Estimated temperature
+      turboEfficiency?: number; // Percentage based on conditions
+      optimalShiftPoints?: { // RPM adjustments for conditions
+        increase: number; // Percentage to increase shift point
+        decrease: number; // Percentage to decrease shift point
+      };
+    };
+    brakingPerformance: {
+      coolingEfficiency: string; // "Excellent", "Good", "Fair", "Poor"
+      estimatedOptimalTemperature: number; // in °F or °C
+      paddleDegradation?: number; // 1-10 scale representing additional wear in these conditions
+      brakingPointAdjustment?: number; // feet or meters to adjust typical braking points
+    };
+    trackSpecificGuidance: {
+      raceLine: {
+        traditional: string; // "Optimal", "Viable", "Compromised"
+        alternativeLine?: string; // Description of alternative racing line for conditions
+        wetLine?: string; // Description of wet weather line
+      };
+      cornerSpeedAdjustments?: Array<{
+        cornerType: string; // "Slow", "Medium", "Fast"
+        speedAdjustment: number; // Percentage adjustment from dry conditions
+      }>;
+      grip: {
+        apexGrip: number; // 1-10 scale
+        exitGrip: number; // 1-10 scale
+        overallBalance: string; // "Understeer", "Neutral", "Oversteer"
+      };
     };
   };
 }
