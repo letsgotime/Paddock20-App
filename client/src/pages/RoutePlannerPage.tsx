@@ -284,6 +284,17 @@ const RoutePlannerPage = () => {
   const [tirePressureAdjustment, setTirePressureAdjustment] = useState(0); // in PSI
   const [torqueAdjustment, setTorqueAdjustment] = useState(0); // in ft-lb
   const [drivingMode, setDrivingMode] = useState("Sport");
+  const [showCustomTireSetupForm, setShowCustomTireSetupForm] = useState(false);
+  const [customTireSetup, setCustomTireSetup] = useState({
+    name: "",
+    compound: "Custom",
+    treadPattern: "Custom",
+    heatingCycle: 5,
+    pressureVariance: 1.0,
+    optimalTemp: 180
+  });
+  const [showCustomDrivingModeForm, setShowCustomDrivingModeForm] = useState(false);
+  const [customDrivingMode, setCustomDrivingMode] = useState("");
   
   // OpenWeather integration and advanced weather data
   const [weatherImpacts, setWeatherImpacts] = useState<any>(null);
@@ -449,13 +460,17 @@ const RoutePlannerPage = () => {
   const [poiCategories, setPoiCategories] = useState([
     { id: "premium_fuel", name: "Premium Fuel Stations", selected: true },
     { id: "performance_shops", name: "Performance Shops", selected: true },
+    { id: "roadside_assistance", name: "Roadside Assistance Coverage", selected: true },
+    { id: "auto_repair_elite", name: "Elite Auto Repair Centers", selected: true },
+    { id: "dealer_service", name: "Official Dealer Service Centers", selected: true },
+    { id: "specialist_mechanics", name: "Specialist Mechanics", selected: true },
+    { id: "exotic_service", name: "Exotic Car Service", selected: true },
     { id: "car_meets", name: "Car Meet Locations", selected: false },
     { id: "ev_chargers", name: "High-Speed EV Chargers", selected: false },
     { id: "scenic_overlooks", name: "Scenic Overlooks", selected: true },
     { id: "photo_spots", name: "Car Photography Spots", selected: true },
     { id: "motorsport_venues", name: "Motorsport Venues", selected: false },
     { id: "car_museums", name: "Automotive Museums", selected: false },
-    { id: "specialist_mechanics", name: "Specialist Mechanics", selected: false },
     { id: "car_detailing", name: "Detailing Services", selected: false },
     { id: "rv_services", name: "RV Services", selected: false },
     { id: "supercar_spotting", name: "Supercar Spotting Locations", selected: false },
@@ -469,8 +484,19 @@ const RoutePlannerPage = () => {
     { id: "mountain_roads", name: "Epic Mountain Roads", selected: true },
     { id: "canyon_roads", name: "Canyon Drives", selected: false },
     { id: "coastal_routes", name: "Scenic Coastal Routes", selected: true },
-    { id: "enthusiast_cafes", name: "Car Enthusiast Cafes", selected: false }
+    { id: "enthusiast_cafes", name: "Car Enthusiast Cafes", selected: false },
+    { id: "custom", name: "Custom Points of Interest", selected: false }
   ]);
+  
+  // Roadside assistance and telemetry support
+  const [roadsideAssistanceOptions, setRoadsideAssistanceOptions] = useState({
+    telemetryEnabled: true,
+    realTimeMonitoring: true,
+    diagnosticSharingWithService: true,
+    priorityTowing: true,
+    luxuryReplacementVehicle: true,
+    customRoadsidePreferences: ""
+  });
   
   // User custom vehicle state
   const [customVehicles, setCustomVehicles] = useState<Record<string, VehicleSpecs>>({});
@@ -1960,16 +1986,60 @@ const RoutePlannerPage = () => {
                     <label className="block text-gray-300 text-xs mb-1">Driving Mode</label>
                     <select
                       value={drivingMode}
-                      onChange={(e) => setDrivingMode(e.target.value)}
+                      onChange={(e) => {
+                        setDrivingMode(e.target.value);
+                        if (e.target.value === "custom") {
+                          setShowCustomDrivingModeForm(true);
+                        }
+                      }}
                       className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700 text-sm"
                     >
                       <option value="Comfort">Comfort</option>
                       <option value="Sport">Sport</option>
                       <option value="Sport+">Sport+</option>
                       <option value="Track">Track</option>
+                      <option value="Drift">Drift</option>
+                      <option value="Drag">Drag Strip</option>
                       <option value="Eco">Eco</option>
                       <option value="Wet">Wet Weather</option>
+                      <option value="Snow">Snow/Ice</option>
+                      <option value="Touring">Long-Distance Touring</option>
+                      <option value="Dynamic">Dynamic</option>
+                      <option value="custom">Custom Mode...</option>
                     </select>
+                    
+                    {showCustomDrivingModeForm && (
+                      <div className="mt-2 p-2 bg-gray-900 rounded border border-gray-700">
+                        <div className="grid gap-2">
+                          <input
+                            type="text"
+                            placeholder="Mode Name"
+                            value={customDrivingMode}
+                            onChange={(e) => setCustomDrivingMode(e.target.value)}
+                            className="p-2 bg-gray-800 text-white rounded border border-gray-700"
+                          />
+                          <div className="flex mt-1">
+                            <button
+                              onClick={() => {
+                                if (customDrivingMode.trim()) {
+                                  setDrivingMode(`custom:${customDrivingMode}`);
+                                  setShowCustomDrivingModeForm(false);
+                                }
+                              }}
+                              className="bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-500 mr-2"
+                            >
+                              Apply
+                            </button>
+                            <button
+                              onClick={() => setShowCustomDrivingModeForm(false)}
+                              className="bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-500"
+                            >
+                              Cancel
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
