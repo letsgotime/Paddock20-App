@@ -60,20 +60,20 @@ const HomeWeatherWidget = () => {
     }
   };
 
-  // Calculate torque setting recommendation based on conditions
+  // Calculate torque setting recommendation for Ferrari F8 based on conditions
   const getTorqueSettingRecommendation = (weather, temp) => {
-    if (!weather || !temp) return '100%';
+    if (!weather || !temp) return '96 ft-lb';
     
     const weatherType = weather.toLowerCase();
     
     if (weatherType.includes('rain') || weatherType.includes('drizzle')) {
-      return '75-80%'; // Wet conditions
+      return '72-77 ft-lb'; // Wet conditions (75-80% of max)
     } else if (weatherType.includes('snow') || temp < 32) {
-      return '50-60%'; // Snow or freezing conditions
+      return '48-58 ft-lb'; // Snow or freezing conditions (50-60% of max)
     } else if (temp > 90) {
-      return '90-95%'; // Very hot conditions
+      return '86-91 ft-lb'; // Very hot conditions (90-95% of max)
     } else {
-      return '100%'; // Ideal conditions
+      return '96 ft-lb'; // Ideal conditions (100%)
     }
   };
 
@@ -193,7 +193,7 @@ const HomeWeatherWidget = () => {
                 <span className="text-green-400 font-medium">{torqueSetting}</span>
               </div>
               <div className="mt-1 text-xs text-gray-500 italic">
-                {torqueSetting === '100%' ? 'Ideal conditions for full power delivery' : 'Reduced for current surface conditions'}
+                {torqueSetting === '96 ft-lb' ? 'Ferrari F8 - Ideal conditions for full torque' : 'Ferrari F8 - Adjusted for current surface conditions'}
               </div>
             </div>
             
