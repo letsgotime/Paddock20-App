@@ -51,7 +51,8 @@ const F1MotorsportWeatherStation = () => {
 
   const fetchWeatherData = async () => {
     try {
-      const response = await fetch(`/api/weather?lat=${location.lat}&lon=${location.lon}`);
+      // Use imperial units for Fahrenheit
+      const response = await fetch(`/api/weather?lat=${location.lat}&lon=${location.lon}&units=imperial`);
       if (!response.ok) {
         throw new Error(`Weather API error: ${response.status}`);
       }
@@ -72,7 +73,7 @@ const F1MotorsportWeatherStation = () => {
 
   const fetchForecastData = async () => {
     try {
-      const response = await fetch(`/api/onecall?lat=${location.lat}&lon=${location.lon}`);
+      const response = await fetch(`/api/onecall?lat=${location.lat}&lon=${location.lon}&units=imperial`);
       if (!response.ok) {
         throw new Error(`Forecast API error: ${response.status}`);
       }
