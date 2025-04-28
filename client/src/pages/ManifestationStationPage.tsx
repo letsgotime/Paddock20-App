@@ -492,7 +492,9 @@ const ManifestationStationPage = () => {
   const [showSearchResults, setShowSearchResults] = useState(false);
   
   // State for photo library selection
-  const [showPhotoLibraryModal, setShowPhotoLibraryModal] = useState(false);
+  const [showPhotoUploadModal, setShowPhotoUploadModal] = useState(false);
+  const [isSharingOpen, setIsSharingOpen] = useState(false);
+  const [shareableGoal, setShareableGoal] = useState<Goal | null>(null);
 
   // Load a new affirmation on component mount
   useEffect(() => {
@@ -1831,7 +1833,7 @@ const ManifestationStationPage = () => {
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                     {/* Add Image Button */}
                     <div 
-                      onClick={() => setShowPhotoLibraryModal(true)}
+                      onClick={() => setShowPhotoUploadModal(true)}
                       className="bg-gradient-to-br from-indigo-900/20 to-indigo-800/10 p-3 rounded-lg border border-indigo-900/30 text-center hover:border-indigo-500/50 cursor-pointer transition-colors"
                     >
                       <div className="text-3xl mb-2">🖼️</div>
@@ -1932,12 +1934,63 @@ const ManifestationStationPage = () => {
                 </div>
               </div>
 
-              {/* Photo Library Modal */}
-              <PhotoLibraryModal
-                isOpen={showPhotoLibraryModal}
-                onClose={() => setShowPhotoLibraryModal(false)}
+              {/* Photo Upload Modal */}
+              <PhotoUploadModal
+                isOpen={showPhotoUploadModal}
+                onClose={() => setShowPhotoUploadModal(false)}
                 onPhotoSelect={handlePhotoFromLibrary}
               />
+              
+              {/* Social Sharing Modal */}
+              {shareableGoal && (
+                <Dialog open={isSharingOpen} onOpenChange={() => setIsSharingOpen(false)}>
+                  <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+                    <div className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg shadow-lg p-6 border border-gray-700 w-full max-w-md">
+                      <h2 className="font-orbitron text-blue-400 text-xl mb-4">Share Your Dream</h2>
+                      
+                      <div className="mb-4">
+                        <div className="aspect-video mb-4 overflow-hidden rounded-lg">
+                          {shareableGoal.mediaGallery.length > 0 && shareableGoal.mediaGallery[0].type === 'image' ? (
+                            <img 
+                              src={shareableGoal.mediaGallery[0].url} 
+                              alt={shareableGoal.targetAsset}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full flex items-center justify-center bg-gray-900">
+                              <span className="text-6xl">✨</span>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <h3 className="text-white text-lg font-medium mb-1">{shareableGoal.goalName}</h3>
+                        <p className="text-gray-400 text-sm mb-4">{shareableGoal.description || `My goal: ${shareableGoal.targetAsset}`}</p>
+                      </div>
+                      
+                      <div className="border-t border-gray-700 pt-4">
+                        <p className="text-gray-400 text-sm mb-3">Share with</p>
+                        <SocialShareButtons 
+                          url={window.location.href} 
+                          title={`Check out my dream: ${shareableGoal.goalName}`}
+                          description={shareableGoal.description || `I'm manifesting a ${shareableGoal.targetAsset} with Paddock20's Manifestation Station™!`}
+                          image={shareableGoal.mediaGallery.length > 0 && shareableGoal.mediaGallery[0].type === 'image' 
+                            ? shareableGoal.mediaGallery[0].url 
+                            : ''}
+                        />
+                      </div>
+                      
+                      <div className="flex justify-end mt-6">
+                        <button
+                          onClick={() => setIsSharingOpen(false)}
+                          className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded"
+                        >
+                          Close
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </Dialog>
+              )}
 
               {/* Actions */}
               <div className="flex justify-between mt-8">
