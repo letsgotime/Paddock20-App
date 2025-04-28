@@ -1,8 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import SimpleWeatherStation from '../components/SimpleWeatherStation';
 import EventsPreview from '../components/EventsPreview';
-import VoiceEnabledWeather from '../components/VoiceEnabledWeather';
 
 const Paddock20HomePage: React.FC = () => {
   return (
@@ -24,12 +22,16 @@ const Paddock20HomePage: React.FC = () => {
         </p>
       </section>
 
-      {/* Weather Station Section */}
+      {/* Weather Module Placeholder */}
       <section className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg shadow-lg border border-gray-700 p-6 mb-8">
-        <h2 className="font-orbitron text-blue-400 text-2xl mb-4">Today's Drive Conditions</h2>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <VoiceEnabledWeather />
-          <SimpleWeatherStation />
+        <h2 className="font-orbitron text-blue-400 text-2xl mb-4">Weather Integration</h2>
+        <div className="p-6 text-center">
+          <p className="text-gray-300 mb-4">
+            Our advanced automotive weather integration is being upgraded.
+          </p>
+          <Link to="/weather" className="inline-block px-4 py-2 bg-green-700/20 border border-green-700/40 rounded-md text-green-500 hover:bg-green-700/30 transition-colors">
+            View Weather Center
+          </Link>
         </div>
       </section>
       
