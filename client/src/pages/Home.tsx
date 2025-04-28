@@ -1,6 +1,6 @@
 import React from "react";
 import { Link } from "react-router-dom";
-import SimpleWeatherStation from '../components/SimpleWeatherStation';
+import F1MotorsportWeatherStation from '../components/F1MotorsportWeatherStation';
 
 const Home = () => {
   return (
@@ -49,8 +49,8 @@ const Home = () => {
 
       {/* Weather Station Section */}
       <section className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg shadow-lg border border-gray-700 p-6 mb-8">
-        <h2 className="font-orbitron text-blue-400 text-2xl mb-4">Today's Conditions</h2>
-        <SimpleWeatherStation />
+        <h2 className="font-orbitron text-blue-400 text-2xl mb-4">F1 Motorsports Weather</h2>
+        <F1MotorsportWeatherStation />
       </section>
 
       {/* Quick Start Links */}
