@@ -733,18 +733,42 @@ const ManifestationStationPage = () => {
 
       {/* Goals Grid */}
       <section className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg shadow-lg p-6 mb-8 border border-gray-700">
-        <h2 className="font-orbitron text-blue-400 text-2xl mb-6">🌟 Your Dream Board</h2>
+        <div className="flex justify-between items-center mb-6">
+          <h2 className="font-orbitron text-blue-400 text-2xl">🌟 Your Dream Board</h2>
+          <div className="flex space-x-2">
+            <div className="bg-black/30 px-3 py-1 rounded-md border border-blue-900/30">
+              <span className="text-gray-400 text-xs">Dream Count:</span>
+              <span className="text-blue-400 text-xs ml-2 font-mono">{goals.filter(goal => goal.manifestStatus !== 'manifested').length}</span>
+            </div>
+            <div className="bg-black/30 px-3 py-1 rounded-md border border-green-900/30">
+              <span className="text-gray-400 text-xs">Manifested:</span>
+              <span className="text-green-400 text-xs ml-2 font-mono">{goals.filter(goal => goal.manifestStatus === 'manifested').length}</span>
+            </div>
+          </div>
+        </div>
         
         {goals.length === 0 ? (
-          <p className="text-gray-300 font-openSans text-center py-8">
-            No dreams saved yet. Start building your future by adding a goal.
-          </p>
+          <div className="bg-black/20 rounded-lg border border-gray-800 p-8 text-center">
+            <div className="w-20 h-20 mx-auto mb-4 rounded-full bg-blue-900/20 flex items-center justify-center">
+              <span className="text-blue-400 text-3xl">🧭</span>
+            </div>
+            <h3 className="text-blue-400 font-orbitron text-xl mb-2">Your Dreams Await</h3>
+            <p className="text-gray-300 font-openSans mb-6">
+              Start building your future by adding a dream to your board.
+            </p>
+            <button
+              onClick={() => setShowAddGoalModal(true)}
+              className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-md text-sm font-medium"
+            >
+              Add Your First Dream
+            </button>
+          </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {goals.filter(goal => goal.manifestStatus !== 'manifested').map((goal) => (
               <div 
                 key={goal.id} 
-                className="bg-gray-800 rounded-lg p-5 shadow-lg border border-gray-700 cursor-pointer hover:border-blue-500 transition-colors"
+                className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg p-5 shadow-xl border border-gray-700 cursor-pointer hover:border-blue-500 transition-all hover:shadow-blue-900/20 hover:shadow-2xl"
                 onClick={() => handleViewGoalDetails(goal)}
               >
                 <div className="flex justify-between items-start mb-3">
@@ -754,26 +778,65 @@ const ManifestationStationPage = () => {
                   </div>
                 </div>
                 
-                <p className="text-white mb-2">{goal.goalType}: {goal.targetAsset}</p>
-                <p className="text-gray-300 text-sm mb-2">🎯 Target Date: {goal.targetDate}</p>
-                <p className="text-gray-300 text-sm mb-2">💰 Funding Plan: {goal.fundingPlan}</p>
+                <p className="text-white mb-2 font-medium">{goal.goalType}: {goal.targetAsset}</p>
+                <p className="text-gray-300 text-sm mb-1">🎯 Target Date: {goal.targetDate}</p>
+                <p className="text-gray-300 text-sm mb-3">💰 Funding Plan: {goal.fundingPlan}</p>
                 
-                <div className="mt-4 mb-2">
+                {/* Financial Progress */}
+                <div className="bg-black/30 rounded-lg p-3 mb-3">
+                  <div className="flex justify-between text-sm mb-1">
+                    <span className="text-gray-300">Target Amount:</span>
+                    <span className="text-green-400 font-medium">${goal.targetAmount.toLocaleString()}</span>
+                  </div>
+                  <div className="flex justify-between text-sm mb-2">
+                    <span className="text-gray-300">Current Savings:</span>
+                    <span className="text-green-400 font-medium">${goal.currentAmount.toLocaleString()}</span>
+                  </div>
+                  <div className="bg-gray-700 h-2.5 w-full rounded-full">
+                    <div
+                      style={{ width: `${Math.min(100, (goal.currentAmount / goal.targetAmount) * 100)}%` }}
+                      className="bg-green-500 h-2.5 rounded-full"
+                    ></div>
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-400 mt-1">
+                    <span>Financial progress</span>
+                    <span>{Math.round((goal.currentAmount / goal.targetAmount) * 100)}%</span>
+                  </div>
+                </div>
+                
+                {/* Mind-Body-Spirit Focus */}
+                <div className="grid grid-cols-3 gap-2 mb-4">
+                  <div className="bg-blue-900/20 p-2 rounded border border-blue-900/30">
+                    <div className="text-blue-400 text-xs font-medium mb-1">Mind</div>
+                    <div className="text-white text-xs line-clamp-2">{goal.mindFocus}</div>
+                  </div>
+                  <div className="bg-green-900/20 p-2 rounded border border-green-900/30">
+                    <div className="text-green-400 text-xs font-medium mb-1">Body</div>
+                    <div className="text-white text-xs line-clamp-2">{goal.bodyFocus}</div>
+                  </div>
+                  <div className="bg-yellow-900/20 p-2 rounded border border-yellow-900/30">
+                    <div className="text-yellow-400 text-xs font-medium mb-1">Spirit</div>
+                    <div className="text-white text-xs line-clamp-2">{goal.spiritFocus}</div>
+                  </div>
+                </div>
+                
+                {/* Overall Progress */}
+                <div className="mt-3 mb-2">
                   <div className="flex justify-between text-xs text-gray-400 mb-1">
-                    <span>Progress</span>
+                    <span>Overall Progress</span>
                     <span>{goal.progressPercentage}%</span>
                   </div>
                   <div className="bg-gray-700 h-3 w-full rounded-full">
                     <div
                       style={{ width: `${goal.progressPercentage}%` }}
-                      className="bg-green-500 h-3 rounded-full"
+                      className="bg-blue-500 h-3 rounded-full"
                     ></div>
                   </div>
                 </div>
                 
                 <div className="flex mt-4 text-xs text-gray-400 justify-between">
                   <span>{goal.completedMilestones.length} / {goal.milestones.length + goal.completedMilestones.length} milestones complete</span>
-                  <span>Click for details</span>
+                  <span className="text-blue-400">Click for details →</span>
                 </div>
               </div>
             ))}
@@ -784,32 +847,67 @@ const ManifestationStationPage = () => {
       {/* Manifested Dreams (Archive) */}
       {goals.some(goal => goal.manifestStatus === 'manifested') && (
         <section className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg shadow-lg p-6 mb-8 border border-gray-700">
-          <h2 className="font-orbitron text-blue-400 text-2xl mb-6">✨ Manifested Dreams</h2>
-          <p className="text-gray-300 font-openSans mb-6 italic">
-            "Proof that dreams, when worked for, drive reality faster than anything else."
-          </p>
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-orbitron text-green-400 text-2xl">✨ Manifested Dreams</h2>
+            <div className="bg-black/30 px-3 py-1 rounded-md border border-green-900/30">
+              <span className="text-gray-400 text-xs">Success Rate:</span>
+              <span className="text-green-400 text-xs ml-2 font-mono">{Math.round((goals.filter(goal => goal.manifestStatus === 'manifested').length / goals.length) * 100)}%</span>
+            </div>
+          </div>
+          
+          <div className="bg-gradient-to-r from-green-900/10 to-black/0 p-4 rounded-lg border border-green-900/20 mb-6">
+            <p className="text-gray-300 font-openSans italic text-center">
+              "Proof that dreams, when worked for, drive reality faster than anything else."
+            </p>
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {goals.filter(goal => goal.manifestStatus === 'manifested').map((goal) => (
               <div 
                 key={goal.id} 
-                className="bg-gradient-to-br from-gray-800 to-green-900/20 rounded-lg p-5 shadow-lg border border-green-900/50 cursor-pointer hover:border-green-500 transition-colors"
+                className="bg-gradient-to-br from-gray-800 to-green-900/20 rounded-lg p-5 shadow-xl border border-green-900/30 cursor-pointer hover:border-green-500 transition-all hover:shadow-green-900/20 hover:shadow-2xl"
                 onClick={() => handleViewGoalDetails(goal)}
               >
                 <div className="flex justify-between items-start mb-3">
                   <h3 className="text-green-400 font-orbitron text-xl">{goal.goalName}</h3>
-                  <div className="bg-green-900/60 px-2 py-1 rounded text-xs text-green-300">
-                    Manifested
+                  <div className="bg-green-900/60 px-2 py-1 rounded text-xs text-green-300 font-medium flex items-center">
+                    <span className="mr-1">✓</span> Manifested
                   </div>
                 </div>
                 
-                <p className="text-white mb-2">{goal.goalType}: {goal.targetAsset}</p>
-                <p className="text-gray-300 text-sm mb-1">
-                  🎯 Target Date: {goal.targetDate}
-                </p>
-                <p className="text-gray-300 text-sm">
-                  ✅ Completed {goal.completedMilestones.length} milestones
-                </p>
+                <p className="text-white mb-3 font-medium">{goal.goalType}: {goal.targetAsset}</p>
+                
+                <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="bg-black/30 p-3 rounded-lg border border-green-900/20">
+                    <div className="text-gray-400 text-xs mb-1">Target Amount</div>
+                    <div className="text-green-400 font-medium">${goal.targetAmount.toLocaleString()}</div>
+                  </div>
+                  <div className="bg-black/30 p-3 rounded-lg border border-green-900/20">
+                    <div className="text-gray-400 text-xs mb-1">Timeline</div>
+                    <div className="text-green-400 font-medium">{goal.targetDate}</div>
+                  </div>
+                </div>
+                
+                <div className="bg-gradient-to-r from-green-900/20 to-black/0 p-3 rounded-lg mb-3">
+                  <div className="flex justify-between">
+                    <div>
+                      <span className="text-gray-400 text-xs">Milestones</span>
+                      <div className="text-white font-medium">{goal.completedMilestones.length} completed</div>
+                    </div>
+                    <div>
+                      <span className="text-gray-400 text-xs">Funding Plan</span>
+                      <div className="text-white font-medium">{goal.fundingPlan}</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex items-center justify-between mt-4">
+                  <div className="flex items-center">
+                    <span className="h-2 w-2 bg-green-500 rounded-full mr-2"></span>
+                    <span className="text-green-400 text-xs">100% Complete</span>
+                  </div>
+                  <span className="text-green-400 text-xs">View details →</span>
+                </div>
               </div>
             ))}
           </div>
