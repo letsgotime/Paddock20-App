@@ -1,10 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useWeather } from '@/contexts/WeatherContext';
-import { 
-  LocationSearchResult, 
-  searchLocationsByName, 
-  getLocationNameByCoordinates 
-} from '@/services/openWeatherService';
+import { LocationSearchResult } from '@/services/openWeatherService';
 import { Command } from '@/components/ui/command';
 import { 
   Popover, 
@@ -36,15 +32,24 @@ const LocationSelector = () => {
     setSearchError(null);
     
     try {
-      const results = await searchLocationsByName(query);
-      // Format location names with city, state (if available), and country
-      const formattedResults = results.map(loc => ({
-        ...loc,
-        formattedName: loc.state 
-          ? `${loc.name}, ${loc.state}, ${loc.country}` 
-          : `${loc.name}, ${loc.country}`
-      }));
-      setSearchResults(formattedResults);
+      // Use the location API endpoint directly
+      const response = await fetch(`/api/location?q=${encodeURIComponent(query)}`);
+      
+      if (!response.ok) {
+        throw new Error(`Location search failed: ${response.status}`);
+      }
+      
+      const location = await response.json();
+      
+      // Format location name with state and country if available
+      const formattedLocation = {
+        ...location,
+        formattedName: location.state 
+          ? `${location.name}, ${location.state}, ${location.country}` 
+          : `${location.name}, ${location.country}`
+      };
+      
+      setSearchResults([formattedLocation]);
     } catch (error) {
       console.error('Error searching for locations:', error);
       setSearchError('Error searching for locations. Please try again.');
@@ -60,16 +65,19 @@ const LocationSelector = () => {
       navigator.geolocation.getCurrentPosition(
         async (position) => {
           const { latitude, longitude } = position.coords;
-          setCoordinates(latitude, longitude);
           
-          try {
-            const locationInfo = await getLocationNameByCoordinates(latitude, longitude);
-            if (locationInfo) {
-              setSelectedLocation(locationInfo);
-            }
-          } catch (error) {
-            console.error('Error fetching location name:', error);
-          }
+          // Use the coordinates directly - we don't need to look up location name for current position
+          const locationInfo = {
+            id: 'current-location',
+            name: 'Current Location',
+            lat: latitude,
+            lon: longitude,
+            country: '',
+            formattedName: 'Current Location'
+          };
+          
+          setSelectedLocation(locationInfo);
+          setCoordinates(latitude, longitude);
         },
         (error) => {
           console.error('Geolocation error:', error);
