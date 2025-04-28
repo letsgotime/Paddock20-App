@@ -1489,6 +1489,147 @@ const ManifestationStationPage = () => {
                 </>
               )}
               
+              {/* Media Tab Content */}
+              {activeTab === 'media' && (
+                <>
+                  <div className="mb-8">
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className="text-indigo-400 font-orbitron text-lg">🖼️ Media Gallery</h3>
+                      <div className="bg-black/30 px-3 py-1 rounded-md border border-indigo-900/30">
+                        <span className="text-gray-400 text-xs">Files:</span>
+                        <span className="text-indigo-400 text-xs ml-2 font-mono">{selectedGoal.mediaGallery.length}</span>
+                      </div>
+                    </div>
+                    
+                    {/* Telemetry-style gallery container */}
+                    <div className="bg-gradient-to-br from-gray-800 to-gray-900 rounded-lg p-4 border border-gray-700 mb-4">
+                      {selectedGoal.mediaGallery.length > 0 ? (
+                        <div>
+                          {/* Gallery filter tabs */}
+                          <div className="flex mb-4 space-x-2 border-b border-gray-700 pb-2">
+                            <button className="bg-indigo-900/40 text-white px-3 py-1 rounded-lg text-sm">All ({selectedGoal.mediaGallery.length})</button>
+                            <button className="hover:bg-gray-700/40 text-gray-300 px-3 py-1 rounded-lg text-sm">Images ({selectedGoal.mediaGallery.filter(m => m.type === 'image').length})</button>
+                            <button className="hover:bg-gray-700/40 text-gray-300 px-3 py-1 rounded-lg text-sm">Files ({selectedGoal.mediaGallery.filter(m => m.type === 'file').length})</button>
+                            <button className="hover:bg-gray-700/40 text-gray-300 px-3 py-1 rounded-lg text-sm">Links ({selectedGoal.mediaGallery.filter(m => m.type === 'link').length})</button>
+                          </div>
+                          
+                          {/* Main grid display of media items */}
+                          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                            {selectedGoal.mediaGallery.map(media => (
+                              <div 
+                                key={media.id} 
+                                className={`bg-black/40 rounded-lg border overflow-hidden hover:shadow-lg hover:border-indigo-500/50 transition-all ${
+                                  media.type === 'image' ? 'border-indigo-900/30' : 
+                                  media.type === 'file' ? 'border-amber-900/30' : 'border-emerald-900/30'
+                                }`}
+                              >
+                                {media.type === 'image' && (
+                                  <a href={media.url} target="_blank" rel="noopener noreferrer" className="block">
+                                    <div className="relative h-40 overflow-hidden bg-gray-900">
+                                      <img 
+                                        src={media.thumbnail || media.url} 
+                                        alt={media.name}
+                                        className="w-full h-full object-cover transition-transform hover:scale-105"
+                                      />
+                                      <div className="absolute top-2 left-2 bg-black/60 text-xs text-white px-2 py-1 rounded">
+                                        Image
+                                      </div>
+                                    </div>
+                                    <div className="p-3">
+                                      <h4 className="text-white font-medium truncate">{media.name}</h4>
+                                      <p className="text-gray-400 text-xs mt-1">Added: {new Date(media.dateAdded).toLocaleDateString()}</p>
+                                      {media.description && (
+                                        <p className="text-gray-300 text-sm mt-2 line-clamp-2">{media.description}</p>
+                                      )}
+                                    </div>
+                                  </a>
+                                )}
+
+                                {media.type === 'link' && (
+                                  <a href={media.url} target="_blank" rel="noopener noreferrer" className="p-4 block">
+                                    <div className="flex items-center">
+                                      <div className="w-10 h-10 bg-emerald-900/30 rounded-full flex items-center justify-center mr-3">
+                                        <span className="text-emerald-400 text-lg">🔗</span>
+                                      </div>
+                                      <div>
+                                        <h4 className="text-white font-medium">{media.name}</h4>
+                                        <p className="text-emerald-400 text-xs truncate">{media.url}</p>
+                                      </div>
+                                    </div>
+                                    {media.description && (
+                                      <p className="text-gray-300 text-sm mt-3 line-clamp-2">{media.description}</p>
+                                    )}
+                                    <p className="text-gray-400 text-xs mt-3">Added: {new Date(media.dateAdded).toLocaleDateString()}</p>
+                                  </a>
+                                )}
+
+                                {media.type === 'file' && (
+                                  <a href={media.url} target="_blank" rel="noopener noreferrer" className="p-4 block">
+                                    <div className="flex items-center">
+                                      <div className="w-10 h-10 bg-amber-900/30 rounded-full flex items-center justify-center mr-3">
+                                        <span className="text-amber-400 text-lg">📄</span>
+                                      </div>
+                                      <div>
+                                        <h4 className="text-white font-medium">{media.name}</h4>
+                                        <p className="text-amber-400 text-xs">Document</p>
+                                      </div>
+                                    </div>
+                                    {media.description && (
+                                      <p className="text-gray-300 text-sm mt-3 line-clamp-2">{media.description}</p>
+                                    )}
+                                    <p className="text-gray-400 text-xs mt-3">Added: {new Date(media.dateAdded).toLocaleDateString()}</p>
+                                  </a>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="text-center p-8 bg-black/20 rounded-lg">
+                          <div className="text-4xl mb-3">🖼️</div>
+                          <p className="text-gray-400 mb-2">No media added yet</p>
+                          <p className="text-gray-500 text-sm">Add images, documents, or links to visualize your goal</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Add new media section */}
+                    <div className="bg-black/30 rounded-lg border border-gray-700 p-4">
+                      <h4 className="text-white font-medium mb-3">Add Media</h4>
+                      
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                        {/* Add Image Button */}
+                        <div 
+                          onClick={() => setShowPhotoUploadModal(true)}
+                          className="bg-gradient-to-br from-indigo-900/20 to-indigo-800/10 p-3 rounded-lg border border-indigo-900/30 text-center hover:border-indigo-500/50 cursor-pointer transition-colors"
+                        >
+                          <div className="text-3xl mb-2">🖼️</div>
+                          <h5 className="font-medium text-white mb-1">Add Image</h5>
+                          <p className="text-gray-400 text-xs">Upload photos of your dream asset</p>
+                        </div>
+                        
+                        {/* Add File Button */}
+                        <div className="bg-gradient-to-br from-amber-900/20 to-amber-800/10 p-3 rounded-lg border border-amber-900/30 text-center hover:border-amber-500/50 cursor-pointer transition-colors">
+                          <div className="text-3xl mb-2">📄</div>
+                          <h5 className="font-medium text-white mb-1">Add Document</h5>
+                          <p className="text-gray-400 text-xs">Upload specs, brochures, PDFs</p>
+                        </div>
+                        
+                        {/* Add Link Button */}
+                        <div 
+                          onClick={handleAddLink}
+                          className="bg-gradient-to-br from-emerald-900/20 to-emerald-800/10 p-3 rounded-lg border border-emerald-900/30 text-center hover:border-emerald-500/50 cursor-pointer transition-colors"
+                        >
+                          <div className="text-3xl mb-2">🔗</div>
+                          <h5 className="font-medium text-white mb-1">Add Link</h5>
+                          <p className="text-gray-400 text-xs">Add websites, videos, articles</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
+              
               {/* Budget Tracker */}
               <div className="mb-8">
                 <h3 className="text-green-400 font-orbitron text-lg mb-3">💰 Financial Telemetry</h3>
