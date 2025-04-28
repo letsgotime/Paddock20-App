@@ -1,8 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import { CarFront, Wind, Droplets, ThermometerSun, AlertTriangle, Sun, CloudRain } from 'lucide-react';
 import { getAutomotiveWeatherData } from '@/services/openWeatherService';
-import { WeatherData, OneCallData } from '@/lib/weather';
-import { fetchCurrentWeather, fetchOneCall } from '@/lib/weather';
+import { WeatherData, OneCallData, getWeatherData, getOneCallData } from '@/lib/weather';
+
+// Define the interface for automotive weather data specific to this component
+interface AutomotiveWeatherData {
+  surfaceConditions?: {
+    asphalt?: {
+      temperature?: number;
+      condition?: string;
+    }
+  };
+  drivingRisk?: {
+    overall?: string;
+    visibility?: string;
+    traction?: string;
+    score?: number;
+    description?: string;
+  };
+  performance?: {
+    tireWarmupTime?: {
+      sport?: number;
+      summer?: number;
+    };
+    roadSurfaceTemp?: number;
+  };
+}
 
 interface DrivingWeatherInsightsProps {
   latitude: number;
@@ -26,8 +49,8 @@ export function DrivingWeatherInsights({ latitude, longitude }: DrivingWeatherIn
       try {
         // Fetch all needed data in parallel
         const [weather, oneCall, automotive] = await Promise.all([
-          fetchCurrentWeather({ lat: latitude, lon: longitude }, 'metric'),
-          fetchOneCall({ lat: latitude, lon: longitude }, 'metric'),
+          getWeatherData({ lat: latitude, lon: longitude }, 'metric'),
+          getOneCallData({ lat: latitude, lon: longitude }, 'metric'),
           getAutomotiveWeatherData(latitude, longitude)
         ]);
         
@@ -67,7 +90,7 @@ export function DrivingWeatherInsights({ latitude, longitude }: DrivingWeatherIn
   }
 
   // Extract relevant driving data
-  const roadTemp = automotiveData?.roadSurfaceTemp || 
+  const roadTemp = automotiveData?.surfaceConditions?.asphalt?.temperature || 
                   currentWeather.main.temp || '—';
                   
   const humidity = currentWeather.main.humidity || '—';
@@ -85,27 +108,35 @@ export function DrivingWeatherInsights({ latitude, longitude }: DrivingWeatherIn
     ? Math.round(oneCallData.hourly[0].pop * 100) 
     : '—';
     
+  // Get driving risk information from automotive data if available
+  const drivingRiskOverall = automotiveData?.drivingRisk?.overall;
+  
   // Compute driving conditions based on various factors
-  let drivingCondition = 'Good';
+  let drivingCondition = drivingRiskOverall || 'Good';
   let drivingConditionClass = 'text-green-500';
   
-  if (precipitation1hr > 0 || 
+  if (drivingRiskOverall === 'Poor' || 
+      precipitation1hr > 0 || 
       currentWeather.weather[0].main === 'Rain' || 
       currentWeather.weather[0].main === 'Snow' ||
-      visibility < 5) {
+      (typeof visibility === 'number' && visibility < 5)) {
     drivingCondition = 'Poor';
     drivingConditionClass = 'text-red-500';
   } else if (
-    windGust > 20 ||
-    oneCallData.alerts?.length > 0 ||
+    drivingRiskOverall === 'Fair' ||
+    (typeof windGust === 'number' && windGust > 20) ||
+    (oneCallData.alerts && oneCallData.alerts.length > 0) ||
     currentWeather.weather[0].main === 'Fog'
   ) {
     drivingCondition = 'Fair';
     drivingConditionClass = 'text-yellow-500';
   }
   
+  // Get tire warmup times from automotive data if available
+  const sportTireWarmup = automotiveData?.performance?.tireWarmupTime?.sport;
+  
   // Check for active weather alerts that would affect road conditions
-  const roadAlert = oneCallData.alerts?.find(alert => 
+  const roadAlert = oneCallData.alerts?.find((alert: any) => 
     alert.event.toLowerCase().includes('road') || 
     alert.event.toLowerCase().includes('traffic') ||
     alert.event.toLowerCase().includes('construction')
@@ -166,46 +197,47 @@ export function DrivingWeatherInsights({ latitude, longitude }: DrivingWeatherIn
         <div className="bg-black/30 p-3 rounded-lg">
           <p className="text-gray-400 text-xs mb-1">Driving Conditions</p>
           <p className="text-white font-mono">
-            {drivingIndex ? (
-              <span 
-                className={
-                  drivingIndex.Category === 'Good' ? 'text-green-500' : 
-                  drivingIndex.Category === 'Fair' ? 'text-yellow-500' : 
-                  'text-red-500'
-                }
-              >
-                {drivingIndex.Category || 'Unknown'}
-              </span>
-            ) : (
-              'No data available'
-            )}
+            <span className={drivingConditionClass}>
+              {drivingCondition}
+            </span>
           </p>
           <div className="mt-2 text-xs text-gray-400">
             Visibility: {visibility} {visibilityUnit}
           </div>
+          {automotiveData?.drivingRisk?.description && (
+            <div className="mt-1 text-xs text-gray-400">
+              {automotiveData.drivingRisk.description}
+            </div>
+          )}
         </div>
       </div>
       
-      {minutecast && minutecast.Summary && minutecast.Summary !== "Minute forecast not available for your location" && (
+      {oneCallData.hourly && oneCallData.hourly.length > 0 && (
         <div className="mt-4 p-3 bg-black/30 rounded-lg">
-          <p className="text-gray-400 text-xs mb-1">Next Hour Precipitation</p>
-          <p className="text-white text-sm">{minutecast.Summary}</p>
+          <p className="text-gray-400 text-xs mb-1">Next Hour Weather</p>
+          <p className="text-white text-sm">
+            {oneCallData.hourly[0].weather[0].description} with 
+            {precipProbability > 0 ? ` ${precipProbability}% chance of precipitation` : ' no precipitation expected'}
+          </p>
         </div>
       )}
       
-      {roadConstructionIndex && (
+      {roadAlert && (
         <div className="mt-4 p-3 bg-black/30 rounded-lg">
-          <p className="text-gray-400 text-xs mb-1">Road Construction</p>
+          <p className="text-gray-400 text-xs mb-1">Road Alert</p>
           <p className="text-white text-sm">
-            <span 
-              className={
-                roadConstructionIndex.Category === 'Low' ? 'text-green-500' : 
-                roadConstructionIndex.Category === 'Medium' ? 'text-yellow-500' : 
-                'text-red-500'
-              }
-            >
-              {roadConstructionIndex.Category || 'Unknown'} - {roadConstructionIndex.Text}
+            <span className="text-yellow-500">
+              {roadAlert.event} - {roadAlert.description}
             </span>
+          </p>
+        </div>
+      )}
+      
+      {sportTireWarmup && (
+        <div className="mt-4 p-3 bg-black/30 rounded-lg">
+          <p className="text-gray-400 text-xs mb-1">Tire Performance</p>
+          <p className="text-white text-sm">
+            Sport tires warm-up time: approximately {sportTireWarmup} minutes
           </p>
         </div>
       )}
