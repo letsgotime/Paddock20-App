@@ -1,11 +1,27 @@
 /**
- * OpenWeather API Service for Paddock20 portal
- * Provides weather data tailored for automotive applications
+ * OpenWeather One Call API 3.0 Service for Paddock20 Portal
+ * Provides comprehensive weather data tailored for automotive applications
+ * Uses the paid Startup plan subscription ($40)
  */
 
 // OpenWeather API key from environment variables
 const API_KEY = "2379a18ee0e478c88aa7d4aa1df44410";
-const BASE_URL = "https://api.openweathermap.org/data/2.5";
+const CURRENT_WEATHER_URL = "https://api.openweathermap.org/data/2.5"; // Current weather still uses 2.5
+const ONE_CALL_URL = "https://api.openweathermap.org/data/3.0"; // One Call API uses 3.0
+const GEO_URL = "https://api.openweathermap.org/geo/1.0"; // Geocoding API for location search
+
+/**
+ * Location search result from OpenWeather Geocoding API
+ */
+export interface LocationSearchResult {
+  name: string;
+  lat: number;
+  lon: number;
+  country: string;
+  state?: string;
+  localNames?: Record<string, string>;
+  formattedName?: string; // This will be added after fetching
+}
 
 // Cache for API responses with expiration times
 interface CacheEntry {
@@ -58,7 +74,7 @@ async function getCachedOrFetch(url: string) {
 export async function fetchCurrentWeather(lat: number, lon: number) {
   try {
     console.log('Fetching current weather for coordinates:', lat, lon);
-    const url = `${BASE_URL}/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=imperial`;
+    const url = `${CURRENT_WEATHER_URL}/weather?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=imperial`;
     return await getCachedOrFetch(url);
   } catch (error) {
     console.error('Error fetching current weather:', error);
@@ -71,7 +87,7 @@ export async function fetchCurrentWeather(lat: number, lon: number) {
  */
 export async function fetchForecast(lat: number, lon: number) {
   try {
-    const url = `${BASE_URL}/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=imperial`;
+    const url = `${CURRENT_WEATHER_URL}/forecast?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=imperial`;
     return await getCachedOrFetch(url);
   } catch (error) {
     console.error('Error fetching forecast:', error);
@@ -80,13 +96,13 @@ export async function fetchForecast(lat: number, lon: number) {
 }
 
 /**
- * Get One Call API data (comprehensive weather data in one call)
+ * Get One Call API 3.0 data (comprehensive weather data in one call)
  * Available on paid plans like your Startup plan ($40)
  */
 export async function fetchOneCall(lat: number, lon: number) {
   try {
-    console.log('Fetching One Call API data for coordinates:', lat, lon);
-    const url = `${BASE_URL}/onecall?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=imperial&exclude=minutely`;
+    console.log('Fetching One Call API 3.0 data for coordinates:', lat, lon);
+    const url = `${ONE_CALL_URL}/onecall?lat=${lat}&lon=${lon}&appid=${API_KEY}&units=imperial`;
     return await getCachedOrFetch(url);
   } catch (error) {
     console.error('Error fetching One Call data:', error);
@@ -129,7 +145,7 @@ export async function fetchDailyForecast(lat: number, lon: number) {
 }
 
 /**
- * Interface for automotive weather data compatible with both APIs
+ * Interface for F1-level automotive weather data with performance metrics
  */
 export interface AutomotiveWeatherData {
   timestamp: number;
@@ -168,6 +184,42 @@ export interface AutomotiveWeatherData {
     temperature?: string;
     wind?: string;
     lighting?: string;
+  };
+  // F1-level performance metrics
+  performance: {
+    tireWarmupTime: {
+      sport: number;     // minutes to optimal temperature for sport tires
+      summer: number;    // minutes to optimal temperature for summer tires
+      allSeason: number; // minutes to optimal temperature for all-season tires
+      winter: number;    // minutes to optimal temperature for winter tires
+    };
+    recommendedTirePressure: {
+      front: {
+        min: number;
+        max: number;
+        optimal: number;
+        unit: string;
+      };
+      rear: {
+        min: number;
+        max: number;
+        optimal: number;
+        unit: string;
+      };
+    };
+    torqueEffect: {
+      description: string;
+      percentageAdjustment: number;
+    };
+    aerodynamics: {
+      dragCoefficient: number; // Estimated based on wind and conditions
+      downforceEfficiency: number; // Percentage effectiveness
+    };
+    enginePerformance: {
+      airDensityFactor: number; // Multiplication factor
+      coolingEfficiency: string;
+      estimatedPowerChange: string;
+    };
   };
 }
 
@@ -287,7 +339,98 @@ export async function getAutomotiveWeatherData(lat: number, lon: number): Promis
       lightingCondition = "Bright direct sunlight";
     }
     
-    // Construct the automotive data object
+    // Calculate F1-level performance metrics
+    
+    // Air density calculation (using simplified formula)
+    const pressurePa = current.main.pressure * 100; // Convert hPa to Pa
+    const tempKelvin = (airTemp - 32) * 5/9 + 273.15; // Convert °F to Kelvin
+    const airDensity = pressurePa / (287.05 * tempKelvin) * (1 - (humidity * 0.378)); // kg/m³
+    
+    // Air density factor (1.0 is standard day at sea level)
+    const standardDensity = 1.225; // kg/m³ at 15°C, sea level
+    const airDensityFactor = (airDensity / standardDensity).toFixed(3);
+    
+    // Engine power effect (very simplified model)
+    const powerChange = ((airDensity / standardDensity - 1) * 100).toFixed(1);
+    const powerChangeStr = powerChange > 0 
+      ? `+${powerChange}% power potential` 
+      : `${powerChange}% power reduction`;
+    
+    // Tire warm-up time calculations (minutes to reach optimal temperature)
+    // Factors: ambient temp, surface temp, wind, humidity
+    const baseWarmupFactor = airTemp < 50 ? 3.0 : airTemp < 65 ? 2.0 : 1.0;
+    
+    // Adjust for surface temperature
+    const surfaceFactor = asphaltTemp < 70 ? 1.5 : asphaltTemp > 100 ? 0.7 : 1.0;
+    
+    // Adjust for wind (wind cools tires)
+    const windFactor = windSpeed > 15 ? 1.3 : windSpeed > 8 ? 1.1 : 1.0;
+    
+    // Adjust for precipitation
+    const wetFactor = hasRain || hasSnow ? 1.8 : humidity > 90 ? 1.3 : 1.0;
+    
+    // Calculate warm-up times for different tire types
+    const sportWarmup = Math.round(baseWarmupFactor * surfaceFactor * windFactor * wetFactor * 1.0); // Sport tires (baseline)
+    const summerWarmup = Math.round(baseWarmupFactor * surfaceFactor * windFactor * wetFactor * 1.2); // Summer tires
+    const allSeasonWarmup = Math.round(baseWarmupFactor * surfaceFactor * windFactor * wetFactor * 1.5); // All-season tires
+    const winterWarmup = Math.round(baseWarmupFactor * surfaceFactor * windFactor * wetFactor * 2.0); // Winter tires
+    
+    // Recommended tire pressure adjustments
+    // For performance driving, we typically increase pressures with higher temps
+    // Base pressures (typical sport car example in PSI)
+    const baseFrontPSI = 32;
+    const baseRearPSI = 30;
+    
+    // Temperature adjustment factor (% per 10°F from 70°F baseline)
+    const tempAdjustmentPct = ((airTemp - 70) / 10) * 1.5; // 1.5% per 10°F diff
+    
+    // Calculate adjusted pressures
+    const frontOptimal = Math.round((baseFrontPSI * (1 + tempAdjustmentPct / 100)) * 10) / 10;
+    const rearOptimal = Math.round((baseRearPSI * (1 + tempAdjustmentPct / 100)) * 10) / 10;
+    
+    // Margin for front/rear (recommended range)
+    const pressureMargin = 2.0;
+    
+    // Torque effect calculation based on road condition
+    let torqueDescription = "Normal torque application recommended";
+    let torqueAdjustment = 0;
+    
+    if (hasSnow) {
+      torqueDescription = "Reduce torque significantly for snow conditions";
+      torqueAdjustment = -40; // 40% reduction
+    } else if (hasRain || surfaceCondition === "Wet") {
+      torqueDescription = "Reduce torque for wet conditions";
+      torqueAdjustment = -25; // 25% reduction
+    } else if (surfaceCondition === "Damp") {
+      torqueDescription = "Moderate torque reduction recommended";
+      torqueAdjustment = -15; // 15% reduction
+    } else if (asphaltTemp > 120) {
+      torqueDescription = "Higher torque application possible on hot, grippy surface";
+      torqueAdjustment = 5; // 5% increase
+    }
+    
+    // Drag coefficient approximation based on conditions
+    // Base value for typical sports car (0.30-0.35)
+    const baseDrag = 0.32;
+    // Adjusted for weather conditions
+    const dragCoefficient = baseDrag * 
+      (1 + (windSpeed / 50)) * // Wind effect
+      (hasRain ? 1.05 : 1) *   // Rain effect
+      (hasSnow ? 1.12 : 1);    // Snow effect
+    
+    // Downforce efficiency (percentage)
+    // Reduced in wet conditions due to water on aero surfaces
+    const downforceEfficiency = hasRain ? 85 : hasSnow ? 70 : 100;
+    
+    // Cooling efficiency
+    let coolingEfficiency = "Optimal";
+    if (airTemp > 90) {
+      coolingEfficiency = "Reduced - monitor temps";
+    } else if (airTemp < 40) {
+      coolingEfficiency = "High - consider blocking airflow";
+    }
+    
+    // Construct the automotive data object with F1-level performance metrics
     const automotiveData: AutomotiveWeatherData = {
       timestamp: Date.now(),
       surfaceConditions: {
@@ -318,6 +461,42 @@ export async function getAutomotiveWeatherData(lat: number, lon: number): Promis
         temperature: `${airTemp}°F`,
         wind: windSpeed < 10 ? "Calm" : "Breezy",
         lighting: lightingCondition
+      },
+      // F1-level performance metrics
+      performance: {
+        tireWarmupTime: {
+          sport: sportWarmup,
+          summer: summerWarmup,
+          allSeason: allSeasonWarmup,
+          winter: winterWarmup
+        },
+        recommendedTirePressure: {
+          front: {
+            min: frontOptimal - pressureMargin,
+            max: frontOptimal + pressureMargin,
+            optimal: frontOptimal,
+            unit: "PSI"
+          },
+          rear: {
+            min: rearOptimal - pressureMargin,
+            max: rearOptimal + pressureMargin,
+            optimal: rearOptimal,
+            unit: "PSI"
+          }
+        },
+        torqueEffect: {
+          description: torqueDescription,
+          percentageAdjustment: torqueAdjustment
+        },
+        aerodynamics: {
+          dragCoefficient: parseFloat(dragCoefficient.toFixed(3)),
+          downforceEfficiency: downforceEfficiency
+        },
+        enginePerformance: {
+          airDensityFactor: parseFloat(airDensityFactor),
+          coolingEfficiency: coolingEfficiency,
+          estimatedPowerChange: powerChangeStr
+        }
       }
     };
     
@@ -409,6 +588,53 @@ export async function fetchAllWeatherData(latitude: number, longitude: number) {
 function getWindDirection(degrees: number): string {
   const directions = ['N', 'NNE', 'NE', 'ENE', 'E', 'ESE', 'SE', 'SSE', 'S', 'SSW', 'SW', 'WSW', 'W', 'WNW', 'NW', 'NNW', 'N'];
   return directions[Math.round(degrees / 22.5)];
+}
+
+/**
+ * Search for locations by name
+ * Allows the user to search for any location worldwide
+ */
+export async function searchLocationsByName(query: string): Promise<LocationSearchResult[]> {
+  try {
+    console.log('Searching for locations with query:', query);
+    const url = `${GEO_URL}/direct?q=${encodeURIComponent(query)}&limit=5&appid=${API_KEY}`;
+    const results = await getCachedOrFetch(url);
+    
+    // Format the results with a user-friendly display name
+    return results.map((location: any) => ({
+      ...location,
+      formattedName: location.state 
+        ? `${location.name}, ${location.state}, ${location.country}` 
+        : `${location.name}, ${location.country}`
+    }));
+  } catch (error) {
+    console.error('Error searching for locations:', error);
+    throw error;
+  }
+}
+
+/**
+ * Get location information for reverse geocoding (coordinates to place name)
+ */
+export async function getLocationNameByCoordinates(lat: number, lon: number): Promise<LocationSearchResult | null> {
+  try {
+    const url = `${GEO_URL}/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${API_KEY}`;
+    const results = await getCachedOrFetch(url);
+    
+    if (results && results.length > 0) {
+      const location = results[0];
+      return {
+        ...location,
+        formattedName: location.state 
+          ? `${location.name}, ${location.state}, ${location.country}` 
+          : `${location.name}, ${location.country}`
+      };
+    }
+    return null;
+  } catch (error) {
+    console.error('Error reverse geocoding:', error);
+    throw error;
+  }
 }
 
 /**
