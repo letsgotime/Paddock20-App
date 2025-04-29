@@ -1,10 +1,19 @@
 import React, { useEffect, useRef, useState } from 'react';
 
 export interface HeatmapDataPoint {
-  lat: number;
-  lng: number;
+  position: { lat: number; lng: number };
   value: number; // 0-100 intensity value
-  metric: 'speed' | 'g-force' | 'engine-load' | 'temperature' | 'combined';
+  metric: 'speed' | 'acceleration' | 'cornering' | 'elevation' | 'temperature' | 'performance';
+  timestamp?: number;
+  details?: {
+    speed: number;
+    acceleration: number;
+    cornering: number;
+    elevation: number;
+    gradient: number;
+    temperature: number;
+    [key: string]: any;
+  };
 }
 
 interface RoutePerformanceHeatmapProps {
@@ -18,19 +27,20 @@ interface RoutePerformanceHeatmapProps {
 }
 
 // Helper function to generate sample heatmap data for testing/demo
-export function generateSampleHeatmapData(
+export const generateSampleHeatmapData = (
   centerLat: number, 
   centerLng: number, 
   pointCount: number = 20,
   radiusKm: number = 0.5
-): HeatmapDataPoint[] {
+): HeatmapDataPoint[] => {
   const points: HeatmapDataPoint[] = [];
-  const metrics: Array<'speed' | 'g-force' | 'engine-load' | 'temperature' | 'combined'> = [
-    'speed', 'g-force', 'engine-load', 'temperature', 'combined'
+  const metrics: Array<'speed' | 'acceleration' | 'cornering' | 'elevation' | 'temperature' | 'performance'> = [
+    'speed', 'acceleration', 'cornering', 'elevation', 'temperature', 'performance'
   ];
   
   // Earth's radius in kilometers
   const earthRadius = 6371;
+  const currentTime = Date.now();
   
   // Generate points in a circular pattern around the center coordinates
   for (let i = 0; i < pointCount; i++) {
@@ -52,14 +62,35 @@ export function generateSampleHeatmapData(
     const normalizedDistance = distance / radiusKm;
     const value = Math.round(100 * (1 - normalizedDistance * 0.8 + Math.random() * 0.2));
     
+    // Random performance metrics
+    const speed = 30 + Math.sin(i / pointCount * Math.PI * 2) * 30 + Math.random() * 20; // 0-80 mph
+    const acceleration = 0.2 + Math.cos(i / pointCount * Math.PI * 3) * 0.3 + Math.random() * 0.2; // G forces
+    const cornering = 0.1 + Math.sin(i / pointCount * Math.PI * 5) * 0.4 + Math.random() * 0.3; // Lateral G
+    const elevationVal = 400 + Math.sin(i / pointCount * Math.PI) * 500 + Math.random() * 100; // Feet
+    const gradient = Math.sin(i / pointCount * Math.PI * 2) * 8; // -8% to 8%
+    const temperatureVal = 75 + Math.sin(i / pointCount * Math.PI) * 10 + Math.random() * 5; // °F
+    
     // Randomly select a metric
     const metric = metrics[Math.floor(Math.random() * metrics.length)];
     
-    points.push({ lat, lng, value, metric });
+    points.push({
+      position: { lat, lng },
+      value,
+      metric,
+      timestamp: currentTime - (pointCount - i) * 5000, // 5 seconds between points
+      details: {
+        speed,
+        acceleration,
+        cornering,
+        elevation: elevationVal,
+        gradient,
+        temperature: temperatureVal
+      }
+    });
   }
   
   return points;
-}
+};
 
 const RoutePerformanceHeatmap: React.FC<RoutePerformanceHeatmapProps> = ({ 
   points, 
@@ -78,8 +109,8 @@ const RoutePerformanceHeatmap: React.FC<RoutePerformanceHeatmapProps> = ({
     if (points.length === 0) return [];
     
     // Find min/max coordinates to scale properly
-    const lats = points.map(p => p.lat);
-    const lngs = points.map(p => p.lng);
+    const lats = points.map(p => p.position.lat);
+    const lngs = points.map(p => p.position.lng);
     const minLat = Math.min(...lats);
     const maxLat = Math.max(...lats);
     const minLng = Math.min(...lngs);
@@ -91,8 +122,8 @@ const RoutePerformanceHeatmap: React.FC<RoutePerformanceHeatmapProps> = ({
     
     // Map each point to canvas coordinates
     return points.map(point => ({
-      x: ((point.lng - minLng) / lngRange) * (width - 40) + 20, // 20px padding on each side
-      y: height - ((point.lat - minLat) / latRange) * (height - 40) - 20,
+      x: ((point.position.lng - minLng) / lngRange) * (width - 40) + 20, // 20px padding on each side
+      y: height - ((point.position.lat - minLat) / latRange) * (height - 40) - 20,
       value: point.value,
       metric: point.metric,
       originalPoint: point
@@ -321,8 +352,8 @@ const RoutePerformanceHeatmap: React.FC<RoutePerformanceHeatmapProps> = ({
       ctx.textAlign = 'left';
       ctx.fillText(`Metric: ${hoveredPoint.metric}`, infoX + 10, infoY + 20);
       ctx.fillText(`Value: ${hoveredPoint.value}`, infoX + 10, infoY + 40);
-      ctx.fillText(`Lat: ${hoveredPoint.lat.toFixed(6)}`, infoX + 10, infoY + 60);
-      ctx.fillText(`Lng: ${hoveredPoint.lng.toFixed(6)}`, infoX + 10, infoY + 75);
+      ctx.fillText(`Lat: ${hoveredPoint.position?.lat.toFixed(6) || 'N/A'}`, infoX + 10, infoY + 60);
+      ctx.fillText(`Lng: ${hoveredPoint.position?.lng.toFixed(6) || 'N/A'}`, infoX + 10, infoY + 75);
     }
     
   }, [points, width, height, colorScale, showLegend, hoveredPoint, realTimeMode]);

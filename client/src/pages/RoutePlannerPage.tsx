@@ -675,7 +675,7 @@ const RoutePlannerPage = () => {
   
   // Performance heatmap data
   const [heatmapData, setHeatmapData] = useState<HeatmapDataPoint[]>([]);
-  const [selectedHeatmapMetric, setSelectedHeatmapMetric] = useState('performance');
+  const [selectedHeatmapMetric, setSelectedHeatmapMetric] = useState<'speed' | 'acceleration' | 'cornering' | 'elevation' | 'temperature' | 'performance'>('performance');
   const [showHeatmap, setShowHeatmap] = useState(false);
   const [heatmapMode, setHeatmapMode] = useState<'real-time' | 'simulated'>('real-time');
   const [isCollectingData, setIsCollectingData] = useState(false);
