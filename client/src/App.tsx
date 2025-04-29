@@ -48,6 +48,7 @@ import DiscountsPage from "./pages/DiscountsPage";
 import ContactPage from "./pages/ContactPage";
 import ChatFeedPage from "./pages/ChatFeedPage";
 import ShareDemoPage from "./pages/ShareDemoPage";
+import MoodEnergyTrackerPage from "./pages/MoodEnergyTrackerPage";
 import SupportChatbot from "./components/SupportChatbot";
 import HomePage from "./pages/Home";
 import { useAuth } from "./hooks/useAuth";
@@ -170,6 +171,7 @@ function App() {
               <Route path="/contact" element={<ProtectedRoute><ContactPage /></ProtectedRoute>} />
               <Route path="/chat-feed" element={<ProtectedRoute><ChatFeedPage /></ProtectedRoute>} />
               <Route path="/share" element={<ProtectedRoute><ShareDemoPage /></ProtectedRoute>} />
+              <Route path="/mood-energy-tracker" element={<ProtectedRoute><MoodEnergyTrackerPage /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             
