@@ -30,7 +30,7 @@ export interface GoalMedia {
 
 export interface HustlePillar {
   id: number;
-  type: 'money' | 'mind' | 'spirit';
+  type: 'body' | 'mind' | 'spirit' | 'activity' | 'education' | 'intention' | 'celebration';
   description: string;
   targetValue: number;
   currentValue: number;
@@ -49,7 +49,7 @@ export interface HustlePillar {
 }
 
 export interface DisciplineStreak {
-  type: 'mind' | 'body' | 'spirit';
+  type: 'activity' | 'education' | 'intention';
   currentStreak: number;
   longestStreak: number;
   lastCompletedDate?: string;
@@ -109,9 +109,9 @@ export interface Goal {
   // New fields for 2.0
   hustlePillars?: HustlePillar[];
   disciplineStreaks?: {
-    mind: DisciplineStreak;
-    body: DisciplineStreak;
-    spirit: DisciplineStreak;
+    activity: DisciplineStreak;
+    education: DisciplineStreak;
+    intention: DisciplineStreak;
   };
   hustleMetrics?: HustleMetric[];
   victoryAchievements?: VictoryAchievement[];
