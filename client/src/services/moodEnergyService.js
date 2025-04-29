@@ -8,6 +8,7 @@ let localMoodEnergyEntries = [
     date: new Date().toISOString(),
     mood: 8,
     energy: 7,
+    focus: 9, // New focus field
     note: 'Excellent drive on the mountain pass today. Car felt responsive and handling was precise.',
     vehicleId: 1
   },
@@ -16,6 +17,7 @@ let localMoodEnergyEntries = [
     date: new Date(Date.now() - 86400000).toISOString(), // 1 day ago
     mood: 5,
     energy: 6,
+    focus: 7, // New focus field
     note: 'Moderate traffic conditions, but still enjoyed the coastal route.',
     vehicleId: 1
   },
@@ -24,6 +26,7 @@ let localMoodEnergyEntries = [
     date: new Date(Date.now() - 172800000).toISOString(), // 2 days ago
     mood: 9,
     energy: 8,
+    focus: 8, // New focus field
     note: 'Perfect weather for track day! Set a new personal best lap time.',
     vehicleId: 2
   }
@@ -126,19 +129,23 @@ export const getMoodEnergyStats = async (vehicleId = null) => {
       return {
         avgMood: 0,
         avgEnergy: 0,
+        avgFocus: 0,
         moodTrend: 'neutral',
         energyTrend: 'neutral',
+        focusTrend: 'neutral',
         entryCount: 0
       };
     }
     
-    // Calculate average mood and energy
+    // Calculate average mood, energy, and focus
     const avgMood = entries.reduce((sum, entry) => sum + entry.mood, 0) / entries.length;
     const avgEnergy = entries.reduce((sum, entry) => sum + entry.energy, 0) / entries.length;
+    const avgFocus = entries.reduce((sum, entry) => sum + (entry.focus || 5), 0) / entries.length;
     
     // Calculate trends (if we have at least 2 entries)
     let moodTrend = 'neutral';
     let energyTrend = 'neutral';
+    let focusTrend = 'neutral';
     
     if (entries.length >= 2) {
       // Sort entries by date, newest first
@@ -159,19 +166,30 @@ export const getMoodEnergyStats = async (vehicleId = null) => {
       const olderEnergyAvg = sortedEntries.slice(Math.min(3, sortedEntries.length))
         .reduce((sum, entry) => sum + entry.energy, 0) / Math.max(1, sortedEntries.length - Math.min(3, sortedEntries.length));
       
+      const recentFocusAvg = sortedEntries.slice(0, Math.min(3, sortedEntries.length))
+        .reduce((sum, entry) => sum + (entry.focus || 5), 0) / Math.min(3, sortedEntries.length);
+      
+      const olderFocusAvg = sortedEntries.slice(Math.min(3, sortedEntries.length))
+        .reduce((sum, entry) => sum + (entry.focus || 5), 0) / Math.max(1, sortedEntries.length - Math.min(3, sortedEntries.length));
+      
       // Determine trend direction
       if (recentMoodAvg > olderMoodAvg + 0.5) moodTrend = 'improving';
       else if (recentMoodAvg < olderMoodAvg - 0.5) moodTrend = 'declining';
       
       if (recentEnergyAvg > olderEnergyAvg + 0.5) energyTrend = 'improving';
       else if (recentEnergyAvg < olderEnergyAvg - 0.5) energyTrend = 'declining';
+      
+      if (recentFocusAvg > olderFocusAvg + 0.5) focusTrend = 'improving';
+      else if (recentFocusAvg < olderFocusAvg - 0.5) focusTrend = 'declining';
     }
     
     return {
       avgMood: parseFloat(avgMood.toFixed(1)),
       avgEnergy: parseFloat(avgEnergy.toFixed(1)),
+      avgFocus: parseFloat(avgFocus.toFixed(1)),
       moodTrend,
       energyTrend,
+      focusTrend,
       entryCount: entries.length,
       recentEntries: entries.slice(0, 5) // Last 5 entries
     };
@@ -180,8 +198,10 @@ export const getMoodEnergyStats = async (vehicleId = null) => {
     return {
       avgMood: 0,
       avgEnergy: 0,
+      avgFocus: 0,
       moodTrend: 'neutral',
       energyTrend: 'neutral',
+      focusTrend: 'neutral',
       entryCount: 0
     };
   }
@@ -244,6 +264,7 @@ export const getTelemetryChartData = async (vehicleId = null) => {
         time: new Date(entry.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         mood: entry.mood,
         energy: entry.energy,
+        focus: entry.focus || 5, // Include focus with a default value of 5
         note: entry.note || ""
       }));
     
