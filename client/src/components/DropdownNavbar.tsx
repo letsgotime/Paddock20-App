@@ -37,7 +37,16 @@ const DropdownNavbar = () => {
             <Link to="/manifestation-station" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>🧭 Manifestation Station™</Link>
             <Link to="/mod-planner" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>📐 Mod Planner</Link>
             <Link to="/drive-journal" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>📝 Drive Journal</Link>
-            <Link to="/hustle-planner" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>🧠 Hustle Planner</Link>
+            <Link to="/manifestation-station" className="hover:text-green-400 block" onClick={() => {
+              // Directly navigate to the Manifestation Station with the hustle planner view
+              window.localStorage.setItem('manifestation_activeView', 'hustle-planner');
+              setIsOpen(false);
+            }}>🧠 Hustle Planner</Link>
+            <Link to="/manifestation-station" className="hover:text-green-400 block" onClick={() => {
+              // Directly navigate to the Manifestation Station with the discipline tracker view
+              window.localStorage.setItem('manifestation_activeView', 'discipline-tracker');
+              setIsOpen(false);
+            }}>📅 Daily Check-in</Link>
             <Link to="/juicebox" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>🧼 Juice Box</Link>
             <Link to="/discounts" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>💸 Discounts & Promotions</Link>
             
