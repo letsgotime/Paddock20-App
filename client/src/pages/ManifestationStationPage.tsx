@@ -233,7 +233,16 @@ const ManifestationStationPage: React.FC = () => {
   const [goals, setGoals] = useState<Goal[]>(MOCK_GOALS);
   const [selectedGoalId, setSelectedGoalId] = useState<number | null>(goals.length > 0 ? goals[0].id : null);
   const [isCreatingNewDream, setIsCreatingNewDream] = useState<boolean>(false);
-  const [activeView, setActiveView] = useState<string>('dashboard');
+  // Check if there's a stored view in localStorage from direct navigation
+  const initialView = window.localStorage.getItem('manifestation_activeView') || 'dashboard';
+  const [activeView, setActiveView] = useState<string>(initialView);
+  
+  // Clear the localStorage value after using it
+  useEffect(() => {
+    if (window.localStorage.getItem('manifestation_activeView')) {
+      window.localStorage.removeItem('manifestation_activeView');
+    }
+  }, []);
   const [todayAffirmation, setTodayAffirmation] = useState<string>(getTodaysAffirmation());
   const [streakCount, setStreakCount] = useState<number>(7); // Mock streak count
   
@@ -600,12 +609,12 @@ const ManifestationStationPage: React.FC = () => {
               </h1>
               
               {!isCreatingNewDream && selectedGoal && (
-                <div className="flex overflow-hidden rounded-md">
+                <div className="flex overflow-hidden rounded-md border-2 border-green-500">
                   <button
                     onClick={() => setActiveView('dashboard')}
-                    className={`px-3 py-1.5 text-sm border-r border-gray-700 ${
+                    className={`px-5 py-2 text-sm border-r-2 border-green-500 ${
                       activeView === 'dashboard' 
-                        ? 'bg-green-600 text-white' 
+                        ? 'bg-blue-600 text-white' 
                         : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                     }`}
                   >
@@ -613,9 +622,9 @@ const ManifestationStationPage: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setActiveView('hustle-planner')}
-                    className={`px-3 py-1.5 text-sm border-r border-gray-700 ${
+                    className={`px-5 py-2 text-sm border-r-2 border-green-500 ${
                       activeView === 'hustle-planner' 
-                        ? 'bg-green-600 text-white' 
+                        ? 'bg-blue-600 text-white' 
                         : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                     }`}
                   >
@@ -623,9 +632,9 @@ const ManifestationStationPage: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setActiveView('discipline-tracker')}
-                    className={`px-3 py-1.5 text-sm ${
+                    className={`px-5 py-2 text-sm ${
                       activeView === 'discipline-tracker' 
-                        ? 'bg-green-600 text-white' 
+                        ? 'bg-blue-600 text-white' 
                         : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                     }`}
                   >
