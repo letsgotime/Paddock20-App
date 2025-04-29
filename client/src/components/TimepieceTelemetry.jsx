@@ -922,7 +922,7 @@ function TimepieceTelemetry({
               <div className="bg-gray-900/50 rounded-lg p-4 border border-gray-800">
                 <div className="flex items-center justify-between mb-2">
                   <div className="text-gray-400 flex items-center">
-                    <Tool className="h-4 w-4 mr-1" /> Service Status
+                    <Wrench className="h-4 w-4 mr-1" /> Service Status
                   </div>
                   <div className="flex items-center">
                     <span className={`inline-block w-3 h-3 rounded-full bg-${getServiceStatusColor()}-500`}></span>
