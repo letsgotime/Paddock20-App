@@ -1,7 +1,6 @@
 import React, { useState } from 'react';
 import { Goal, HustlePillar } from '../../types/manifestation';
 import { 
-  Party, 
   Trophy, 
   Star, 
   Heart, 
@@ -19,7 +18,8 @@ import {
   Edit,
   Save,
   X,
-  Calendar
+  Calendar,
+  Music
 } from 'lucide-react';
 
 interface CelebrationComponentProps {
@@ -296,7 +296,7 @@ const CelebrationComponent: React.FC<CelebrationComponentProps> = ({ goal, onUpd
           
           <div>
             <label className="block text-xs text-gray-400 mb-1">
-              <Party className="inline-block h-3.5 w-3.5 mr-1" />
+              <Music className="inline-block h-3.5 w-3.5 mr-1" />
               What music or sounds will be playing?
             </label>
             <input
@@ -436,7 +436,7 @@ const CelebrationComponent: React.FC<CelebrationComponentProps> = ({ goal, onUpd
                 {celebrationDetails.musicOrSounds && (
                   <div>
                     <h5 className="text-blue-400 text-xs uppercase tracking-wider mb-1 flex items-center">
-                      <Party className="h-3.5 w-3.5 mr-1" />
+                      <Music className="h-3.5 w-3.5 mr-1" />
                       Soundscape
                     </h5>
                     <p className="text-white">{celebrationDetails.musicOrSounds}</p>
