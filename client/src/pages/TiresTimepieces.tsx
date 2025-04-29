@@ -22,7 +22,7 @@ interface TimepieceState {
 
 const TiresTimepieces: React.FC = () => {
   const contentRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'timepiece-vault' | 'telemetry' | 'compare' | 'provenance' | 'analytics' | 'certification'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'timepiece-vault' | 'telemetry' | 'compare' | 'provenance' | 'analytics' | 'certification' | 'marketplace'>('overview');
   const [selectedTimepieceId, setSelectedTimepieceId] = useState<string | null>(null);
   
   // For comparison functionality
