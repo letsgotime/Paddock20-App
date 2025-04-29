@@ -2182,43 +2182,43 @@ const RoutePlannerPage = () => {
           )}
         </div>
         
-        {/* Navigation App Selection - Moved to top for better UX */}
-        <div className="bg-gray-900/60 rounded-lg p-3 border border-blue-900/30 mb-4">
-          <div className="flex flex-wrap items-center gap-4">
-            <div className="flex-shrink-0">
-              <label className="text-blue-400 font-orbitron text-sm">Navigation App:</label>
-            </div>
-            <div className="flex-grow flex items-center gap-3">
+        {/* Navigation Integration */}
+        <div className="bg-gray-900/60 rounded-lg p-4 border border-blue-900/30 mb-4">
+          <h3 className="text-blue-400 font-orbitron text-lg mb-3">Navigation Integration</h3>
+          
+          <div className="mb-3">
+            <label className="block text-gray-300 text-sm mb-2">Preferred Navigation App</label>
+            <div className="flex items-center gap-3">
               <select
                 value={preferredNavApp}
                 onChange={(e) => setPreferredNavApp(e.target.value)}
-                className="bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm"
+                className="bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 w-full"
               >
                 <option value="Google Maps">Google Maps</option>
                 <option value="Waze">Waze</option>
                 <option value="Apple Maps">Apple Maps</option>
               </select>
-              
-              <label className="inline-flex items-center ml-2 cursor-pointer">
-                <input
-                  type="checkbox"
-                  checked={showAdvancedSettings}
-                  onChange={() => setShowAdvancedSettings(!showAdvancedSettings)}
-                  className="form-checkbox text-blue-500 rounded h-4 w-4"
-                />
-                <span className="ml-2 text-gray-300 text-sm">Advanced Options</span>
-              </label>
-              
-              {showAdvancedSettings && (
-                <button
-                  onClick={() => document.getElementById('navigation-advanced-settings')?.scrollIntoView({ behavior: 'smooth' })}
-                  className="text-blue-400 hover:text-blue-300 text-sm underline"
-                >
-                  Configure Navigation Settings
-                </button>
-              )}
             </div>
           </div>
+          
+          <button
+            onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
+            className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-lg px-4 py-2 transition-colors"
+          >
+            <span>Show Advanced Navigation Features</span>
+            <span>{showAdvancedSettings ? '▼' : '►'}</span>
+          </button>
+          
+          {showAdvancedSettings && (
+            <div className="mt-3 pl-4 border-l-2 border-blue-500/30 animate-fadeIn">
+              <button
+                onClick={() => document.getElementById('navigation-advanced-settings')?.scrollIntoView({ behavior: 'smooth' })}
+                className="text-blue-400 hover:text-blue-300 text-sm underline"
+              >
+                Configure Navigation Settings
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
@@ -2385,80 +2385,7 @@ const RoutePlannerPage = () => {
               </div>
             </div>
             
-            {/* Route Customization - Moved here as requested */}
-            <div className="mt-6 bg-gray-900/60 p-4 rounded-lg border border-blue-900/30">
-              <h3 className="text-blue-400 font-orbitron text-lg mb-3 flex items-center">
-                <span className="mr-2">⚙️</span> Route Customizations
-              </h3>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {/* Trip Configuration */}
-                <div className="bg-gray-800/60 p-3 rounded-lg border border-gray-700">
-                  <h4 className="text-green-500 font-semibold mb-2 text-sm uppercase tracking-wide">Trip Type</h4>
-                  <div className="space-y-2">
-                    <label className="flex items-center p-2 hover:bg-gray-800 rounded transition-colors">
-                      <input
-                        type="checkbox"
-                        name="roundTrip"
-                        checked={routeCustomizations.roundTrip}
-                        onChange={handleRouteCustomizationChange}
-                        className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5"
-                      />
-                      <div>
-                        <span className="text-white font-medium">Round Trip</span>
-                        <p className="text-gray-400 text-xs">Return to starting point</p>
-                      </div>
-                    </label>
-                    <label className="flex items-center p-2 hover:bg-gray-800 rounded transition-colors">
-                      <input
-                        type="checkbox"
-                        name="scenic"
-                        checked={routeCustomizations.scenic}
-                        onChange={handleRouteCustomizationChange}
-                        className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5"
-                      />
-                      <div>
-                        <span className="text-white font-medium">Scenic Route</span>
-                        <p className="text-gray-400 text-xs">Prioritize roads with views</p>
-                      </div>
-                    </label>
-                  </div>
-                </div>
-                
-                {/* Stop Configurations */}
-                <div className="bg-gray-800/60 p-3 rounded-lg border border-gray-700">
-                  <h4 className="text-green-500 font-semibold mb-2 text-sm uppercase tracking-wide">Route Options</h4>
-                  <div className="space-y-2">
-                    <label className="flex items-center p-2 hover:bg-gray-800 rounded transition-colors">
-                      <input
-                        type="checkbox"
-                        name="avoidTolls"
-                        checked={routeCustomizations.avoidTolls}
-                        onChange={handleRouteCustomizationChange}
-                        className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5"
-                      />
-                      <div>
-                        <span className="text-white font-medium">Avoid Tolls</span>
-                        <p className="text-gray-400 text-xs">Find toll-free routes</p>
-                      </div>
-                    </label>
-                    <label className="flex items-center p-2 hover:bg-gray-800 rounded transition-colors">
-                      <input
-                        type="checkbox"
-                        name="gasStop"
-                        checked={routeCustomizations.gasStop}
-                        onChange={handleRouteCustomizationChange}
-                        className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5"
-                      />
-                      <div>
-                        <span className="text-white font-medium">Include Gas Stops</span>
-                        <p className="text-gray-400 text-xs">Add premium fuel stations to route</p>
-                      </div>
-                    </label>
-                  </div>
-                </div>
-              </div>
-            </div>
+            {/* Removed duplicate Route Customizations section - Using the more comprehensive section below */}
           </div>
           
           {/* Vehicle Selection Section */}
