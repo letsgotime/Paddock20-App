@@ -188,7 +188,8 @@ const RoutePlannerPage: React.FC = () => {
   // References and states
   const mapRef = useRef<HTMLDivElement>(null);
   const [selectedVehicle, setSelectedVehicle] = useState<VehiclePerformanceData | null>(null);
-  const [waypoints, setWaypoints] = useState<google.maps.LatLngLiteral[]>([]);
+  // Changed from google.maps.LatLngLiteral to a simple interface to avoid Google Maps dependency
+  const [waypoints, setWaypoints] = useState<{lat: number, lng: number}[]>([]);
   const [routeStats, setRouteStats] = useState<{
     distance: number;
     duration: number;
@@ -715,8 +716,8 @@ const RoutePlannerPage: React.FC = () => {
     try {
       setWeatherLoading(true);
       const [weatherResponse, oneCallResponse] = await Promise.all([
-        getWeatherData(position.lat, position.lng),
-        getOneCallData(position.lat, position.lng)
+        getWeatherData({ lat: position.lat, lon: position.lng }),
+        getOneCallData({ lat: position.lat, lon: position.lng })
       ]);
       
       if (weatherResponse) {
@@ -982,7 +983,7 @@ const RoutePlannerPage: React.FC = () => {
     
     // Get actual location if available
     getCurrentLocation();
-  }, []);
+  }, [updateWeather]);
   
   // Update performance data when vehicle changes
   useEffect(() => {
