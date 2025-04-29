@@ -1,10 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { 
   Tag, Clock, Shield, ChevronRight, 
   Check, AlertTriangle, ChevronDown, MapPin, 
   Star, DollarSign, Info, ExternalLink, 
-  Activity, BarChart3, Gauge, Zap
+  Activity, BarChart3, Gauge, Zap, ImageIcon
 } from 'lucide-react';
+import { getImageForItem, searchImage } from '../services/unsplashService';
+
+// Fallback images for when API fails
 import ferrariImg from '@assets/Ferrari-458-With-HRE-P101-Wheels-By-TAG-Motorsports-2.jpg';
 import patekImg from '@assets/5711_1A_014_1@2x.jpg';
 
@@ -38,48 +41,91 @@ const MarketplaceListing = ({ listing, isAdmin, onEdit, onDelete, onViewTelemetr
     }
   };
 
-  // Use imported assets
+  // State for storing the image URL
+  const [imageUrl, setImageUrl] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(false);
   
-  const getImageForListing = (listing) => {
-    // Map listings to available images in attached_assets
-    if (listing.type === 'vehicle') {
-      if (listing.brand === 'Ferrari') {
-        return ferrariImg;
+  // Fetch image from Unsplash on component mount
+  useEffect(() => {
+    const fetchImage = async () => {
+      try {
+        setLoading(true);
+        let url = null;
+        
+        // First try to get image from the getImageForItem service (cached)
+        url = getImageForItem(listing.type, listing.brand, listing.model);
+        
+        // If no cached image, try to fetch one
+        if (!url) {
+          const searchQuery = `${listing.brand} ${listing.model} ${listing.type === 'vehicle' ? 'car' : 'watch'}`;
+          url = await searchImage(searchQuery);
+        }
+        
+        // If we still don't have an image, use fallbacks
+        if (!url) {
+          if (listing.type === 'vehicle') {
+            url = ferrariImg; // Fallback to local Ferrari image
+          } else {
+            url = patekImg; // Fallback to local Patek image
+          }
+        }
+        
+        setImageUrl(url);
+      } catch (err) {
+        console.error('Error fetching image:', err);
+        setError(true);
+        
+        // Use fallback images on error
+        if (listing.type === 'vehicle') {
+          setImageUrl(ferrariImg);
+        } else {
+          setImageUrl(patekImg);
+        }
+      } finally {
+        setLoading(false);
       }
-      // Default car image if specific one not found
-      return ferrariImg;
-    } else if (listing.type === 'timepiece') {
-      if (listing.brand === 'Patek Philippe' && listing.reference === '5711/1A-014') {
-        return patekImg;
-      }
-      // Default watch image if specific one not found
-      return patekImg;
-    }
-    return null;
-  };
-
-  const renderListingImage = () => {
-    // Get appropriate image for this listing
-    const imageUrl = getImageForListing(listing);
+    };
     
-    if (imageUrl) {
+    fetchImage();
+  }, [listing.brand, listing.model, listing.type]);
+  
+  const renderListingImage = () => {
+    if (loading) {
       return (
-        <div className="flex-shrink-0 relative w-28 h-28 md:w-36 md:h-36 rounded-lg overflow-hidden bg-gray-900 border border-gray-800">
-          <img 
-            src={imageUrl} 
-            alt={`${listing.brand} ${listing.model}`}
-            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 hover:scale-110"
-          />
+        <div className="flex-shrink-0 relative w-28 h-28 md:w-36 md:h-36 rounded-lg overflow-hidden bg-gray-900 border border-gray-800 flex items-center justify-center">
+          <div className="w-8 h-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
         </div>
       );
     }
     
-    // Fallback if no image mapping found
-    return (
-      <div className="flex-shrink-0 w-28 h-28 md:w-36 md:h-36 rounded-lg bg-gray-900 border border-gray-800 flex items-center justify-center">
-        <div className="text-gray-700 text-center p-2">
-          <span className="text-xs">{listing.brand} {listing.model}</span>
+    if (error || !imageUrl) {
+      return (
+        <div className="flex-shrink-0 w-28 h-28 md:w-36 md:h-36 rounded-lg bg-gray-900 border border-gray-800 flex items-center justify-center">
+          <ImageIcon className="h-8 w-8 text-gray-700" />
+          <div className="text-gray-700 text-center p-2">
+            <span className="text-xs">{listing.brand} {listing.model}</span>
+          </div>
         </div>
+      );
+    }
+    
+    return (
+      <div className="flex-shrink-0 relative w-28 h-28 md:w-36 md:h-36 rounded-lg overflow-hidden bg-gray-900 border border-gray-800">
+        <img 
+          src={imageUrl} 
+          alt={`${listing.brand} ${listing.model}`}
+          className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+          onError={() => {
+            setError(true);
+            // Fallback to local images on load error
+            if (listing.type === 'vehicle') {
+              setImageUrl(ferrariImg);
+            } else {
+              setImageUrl(patekImg);
+            }
+          }}
+        />
       </div>
     );
   };
