@@ -10,9 +10,11 @@ import VaultStorageServices from '../components/VaultStorageServices';
 import GlossTracker from '../components/GlossTracker';
 import F1TelemetryDashboard from '../components/F1TelemetryDashboard';
 import JuiceBoxChecklists from '../components/JuiceBoxChecklists';
+import SeasonalChecklists from '../components/SeasonalChecklists';
 import AddVehicleForm from '../components/AddVehicleForm';
 import AddModificationForm from '../components/AddModificationForm';
 import AddMaintenanceForm from '../components/AddMaintenanceForm';
+import EnhancedVehicleDetail from '../components/EnhancedVehicleDetail';
 
 // Enhanced telemetry and data services
 import vehicleDataService from '../services/vehicleDataService';
@@ -22,7 +24,8 @@ import {
   Clock, Calendar, PieChart as PieChartIcon, AlertTriangle, TrendingUp, 
   ChevronRight, ChevronDown, ChevronUp, Gauge, Info, Fuel, Droplets, Battery, 
   Car, Upload, Maximize2, Zap, MapPin, Mountain, Filter, PlusCircle, 
-  Wrench, Shield, Camera, Clipboard, MoreHorizontal, Eye, Trash2, Download, X, Plus
+  Wrench, Shield, Camera, Clipboard, MoreHorizontal, Eye, Trash2, Download, X, Plus,
+  CloudSnow, Sun, Leaf, Settings
 } from 'lucide-react';
 import { vehicleProfile, garageVehicles } from '../data/vehicles';
 
@@ -446,6 +449,14 @@ function GarageVaultPage() {
                 JuiceBox™
               </button>
               <button 
+                onClick={() => setActiveSection('seasonal')}
+                className={`px-3 py-1 text-sm rounded-md transition ${
+                  activeSection === 'seasonal' ? 'bg-green-500 text-black font-bold' : 'text-white hover:bg-gray-800'
+                }`}
+              >
+                Seasonal
+              </button>
+              <button 
                 onClick={() => setActiveSection('gloss')}
                 className={`px-3 py-1 text-sm rounded-md transition ${
                   activeSection === 'gloss' ? 'bg-green-500 text-black font-bold' : 'text-white hover:bg-gray-800'
@@ -562,6 +573,14 @@ function GarageVaultPage() {
             JuiceBox™
           </button>
           <button 
+            onClick={() => setActiveSection('seasonal')}
+            className={`px-3 py-1 text-sm whitespace-nowrap rounded-md transition ${
+              activeSection === 'seasonal' ? 'bg-green-500 text-black font-bold' : 'text-white bg-gray-800'
+            }`}
+          >
+            Seasonal
+          </button>
+          <button 
             onClick={() => setActiveSection('gloss')}
             className={`px-3 py-1 text-sm whitespace-nowrap rounded-md transition ${
               activeSection === 'gloss' ? 'bg-green-500 text-black font-bold' : 'text-white bg-gray-800'
@@ -580,6 +599,70 @@ function GarageVaultPage() {
           </div>
         ) : (
           <>
+            {/* Seasonal Checklist Section */}
+            {activeSection === 'seasonal' && (
+              <div className="seasonal-checklists-section">
+                <div className="flex flex-col lg:flex-row justify-between items-start mb-6">
+                  <div>
+                    <h2 className="text-blue-400 font-orbitron text-2xl mb-2">Seasonal Maintenance</h2>
+                    <p className="text-gray-400">
+                      Season-specific maintenance checklists customized to your climate and vehicle needs
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center mt-4 lg:mt-0 gap-3">
+                    <button 
+                      onClick={() => {
+                        const checklistElement = document.getElementById('seasonalChecklists');
+                        if (checklistElement) {
+                          exportToPdf(checklistElement, 'GoTime Motorsports - Seasonal Checklists.pdf');
+                        }
+                      }}
+                      className="apex-button-sm flex items-center"
+                    >
+                      <FileDown size={16} className="mr-2" />
+                      Export PDF
+                    </button>
+                    <div className="flex items-center space-x-2">
+                      <span className="text-gray-400 text-sm">Current Season:</span>
+                      <div className="flex border border-gray-700 rounded overflow-hidden">
+                        <button className="p-1.5 bg-green-600 text-white">
+                          <Leaf size={16} />
+                        </button>
+                        <button className="p-1.5 text-gray-400 hover:text-white">
+                          <Sun size={16} />
+                        </button>
+                        <button className="p-1.5 text-gray-400 hover:text-white">
+                          <Wind size={16} />
+                        </button>
+                        <button className="p-1.5 text-gray-400 hover:text-white">
+                          <CloudSnow size={16} />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div id="seasonalChecklists" className="bg-black rounded-xl p-6 border border-green-500/20">
+                  <SeasonalChecklists 
+                    vehicle={activeVehicle} 
+                    onExport={(data) => {
+                      if (data.format === 'pdf') {
+                        const checklistElement = document.getElementById('seasonalChecklists');
+                        if (checklistElement) {
+                          exportToPdf(checklistElement, `GoTime Motorsports - ${data.checklist.name}.pdf`);
+                        }
+                      }
+                    }}
+                    onSave={(data) => {
+                      console.log('Saving checklist data:', data);
+                      // In a real implementation, this would save to Supabase
+                    }}
+                  />
+                </div>
+              </div>
+            )}
+            
             {/* JuiceBox Section */}
             {activeSection === 'juicebox' && (
               <div className="juice-box-section">
@@ -1214,20 +1297,199 @@ function GarageVaultPage() {
             {/* Telemetry View */}
             {activeSection === 'telemetry' && activeVehicle && (
               <div ref={telemetryRef} className="telemetry-view">
-                <div className="bg-gray-900 rounded-xl p-4 border border-blue-500/20 mb-6">
+                {/* Enhanced Telemetry Dashboard */}
+                <div className="mb-8">
+                  <div className="flex justify-between items-center mb-6">
+                    <div>
+                      <h2 className="text-blue-400 font-orbitron text-2xl mb-2">Enhanced Vehicle Telemetry</h2>
+                      <p className="text-gray-400">
+                        Advanced F1-inspired real-time vehicle monitoring and performance analytics
+                      </p>
+                    </div>
+                    
+                    <div className="flex items-center gap-3">
+                      <button 
+                        onClick={() => setExpandedTelemetry(!expandedTelemetry)}
+                        className="apex-button-sm flex items-center"
+                      >
+                        <Maximize2 size={16} className="mr-2" />
+                        {expandedTelemetry ? 'Compact View' : 'Expanded View'}
+                      </button>
+                      <button 
+                        onClick={startOBDScan}
+                        className={`apex-button-sm flex items-center ${obdScanActive ? 'bg-yellow-600 hover:bg-yellow-700' : ''}`}
+                        disabled={obdScanActive}
+                      >
+                        <Activity size={16} className="mr-2" />
+                        {obdScanActive ? 'Scanning...' : 'Scan OBD'}
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <EnhancedVehicleTelemetry 
+                    vehicle={activeVehicle}
+                    telemetryData={{
+                      ...obdData,
+                      fuelLevel: carMetrics.fuelLevel,
+                      batteryVoltage: carMetrics.batteryHealth / 10 + 10, // Convert percentage to voltage
+                      engineTemp: obdData.engineTemp || 195,
+                      coolantTemp: obdData.engineTemp || 190,
+                      oilPressure: 45,
+                      oilTemp: 215,
+                    }}
+                    isExpanded={expandedTelemetry}
+                    onToggleExpand={() => setExpandedTelemetry(!expandedTelemetry)}
+                  />
+                </div>
+                
+                {/* OBD Information Panel */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+                  <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+                    <h3 className="text-lg font-orbitron text-blue-400 mb-4 flex items-center">
+                      <Activity size={18} className="mr-2" />
+                      OBD Connection Status
+                    </h3>
+                    
+                    {obdScanActive ? (
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-300">Scan Status</span>
+                          <span className="text-green-500 flex items-center">
+                            <span className="inline-block w-2 h-2 rounded-full bg-green-500 mr-2 animate-pulse"></span>
+                            Active
+                          </span>
+                        </div>
+                        
+                        <div className="h-1 bg-gray-800 rounded-full overflow-hidden">
+                          <div className="h-full bg-green-500 rounded-full animate-pulse" style={{ width: '100%' }}></div>
+                        </div>
+                        
+                        <div className="grid grid-cols-2 gap-4 mt-4">
+                          <div className="bg-gray-800 p-3 rounded-lg">
+                            <div className="text-xs text-gray-400 mb-1">ENGINE TEMP</div>
+                            <div className="text-lg font-medium text-white">{obdData.engineTemp}°F</div>
+                          </div>
+                          <div className="bg-gray-800 p-3 rounded-lg">
+                            <div className="text-xs text-gray-400 mb-1">RPM</div>
+                            <div className="text-lg font-medium text-white">{obdData.rpm}</div>
+                          </div>
+                          <div className="bg-gray-800 p-3 rounded-lg">
+                            <div className="text-xs text-gray-400 mb-1">MAF</div>
+                            <div className="text-lg font-medium text-white">{obdData.maf} g/s</div>
+                          </div>
+                          <div className="bg-gray-800 p-3 rounded-lg">
+                            <div className="text-xs text-gray-400 mb-1">INTAKE TEMP</div>
+                            <div className="text-lg font-medium text-white">{obdData.intakeTemp}°F</div>
+                          </div>
+                        </div>
+                        
+                        {obdData.dtcCodes.length > 0 && (
+                          <div className="mt-4 p-3 bg-red-900/30 border border-red-800 rounded-lg">
+                            <h4 className="text-red-500 font-medium flex items-center">
+                              <AlertTriangle size={16} className="mr-2" />
+                              DTC Codes Detected
+                            </h4>
+                            <ul className="mt-2 space-y-1">
+                              {obdData.dtcCodes.map((code, index) => (
+                                <li key={index} className="text-red-400 text-sm flex items-center">
+                                  <span className="inline-block w-16 font-mono">{code}</span>
+                                  <span>- Evaporative System Leak Detected (Very Small Leak)</span>
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="space-y-4">
+                        <div className="flex justify-between items-center">
+                          <span className="text-gray-300">Scan Status</span>
+                          <span className="text-gray-500">Inactive</span>
+                        </div>
+                        
+                        <div className="h-1 bg-gray-800 rounded-full overflow-hidden">
+                          <div className="h-full bg-gray-700 rounded-full" style={{ width: '0%' }}></div>
+                        </div>
+                        
+                        <p className="text-gray-400 text-center mt-6">
+                          Click "Scan OBD" to connect to your vehicle's onboard diagnostic system.
+                        </p>
+                        
+                        <button 
+                          onClick={startOBDScan}
+                          className="w-full py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-md flex items-center justify-center"
+                        >
+                          <Activity size={16} className="mr-2" />
+                          Start OBD Scan
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="bg-gray-900 border border-gray-800 rounded-lg p-6">
+                    <h3 className="text-lg font-orbitron text-blue-400 mb-4 flex items-center">
+                      <Shield size={18} className="mr-2" />
+                      Diagnostic Information
+                    </h3>
+                    
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-3 bg-gray-800 rounded-lg">
+                        <div className="flex items-center">
+                          <div className={`w-3 h-3 rounded-full ${carMetrics.carStatus === 'Ready' ? 'bg-green-500' : 'bg-yellow-500'} mr-3`}></div>
+                          <span className="text-gray-300">Overall Status</span>
+                        </div>
+                        <span className="text-white font-medium">{carMetrics.carStatus}</span>
+                      </div>
+                      
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        <div className="flex flex-col p-3 bg-gray-800 rounded-lg">
+                          <span className="text-xs text-gray-400 mb-1">LAST SERVICE</span>
+                          <span className="text-white">{carMetrics.lastService}</span>
+                        </div>
+                        <div className="flex flex-col p-3 bg-gray-800 rounded-lg">
+                          <span className="text-xs text-gray-400 mb-1">NEXT SERVICE</span>
+                          <span className="text-white">{carMetrics.nextServiceDue}</span>
+                        </div>
+                        <div className="flex flex-col p-3 bg-gray-800 rounded-lg">
+                          <span className="text-xs text-gray-400 mb-1">OIL LIFE</span>
+                          <div className="flex items-center">
+                            <span className="text-white mr-2">{carMetrics.oilLifeRemaining}%</span>
+                            <div className="flex-grow h-1.5 bg-gray-700 rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full rounded-full ${
+                                  carMetrics.oilLifeRemaining > 60 ? 'bg-green-500' : 
+                                  carMetrics.oilLifeRemaining > 20 ? 'bg-yellow-500' : 'bg-red-500'
+                                }`}
+                                style={{ width: `${carMetrics.oilLifeRemaining}%` }}
+                              ></div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="flex flex-col p-3 bg-gray-800 rounded-lg">
+                          <span className="text-xs text-gray-400 mb-1">ENGINE STATUS</span>
+                          <span className="text-white">{carMetrics.engineStatus}</span>
+                        </div>
+                      </div>
+                      
+                      <button 
+                        className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center justify-center mt-2"
+                      >
+                        <FileDown size={16} className="mr-2" />
+                        Download Diagnostic Report
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Legacy Telemetry (original implementation) */}
+                <div className="mt-8 bg-gray-900 rounded-xl p-4 border border-blue-500/20">
                   <div className="flex justify-between items-center mb-6">
                     <h3 className="text-blue-400 font-orbitron text-lg">
                       <span className="mr-2">⚡</span> F1-Style Performance Telemetry
                     </h3>
-                    <button 
-                      onClick={() => setExpandedTelemetry(!expandedTelemetry)}
-                      className="apex-button-sm"
-                    >
-                      {expandedTelemetry ? 'Compact View' : 'Expanded View'}
-                    </button>
                   </div>
                   
-                  <div className={expandedTelemetry ? "min-h-[800px]" : "min-h-[500px]"}>
+                  <div className={expandedTelemetry ? "min-h-[600px]" : "min-h-[400px]"}>
                     <Suspense fallback={<div className="h-full flex items-center justify-center"><RefreshCw className="animate-spin h-10 w-10 text-blue-500" /></div>}>
                       <F1TelemetryDashboard vehicle={activeVehicle} vehicleData={vehicleData} />
                     </Suspense>
