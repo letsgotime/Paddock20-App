@@ -25,7 +25,7 @@ import {
   ChevronRight, ChevronDown, ChevronUp, Gauge, Info, Fuel, Droplets, Battery, 
   Car, Upload, Maximize2, Zap, MapPin, Mountain, Filter, PlusCircle, 
   Wrench, Shield, Camera, Clipboard, MoreHorizontal, Eye, Trash2, Download, X, Plus,
-  CloudSnow, Sun, Leaf, Settings
+  CloudSnow, Sun, Leaf, Settings, Printer, ExternalLink, Pencil
 } from 'lucide-react';
 import { vehicleProfile, garageVehicles } from '../data/vehicles';
 
@@ -1738,6 +1738,247 @@ function GarageVaultPage() {
                             <span className="text-xs text-gray-400 ml-1">ECU Tuning Experts</span>
                           </div>
                         </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Modifications View */}
+            {activeSection === 'modifications' && activeVehicle && (
+              <div className="modifications-view">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                  <div className="lg:col-span-1 bg-gray-900 rounded-xl p-4 border border-blue-500/20">
+                    <h3 className="text-blue-400 font-orbitron text-lg mb-4">Vehicle Modifications</h3>
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className="text-white text-sm">Type Filter:</span>
+                        <select 
+                          className="bg-gray-800 text-white text-sm border border-gray-700 rounded-md px-2 py-1"
+                          onChange={(e) => {
+                            // Add filter functionality here
+                          }}
+                          defaultValue="all"
+                        >
+                          <option value="all">All Types</option>
+                          <option value="Performance">Performance</option>
+                          <option value="Aesthetic">Aesthetic</option>
+                          <option value="Wheels & Suspension">Wheels & Suspension</option>
+                          <option value="Electronics">Electronics</option>
+                          <option value="Lighting">Lighting</option>
+                          <option value="Interior">Interior</option>
+                          <option value="Exhaust">Exhaust</option>
+                          <option value="Intake">Intake</option>
+                          <option value="Engine">Engine</option>
+                          <option value="Brakes">Brakes</option>
+                          <option value="Other">Other</option>
+                        </select>
+                      </div>
+                      
+                      <button 
+                        onClick={() => {
+                          setActiveVehicle(activeVehicle);
+                          setShowAddModForm(true);
+                        }}
+                        className="w-full py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-md flex items-center justify-center"
+                      >
+                        <PlusCircle size={16} className="mr-2" />
+                        Add New Modification
+                      </button>
+                      
+                      <div className="bg-gray-800/30 p-3 rounded-lg border border-gray-700 mt-4">
+                        <h4 className="text-gray-300 font-medium flex items-center mb-2">
+                          <Wrench size={16} className="mr-2 text-blue-400" />
+                          Modification Stats
+                        </h4>
+                        <div className="grid grid-cols-2 gap-2 text-sm">
+                          <div className="bg-gray-800 p-2 rounded-lg">
+                            <div className="text-xs text-gray-400">Total</div>
+                            <div className="text-white">{modifications.filter(m => m.vehicleId === activeVehicle.id).length}</div>
+                          </div>
+                          <div className="bg-gray-800 p-2 rounded-lg">
+                            <div className="text-xs text-gray-400">Installed</div>
+                            <div className="text-white">{modifications.filter(m => m.vehicleId === activeVehicle.id && m.status === 'Installed').length}</div>
+                          </div>
+                          <div className="bg-gray-800 p-2 rounded-lg">
+                            <div className="text-xs text-gray-400">Planned</div>
+                            <div className="text-white">{modifications.filter(m => m.vehicleId === activeVehicle.id && m.status === 'Planned').length}</div>
+                          </div>
+                          <div className="bg-gray-800 p-2 rounded-lg">
+                            <div className="text-xs text-gray-400">In Progress</div>
+                            <div className="text-white">{modifications.filter(m => m.vehicleId === activeVehicle.id && m.status === 'In Progress').length}</div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="lg:col-span-2">
+                    <div className="bg-gray-900 rounded-xl p-4 border border-blue-500/20 h-full">
+                      <div className="flex justify-between items-center mb-4">
+                        <h3 className="text-blue-400 font-orbitron text-lg">Modification List</h3>
+                        <div className="flex space-x-2">
+                          <button 
+                            onClick={() => {
+                              // Export modifications to CSV
+                              const vehicleMods = modifications.filter(m => m.vehicleId === activeVehicle.id);
+                              if (vehicleMods.length > 0) {
+                                exportToCsv(vehicleMods, `${activeVehicle.make}_${activeVehicle.model}_modifications`);
+                              }
+                            }}
+                            className="p-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-md flex items-center"
+                            title="Export to CSV"
+                          >
+                            <FileDown size={16} />
+                          </button>
+                          <button 
+                            onClick={() => {
+                              // Print modifications list
+                              const printSection = document.getElementById('modifications-list');
+                              if (printSection) {
+                                printElement(printSection);
+                              }
+                            }}
+                            className="p-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 hover:text-white rounded-md flex items-center"
+                            title="Print"
+                          >
+                            <Printer size={16} />
+                          </button>
+                        </div>
+                      </div>
+                      
+                      <div id="modifications-list" className="space-y-4 overflow-y-auto max-h-[600px] pr-2">
+                        {modifications.filter(m => m.vehicleId === activeVehicle.id).length > 0 ? (
+                          modifications
+                            .filter(m => m.vehicleId === activeVehicle.id)
+                            .map((mod, index) => (
+                              <div key={index} className="bg-gray-800 rounded-lg p-4 border border-gray-700 hover:border-blue-500/30 transition-colors">
+                                <div className="flex justify-between mb-3">
+                                  <div className="flex items-center">
+                                    <div className={`w-2 h-2 rounded-full mr-2 ${
+                                      mod.status === 'Installed' ? 'bg-green-500' : 
+                                      mod.status === 'Planned' ? 'bg-yellow-500' : 
+                                      mod.status === 'In Progress' ? 'bg-blue-500' : 'bg-red-500'
+                                    }`}></div>
+                                    <h4 className="font-medium text-white">{mod.name}</h4>
+                                  </div>
+                                  <div className="flex space-x-1">
+                                    <button 
+                                      className="p-1 text-gray-400 hover:text-white"
+                                      onClick={() => {
+                                        // Implement edit modification functionality
+                                        setActiveMod(mod);
+                                      }}
+                                    >
+                                      <Pencil size={14} />
+                                    </button>
+                                    <button 
+                                      className="p-1 text-gray-400 hover:text-red-500"
+                                      onClick={() => {
+                                        if (window.confirm('Are you sure you want to delete this modification?')) {
+                                          // Implement delete modification functionality
+                                          setModifications(modifications.filter(m => m.id !== mod.id));
+                                        }
+                                      }}
+                                    >
+                                      <Trash2 size={14} />
+                                    </button>
+                                  </div>
+                                </div>
+                                
+                                <div className="grid grid-cols-2 md:grid-cols-3 gap-x-4 gap-y-2 text-sm mb-3">
+                                  <div>
+                                    <span className="text-gray-400">Type:</span>
+                                    <span className="text-white ml-2">{mod.type}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-400">Brand:</span>
+                                    <span className="text-white ml-2">{mod.brand || 'N/A'}</span>
+                                  </div>
+                                  <div>
+                                    <span className="text-gray-400">Status:</span>
+                                    <span className="text-white ml-2">{mod.status}</span>
+                                  </div>
+                                  {mod.installation_date && (
+                                    <div>
+                                      <span className="text-gray-400">Installed:</span>
+                                      <span className="text-white ml-2">{new Date(mod.installation_date).toLocaleDateString()}</span>
+                                    </div>
+                                  )}
+                                  {mod.cost && (
+                                    <div>
+                                      <span className="text-gray-400">Cost:</span>
+                                      <span className="text-white ml-2">${parseFloat(mod.cost).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2})}</span>
+                                    </div>
+                                  )}
+                                  {mod.installer && (
+                                    <div>
+                                      <span className="text-gray-400">Installer:</span>
+                                      <span className="text-white ml-2">{mod.installer}</span>
+                                    </div>
+                                  )}
+                                </div>
+                                
+                                {mod.description && (
+                                  <div className="text-sm text-gray-300 mt-2 bg-gray-800/50 p-2 rounded">
+                                    {mod.description}
+                                  </div>
+                                )}
+                                
+                                {mod.affected_systems && mod.affected_systems.length > 0 && (
+                                  <div className="mt-2">
+                                    <span className="text-xs text-gray-400">Affected Systems:</span>
+                                    <div className="flex flex-wrap gap-1 mt-1">
+                                      {mod.affected_systems.map((system, idx) => (
+                                        <span key={idx} className="text-xs bg-gray-700 text-white px-2 py-0.5 rounded">
+                                          {system}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                )}
+                                
+                                {mod.image_url && (
+                                  <div className="mt-3">
+                                    <img 
+                                      src={mod.image_url} 
+                                      alt={mod.name} 
+                                      className="w-full h-48 object-cover rounded-md"
+                                      onError={(e) => {
+                                        e.target.src = '/assets/placeholder.jpg';
+                                        e.target.onerror = null;
+                                      }}
+                                    />
+                                  </div>
+                                )}
+                                
+                                {mod.link_url && mod.link_label && (
+                                  <div className="mt-2">
+                                    <a 
+                                      href={mod.link_url} 
+                                      target="_blank" 
+                                      rel="noopener noreferrer"
+                                      className="text-blue-400 hover:text-blue-300 text-sm inline-flex items-center"
+                                    >
+                                      <ExternalLink size={14} className="mr-1" />
+                                      {mod.link_label}
+                                    </a>
+                                  </div>
+                                )}
+                              </div>
+                            ))
+                        ) : (
+                          <div className="flex flex-col items-center justify-center py-12 text-center">
+                            <div className="bg-gray-800 rounded-full p-3 mb-4">
+                              <Wrench size={24} className="text-gray-400" />
+                            </div>
+                            <h4 className="text-lg text-white mb-2">No Modifications Added</h4>
+                            <p className="text-gray-400 max-w-md">
+                              Track all your vehicle modifications by clicking the "Add New Modification" button.
+                            </p>
+                          </div>
+                        )}
                       </div>
                     </div>
                   </div>
