@@ -5,13 +5,25 @@ import { exportToPdf, exportToCsv, printElement } from '../utils/exportUtils';
 import TireTracker from '../components/TireTracker';
 import TireManagementDashboard from '../components/TireManagementDashboard';
 import VehicleTelemetry from '../components/VehicleTelemetry';
+import EnhancedVehicleTelemetry from '../components/EnhancedVehicleTelemetry';
 import VehicleGallery from '../components/VehicleGallery';
+import VaultStorageServices from '../components/VaultStorageServices';
 import GlossTracker from '../components/GlossTracker';
 import PreDriveChecklist from '../components/PreDriveChecklist';
 import WeeklyChecklist from '../components/WeeklyChecklist';
 import MonthlyChecklist from '../components/MonthlyChecklist';
 import QuarterlyChecklist from '../components/QuarterlyChecklist';
 import SeasonalAdaptationChecklist from '../components/SeasonalAdaptationChecklist';
+
+// Enhanced telemetry and data services
+import vehicleDataService from '../services/vehicleDataService';
+import { searchImage } from '../services/unsplashService';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
+import { 
+  Activity, BarChart2, Wind, Thermometer, CornerUpRight, 
+  Clock, Calendar, PieChart as PieChartIcon, AlertTriangle, TrendingUp, 
+  Droplets, Car, Upload, Maximize2, Zap, MapPin, Mountain
+} from 'lucide-react';
 import { vehicleProfile, garageVehicles } from '../data/vehicles';
 
 function GarageVaultPage() {
@@ -22,6 +34,8 @@ function GarageVaultPage() {
   const [activeVehicle, setActiveVehicle] = useState(null);
   const [activeSection, setActiveSection] = useState('overview');
   const [activeTab, setActiveTab] = useState('specs');
+  const [showEnhancedTelemetry, setShowEnhancedTelemetry] = useState(false);
+  const [showVaultServices, setShowVaultServices] = useState(false);
   const [suggestedActivities, setSuggestedActivities] = useState([]);
   const [weatherAlerts, setWeatherAlerts] = useState([]);
   const [seasonalMaintenanceItems, setSeasonalMaintenanceItems] = useState([]);
@@ -389,6 +403,22 @@ function GarageVaultPage() {
                   }`}
                 >
                   <span className="mr-2">📓</span> Drive Journal
+                </button>
+                <button 
+                  onClick={() => setActiveSection('enhancedTelemetry')}
+                  className={`w-full text-left p-2 rounded-lg flex items-center ${
+                    activeSection === 'enhancedTelemetry' ? 'bg-green-500 text-black font-bold' : 'text-white hover:bg-green-600'
+                  }`}
+                >
+                  <span className="mr-2">📊</span> Enhanced Telemetry
+                </button>
+                <button 
+                  onClick={() => setActiveSection('vaultServices')}
+                  className={`w-full text-left p-2 rounded-lg flex items-center ${
+                    activeSection === 'vaultServices' ? 'bg-green-500 text-black font-bold' : 'text-white hover:bg-gray-800'
+                  }`}
+                >
+                  <span className="mr-2">🔒</span> Vault Services
                 </button>
               </nav>
             </div>
