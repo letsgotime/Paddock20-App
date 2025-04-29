@@ -811,6 +811,24 @@ function GarageVaultPage() {
                     </div>
                   </div>
                 )}
+                
+                {activeSection === 'enhancedTelemetry' && (
+                  <div className="apex-card p-6">
+                    <h3 className="text-blue-400 font-orbitron text-xl mb-4">Enhanced Vehicle Telemetry</h3>
+                    <p className="text-white mb-4">Advanced F1-style telemetry data visualization for your {activeVehicle.year} {activeVehicle.make} {activeVehicle.model}.</p>
+                    
+                    <EnhancedVehicleTelemetry vehicle={activeVehicle} />
+                  </div>
+                )}
+                
+                {activeSection === 'vaultServices' && (
+                  <div className="apex-card p-6">
+                    <h3 className="text-blue-400 font-orbitron text-xl mb-4">Vault Storage Services</h3>
+                    <p className="text-white mb-4">Premium storage and maintenance services for your high-value vehicle.</p>
+                    
+                    <VaultStorageServices vehicle={activeVehicle} membershipTier="GOAT" />
+                  </div>
+                )}
               </div>
             ) : (
               <div className="apex-card p-6 text-center">
