@@ -19,7 +19,7 @@ const GoalTileGrid: React.FC<GoalTileGridProps> = ({
   const filteredGoals = goals.filter(goal => 
     type === 'active' 
       ? goal.manifestStatus === 'in_progress' 
-      : goal.manifestStatus === 'completed'
+      : goal.manifestStatus === 'complete' || goal.manifestStatus === 'completed'
   );
 
   if (filteredGoals.length === 0) {
@@ -78,7 +78,7 @@ const GoalTileGrid: React.FC<GoalTileGridProps> = ({
               </div>
             </div>
             
-            {/* Dream Details */}
+            {/* Goal Details */}
             <div className="p-4">
               <div className="flex items-center justify-between mb-4">
                 {/* Progress Percentage */}
