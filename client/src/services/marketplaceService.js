@@ -172,28 +172,43 @@ const initialListings = [
     id: 'car-1',
     type: 'vehicle',
     brand: 'Lamborghini',
-    model: 'Gallardo Superleggera',
+    model: 'Gallardo LP570-4 Superleggera',
     year: 2013,
     price: 182995,
     currency: 'USD',
     mileage: 9780,
     condition: 'Excellent',
-    description: 'Superleggera Bianco Monocerus exterior with Rosso Red/Nero Black Alcantara interior. Carbon fiber interior package, E-gear transmission, carbon-ceramic brakes, Superleggera rear wing, and front lift system. Complete service history including recent major service.',
+    description: 'Superleggera Bianco Monocerus exterior with Rosso Red/Nero Black Alcantara interior. Carbon fiber interior package, E-gear transmission, carbon-ceramic brakes, Superleggera rear wing, and front lift system. Transparent engine cover displays the immaculate V10 engine. Factory sport sound system. Complete service history including recent major service.',
     vin: 'ZHWGU22T78LA07255',
-    engineType: '5.0L V10',
-    horsePower: 530,
-    torque: 376,
+    engineType: '5.2L V10',
+    displacement: 5204, // cc
+    engineLayout: 'Mid-engine',
+    cylinderConfig: 'V10 at 90°',
+    valvetrain: 'DOHC, 4 valves per cylinder',
+    fuelDelivery: 'Multi-point fuel injection',
+    horsePower: 570,
+    peakPowerRPM: 8000,
+    torque: 398,
+    peakTorqueRPM: 6500,
     compression: '12.5:1',
-    topSpeed: 196,
+    redline: 8500, // RPM
+    topSpeed: 202, // mph
     acceleration: 3.4, // 0-60 mph in seconds
-    transmission: '6-speed E-Gear',
-    drivetrain: 'AWD',
+    transmission: '6-speed E-Gear automated manual',
+    transmissionDetails: 'Electronically controlled with paddle shifters',
+    numberOfGears: 6,
+    drivetrain: 'All-wheel drive (AWD)',
+    powerDistribution: '30/70 front/rear bias',
     exteriorColor: 'Bianco Monocerus',
     interiorColor: 'Rosso Red/Nero Black Alcantara',
     weight: 2954, // lbs - Superleggera was 220 lbs lighter than standard Gallardo
     weightDistribution: '43/57', // front/rear
-    wheels: '19" forged',
+    wheels: '19" forged aluminum alloy',
+    frontWheels: '19 x 8.5J',
+    rearWheels: '19 x 11J',
     tires: 'Pirelli P Zero Corsa',
+    frontTires: '235/35 ZR19',
+    rearTires: '295/30 ZR19',
     brakes: 'Carbon Ceramic',
     fuelEconomy: '12/20', // city/highway
     productionCount: 618, // Superleggera production total
@@ -232,7 +247,33 @@ const initialListings = [
     aerodynamics: {
       dragCoefficient: 0.36,
       downforce: 'Medium',
-      activeAero: false
+      activeAero: false,
+      frontSplitter: true,
+      rearDiffuser: true,
+      rearWing: 'Fixed carbon fiber wing',
+      underfloorAero: 'Smooth underbody with rear venturi tunnels',
+      cooling: 'Enhanced cooling for engine and brakes',
+      airIntakes: ['Front brake cooling ducts', 'Side engine intakes', 'Roof scoop']
+    },
+    chassis: {
+      type: 'Aluminum space frame with carbon fiber components',
+      frontSuspension: 'Double wishbone with aluminum arms',
+      rearSuspension: 'Double wishbone with aluminum arms',
+      adjustableDampers: true,
+      antiRollBars: 'Front and rear, adjustable',
+      steeringSystem: 'Hydraulic power-assisted rack and pinion',
+      steeringRatio: 16.1
+    },
+    dimensions: {
+      length: 4386, // mm
+      width: 1900, // mm
+      height: 1165, // mm
+      wheelbase: 2560, // mm
+      frontTrack: 1632, // mm
+      rearTrack: 1597, // mm
+      groundClearance: 108, // mm
+      fuelCapacity: 90, // liters
+      cargoSpace: 110 // liters
     },
     location: 'San Diego, CA',
     seller: 'Paddock20 Premium',
