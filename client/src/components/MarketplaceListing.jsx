@@ -1,0 +1,260 @@
+import React, { useState } from 'react';
+import { 
+  Tag, Clock, Shield, ChevronRight, 
+  Check, AlertTriangle, ChevronDown, MapPin, 
+  Star, DollarSign, Info, ExternalLink
+} from 'lucide-react';
+
+const MarketplaceListing = ({ listing, isAdmin, onEdit, onDelete, expandedByDefault = false }) => {
+  const [expanded, setExpanded] = useState(expandedByDefault);
+  const [showActions, setShowActions] = useState(false);
+
+  const formatCurrency = (amount, currency = 'USD') => {
+    return new Intl.NumberFormat('en-US', { 
+      style: 'currency', 
+      currency, 
+      maximumFractionDigits: 0 
+    }).format(amount);
+  };
+
+  const getConditionColor = (condition) => {
+    switch(condition?.toLowerCase()) {
+      case 'new':
+      case 'mint':
+      case 'excellent':
+        return 'text-green-400';
+      case 'very good':
+      case 'good':
+        return 'text-blue-400';
+      case 'fair':
+        return 'text-yellow-400';
+      case 'poor':
+        return 'text-red-400';
+      default:
+        return 'text-gray-400';
+    }
+  };
+
+  const renderListingImage = () => {
+    if (listing.images && listing.images.length > 0) {
+      // In production, these would be real image paths
+      return (
+        <div className="flex-shrink-0 relative w-28 h-28 md:w-36 md:h-36 rounded-lg overflow-hidden bg-gray-900 border border-gray-800">
+          <div className="absolute inset-0 flex items-center justify-center text-gray-600">
+            <span className="text-xs">{listing.brand} {listing.model}</span>
+          </div>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="flex-shrink-0 w-28 h-28 md:w-36 md:h-36 rounded-lg bg-gray-900 border border-gray-800 flex items-center justify-center">
+        <div className="text-gray-700 text-center p-2">
+          <span className="text-xs">No Image</span>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div 
+      className={`relative bg-gradient-to-br from-gray-900 to-black border ${listing.featured ? 'border-blue-800' : 'border-gray-800'} rounded-lg overflow-hidden transition-all duration-300 hover:shadow-lg ${listing.sold ? 'opacity-70' : ''}`}
+      onMouseEnter={() => isAdmin && setShowActions(true)}
+      onMouseLeave={() => isAdmin && setShowActions(false)}
+    >
+      {listing.featured && (
+        <div className="absolute top-0 right-0 bg-blue-700 text-xs text-white px-2 py-1 rounded-bl-lg z-10">
+          Featured
+        </div>
+      )}
+      
+      {listing.sold && (
+        <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-20">
+          <div className="bg-red-900/80 text-white px-4 py-2 rounded-lg transform rotate-12 font-bold border border-red-700">
+            SOLD
+          </div>
+        </div>
+      )}
+      
+      {isAdmin && showActions && !listing.sold && (
+        <div className="absolute top-2 right-2 flex space-x-2 z-30">
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit && onEdit(listing);
+            }}
+            className="p-1 bg-blue-900/80 text-blue-100 rounded hover:bg-blue-800"
+          >
+            Edit
+          </button>
+          <button 
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete && onDelete(listing.id);
+            }}
+            className="p-1 bg-red-900/80 text-red-100 rounded hover:bg-red-800"
+          >
+            Remove
+          </button>
+        </div>
+      )}
+      
+      <div className="p-4" onClick={() => setExpanded(!expanded)}>
+        <div className="flex gap-4">
+          {renderListingImage()}
+          
+          <div className="flex-grow">
+            <div className="flex justify-between items-start mb-1">
+              <h3 className="text-lg font-medium text-white">
+                {listing.brand} {listing.model}
+              </h3>
+              <span className="text-lg font-semibold text-blue-400">
+                {formatCurrency(listing.price, listing.currency)}
+              </span>
+            </div>
+            
+            <div className="flex items-center text-sm mb-2">
+              <span className="inline-block px-2 py-0.5 bg-gray-800 rounded-full text-xs mr-2">
+                {listing.type === 'timepiece' ? 'Watch' : 'Vehicle'}
+              </span>
+              <span className="text-gray-400 mr-2">
+                {listing.year}
+              </span>
+              <span className={`${getConditionColor(listing.condition)}`}>
+                {listing.condition}
+              </span>
+            </div>
+            
+            <div className="text-gray-400 text-sm line-clamp-2 mb-2">
+              {listing.description}
+            </div>
+            
+            <div className="flex flex-wrap items-center text-xs text-gray-500 gap-x-3 gap-y-1">
+              {listing.serialNumber && (
+                <div className="flex items-center">
+                  <Shield className="h-3 w-3 mr-1" />
+                  <span>SN: {listing.serialNumber.substring(0, 4)}...</span>
+                </div>
+              )}
+              
+              {listing.reference && (
+                <div className="flex items-center">
+                  <Tag className="h-3 w-3 mr-1" />
+                  <span>Ref: {listing.reference}</span>
+                </div>
+              )}
+              
+              {listing.location && (
+                <div className="flex items-center">
+                  <MapPin className="h-3 w-3 mr-1" />
+                  <span>{listing.location}</span>
+                </div>
+              )}
+              
+              {listing.dateAdded && (
+                <div className="flex items-center">
+                  <Clock className="h-3 w-3 mr-1" />
+                  <span>Listed: {listing.dateAdded}</span>
+                </div>
+              )}
+            </div>
+          </div>
+          
+          <div className="flex items-center">
+            <ChevronDown className={`h-5 w-5 text-gray-500 transition-transform ${expanded ? 'transform rotate-180' : ''}`} />
+          </div>
+        </div>
+      </div>
+      
+      {expanded && (
+        <div className="border-t border-gray-800 p-4 bg-black/30">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <h4 className="text-sm font-medium text-gray-400 mb-2">Details</h4>
+              <div className="space-y-2">
+                {listing.type === 'timepiece' && (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Reference</span>
+                      <span className="text-white">{listing.reference}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Box & Papers</span>
+                      <span className="text-white">{listing.boxPapers ? 'Yes' : 'No'}</span>
+                    </div>
+                  </>
+                )}
+                
+                {listing.type === 'vehicle' && (
+                  <>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Mileage</span>
+                      <span className="text-white">{listing.mileage?.toLocaleString()} mi</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Engine</span>
+                      <span className="text-white">{listing.engineType}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-500">Transmission</span>
+                      <span className="text-white">{listing.transmission}</span>
+                    </div>
+                  </>
+                )}
+                
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Condition</span>
+                  <span className={getConditionColor(listing.condition)}>{listing.condition}</span>
+                </div>
+                
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Year</span>
+                  <span className="text-white">{listing.year}</span>
+                </div>
+              </div>
+            </div>
+            
+            <div>
+              <h4 className="text-sm font-medium text-gray-400 mb-2">Seller Information</h4>
+              <div className="space-y-2">
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Seller</span>
+                  <span className="text-white">{listing.seller}</span>
+                </div>
+                
+                {listing.sellerRating && (
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-500">Rating</span>
+                    <span className="flex items-center text-amber-400">
+                      {listing.sellerRating.toFixed(1)}
+                      <Star className="h-3 w-3 ml-1" />
+                    </span>
+                  </div>
+                )}
+                
+                <div className="flex justify-between text-sm">
+                  <span className="text-gray-500">Location</span>
+                  <span className="text-white">{listing.location}</span>
+                </div>
+              </div>
+              
+              <div className="mt-4 flex justify-end">
+                <button className="text-sm px-4 py-2 bg-blue-900 text-blue-100 rounded-lg hover:bg-blue-800 transition-colors flex items-center">
+                  <span>Contact Seller</span>
+                  <ExternalLink className="h-4 w-4 ml-1" />
+                </button>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-6">
+            <h4 className="text-sm font-medium text-gray-400 mb-2">Full Description</h4>
+            <p className="text-gray-300 text-sm">{listing.description}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
+export default MarketplaceListing;
