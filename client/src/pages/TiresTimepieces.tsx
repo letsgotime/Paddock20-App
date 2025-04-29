@@ -35,59 +35,70 @@ const TiresTimepieces: React.FC = () => {
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="max-w-7xl mx-auto px-4 py-12">
-        {/* Tabs Navigation */}
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex space-x-1 bg-gray-900/50 p-1 rounded-lg border border-gray-800">
-            <button
-              onClick={() => setActiveTab('overview')}
-              className={`px-4 py-2 rounded-md text-sm ${
-                activeTab === 'overview' 
-                  ? 'bg-gradient-to-br from-blue-900/60 to-blue-800/20 text-blue-400' 
-                  : 'text-gray-400 hover:text-gray-200'
-              }`}
-            >
-              <span className="hidden md:inline">T&T</span> Overview
-            </button>
-            <button
-              onClick={() => setActiveTab('timepiece-vault')}
-              className={`px-4 py-2 rounded-md text-sm ${
-                activeTab === 'timepiece-vault' 
-                  ? 'bg-gradient-to-br from-purple-900/60 to-purple-800/20 text-purple-400' 
-                  : 'text-gray-400 hover:text-gray-200'
-              }`}
-            >
-              <Watch className="inline-block h-4 w-4 mr-1 md:mr-2" /> 
-              <span className="hidden md:inline">Timepiece</span> Vault
-            </button>
-            <button
-              onClick={() => {
-                if (selectedTimepieceId || activeTimepiece) {
-                  setSelectedTimepieceId(selectedTimepieceId || activeTimepiece?.id || null);
-                  setActiveTab('telemetry');
-                }
-              }}
-              className={`px-4 py-2 rounded-md text-sm ${
-                activeTab === 'telemetry' 
-                  ? 'bg-gradient-to-br from-green-900/60 to-green-800/20 text-green-400' 
-                  : 'text-gray-400 hover:text-gray-200'
-              } ${(!selectedTimepieceId && !activeTimepiece) ? 'opacity-50 cursor-not-allowed' : ''}`}
-              disabled={!selectedTimepieceId && !activeTimepiece}
-            >
-              <Activity className="inline-block h-4 w-4 mr-1 md:mr-2" /> 
-              <span className="hidden md:inline">Timepiece</span> Telemetry
-            </button>
+        {/* Tabs Navigation - Enhanced for more prominence */}
+        <div className="flex flex-col md:flex-row justify-between items-center mb-8 gap-4">
+          <div className="w-full md:w-auto">
+            <div className="flex w-full bg-gradient-to-r from-gray-900 to-black p-2 rounded-xl border-2 border-gray-800 shadow-lg">
+              <button
+                onClick={() => setActiveTab('overview')}
+                className={`flex items-center justify-center flex-1 px-5 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
+                  activeTab === 'overview' 
+                    ? 'bg-gradient-to-br from-blue-900 to-blue-800/70 text-blue-100 shadow-inner border border-blue-700' 
+                    : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+                }`}
+              >
+                <span className="flex items-center">
+                  <Car className="h-5 w-5 mr-2" />
+                  <span className="hidden md:inline">T&T</span> Overview
+                </span>
+              </button>
+              <button
+                onClick={() => setActiveTab('timepiece-vault')}
+                className={`flex items-center justify-center flex-1 px-5 py-3 rounded-lg text-base font-medium mx-2 transition-all duration-200 ${
+                  activeTab === 'timepiece-vault' 
+                    ? 'bg-gradient-to-br from-purple-900 to-purple-800/70 text-purple-100 shadow-inner border border-purple-700' 
+                    : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+                }`}
+              >
+                <span className="flex items-center">
+                  <Watch className="h-5 w-5 mr-2" /> 
+                  <span className="hidden md:inline">Timepiece</span> Vault
+                </span>
+              </button>
+              <button
+                onClick={() => {
+                  if (selectedTimepieceId || activeTimepiece) {
+                    setSelectedTimepieceId(selectedTimepieceId || activeTimepiece?.id || null);
+                    setActiveTab('telemetry');
+                  }
+                }}
+                className={`flex items-center justify-center flex-1 px-5 py-3 rounded-lg text-base font-medium transition-all duration-200 ${
+                  activeTab === 'telemetry' 
+                    ? 'bg-gradient-to-br from-green-900 to-green-800/70 text-green-100 shadow-inner border border-green-700' 
+                    : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+                } ${(!selectedTimepieceId && !activeTimepiece) ? 'opacity-50 cursor-not-allowed' : ''}`}
+                disabled={!selectedTimepieceId && !activeTimepiece}
+              >
+                <span className="flex items-center">
+                  <Activity className="h-5 w-5 mr-2" /> 
+                  <span className="hidden md:inline">Timepiece</span> Telemetry
+                </span>
+              </button>
+            </div>
           </div>
           
-          <ExportOptions 
-            contentRef={contentRef}
-            title="Tires & Timepieces Brokerage"
-            pageName="TiresTimepieces"
-            data={{
-              service: "Luxury Asset Brokerage",
-              categories: ["Exotic Cars", "Luxury Watches", "Collectibles"],
-              partners: ["Bennisson", "GoTime Motorsports"]
-            }}
-          />
+          <div className="w-full md:w-auto flex justify-end mt-2 md:mt-0">
+            <ExportOptions 
+              contentRef={contentRef}
+              title="Tires & Timepieces Brokerage"
+              pageName="TiresTimepieces"
+              data={{
+                service: "Luxury Asset Brokerage",
+                categories: ["Exotic Cars", "Luxury Watches", "Collectibles"],
+                partners: ["Bennisson", "GoTime Motorsports"]
+              }}
+            />
+          </div>
         </div>
         
         {activeTab === 'timepiece-vault' && (
