@@ -39,9 +39,20 @@ export const vehicles = pgTable('vehicles', {
   year: integer('year').notNull(),
   trim: varchar('trim', { length: 50 }),
   color: varchar('color', { length: 30 }),
+  vin: varchar('vin', { length: 17 }),
   vinLast6: varchar('vin_last_6', { length: 6 }),
   nickname: varchar('nickname', { length: 50 }),
+  engine: varchar('engine', { length: 50 }),
+  transmission: varchar('transmission', { length: 50 }),
+  mileage: integer('mileage'),
+  status: varchar('status', { length: 30 }).default('Ready'),
+  glossIndex: integer('gloss_index').default(85),
+  license_plate: varchar('license_plate', { length: 20 }),
+  purchase_date: timestamp('purchase_date'),
+  insurance_renewal: timestamp('insurance_renewal'),
+  registration_renewal: timestamp('registration_renewal'),
   imageUrl: varchar('image_url', { length: 255 }),
+  notes: text('notes'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
@@ -119,6 +130,31 @@ export const glossLogs = pgTable('gloss_logs', {
   notes: text('notes'),
 });
 
+// Vehicle Modifications table
+export const modifications = pgTable('modifications', {
+  id: serial('id').primaryKey(),
+  vehicleId: integer('vehicle_id').references(() => vehicles.id).notNull(),
+  name: varchar('name', { length: 100 }).notNull(),
+  type: varchar('type', { length: 50 }).notNull(), // Performance, Aesthetic, Wheels & Suspension, etc.
+  description: text('description'),
+  brand: varchar('brand', { length: 100 }),
+  model: varchar('model', { length: 100 }),
+  part_number: varchar('part_number', { length: 50 }),
+  installation_date: timestamp('installation_date'),
+  installation_location: varchar('installation_location', { length: 100 }),
+  cost: real('cost'),
+  installer: varchar('installer', { length: 100 }),
+  warranty_expires: timestamp('warranty_expires'),
+  status: varchar('status', { length: 30 }).default('Installed'), // Installed, Planned, In Progress, Removed
+  affected_systems: jsonb('affected_systems').default([]),
+  image_url: varchar('image_url', { length: 255 }),
+  link_url: varchar('link_url', { length: 255 }),
+  link_label: varchar('link_label', { length: 100 }),
+  notes: text('notes'),
+  createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
+});
+
 // Insert Types
 export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
 export const insertSavedLocationSchema = createInsertSchema(savedLocations).omit({ id: true, createdAt: true, lastAccessed: true });
@@ -128,6 +164,7 @@ export const insertMaintenanceRecordSchema = createInsertSchema(maintenanceRecor
 export const insertMaintenanceFlagSchema = createInsertSchema(maintenanceFlags).omit({ id: true, updatedAt: true });
 export const insertGlossTrackingSchema = createInsertSchema(glossTracking).omit({ id: true, updatedAt: true });
 export const insertGlossLogSchema = createInsertSchema(glossLogs).omit({ id: true });
+export const insertModificationSchema = createInsertSchema(modifications).omit({ id: true, createdAt: true, updatedAt: true });
 
 // Types
 export type User = typeof users.$inferSelect;
