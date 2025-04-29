@@ -351,7 +351,7 @@ const initialListings = [
     sold: false
   },
   {
-    id: 'car-2',
+    id: 'car-6',
     type: 'vehicle',
     brand: 'Lamborghini',
     model: 'Aventador SVJ',
@@ -501,7 +501,7 @@ const initialListings = [
     sold: false
   },
   {
-    id: 'car-6',
+    id: 'car-7',
     type: 'vehicle',
     brand: 'Bugatti',
     model: 'Chiron',

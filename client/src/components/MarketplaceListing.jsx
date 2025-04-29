@@ -59,9 +59,13 @@ const MarketplaceListing = ({ listing, isAdmin, onEdit, onDelete, onViewTelemetr
 
   return (
     <div 
-      className={`relative bg-gradient-to-br from-gray-900 to-black border ${listing.featured ? 'border-blue-800' : 'border-gray-800'} rounded-lg overflow-hidden transition-all duration-300 hover:shadow-lg ${listing.sold ? 'opacity-70' : ''}`}
-      onMouseEnter={() => isAdmin && setShowActions(true)}
-      onMouseLeave={() => isAdmin && setShowActions(false)}
+      className={`relative bg-gradient-to-br from-gray-900 to-black border ${listing.featured ? 'border-blue-800' : 'border-gray-800'} rounded-lg overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-blue-900/20 transform hover:-translate-y-1 ${listing.sold ? 'opacity-70' : ''}`}
+      onMouseEnter={() => {
+        isAdmin && setShowActions(true);
+      }}
+      onMouseLeave={() => {
+        isAdmin && setShowActions(false);
+      }}
     >
       {listing.featured && (
         <div className="absolute top-0 right-0 bg-blue-700 text-xs text-white px-2 py-1 rounded-bl-lg z-10">
@@ -240,9 +244,9 @@ const MarketplaceListing = ({ listing, isAdmin, onEdit, onDelete, onViewTelemetr
               </div>
               
               <div className="mt-4 flex justify-end">
-                <button className="text-sm px-4 py-2 bg-blue-900 text-blue-100 rounded-lg hover:bg-blue-800 transition-colors flex items-center">
+                <button className="text-sm px-4 py-2 bg-blue-900 text-blue-100 rounded-lg hover:bg-blue-800 transition-all duration-300 flex items-center hover:shadow-md hover:shadow-blue-900/30 transform hover:-translate-y-0.5">
                   <span>Contact Seller</span>
-                  <ExternalLink className="h-4 w-4 ml-1" />
+                  <ExternalLink className="h-4 w-4 ml-1 transition-transform duration-300 group-hover:translate-x-0.5" />
                 </button>
               </div>
             </div>
@@ -311,7 +315,7 @@ const MarketplaceListing = ({ listing, isAdmin, onEdit, onDelete, onViewTelemetr
                       onViewTelemetry(listing.id);
                     }
                   }}
-                  className="text-sm px-4 py-2 bg-gradient-to-br from-green-900 to-green-800 text-green-100 rounded-lg hover:from-green-800 hover:to-green-700 transition-colors flex items-center border border-green-700 shadow-md"
+                  className="group text-sm px-4 py-2 bg-gradient-to-br from-green-900 to-green-800 text-green-100 rounded-lg hover:from-green-800 hover:to-green-700 transition-all duration-300 flex items-center border border-green-700 shadow-md hover:shadow-lg hover:shadow-green-900/30 transform hover:-translate-y-0.5"
                 >
                   <Activity className="h-4 w-4 mr-2" />
                   <span>View F1-Style Telemetry</span>
