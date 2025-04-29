@@ -2364,13 +2364,7 @@ const RoutePlannerPage = () => {
             </div>
           </div>
           
-          <button
-            onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
-            className="flex items-center gap-2 bg-gray-800 hover:bg-gray-700 text-gray-200 rounded-lg px-4 py-2 transition-colors"
-          >
-            <span>Show Advanced Navigation Features</span>
-            <span>{showAdvancedSettings ? '▼' : '►'}</span>
-          </button>
+          {/* Removed duplicate Advanced Navigation Features button */}
           
           {showAdvancedSettings && (
             <div className="mt-3 pl-4 border-l-2 border-blue-500/30 animate-fadeIn space-y-5">
