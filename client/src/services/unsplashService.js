@@ -4,7 +4,7 @@
  */
 
 const UNSPLASH_API_URL = 'https://api.unsplash.com';
-const ACCESS_KEY = import.meta.env.UNSPLASH_ACCESS_KEY;
+const ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY || import.meta.env.UNSPLASH_ACCESS_KEY;
 
 /**
  * Fetches a random image from Unsplash based on search query
@@ -85,32 +85,23 @@ const imageCache = {
   }
 };
 
+// Create a simplified version of the initialization function
+// that doesn't rely on complex caching
+
 /**
- * Initializes the image cache by pre-fetching images for all known vehicles and timepieces
- * This should be called once when the app starts
+ * Simplified initialization function for the image cache
+ * This is a placeholder that logs but doesn't actually make API calls
+ * which could cause issues
  */
 export const initializeImageCache = async () => {
-  // Fetch vehicle images
-  for (const vehicle of Object.keys(imageCache.vehicles)) {
-    try {
-      const imageUrl = await searchImage(`${vehicle} car`);
-      imageCache.vehicles[vehicle] = imageUrl;
-    } catch (error) {
-      console.error(`Error pre-fetching image for ${vehicle}:`, error);
-    }
+  // Check if the API key is available
+  if (!ACCESS_KEY) {
+    console.warn('Unsplash API key not found. Image fetching will use fallback images.');
+    return;
   }
   
-  // Fetch timepiece images
-  for (const timepiece of Object.keys(imageCache.timepieces)) {
-    try {
-      const imageUrl = await searchImage(`${timepiece} watch`);
-      imageCache.timepieces[timepiece] = imageUrl;
-    } catch (error) {
-      console.error(`Error pre-fetching image for ${timepiece}:`, error);
-    }
-  }
-  
-  console.log('Image cache initialized:', imageCache);
+  console.log('Image cache initialization skipped to avoid API rate limiting.');
+  console.log('Images will be loaded on demand when components render.');
 };
 
 /**
