@@ -260,40 +260,113 @@ function TimepieceTelemetry({
   // Full detailed view
   return (
     <div className={`${className} flex flex-col space-y-6`}>
-      {/* Timepiece Header */}
+      {/* Timepiece Header - Enhanced with Key Shopping Data */}
       <div className="apex-card p-6 bg-gradient-to-br from-gray-900 to-gray-900/40">
+        {/* Essential Product Data Box */}
+        <div className="mb-4 bg-black/30 border border-gray-800 rounded-lg p-4">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="flex flex-col">
+              <div className="text-xs text-gray-500 uppercase tracking-wider">Brand</div>
+              <div className="text-xl font-bold text-blue-400">{timepiece.brand}</div>
+            </div>
+            <div className="flex flex-col">
+              <div className="text-xs text-gray-500 uppercase tracking-wider">Model</div>
+              <div className="text-xl font-bold text-white">{timepiece.model}</div>
+            </div>
+            <div className="flex flex-col">
+              <div className="text-xs text-gray-500 uppercase tracking-wider">Reference No.</div>
+              <div className="text-xl font-bold text-blue-300">{timepiece.reference}</div>
+            </div>
+            <div className="flex flex-col">
+              <div className="text-xs text-gray-500 uppercase tracking-wider">Serial No.</div>
+              <div className="text-xl font-bold text-purple-300">{timepiece.serialNumber || "—"}</div>
+            </div>
+          </div>
+        </div>
+        
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
           <div className="mb-4 md:mb-0">
-            <h2 className="font-orbitron text-2xl text-blue-400 mb-1">{timepiece.brand} {timepiece.model}</h2>
-            <p className="text-gray-400">
-              Ref. {timepiece.reference} • {timepiece.year} • {timepiece.type}
+            <div className="flex flex-col md:flex-row items-start md:items-center gap-2 mb-1">
+              <h2 className="font-orbitron text-2xl text-blue-400">{timepiece.brand} {timepiece.model}</h2>
+              <div className="flex items-center">
+                <span className="bg-blue-500/20 text-blue-300 px-2 py-0.5 rounded text-sm border border-blue-700/50">
+                  {timepiece.year}
+                </span>
+              </div>
+            </div>
+            <p className="text-gray-400 mb-2">
+              <span className="font-semibold text-white">Ref:</span> {timepiece.reference} • 
+              <span className="font-semibold text-white ml-2">Type:</span> {timepiece.type} •
+              <span className="font-semibold text-white ml-2">Market Value:</span> ${timepiece.marketValue?.toLocaleString() || 'N/A'}
             </p>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-2 mt-2">
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-900/40 text-blue-200 border border-blue-700">
+                <Shield className="h-3 w-3 mr-1" />
+                Authenticated
+              </span>
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-purple-900/40 text-purple-200 border border-purple-700">
+                <Clock className="h-3 w-3 mr-1" />
+                {timepiece.movement}
+              </span>
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/40 text-green-200 border border-green-700">
+                <Droplet className="h-3 w-3 mr-1" />
+                {timepiece.waterResistance}
+              </span>
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-amber-900/40 text-amber-200 border border-amber-700">
+                <Package className="h-3 w-3 mr-1" />
+                {timepiece.caseMaterial}
+              </span>
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-900/40 text-red-200 border border-red-700">
+                <Battery className="h-3 w-3 mr-1" />
+                {timepiece.powerReserve}
+              </span>
+            </div>
           </div>
           
           <div className="flex space-x-2">
             <button
               onClick={() => setActiveTab('overview')}
-              className={`px-3 py-1 rounded ${activeTab === 'overview' 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-gray-800 text-gray-400'}`}
+              className={`px-3 py-1 rounded-md ${activeTab === 'overview' 
+                ? 'bg-gradient-to-r from-blue-700 to-blue-900 text-white border border-blue-500 shadow-lg' 
+                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
             >
-              Overview
+              <span className="flex items-center">
+                <Info className="h-4 w-4 mr-1" />
+                Overview
+              </span>
             </button>
             <button
               onClick={() => setActiveTab('maintenance')}
-              className={`px-3 py-1 rounded ${activeTab === 'maintenance' 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-gray-800 text-gray-400'}`}
+              className={`px-3 py-1 rounded-md ${activeTab === 'maintenance' 
+                ? 'bg-gradient-to-r from-green-700 to-green-900 text-white border border-green-500 shadow-lg' 
+                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
             >
-              Maintenance
+              <span className="flex items-center">
+                <Settings className="h-4 w-4 mr-1" />
+                Maintenance
+              </span>
             </button>
             <button
               onClick={() => setActiveTab('market')}
-              className={`px-3 py-1 rounded ${activeTab === 'market' 
-                ? 'bg-blue-600 text-white' 
-                : 'bg-gray-800 text-gray-400'}`}
+              className={`px-3 py-1 rounded-md ${activeTab === 'market' 
+                ? 'bg-gradient-to-r from-amber-700 to-amber-900 text-white border border-amber-500 shadow-lg' 
+                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
             >
-              Market
+              <span className="flex items-center">
+                <DollarSign className="h-4 w-4 mr-1" />
+                Market
+              </span>
+            </button>
+            <button
+              onClick={() => setActiveTab('performance')}
+              className={`px-3 py-1 rounded-md ${activeTab === 'performance' 
+                ? 'bg-gradient-to-r from-purple-700 to-purple-900 text-white border border-purple-500 shadow-lg' 
+                : 'bg-gray-800 text-gray-400 hover:bg-gray-700'}`}
+            >
+              <span className="flex items-center">
+                <Activity className="h-4 w-4 mr-1" />
+                Performance
+              </span>
             </button>
           </div>
         </div>
