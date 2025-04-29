@@ -3,7 +3,6 @@ import { format } from 'date-fns';
 import MoodEnergyTracker from '../components/MoodEnergyTracker';
 import RouteAnalytics from '../components/RouteAnalytics';
 import EnhancedDriveTelemetry from '../components/EnhancedDriveTelemetry';
-import { VehicleData, retrieveStoredVehicleData, getVehicleByName } from '../services/vehicleDataService';
 
 // Define interfaces for type safety
 interface MoodEnergy {
@@ -300,19 +299,13 @@ const DriveJournalPage: React.FC = () => {
         const parsedDrive = JSON.parse(pendingDrive);
         console.log("Found pending drive from Route Planner:", parsedDrive);
         
-        // Check if we can get vehicle data from our service
-        const vehicleDetails = getVehicleByName(parsedDrive.vehicle);
-        const storedVehicleData = retrieveStoredVehicleData();
-        
-        // Combine vehicle data from all sources
-        const vehicleSpecs = parsedDrive.vehicleSpecs || storedVehicleData?.specs || vehicleDetails?.specs;
-        const tireSetup = parsedDrive.tireSetup || storedVehicleData?.tireSetup || vehicleDetails?.tireSetup;
+        // Get vehicle specs and other data directly from the parsedDrive
+        const vehicleSpecs = parsedDrive.vehicleSpecs || {};
+        const tireSetup = parsedDrive.tireSetup || {};
         
         // Get driving profile data
         const profileName = parsedDrive.performanceSettings?.drivingMode || "Normal";
-        const drivingProfile = parsedDrive.drivingProfile || 
-                              (vehicleDetails && vehicleDetails.drivingProfiles[profileName]) || 
-                              (vehicleDetails && vehicleDetails.drivingProfiles[vehicleDetails.defaultDrivingProfile]);
+        const drivingProfile = parsedDrive.drivingProfile || {};
         
         // Create a new drive entry from the pending data with enhanced vehicle info
         const newDriveEntry: DriveEntry = {
@@ -1488,16 +1481,18 @@ const DriveJournalPage: React.FC = () => {
               )}
               
               {/* Enhanced F1-Style Telemetry Analysis */}
-              <div className="mb-8">
-                <EnhancedDriveTelemetry
-                  distanceMiles={selectedDrive.distanceMiles}
-                  durationMinutes={selectedDrive.durationMinutes}
-                  vehicleSpecs={selectedDrive.performanceSettings?.vehicleSpecs}
-                  drivingProfile={selectedDrive.performanceSettings?.drivingProfile}
-                  showFullTelemetry={true}
-                  isLapTrack={false}
-                />
-              </div>
+              {selectedDrive && (
+                <div className="mb-8">
+                  <EnhancedDriveTelemetry
+                    distanceMiles={selectedDrive.distanceMiles || 0}
+                    durationMinutes={selectedDrive.durationMinutes || 0}
+                    vehicleSpecs={selectedDrive.performanceSettings?.vehicleSpecs}
+                    drivingProfile={selectedDrive.performanceSettings?.drivingProfile}
+                    showFullTelemetry={true}
+                    isLapTrack={false}
+                  />
+                </div>
+              )}
               
               {/* Points of Interest */}
               {selectedDrive.pointsOfInterest && (
