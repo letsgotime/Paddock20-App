@@ -5,6 +5,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import { initializeImageCache } from "./services/unsplashService";
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import Garage from "@/pages/Garage";
@@ -88,6 +89,17 @@ function App() {
       announcer.remove();
     };
   }, []);
+  
+  // Initialize Unsplash image cache for marketplace listings
+  useEffect(() => {
+    // Pre-fetch images for marketplace listings to avoid rate limiting
+    if (previewMode || effectiveSession) {
+      console.log('Initializing image cache for marketplace listings...');
+      initializeImageCache()
+        .then(() => console.log('Image cache initialized successfully'))
+        .catch((error) => console.error('Failed to initialize image cache:', error));
+    }
+  }, [previewMode, effectiveSession]);
 
   return (
     <QueryClientProvider client={queryClient}>
