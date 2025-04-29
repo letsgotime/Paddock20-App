@@ -3,7 +3,8 @@ import {
   Watch, Clock, Calendar, AlertTriangle, CheckCircle, 
   RefreshCw, FileText, ClipboardCheck, Settings, Wrench as Tool, 
   DollarSign, Package, Shield, BarChart, Battery, Droplet, Activity, Info,
-  PlusCircle
+  PlusCircle, Circle, Trending, MapPin, History, Eye, Save,
+  RotateCcw, CircleCheck, SaveIcon, LocateFixed
 } from 'lucide-react';
 import EditableTelemetry from './EditableTelemetry';
 import timepieceDataService from '../services/timepieceDataService';
