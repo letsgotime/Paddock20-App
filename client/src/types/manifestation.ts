@@ -10,18 +10,79 @@ export interface BudgetEntry {
   id: number;
   date: string;
   amount: number;
-  type: 'deposit' | 'expense';
+  type: 'deposit' | 'expense' | 'investment' | 'payment' | 'refund';
   description: string;
+  category?: string;
+  receiptUrl?: string;
 }
 
 export interface GoalMedia {
   id: number;
-  type: 'image' | 'file' | 'link';
+  type: 'image' | 'file' | 'link' | 'video' | 'audio' | 'document';
   name: string;
   url: string;
   thumbnail?: string;
   description?: string;
   dateAdded: string;
+  tags?: string[];
+  isInspirational?: boolean;
+}
+
+export interface HustlePillar {
+  id: number;
+  type: 'money' | 'mind' | 'spirit';
+  description: string;
+  targetValue: number;
+  currentValue: number;
+  unit: string;
+  completed: boolean;
+  actions: Array<{
+    id: number;
+    name: string;
+    completed: boolean;
+    date?: string;
+    notes?: string;
+  }>;
+  frequency?: 'daily' | 'weekly' | 'monthly' | 'once';
+  startDate?: string;
+  endDate?: string;
+}
+
+export interface DisciplineStreak {
+  type: 'mind' | 'body' | 'spirit';
+  currentStreak: number;
+  longestStreak: number;
+  lastCompletedDate?: string;
+  totalCompleted: number;
+  history: Array<{
+    date: string;
+    completed: boolean;
+    minutes?: number;
+    notes?: string;
+  }>;
+}
+
+export interface HustleMetric {
+  id: number;
+  name: string;
+  value: number;
+  unit: string;
+  date: string;
+  category: 'financial' | 'skill' | 'health' | 'spiritual';
+  goalId: number; // related to which goal
+  notes?: string;
+}
+
+export interface VictoryAchievement {
+  id: number;
+  goalId: number;
+  title: string;
+  description: string;
+  date: string;
+  badgeUrl?: string;
+  certificateUrl?: string;
+  celebrationType?: 'badge' | 'certificate' | 'animation' | 'all';
+  shared?: boolean;
 }
 
 export interface Goal {
@@ -45,6 +106,22 @@ export interface Goal {
   budgetEntries: BudgetEntry[];
   // Media gallery
   mediaGallery: GoalMedia[];
+  // New fields for 2.0
+  hustlePillars?: HustlePillar[];
+  disciplineStreaks?: {
+    mind: DisciplineStreak;
+    body: DisciplineStreak;
+    spirit: DisciplineStreak;
+  };
+  hustleMetrics?: HustleMetric[];
+  victoryAchievements?: VictoryAchievement[];
+  timeline?: Array<{
+    date: string;
+    event: string;
+    type: 'milestone' | 'checkin' | 'hustle' | 'victory';
+    amount?: number;
+    description?: string;
+  }>;
 }
 
 export interface DailyCheckin {
@@ -62,4 +139,10 @@ export interface DailyCheckin {
   mindNotes?: string;
   bodyNotes?: string;
   spiritNotes?: string;
+  // New fields for 2.0
+  hustleCompleted?: boolean;
+  hustleMinutes?: number;
+  hustleNotes?: string;
+  financialProgress?: number;
+  skillsGained?: string[];
 }
