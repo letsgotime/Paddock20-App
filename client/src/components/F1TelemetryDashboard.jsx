@@ -18,44 +18,53 @@ const AdaptiveImage = lazy(() => import('./AdaptiveImage'));
 const AdaptiveImageGrid = lazy(() => import('./AdaptiveImage').then(module => ({ default: module.AdaptiveImageGrid })));
 const AdaptiveHeroImage = lazy(() => import('./AdaptiveImage').then(module => ({ default: module.AdaptiveHeroImage })));
 
+// Helper function to get vehicle images without using imports
+const getVehicleImageUrls = () => {
+  return [
+    // Consistent car images used for all vehicles to ensure reliable display
+    'https://images.unsplash.com/photo-1525609004556-c46c7d6cf023?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8cG9yc2NoZXxlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80',
+    'https://images.unsplash.com/photo-1503376780353-7e6692767b70?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8OHx8ZmVycmFyaXxlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80',
+    'https://images.unsplash.com/photo-1494976388531-d1058494cdd8?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80',
+    'https://images.unsplash.com/photo-1552519507-da3b142c6e3d?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxzZWFyY2h8NXx8Y2Fyc3xlbnwwfHwwfHx8MA%3D%3D&w=1000&q=80',
+    'https://images.unsplash.com/photo-1605515298946-d899b3f0d702?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=1480&q=80',
+    'https://images.unsplash.com/photo-1544829099-b9a0c07fad1a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3387&q=80',
+    'https://images.unsplash.com/photo-1514316454349-750a7fd3da3a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3387&q=80',
+    'https://images.unsplash.com/photo-1542362567-b07e54358753?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3540&q=80',
+    'https://images.unsplash.com/photo-1623006484989-ba44afa6615a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=3387&q=80'
+  ];
+};
+
 // Helper function to get vehicle images
 const getVehicleImageUrl = (vehicle, index) => {
-  if (!vehicle) {
-    // Default image queries when no vehicle is provided
-    const defaultQueries = [
-      'luxury sports car',
-      'performance car',
-      'car wheel detail',
-      'sports car engine',
-      'brake system',
-      'car interior luxury',
-      'carbon fiber car parts',
-      'suspension car',
-      'engine detail'
-    ];
-    return `https://source.unsplash.com/random/1200x800/?${defaultQueries[index % defaultQueries.length]}`;
-  }
-  
-  // Vehicle-specific queries
-  const queries = [
-    `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
-    `${vehicle.make} ${vehicle.model} performance`,
-    `${vehicle.make} ${vehicle.model} wheel`,
-    `${vehicle.make} ${vehicle.model} engine`,
-    `${vehicle.make} ${vehicle.model} brake`,
-    `${vehicle.make} ${vehicle.model} interior`,
-    `${vehicle.make} ${vehicle.model} carbon`,
-    `${vehicle.make} ${vehicle.model} suspension`,
-    `${vehicle.make} ${vehicle.model} detail`
-  ];
-  
-  return `https://source.unsplash.com/random/1200x800/?${queries[index % queries.length]}`;
+  // Using direct image URLs for consistent, reliable display
+  const imageUrls = getVehicleImageUrls();
+  return imageUrls[index % imageUrls.length];
+};
+
+// Direct part image URLs
+const getPartImageUrls = () => {
+  return {
+    // Brake System
+    'brake_disc': 'https://images.unsplash.com/photo-1486262254076-a1900224c077?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&h=600&q=80',
+    'brake_caliper': 'https://images.unsplash.com/photo-1615218282944-68b55d2dffc4?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&h=600&q=80',
+    'brake_pad': 'https://images.unsplash.com/photo-1615189617400-a1476cbeb9d2?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&h=600&q=80',
+    'brake_system': 'https://images.unsplash.com/photo-1486262090863-e738cbb31e30?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&h=600&q=80',
+    
+    // Tire System
+    'tire_tread': 'https://images.unsplash.com/photo-1588253127942-904c0ed2517a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&h=600&q=80',
+    'tire_sidewall': 'https://images.unsplash.com/photo-1605236865049-d6d5c16bb670?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&h=600&q=80',
+    'tire_compound': 'https://images.unsplash.com/photo-1573747812221-7e8cf2d8d95a?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&h=600&q=80',
+    'tire_pressure': 'https://images.unsplash.com/photo-1616293273000-5ca35f6f2031?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&h=600&q=80',
+    
+    // Default image for all other part types
+    'default': 'https://images.unsplash.com/photo-1617886322168-72b886573c5f?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=800&h=600&q=80'
+  };
 };
 
 // Helper function to get part images
 const getPartImageUrl = (partType) => {
-  const query = partSearchQueries[partType] || partType;
-  return `https://source.unsplash.com/random/800x600/?${query}`;
+  const partImages = getPartImageUrls();
+  return partImages[partType] || partImages['default'];
 };
 
 // Vehicle image search terms
