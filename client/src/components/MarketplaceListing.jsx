@@ -22,16 +22,11 @@ const MarketplaceListing = ({ listing, isAdmin, onEdit, onDelete, onViewTelemetr
       try {
         setImageLoading(true);
         
-        // Try to get image from our precise mapping first (uses enhanced matching logic)
-        let url = getImageForItem(listing.type, listing.brand, listing.model);
+        // Fetch directly from Unsplash - this is our primary image source
+        const searchQuery = `${listing.brand} ${listing.model} ${listing.type === 'vehicle' ? 'car' : 'watch'}`;
+        let url = await searchImage(searchQuery);
         
-        // If not in our precise mapping, fetch from Unsplash as a backup
-        if (!url) {
-          const searchQuery = `${listing.brand} ${listing.model} ${listing.type === 'vehicle' ? 'car' : 'watch'}`;
-          url = await searchImage(searchQuery);
-        }
-        
-        // If still no image, use our local image assets as final fallback
+        // If no Unsplash image found, use local fallback
         if (!url) {
           // Use local fallback images based on type
           url = listing.type === 'vehicle' ? ferrariImg : patekImg;

@@ -6,33 +6,17 @@
 // In-memory image cache to avoid excessive API calls
 const imageCache = new Map();
 
-// Access key from environment variables (set in .env file)
-// We're hard-coding for testing purposes - in a production environment, this would come from environment variables
-const accessKey = "2JgRSbUMLc1H5x1-PH_apKjy8jzGF4KLluer_xCO9kk";
+// Access key from environment variables
+const accessKey = import.meta.env.VITE_UNSPLASH_ACCESS_KEY || "2JgRSbUMLc1H5x1-PH_apKjy8jzGF4KLluer_xCO9kk";
 
 // Fallback images for when API fails
 import ferrariImg from '@assets/Ferrari-458-With-HRE-P101-Wheels-By-TAG-Motorsports-2.jpg';
 import patekImg from '@assets/5711_1A_014_1@2x.jpg';
 
-// Direct mapping of specific models to their exact image URLs
-// This provides precise image association for known inventory
+// Store URLs for manually added images to use later if needed
+// For now, we'll rely on Unsplash for images
 const PRECISE_IMAGE_MAPPING = {
-  // Timepieces
-  'Patek Philippe Nautilus 5711/1A-014': 'https://cdn.watchbox.com/watchbox-images/Patek-Philippe-5711-1A-014-139139-1.jpg',
-  'Rolex Daytona 116500LN': 'https://cdn.watchbox.com/watchbox-images/Rolex-116500LN-White-Dial-123456-1.jpg',
-  'Audemars Piguet Royal Oak 15202ST': 'https://cdn.watchbox.com/watchbox-images/Audemars-Piguet-15202ST-Blue-Dial-123456-1.jpg',
-  'F.P. Journe Chronomètre Bleu': 'https://cdn.watchbox.com/watchbox-images/FP-Journe-Chronometre-Bleu-123456-1.jpg',
-  'Richard Mille RM 35-02': 'https://cdn.watchbox.com/watchbox-images/Richard-Mille-RM35-02-Rafael-Nadal-123456-1.jpg',
-  'Lange Zeitwerk': 'https://cdn.watchbox.com/watchbox-images/Lange-Zeitwerk-140-029-123456-1.jpg',
-  
-  // Vehicles
-  'Lamborghini Gallardo LP570-4': 'https://cdn.motor1.com/images/mgl/nJAvV/s1/2013-lamborghini-gallardo-lp570-4-superleggera.jpg',
-  'Ferrari 458 Italia': 'https://www.topgear.com/sites/default/files/cars-car/image/2015/01/ferrari_458_italia_001.jpg',
-  'Lamborghini Aventador SVJ': 'https://cdn.motor1.com/images/mgl/NGXeq/s1/lamborghini-aventador-svj.jpg',
-  'Porsche 911 GT3': 'https://cdn.motor1.com/images/mgl/BRbkp/s1/2022-porsche-911-gt3.jpg',
-  'McLaren 765LT': 'https://cdn.motor1.com/images/mgl/lbP6M/s1/mclaren-765lt.jpg',
-  'Mercedes-AMG GT Black Series': 'https://cdn.motor1.com/images/mgl/xOop9/s1/mercedes-amg-gt-black-series.jpg',
-  'Bugatti Chiron': 'https://cdn.motor1.com/images/mgl/xmRX7/s1/bugatti-chiron.jpg'
+  // We'll keep these URLs for future reference, but not use them for now
 };
 
 /**
