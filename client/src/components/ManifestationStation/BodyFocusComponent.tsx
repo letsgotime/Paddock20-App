@@ -424,6 +424,10 @@ const BodyFocusComponent: React.FC<BodyFocusComponentProps> = ({ goal, onUpdate 
                 <option value="hours per week">hours per week</option>
                 <option value="miles per week">miles per week</option>
                 <option value="$ saved">$ saved</option>
+                <option value="volunteer hours">volunteer hours</option>
+                <option value="people helped">people helped</option>
+                <option value="donations made">donations made</option>
+                <option value="community events">community events</option>
               </select>
             </div>
           </div>
@@ -473,6 +477,10 @@ const BodyFocusComponent: React.FC<BodyFocusComponentProps> = ({ goal, onUpdate 
           <li className="flex items-start">
             <ArrowRight className="h-4 w-4 text-green-400 mt-0.5 mr-2 flex-shrink-0" />
             <span>Track your progress daily to maintain momentum and celebrate small wins.</span>
+          </li>
+          <li className="flex items-start">
+            <ArrowRight className="h-4 w-4 text-green-400 mt-0.5 mr-2 flex-shrink-0" />
+            <span>Include volunteer work in your action plan - contributing your time to help others creates positive energy that accelerates your success.</span>
           </li>
         </ul>
       </div>
