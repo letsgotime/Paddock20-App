@@ -11,7 +11,7 @@ import {
 import { 
   MapPin, Locate, Search, AlertTriangle, ThermometerSun, 
   Droplets, Wind, Sunrise, Sunset, Calendar, Settings,
-  LocateFixed, Eye, SaveIcon, RotateCcw, Sliders, Check
+  LocateFixed, Eye, SaveIcon, RotateCcw, Check
 } from 'lucide-react';
 
 const HomeWeatherWidget = () => {

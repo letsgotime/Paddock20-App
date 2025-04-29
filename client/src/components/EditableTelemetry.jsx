@@ -382,7 +382,7 @@ function EditableTelemetry({
             className={`p-1 rounded hover:bg-black/30 ${themeClasses.headerText}`}
             aria-label="Telemetry settings"
           >
-            <Sliders size={16} />
+            <Settings size={16} />
           </button>
           
           {collapsible && (
