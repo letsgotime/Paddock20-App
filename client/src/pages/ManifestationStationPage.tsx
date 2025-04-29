@@ -164,7 +164,7 @@ const MOCK_GOALS: Goal[] = [
     spiritFocus: 'Gratitude practice focused on current achievements',
     milestones: [],
     completedMilestones: [],
-    manifestStatus: 'completed',
+    manifestStatus: 'complete',
     description: 'The first watch on the moon - a symbol of human achievement',
     progressPercentage: 100,
     targetAmount: 6500,
@@ -193,7 +193,7 @@ const MOCK_GOALS: Goal[] = [
     spiritFocus: 'Gratitude for motorsport passion and opportunity to experience it firsthand',
     milestones: [],
     completedMilestones: [],
-    manifestStatus: 'completed',
+    manifestStatus: 'complete',
     description: 'The ultimate Formula 1 fan experience across iconic European circuits',
     progressPercentage: 100,
     targetAmount: 22000,
@@ -333,12 +333,20 @@ const ManifestationStationPage: React.FC = () => {
               className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded flex items-center text-sm"
             >
               <Edit className="h-4 w-4 mr-1.5" />
-              <span>Edit Dream</span>
+              <span>Update Hustle Plan</span>
+            </button>
+
+            <button
+              onClick={() => setActiveView('discipline-tracker')}
+              className="px-3 py-1.5 bg-green-600 hover:bg-green-500 text-white rounded flex items-center text-sm ml-2"
+            >
+              <ListChecks className="h-4 w-4 mr-1.5" />
+              <span>Daily Check-in</span>
             </button>
             
             <button
               onClick={() => setIsCreatingNewDream(true)}
-              className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded flex items-center text-sm"
+              className="px-3 py-1.5 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded flex items-center text-sm ml-2"
             >
               <Plus className="h-4 w-4 mr-1.5" />
               <span>New Dream</span>
@@ -347,7 +355,7 @@ const ManifestationStationPage: React.FC = () => {
         </div>
         
         {/* Daily affirmation card */}
-        <div className="bg-gradient-to-r from-blue-900/50 to-purple-900/50 rounded-lg p-4 border border-blue-800">
+        <div className="bg-gradient-to-r from-blue-900/50 to-green-900/50 rounded-lg p-4 border border-blue-800">
           <div className="flex items-start">
             <SparkleIcon className="h-6 w-6 text-blue-400 mr-3 mt-0.5 flex-shrink-0" />
             <div>
@@ -377,7 +385,7 @@ const ManifestationStationPage: React.FC = () => {
             
             <div className="w-full bg-gray-800 rounded-full h-2.5 mb-2">
               <div 
-                className="h-2.5 rounded-full bg-gradient-to-r from-blue-500 to-purple-500"
+                className="h-2.5 rounded-full bg-gradient-to-r from-blue-500 to-green-500"
                 style={{ width: `${selectedGoal.progressPercentage}%` }}
               ></div>
             </div>
@@ -520,7 +528,7 @@ const ManifestationStationPage: React.FC = () => {
         {/* Celebration vision */}
         <button
           onClick={() => setActiveView('celebration')}
-          className="w-full bg-gradient-to-r from-indigo-900/50 to-purple-900/50 hover:from-indigo-900/70 hover:to-purple-900/70 rounded-lg p-4 border border-indigo-800 flex items-start"
+          className="w-full bg-gradient-to-r from-blue-900/50 to-green-900/50 hover:from-blue-900/70 hover:to-green-900/70 rounded-lg p-4 border border-blue-800 flex items-start"
         >
           <Trophy className="h-6 w-6 text-yellow-400 mr-3 flex-shrink-0" />
           <div className="text-left">
@@ -585,45 +593,87 @@ const ManifestationStationPage: React.FC = () => {
     <div className="min-h-screen bg-gray-950 text-white py-6">
       <div className="container px-4 md:px-6 mx-auto">
         <header className="mb-8">
-          <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-orbitron text-blue-400">
-              MANIFESTATION STATION
-            </h1>
-            
-            {!isCreatingNewDream && selectedGoal && (
-              <div className="flex">
-                <button
-                  onClick={() => setActiveView('dashboard')}
-                  className={`px-3 py-1.5 rounded-l text-sm ${
-                    activeView === 'dashboard' 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                  }`}
-                >
-                  Dashboard
-                </button>
-                <button
-                  onClick={() => setActiveView('hustle-planner')}
-                  className={`px-3 py-1.5 text-sm ${
-                    activeView === 'hustle-planner' 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                  }`}
-                >
-                  Hustle Planner
-                </button>
-                <button
-                  onClick={() => setActiveView('discipline-tracker')}
-                  className={`px-3 py-1.5 rounded-r text-sm ${
-                    activeView === 'discipline-tracker' 
-                      ? 'bg-blue-600 text-white' 
-                      : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
-                  }`}
-                >
-                  Daily Check-in
-                </button>
+          <div className="flex flex-col mb-6">
+            <div className="flex justify-between items-center">
+              <h1 className="text-3xl font-orbitron text-blue-400">
+                MANIFESTATION STATION
+              </h1>
+              
+              {!isCreatingNewDream && selectedGoal && (
+                <div className="flex">
+                  <button
+                    onClick={() => setActiveView('dashboard')}
+                    className={`px-3 py-1.5 rounded-l text-sm ${
+                      activeView === 'dashboard' 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                    }`}
+                  >
+                    Dashboard
+                  </button>
+                  <button
+                    onClick={() => setActiveView('hustle-planner')}
+                    className={`px-3 py-1.5 text-sm ${
+                      activeView === 'hustle-planner' 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                    }`}
+                  >
+                    Hustle Planner
+                  </button>
+                  <button
+                    onClick={() => setActiveView('discipline-tracker')}
+                    className={`px-3 py-1.5 rounded-r text-sm ${
+                      activeView === 'discipline-tracker' 
+                        ? 'bg-blue-600 text-white' 
+                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                    }`}
+                  >
+                    Daily Check-in
+                  </button>
+                </div>
+              )}
+            </div>
+            <div className="mt-3 mb-5 space-y-4 max-w-4xl">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div className="bg-gray-900 rounded-lg p-4 border border-blue-800">
+                  <h3 className="text-blue-400 font-medium text-lg mb-2">Why You're Here</h3>
+                  <p className="text-gray-300 text-sm">
+                    Manifestation Station™ isn't about "wishing." It's about working. 
+                    Every goal you log here — every car, watch, home, or milestone — comes with a plan built the way real winners build: 
+                    Daily movement. Daily mindset. Daily gratitude. 
+                    Because real manifestation isn't magic—it's momentum.
+                  </p>
+                </div>
+                
+                <div className="bg-gray-900 rounded-lg p-4 border border-blue-800">
+                  <h3 className="text-blue-400 font-medium text-lg mb-2">What You Get</h3>
+                  <ul className="text-gray-300 text-sm list-disc pl-5 space-y-1">
+                    <li>Dream Vault: Log your cars, watches, experiences, investments</li>
+                    <li>Goal Telemetry: Set your target, funding path, and timeline</li>
+                    <li>Milestone Tracking: Break down the dream into checkable steps</li>
+                    <li>Daily Discipline Tracker: Mind, Body, Spirit focus areas</li>
+                    <li>Proof of Progress System: See your real manifestation rate</li>
+                  </ul>
+                </div>
+                
+                <div className="bg-gray-900 rounded-lg p-4 border border-blue-800">
+                  <h3 className="text-blue-400 font-medium text-lg mb-2">How to Use It</h3>
+                  <ul className="text-gray-300 text-sm list-disc pl-5 space-y-1">
+                    <li>Set Goals: Add dream assets or experiences</li>
+                    <li>Link Daily Disciplines: Choose your mind, body, spirit focuses</li>
+                    <li>Track Progress: Update every week or day as you advance</li>
+                    <li>Celebrate Completions: Archive manifested goals</li>
+                    <li>Level Up: After each goal, raise your standards</li>
+                  </ul>
+                </div>
               </div>
-            )}
+              
+              <p className="text-gray-300 text-sm italic">
+                Manifestation Station™ isn't about posting dreams. It's about engineering victories — one daily choice at a time.
+                Dream bigger. Work sharper. Drive harder. Live better.
+              </p>
+            </div>
           </div>
           
           {!isCreatingNewDream && goals.length > 1 && (
