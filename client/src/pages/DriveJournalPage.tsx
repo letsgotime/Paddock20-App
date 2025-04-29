@@ -300,7 +300,21 @@ const DriveJournalPage: React.FC = () => {
         const parsedDrive = JSON.parse(pendingDrive);
         console.log("Found pending drive from Route Planner:", parsedDrive);
         
-        // Create a new drive entry from the pending data
+        // Check if we can get vehicle data from our service
+        const vehicleDetails = getVehicleByName(parsedDrive.vehicle);
+        const storedVehicleData = retrieveStoredVehicleData();
+        
+        // Combine vehicle data from all sources
+        const vehicleSpecs = parsedDrive.vehicleSpecs || storedVehicleData?.specs || vehicleDetails?.specs;
+        const tireSetup = parsedDrive.tireSetup || storedVehicleData?.tireSetup || vehicleDetails?.tireSetup;
+        
+        // Get driving profile data
+        const profileName = parsedDrive.performanceSettings?.drivingMode || "Normal";
+        const drivingProfile = parsedDrive.drivingProfile || 
+                              (vehicleDetails && vehicleDetails.drivingProfiles[profileName]) || 
+                              (vehicleDetails && vehicleDetails.drivingProfiles[vehicleDetails.defaultDrivingProfile]);
+        
+        // Create a new drive entry from the pending data with enhanced vehicle info
         const newDriveEntry: DriveEntry = {
           id: `${Date.now()}`,
           date: new Date().toISOString(),
@@ -316,10 +330,10 @@ const DriveJournalPage: React.FC = () => {
           performanceSettings: {
             tirePressureAdjustment: parsedDrive.performanceSettings?.tirePressureAdjustment || 0,
             torqueAdjustment: parsedDrive.performanceSettings?.torqueAdjustment || 0,
-            drivingMode: parsedDrive.performanceSettings?.drivingMode || "Normal",
-            vehicleSpecs: parsedDrive.vehicleSpecs || {},
-            tireSetup: parsedDrive.tireSetup || {},
-            drivingProfile: parsedDrive.drivingProfile || {},
+            drivingMode: profileName,
+            vehicleSpecs: vehicleSpecs || {},
+            tireSetup: tireSetup || {},
+            drivingProfile: drivingProfile || {},
             curvatureMetrics: parsedDrive.performanceSettings?.curvatureMetrics || {
               intensity: 3,
               trnRange: "4-6 TRN/km (Moderate)"
@@ -329,7 +343,7 @@ const DriveJournalPage: React.FC = () => {
             events: [],
             culturalSpots: []
           },
-          notes: `Auto-generated from Route Planner. ${parsedDrive.vehicle} journey with a ${parsedDrive.performanceSettings?.drivingMode || "Normal"} driving mode.`,
+          notes: `Auto-generated from Route Planner. ${parsedDrive.vehicle} journey with a ${profileName} driving mode.`,
           photos: [],
           rating: 0,
           isFromRoutePlanner: true,
@@ -337,18 +351,17 @@ const DriveJournalPage: React.FC = () => {
           moodEnergy: {
             mood: 8,
             energy: 8,
-            focus: 8,
+            focus: drivingProfile ? (drivingProfile.throttleResponse * 0.8) : 8, // Scale focus based on throttle response
             confidence: 8,
-            comfort: 8,
+            comfort: drivingProfile ? (10 - drivingProfile.suspensionStiffness / 2) : 8, // Comfort is inversely related to suspension stiffness
             trackFamiliarity: 5,
-            excitementFactor: 8,
-            stressLevel: 3,
+            excitementFactor: drivingProfile ? (drivingProfile.throttleResponse * 0.9) : 8, // Excitement correlates with throttle response
+            stressLevel: drivingProfile ? (drivingProfile.tractionControl < 5 ? 6 : 3) : 3, // More stress with less traction control
             timestamps: {
               "0": { mood: 8, energy: 8, note: "Starting the drive" }
             }
           },
-          // Initialize altitude and route characteristics with default values
-          // These will be populated with real data during the drive
+          // Initialize altitude and route characteristics with data from route planner or defaults
           altitudeData: parsedDrive.altitudeData || {
             maxAltitude: 0,
             minAltitude: 0,
@@ -1473,6 +1486,18 @@ const DriveJournalPage: React.FC = () => {
                   />
                 </div>
               )}
+              
+              {/* Enhanced F1-Style Telemetry Analysis */}
+              <div className="mb-8">
+                <EnhancedDriveTelemetry
+                  distanceMiles={selectedDrive.distanceMiles}
+                  durationMinutes={selectedDrive.durationMinutes}
+                  vehicleSpecs={selectedDrive.performanceSettings?.vehicleSpecs}
+                  drivingProfile={selectedDrive.performanceSettings?.drivingProfile}
+                  showFullTelemetry={true}
+                  isLapTrack={false}
+                />
+              </div>
               
               {/* Points of Interest */}
               {selectedDrive.pointsOfInterest && (
