@@ -14,6 +14,7 @@ import WeeklyChecklist from '../components/WeeklyChecklist';
 import MonthlyChecklist from '../components/MonthlyChecklist';
 import QuarterlyChecklist from '../components/QuarterlyChecklist';
 import SeasonalAdaptationChecklist from '../components/SeasonalAdaptationChecklist';
+import F1TelemetryDashboard from '../components/F1TelemetryDashboard';
 
 // Enhanced telemetry and data services
 import vehicleDataService from '../services/vehicleDataService';
@@ -253,7 +254,7 @@ function GarageVaultPage() {
       {/* Header with Export Options */}
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
         <h2 id="garageVaultHeading" className="text-blue-400 font-orbitron text-2xl md:text-3xl mb-4 md:mb-0">
-          Garage Vault<span className="text-white"> | Central Hub</span>
+          Garage Vault<span className="text-white"> | Paddock20</span>
         </h2>
         
         <div ref={exportMenuRef} className="relative">
@@ -387,6 +388,14 @@ function GarageVaultPage() {
                   }`}
                 >
                   <span className="mr-2">🔩</span> Modifications
+                </button>
+                <button 
+                  onClick={() => setActiveSection('f1Telemetry')}
+                  className={`w-full text-left p-2 rounded-lg flex items-center ${
+                    activeSection === 'f1Telemetry' ? 'bg-green-500 text-black font-bold' : 'text-white hover:bg-gray-800'
+                  }`}
+                >
+                  <span className="mr-2">🏎️</span> F1 Telemetry
                 </button>
                 <button 
                   onClick={() => setActiveSection('documents')}
@@ -827,6 +836,18 @@ function GarageVaultPage() {
                     <p className="text-white mb-4">Premium storage and maintenance services for your high-value vehicle.</p>
                     
                     <VaultStorageServices vehicle={activeVehicle} membershipTier="GOAT" />
+                  </div>
+                )}
+                
+                {activeSection === 'f1Telemetry' && (
+                  <div className="apex-card p-6">
+                    <h3 className="text-blue-400 font-orbitron text-xl mb-4">F1 Telemetry Dashboard</h3>
+                    <p className="text-white mb-4">Bespoke, world-class performance and maintenance visualization with comprehensive telemetry data.</p>
+                    
+                    <F1TelemetryDashboard 
+                      vehicle={activeVehicle}
+                      vehicleData={vehicleData}
+                    />
                   </div>
                 )}
               </div>
