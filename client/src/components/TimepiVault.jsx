@@ -1,8 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Watch, ChevronRight, ChevronLeft, Clock, Calendar, Settings, 
   Sparkles, Shield, AlertTriangle, CheckCircle, DollarSign, 
-  PlusCircle, RefreshCw, ArrowUpRight, Search
+  PlusCircle, RefreshCw, ArrowUpRight, Search, BarChart3, 
+  Database, Filter, Image, Download, ExternalLink, Zap,
+  Gauge, Camera, Share2, Upload, CircleDollarSign, History,
+  Shuffle, ArrowUpDown, Maximize2, PanelLeft, Tag, Diamond
 } from 'lucide-react';
 import timepieceDataService from '../services/timepieceDataService';
 import ProgressSparkline from './ProgressSparkline';
@@ -40,6 +43,18 @@ function TimepiVault() {
   const [marketTrend, setMarketTrend] = useState('up'); // up, down, stable
   const [marketData, setMarketData] = useState([]);
   const [searchQuery, setSearchQuery] = useState('');
+  const [activeDetailTab, setActiveDetailTab] = useState('overview'); // overview, gallery, movement, history, market
+  const [isFullscreenMode, setIsFullscreenMode] = useState(false);
+  const [galleryView, setGalleryView] = useState('grid'); // grid, carousel
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState(0);
+  const fullscreenRef = useRef(null);
+  const [filterOptions, setFilterOptions] = useState({
+    brand: 'all',
+    priceRange: 'all',
+    type: 'all',
+    sort: 'alphabetical'
+  });
+  const [showAdvancedAnalytics, setShowAdvancedAnalytics] = useState(false);
   
   // Filter timepieces 
   const ownedTimepieces = timepieces.filter(t => t.isOwned);
