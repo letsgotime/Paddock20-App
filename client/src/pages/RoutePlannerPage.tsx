@@ -1600,6 +1600,31 @@ const RoutePlannerPage = () => {
         tireSetup: selectedTireSetup ? tireSetups[selectedTireSetup] : null,
         drivingProfile: selectedDrivingProfile ? drivingProfiles.find(p => p.name === selectedDrivingProfile) : null,
       },
+      // Media collection
+      media: {
+        photos: photoPreviewUrls.map((url, index) => ({
+          url,
+          name: carPhotos[index]?.name || `Photo ${index + 1}`,
+          type: carPhotos[index]?.type || 'image/jpeg',
+          size: carPhotos[index]?.size || 0,
+          lastModified: carPhotos[index]?.lastModified || Date.now(),
+          isPreDrive: true // Flag to indicate this was added before the drive
+        })),
+        videos: videoPreviewUrls.map((url, index) => ({
+          url,
+          name: carVideos[index]?.name || `Video ${index + 1}`,
+          type: carVideos[index]?.type || 'video/mp4',
+          size: carVideos[index]?.size || 0,
+          lastModified: carVideos[index]?.lastModified || Date.now(),
+          isPreDrive: true // Flag to indicate this was added before the drive
+        })),
+        voiceNotes: audioUrl ? [{
+          url: audioUrl,
+          duration: recordingTime,
+          recordedAt: Date.now(),
+          isPreDrive: true // Flag to indicate this was added before the drive
+        }] : []
+      },
       telemetryHistory: [],
       trackHistory: [],
       status: 'active',
@@ -5424,9 +5449,211 @@ const RoutePlannerPage = () => {
         </div>
       )}
       
+      {/* Drive Media Collection - Photos, Videos, Voice Notes */}
+      {!gpsTrackingEnabled && (
+        <div className="mt-12 mb-8 max-w-6xl mx-auto">
+          <div className="bg-gray-900/80 rounded-lg p-6 border border-blue-900/40">
+            <h2 className="text-blue-400 font-orbitron text-xl mb-4 flex items-center">
+              <span className="mr-2">📸</span> Drive Media Collection
+            </h2>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Photo Gallery */}
+              <div className="bg-gray-800/60 p-4 rounded-lg border border-gray-700">
+                <h3 className="text-green-500 font-semibold mb-2 text-md uppercase tracking-wide flex items-center">
+                  <span className="mr-2">🖼️</span> Photo Gallery
+                  <span className="ml-2 text-xs text-gray-400">({carPhotos.length}/5)</span>
+                </h3>
+                
+                <div className="mb-3">
+                  <label className="relative flex justify-center items-center p-4 border-2 border-dashed border-blue-500/40 rounded-lg hover:border-blue-500/80 transition-colors cursor-pointer bg-gray-900/50">
+                    <div className="text-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mx-auto mb-2 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16l4.586-4.586a2 2 0 012.828 0L16 16m-2-2l1.586-1.586a2 2 0 012.828 0L20 14m-6-6h.01M6 20h12a2 2 0 002-2V6a2 2 0 00-2-2H6a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-sm text-blue-400 font-medium">Click to add car photos</p>
+                      <p className="text-xs text-gray-400">JPG, PNG, WEBP (max 5 photos)</p>
+                    </div>
+                    <input 
+                      type="file" 
+                      accept="image/*" 
+                      multiple 
+                      className="hidden" 
+                      onChange={handlePhotoUpload}
+                    />
+                  </label>
+                </div>
+                
+                {photoPreviewUrls.length > 0 && (
+                  <div className="grid grid-cols-2 gap-2 mt-3">
+                    {photoPreviewUrls.map((url, index) => (
+                      <div key={index} className="relative group rounded-lg overflow-hidden aspect-video">
+                        <img src={url} alt={`Car photo ${index + 1}`} className="w-full h-full object-cover" />
+                        <button
+                          onClick={() => removePhoto(index)}
+                          className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              {/* Video Gallery */}
+              <div className="bg-gray-800/60 p-4 rounded-lg border border-gray-700">
+                <h3 className="text-green-500 font-semibold mb-2 text-md uppercase tracking-wide flex items-center">
+                  <span className="mr-2">🎬</span> Video Gallery
+                  <span className="ml-2 text-xs text-gray-400">({carVideos.length}/3)</span>
+                </h3>
+                
+                <div className="mb-3">
+                  <label className="relative flex justify-center items-center p-4 border-2 border-dashed border-purple-500/40 rounded-lg hover:border-purple-500/80 transition-colors cursor-pointer bg-gray-900/50">
+                    <div className="text-center">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-10 w-10 mx-auto mb-2 text-purple-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                      <p className="text-sm text-purple-400 font-medium">Click to add car videos</p>
+                      <p className="text-xs text-gray-400">MP4, WebM (max 3 videos, 100MB each)</p>
+                    </div>
+                    <input 
+                      type="file" 
+                      accept="video/*" 
+                      multiple 
+                      className="hidden" 
+                      onChange={handleVideoUpload}
+                    />
+                  </label>
+                </div>
+                
+                {videoPreviewUrls.length > 0 && (
+                  <div className="space-y-2 mt-3">
+                    {videoPreviewUrls.map((url, index) => (
+                      <div key={index} className="relative group rounded-lg overflow-hidden">
+                        <video 
+                          src={url} 
+                          controls 
+                          className="w-full rounded-lg border border-gray-700" 
+                          preload="metadata"
+                        />
+                        <button
+                          onClick={() => removeVideo(index)}
+                          className="absolute top-1 right-1 bg-red-600 text-white rounded-full p-1 opacity-0 group-hover:opacity-100 transition-opacity"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+                          </svg>
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+              
+              {/* Voice Notes */}
+              <div className="bg-gray-800/60 p-4 rounded-lg border border-gray-700">
+                <h3 className="text-green-500 font-semibold mb-2 text-md uppercase tracking-wide flex items-center">
+                  <span className="mr-2">🎙️</span> Voice Notes
+                </h3>
+                
+                <div className="space-y-4">
+                  <div className="bg-gray-900/60 p-3 rounded-lg border border-gray-700 flex flex-col items-center">
+                    {!isRecording && !audioUrl && (
+                      <button
+                        onClick={startRecording}
+                        className="px-4 py-2 bg-red-600 hover:bg-red-500 text-white rounded-full flex items-center gap-2 w-full justify-center"
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z" />
+                        </svg>
+                        Start Recording
+                      </button>
+                    )}
+                    
+                    {isRecording && (
+                      <div className="w-full">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="text-red-500 font-mono text-sm animate-pulse flex items-center">
+                            <span className="h-3 w-3 bg-red-500 rounded-full mr-2 animate-ping"></span>
+                            REC
+                          </div>
+                          <div className="text-white font-mono">
+                            {Math.floor(recordingTime / 60).toString().padStart(2, '0')}:{(recordingTime % 60).toString().padStart(2, '0')}
+                          </div>
+                        </div>
+                        
+                        <button
+                          onClick={stopRecording}
+                          className="px-4 py-2 bg-gray-700 hover:bg-gray-600 text-white rounded-full flex items-center gap-2 w-full justify-center"
+                        >
+                          <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 10a1 1 0 011-1h4a1 1 0 011 1v4a1 1 0 01-1 1h-4a1 1 0 01-1-1v-4z" />
+                          </svg>
+                          Stop Recording
+                        </button>
+                      </div>
+                    )}
+                    
+                    {audioUrl && !isRecording && (
+                      <div className="w-full">
+                        <div className="flex justify-between items-center mb-2">
+                          <div className="text-blue-400 font-mono text-sm">Voice Note Recorded</div>
+                          <div className="text-gray-400 font-mono text-xs">
+                            {Math.floor(recordingTime / 60).toString().padStart(2, '0')}:{(recordingTime % 60).toString().padStart(2, '0')}
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <button
+                            onClick={playRecording}
+                            className="flex-1 px-3 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg flex items-center justify-center gap-1"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                            Play
+                          </button>
+                          
+                          <button
+                            onClick={deleteRecording}
+                            className="px-3 py-2 bg-red-600 hover:bg-red-500 text-white rounded-lg flex items-center justify-center"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                            </svg>
+                          </button>
+                          
+                          <button
+                            onClick={startRecording}
+                            className="px-3 py-2 bg-green-600 hover:bg-green-500 text-white rounded-lg flex items-center justify-center"
+                          >
+                            <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            </svg>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  
+                  <div className="text-center text-xs text-gray-400">
+                    <p>All media will be automatically packaged and synchronized to your Drive Journal</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+        
       {/* Ferrari-inspired Start GPS Button at the bottom of the page */}
       {!gpsTrackingEnabled && (
-        <div className="mt-12 mb-16 flex flex-col items-center">
+        <div className="mt-6 mb-16 flex flex-col items-center">
           <div className="bg-black/30 rounded-2xl p-8 w-full max-w-2xl border border-red-600/30 shadow-xl">
             <div className="text-center mb-4">
               <h3 className="text-red-500 font-orbitron text-2xl uppercase tracking-widest">Ready to Drive</h3>
