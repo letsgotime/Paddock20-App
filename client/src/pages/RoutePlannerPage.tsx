@@ -2218,12 +2218,222 @@ const RoutePlannerPage = () => {
           </button>
           
           {showAdvancedSettings && (
-            <div className="mt-3 pl-4 border-l-2 border-blue-500/30 animate-fadeIn">
+            <div className="mt-3 pl-4 border-l-2 border-blue-500/30 animate-fadeIn space-y-5">
+              {/* Universal Features */}
+              <div>
+                <h4 className="text-green-400 font-orbitron text-md mb-2">Universal Features</h4>
+                <div className="grid grid-cols-2 gap-2">
+                  <label className="flex items-center space-x-2 text-white text-sm">
+                    <input
+                      type="checkbox"
+                      checked={navigationFeatures.realTimeTraffic}
+                      onChange={(e) => setNavigationFeatures({...navigationFeatures, realTimeTraffic: e.target.checked})}
+                      className="form-checkbox text-green-500"
+                    />
+                    <span>Real-Time Traffic</span>
+                  </label>
+                  
+                  <label className="flex items-center space-x-2 text-white text-sm">
+                    <input
+                      type="checkbox"
+                      checked={navigationFeatures.avoidHighways}
+                      onChange={(e) => setNavigationFeatures({...navigationFeatures, avoidHighways: e.target.checked})}
+                      className="form-checkbox text-green-500"
+                    />
+                    <span>Avoid Highways</span>
+                  </label>
+                  
+                  <label className="flex items-center space-x-2 text-white text-sm">
+                    <input
+                      type="checkbox"
+                      checked={navigationFeatures.avoidTolls}
+                      onChange={(e) => setNavigationFeatures({...navigationFeatures, avoidTolls: e.target.checked})}
+                      className="form-checkbox text-green-500"
+                    />
+                    <span>Avoid Tolls</span>
+                  </label>
+                  
+                  <label className="flex items-center space-x-2 text-white text-sm">
+                    <input
+                      type="checkbox"
+                      checked={navigationFeatures.preferScenic}
+                      onChange={(e) => setNavigationFeatures({...navigationFeatures, preferScenic: e.target.checked})}
+                      className="form-checkbox text-green-500"
+                    />
+                    <span>Prefer Scenic Routes</span>
+                  </label>
+                  
+                  <label className="flex items-center space-x-2 text-white text-sm">
+                    <input
+                      type="checkbox"
+                      checked={navigationFeatures.curvyRoads}
+                      onChange={(e) => setNavigationFeatures({...navigationFeatures, curvyRoads: e.target.checked})}
+                      className="form-checkbox text-green-500"
+                    />
+                    <span>Prefer Curvy Roads</span>
+                  </label>
+                  
+                  <label className="flex items-center space-x-2 text-white text-sm">
+                    <input
+                      type="checkbox"
+                      checked={navigationFeatures.avoidUnpaved}
+                      onChange={(e) => setNavigationFeatures({...navigationFeatures, avoidUnpaved: e.target.checked})}
+                      className="form-checkbox text-green-500"
+                    />
+                    <span>Avoid Unpaved Roads</span>
+                  </label>
+                  
+                  <label className="flex items-center space-x-2 text-white text-sm">
+                    <input
+                      type="checkbox"
+                      checked={navigationFeatures.avoidFerries || false}
+                      onChange={(e) => setNavigationFeatures({...navigationFeatures, avoidFerries: e.target.checked})}
+                      className="form-checkbox text-green-500"
+                    />
+                    <span>Avoid Ferries</span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Route Optimization */}
+              <div>
+                <h4 className="text-green-400 font-orbitron text-md mb-2">Route Optimization</h4>
+                <div className="mb-3">
+                  <label className="block text-gray-300 text-sm mb-1">Traffic Avoidance Strategy</label>
+                  <select 
+                    className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                    value={navigationFeatures.trafficAvoidance || 'moderate'}
+                    onChange={(e) => setNavigationFeatures({...navigationFeatures, trafficAvoidance: e.target.value})}
+                  >
+                    <option value="none">None - Follow Main Route</option>
+                    <option value="light">Light - Minor Detours Only</option>
+                    <option value="moderate">Moderate - Avoid Major Delays</option>
+                    <option value="aggressive">Aggressive - Best Time Priority</option>
+                    <option value="max">Maximum - Avoid All Traffic</option>
+                  </select>
+                </div>
+                
+                <div className="mb-3">
+                  <label className="block text-gray-300 text-sm mb-1">Road Type Preference</label>
+                  <select 
+                    className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                    value={navigationFeatures.roadTypePreference || 'balanced'}
+                    onChange={(e) => setNavigationFeatures({...navigationFeatures, roadTypePreference: e.target.value})}
+                  >
+                    <option value="highways">Highway Priority</option>
+                    <option value="balanced">Balanced</option>
+                    <option value="scenic">Scenic Routes</option>
+                    <option value="enthusiast">Enthusiast Roads</option>
+                    <option value="trackday">Track Day Approach</option>
+                  </select>
+                </div>
+
+                <div className="mb-3">
+                  <label className="block text-gray-300 text-sm mb-1">Route Complexity</label>
+                  <div className="flex items-center">
+                    <span className="text-xs text-gray-400 w-20">Simple</span>
+                    <input
+                      type="range"
+                      min="1"
+                      max="5"
+                      step="1"
+                      value={navigationFeatures.complexityLevel || 3}
+                      onChange={(e) => setNavigationFeatures({...navigationFeatures, complexityLevel: parseInt(e.target.value)})}
+                      className="flex-grow mx-2"
+                    />
+                    <span className="text-xs text-gray-400 w-20 text-right">Complex</span>
+                  </div>
+                </div>
+                
+                <label className="flex items-center space-x-2 text-white text-sm">
+                  <input
+                    type="checkbox"
+                    checked={navigationFeatures.optimizeForSportsCars || false}
+                    onChange={(e) => setNavigationFeatures({...navigationFeatures, optimizeForSportsCars: e.target.checked})}
+                    className="form-checkbox text-green-500"
+                  />
+                  <span>Sports Car Optimization</span>
+                </label>
+              </div>
+
+              {/* Google Maps Features */}
+              {preferredNavApp === "Google Maps" && (
+                <div>
+                  <h4 className="text-green-400 font-orbitron text-md mb-2">Google Maps Features</h4>
+                  <div className="grid grid-cols-2 gap-2">
+                    <label className="flex items-center space-x-2 text-white text-sm">
+                      <input
+                        type="checkbox"
+                        checked={googleMapsOptions.trafficLayer || false}
+                        onChange={(e) => setGoogleMapsOptions({...googleMapsOptions, trafficLayer: e.target.checked})}
+                        className="form-checkbox text-green-500"
+                      />
+                      <span>Traffic Layer</span>
+                    </label>
+                    
+                    <label className="flex items-center space-x-2 text-white text-sm">
+                      <input
+                        type="checkbox"
+                        checked={googleMapsOptions.satelliteView || false}
+                        onChange={(e) => setGoogleMapsOptions({...googleMapsOptions, satelliteView: e.target.checked})}
+                        className="form-checkbox text-green-500"
+                      />
+                      <span>Satellite View</span>
+                    </label>
+                    
+                    <label className="flex items-center space-x-2 text-white text-sm">
+                      <input
+                        type="checkbox"
+                        checked={googleMapsOptions.streetView || false}
+                        onChange={(e) => setGoogleMapsOptions({...googleMapsOptions, streetView: e.target.checked})}
+                        className="form-checkbox text-green-500"
+                      />
+                      <span>Street View Access</span>
+                    </label>
+                    
+                    <label className="flex items-center space-x-2 text-white text-sm">
+                      <input
+                        type="checkbox"
+                        checked={googleMapsOptions.terrainView || false}
+                        onChange={(e) => setGoogleMapsOptions({...googleMapsOptions, terrainView: e.target.checked})}
+                        className="form-checkbox text-green-500"
+                      />
+                      <span>Terrain View</span>
+                    </label>
+                    
+                    <label className="flex items-center space-x-2 text-white text-sm">
+                      <input
+                        type="checkbox"
+                        checked={googleMapsOptions.evChargingStations || false}
+                        onChange={(e) => setGoogleMapsOptions({...googleMapsOptions, evChargingStations: e.target.checked})}
+                        className="form-checkbox text-green-500"
+                      />
+                      <span>EV Charging Stations</span>
+                    </label>
+                    
+                    <label className="flex items-center space-x-2 text-white text-sm">
+                      <input
+                        type="checkbox"
+                        checked={googleMapsOptions.gasPriceLayer || false}
+                        onChange={(e) => setGoogleMapsOptions({...googleMapsOptions, gasPriceLayer: e.target.checked})}
+                        className="form-checkbox text-green-500"
+                      />
+                      <span>Gas Price Layer</span>
+                    </label>
+                  </div>
+                </div>
+              )}
+
+              <p className="text-sm text-gray-400 mt-3">
+                For app-specific features, Paddock20 uses custom launch parameters through deep linking. 
+                Your preferences will be automatically configured when opening your preferred navigation app.
+              </p>
+              
               <button
                 onClick={() => document.getElementById('navigation-advanced-settings')?.scrollIntoView({ behavior: 'smooth' })}
-                className="text-blue-400 hover:text-blue-300 text-sm underline"
+                className="text-blue-400 hover:text-blue-300 text-sm underline mt-3"
               >
-                Configure Navigation Settings
+                See More Advanced Navigation Settings
               </button>
             </div>
           )}
