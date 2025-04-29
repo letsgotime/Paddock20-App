@@ -26,8 +26,9 @@ interface TimepieceState {
 
 const TiresTimepieces: React.FC = () => {
   const contentRef = useRef<HTMLDivElement>(null);
-  const [activeTab, setActiveTab] = useState<'overview' | 'timepiece-vault' | 'telemetry' | 'compare' | 'provenance' | 'analytics' | 'certification' | 'marketplace'>('overview');
+  const [activeTab, setActiveTab] = useState<'overview' | 'timepiece-vault' | 'telemetry' | 'vehicle-telemetry' | 'compare' | 'provenance' | 'analytics' | 'certification' | 'marketplace'>('overview');
   const [selectedTimepieceId, setSelectedTimepieceId] = useState<string | null>(null);
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(null);
   
   // For comparison functionality
   const [compareItems, setCompareItems] = useState<string[]>([]);
@@ -247,6 +248,21 @@ const TiresTimepieces: React.FC = () => {
           </div>
         )}
         
+        {activeTab === 'vehicle-telemetry' && selectedVehicleId && (
+          <div className="mb-6">
+            <div className="flex justify-start mb-4">
+              <button
+                onClick={() => setActiveTab('marketplace')}
+                className="inline-flex items-center text-gray-400 hover:text-white"
+              >
+                <ChevronLeft className="h-5 w-5 mr-1" />
+                Back to Marketplace
+              </button>
+            </div>
+            <VehicleTelemetry listingId={selectedVehicleId} />
+          </div>
+        )}
+        
         {activeTab === 'marketplace' && (
           <div className="mb-6">
             <div className="text-center mb-10">
@@ -329,6 +345,12 @@ const TiresTimepieces: React.FC = () => {
                     onDelete={(id) => {
                       if (window.confirm('Are you sure you want to remove this listing?')) {
                         removeListing(id);
+                      }
+                    }}
+                    onViewTelemetry={(id) => {
+                      if (listing.type === 'vehicle') {
+                        setSelectedVehicleId(id);
+                        setActiveTab('vehicle-telemetry');
                       }
                     }}
                   />
