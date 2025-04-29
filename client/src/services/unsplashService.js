@@ -37,10 +37,21 @@ export const initializeImageCache = async () => {
       'Audemars Piguet watch'
     ];
 
-    // Execute searches in parallel
-    await Promise.all(
-      commonSearches.map(term => searchImage(term, true))
-    );
+    try {
+      // Execute searches in parallel, but limit to 3 at a time to avoid rate limits
+      const batchSize = 3;
+      for (let i = 0; i < commonSearches.length; i += batchSize) {
+        const batch = commonSearches.slice(i, i + batchSize);
+        await Promise.all(batch.map(term => searchImage(term, true)));
+        
+        // Small delay to avoid overwhelming the API
+        if (i + batchSize < commonSearches.length) {
+          await new Promise(resolve => setTimeout(resolve, 300));
+        }
+      }
+    } catch (error) {
+      console.warn('Image prefetching partially failed:', error.message);
+    }
 
     return true;
   } catch (error) {
@@ -67,8 +78,15 @@ export const searchImage = async (query, silent = false) => {
   }
 
   try {
+    // Enhanced query parameters for better results:
+    // - orientation=landscape for vehicle images (better aspect ratio)
+    // - content_filter=high to ensure appropriate images
+    // - per_page=3 to get more variety
+    // - order_by=relevant for better matching
+    const orientation = query.includes('car') || query.includes('vehicle') ? 'landscape' : 'squarish';
+    
     const response = await fetch(
-      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1`,
+      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=3&orientation=${orientation}&content_filter=high&order_by=relevant`,
       {
         headers: {
           Authorization: `Client-ID ${accessKey}`
@@ -83,7 +101,9 @@ export const searchImage = async (query, silent = false) => {
     const data = await response.json();
     
     if (data.results && data.results.length > 0) {
-      const imageUrl = data.results[0].urls.regular;
+      // Use some randomness to get variety in the images
+      const randomIndex = Math.floor(Math.random() * Math.min(data.results.length, 3));
+      const imageUrl = data.results[randomIndex].urls.regular;
       
       // Cache the result
       imageCache.set(query, imageUrl);
