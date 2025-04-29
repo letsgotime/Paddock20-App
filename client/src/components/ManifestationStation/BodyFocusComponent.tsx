@@ -2,18 +2,19 @@ import React, { useState } from 'react';
 import { Goal } from '../../types/manifestation';
 import { 
   Dumbbell, 
-  CheckCircle, 
-  PlusCircle, 
-  Edit, 
+  Calendar, 
   Save, 
-  Trash2, 
-  ClipboardList,
-  Calendar,
-  Clock,
-  RepeatIcon,
+  Edit, 
+  PlusCircle, 
+  Clock, 
+  CheckCircle, 
+  Trash2,
+  CalendarDays,
   ArrowRight,
-  Activity,
-  BarChart
+  Heart,
+  Timer,
+  BarChart2,
+  Repeat
 } from 'lucide-react';
 
 interface BodyFocusComponentProps {
@@ -24,11 +25,13 @@ interface BodyFocusComponentProps {
 interface PhysicalActivity {
   id: number;
   name: string;
-  frequency: 'daily' | 'weekly' | 'monthly' | 'once';
-  duration: number; // minutes
+  frequency: string;
   description: string;
   isActive: boolean;
   lastUpdated: string;
+  targetCount: number;
+  currentCount: number;
+  unit: string;
 }
 
 const BodyFocusComponent: React.FC<BodyFocusComponentProps> = ({ goal, onUpdate }) => {
@@ -37,38 +40,45 @@ const BodyFocusComponent: React.FC<BodyFocusComponentProps> = ({ goal, onUpdate 
   const [activities, setActivities] = useState<PhysicalActivity[]>([
     {
       id: 1,
-      name: 'Cardio Training',
-      frequency: 'weekly',
-      duration: 30,
-      description: 'Maintain cardiovascular health and endurance for long drives and high-intensity situations.',
+      name: 'Morning Exercise Routine',
+      frequency: '3x per week',
+      description: 'A 20-minute routine focused on building core strength and endurance for better driving posture and stamina.',
       isActive: true,
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
+      targetCount: 3,
+      currentCount: 1,
+      unit: 'sessions per week'
     },
     {
       id: 2,
-      name: 'Core Strength',
-      frequency: 'weekly',
-      duration: 20,
-      description: 'Build core stability for better posture and control during driving.',
+      name: 'Financial Action Steps',
+      frequency: 'Daily',
+      description: 'Take one concrete action each day toward saving or growing your funds for your dream.',
       isActive: true,
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
+      targetCount: 7,
+      currentCount: 5,
+      unit: 'actions per week'
     },
     {
       id: 3,
-      name: 'Flexibility Session',
-      frequency: 'weekly',
-      duration: 15,
-      description: 'Maintain flexibility to comfortably operate controls and prevent stiffness on long drives.',
+      name: 'Learning Sessions',
+      frequency: '2x per week',
+      description: 'Dedicated time to learn about your target asset - study maintenance, history, technology, ownership experience.',
       isActive: true,
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
+      targetCount: 2,
+      currentCount: 1,
+      unit: 'sessions per week'
     }
   ]);
   
-  const [newActivity, setNewActivity] = useState<Omit<PhysicalActivity, 'id' | 'isActive' | 'lastUpdated'>>({
+  const [newActivity, setNewActivity] = useState<Omit<PhysicalActivity, 'id' | 'isActive' | 'lastUpdated' | 'currentCount'>>({
     name: '',
-    frequency: 'weekly',
-    duration: 30,
-    description: ''
+    frequency: '',
+    description: '',
+    targetCount: 1,
+    unit: 'sessions per week'
   });
   
   // Save updated body focus
@@ -86,10 +96,12 @@ const BodyFocusComponent: React.FC<BodyFocusComponentProps> = ({ goal, onUpdate 
       id: Date.now(),
       name: newActivity.name,
       frequency: newActivity.frequency,
-      duration: newActivity.duration,
       description: newActivity.description,
       isActive: true,
-      lastUpdated: new Date().toISOString()
+      lastUpdated: new Date().toISOString(),
+      targetCount: newActivity.targetCount,
+      currentCount: 0,
+      unit: newActivity.unit
     };
     
     setActivities([...activities, newActivityEntry]);
@@ -97,13 +109,14 @@ const BodyFocusComponent: React.FC<BodyFocusComponentProps> = ({ goal, onUpdate 
     // Reset form
     setNewActivity({
       name: '',
-      frequency: 'weekly',
-      duration: 30,
-      description: ''
+      frequency: '',
+      description: '',
+      targetCount: 1,
+      unit: 'sessions per week'
     });
   };
   
-  // Toggle activity active status
+  // Toggle activity status
   const toggleActivityStatus = (id: number) => {
     const updatedActivities = activities.map(activity => 
       activity.id === id 
@@ -114,6 +127,25 @@ const BodyFocusComponent: React.FC<BodyFocusComponentProps> = ({ goal, onUpdate 
           } 
         : activity
     );
+    
+    setActivities(updatedActivities);
+  };
+  
+  // Update activity progress
+  const updateActivityProgress = (id: number, increment: boolean) => {
+    const updatedActivities = activities.map(activity => {
+      if (activity.id !== id) return activity;
+      
+      const newCount = increment 
+        ? Math.min(activity.currentCount + 1, activity.targetCount) 
+        : Math.max(activity.currentCount - 1, 0);
+      
+      return {
+        ...activity,
+        currentCount: newCount,
+        lastUpdated: new Date().toISOString()
+      };
+    });
     
     setActivities(updatedActivities);
   };
@@ -129,21 +161,11 @@ const BodyFocusComponent: React.FC<BodyFocusComponentProps> = ({ goal, onUpdate 
     return new Date(dateString).toLocaleDateString();
   };
   
-  // Get frequency display text
-  const getFrequencyText = (frequency: string) => {
-    switch (frequency) {
-      case 'daily':
-        return 'Daily';
-      case 'weekly':
-        return 'Weekly';
-      case 'monthly':
-        return 'Monthly';
-      case 'once':
-        return 'Once';
-      default:
-        return frequency;
-    }
-  };
+  // Calculate average progress percentage
+  const averageProgress = activities
+    .filter(a => a.isActive)
+    .reduce((sum, activity) => sum + (activity.currentCount / activity.targetCount * 100), 0) / 
+    Math.max(1, activities.filter(a => a.isActive).length);
   
   return (
     <div className="bg-gray-900 rounded-lg p-4">
@@ -163,11 +185,11 @@ const BodyFocusComponent: React.FC<BodyFocusComponentProps> = ({ goal, onUpdate 
               <textarea
                 value={bodyFocus}
                 onChange={(e) => setBodyFocus(e.target.value)}
-                placeholder="e.g., Track day fitness training 3x weekly to improve driving stamina and reflexes"
+                placeholder="e.g., Daily fitness routine to improve stamina and reflexes for track driving"
                 className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm h-24 resize-none"
               />
               <p className="text-xs text-gray-500 mt-1">
-                Describe the physical activities or changes you'll implement to support your dream.
+                Describe the physical actions and routines that will prepare you to achieve your dream.
               </p>
             </div>
             
@@ -217,28 +239,31 @@ const BodyFocusComponent: React.FC<BodyFocusComponentProps> = ({ goal, onUpdate 
         )}
       </div>
       
-      {/* Physical Activity Routine */}
+      {/* Physical Activities */}
       <div className="mb-6">
         <h4 className="text-white font-medium mb-3 flex items-center">
-          <Activity className="h-4 w-4 mr-2" />
-          Physical Activity Routine
+          <Dumbbell className="h-4 w-4 mr-2" />
+          Physical Actions & Routines
         </h4>
         
         <div className="bg-gray-800 rounded-lg p-4 mb-4">
           <div className="flex justify-between items-center mb-3">
             <div>
-              <h5 className="text-green-400 font-medium">Your Physical Plan</h5>
-              <p className="text-gray-400 text-sm">Activities to support your goal</p>
+              <h5 className="text-green-400 font-medium">Weekly Progress</h5>
+              <p className="text-gray-400 text-sm">Your action completion rate</p>
             </div>
             <div className="bg-green-900/50 text-green-300 py-1 px-3 rounded-full flex items-center">
-              <BarChart className="h-3.5 w-3.5 mr-1.5" />
-              <span>{activities.filter(a => a.isActive).length} Activities</span>
+              <BarChart2 className="h-3.5 w-3.5 mr-1.5" />
+              <span>{Math.round(averageProgress)}% Complete</span>
             </div>
           </div>
           
-          <p className="text-sm text-gray-300">
-            Your body's condition directly impacts your ability to manifest your dreams. These physical activities will ensure you're in optimal condition to achieve your goals.
-          </p>
+          <div className="w-full bg-gray-700 rounded-full h-2">
+            <div 
+              className="h-2 rounded-full bg-gradient-to-r from-green-500 to-teal-500"
+              style={{ width: `${averageProgress}%` }}
+            ></div>
+          </div>
         </div>
         
         {/* Activity list */}
@@ -270,13 +295,10 @@ const BodyFocusComponent: React.FC<BodyFocusComponentProps> = ({ goal, onUpdate 
                       {activity.name}
                     </h5>
                     <div className="flex items-center text-xs text-gray-500 mt-0.5">
-                      <RepeatIcon className="h-3 w-3 mr-1" />
-                      <span>{getFrequencyText(activity.frequency)}</span>
+                      <Repeat className="h-3 w-3 mr-1" />
+                      <span>{activity.frequency}</span>
                       <span className="mx-2">•</span>
-                      <Clock className="h-3 w-3 mr-1" />
-                      <span>{activity.duration} minutes</span>
-                      <span className="mx-2">•</span>
-                      <Calendar className="h-3 w-3 mr-1" />
+                      <CalendarDays className="h-3 w-3 mr-1" />
                       <span>Updated {formatDate(activity.lastUpdated)}</span>
                     </div>
                   </div>
@@ -295,6 +317,54 @@ const BodyFocusComponent: React.FC<BodyFocusComponentProps> = ({ goal, onUpdate 
                   {activity.description}
                 </p>
               )}
+              
+              {activity.isActive && (
+                <div className="ml-8 mt-3 flex items-center">
+                  <div className="flex-grow">
+                    <div className="flex justify-between text-xs mb-1">
+                      <span className="text-gray-500">Progress</span>
+                      <span className="text-gray-400">
+                        {activity.currentCount}/{activity.targetCount} {activity.unit}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-700 rounded-full h-1.5">
+                      <div 
+                        className="h-1.5 rounded-full bg-green-500"
+                        style={{ width: `${(activity.currentCount / activity.targetCount) * 100}%` }}
+                      ></div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex space-x-1 ml-3">
+                    <button
+                      onClick={() => updateActivityProgress(activity.id, false)}
+                      disabled={activity.currentCount === 0}
+                      className={`p-1 rounded ${
+                        activity.currentCount > 0
+                          ? 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                          : 'bg-gray-800 text-gray-600 cursor-not-allowed'
+                      }`}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 12H4"></path>
+                      </svg>
+                    </button>
+                    <button
+                      onClick={() => updateActivityProgress(activity.id, true)}
+                      disabled={activity.currentCount === activity.targetCount}
+                      className={`p-1 rounded ${
+                        activity.currentCount < activity.targetCount
+                          ? 'bg-green-600 text-white hover:bg-green-500'
+                          : 'bg-gray-800 text-gray-600 cursor-not-allowed'
+                      }`}
+                    >
+                      <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"></path>
+                      </svg>
+                    </button>
+                  </div>
+                </div>
+              )}
             </div>
           ))}
         </div>
@@ -304,7 +374,7 @@ const BodyFocusComponent: React.FC<BodyFocusComponentProps> = ({ goal, onUpdate 
       <div className="bg-gray-800 rounded-lg p-4">
         <h4 className="text-sm font-medium text-white mb-3 flex items-center">
           <PlusCircle className="h-4 w-4 mr-2" />
-          Add Physical Activity
+          Add Physical Action
         </h4>
         
         <div className="space-y-3">
@@ -312,62 +382,56 @@ const BodyFocusComponent: React.FC<BodyFocusComponentProps> = ({ goal, onUpdate 
             <label className="block text-xs text-gray-400 mb-1">Activity Name</label>
             <input
               type="text"
-              placeholder="e.g., Track Day Training"
+              placeholder="e.g., Financial Saving Routine"
               value={newActivity.name}
               onChange={(e) => setNewActivity({ ...newActivity, name: e.target.value })}
               className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm"
             />
           </div>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+          <div>
+            <label className="block text-xs text-gray-400 mb-1">Frequency</label>
+            <input
+              type="text"
+              placeholder="e.g., 3x per week, Daily, etc."
+              value={newActivity.frequency}
+              onChange={(e) => setNewActivity({ ...newActivity, frequency: e.target.value })}
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm"
+            />
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Frequency</label>
-              <select
-                value={newActivity.frequency}
-                onChange={(e) => setNewActivity({ 
-                  ...newActivity, 
-                  frequency: e.target.value as 'daily' | 'weekly' | 'monthly' | 'once'
-                })}
+              <label className="block text-xs text-gray-400 mb-1">Target Count</label>
+              <input
+                type="number"
+                min="1"
+                value={newActivity.targetCount}
+                onChange={(e) => setNewActivity({ ...newActivity, targetCount: parseInt(e.target.value) || 1 })}
                 className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm"
-              >
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-                <option value="once">Once</option>
-              </select>
+              />
             </div>
             
             <div>
-              <label className="block text-xs text-gray-400 mb-1">Duration (minutes)</label>
-              <div className="flex items-center">
-                <button
-                  onClick={() => setNewActivity({ ...newActivity, duration: Math.max(5, newActivity.duration - 5) })}
-                  className="bg-gray-700 text-gray-300 px-3 py-2 rounded-l-md border border-gray-600"
-                >
-                  -
-                </button>
-                <input
-                  type="number"
-                  min="5"
-                  value={newActivity.duration}
-                  onChange={(e) => setNewActivity({ ...newActivity, duration: parseInt(e.target.value) || 5 })}
-                  className="w-16 text-center bg-gray-700 border-t border-b border-gray-600 text-white py-2"
-                />
-                <button
-                  onClick={() => setNewActivity({ ...newActivity, duration: newActivity.duration + 5 })}
-                  className="bg-gray-700 text-gray-300 px-3 py-2 rounded-r-md border border-gray-600"
-                >
-                  +
-                </button>
-                <span className="text-gray-400 ml-2">min</span>
-              </div>
+              <label className="block text-xs text-gray-400 mb-1">Unit</label>
+              <select
+                value={newActivity.unit}
+                onChange={(e) => setNewActivity({ ...newActivity, unit: e.target.value })}
+                className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm"
+              >
+                <option value="sessions per week">sessions per week</option>
+                <option value="actions per week">actions per week</option>
+                <option value="hours per week">hours per week</option>
+                <option value="miles per week">miles per week</option>
+                <option value="$ saved">$ saved</option>
+              </select>
             </div>
           </div>
           
           <div>
             <label className="block text-xs text-gray-400 mb-1">Description (optional)</label>
             <textarea
-              placeholder="How does this activity support your goal?"
+              placeholder="Describe this activity and how it contributes to your dream..."
               value={newActivity.description}
               onChange={(e) => setNewActivity({ ...newActivity, description: e.target.value })}
               className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm h-20 resize-none"
@@ -376,38 +440,39 @@ const BodyFocusComponent: React.FC<BodyFocusComponentProps> = ({ goal, onUpdate 
           
           <button
             onClick={addActivity}
-            disabled={!newActivity.name.trim()}
+            disabled={!newActivity.name.trim() || !newActivity.frequency.trim()}
             className={`w-full py-2 rounded flex items-center justify-center ${
-              newActivity.name.trim()
+              newActivity.name.trim() && newActivity.frequency.trim()
                 ? 'bg-green-600 hover:bg-green-500 text-white'
-                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
             }`}
           >
-            <PlusCircle className="h-4 w-4 mr-2" />
+            <PlusCircle className="h-4 w-4 mr-1.5" />
             <span>Add Activity</span>
           </button>
         </div>
       </div>
       
-      {/* Physical Optimization Tips */}
-      <div className="mt-6 p-4 bg-green-900/20 border border-green-800 rounded-md">
-        <h5 className="text-green-400 font-medium mb-2">Physical Optimization Tips</h5>
+      {/* Body focus tips */}
+      <div className="mt-6 bg-green-900/20 rounded-lg p-4">
+        <h4 className="text-green-400 font-medium mb-3">Action Tips</h4>
+        
         <ul className="text-sm text-gray-300 space-y-2">
           <li className="flex items-start">
             <ArrowRight className="h-4 w-4 text-green-400 mt-0.5 mr-2 flex-shrink-0" />
-            <span>Choose activities that directly support your goal's physical requirements.</span>
+            <span>Consistency beats intensity - small daily actions compound over time.</span>
           </li>
           <li className="flex items-start">
             <ArrowRight className="h-4 w-4 text-green-400 mt-0.5 mr-2 flex-shrink-0" />
-            <span>Track your progress and gradually increase intensity as you improve.</span>
+            <span>Include financial actions as part of your body focus plan - steps that build your resources.</span>
           </li>
           <li className="flex items-start">
             <ArrowRight className="h-4 w-4 text-green-400 mt-0.5 mr-2 flex-shrink-0" />
-            <span>Recovery is as important as activity. Ensure proper rest between sessions.</span>
+            <span>Connect physical activities to your dream - seek activities that directly prepare you.</span>
           </li>
           <li className="flex items-start">
             <ArrowRight className="h-4 w-4 text-green-400 mt-0.5 mr-2 flex-shrink-0" />
-            <span>Consider working with a professional trainer to optimize your routine.</span>
+            <span>Track your progress daily to maintain momentum and celebrate small wins.</span>
           </li>
         </ul>
       </div>

@@ -1,17 +1,24 @@
-import React, { useState } from 'react';
-import { Goal, DisciplineStreak } from '../../types/manifestation';
+import React, { useState, useEffect } from 'react';
+import { Goal } from '../../types/manifestation';
 import { 
-  CheckCircle, 
-  Circle, 
+  ListChecks, 
   Calendar, 
-  Flame, 
-  Clock, 
-  BarChart, 
-  ArrowUpRight,
-  CheckSquare,
-  PlusCircle,
   CalendarDays,
-  Trophy
+  CheckCircle, 
+  BrainCircuit,
+  Dumbbell,
+  Heart,
+  Camera,
+  BookOpen,
+  BookMarked,
+  Upload,
+  PlusCircle,
+  ArrowRight,
+  FileEdit,
+  Save,
+  Timer,
+  Award,
+  Flame
 } from 'lucide-react';
 
 interface DisciplineTrackerComponentProps {
@@ -19,373 +26,614 @@ interface DisciplineTrackerComponentProps {
   onUpdate: (updatedGoal: Goal) => void;
 }
 
-type DisciplineType = 'activity' | 'education' | 'intention';
+interface DailyLog {
+  id: number;
+  date: string;
+  completed: boolean;
+  mindCompleted: boolean;
+  bodyCompleted: boolean;
+  spiritCompleted: boolean;
+  knowledgeCompleted: boolean;
+  resourcesCompleted: boolean;
+  photoUploaded: boolean;
+  notes: string;
+  streak: number;
+}
 
 const DisciplineTrackerComponent: React.FC<DisciplineTrackerComponentProps> = ({ goal, onUpdate }) => {
-  const [activeTab, setActiveTab] = useState<DisciplineType>('activity');
-  const [minutes, setMinutes] = useState<number>(15);
+  const [dailyLogs, setDailyLogs] = useState<DailyLog[]>([]);
+  const [selectedDate, setSelectedDate] = useState<Date>(new Date());
+  const [todayLog, setTodayLog] = useState<DailyLog | null>(null);
   const [notes, setNotes] = useState<string>('');
+  const [isEditingNotes, setIsEditingNotes] = useState<boolean>(false);
+  const [photoUpload, setPhotoUpload] = useState<string | null>(null);
+  const [currentStreak, setCurrentStreak] = useState<number>(0);
   
-  // Initialize discipline streaks if they don't exist
-  if (!goal.disciplineStreaks) {
-    goal.disciplineStreaks = {
-      activity: {
-        type: 'activity',
-        currentStreak: 0,
-        longestStreak: 0,
-        totalCompleted: 0,
-        history: []
-      },
-      education: {
-        type: 'education',
-        currentStreak: 0,
-        longestStreak: 0,
-        totalCompleted: 0,
-        history: []
-      },
-      intention: {
-        type: 'intention',
-        currentStreak: 0,
-        longestStreak: 0,
-        totalCompleted: 0,
-        history: []
+  // Initialize logs on component mount
+  useEffect(() => {
+    // In a real app, these would be loaded from database
+    const logs: DailyLog[] = [];
+    
+    // Generate some past logs
+    const today = new Date();
+    
+    // Populate logs for the past 10 days
+    for (let i = 9; i >= 0; i--) {
+      const date = new Date();
+      date.setDate(today.getDate() - i);
+      
+      // Create more completed logs for the past, with some random variation
+      const completed = i > 3 || Math.random() > 0.3;
+      
+      logs.push({
+        id: Date.now() - i,
+        date: date.toISOString().split('T')[0],
+        completed: completed,
+        mindCompleted: completed && (Math.random() > 0.1),
+        bodyCompleted: completed && (Math.random() > 0.2),
+        spiritCompleted: completed && (Math.random() > 0.15),
+        knowledgeCompleted: completed && (Math.random() > 0.3),
+        resourcesCompleted: completed && (Math.random() > 0.25),
+        photoUploaded: i % 3 === 0 && completed, // Every 3rd day has a photo
+        notes: i % 2 === 0 ? 'Made good progress today on my manifestation journey.' : '',
+        streak: i < 7 ? 7 - i : 0 // For demo purposes
+      });
+    }
+    
+    setDailyLogs(logs);
+    
+    // Initialize today's log
+    const todayDateStr = today.toISOString().split('T')[0];
+    const existingTodayLog = logs.find(log => log.date === todayDateStr);
+    
+    if (existingTodayLog) {
+      setTodayLog(existingTodayLog);
+      setNotes(existingTodayLog.notes);
+      
+      // Set current streak
+      const todayIndex = logs.findIndex(log => log.date === todayDateStr);
+      if (todayIndex >= 0 && logs[todayIndex].completed) {
+        setCurrentStreak(logs[todayIndex].streak);
+      } else if (todayIndex > 0 && logs[todayIndex - 1].completed) {
+        setCurrentStreak(logs[todayIndex - 1].streak);
       }
+    } else {
+      // Create a new log for today
+      const lastLog = logs[logs.length - 1];
+      const newStreak = lastLog && lastLog.completed ? lastLog.streak + 1 : 1;
+      
+      const newTodayLog: DailyLog = {
+        id: Date.now(),
+        date: todayDateStr,
+        completed: false,
+        mindCompleted: false,
+        bodyCompleted: false,
+        spiritCompleted: false,
+        knowledgeCompleted: false,
+        resourcesCompleted: false,
+        photoUploaded: false,
+        notes: '',
+        streak: newStreak
+      };
+      
+      setTodayLog(newTodayLog);
+      setDailyLogs([...logs, newTodayLog]);
+      
+      // Set current streak based on yesterday's log
+      if (lastLog && lastLog.completed) {
+        setCurrentStreak(lastLog.streak);
+      }
+    }
+  }, []);
+  
+  // Update the combined completed status for today
+  const updateCompletedStatus = (newLog: DailyLog) => {
+    const completed = 
+      newLog.mindCompleted && 
+      newLog.bodyCompleted && 
+      newLog.spiritCompleted;
+    
+    // For this to count as fully complete, we need core disciplines
+    return {
+      ...newLog,
+      completed
     };
-  }
+  };
   
-  // Get the active discipline streak
-  const activeStreak = goal.disciplineStreaks[activeTab];
+  // Handle checkbox changes
+  const handleCheckboxChange = (field: string, value: boolean) => {
+    if (!todayLog) return;
+    
+    const updatedLog = {
+      ...todayLog,
+      [field]: value
+    };
+    
+    // Update the completed status
+    const finalUpdatedLog = updateCompletedStatus(updatedLog);
+    
+    // Update the streak counter if the status changed to completed
+    let newStreak = finalUpdatedLog.streak;
+    if (!todayLog.completed && finalUpdatedLog.completed) {
+      // If changing from incomplete to complete, increment the streak
+      newStreak += 1;
+      setCurrentStreak(newStreak);
+    } else if (todayLog.completed && !finalUpdatedLog.completed) {
+      // If changing from complete to incomplete, decrement the streak (but not below 0)
+      newStreak = Math.max(0, newStreak - 1);
+      setCurrentStreak(newStreak);
+    }
+    
+    // Set the updated streak value
+    finalUpdatedLog.streak = newStreak;
+    
+    // Update today's log
+    setTodayLog(finalUpdatedLog);
+    
+    // Update the logs array
+    const updatedLogs = dailyLogs.map(log => 
+      log.id === todayLog.id ? finalUpdatedLog : log
+    );
+    setDailyLogs(updatedLogs);
+  };
   
-  // Check if today's activity is already complete
-  const today = new Date().toISOString().split('T')[0];
-  const isTodayComplete = activeStreak.history.some(
-    entry => entry.date.split('T')[0] === today && entry.completed
-  );
+  // Handle notes save
+  const saveNotes = () => {
+    if (!todayLog) return;
+    
+    const updatedLog = {
+      ...todayLog,
+      notes
+    };
+    
+    // Update today's log
+    setTodayLog(updatedLog);
+    
+    // Update the logs array
+    const updatedLogs = dailyLogs.map(log => 
+      log.id === todayLog.id ? updatedLog : log
+    );
+    setDailyLogs(updatedLogs);
+    
+    setIsEditingNotes(false);
+  };
   
-  // Format date for display
+  // Handle photo upload
+  const handlePhotoUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (!file) return;
+    
+    // For demo, we'll just create a URL to the file
+    const photoUrl = URL.createObjectURL(file);
+    setPhotoUpload(photoUrl);
+    
+    if (!todayLog) return;
+    
+    const updatedLog = {
+      ...todayLog,
+      photoUploaded: true
+    };
+    
+    // Update today's log
+    setTodayLog(updatedLog);
+    
+    // Update the logs array
+    const updatedLogs = dailyLogs.map(log => 
+      log.id === todayLog.id ? updatedLog : log
+    );
+    setDailyLogs(updatedLogs);
+  };
+  
+  // Calculate completed days percentage
+  const calculateCompletionPercentage = () => {
+    if (dailyLogs.length === 0) return 0;
+    
+    const completedCount = dailyLogs.filter(log => log.completed).length;
+    return (completedCount / dailyLogs.length) * 100;
+  };
+  
+  // Format date to display
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString(undefined, {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric'
-    });
-  };
-  
-  // Log today's progress
-  const logTodayProgress = () => {
-    if (isTodayComplete) return;
-    
-    const updatedGoal = { ...goal };
-    const todayEntry = {
-      date: new Date().toISOString(),
-      completed: true,
-      minutes: minutes,
-      notes: notes
+    const options: Intl.DateTimeFormatOptions = { 
+      weekday: 'short', 
+      month: 'short', 
+      day: 'numeric' 
     };
-    
-    // Add today's entry to history
-    updatedGoal.disciplineStreaks![activeTab].history.unshift(todayEntry);
-    
-    // Update streak counters
-    const currentStreak = updatedGoal.disciplineStreaks![activeTab].currentStreak + 1;
-    updatedGoal.disciplineStreaks![activeTab].currentStreak = currentStreak;
-    
-    // Update longest streak if current streak is longer
-    if (currentStreak > updatedGoal.disciplineStreaks![activeTab].longestStreak) {
-      updatedGoal.disciplineStreaks![activeTab].longestStreak = currentStreak;
-    }
-    
-    // Update total completed
-    updatedGoal.disciplineStreaks![activeTab].totalCompleted += 1;
-    
-    // Update the goal
-    onUpdate(updatedGoal);
-    
-    // Reset form
-    setNotes('');
+    return new Date(dateString).toLocaleDateString(undefined, options);
   };
   
-  // Break streak (for testing)
-  const breakStreak = () => {
-    const updatedGoal = { ...goal };
-    updatedGoal.disciplineStreaks![activeTab].currentStreak = 0;
-    onUpdate(updatedGoal);
+  // Check if date is today
+  const isToday = (dateString: string) => {
+    const today = new Date().toISOString().split('T')[0];
+    return dateString === today;
   };
   
-  // Calculate streak metrics
-  const totalMinutes = activeStreak.history.reduce((sum, entry) => sum + (entry.minutes || 0), 0);
-  const averageMinutes = activeStreak.history.length > 0 
-    ? Math.round(totalMinutes / activeStreak.history.length) 
-    : 0;
-  
-  // Get last 7 days of history
-  const recentHistory = [...activeStreak.history]
-    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
-    .slice(0, 7);
-  
-  // Get discipline type label
-  const getDisciplineLabel = (type: DisciplineType) => {
+  // Render activity streak indicators for the week view
+  const renderActivityIndicator = (day: DailyLog, type: string) => {
+    let isCompleted = false;
+    
     switch (type) {
-      case 'activity':
-        return 'Body Activity';
-      case 'education':
-        return 'Mind Focus';
-      case 'intention':
-        return 'Spirit Practice';
-      default:
-        return '';
+      case 'mind':
+        isCompleted = day.mindCompleted;
+        break;
+      case 'body': 
+        isCompleted = day.bodyCompleted;
+        break;
+      case 'spirit':
+        isCompleted = day.spiritCompleted;
+        break;
+      case 'knowledge':
+        isCompleted = day.knowledgeCompleted;
+        break;
+      case 'resources':
+        isCompleted = day.resourcesCompleted;
+        break;
+      case 'photo':
+        isCompleted = day.photoUploaded;
+        break;
     }
-  };
-  
-  // Get discipline description
-  const getDisciplineDescription = (type: DisciplineType) => {
-    switch (type) {
-      case 'activity':
-        return goal.bodyFocus || 'Physical actions to take toward your dream.';
-      case 'education':
-        return goal.mindFocus || 'Daily visualization and mental practice.';
-      case 'intention':
-        return goal.spiritFocus || 'Gratitude and spiritual alignment.';
-      default:
-        return '';
+    
+    let bgColor = 'bg-gray-800';
+    
+    if (isCompleted) {
+      switch (type) {
+        case 'mind':
+          bgColor = 'bg-blue-500';
+          break;
+        case 'body': 
+          bgColor = 'bg-green-500';
+          break;
+        case 'spirit':
+          bgColor = 'bg-purple-500';
+          break;
+        case 'knowledge':
+          bgColor = 'bg-yellow-500';
+          break;
+        case 'resources':
+          bgColor = 'bg-indigo-500';
+          break;
+        case 'photo':
+          bgColor = 'bg-pink-500';
+          break;
+      }
     }
+    
+    return (
+      <div className={`w-full h-1.5 rounded-full ${bgColor}`}></div>
+    );
   };
   
   return (
     <div className="bg-gray-900 rounded-lg p-4">
-      <h3 className="text-xl text-blue-400 font-orbitron mb-4">MANIFESTATION DISCIPLINES</h3>
+      <h3 className="text-xl text-amber-400 font-orbitron flex items-center mb-4">
+        <ListChecks className="mr-2 h-5 w-5" />
+        DAILY DISCIPLINE TRACKER
+      </h3>
       
-      {/* Tab navigation */}
-      <div className="flex space-x-1 mb-6">
-        <button
-          onClick={() => setActiveTab('activity')}
-          className={`flex-1 py-2 rounded-t-lg ${activeTab === 'activity' 
-            ? 'bg-green-900/70 text-green-400 font-semibold border-b-2 border-green-400' 
-            : 'bg-gray-800 hover:bg-gray-700 text-gray-400'}`}
-        >
-          <div className="flex items-center justify-center">
-            <CheckSquare className="h-4 w-4 mr-1" />
-            <span>Body</span>
-          </div>
-        </button>
-        
-        <button
-          onClick={() => setActiveTab('education')}
-          className={`flex-1 py-2 rounded-t-lg ${activeTab === 'education' 
-            ? 'bg-blue-900/70 text-blue-400 font-semibold border-b-2 border-blue-400' 
-            : 'bg-gray-800 hover:bg-gray-700 text-gray-400'}`}
-        >
-          <div className="flex items-center justify-center">
-            <CheckSquare className="h-4 w-4 mr-1" />
-            <span>Mind</span>
-          </div>
-        </button>
-        
-        <button
-          onClick={() => setActiveTab('intention')}
-          className={`flex-1 py-2 rounded-t-lg ${activeTab === 'intention' 
-            ? 'bg-purple-900/70 text-purple-400 font-semibold border-b-2 border-purple-400' 
-            : 'bg-gray-800 hover:bg-gray-700 text-gray-400'}`}
-        >
-          <div className="flex items-center justify-center">
-            <CheckSquare className="h-4 w-4 mr-1" />
-            <span>Spirit</span>
-          </div>
-        </button>
-      </div>
-      
-      {/* Discipline description */}
-      <div className={`
-        mb-5 p-3 rounded-md
-        ${activeTab === 'activity' ? 'bg-green-900/20 border border-green-800' : 
-         activeTab === 'education' ? 'bg-blue-900/20 border border-blue-800' :
-         'bg-purple-900/20 border border-purple-800'}
-      `}>
-        <h4 className={`
-          text-sm font-medium mb-1
-          ${activeTab === 'activity' ? 'text-green-400' : 
-           activeTab === 'education' ? 'text-blue-400' :
-           'text-purple-400'}
-        `}>
-          {getDisciplineLabel(activeTab)}
-        </h4>
-        <p className="text-gray-300 text-sm">
-          {getDisciplineDescription(activeTab)}
-        </p>
-      </div>
-      
-      {/* Streak metrics */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-5">
-        <div className="bg-gray-800 rounded-lg p-3">
-          <div className="text-xs text-gray-500 mb-1">Current Streak</div>
-          <div className="flex items-baseline">
-            <span className="text-2xl font-semibold text-white">{activeStreak.currentStreak}</span>
-            <span className="text-gray-400 ml-1">days</span>
-          </div>
-        </div>
-        
-        <div className="bg-gray-800 rounded-lg p-3">
-          <div className="text-xs text-gray-500 mb-1">Longest Streak</div>
-          <div className="flex items-baseline">
-            <span className="text-2xl font-semibold text-white">{activeStreak.longestStreak}</span>
-            <span className="text-gray-400 ml-1">days</span>
-          </div>
-        </div>
-        
-        <div className="bg-gray-800 rounded-lg p-3">
-          <div className="text-xs text-gray-500 mb-1">Total Time</div>
-          <div className="flex items-baseline">
-            <span className="text-2xl font-semibold text-white">{totalMinutes}</span>
-            <span className="text-gray-400 ml-1">minutes</span>
-          </div>
-        </div>
-        
-        <div className="bg-gray-800 rounded-lg p-3">
-          <div className="text-xs text-gray-500 mb-1">Sessions</div>
-          <div className="flex items-baseline">
-            <span className="text-2xl font-semibold text-white">{activeStreak.totalCompleted}</span>
-            <span className="text-gray-400 ml-1">total</span>
-          </div>
-        </div>
-      </div>
-      
-      {/* Today's tracking */}
-      <div className={`
-        mb-6 p-4 rounded-lg border
-        ${isTodayComplete 
-          ? 'bg-gray-800/50 border-gray-700' 
-          : activeTab === 'activity' 
-            ? 'bg-green-900/10 border-green-900/50' 
-            : activeTab === 'education' 
-              ? 'bg-blue-900/10 border-blue-900/50'
-              : 'bg-purple-900/10 border-purple-900/50'
-        }
-      `}>
-        <h4 className="text-white text-sm font-medium mb-3 flex items-center">
-          <Calendar className="h-4 w-4 mr-2" />
-          {isTodayComplete ? "Today's Practice Completed" : "Log Today's Practice"}
-        </h4>
-        
-        {isTodayComplete ? (
-          <div className="bg-gray-900/50 rounded-md p-3 flex items-center">
-            <CheckCircle className="h-5 w-5 text-green-500 mr-3" />
-            <div>
-              <p className="text-gray-300">Well done! You've completed your {getDisciplineLabel(activeTab).toLowerCase()} practice for today.</p>
-              <p className="text-xs text-gray-500 mt-1">Come back tomorrow to continue your streak!</p>
-            </div>
-          </div>
-        ) : (
-          <div className="space-y-3">
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Minutes Spent</label>
-              <div className="flex items-center">
-                <button
-                  onClick={() => setMinutes(Math.max(5, minutes - 5))}
-                  className="bg-gray-800 text-gray-300 px-3 py-2 rounded-l-md border border-gray-700"
-                >
-                  -
-                </button>
-                <input
-                  type="number"
-                  min="1"
-                  value={minutes}
-                  onChange={(e) => setMinutes(parseInt(e.target.value) || 5)}
-                  className="w-16 text-center bg-gray-800 border-t border-b border-gray-700 text-white py-2"
-                />
-                <button
-                  onClick={() => setMinutes(minutes + 5)}
-                  className="bg-gray-800 text-gray-300 px-3 py-2 rounded-r-md border border-gray-700"
-                >
-                  +
-                </button>
-                <span className="text-gray-400 ml-2">minutes</span>
-              </div>
-            </div>
+      <div className="space-y-6">
+        {/* Today's Discipline Trackers */}
+        <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+          <div className="flex justify-between items-center mb-4">
+            <h4 className="text-white font-medium flex items-center">
+              <Calendar className="h-4 w-4 mr-2" />
+              {todayLog && isToday(todayLog.date) ? (
+                <span>Today's Disciplines</span>
+              ) : (
+                <span>{todayLog ? formatDate(todayLog.date) : "Today"}</span>
+              )}
+            </h4>
             
-            <div>
-              <label className="block text-xs text-gray-400 mb-1">Notes (optional)</label>
-              <textarea
-                placeholder={`What did you do for your ${getDisciplineLabel(activeTab).toLowerCase()} today?`}
-                value={notes}
-                onChange={(e) => setNotes(e.target.value)}
-                className="w-full px-3 py-2 bg-gray-800 border border-gray-700 rounded text-white text-sm h-20 resize-none"
-              />
+            <div className="flex items-center">
+              <Flame className="h-4 w-4 text-orange-500 mr-1" />
+              <span className="text-orange-400 font-semibold">{currentStreak} day streak</span>
             </div>
-            
-            <button
-              onClick={logTodayProgress}
-              className={`
-                w-full py-2 rounded flex items-center justify-center text-white
-                ${activeTab === 'activity' ? 'bg-green-600 hover:bg-green-500' : 
-                 activeTab === 'education' ? 'bg-blue-600 hover:bg-blue-500' :
-                 'bg-purple-600 hover:bg-purple-500'}
-              `}
-            >
-              <CheckCircle className="h-4 w-4 mr-2" />
-              <span>Complete Today's Practice</span>
-            </button>
           </div>
-        )}
-      </div>
-      
-      {/* Recent history */}
-      <div>
-        <h4 className="text-gray-300 text-sm font-medium border-b border-gray-700 pb-1 mb-3 flex items-center">
-          <CalendarDays className="h-4 w-4 mr-2" />
-          Recent Activity
-        </h4>
-        
-        {recentHistory.length === 0 ? (
-          <div className="text-center py-4">
-            <p className="text-gray-500">No recent activity recorded.</p>
-            <p className="text-xs text-gray-600 mt-1">Start logging your daily practice to build your streak!</p>
-          </div>
-        ) : (
-          <div className="space-y-2 max-h-60 overflow-y-auto">
-            {recentHistory.map((entry, index) => (
-              <div 
-                key={index} 
-                className={`flex items-start p-3 rounded ${
-                  entry.completed ? 'bg-gray-800' : 'bg-gray-800/50'
-                }`}
-              >
-                <div className="flex-shrink-0 mr-3 mt-0.5">
-                  {entry.completed ? (
-                    <CheckCircle className={`h-5 w-5 
-                      ${activeTab === 'activity' ? 'text-green-500' : 
-                       activeTab === 'education' ? 'text-blue-500' :
-                       'text-purple-500'}
-                    `} />
-                  ) : (
-                    <Circle className="h-5 w-5 text-gray-600" />
-                  )}
-                </div>
-                
-                <div className="flex-grow">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <p className="text-white font-medium">
-                        {formatDate(entry.date)}
-                      </p>
-                      {entry.minutes && (
-                        <p className="text-gray-400 text-xs mt-0.5 flex items-center">
-                          <Clock className="h-3 w-3 mr-1" />
-                          {entry.minutes} minutes
-                        </p>
+          
+          {todayLog && (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {/* Core Disciplines */}
+              <div>
+                <h5 className="text-amber-400 text-sm mb-3">Core Disciplines</h5>
+                <div className="space-y-2">
+                  <div className="flex items-center">
+                    <button
+                      onClick={() => handleCheckboxChange('mindCompleted', !todayLog.mindCompleted)}
+                      className="mr-3"
+                    >
+                      {todayLog.mindCompleted ? (
+                        <CheckCircle className="h-5 w-5 text-blue-500" />
+                      ) : (
+                        <div className="w-5 h-5 rounded-full border border-gray-600 hover:border-blue-400" />
                       )}
+                    </button>
+                    <div>
+                      <div className="flex items-center">
+                        <BrainCircuit className="h-4 w-4 text-blue-400 mr-1.5" />
+                        <span className="text-white">Mind Focus</span>
+                      </div>
+                      <p className="text-xs text-gray-400">Visualizations & mental rehearsal</p>
                     </div>
                   </div>
                   
-                  {entry.notes && (
-                    <p className="text-gray-400 text-sm mt-2">
-                      {entry.notes}
-                    </p>
-                  )}
+                  <div className="flex items-center">
+                    <button
+                      onClick={() => handleCheckboxChange('bodyCompleted', !todayLog.bodyCompleted)}
+                      className="mr-3"
+                    >
+                      {todayLog.bodyCompleted ? (
+                        <CheckCircle className="h-5 w-5 text-green-500" />
+                      ) : (
+                        <div className="w-5 h-5 rounded-full border border-gray-600 hover:border-green-400" />
+                      )}
+                    </button>
+                    <div>
+                      <div className="flex items-center">
+                        <Dumbbell className="h-4 w-4 text-green-400 mr-1.5" />
+                        <span className="text-white">Body Focus</span>
+                      </div>
+                      <p className="text-xs text-gray-400">Physical & financial actions</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <button
+                      onClick={() => handleCheckboxChange('spiritCompleted', !todayLog.spiritCompleted)}
+                      className="mr-3"
+                    >
+                      {todayLog.spiritCompleted ? (
+                        <CheckCircle className="h-5 w-5 text-purple-500" />
+                      ) : (
+                        <div className="w-5 h-5 rounded-full border border-gray-600 hover:border-purple-400" />
+                      )}
+                    </button>
+                    <div>
+                      <div className="flex items-center">
+                        <Heart className="h-4 w-4 text-purple-400 mr-1.5" />
+                        <span className="text-white">Spirit Focus</span>
+                      </div>
+                      <p className="text-xs text-gray-400">Gratitude & spiritual alignment</p>
+                    </div>
+                  </div>
                 </div>
               </div>
-            ))}
+              
+              {/* Additional Disciplines */}
+              <div>
+                <h5 className="text-amber-400 text-sm mb-3">Additional Practices</h5>
+                <div className="space-y-2">
+                  <div className="flex items-center">
+                    <button
+                      onClick={() => handleCheckboxChange('knowledgeCompleted', !todayLog.knowledgeCompleted)}
+                      className="mr-3"
+                    >
+                      {todayLog.knowledgeCompleted ? (
+                        <CheckCircle className="h-5 w-5 text-yellow-500" />
+                      ) : (
+                        <div className="w-5 h-5 rounded-full border border-gray-600 hover:border-yellow-400" />
+                      )}
+                    </button>
+                    <div>
+                      <div className="flex items-center">
+                        <BookOpen className="h-4 w-4 text-yellow-400 mr-1.5" />
+                        <span className="text-white">Knowledge Expansion</span>
+                      </div>
+                      <p className="text-xs text-gray-400">Read from your manifestation library</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <button
+                      onClick={() => handleCheckboxChange('resourcesCompleted', !todayLog.resourcesCompleted)}
+                      className="mr-3"
+                    >
+                      {todayLog.resourcesCompleted ? (
+                        <CheckCircle className="h-5 w-5 text-indigo-500" />
+                      ) : (
+                        <div className="w-5 h-5 rounded-full border border-gray-600 hover:border-indigo-400" />
+                      )}
+                    </button>
+                    <div>
+                      <div className="flex items-center">
+                        <BookMarked className="h-4 w-4 text-indigo-400 mr-1.5" />
+                        <span className="text-white">Resource Collection</span>
+                      </div>
+                      <p className="text-xs text-gray-400">Add helpful resources to your library</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center">
+                    <button
+                      onClick={() => document.getElementById('photo-upload')?.click()}
+                      className="mr-3"
+                    >
+                      {todayLog.photoUploaded ? (
+                        <CheckCircle className="h-5 w-5 text-pink-500" />
+                      ) : (
+                        <div className="w-5 h-5 rounded-full border border-gray-600 hover:border-pink-400" />
+                      )}
+                      <input 
+                        type="file" 
+                        id="photo-upload" 
+                        className="hidden" 
+                        accept="image/*"
+                        onChange={handlePhotoUpload}
+                      />
+                    </button>
+                    <div>
+                      <div className="flex items-center">
+                        <Camera className="h-4 w-4 text-pink-400 mr-1.5" />
+                        <span className="text-white">Daily Progress Photo</span>
+                      </div>
+                      <p className="text-xs text-gray-400">Document your journey visually</p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+          
+          {/* Progress status */}
+          {todayLog && (
+            <div className="mt-4 pt-4 border-t border-gray-700">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h5 className="text-white font-medium mb-1">Today's Status</h5>
+                  {todayLog.completed ? (
+                    <div className="flex items-center text-green-400">
+                      <Award className="h-4 w-4 mr-1.5" />
+                      <span>All core disciplines completed! Great work!</span>
+                    </div>
+                  ) : (
+                    <div className="flex items-center text-amber-400">
+                      <Timer className="h-4 w-4 mr-1.5" />
+                      <span>Complete your core disciplines to maintain your streak</span>
+                    </div>
+                  )}
+                </div>
+                
+                {photoUpload && (
+                  <div className="w-12 h-12 rounded-md overflow-hidden">
+                    <img
+                      src={photoUpload}
+                      alt="Today's progress"
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {/* Today's Notes */}
+        <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+          <div className="flex justify-between items-center mb-3">
+            <h4 className="text-white font-medium">Journey Notes</h4>
+            {!isEditingNotes ? (
+              <button
+                onClick={() => setIsEditingNotes(true)}
+                className="text-gray-400 hover:text-amber-400"
+              >
+                <FileEdit className="h-4 w-4" />
+              </button>
+            ) : (
+              <button
+                onClick={saveNotes}
+                className="text-amber-400 hover:text-amber-300"
+              >
+                <Save className="h-4 w-4" />
+              </button>
+            )}
           </div>
-        )}
+          
+          {isEditingNotes ? (
+            <textarea
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="How was your manifestation journey today? Record insights, breakthroughs, and feelings..."
+              className="w-full px-3 py-2 bg-gray-700 border border-gray-600 rounded text-white text-sm h-24 resize-none"
+            />
+          ) : (
+            <div className="bg-gray-700 rounded p-3 min-h-24">
+              {notes ? (
+                <p className="text-gray-300 text-sm">{notes}</p>
+              ) : (
+                <p className="text-gray-500 text-sm italic">
+                  No notes for today. Click the edit icon to add your thoughts.
+                </p>
+              )}
+            </div>
+          )}
+        </div>
+        
+        {/* Weekly View */}
+        <div>
+          <h4 className="text-white font-medium mb-3 flex items-center">
+            <CalendarDays className="h-4 w-4 mr-2" />
+            Weekly Discipline Log
+          </h4>
+          
+          <div className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+            <div className="grid grid-cols-7 gap-0 text-center py-2 border-b border-gray-700 bg-gray-800">
+              <div className="text-xs text-gray-500">Mind</div>
+              <div className="text-xs text-gray-500">Body</div>
+              <div className="text-xs text-gray-500">Spirit</div>
+              <div className="text-xs text-gray-500">Knowledge</div>
+              <div className="text-xs text-gray-500">Resources</div>
+              <div className="text-xs text-gray-500">Photo</div>
+              <div className="text-xs text-gray-500">Status</div>
+            </div>
+            
+            <div className="divide-y divide-gray-700">
+              {dailyLogs.slice(-7).map((log) => (
+                <div 
+                  key={log.id} 
+                  className={`grid grid-cols-7 gap-0 py-3 px-2 ${
+                    isToday(log.date) ? 'bg-gray-700' : ''
+                  }`}
+                >
+                  <div className="flex justify-center items-center px-1">
+                    {renderActivityIndicator(log, 'mind')}
+                  </div>
+                  <div className="flex justify-center items-center px-1">
+                    {renderActivityIndicator(log, 'body')}
+                  </div>
+                  <div className="flex justify-center items-center px-1">
+                    {renderActivityIndicator(log, 'spirit')}
+                  </div>
+                  <div className="flex justify-center items-center px-1">
+                    {renderActivityIndicator(log, 'knowledge')}
+                  </div>
+                  <div className="flex justify-center items-center px-1">
+                    {renderActivityIndicator(log, 'resources')}
+                  </div>
+                  <div className="flex justify-center items-center px-1">
+                    {renderActivityIndicator(log, 'photo')}
+                  </div>
+                  <div className="flex justify-center items-center">
+                    {log.completed ? (
+                      <CheckCircle className="h-4 w-4 text-green-500" />
+                    ) : (
+                      <div className="h-4 w-4 rounded-full border border-gray-600" />
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+            
+            <div className="px-4 py-3 bg-gray-750 border-t border-gray-700">
+              <div className="flex justify-between items-center">
+                <div className="text-sm text-gray-400">
+                  <span className="font-medium">{Math.round(calculateCompletionPercentage())}%</span> completion rate
+                </div>
+                <div className="flex items-center space-x-1 text-sm">
+                  <span className="text-amber-400">{formatDate(dailyLogs[0]?.date || '')}</span>
+                  <ArrowRight className="h-3 w-3 text-gray-500" />
+                  <span className="text-amber-400">{formatDate(dailyLogs[dailyLogs.length - 1]?.date || '')}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Discipline Tips */}
+        <div className="bg-amber-900/20 rounded-lg p-4 border border-amber-800">
+          <h4 className="text-amber-400 font-medium mb-2">Consistency Tips</h4>
+          <ul className="text-sm text-gray-300 space-y-2">
+            <li className="flex items-start">
+              <ArrowRight className="h-4 w-4 text-amber-400 mt-0.5 mr-2 flex-shrink-0" />
+              <span>Track your disciplines at the same time each day to build a solid routine.</span>
+            </li>
+            <li className="flex items-start">
+              <ArrowRight className="h-4 w-4 text-amber-400 mt-0.5 mr-2 flex-shrink-0" />
+              <span>Don't break the chain - your streak is powerful psychological motivation.</span>
+            </li>
+            <li className="flex items-start">
+              <ArrowRight className="h-4 w-4 text-amber-400 mt-0.5 mr-2 flex-shrink-0" />
+              <span>Taking daily progress photos helps you see subtle changes you might otherwise miss.</span>
+            </li>
+          </ul>
+        </div>
       </div>
     </div>
   );
