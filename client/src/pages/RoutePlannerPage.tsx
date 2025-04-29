@@ -1925,39 +1925,29 @@ const RoutePlannerPage = () => {
         <div className="flex justify-between items-center mb-4">
           <h1 className="text-blue-400 font-orbitron text-4xl">🛣️ Route Planner</h1>
           
-          {/* Live Telemetry Controls */}
-          <div className="flex items-center space-x-4">
-            {!gpsTrackingEnabled ? (
-              <button 
-                onClick={startGpsTracking}
-                className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 hover:scale-105"
-              >
-                <MapPin className="h-5 w-5" />
-                <span className="font-orbitron">Start GPS Tracking</span>
-              </button>
-            ) : (
-              <div className="flex items-center gap-4">
-                <div className="bg-black/40 rounded-lg border border-blue-500/30 px-4 py-2 flex items-center gap-3">
-                  <div className="flex items-center gap-2">
-                    <div className="h-3 w-3 rounded-full bg-green-500 animate-pulse"></div>
-                    <span className="text-green-400 font-orbitron text-sm">TRACKING ACTIVE</span>
-                  </div>
-                  <div className="text-gray-300 text-sm">
-                    {gpsTrackHistory.length > 0 && (
-                      <span>{calculateTotalDistance(gpsTrackHistory).toFixed(1)} mi</span>
-                    )}
-                  </div>
+          {/* Only show active tracking stats in header when tracking is active */}
+          {gpsTrackingEnabled && (
+            <div className="flex items-center gap-4">
+              <div className="bg-black/40 rounded-lg border border-blue-500/30 px-4 py-2 flex items-center gap-3">
+                <div className="flex items-center gap-2">
+                  <div className="h-3 w-3 rounded-full bg-green-500 animate-pulse"></div>
+                  <span className="text-green-400 font-orbitron text-sm">TRACKING ACTIVE</span>
                 </div>
-                <button 
-                  onClick={stopGpsTracking}
-                  className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 hover:scale-105"
-                >
-                  <RotateCw className="h-5 w-5" />
-                  <span className="font-orbitron">End & Save</span>
-                </button>
+                <div className="text-gray-300 text-sm">
+                  {gpsTrackHistory.length > 0 && (
+                    <span>{calculateTotalDistance(gpsTrackHistory).toFixed(1)} mi</span>
+                  )}
+                </div>
               </div>
-            )}
-          </div>
+              <button 
+                onClick={stopGpsTracking}
+                className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 hover:scale-105"
+              >
+                <RotateCw className="h-5 w-5" />
+                <span className="font-orbitron">End & Save</span>
+              </button>
+            </div>
+          )}
         </div>
         
         {/* Navigation App Selection - Moved to top for better UX */}
