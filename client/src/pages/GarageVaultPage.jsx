@@ -1,52 +1,90 @@
-import React, { useState, useEffect, useRef } from 'react';
-import supabase from '../services/supabaseClient';
+import React, { useState, useEffect, useRef, Suspense } from 'react';
 import { Link } from 'react-router-dom';
+import supabase from '../services/supabaseClient';
 import { exportToPdf, exportToCsv, printElement } from '../utils/exportUtils';
 import TireTracker from '../components/TireTracker';
-import TireManagementDashboard from '../components/TireManagementDashboard';
 import VehicleTelemetry from '../components/VehicleTelemetry';
 import EnhancedVehicleTelemetry from '../components/EnhancedVehicleTelemetry';
 import VehicleGallery from '../components/VehicleGallery';
 import VaultStorageServices from '../components/VaultStorageServices';
 import GlossTracker from '../components/GlossTracker';
-import PreDriveChecklist from '../components/PreDriveChecklist';
-import WeeklyChecklist from '../components/WeeklyChecklist';
-import MonthlyChecklist from '../components/MonthlyChecklist';
-import QuarterlyChecklist from '../components/QuarterlyChecklist';
-import SeasonalAdaptationChecklist from '../components/SeasonalAdaptationChecklist';
 import F1TelemetryDashboard from '../components/F1TelemetryDashboard';
+import JuiceBoxChecklists from '../components/JuiceBoxChecklists';
 
 // Enhanced telemetry and data services
 import vehicleDataService from '../services/vehicleDataService';
 import { searchImage } from '../services/unsplashService';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell } from 'recharts';
 import { 
-  Activity, BarChart2, Wind, Thermometer, CornerUpRight, 
+  Activity, BarChart2, Wind, Thermometer, FileDown, RefreshCw,
   Clock, Calendar, PieChart as PieChartIcon, AlertTriangle, TrendingUp, 
-  Droplets, Car, Upload, Maximize2, Zap, MapPin, Mountain
+  ChevronRight, ChevronDown, ChevronUp, Gauge, Info, Fuel, Droplets, Battery, 
+  Car, Upload, Maximize2, Zap, MapPin, Mountain, Filter, PlusCircle, 
+  Wrench, Shield, Camera, Clipboard, MoreHorizontal, Eye, Trash2, Download, X, Plus
 } from 'lucide-react';
 import { vehicleProfile, garageVehicles } from '../data/vehicles';
 
 function GarageVaultPage() {
+  // State management
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [decodedData, setDecodedData] = useState({});
-  const [decoding, setDecoding] = useState(false);
   const [activeVehicle, setActiveVehicle] = useState(null);
-  const [activeSection, setActiveSection] = useState('overview');
-  const [activeTab, setActiveTab] = useState('specs');
-  const [showEnhancedTelemetry, setShowEnhancedTelemetry] = useState(false);
-  const [showVaultServices, setShowVaultServices] = useState(false);
-  const [suggestedActivities, setSuggestedActivities] = useState([]);
-  const [weatherAlerts, setWeatherAlerts] = useState([]);
-  const [seasonalMaintenanceItems, setSeasonalMaintenanceItems] = useState([]);
+  const [activeSection, setActiveSection] = useState('dashboard');
+  const [activeView, setActiveView] = useState('grid');
+  const [activeMod, setActiveMod] = useState(null);
+  const [expandedTelemetry, setExpandedTelemetry] = useState(false);
   const [vehicleData, setVehicleData] = useState(vehicleProfile);
-
-  // Export menu state
+  const [weatherData, setWeatherData] = useState(null);
   const [showExportMenu, setShowExportMenu] = useState(false);
+  const [showAddForm, setShowAddForm] = useState(false);
+  const [showOBDPanel, setShowOBDPanel] = useState(false);
+  const [obdScanActive, setObdScanActive] = useState(false);
+  const [filters, setFilters] = useState({
+    make: 'all',
+    type: 'all',
+    status: 'all'
+  });
+  
+  // Metrics and dynamic data
+  const [carMetrics, setCarMetrics] = useState({
+    lastService: '2023-10-15',
+    nextServiceDue: '2024-04-15',
+    daysSinceLastDrive: 5,
+    mileage: 12_589,
+    fuelLevel: 76,
+    batteryHealth: 92,
+    tirePressure: {
+      frontLeft: 35,
+      frontRight: 34.5,
+      rearLeft: 35.5,
+      rearRight: 35
+    },
+    engineStatus: 'Excellent',
+    glossIndex: 89,
+    lastWash: '2023-12-01',
+    oilLifeRemaining: 68,
+    carStatus: 'Ready'
+  });
+  
+  // Simulated OBD2 data
+  const [obdData, setObdData] = useState({
+    engineTemp: 0,
+    rpm: 0,
+    speed: 0,
+    throttlePosition: 0,
+    fuelPressure: 0,
+    intakeTemp: 0,
+    maf: 0,
+    timingAdvance: 0,
+    o2Sensor: 0,
+    dtcCodes: []
+  });
+  
+  // UI refs
   const exportMenuRef = useRef(null);
-
-  // Fetch vehicles data
+  const telemetryRef = useRef(null);
+  const garageGridRef = useRef(null);
+  
+  // Fetch vehicles from Supabase
   useEffect(() => {
     async function fetchVehicles() {
       try {
@@ -73,127 +111,18 @@ function GarageVaultPage() {
       }
       setLoading(false);
     }
+    
     fetchVehicles();
     
-    // Generate suggested activities
-    generateSuggestedActivities();
+    // Simulate real-time metrics updates
+    const metricsInterval = setInterval(() => {
+      updateCarMetrics();
+    }, 5000);
     
-    // Mock weather alerts (would come from weather API in production)
-    setWeatherAlerts([
-      { type: 'Heavy Rain', message: 'Check windshield wipers and tire tread', severity: 'moderate' },
-      { type: 'Heat Wave', message: 'Check coolant levels and A/C function', severity: 'high' }
-    ]);
-    
-    // Generate seasonal maintenance based on current month
-    generateSeasonalMaintenance();
+    return () => clearInterval(metricsInterval);
   }, []);
   
-  // Generate suggested activities based on vehicle data, weather, and history
-  const generateSuggestedActivities = () => {
-    const currentMonth = new Date().getMonth();
-    const currentSeason = 
-      currentMonth >= 2 && currentMonth <= 4 ? 'spring' :
-      currentMonth >= 5 && currentMonth <= 7 ? 'summer' :
-      currentMonth >= 8 && currentMonth <= 10 ? 'fall' : 'winter';
-    
-    // Example activities based on season
-    const seasonalActivities = {
-      spring: [
-        { title: "Interior Detailing", description: "Focus on your interior while it's not too hot outside", priority: "high" },
-        { title: "Photo Shoot", description: "Diffused lighting is perfect for car photography", priority: "medium" },
-        { title: "Maintenance Check", description: "Good time to inspect systems without heat interference", priority: "high" },
-        { title: "Paint Correction", description: "Ideal time to address paint imperfections", priority: "medium" }
-      ],
-      summer: [
-        { title: "Heat Protection", description: "Apply UV protection to interior surfaces", priority: "high" },
-        { title: "Cooling System Check", description: "Ensure coolant levels are optimal", priority: "high" },
-        { title: "Dawn/Dusk Photo Shoot", description: "Perfect lighting conditions for showcasing your car", priority: "medium" },
-        { title: "Mountain Drive", description: "Take advantage of clear roads for a scenic drive", priority: "medium" }
-      ],
-      fall: [
-        { title: "Winter Prep", description: "Apply paint protection before winter", priority: "high" },
-        { title: "Tire Inspection", description: "Check tread depth for winter readiness", priority: "high" },
-        { title: "Fall Colors Drive", description: "Document your car against autumn landscapes", priority: "medium" },
-        { title: "Paint Sealant", description: "Protect your finish before harsh weather arrives", priority: "high" }
-      ],
-      winter: [
-        { title: "Battery Check", description: "Cold weather affects battery performance", priority: "high" },
-        { title: "Undercarriage Protection", description: "Protect against salt and ice damage", priority: "medium" },
-        { title: "Interior Detailing", description: "Perfect time for deep cleaning while car is used less", priority: "medium" },
-        { title: "Snow Photography", description: "Capture unique winter shots of your vehicle", priority: "low" }
-      ]
-    };
-    
-    setSuggestedActivities(seasonalActivities[currentSeason] || []);
-  };
-  
-  // Generate seasonal maintenance items
-  const generateSeasonalMaintenance = () => {
-    const currentMonth = new Date().getMonth();
-    const upcomingSeason = 
-      currentMonth >= 1 && currentMonth <= 3 ? 'spring' :
-      currentMonth >= 4 && currentMonth <= 6 ? 'summer' :
-      currentMonth >= 7 && currentMonth <= 9 ? 'fall' : 'winter';
-    
-    const seasonalItems = {
-      spring: [
-        'Check brake system after winter conditions',
-        'Inspect suspension components',
-        'Replace windshield wipers if needed'
-      ],
-      summer: [
-        'Ensure A/C is functioning properly',
-        'Check coolant levels and condition',
-        'Inspect belts and hoses for heat damage'
-      ],
-      fall: [
-        'Check tire tread depth for winter',
-        'Test battery before cold weather',
-        'Inspect heating system'
-      ],
-      winter: [
-        'Apply undercarriage protection',
-        'Check antifreeze levels',
-        'Ensure all exterior lights function properly'
-      ]
-    };
-    
-    setSeasonalMaintenanceItems(seasonalItems[upcomingSeason] || []);
-  };
-  
-  // Function to handle VIN decoding
-  const handleVinDecode = async (vin) => {
-    setDecoding(true);
-    try {
-      const response = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinExtended/${vin}?format=json`);
-      const result = await response.json();
-      const usefulData = result.Results.filter(item => item.Value && item.Variable !== "Error Code");
-      
-      setDecodedData(prev => ({
-        ...prev,
-        [vin]: usefulData
-      }));
-      
-      // Announce to screen readers
-      const announcer = document.getElementById('announcer');
-      if (announcer) {
-        const makeModel = usefulData.find(item => item.Variable === "Make")?.Value + ' ' + 
-                         usefulData.find(item => item.Variable === "Model")?.Value;
-        announcer.textContent = `VIN has been successfully decoded for ${makeModel || 'your vehicle'}`;
-      }
-    } catch (error) {
-      console.error('Error decoding VIN:', error.message);
-      // Announce error to screen readers
-      const announcer = document.getElementById('announcer');
-      if (announcer) {
-        announcer.textContent = `Error decoding VIN. Please try again later.`;
-      }
-    } finally {
-      setDecoding(false);
-    }
-  };
-  
-  // Function to handle clicking outside the dropdown menu
+  // Auto-close dropdowns when clicking outside
   useEffect(() => {
     function handleClickOutside(event) {
       if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
@@ -207,7 +136,68 @@ function GarageVaultPage() {
     };
   }, []);
   
-  // Export functions using the utility library
+  // Simulate OBD2 scanning
+  useEffect(() => {
+    if (obdScanActive) {
+      const scanInterval = setInterval(() => {
+        setObdData({
+          engineTemp: Math.floor(180 + Math.random() * 20),
+          rpm: Math.floor(800 + Math.random() * 200),
+          speed: 0,
+          throttlePosition: Math.floor(Math.random() * 5),
+          fuelPressure: Math.floor(40 + Math.random() * 5),
+          intakeTemp: Math.floor(70 + Math.random() * 10),
+          maf: Math.floor(8 + Math.random() * 2),
+          timingAdvance: Math.floor(10 + Math.random() * 5),
+          o2Sensor: 0.85 + (Math.random() * 0.2),
+          dtcCodes: Math.random() > 0.9 ? ['P0456'] : []
+        });
+      }, 1000);
+      
+      // Stop scanning after 10 seconds
+      setTimeout(() => {
+        setObdScanActive(false);
+        clearInterval(scanInterval);
+      }, 10000);
+      
+      return () => clearInterval(scanInterval);
+    }
+  }, [obdScanActive]);
+  
+  // Update car metrics for current vehicle (simulated real-time data)
+  const updateCarMetrics = () => {
+    // Only make small fluctuations to simulate live data
+    setCarMetrics(prev => ({
+      ...prev,
+      batteryHealth: Math.max(80, Math.min(100, prev.batteryHealth + (Math.random() > 0.7 ? Math.random() * 0.2 - 0.1 : 0))),
+      tirePressure: {
+        frontLeft: Math.max(30, Math.min(38, prev.tirePressure.frontLeft + (Math.random() > 0.8 ? Math.random() * 0.2 - 0.1 : 0))),
+        frontRight: Math.max(30, Math.min(38, prev.tirePressure.frontRight + (Math.random() > 0.8 ? Math.random() * 0.2 - 0.1 : 0))),
+        rearLeft: Math.max(30, Math.min(38, prev.tirePressure.rearLeft + (Math.random() > 0.8 ? Math.random() * 0.2 - 0.1 : 0))),
+        rearRight: Math.max(30, Math.min(38, prev.tirePressure.rearRight + (Math.random() > 0.8 ? Math.random() * 0.2 - 0.1 : 0)))
+      }
+    }));
+  };
+  
+  // Start OBD2 scan simulation
+  const startOBDScan = () => {
+    setObdScanActive(true);
+    // Reset data to show connection starting
+    setObdData({
+      engineTemp: 0,
+      rpm: 0,
+      speed: 0,
+      throttlePosition: 0,
+      fuelPressure: 0,
+      intakeTemp: 0,
+      maf: 0,
+      timingAdvance: 0,
+      o2Sensor: 0,
+      dtcCodes: []
+    });
+  };
+  
+  // Export functions
   const handleExportToPDF = async () => {
     setShowExportMenu(false);
     const element = document.getElementById('garageVaultSection');
@@ -216,9 +206,8 @@ function GarageVaultPage() {
     }
   };
   
-  const handleExportToGoogleSheets = async () => {
+  const handleExportToCSV = async () => {
     setShowExportMenu(false);
-    // Get vehicle data in correct format for CSV
     if (!vehicles || vehicles.length === 0) {
       console.error("No vehicles to export");
       return;
@@ -235,7 +224,7 @@ function GarageVaultPage() {
     await exportToCsv(vehicleExportData, 'GoTime Motorsports - GarageVault.csv');
   };
   
-  const handleExportToGoogleDocs = async () => {
+  const handlePrint = async () => {
     setShowExportMenu(false);
     const element = document.getElementById('garageVaultSection');
     if (element) {
@@ -246,617 +235,1347 @@ function GarageVaultPage() {
   // Function to change active vehicle
   const handleVehicleChange = (vehicle) => {
     setActiveVehicle(vehicle);
-    setActiveSection('overview');
+    setActiveSection('dashboard');
   };
-
+  
+  // Filter vehicles based on criteria
+  const filteredVehicles = vehicles.filter(vehicle => {
+    if (filters.make !== 'all' && vehicle.make !== filters.make) return false;
+    if (filters.type !== 'all' && vehicle.vehicle_type !== filters.type) return false;
+    if (filters.status !== 'all' && vehicle.status !== filters.status) return false;
+    return true;
+  });
+  
+  // Get vehicle image (with a more refined search based on vehicle attributes)
+  const getVehicleImageQuery = (vehicle) => {
+    if (!vehicle) return 'luxury car';
+    return `${vehicle.year} ${vehicle.make} ${vehicle.model} ${vehicle.trim || ''} professional photography`;
+  };
+  
   return (
-    <div className="p-6 md:p-10 bg-black min-h-screen" aria-labelledby="garageVaultHeading">
-      {/* Header with Export Options */}
-      <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8">
-        <h2 id="garageVaultHeading" className="text-blue-400 font-orbitron text-2xl md:text-3xl mb-4 md:mb-0">
-          Garage Vault<span className="text-white"> | Paddock20</span>
-        </h2>
-        
-        <div ref={exportMenuRef} className="relative">
-          <button 
-            onClick={() => setShowExportMenu(!showExportMenu)}
-            className="apex-button flex items-center"
-            aria-label="Export Garage Vault"
-            aria-expanded={showExportMenu}
-            aria-haspopup="true"
-          >
-            <span className="mr-2">📥</span> Export Options
-          </button>
-          
-          {showExportMenu && (
-            <div 
-              className="absolute right-0 mt-2 w-60 bg-gray-900 border border-green-500 rounded-md shadow-lg z-50"
-              role="menu"
-              aria-orientation="vertical"
-              aria-labelledby="export-menu"
+    <div id="garageVaultSection" className="bg-black min-h-screen" aria-labelledby="garageVaultHeading">
+      {/* Modernized Header & Dashboard Controls */}
+      <div className="p-4 md:p-6 border-b border-gray-800">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+          <div className="flex items-center">
+            <h2 
+              id="garageVaultHeading" 
+              className="text-blue-400 font-orbitron text-2xl md:text-3xl"
             >
-              <div className="py-1" role="none">
-                <button
-                  onClick={handleExportToPDF}
-                  className="flex items-center px-4 py-2 text-sm text-gray-100 hover:bg-gray-800 w-full text-left"
-                  role="menuitem"
-                >
-                  <span className="mr-2">📄</span> Export to PDF
-                </button>
-                <button
-                  onClick={handleExportToGoogleSheets}
-                  className="flex items-center px-4 py-2 text-sm text-gray-100 hover:bg-gray-800 w-full text-left"
-                  role="menuitem"
-                >
-                  <span className="mr-2">📊</span> Export to Google Sheets
-                </button>
-                <button
-                  onClick={handleExportToGoogleDocs}
-                  className="flex items-center px-4 py-2 text-sm text-gray-100 hover:bg-gray-800 w-full text-left"
-                  role="menuitem"
-                >
-                  <span className="mr-2">📝</span> Export to Google Docs
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-      
-      {/* Screen reader announcer */}
-      <div id="announcer" className="sr-only" aria-live="polite"></div>
-
-      {loading ? (
-        <p className="text-white text-center py-20" role="status" aria-live="polite">
-          Loading your garage...
-        </p>
-      ) : (
-        <div className="flex flex-col lg:flex-row gap-6">
-          {/* Left Sidebar - Vehicle Selection and Main Navigation */}
-          <div className="lg:w-1/4">
-            <div className="apex-card p-4 mb-6">
-              <h3 className="text-blue-400 font-orbitron text-lg mb-4">Your Vehicles</h3>
-              
-              <div className="space-y-3">
-                {vehicles && vehicles.length > 0 ? vehicles.map((vehicle, index) => (
-                  <button
-                    key={index}
-                    onClick={() => handleVehicleChange(vehicle)}
-                    className={`w-full text-left p-3 rounded-lg transition-all ${activeVehicle?.id === vehicle.id 
-                      ? 'bg-green-500 bg-opacity-20 border border-green-500' 
-                      : 'bg-gray-800 hover:bg-gray-700'}`}
-                    aria-current={activeVehicle?.id === vehicle.id ? 'true' : 'false'}
-                  >
-                    <div className="font-bold text-white">{vehicle.make} {vehicle.model}</div>
-                    <div className="text-sm text-gray-400">
-                      {vehicle.year} | {vehicleProfile.mileage || 0} miles
-                    </div>
-                  </button>
-                )) : (
-                  <div className="text-white p-3 bg-gray-800 rounded-lg">
-                    No vehicles found. Add a new vehicle to get started.
-                  </div>
-                )}
-                
-                <button className="w-full mt-4 p-2 border border-dashed border-green-500 text-green-500 rounded-lg hover:bg-green-500 hover:bg-opacity-10 transition-all">
-                  + Add New Vehicle
-                </button>
-              </div>
-            </div>
+              Garage Vault<span className="text-white"> | Paddock20</span>
+            </h2>
             
-            {/* Main Navigation Menu */}
-            <div className="apex-card p-4 mb-6">
-              <h3 className="text-blue-400 font-orbitron text-lg mb-4">Garage Sections</h3>
-              
-              <nav className="space-y-2" aria-label="Garage vault navigation">
-                <button 
-                  onClick={() => setActiveSection('overview')}
-                  className={`w-full text-left p-2 rounded-lg flex items-center ${
-                    activeSection === 'overview' ? 'bg-green-500 text-black font-bold' : 'text-white hover:bg-gray-800'
-                  }`}
-                >
-                  <span className="mr-2">📋</span> Overview
-                </button>
-                <button 
-                  onClick={() => setActiveSection('maintenance')}
-                  className={`w-full text-left p-2 rounded-lg flex items-center ${
-                    activeSection === 'maintenance' ? 'bg-green-500 text-black font-bold' : 'text-white hover:bg-gray-800'
-                  }`}
-                >
-                  <span className="mr-2">🔧</span> Maintenance
-                </button>
-                <button 
-                  onClick={() => setActiveSection('tires')}
-                  className={`w-full text-left p-2 rounded-lg flex items-center ${
-                    activeSection === 'tires' ? 'bg-green-500 text-black font-bold' : 'text-white hover:bg-gray-800'
-                  }`}
-                >
-                  <span className="mr-2">🛞</span> Tires
-                </button>
-                <button 
-                  onClick={() => setActiveSection('gloss')}
-                  className={`w-full text-left p-2 rounded-lg flex items-center ${
-                    activeSection === 'gloss' ? 'bg-green-500 text-black font-bold' : 'text-white hover:bg-gray-800'
-                  }`}
-                >
-                  <span className="mr-2">✨</span> Gloss Tracking
-                </button>
-                <button 
-                  onClick={() => setActiveSection('modifications')}
-                  className={`w-full text-left p-2 rounded-lg flex items-center ${
-                    activeSection === 'modifications' ? 'bg-green-500 text-black font-bold' : 'text-white hover:bg-gray-800'
-                  }`}
-                >
-                  <span className="mr-2">🔩</span> Modifications
-                </button>
-                <button 
-                  onClick={() => setActiveSection('f1Telemetry')}
-                  className={`w-full text-left p-2 rounded-lg flex items-center ${
-                    activeSection === 'f1Telemetry' ? 'bg-green-500 text-black font-bold' : 'text-white hover:bg-gray-800'
-                  }`}
-                >
-                  <span className="mr-2">🏎️</span> F1 Telemetry
-                </button>
-                <button 
-                  onClick={() => setActiveSection('documents')}
-                  className={`w-full text-left p-2 rounded-lg flex items-center ${
-                    activeSection === 'documents' ? 'bg-green-500 text-black font-bold' : 'text-white hover:bg-gray-800'
-                  }`}
-                >
-                  <span className="mr-2">📄</span> Documents
-                </button>
-                <button 
-                  onClick={() => setActiveSection('drivejournal')}
-                  className={`w-full text-left p-2 rounded-lg flex items-center ${
-                    activeSection === 'drivejournal' ? 'bg-green-500 text-black font-bold' : 'text-white hover:bg-gray-800'
-                  }`}
-                >
-                  <span className="mr-2">📓</span> Drive Journal
-                </button>
-                <button 
-                  onClick={() => setActiveSection('enhancedTelemetry')}
-                  className={`w-full text-left p-2 rounded-lg flex items-center ${
-                    activeSection === 'enhancedTelemetry' ? 'bg-green-500 text-black font-bold' : 'text-white hover:bg-green-600'
-                  }`}
-                >
-                  <span className="mr-2">📊</span> Enhanced Telemetry
-                </button>
-                <button 
-                  onClick={() => setActiveSection('vaultServices')}
-                  className={`w-full text-left p-2 rounded-lg flex items-center ${
-                    activeSection === 'vaultServices' ? 'bg-green-500 text-black font-bold' : 'text-white hover:bg-gray-800'
-                  }`}
-                >
-                  <span className="mr-2">🔒</span> Vault Services
-                </button>
-              </nav>
-            </div>
-            
-            {/* Suggested Activities */}
-            <div className="apex-card p-4 mb-6">
-              <h3 className="text-blue-400 font-orbitron text-lg mb-4">Suggested Activities</h3>
-              
-              {suggestedActivities && suggestedActivities.length > 0 ? (
-                <ul className="space-y-2">
-                  {suggestedActivities.map((activity, index) => (
-                    <li 
-                      key={index} 
-                      className={`p-2 rounded-lg ${
-                        activity.priority === "high" ? 'border-l-4 border-green-500' : 
-                        activity.priority === "medium" ? 'border-l-4 border-yellow-500' : 
-                        'border-l-4 border-blue-500'
-                      }`}
-                    >
-                      <div className="font-bold text-white">{activity.title}</div>
-                      <div className="text-sm text-gray-400">{activity.description}</div>
-                    </li>
-                  ))}
-                </ul>
-              ) : (
-                <p className="text-white">No suggested activities available.</p>
-              )}
+            <div className="hidden md:flex items-center ml-8 gap-6">
+              <button 
+                onClick={() => setActiveSection('dashboard')}
+                className={`px-3 py-1 text-sm rounded-md transition ${
+                  activeSection === 'dashboard' ? 'bg-green-500 text-black font-bold' : 'text-white hover:bg-gray-800'
+                }`}
+              >
+                Dashboard
+              </button>
+              <button 
+                onClick={() => setActiveSection('garage')}
+                className={`px-3 py-1 text-sm rounded-md transition ${
+                  activeSection === 'garage' ? 'bg-green-500 text-black font-bold' : 'text-white hover:bg-gray-800'
+                }`}
+              >
+                Garage
+              </button>
+              <button 
+                onClick={() => setActiveSection('telemetry')}
+                className={`px-3 py-1 text-sm rounded-md transition ${
+                  activeSection === 'telemetry' ? 'bg-green-500 text-black font-bold' : 'text-white hover:bg-gray-800'
+                }`}
+              >
+                Telemetry
+              </button>
+              <button 
+                onClick={() => setActiveSection('maintenance')}
+                className={`px-3 py-1 text-sm rounded-md transition ${
+                  activeSection === 'maintenance' ? 'bg-green-500 text-black font-bold' : 'text-white hover:bg-gray-800'
+                }`}
+              >
+                Maintenance
+              </button>
+              <button 
+                onClick={() => setActiveSection('juicebox')}
+                className={`px-3 py-1 text-sm rounded-md transition ${
+                  activeSection === 'juicebox' ? 'bg-green-500 text-black font-bold' : 'text-white hover:bg-gray-800'
+                }`}
+              >
+                JuiceBox™
+              </button>
+              <button 
+                onClick={() => setActiveSection('gloss')}
+                className={`px-3 py-1 text-sm rounded-md transition ${
+                  activeSection === 'gloss' ? 'bg-green-500 text-black font-bold' : 'text-white hover:bg-gray-800'
+                }`}
+              >
+                Gloss
+              </button>
             </div>
           </div>
           
-          {/* Main Content Area */}
-          <div className="lg:w-3/4" id="garageVaultSection">
-            {activeVehicle ? (
-              <div>
-                {/* Vehicle Header */}
-                <div className="apex-card p-6 mb-6">
-                  <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-                    <div>
-                      <h3 className="text-blue-400 font-orbitron text-xl mb-2">
-                        {activeVehicle.year} {activeVehicle.make} {activeVehicle.model}
-                      </h3>
-                      <div className="text-white text-sm mb-4">Vehicle ID: {activeVehicle.id}</div>
-                      
-                      <div className="flex flex-wrap gap-3 mb-4">
-                        <span className="inline-flex items-center px-3 py-1 bg-gray-800 text-green-400 rounded-full text-sm">
-                          VIN: {vehicleProfile.vin || "N/A"}
-                        </span>
-                        <span className="inline-flex items-center px-3 py-1 bg-gray-800 text-green-400 rounded-full text-sm">
-                          {vehicleProfile.mileage} miles
-                        </span>
-                        <span className="inline-flex items-center px-3 py-1 bg-gray-800 text-green-400 rounded-full text-sm">
-                          {vehicleProfile.color || "N/A"}
-                        </span>
+          <div className="flex mt-4 md:mt-0 gap-3">
+            <button 
+              onClick={() => setShowOBDPanel(!showOBDPanel)}
+              className="apex-button-sm flex items-center"
+            >
+              <Gauge size={16} className="mr-2" />
+              OBD2 Connect
+            </button>
+            
+            <div ref={exportMenuRef} className="relative">
+              <button 
+                onClick={() => setShowExportMenu(!showExportMenu)}
+                className="apex-button-sm flex items-center"
+                aria-expanded={showExportMenu}
+              >
+                <FileDown size={16} className="mr-2" />
+                Export
+              </button>
+              
+              {showExportMenu && (
+                <div className="absolute right-0 mt-2 w-60 bg-gray-900 border border-green-500 rounded-md shadow-lg z-50">
+                  <div className="py-1">
+                    <button
+                      onClick={handleExportToPDF}
+                      className="flex items-center px-4 py-2 text-sm text-gray-100 hover:bg-gray-800 w-full text-left"
+                    >
+                      <Download size={16} className="mr-2" /> Export to PDF
+                    </button>
+                    <button
+                      onClick={handleExportToCSV}
+                      className="flex items-center px-4 py-2 text-sm text-gray-100 hover:bg-gray-800 w-full text-left"
+                    >
+                      <Download size={16} className="mr-2" /> Export to CSV
+                    </button>
+                    <button
+                      onClick={handlePrint}
+                      className="flex items-center px-4 py-2 text-sm text-gray-100 hover:bg-gray-800 w-full text-left"
+                    >
+                      <Download size={16} className="mr-2" /> Print
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+            
+            <button 
+              onClick={() => setShowAddForm(true)}
+              className="apex-button-sm flex items-center bg-green-600 hover:bg-green-700"
+            >
+              <Plus size={16} className="mr-2" />
+              Add Vehicle
+            </button>
+          </div>
+        </div>
+        
+        {/* Mobile Navigation */}
+        <div className="flex md:hidden overflow-x-auto py-3 gap-3 mt-4">
+          <button 
+            onClick={() => setActiveSection('dashboard')}
+            className={`px-3 py-1 text-sm whitespace-nowrap rounded-md transition ${
+              activeSection === 'dashboard' ? 'bg-green-500 text-black font-bold' : 'text-white bg-gray-800'
+            }`}
+          >
+            Dashboard
+          </button>
+          <button 
+            onClick={() => setActiveSection('garage')}
+            className={`px-3 py-1 text-sm whitespace-nowrap rounded-md transition ${
+              activeSection === 'garage' ? 'bg-green-500 text-black font-bold' : 'text-white bg-gray-800'
+            }`}
+          >
+            Garage
+          </button>
+          <button 
+            onClick={() => setActiveSection('telemetry')}
+            className={`px-3 py-1 text-sm whitespace-nowrap rounded-md transition ${
+              activeSection === 'telemetry' ? 'bg-green-500 text-black font-bold' : 'text-white bg-gray-800'
+            }`}
+          >
+            Telemetry
+          </button>
+          <button 
+            onClick={() => setActiveSection('maintenance')}
+            className={`px-3 py-1 text-sm whitespace-nowrap rounded-md transition ${
+              activeSection === 'maintenance' ? 'bg-green-500 text-black font-bold' : 'text-white bg-gray-800'
+            }`}
+          >
+            Maintenance
+          </button>
+          <button 
+            onClick={() => setActiveSection('juicebox')}
+            className={`px-3 py-1 text-sm whitespace-nowrap rounded-md transition ${
+              activeSection === 'juicebox' ? 'bg-green-500 text-black font-bold' : 'text-white bg-gray-800'
+            }`}
+          >
+            JuiceBox™
+          </button>
+          <button 
+            onClick={() => setActiveSection('gloss')}
+            className={`px-3 py-1 text-sm whitespace-nowrap rounded-md transition ${
+              activeSection === 'gloss' ? 'bg-green-500 text-black font-bold' : 'text-white bg-gray-800'
+            }`}
+          >
+            Gloss
+          </button>
+        </div>
+      </div>
+      
+      {/* Main Content Area */}
+      <div className="p-4 md:p-6">
+        {loading ? (
+          <div className="flex items-center justify-center h-64">
+            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+          </div>
+        ) : (
+          <>
+            {/* JuiceBox Section */}
+            {activeSection === 'juicebox' && (
+              <div className="juice-box-section">
+                <div className="flex flex-col lg:flex-row justify-between items-start mb-6">
+                  <div>
+                    <h2 className="text-blue-400 font-orbitron text-2xl mb-2">JuiceBox™ Checklists</h2>
+                    <p className="text-gray-400">
+                      The curated, real-world tested, gloss-backed, Gavin-approved detailing and maintenance checklists
+                    </p>
+                  </div>
+                  
+                  <div className="flex items-center mt-4 lg:mt-0 gap-3">
+                    <button 
+                      onClick={() => {
+                        const checklistElement = document.getElementById('juiceBoxChecklists');
+                        if (checklistElement) {
+                          exportToPdf(checklistElement, 'GoTime Motorsports - JuiceBox Checklists.pdf');
+                        }
+                      }}
+                      className="apex-button-sm flex items-center"
+                    >
+                      <FileDown size={16} className="mr-2" />
+                      Export PDF
+                    </button>
+                    <button 
+                      onClick={() => {
+                        // Open customization modal
+                        // This would be implemented with a state variable and modal component
+                        alert("Customize checklists feature coming soon!");
+                      }}
+                      className="apex-button-sm flex items-center"
+                    >
+                      <Wrench size={16} className="mr-2" />
+                      Customize
+                    </button>
+                  </div>
+                </div>
+                
+                <div id="juiceBoxChecklists" className="bg-black rounded-xl p-6 border border-green-500/20">
+                  <JuiceBoxChecklists vehicle={activeVehicle} />
+                </div>
+              </div>
+            )}
+            {/* Dashboard View */}
+            {activeSection === 'dashboard' && (
+              <div className="dashboard-view">
+                {/* Current Vehicle Spotlight */}
+                {activeVehicle && (
+                  <div className="vehicle-spotlight mb-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div className="lg:col-span-2 bg-gray-900 rounded-xl overflow-hidden border border-blue-500/20 relative">
+                      <div className="h-64 md:h-80 relative">
+                        <img 
+                          src={activeVehicle.image_url || getVehicleImageQuery(activeVehicle)}
+                          alt={`${activeVehicle.year} ${activeVehicle.make} ${activeVehicle.model}`}
+                          className="w-full h-full object-cover"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
+                        <div className="absolute bottom-0 left-0 p-6">
+                          <div className="flex items-center mb-2">
+                            <span className={`inline-block w-3 h-3 rounded-full mr-2 ${
+                              carMetrics.carStatus === 'Ready' ? 'bg-green-500' : 
+                              carMetrics.carStatus === 'Service Due' ? 'bg-yellow-500' : 'bg-red-500'
+                            }`}></span>
+                            <span className="text-sm text-gray-300">{carMetrics.carStatus}</span>
+                          </div>
+                          <h2 className="text-white font-orbitron text-2xl md:text-3xl">
+                            {activeVehicle.year} {activeVehicle.make} {activeVehicle.model}
+                          </h2>
+                          <p className="text-gray-300">{activeVehicle.trim} • {carMetrics.mileage} miles</p>
+                        </div>
+                        <div className="absolute top-4 right-4 bg-black/70 px-3 py-1 rounded-full flex items-center">
+                          <Clock className="h-4 w-4 text-green-500 mr-2" />
+                          <span className="text-white text-sm">{new Date().toLocaleTimeString()}</span>
+                        </div>
+                      </div>
+                      <div className="p-4 grid grid-cols-2 lg:grid-cols-4 gap-4">
+                        <div className="bg-black rounded-lg p-3">
+                          <div className="text-sm text-gray-400 mb-1">Last Service</div>
+                          <div className="text-white font-medium">{carMetrics.lastService}</div>
+                        </div>
+                        <div className="bg-black rounded-lg p-3">
+                          <div className="text-sm text-gray-400 mb-1">Next Service Due</div>
+                          <div className="text-white font-medium">{carMetrics.nextServiceDue}</div>
+                        </div>
+                        <div className="bg-black rounded-lg p-3">
+                          <div className="text-sm text-gray-400 mb-1">Oil Life</div>
+                          <div className="relative pt-1">
+                            <div className="flex mb-2 items-center justify-between">
+                              <div className="text-white font-medium">{carMetrics.oilLifeRemaining}%</div>
+                            </div>
+                            <div className="overflow-hidden h-2 text-xs flex rounded bg-gray-700">
+                              <div 
+                                style={{ width: `${carMetrics.oilLifeRemaining}%` }}
+                                className={`shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center ${
+                                  carMetrics.oilLifeRemaining > 60 ? 'bg-green-500' : 
+                                  carMetrics.oilLifeRemaining > 20 ? 'bg-yellow-500' : 'bg-red-500'
+                                }`}>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="bg-black rounded-lg p-3">
+                          <div className="text-sm text-gray-400 mb-1">Gloss Index</div>
+                          <div className="relative pt-1">
+                            <div className="flex mb-2 items-center justify-between">
+                              <div className="text-white font-medium">{carMetrics.glossIndex}%</div>
+                            </div>
+                            <div className="overflow-hidden h-2 text-xs flex rounded bg-gray-700">
+                              <div 
+                                style={{ width: `${carMetrics.glossIndex}%` }}
+                                className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500">
+                              </div>
+                            </div>
+                          </div>
+                        </div>
                       </div>
                     </div>
                     
-                    <div className="flex gap-2 mt-4 md:mt-0">
-                      <button className="apex-button">Edit</button>
-                      <Link
-                        to={`/vehicle-mods/${activeVehicle.id}`}
-                        className="apex-button"
-                      >
-                        Modification Hub
-                      </Link>
+                    <div className="flex flex-col gap-4">
+                      {/* Vehicle Vitals */}
+                      <div className="bg-gray-900 rounded-xl p-4 border border-blue-500/20">
+                        <h3 className="text-blue-400 font-orbitron text-lg mb-4">Vehicle Vitals</h3>
+                        <div className="space-y-3">
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center">
+                              <Fuel className="h-5 w-5 text-green-500 mr-2" />
+                              <span className="text-gray-300">Fuel Level</span>
+                            </div>
+                            <div className="relative w-32 h-2 bg-gray-700 rounded">
+                              <div 
+                                className="absolute top-0 left-0 h-2 bg-green-500 rounded"
+                                style={{ width: `${carMetrics.fuelLevel}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-white font-medium">{carMetrics.fuelLevel}%</span>
+                          </div>
+                          <div className="flex justify-between items-center">
+                            <div className="flex items-center">
+                              <Battery className="h-5 w-5 text-green-500 mr-2" />
+                              <span className="text-gray-300">Battery</span>
+                            </div>
+                            <div className="relative w-32 h-2 bg-gray-700 rounded">
+                              <div 
+                                className={`absolute top-0 left-0 h-2 rounded ${
+                                  carMetrics.batteryHealth > 70 ? 'bg-green-500' : 
+                                  carMetrics.batteryHealth > 40 ? 'bg-yellow-500' : 'bg-red-500'
+                                }`}
+                                style={{ width: `${carMetrics.batteryHealth}%` }}
+                              ></div>
+                            </div>
+                            <span className="text-white font-medium">{carMetrics.batteryHealth}%</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      {/* Tire Pressure */}
+                      <div className="bg-gray-900 rounded-xl p-4 border border-blue-500/20 flex-grow">
+                        <h3 className="text-blue-400 font-orbitron text-lg mb-4">Tire Pressure (PSI)</h3>
+                        <div className="h-40 relative flex items-center justify-center">
+                          <div className="w-48 h-32 border-2 border-gray-600 rounded-lg relative">
+                            {/* Tire pressure indicators */}
+                            <div className="absolute top-2 left-2 text-center">
+                              <div className={`font-bold ${
+                                carMetrics.tirePressure.frontLeft > 33 && carMetrics.tirePressure.frontLeft < 37 
+                                  ? 'text-green-500' : 'text-yellow-500'
+                              }`}>
+                                {carMetrics.tirePressure.frontLeft}
+                              </div>
+                              <div className="text-xs text-gray-400">FL</div>
+                            </div>
+                            <div className="absolute top-2 right-2 text-center">
+                              <div className={`font-bold ${
+                                carMetrics.tirePressure.frontRight > 33 && carMetrics.tirePressure.frontRight < 37 
+                                  ? 'text-green-500' : 'text-yellow-500'
+                              }`}>
+                                {carMetrics.tirePressure.frontRight}
+                              </div>
+                              <div className="text-xs text-gray-400">FR</div>
+                            </div>
+                            <div className="absolute bottom-2 left-2 text-center">
+                              <div className={`font-bold ${
+                                carMetrics.tirePressure.rearLeft > 33 && carMetrics.tirePressure.rearLeft < 37 
+                                  ? 'text-green-500' : 'text-yellow-500'
+                              }`}>
+                                {carMetrics.tirePressure.rearLeft}
+                              </div>
+                              <div className="text-xs text-gray-400">RL</div>
+                            </div>
+                            <div className="absolute bottom-2 right-2 text-center">
+                              <div className={`font-bold ${
+                                carMetrics.tirePressure.rearRight > 33 && carMetrics.tirePressure.rearRight < 37 
+                                  ? 'text-green-500' : 'text-yellow-500'
+                              }`}>
+                                {carMetrics.tirePressure.rearRight}
+                              </div>
+                              <div className="text-xs text-gray-400">RR</div>
+                            </div>
+                            
+                            {/* Car outline */}
+                            <div className="absolute inset-0 m-auto w-32 h-24 bg-blue-500/10 rounded"></div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Vehicle Collection Overview */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                  <div className="bg-gray-900 rounded-xl p-4 border border-blue-500/20">
+                    <h3 className="text-blue-400 font-orbitron text-lg mb-4">Vehicle Collection</h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">Total Vehicles</span>
+                        <span className="text-white font-medium">{vehicles.length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">Ready</span>
+                        <span className="text-white font-medium">{vehicles.filter(v => v.status === 'Ready').length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">Service Due</span>
+                        <span className="text-white font-medium">{vehicles.filter(v => v.status === 'Service Due').length}</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-300">In Storage</span>
+                        <span className="text-white font-medium">{vehicles.filter(v => v.status === 'In Storage').length}</span>
+                      </div>
+                      <div className="mt-4">
+                        <button 
+                          onClick={() => setActiveSection('garage')}
+                          className="w-full py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-md flex items-center justify-center"
+                        >
+                          View All Vehicles
+                          <ChevronRight size={16} className="ml-1" />
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-900 rounded-xl p-4 border border-blue-500/20">
+                    <h3 className="text-blue-400 font-orbitron text-lg mb-4">Recent Activity</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0 w-2 h-2 mt-1.5 rounded-full bg-green-500 mr-2"></div>
+                        <div>
+                          <p className="text-white text-sm">Oil change completed</p>
+                          <p className="text-xs text-gray-500">3 days ago</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0 w-2 h-2 mt-1.5 rounded-full bg-blue-500 mr-2"></div>
+                        <div>
+                          <p className="text-white text-sm">Ceramic coating applied</p>
+                          <p className="text-xs text-gray-500">1 week ago</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0 w-2 h-2 mt-1.5 rounded-full bg-yellow-500 mr-2"></div>
+                        <div>
+                          <p className="text-white text-sm">Tire rotation scheduled</p>
+                          <p className="text-xs text-gray-500">2 days ago</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0 w-2 h-2 mt-1.5 rounded-full bg-green-500 mr-2"></div>
+                        <div>
+                          <p className="text-white text-sm">Detailing completed</p>
+                          <p className="text-xs text-gray-500">Yesterday</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-900 rounded-xl p-4 border border-blue-500/20">
+                    <h3 className="text-blue-400 font-orbitron text-lg mb-4">Upcoming Services</h3>
+                    <div className="space-y-3">
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0 w-8 h-8 bg-gray-800 flex items-center justify-center rounded-md mr-3">
+                          <Wrench className="h-4 w-4 text-green-500" />
+                        </div>
+                        <div>
+                          <p className="text-white text-sm">Brake fluid flush</p>
+                          <p className="text-xs text-gray-500">Due in 3 weeks</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0 w-8 h-8 bg-gray-800 flex items-center justify-center rounded-md mr-3">
+                          <Filter className="h-4 w-4 text-green-500" />
+                        </div>
+                        <div>
+                          <p className="text-white text-sm">Air filter replacement</p>
+                          <p className="text-xs text-gray-500">Due in 1 month</p>
+                        </div>
+                      </div>
+                      <div className="flex items-start">
+                        <div className="flex-shrink-0 w-8 h-8 bg-gray-800 flex items-center justify-center rounded-md mr-3">
+                          <Droplets className="h-4 w-4 text-green-500" />
+                        </div>
+                        <div>
+                          <p className="text-white text-sm">Ceramic coating maintenance</p>
+                          <p className="text-xs text-gray-500">Due in 6 weeks</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
                 
-                {/* Section Content */}
-                {activeSection === 'overview' && (
-                  <div className="apex-card p-6">
-                    <h3 className="text-blue-400 font-orbitron text-xl mb-4">Vehicle Overview</h3>
+                {/* F1-style Telemetry Preview */}
+                <div className="bg-gray-900 rounded-xl p-4 border border-blue-500/20 mb-8">
+                  <div className="flex justify-between items-center mb-4">
+                    <h3 className="text-blue-400 font-orbitron text-lg">Quick Telemetry</h3>
+                    <button 
+                      onClick={() => setActiveSection('telemetry')}
+                      className="text-sm text-gray-300 hover:text-blue-400 flex items-center"
+                    >
+                      View Full Telemetry <ChevronRight size={16} className="ml-1" />
+                    </button>
+                  </div>
+                  
+                  <div className="h-64">
+                    {activeVehicle && (
+                      <Suspense fallback={<div className="h-full flex items-center justify-center"><RefreshCw className="animate-spin h-10 w-10 text-blue-500" /></div>}>
+                        <F1TelemetryDashboard vehicle={activeVehicle} vehicleData={vehicleData} />
+                      </Suspense>
+                    )}
+                  </div>
+                </div>
+                
+                {/* OBD2 Panel (shows when connected) */}
+                {showOBDPanel && (
+                  <div className="bg-gray-900 rounded-xl p-4 border border-blue-500/20 mb-8 relative">
+                    <button 
+                      onClick={() => setShowOBDPanel(false)}
+                      className="absolute top-4 right-4 text-gray-400 hover:text-white"
+                    >
+                      <X size={16} />
+                    </button>
                     
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                      {/* Vehicle Specifications */}
-                      <div className="bg-gray-800 p-4 rounded-lg">
-                        <h4 className="text-green-400 font-orbitron text-md mb-3">Specifications</h4>
-                        <ul className="space-y-2">
-                          <li className="flex justify-between">
-                            <span className="text-gray-400">Year:</span>
-                            <span className="text-white">{activeVehicle.year}</span>
-                          </li>
-                          <li className="flex justify-between">
-                            <span className="text-gray-400">Make:</span>
-                            <span className="text-white">{activeVehicle.make}</span>
-                          </li>
-                          <li className="flex justify-between">
-                            <span className="text-gray-400">Model:</span>
-                            <span className="text-white">{activeVehicle.model}</span>
-                          </li>
-                          <li className="flex justify-between">
-                            <span className="text-gray-400">Engine:</span>
-                            <span className="text-white">{vehicleProfile.engineType || "N/A"}</span>
-                          </li>
-                          <li className="flex justify-between">
-                            <span className="text-gray-400">Transmission:</span>
-                            <span className="text-white">{vehicleProfile.transmission || "N/A"}</span>
-                          </li>
-                          <li className="flex justify-between">
-                            <span className="text-gray-400">Drivetrain:</span>
-                            <span className="text-white">{vehicleProfile.driveType || "N/A"}</span>
-                          </li>
-                        </ul>
-                      </div>
-                      
-                      {/* Maintenance Summary */}
-                      <div className="bg-gray-800 p-4 rounded-lg">
-                        <h4 className="text-green-400 font-orbitron text-md mb-3">Maintenance Summary</h4>
-                        <ul className="space-y-2">
-                          <li className="flex justify-between">
-                            <span className="text-gray-400">Last Oil Change:</span>
-                            <span className="text-white">{vehicleProfile.maintenance.lastOilChange}</span>
-                          </li>
-                          <li className="flex justify-between">
-                            <span className="text-gray-400">Last Service:</span>
-                            <span className="text-white">{vehicleProfile.lastService}</span>
-                          </li>
-                          <li className="flex justify-between">
-                            <span className="text-gray-400">Next Service:</span>
-                            <span className="text-white">{vehicleProfile.nextService}</span>
-                          </li>
-                        </ul>
-                        <button className="text-green-400 mt-3 text-sm hover:underline">
-                          View Full Maintenance History →
+                    <h3 className="text-blue-400 font-orbitron text-lg mb-4">OBD2 Diagnostics</h3>
+                    
+                    {!obdScanActive && obdData.engineTemp === 0 ? (
+                      <div className="p-8 text-center">
+                        <div className="mb-4 inline-flex p-3 bg-blue-500/10 rounded-full">
+                          <Gauge size={32} className="text-blue-400" />
+                        </div>
+                        <h4 className="text-white text-lg mb-2">Connect to OBD2 Scanner</h4>
+                        <p className="text-gray-400 mb-6">Connect your OBD2 scanner to monitor real-time engine data and diagnose issues.</p>
+                        <button 
+                          onClick={startOBDScan}
+                          className="apex-button bg-blue-600 hover:bg-blue-700"
+                        >
+                          Start Scan
                         </button>
                       </div>
-                      
-                      {/* Weather Alerts */}
-                      <div className="bg-gray-800 p-4 rounded-lg">
-                        <h4 className="text-green-400 font-orbitron text-md mb-3">Weather Alerts</h4>
-                        {weatherAlerts && weatherAlerts.length > 0 ? (
-                          <ul className="space-y-3">
-                            {weatherAlerts.map((alert, index) => (
-                              <li 
-                                key={index} 
-                                className={`p-2 rounded border-l-4 ${
-                                  alert.severity === "high" ? 'border-red-500' : 
-                                  alert.severity === "moderate" ? 'border-yellow-500' : 
-                                  'border-blue-500'
-                                }`}
-                              >
-                                <div className="font-bold text-white">{alert.type}</div>
-                                <div className="text-sm text-gray-400">{alert.message}</div>
-                              </li>
-                            ))}
-                          </ul>
-                        ) : (
-                          <p className="text-white">No alerts at this time.</p>
+                    ) : (
+                      <div>
+                        {obdScanActive && (
+                          <div className="flex items-center justify-center mb-4">
+                            <RefreshCw className="animate-spin h-5 w-5 text-blue-500 mr-2" />
+                            <span className="text-blue-400">Scanning vehicle systems...</span>
+                          </div>
+                        )}
+                        
+                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                          <div className="bg-gray-800 p-3 rounded-lg">
+                            <div className="text-xs text-gray-400 mb-1">Engine Temp</div>
+                            <div className="text-xl font-medium text-white">{obdData.engineTemp}°F</div>
+                          </div>
+                          <div className="bg-gray-800 p-3 rounded-lg">
+                            <div className="text-xs text-gray-400 mb-1">RPM</div>
+                            <div className="text-xl font-medium text-white">{obdData.rpm}</div>
+                          </div>
+                          <div className="bg-gray-800 p-3 rounded-lg">
+                            <div className="text-xs text-gray-400 mb-1">Throttle Position</div>
+                            <div className="text-xl font-medium text-white">{obdData.throttlePosition}%</div>
+                          </div>
+                          <div className="bg-gray-800 p-3 rounded-lg">
+                            <div className="text-xs text-gray-400 mb-1">Fuel Pressure</div>
+                            <div className="text-xl font-medium text-white">{obdData.fuelPressure} kPa</div>
+                          </div>
+                          <div className="bg-gray-800 p-3 rounded-lg">
+                            <div className="text-xs text-gray-400 mb-1">Intake Temp</div>
+                            <div className="text-xl font-medium text-white">{obdData.intakeTemp}°F</div>
+                          </div>
+                          <div className="bg-gray-800 p-3 rounded-lg">
+                            <div className="text-xs text-gray-400 mb-1">MAF</div>
+                            <div className="text-xl font-medium text-white">{obdData.maf} g/s</div>
+                          </div>
+                          <div className="bg-gray-800 p-3 rounded-lg">
+                            <div className="text-xs text-gray-400 mb-1">Timing Advance</div>
+                            <div className="text-xl font-medium text-white">{obdData.timingAdvance}°</div>
+                          </div>
+                          <div className="bg-gray-800 p-3 rounded-lg">
+                            <div className="text-xs text-gray-400 mb-1">O2 Sensor</div>
+                            <div className="text-xl font-medium text-white">{obdData.o2Sensor.toFixed(2)} V</div>
+                          </div>
+                        </div>
+                        
+                        {obdData.dtcCodes.length > 0 && (
+                          <div className="mt-4 p-3 bg-red-500/10 border border-red-500/20 rounded-lg">
+                            <div className="flex items-center text-red-400 mb-2">
+                              <AlertTriangle size={16} className="mr-2" />
+                              <span className="font-medium">Diagnostic Trouble Codes Detected</span>
+                            </div>
+                            <div className="space-y-2">
+                              {obdData.dtcCodes.map((code, idx) => (
+                                <div key={idx} className="flex items-center justify-between">
+                                  <span className="text-white">{code}</span>
+                                  <span className="text-sm text-gray-400">Evaporative Emission System Leak Detected</span>
+                                </div>
+                              ))}
+                            </div>
+                          </div>
                         )}
                       </div>
-                    </div>
+                    )}
                   </div>
                 )}
-                
-                {activeSection === 'maintenance' && (
-                  <div className="apex-card p-6">
-                    <h3 className="text-blue-400 font-orbitron text-xl mb-4">Maintenance</h3>
-                    
-                    <div className="bg-gray-800 p-4 rounded-lg mb-6">
-                      <h4 className="text-green-400 font-orbitron text-md mb-3">Upcoming Maintenance</h4>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
-                        <div className="bg-gray-900 p-3 rounded-lg border border-green-500">
-                          <div className="font-bold text-white">Oil Change</div>
-                          <div className="text-sm text-gray-400">Due in 1,500 miles</div>
-                        </div>
-                        <div className="bg-gray-900 p-3 rounded-lg border border-yellow-500">
-                          <div className="font-bold text-white">Tire Rotation</div>
-                          <div className="text-sm text-gray-400">Due now</div>
-                        </div>
-                        <div className="bg-gray-900 p-3 rounded-lg border border-gray-500">
-                          <div className="font-bold text-white">Brake Inspection</div>
-                          <div className="text-sm text-gray-400">Due in 5,000 miles</div>
-                        </div>
-                      </div>
-                      
-                      <button className="apex-button">Add Maintenance Record</button>
-                    </div>
-                    
-                    <div className="bg-gray-800 p-4 rounded-lg">
-                      <h4 className="text-green-400 font-orbitron text-md mb-3">Seasonal Maintenance</h4>
-                      
-                      <div className="mb-4">
-                        <div className="font-bold text-white mb-2">Upcoming Season Preparation</div>
-                        <ul className="space-y-2">
-                          {seasonalMaintenanceItems && seasonalMaintenanceItems.length > 0 ? seasonalMaintenanceItems.map((item, index) => (
-                            <li key={index} className="flex items-start">
-                              <span className="text-green-400 mr-2">→</span>
-                              <span className="text-white">{item}</span>
-                            </li>
-                          )) : (
-                            <li className="text-white">No seasonal maintenance items available.</li>
-                          )}
-                        </ul>
-                      </div>
-                      
-                      <Link to="/seasonal-checklist" className="apex-button inline-block">
-                        View Full Seasonal Checklist
-                      </Link>
-                    </div>
-                  </div>
-                )}
-                
-                {activeSection === 'tires' && (
-                  <div className="apex-card p-6">
-                    <h3 className="text-blue-400 font-orbitron text-xl mb-4">Tire Management</h3>
-                    <TireManagementDashboard />
-                  </div>
-                )}
-                
-                {activeSection === 'gloss' && (
-                  <div className="apex-card p-6">
-                    <h3 className="text-blue-400 font-orbitron text-xl mb-4">Gloss Tracking</h3>
-                    <GlossTracker />
-                    <div className="mt-6">
-                      <Link to="/gloss-growth" className="apex-button">
-                        Open Detailed Gloss Tracker
-                      </Link>
-                    </div>
-                  </div>
-                )}
-                
-                {activeSection === 'modifications' && (
-                  <div className="apex-card p-6">
-                    <h3 className="text-blue-400 font-orbitron text-xl mb-4">Modifications</h3>
-                    
-                    <div className="mb-6">
-                      <p className="text-white mb-4">Track all modifications and upgrades to your vehicle. Keep a record of parts, labor, and performance changes.</p>
-                      
-                      <Link 
-                        to={`/vehicle-mods/${activeVehicle?.id}`}
-                        className="apex-button inline-block"
-                      >
-                        Go to Modification Hub
-                      </Link>
-                    </div>
-                    
-                    <h2 className="text-blue-400 font-orbitron text-2xl mb-4">Product Arsenal</h2>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="bg-gray-800 p-4 rounded-lg">
-                        <h4 className="text-green-400 font-orbitron text-md mb-3">Recent Modifications</h4>
-                        <ul className="space-y-2">
-                          <li className="p-2 border-l-4 border-green-500">
-                            <div className="font-bold text-white">Performance Intake</div>
-                            <div className="text-sm text-gray-400">Installed March 2023</div>
-                          </li>
-                          <li className="p-2 border-l-4 border-green-500">
-                            <div className="font-bold text-white">ECU Tune</div>
-                            <div className="text-sm text-gray-400">Installed February 2023</div>
-                          </li>
-                        </ul>
-                      </div>
-                      
-                      <div className="bg-gray-800 p-4 rounded-lg">
-                        <h4 className="text-green-400 font-orbitron text-md mb-3">Planned Modifications</h4>
-                        <ul className="space-y-2">
-                          <li className="p-2 border-l-4 border-blue-500">
-                            <div className="font-bold text-white">Performance Exhaust</div>
-                            <div className="text-sm text-gray-400">Budget: $1,200</div>
-                          </li>
-                          <li className="p-2 border-l-4 border-blue-500">
-                            <div className="font-bold text-white">Suspension Upgrade</div>
-                            <div className="text-sm text-gray-400">Budget: $2,500</div>
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {activeSection === 'documents' && (
-                  <div className="apex-card p-6">
-                    <h3 className="text-blue-400 font-orbitron text-xl mb-4">Documents & Records</h3>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                      <div className="bg-gray-800 p-4 rounded-lg">
-                        <h4 className="text-green-400 font-orbitron text-md mb-3">Vehicle Documents</h4>
-                        <ul className="space-y-2">
-                          <li className="flex justify-between items-center p-2 hover:bg-gray-700 rounded">
-                            <span className="text-white">Insurance Policy</span>
-                            <button className="text-blue-400 hover:underline">View</button>
-                          </li>
-                          <li className="flex justify-between items-center p-2 hover:bg-gray-700 rounded">
-                            <span className="text-white">Registration</span>
-                            <button className="text-blue-400 hover:underline">View</button>
-                          </li>
-                          <li className="flex justify-between items-center p-2 hover:bg-gray-700 rounded">
-                            <span className="text-white">Owner's Manual</span>
-                            <button className="text-blue-400 hover:underline">View</button>
-                          </li>
-                        </ul>
-                      </div>
-                      
-                      <div className="bg-gray-800 p-4 rounded-lg">
-                        <h4 className="text-green-400 font-orbitron text-md mb-3">Service Records</h4>
-                        <ul className="space-y-2">
-                          <li className="flex justify-between items-center p-2 hover:bg-gray-700 rounded">
-                            <span className="text-white">Oil Change - March 2023</span>
-                            <button className="text-blue-400 hover:underline">View</button>
-                          </li>
-                          <li className="flex justify-between items-center p-2 hover:bg-gray-700 rounded">
-                            <span className="text-white">Brake Service - January 2023</span>
-                            <button className="text-blue-400 hover:underline">View</button>
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                    
-                    <div className="bg-gray-800 p-4 rounded-lg">
-                      <h4 className="text-green-400 font-orbitron text-md mb-3">Upload Documents</h4>
-                      <div className="mb-4">
-                        <label className="block text-white mb-2">Document Type</label>
-                        <select className="w-full bg-gray-700 text-white p-2 rounded">
-                          <option>Service Record</option>
-                          <option>Insurance Document</option>
-                          <option>Registration</option>
-                          <option>Purchase Receipt</option>
-                          <option>Other</option>
-                        </select>
-                      </div>
-                      <div className="mb-4">
-                        <label className="block text-white mb-2">Document Description</label>
-                        <input 
-                          type="text" 
-                          className="w-full bg-gray-700 text-white p-2 rounded"
-                          placeholder="e.g., Oil Change April 2023"
-                        />
-                      </div>
-                      <div className="mb-4">
-                        <label className="block text-white mb-2">Upload File</label>
-                        <div className="border-2 border-dashed border-gray-600 p-4 rounded text-center">
-                          <p className="text-gray-400">Drag and drop files here or click to browse</p>
-                        </div>
-                      </div>
-                      <button className="apex-button">Upload Document</button>
-                    </div>
-                  </div>
-                )}
-                
-                {activeSection === 'drivejournal' && (
-                  <div className="apex-card p-6">
-                    <h3 className="text-blue-400 font-orbitron text-xl mb-4">Drive Journal</h3>
-                    
-                    <div className="mb-6">
-                      <p className="text-white mb-4">Keep track of your drives, routes, and experiences. Document memories and driving conditions.</p>
-                      
-                      <Link to="/journal" className="apex-button inline-block">
-                        Go to Full Drive Journal
-                      </Link>
-                    </div>
-                    
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                      <div className="bg-gray-800 p-4 rounded-lg">
-                        <h4 className="text-green-400 font-orbitron text-md mb-3">Recent Drives</h4>
-                        <ul className="space-y-3">
-                          <li className="border-l-4 border-green-500 p-2">
-                            <div className="font-bold text-white">Mountain Run</div>
-                            <div className="text-sm text-gray-400">April 12, 2023 • 120 miles</div>
-                            <div className="text-sm text-gray-400 mt-1">Perfect weather, car performed excellently on the mountain passes.</div>
-                          </li>
-                          <li className="border-l-4 border-blue-500 p-2">
-                            <div className="font-bold text-white">Coastal Highway</div>
-                            <div className="text-sm text-gray-400">March 20, 2023 • 85 miles</div>
-                            <div className="text-sm text-gray-400 mt-1">Scenic drive along the coast. Great handling on the curves.</div>
-                          </li>
-                        </ul>
-                      </div>
-                      
-                      <div className="bg-gray-800 p-4 rounded-lg">
-                        <h4 className="text-green-400 font-orbitron text-md mb-3">Drive Statistics</h4>
-                        <ul className="space-y-2">
-                          <li className="flex justify-between">
-                            <span className="text-gray-400">Total Drives:</span>
-                            <span className="text-white">24</span>
-                          </li>
-                          <li className="flex justify-between">
-                            <span className="text-gray-400">Total Distance:</span>
-                            <span className="text-white">1,850 miles</span>
-                          </li>
-                          <li className="flex justify-between">
-                            <span className="text-gray-400">Avg Drive Length:</span>
-                            <span className="text-white">77 miles</span>
-                          </li>
-                          <li className="flex justify-between">
-                            <span className="text-gray-400">Favorite Route:</span>
-                            <span className="text-white">Mountain Run</span>
-                          </li>
-                        </ul>
-                      </div>
-                    </div>
-                  </div>
-                )}
-                
-                {activeSection === 'enhancedTelemetry' && (
-                  <div className="apex-card p-6">
-                    <h3 className="text-blue-400 font-orbitron text-xl mb-4">Enhanced Vehicle Telemetry</h3>
-                    <p className="text-white mb-4">Advanced F1-style telemetry data visualization for your {activeVehicle.year} {activeVehicle.make} {activeVehicle.model}.</p>
-                    
-                    <EnhancedVehicleTelemetry vehicle={activeVehicle} />
-                  </div>
-                )}
-                
-                {activeSection === 'vaultServices' && (
-                  <div className="apex-card p-6">
-                    <h3 className="text-blue-400 font-orbitron text-xl mb-4">Vault Storage Services</h3>
-                    <p className="text-white mb-4">Premium storage and maintenance services for your high-value vehicle.</p>
-                    
-                    <VaultStorageServices vehicle={activeVehicle} membershipTier="GOAT" />
-                  </div>
-                )}
-                
-                {activeSection === 'f1Telemetry' && (
-                  <div className="apex-card p-6">
-                    <h3 className="text-blue-400 font-orbitron text-xl mb-4">F1 Telemetry Dashboard</h3>
-                    <p className="text-white mb-4">Bespoke, world-class performance and maintenance visualization with comprehensive telemetry data.</p>
-                    
-                    <F1TelemetryDashboard 
-                      vehicle={activeVehicle}
-                      vehicleData={vehicleData}
-                    />
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="apex-card p-6 text-center">
-                <p className="text-white mb-4">No vehicle selected or you haven't added any vehicles yet.</p>
-                <button className="apex-button">Add Your First Vehicle</button>
               </div>
             )}
+            
+            {/* Garage View - Vehicle Grid & List with Filters */}
+            {activeSection === 'garage' && (
+              <div className="garage-view">
+                {/* Filtering and View Options */}
+                <div className="bg-gray-900 rounded-xl p-4 border border-blue-500/20 mb-6">
+                  <div className="flex flex-col sm:flex-row justify-between mb-4">
+                    <h3 className="text-blue-400 font-orbitron text-lg mb-2 sm:mb-0">Vehicle Collection</h3>
+                    <div className="flex items-center space-x-3">
+                      <button 
+                        onClick={() => setActiveView('grid')}
+                        className={`px-3 py-1 text-sm rounded-md ${
+                          activeView === 'grid' ? 'bg-green-500 text-black' : 'text-white bg-gray-800'
+                        }`}
+                      >
+                        Grid View
+                      </button>
+                      <button 
+                        onClick={() => setActiveView('list')}
+                        className={`px-3 py-1 text-sm rounded-md ${
+                          activeView === 'list' ? 'bg-green-500 text-black' : 'text-white bg-gray-800'
+                        }`}
+                      >
+                        List View
+                      </button>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Make</label>
+                      <select 
+                        value={filters.make}
+                        onChange={(e) => setFilters({...filters, make: e.target.value})}
+                        className="w-full bg-gray-800 text-white border border-gray-700 rounded-md px-3 py-2"
+                      >
+                        <option value="all">All Makes</option>
+                        {Array.from(new Set(vehicles.map(v => v.make))).map((make, idx) => (
+                          <option key={idx} value={make}>{make}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Type</label>
+                      <select 
+                        value={filters.type}
+                        onChange={(e) => setFilters({...filters, type: e.target.value})}
+                        className="w-full bg-gray-800 text-white border border-gray-700 rounded-md px-3 py-2"
+                      >
+                        <option value="all">All Types</option>
+                        <option value="Sports">Sports</option>
+                        <option value="Luxury">Luxury</option>
+                        <option value="SUV">SUV</option>
+                        <option value="Classic">Classic</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-1">Status</label>
+                      <select 
+                        value={filters.status}
+                        onChange={(e) => setFilters({...filters, status: e.target.value})}
+                        className="w-full bg-gray-800 text-white border border-gray-700 rounded-md px-3 py-2"
+                      >
+                        <option value="all">All Statuses</option>
+                        <option value="Ready">Ready</option>
+                        <option value="Service Due">Service Due</option>
+                        <option value="In Storage">In Storage</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Vehicle Grid View */}
+                {activeView === 'grid' && (
+                  <div ref={garageGridRef} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                    {filteredVehicles.map((vehicle, idx) => (
+                      <div 
+                        key={idx}
+                        className={`bg-gray-900 rounded-xl overflow-hidden border transition-all hover:scale-[1.02] ${
+                          activeVehicle?.id === vehicle.id 
+                            ? 'border-green-500 ring-1 ring-green-500'
+                            : 'border-blue-500/20 hover:border-blue-500/50'
+                        }`}
+                      >
+                        <div className="h-48 relative">
+                          <img 
+                            src={vehicle.image_url || getVehicleImageQuery(vehicle)}
+                            alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+                            className="w-full h-full object-cover"
+                          />
+                          <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
+                          <div className="absolute bottom-0 left-0 p-4">
+                            <div className="flex items-center mb-1">
+                              <span className={`inline-block w-2 h-2 rounded-full mr-2 ${
+                                vehicle.status === 'Ready' ? 'bg-green-500' : 
+                                vehicle.status === 'Service Due' ? 'bg-yellow-500' : 'bg-red-500'
+                              }`}></span>
+                              <span className="text-xs text-gray-300">{vehicle.status || 'Ready'}</span>
+                            </div>
+                            <h3 className="text-white font-semibold">{vehicle.year} {vehicle.make} {vehicle.model}</h3>
+                            <p className="text-sm text-gray-300">{vehicle.trim}</p>
+                          </div>
+                        </div>
+                        <div className="p-4 flex justify-between items-center">
+                          <div>
+                            <div className="text-xs text-gray-400">Mileage</div>
+                            <div className="text-white">{vehicle.mileage} miles</div>
+                          </div>
+                          <button
+                            onClick={() => handleVehicleChange(vehicle)}
+                            className="px-3 py-1 bg-gray-800 hover:bg-blue-600 text-white text-sm rounded-md transition"
+                          >
+                            View Details
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                    
+                    {/* Add new vehicle card */}
+                    <div 
+                      onClick={() => setShowAddForm(true)}
+                      className="bg-gray-900 rounded-xl border border-dashed border-gray-700 hover:border-green-500 flex flex-col items-center justify-center h-64 cursor-pointer transition-all hover:bg-gray-800"
+                    >
+                      <PlusCircle size={32} className="text-green-500 mb-3" />
+                      <p className="text-white font-medium">Add New Vehicle</p>
+                      <p className="text-sm text-gray-400">Click to add to your collection</p>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Vehicle List View */}
+                {activeView === 'list' && (
+                  <div className="bg-gray-900 rounded-xl border border-blue-500/20 overflow-hidden">
+                    <table className="w-full text-left">
+                      <thead>
+                        <tr className="border-b border-gray-800">
+                          <th className="px-4 py-3 bg-gray-950 text-gray-400 font-medium text-sm">Make & Model</th>
+                          <th className="px-4 py-3 bg-gray-950 text-gray-400 font-medium text-sm">Year</th>
+                          <th className="px-4 py-3 bg-gray-950 text-gray-400 font-medium text-sm">Mileage</th>
+                          <th className="px-4 py-3 bg-gray-950 text-gray-400 font-medium text-sm">Status</th>
+                          <th className="px-4 py-3 bg-gray-950 text-gray-400 font-medium text-sm">VIN</th>
+                          <th className="px-4 py-3 bg-gray-950 text-gray-400 font-medium text-sm">Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {filteredVehicles.map((vehicle, idx) => (
+                          <tr 
+                            key={idx}
+                            className={`border-b border-gray-800 hover:bg-gray-800 ${
+                              activeVehicle?.id === vehicle.id ? 'bg-green-500/10' : ''
+                            }`}
+                          >
+                            <td className="px-4 py-3">
+                              <div className="flex items-center">
+                                <div className="flex-shrink-0 h-10 w-10 rounded overflow-hidden mr-3">
+                                  <img 
+                                    src={vehicle.image_url || getVehicleImageQuery(vehicle)}
+                                    alt={`${vehicle.make} ${vehicle.model}`}
+                                    className="h-full w-full object-cover"
+                                  />
+                                </div>
+                                <div>
+                                  <div className="text-white font-medium">{vehicle.make} {vehicle.model}</div>
+                                  <div className="text-gray-400 text-sm">{vehicle.trim}</div>
+                                </div>
+                              </div>
+                            </td>
+                            <td className="px-4 py-3 text-white">{vehicle.year}</td>
+                            <td className="px-4 py-3 text-white">{vehicle.mileage} miles</td>
+                            <td className="px-4 py-3">
+                              <span className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${
+                                vehicle.status === 'Ready' ? 'bg-green-500/10 text-green-400' : 
+                                vehicle.status === 'Service Due' ? 'bg-yellow-500/10 text-yellow-400' : 
+                                'bg-blue-500/10 text-blue-400'
+                              }`}>
+                                <span className={`w-1.5 h-1.5 rounded-full mr-1 ${
+                                  vehicle.status === 'Ready' ? 'bg-green-500' : 
+                                  vehicle.status === 'Service Due' ? 'bg-yellow-500' : 
+                                  'bg-blue-500'
+                                }`}></span>
+                                {vehicle.status || 'Ready'}
+                              </span>
+                            </td>
+                            <td className="px-4 py-3 text-gray-400 font-mono text-sm">{vehicle.vin || 'N/A'}</td>
+                            <td className="px-4 py-3">
+                              <div className="flex items-center space-x-2">
+                                <button 
+                                  onClick={() => handleVehicleChange(vehicle)}
+                                  className="p-1 text-gray-400 hover:text-white"
+                                  title="View"
+                                >
+                                  <Eye size={16} />
+                                </button>
+                                <button 
+                                  className="p-1 text-gray-400 hover:text-white"
+                                  title="Delete"
+                                >
+                                  <Trash2 size={16} />
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+            )}
+            
+            {/* Telemetry View */}
+            {activeSection === 'telemetry' && activeVehicle && (
+              <div ref={telemetryRef} className="telemetry-view">
+                <div className="bg-gray-900 rounded-xl p-4 border border-blue-500/20 mb-6">
+                  <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-blue-400 font-orbitron text-lg">
+                      <span className="mr-2">⚡</span> F1-Style Performance Telemetry
+                    </h3>
+                    <button 
+                      onClick={() => setExpandedTelemetry(!expandedTelemetry)}
+                      className="apex-button-sm"
+                    >
+                      {expandedTelemetry ? 'Compact View' : 'Expanded View'}
+                    </button>
+                  </div>
+                  
+                  <div className={expandedTelemetry ? "min-h-[800px]" : "min-h-[500px]"}>
+                    <Suspense fallback={<div className="h-full flex items-center justify-center"><RefreshCw className="animate-spin h-10 w-10 text-blue-500" /></div>}>
+                      <F1TelemetryDashboard vehicle={activeVehicle} vehicleData={vehicleData} />
+                    </Suspense>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Maintenance View */}
+            {activeSection === 'maintenance' && activeVehicle && (
+              <div className="maintenance-view">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                  <div className="lg:col-span-1 bg-gray-900 rounded-xl p-4 border border-blue-500/20">
+                    <h3 className="text-blue-400 font-orbitron text-lg mb-4">Maintenance Schedule</h3>
+                    <div className="space-y-4">
+                      <div className="bg-gray-800 p-3 rounded-lg">
+                        <div className="flex justify-between items-center mb-2">
+                          <div className="text-white font-medium">Oil Change</div>
+                          <div className="text-sm text-gray-400">Every 5,000 miles</div>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-full bg-gray-700 rounded-full h-2.5">
+                            <div className="bg-green-500 h-2.5 rounded-full" style={{ width: '68%' }}></div>
+                          </div>
+                          <span className="text-white ml-3">68%</span>
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">Next: In 1,600 miles</div>
+                      </div>
+                      
+                      <div className="bg-gray-800 p-3 rounded-lg">
+                        <div className="flex justify-between items-center mb-2">
+                          <div className="text-white font-medium">Tire Rotation</div>
+                          <div className="text-sm text-gray-400">Every 6,000 miles</div>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-full bg-gray-700 rounded-full h-2.5">
+                            <div className="bg-green-500 h-2.5 rounded-full" style={{ width: '42%' }}></div>
+                          </div>
+                          <span className="text-white ml-3">42%</span>
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">Next: In 3,480 miles</div>
+                      </div>
+                      
+                      <div className="bg-gray-800 p-3 rounded-lg">
+                        <div className="flex justify-between items-center mb-2">
+                          <div className="text-white font-medium">Brake Inspection</div>
+                          <div className="text-sm text-gray-400">Every 10,000 miles</div>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-full bg-gray-700 rounded-full h-2.5">
+                            <div className="bg-yellow-500 h-2.5 rounded-full" style={{ width: '15%' }}></div>
+                          </div>
+                          <span className="text-white ml-3">15%</span>
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">Next: In 8,500 miles</div>
+                      </div>
+                      
+                      <div className="bg-gray-800 p-3 rounded-lg">
+                        <div className="flex justify-between items-center mb-2">
+                          <div className="text-white font-medium">Air Filter</div>
+                          <div className="text-sm text-gray-400">Every 15,000 miles</div>
+                        </div>
+                        <div className="flex items-center">
+                          <div className="w-full bg-gray-700 rounded-full h-2.5">
+                            <div className="bg-red-500 h-2.5 rounded-full" style={{ width: '95%' }}></div>
+                          </div>
+                          <span className="text-white ml-3">95%</span>
+                        </div>
+                        <div className="text-xs text-gray-400 mt-1">Next: Due now</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="lg:col-span-2 bg-gray-900 rounded-xl p-4 border border-blue-500/20">
+                    <h3 className="text-blue-400 font-orbitron text-lg mb-4">Maintenance Records</h3>
+                    <div className="overflow-x-auto">
+                      <table className="w-full text-left">
+                        <thead>
+                          <tr className="border-b border-gray-800">
+                            <th className="px-4 py-2 bg-gray-950 text-gray-400 font-medium text-sm">Date</th>
+                            <th className="px-4 py-2 bg-gray-950 text-gray-400 font-medium text-sm">Service</th>
+                            <th className="px-4 py-2 bg-gray-950 text-gray-400 font-medium text-sm">Mileage</th>
+                            <th className="px-4 py-2 bg-gray-950 text-gray-400 font-medium text-sm">Technician</th>
+                            <th className="px-4 py-2 bg-gray-950 text-gray-400 font-medium text-sm">Parts</th>
+                            <th className="px-4 py-2 bg-gray-950 text-gray-400 font-medium text-sm">Notes</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          <tr className="border-b border-gray-800 hover:bg-gray-800">
+                            <td className="px-4 py-3 text-white">2023-10-15</td>
+                            <td className="px-4 py-3 text-white">Oil Change</td>
+                            <td className="px-4 py-3 text-white">12,245</td>
+                            <td className="px-4 py-3 text-white">Mike J.</td>
+                            <td className="px-4 py-3 text-white">Motul 8100 5W-40</td>
+                            <td className="px-4 py-3 text-gray-400">Replaced oil filter</td>
+                          </tr>
+                          <tr className="border-b border-gray-800 hover:bg-gray-800">
+                            <td className="px-4 py-3 text-white">2023-07-22</td>
+                            <td className="px-4 py-3 text-white">Brake Service</td>
+                            <td className="px-4 py-3 text-white">10,870</td>
+                            <td className="px-4 py-3 text-white">Chris T.</td>
+                            <td className="px-4 py-3 text-white">Brembo Pads, Rotors</td>
+                            <td className="px-4 py-3 text-gray-400">Front brake service</td>
+                          </tr>
+                          <tr className="border-b border-gray-800 hover:bg-gray-800">
+                            <td className="px-4 py-3 text-white">2023-05-14</td>
+                            <td className="px-4 py-3 text-white">Tire Rotation</td>
+                            <td className="px-4 py-3 text-white">9,450</td>
+                            <td className="px-4 py-3 text-white">Sarah L.</td>
+                            <td className="px-4 py-3 text-white">N/A</td>
+                            <td className="px-4 py-3 text-gray-400">Balanced all wheels</td>
+                          </tr>
+                          <tr className="hover:bg-gray-800">
+                            <td className="px-4 py-3 text-white">2023-03-02</td>
+                            <td className="px-4 py-3 text-white">Oil Change</td>
+                            <td className="px-4 py-3 text-white">7,120</td>
+                            <td className="px-4 py-3 text-white">Mike J.</td>
+                            <td className="px-4 py-3 text-white">Motul 8100 5W-40</td>
+                            <td className="px-4 py-3 text-gray-400">Replaced air filter</td>
+                          </tr>
+                        </tbody>
+                      </table>
+                    </div>
+                    
+                    <div className="mt-4 flex justify-end">
+                      <button className="apex-button-sm mr-2">
+                        <PlusCircle size={16} className="mr-1" />
+                        Add Record
+                      </button>
+                      <button className="apex-button-sm">
+                        <Download size={16} className="mr-1" />
+                        Export History
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                  <div className="bg-gray-900 rounded-xl p-4 border border-blue-500/20">
+                    <h3 className="text-blue-400 font-orbitron text-lg mb-4">Component Health</h3>
+                    
+                    <div className="space-y-4">
+                      <div className="flex items-center">
+                        <div className="w-32 text-gray-300">Engine</div>
+                        <div className="flex-1">
+                          <div className="w-full bg-gray-700 rounded-full h-2.5">
+                            <div className="bg-green-500 h-2.5 rounded-full" style={{ width: '92%' }}></div>
+                          </div>
+                        </div>
+                        <div className="ml-4 text-white">92%</div>
+                      </div>
+                      
+                      <div className="flex items-center">
+                        <div className="w-32 text-gray-300">Transmission</div>
+                        <div className="flex-1">
+                          <div className="w-full bg-gray-700 rounded-full h-2.5">
+                            <div className="bg-green-500 h-2.5 rounded-full" style={{ width: '88%' }}></div>
+                          </div>
+                        </div>
+                        <div className="ml-4 text-white">88%</div>
+                      </div>
+                      
+                      <div className="flex items-center">
+                        <div className="w-32 text-gray-300">Brake Pads</div>
+                        <div className="flex-1">
+                          <div className="w-full bg-gray-700 rounded-full h-2.5">
+                            <div className="bg-yellow-500 h-2.5 rounded-full" style={{ width: '65%' }}></div>
+                          </div>
+                        </div>
+                        <div className="ml-4 text-white">65%</div>
+                      </div>
+                      
+                      <div className="flex items-center">
+                        <div className="w-32 text-gray-300">Tires</div>
+                        <div className="flex-1">
+                          <div className="w-full bg-gray-700 rounded-full h-2.5">
+                            <div className="bg-yellow-500 h-2.5 rounded-full" style={{ width: '72%' }}></div>
+                          </div>
+                        </div>
+                        <div className="ml-4 text-white">72%</div>
+                      </div>
+                      
+                      <div className="flex items-center">
+                        <div className="w-32 text-gray-300">Battery</div>
+                        <div className="flex-1">
+                          <div className="w-full bg-gray-700 rounded-full h-2.5">
+                            <div className="bg-green-500 h-2.5 rounded-full" style={{ width: '90%' }}></div>
+                          </div>
+                        </div>
+                        <div className="ml-4 text-white">90%</div>
+                      </div>
+                      
+                      <div className="flex items-center">
+                        <div className="w-32 text-gray-300">Suspension</div>
+                        <div className="flex-1">
+                          <div className="w-full bg-gray-700 rounded-full h-2.5">
+                            <div className="bg-green-500 h-2.5 rounded-full" style={{ width: '85%' }}></div>
+                          </div>
+                        </div>
+                        <div className="ml-4 text-white">85%</div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-900 rounded-xl p-4 border border-blue-500/20">
+                    <h3 className="text-blue-400 font-orbitron text-lg mb-4">Service Providers</h3>
+                    
+                    <div className="space-y-4">
+                      <div className="bg-gray-800 p-3 rounded-lg flex items-start">
+                        <div className="w-12 h-12 bg-blue-500/10 flex items-center justify-center rounded-lg">
+                          <Wrench className="h-6 w-6 text-blue-400" />
+                        </div>
+                        <div className="ml-4">
+                          <h4 className="text-white font-medium">Premium Auto Service</h4>
+                          <p className="text-gray-400 text-sm">123 Motorsport Ave, Nashville, TN</p>
+                          <div className="flex items-center mt-1">
+                            <span className="text-yellow-500">★★★★★</span>
+                            <span className="text-xs text-gray-400 ml-1">Trusted Partner</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-gray-800 p-3 rounded-lg flex items-start">
+                        <div className="w-12 h-12 bg-blue-500/10 flex items-center justify-center rounded-lg">
+                          <Droplets className="h-6 w-6 text-blue-400" />
+                        </div>
+                        <div className="ml-4">
+                          <h4 className="text-white font-medium">Elite Detail Studio</h4>
+                          <p className="text-gray-400 text-sm">456 Shine Blvd, Nashville, TN</p>
+                          <div className="flex items-center mt-1">
+                            <span className="text-yellow-500">★★★★☆</span>
+                            <span className="text-xs text-gray-400 ml-1">Ceramic Coating Specialist</span>
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-gray-800 p-3 rounded-lg flex items-start">
+                        <div className="w-12 h-12 bg-blue-500/10 flex items-center justify-center rounded-lg">
+                          <PieChartIcon className="h-6 w-6 text-blue-400" />
+                        </div>
+                        <div className="ml-4">
+                          <h4 className="text-white font-medium">Performance Tuning Inc.</h4>
+                          <p className="text-gray-400 text-sm">789 Horsepower Lane, Nashville, TN</p>
+                          <div className="flex items-center mt-1">
+                            <span className="text-yellow-500">★★★★★</span>
+                            <span className="text-xs text-gray-400 ml-1">ECU Tuning Experts</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+            
+            {/* Gloss Metrics View */}
+            {activeSection === 'gloss' && activeVehicle && (
+              <div className="gloss-view">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                  <div className="bg-gray-900 rounded-xl p-4 border border-blue-500/20 lg:col-span-2">
+                    <div className="flex justify-between items-center mb-4">
+                      <h3 className="text-blue-400 font-orbitron text-lg">Gloss Index History</h3>
+                      <div className="flex items-center">
+                        <span className="text-gray-400 text-sm mr-3">Current: {carMetrics.glossIndex}%</span>
+                        <div className={`px-2 py-1 rounded text-xs ${
+                          carMetrics.glossIndex > 80 ? 'bg-green-500/10 text-green-400' : 
+                          carMetrics.glossIndex > 50 ? 'bg-yellow-500/10 text-yellow-400' : 
+                          'bg-red-500/10 text-red-400'
+                        }`}>
+                          {carMetrics.glossIndex > 80 ? 'Excellent' : 
+                           carMetrics.glossIndex > 50 ? 'Good' : 'Needs Attention'}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="h-64">
+                      <Suspense fallback={<div className="h-full flex items-center justify-center"><RefreshCw className="animate-spin h-10 w-10 text-blue-500" /></div>}>
+                        <GlossTracker vehicle={activeVehicle} />
+                      </Suspense>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-900 rounded-xl p-4 border border-blue-500/20">
+                    <h3 className="text-blue-400 font-orbitron text-lg mb-4">Treatment History</h3>
+                    <div className="space-y-4">
+                      <div className="border-l-2 border-green-500 pl-4 pb-5 relative">
+                        <div className="absolute w-3 h-3 bg-green-500 rounded-full -left-[7px] top-0"></div>
+                        <div className="text-white font-semibold">Ceramic Coating</div>
+                        <div className="text-sm text-gray-400">Applied 3 months ago</div>
+                        <div className="text-sm text-gray-300 mt-1">5-year Ceramic Pro Gold Package</div>
+                      </div>
+                      
+                      <div className="border-l-2 border-blue-500 pl-4 pb-5 relative">
+                        <div className="absolute w-3 h-3 bg-blue-500 rounded-full -left-[7px] top-0"></div>
+                        <div className="text-white font-semibold">Paint Correction</div>
+                        <div className="text-sm text-gray-400">Performed 3 months ago</div>
+                        <div className="text-sm text-gray-300 mt-1">Full paint correction before ceramic coating</div>
+                      </div>
+                      
+                      <div className="border-l-2 border-purple-500 pl-4 pb-5 relative">
+                        <div className="absolute w-3 h-3 bg-purple-500 rounded-full -left-[7px] top-0"></div>
+                        <div className="text-white font-semibold">Full Detail</div>
+                        <div className="text-sm text-gray-400">Performed 2 weeks ago</div>
+                        <div className="text-sm text-gray-300 mt-1">Maintenance wash and detailing</div>
+                      </div>
+                      
+                      <div className="border-l-2 border-gray-500 pl-4 relative">
+                        <div className="absolute w-3 h-3 bg-gray-500 rounded-full -left-[7px] top-0"></div>
+                        <div className="text-white font-semibold">Wash Protocol</div>
+                        <div className="text-sm text-gray-400">Last performed yesterday</div>
+                        <div className="text-sm text-gray-300 mt-1">2-bucket method with Frothe™</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div className="bg-gray-900 rounded-xl p-4 border border-blue-500/20">
+                    <h3 className="text-blue-400 font-orbitron text-lg mb-4">Paint Condition</h3>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="bg-gray-800 p-3 rounded-lg">
+                        <div className="text-sm text-gray-400 mb-1">Swirl Marks</div>
+                        <div className="flex items-center">
+                          <div className="w-full bg-gray-700 rounded-full h-2.5">
+                            <div className="bg-green-500 h-2.5 rounded-full" style={{ width: '5%' }}></div>
+                          </div>
+                          <div className="ml-3 text-white">Minimal</div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-gray-800 p-3 rounded-lg">
+                        <div className="text-sm text-gray-400 mb-1">Scratches</div>
+                        <div className="flex items-center">
+                          <div className="w-full bg-gray-700 rounded-full h-2.5">
+                            <div className="bg-green-500 h-2.5 rounded-full" style={{ width: '8%' }}></div>
+                          </div>
+                          <div className="ml-3 text-white">Minimal</div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-gray-800 p-3 rounded-lg">
+                        <div className="text-sm text-gray-400 mb-1">Water Spots</div>
+                        <div className="flex items-center">
+                          <div className="w-full bg-gray-700 rounded-full h-2.5">
+                            <div className="bg-green-500 h-2.5 rounded-full" style={{ width: '2%' }}></div>
+                          </div>
+                          <div className="ml-3 text-white">None</div>
+                        </div>
+                      </div>
+                      
+                      <div className="bg-gray-800 p-3 rounded-lg">
+                        <div className="text-sm text-gray-400 mb-1">Paint Chips</div>
+                        <div className="flex items-center">
+                          <div className="w-full bg-gray-700 rounded-full h-2.5">
+                            <div className="bg-yellow-500 h-2.5 rounded-full" style={{ width: '15%' }}></div>
+                          </div>
+                          <div className="ml-3 text-white">Few</div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-900 rounded-xl p-4 border border-blue-500/20">
+                    <h3 className="text-blue-400 font-orbitron text-lg mb-4">Protection Status</h3>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300">Ceramic Coating Integrity</span>
+                        <span className="text-green-400 font-medium">Excellent</span>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-2.5 mb-4">
+                        <div className="bg-green-500 h-2.5 rounded-full" style={{ width: '92%' }}></div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300">Hydrophobic Effect</span>
+                        <span className="text-green-400 font-medium">Excellent</span>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-2.5 mb-4">
+                        <div className="bg-green-500 h-2.5 rounded-full" style={{ width: '95%' }}></div>
+                      </div>
+                      
+                      <div className="flex justify-between items-center">
+                        <span className="text-gray-300">UV Protection</span>
+                        <span className="text-green-400 font-medium">Excellent</span>
+                      </div>
+                      <div className="w-full bg-gray-700 rounded-full h-2.5 mb-4">
+                        <div className="bg-green-500 h-2.5 rounded-full" style={{ width: '90%' }}></div>
+                      </div>
+                      
+                      <div className="mt-4">
+                        <div className="text-white mb-2">Next Recommended Treatment:</div>
+                        <div className="bg-blue-500/10 p-3 rounded-lg text-blue-300">
+                          Maintenance wash with Frothe™ in 1 week
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+          </>
+        )}
+      </div>
+      
+      {/* Screen reader announcer */}
+      <div id="announcer" className="sr-only" aria-live="polite"></div>
+      
+      {/* Add Vehicle Modal */}
+      {showAddForm && (
+        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 rounded-xl border border-blue-500/20 p-6 w-full max-w-2xl">
+            <div className="flex justify-between items-center mb-6">
+              <h3 className="text-blue-400 font-orbitron text-xl">Add New Vehicle</h3>
+              <button 
+                onClick={() => setShowAddForm(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <X size={20} />
+              </button>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Make</label>
+                <input 
+                  type="text" 
+                  className="w-full bg-gray-800 text-white border border-gray-700 rounded-md px-3 py-2"
+                  placeholder="e.g. Ferrari"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Model</label>
+                <input 
+                  type="text" 
+                  className="w-full bg-gray-800 text-white border border-gray-700 rounded-md px-3 py-2"
+                  placeholder="e.g. 458 Italia"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Year</label>
+                <input 
+                  type="number" 
+                  className="w-full bg-gray-800 text-white border border-gray-700 rounded-md px-3 py-2"
+                  placeholder="e.g. 2023"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Mileage</label>
+                <input 
+                  type="number" 
+                  className="w-full bg-gray-800 text-white border border-gray-700 rounded-md px-3 py-2"
+                  placeholder="e.g. 10500"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">VIN (Optional)</label>
+                <input 
+                  type="text" 
+                  className="w-full bg-gray-800 text-white border border-gray-700 rounded-md px-3 py-2"
+                  placeholder="Vehicle Identification Number"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-1">Status</label>
+                <select className="w-full bg-gray-800 text-white border border-gray-700 rounded-md px-3 py-2">
+                  <option value="Ready">Ready</option>
+                  <option value="Service Due">Service Due</option>
+                  <option value="In Storage">In Storage</option>
+                </select>
+              </div>
+            </div>
+            
+            <div className="mb-6">
+              <label className="block text-sm text-gray-400 mb-1">Image URL (Optional)</label>
+              <input 
+                type="text" 
+                className="w-full bg-gray-800 text-white border border-gray-700 rounded-md px-3 py-2"
+                placeholder="https://example.com/car-image.jpg"
+              />
+              <p className="text-xs text-gray-500 mt-1">Leave blank to use AI-generated images based on make/model</p>
+            </div>
+            
+            <div className="flex justify-end gap-3">
+              <button 
+                onClick={() => setShowAddForm(false)}
+                className="px-4 py-2 border border-gray-600 text-white rounded-md hover:bg-gray-800"
+              >
+                Cancel
+              </button>
+              <button 
+                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md"
+              >
+                Add Vehicle
+              </button>
+            </div>
           </div>
         </div>
       )}
