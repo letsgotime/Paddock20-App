@@ -464,6 +464,8 @@ const RoutePlannerPage = () => {
   // Weather and conditions data
   const [weatherData, setWeatherData] = useState<any>(null);
   
+
+  
   // Telemetry and driving conditions data
   const [telemetryData, setTelemetryData] = useState<TelemetrySnapshot | null>(null);
   const [telemetryStats, setTelemetryStats] = useState<{
