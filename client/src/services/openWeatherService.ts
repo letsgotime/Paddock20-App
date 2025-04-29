@@ -2,10 +2,10 @@
 const API_KEY = "2379a18ee0e478c88aa7d4aa1df44410";
 const BASE_URL = "https://api.openweathermap.org/data/2.5";
 
-// Get current weather data for a location using local proxy
+// Get current weather data for a location
 export const getWeatherData = async (location: { lat: number; lon: number }, units: 'metric' | 'imperial' = 'imperial') => {
   const response = await fetch(
-    `/api/weather?lat=${location.lat}&lon=${location.lon}&units=${units}`
+    `${BASE_URL}/weather?lat=${location.lat}&lon=${location.lon}&appid=${API_KEY}&units=${units}`
   );
   
   if (!response.ok) {
@@ -15,10 +15,10 @@ export const getWeatherData = async (location: { lat: number; lon: number }, uni
   return await response.json();
 };
 
-// Get one call weather data (current, hourly, daily forecasts) using local proxy
+// Get one call weather data (current, hourly, daily forecasts)
 export const getOneCallData = async (location: { lat: number; lon: number }, units: 'metric' | 'imperial' = 'imperial') => {
   const response = await fetch(
-    `/api/onecall?lat=${location.lat}&lon=${location.lon}&units=${units}&exclude=minutely`
+    `${BASE_URL}/onecall?lat=${location.lat}&lon=${location.lon}&appid=${API_KEY}&units=${units}&exclude=minutely`
   );
   
   if (!response.ok) {
