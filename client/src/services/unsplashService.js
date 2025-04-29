@@ -7,7 +7,7 @@
 const imageCache = new Map();
 
 // Access key from environment variables
-const accessKey = import.meta.env.VITE_UNSPLASH_ACCESS_KEY || "2JgRSbUMLc1H5x1-PH_apKjy8jzGF4KLluer_xCO9kk";
+const accessKey = import.meta.env.VITE_UNSPLASH_ACCESS_KEY || import.meta.env.UNSPLASH_ACCESS_KEY || "2JgRSbUMLc1H5x1-PH_apKjy8jzGF4KLluer_xCO9kk";
 
 // Fallback images for when API fails
 import ferrariImg from '@assets/Ferrari-458-With-HRE-P101-Wheels-By-TAG-Motorsports-2.jpg';
