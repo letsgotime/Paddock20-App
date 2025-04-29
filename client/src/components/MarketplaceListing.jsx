@@ -2,10 +2,11 @@ import React, { useState } from 'react';
 import { 
   Tag, Clock, Shield, ChevronRight, 
   Check, AlertTriangle, ChevronDown, MapPin, 
-  Star, DollarSign, Info, ExternalLink
+  Star, DollarSign, Info, ExternalLink, 
+  Activity, BarChart3, Gauge, Zap
 } from 'lucide-react';
 
-const MarketplaceListing = ({ listing, isAdmin, onEdit, onDelete, expandedByDefault = false }) => {
+const MarketplaceListing = ({ listing, isAdmin, onEdit, onDelete, onViewTelemetry, expandedByDefault = false }) => {
   const [expanded, setExpanded] = useState(expandedByDefault);
   const [showActions, setShowActions] = useState(false);
 
@@ -246,6 +247,78 @@ const MarketplaceListing = ({ listing, isAdmin, onEdit, onDelete, expandedByDefa
               </div>
             </div>
           </div>
+          
+          {/* Key Performance Indicators for Vehicles */}
+          {expanded && listing.type === 'vehicle' && (listing.horsePower || listing.topSpeed || listing.acceleration) && (
+            <div className="mt-6 border-t border-gray-800 pt-6">
+              <h4 className="text-sm font-medium text-gray-400 mb-4 flex items-center">
+                <Activity className="h-4 w-4 mr-2 text-green-500" />
+                Performance Metrics
+              </h4>
+              
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
+                {listing.horsePower && (
+                  <div className="bg-gray-900/50 p-3 rounded-lg">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="text-xs text-gray-400">HORSEPOWER</div>
+                      <Zap className="h-3 w-3 text-amber-500" />
+                    </div>
+                    <div className="text-xl font-bold text-white">{listing.horsePower}</div>
+                    <div className="text-xs text-gray-500">HP</div>
+                  </div>
+                )}
+                
+                {listing.torque && (
+                  <div className="bg-gray-900/50 p-3 rounded-lg">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="text-xs text-gray-400">TORQUE</div>
+                      <Activity className="h-3 w-3 text-blue-500" />
+                    </div>
+                    <div className="text-xl font-bold text-white">{listing.torque}</div>
+                    <div className="text-xs text-gray-500">LB-FT</div>
+                  </div>
+                )}
+                
+                {listing.topSpeed && (
+                  <div className="bg-gray-900/50 p-3 rounded-lg">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="text-xs text-gray-400">TOP SPEED</div>
+                      <Gauge className="h-3 w-3 text-rose-500" />
+                    </div>
+                    <div className="text-xl font-bold text-white">{listing.topSpeed}</div>
+                    <div className="text-xs text-gray-500">MPH</div>
+                  </div>
+                )}
+                
+                {listing.acceleration && (
+                  <div className="bg-gray-900/50 p-3 rounded-lg">
+                    <div className="flex items-center justify-between mb-1">
+                      <div className="text-xs text-gray-400">0-60 MPH</div>
+                      <BarChart3 className="h-3 w-3 text-green-500" />
+                    </div>
+                    <div className="text-xl font-bold text-white">{listing.acceleration}</div>
+                    <div className="text-xs text-gray-500">SECONDS</div>
+                  </div>
+                )}
+              </div>
+              
+              <div className="flex justify-center mt-4">
+                <button 
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    // Call the onViewTelemetry function passed as a prop
+                    if (onViewTelemetry) {
+                      onViewTelemetry(listing.id);
+                    }
+                  }}
+                  className="text-sm px-4 py-2 bg-gradient-to-br from-green-900 to-green-800 text-green-100 rounded-lg hover:from-green-800 hover:to-green-700 transition-colors flex items-center border border-green-700 shadow-md"
+                >
+                  <Activity className="h-4 w-4 mr-2" />
+                  <span>View F1-Style Telemetry</span>
+                </button>
+              </div>
+            </div>
+          )}
           
           <div className="mt-6">
             <h4 className="text-sm font-medium text-gray-400 mb-2">Full Description</h4>
