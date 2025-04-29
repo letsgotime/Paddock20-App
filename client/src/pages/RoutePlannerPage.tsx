@@ -2640,7 +2640,24 @@ const RoutePlannerPage = () => {
                     };
                     
                     console.log("Checklist logged:", checklistLog);
-                    alert("Pre-drive safety checklist completed and logged!");
+                    
+                    // Show toast instead of plain alert
+                    setCheckedItems({
+                      tires: true,
+                      fluids: true,
+                      lights: true,
+                      brakes: true,
+                      weather: true
+                    });
+                    
+                    // Update ready state
+                    setIsReadyToDrive(true);
+                    
+                    // Display styled notification
+                    setShowChecklistCompleteMessage(true);
+                    setTimeout(() => {
+                      setShowChecklistCompleteMessage(false);
+                    }, 5000);
                   }}
                   className="bg-green-600 hover:bg-green-500 text-white px-3 py-2 rounded-lg shadow-md transition-all flex items-center gap-1"
                 >
