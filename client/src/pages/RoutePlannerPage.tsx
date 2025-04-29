@@ -1844,6 +1844,119 @@ const RoutePlannerPage = () => {
             </div>
           </div>
           
+          {/* Vehicle Selection Section */}
+          <div className="bg-gray-900/60 rounded-lg p-4 border border-blue-900/30">
+            <h3 className="text-blue-400 font-orbitron text-xl mb-4">🚗 Vehicle Selection</h3>
+            
+            <div className="mb-6">
+              <label className="block text-gray-300 mb-1">Select Your Vehicle</label>
+              <select
+                value={selectedVehicle}
+                onChange={(e) => setSelectedVehicle(e.target.value)}
+                className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
+              >
+                <option value="">-- Select a Vehicle --</option>
+                <option value="Ferrari 458 Italia">Ferrari 458 Italia</option>
+                <option value="Porsche 911 GT3">Porsche 911 GT3</option>
+                <option value="BMW M3 Competition">BMW M3 Competition</option>
+                <option value="Lamborghini Huracán">Lamborghini Huracán</option>
+                <option value="Mercedes-AMG GT">Mercedes-AMG GT</option>
+                <option value="Audi R8 V10">Audi R8 V10</option>
+                <option value="McLaren 720S">McLaren 720S</option>
+                <option value="Aston Martin Vantage">Aston Martin Vantage</option>
+              </select>
+            </div>
+            
+            <div className="mb-6">
+              <div className="flex items-center justify-between mb-2">
+                <label className="block text-gray-300">Vehicle Performance Settings</label>
+                <div className="flex gap-2">
+                  <div className="px-2 py-1 bg-blue-900/30 text-xs text-blue-400 rounded-lg">{drivingMode} Mode</div>
+                  {tirePressureAdjustment !== 0 && (
+                    <div className="px-2 py-1 bg-blue-900/30 text-xs text-blue-400 rounded-lg">
+                      PSI: {tirePressureAdjustment > 0 ? '+' : ''}{tirePressureAdjustment}
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                {/* Driving Style */}
+                <div>
+                  <label className="block text-gray-300 text-sm mb-1">Driving Mode</label>
+                  <select
+                    value={drivingMode}
+                    onChange={(e) => setDrivingMode(e.target.value)}
+                    className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                  >
+                    <option value="Eco">Eco</option>
+                    <option value="Normal">Normal</option>
+                    <option value="Sport">Sport</option>
+                    <option value="Sport+">Sport+</option>
+                    <option value="Track">Track</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-gray-300 text-sm mb-1">Tire Setup</label>
+                  <select
+                    value={selectedTireSetup}
+                    onChange={(e) => setSelectedTireSetup(e.target.value)}
+                    className="w-full p-2 bg-gray-800 text-white rounded border border-gray-700"
+                  >
+                    <option value="">-- Select Tire Setup --</option>
+                    {Object.keys(tireSetups).map((setup) => (
+                      <option key={setup} value={setup}>{setup}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-gray-300 text-sm mb-1">Tire Pressure Adjustment</label>
+                  <div className="flex items-center">
+                    <input
+                      type="range"
+                      min="-5"
+                      max="5"
+                      step="0.5"
+                      value={tirePressureAdjustment}
+                      onChange={(e) => setTirePressureAdjustment(parseFloat(e.target.value))}
+                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <span className="ml-3 text-white w-10">{tirePressureAdjustment > 0 ? '+' : ''}{tirePressureAdjustment}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-400 mt-1">
+                    <span>-5 PSI</span>
+                    <span>0</span>
+                    <span>+5 PSI</span>
+                  </div>
+                </div>
+                
+                <div>
+                  <label className="block text-gray-300 text-sm mb-1">Torque Adjustment</label>
+                  <div className="flex items-center">
+                    <input
+                      type="range"
+                      min="-20"
+                      max="20"
+                      value={torqueAdjustment}
+                      onChange={(e) => setTorqueAdjustment(parseInt(e.target.value))}
+                      className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                    />
+                    <span className="ml-3 text-white w-10">{torqueAdjustment > 0 ? '+' : ''}{torqueAdjustment}</span>
+                  </div>
+                  <div className="flex justify-between text-xs text-gray-400 mt-1">
+                    <span>-20 ft-lb</span>
+                    <span>0</span>
+                    <span>+20 ft-lb</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
           {/* Pre-Drive Performance Checklist - Now in its own section */}
           <div className="bg-gray-900/60 rounded-lg p-4 border border-green-900/30">
             <div className="flex items-center justify-between mb-2">
