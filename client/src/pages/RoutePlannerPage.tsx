@@ -2610,11 +2610,12 @@ const RoutePlannerPage = () => {
           
           {/* Pre-Drive Performance Checklist - Now in its own section */}
           <div className="bg-gray-900/60 rounded-lg p-4 border border-green-900/30">
-            <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center justify-between mb-4">
               <div className="flex items-center">
                 <span className="text-blue-400 font-orbitron text-xl">🏁 Pre-Drive Checklist</span>
                 <span className="ml-2 bg-green-600 text-xs text-black font-bold px-2 py-0.5 rounded">SAFETY REQUIRED</span>
               </div>
+
               <div className="flex items-center gap-2">
                 <button 
                   onClick={() => {
@@ -2682,6 +2683,52 @@ const RoutePlannerPage = () => {
                 Complete this mandatory safety checklist before starting your {drivePurpose === 'celebration' ? 'celebration ride' : 'performance drive'}.
                 Items are tailored specifically for your {selectedVehicle || 'vehicle'} and current conditions.
               </p>
+              
+              {/* Vehicle Selection - First step of Pre-Drive Checklist */}
+              <div className="mb-6 bg-gradient-to-r from-green-900/30 to-black p-4 rounded-lg border border-green-900/50">
+                <div className="flex items-center justify-between mb-2">
+                  <label className="block text-green-400 font-medium">Vehicle Selection</label>
+                  <span className="text-xs bg-green-600/20 text-green-400 px-2 py-0.5 rounded">REQUIRED</span>
+                </div>
+                <div className="flex gap-3 items-center">
+                  <select
+                    value={selectedVehicle}
+                    onChange={(e) => setSelectedVehicle(e.target.value)}
+                    className="flex-grow p-2 bg-gray-800 text-white rounded border border-green-700"
+                  >
+                    <option value="">Select your vehicle</option>
+                    <option value="Ferrari F8 Tributo">Ferrari F8 Tributo</option>
+                    <option value="Porsche 911 Carrera S">Porsche 911 Carrera S</option>
+                    <option value="BMW M4 G82">BMW M4 G82</option>
+                    
+                    {/* Custom vehicles */}
+                    {Object.keys(customVehicles).length > 0 && (
+                      <optgroup label="Your Vehicles">
+                        {Object.keys(customVehicles).map(vehicle => (
+                          <option key={vehicle} value={vehicle}>{vehicle}</option>
+                        ))}
+                      </optgroup>
+                    )}
+                  </select>
+                  <button
+                    onClick={() => setShowAddVehicleForm(true)}
+                    className="bg-green-800 hover:bg-green-700 text-white p-2 rounded-lg flex items-center gap-1"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6v6m0 0v6m0-6h6m-6 0H6" />
+                    </svg>
+                    <span>Add</span>
+                  </button>
+                </div>
+                {!selectedVehicle && 
+                  <p className="text-amber-400 text-xs mt-1">Select a vehicle to automatically adjust checklist requirements</p>
+                }
+                {selectedVehicle && 
+                  <p className="text-green-400 text-xs mt-1">
+                    {selectedVehicle} selected - checklist updated with vehicle-specific requirements
+                  </p>
+                }
+              </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="bg-black/40 p-3 rounded-lg border border-green-900/30 shadow-inner transition-all hover:border-green-500/30 group relative">
@@ -3172,32 +3219,7 @@ const RoutePlannerPage = () => {
                 F1-Grade Performance Telemetry
               </h3>
               
-              {/* Vehicle Selection - Top Priority */}
-              <div className="mb-4 bg-gradient-to-r from-blue-900/30 to-gray-900 p-3 rounded-lg border border-blue-900/50">
-                <label className="block text-blue-400 font-medium mb-1">Vehicle Selection</label>
-                <select
-                  value={selectedVehicle}
-                  onChange={(e) => setSelectedVehicle(e.target.value)}
-                  className="w-full p-2 bg-gray-800 text-white rounded border border-blue-700"
-                >
-                  <option value="">Select your vehicle</option>
-                  <option value="Ferrari F8 Tributo">Ferrari F8 Tributo</option>
-                  <option value="Porsche 911 Carrera S">Porsche 911 Carrera S</option>
-                  <option value="BMW M4 G82">BMW M4 G82</option>
-                  
-                  {/* Custom vehicles */}
-                  {Object.keys(customVehicles).length > 0 && (
-                    <optgroup label="Your Vehicles">
-                      {Object.keys(customVehicles).map(vehicle => (
-                        <option key={vehicle} value={vehicle}>{vehicle}</option>
-                      ))}
-                    </optgroup>
-                  )}
-                </select>
-                {!selectedVehicle && 
-                  <p className="text-amber-400 text-xs mt-1">Select a vehicle for accurate telemetry and drive settings</p>
-                }
-              </div>
+              {/* Vehicle Selection removed from here - now in Pre-Drive Checklist */}
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">                
                 {/* Driving Style */}
