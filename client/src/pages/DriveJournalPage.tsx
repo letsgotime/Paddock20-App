@@ -2,6 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
 import MoodEnergyTracker from '../components/MoodEnergyTracker';
 import RouteAnalytics from '../components/RouteAnalytics';
+import EnhancedDriveTelemetry from '../components/EnhancedDriveTelemetry';
+import { VehicleData, retrieveStoredVehicleData, getVehicleByName } from '../services/vehicleDataService';
 
 // Define interfaces for type safety
 interface MoodEnergy {
@@ -294,18 +296,97 @@ const DriveJournalPage: React.FC = () => {
     const pendingDrive = localStorage.getItem('pendingDriveJournal');
     
     if (pendingDrive) {
-      // In a real app, we would process this data and save it to the database
-      console.log("Found pending drive from Route Planner:", JSON.parse(pendingDrive));
-      // Clear the pending drive after processing
-      localStorage.removeItem('pendingDriveJournal');
-    }
-    
-    // Load mock data
-    setDriveEntries(mockDriveEntries);
-    
-    // If there are entries, select the first one by default
-    if (mockDriveEntries.length > 0) {
-      setSelectedDriveId(mockDriveEntries[0].id);
+      try {
+        const parsedDrive = JSON.parse(pendingDrive);
+        console.log("Found pending drive from Route Planner:", parsedDrive);
+        
+        // Create a new drive entry from the pending data
+        const newDriveEntry: DriveEntry = {
+          id: `${Date.now()}`,
+          date: new Date().toISOString(),
+          title: parsedDrive.routeTitle || `${parsedDrive.startLocation} to ${parsedDrive.endLocation}`,
+          startLocation: parsedDrive.startLocation,
+          endLocation: parsedDrive.endLocation,
+          waypoints: parsedDrive.waypoints || [],
+          vehicle: parsedDrive.vehicle,
+          distanceMiles: parsedDrive.distance || 0,
+          durationMinutes: parsedDrive.duration || 0,
+          weatherConditions: parsedDrive.weatherConditions || {},
+          routeCustomizations: parsedDrive.routeCustomizations || {},
+          performanceSettings: {
+            tirePressureAdjustment: parsedDrive.performanceSettings?.tirePressureAdjustment || 0,
+            torqueAdjustment: parsedDrive.performanceSettings?.torqueAdjustment || 0,
+            drivingMode: parsedDrive.performanceSettings?.drivingMode || "Normal",
+            vehicleSpecs: parsedDrive.vehicleSpecs || {},
+            tireSetup: parsedDrive.tireSetup || {},
+            drivingProfile: parsedDrive.drivingProfile || {},
+            curvatureMetrics: parsedDrive.performanceSettings?.curvatureMetrics || {
+              intensity: 3,
+              trnRange: "4-6 TRN/km (Moderate)"
+            }
+          },
+          pointsOfInterest: parsedDrive.pointsOfInterest || {
+            events: [],
+            culturalSpots: []
+          },
+          notes: `Auto-generated from Route Planner. ${parsedDrive.vehicle} journey with a ${parsedDrive.performanceSettings?.drivingMode || "Normal"} driving mode.`,
+          photos: [],
+          rating: 0,
+          isFromRoutePlanner: true,
+          // Initialize mood and energy data based on drive profile
+          moodEnergy: {
+            mood: 8,
+            energy: 8,
+            focus: 8,
+            confidence: 8,
+            comfort: 8,
+            trackFamiliarity: 5,
+            excitementFactor: 8,
+            stressLevel: 3,
+            timestamps: {
+              "0": { mood: 8, energy: 8, note: "Starting the drive" }
+            }
+          },
+          // Initialize altitude and route characteristics with default values
+          // These will be populated with real data during the drive
+          altitudeData: parsedDrive.altitudeData || {
+            maxAltitude: 0,
+            minAltitude: 0,
+            totalAscent: 0,
+            totalDescent: 0,
+            altitudePoints: []
+          },
+          routeCharacteristics: parsedDrive.routeCharacteristics || {
+            totalTurns: 0,
+            sharpTurns: 0,
+            straightSections: 0,
+            hillClimbs: 0,
+            descents: 0
+          }
+        };
+        
+        // Add the new entry to the beginning of the list
+        setDriveEntries(prevEntries => [newDriveEntry, ...prevEntries]);
+        
+        // Select the new entry
+        setSelectedDriveId(newDriveEntry.id);
+        
+        // Show a confirmation message
+        alert(`Drive information successfully transferred from Route Planner! You can now edit and complete the drive details.`);
+        
+        // Clear the pending drive after processing
+        localStorage.removeItem('pendingDriveJournal');
+      } catch (error) {
+        console.error("Error processing pending drive:", error);
+      }
+    } else {
+      // If no pending drive, load mock data
+      setDriveEntries(mockDriveEntries);
+      
+      // If there are entries, select the first one by default
+      if (mockDriveEntries.length > 0) {
+        setSelectedDriveId(mockDriveEntries[0].id);
+      }
     }
   }, []);
   

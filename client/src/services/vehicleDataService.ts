@@ -1,593 +1,581 @@
-import supabase from './supabaseClient';
-import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+// Vehicle Data Service
+// This service handles the flow of vehicle data between components
 
-// Define vehicle data types
-export interface Vehicle {
-  id: number;
-  userId: number;
+// Define vehicle data interfaces
+export interface VehicleSpecs {
   make: string;
   model: string;
   year: number;
-  trim?: string;
-  color?: string;
-  vinLast6?: string;
-  nickname?: string;
-  imageUrl?: string;
-  mileage?: number;
-  notes?: string;
-  purchaseDate?: string;
-  purchasePrice?: number;
+  engine: string;
+  horsepower: number;
+  torque: number;
+  transmission: string;
+  drivetrain: string;
+  weight: number;
+  acceleration: number; // 0-60mph in seconds
+  topSpeed: number;
+  fuelEfficiency?: number;
+  range?: number;
+  color: string;
   vin?: string;
-  licensePlate?: string;
-  insurance?: string;
-  registrationExpiry?: string;
-  gallery?: VehicleImage[];
 }
 
-export interface VehicleImage {
-  id: number;
-  vehicleId: number;
-  imageUrl: string;
-  description?: string;
-  category: 'delivery' | 'modification' | 'detail' | 'general' | 'sale';
-  dateAdded: string;
-  isFeatured?: boolean;
-}
-
-export interface VehicleMod {
-  id: number;
-  vehicleId: number;
-  name: string;
-  type: string;
+export interface TireSetup {
+  brand: string;
+  model: string;
+  type: string; // e.g., "Summer", "All-Season", "Performance"
+  frontSize: string;
+  rearSize: string;
+  recommendedPressureFront: number;
+  recommendedPressureRear: number;
+  currentPressureFront: number;
+  currentPressureRear: number;
+  treadDepthFront: number;
+  treadDepthRear: number;
   installDate?: string;
-  installedBy?: string;
-  cost?: number;
-  description?: string;
-  images?: string[];
-  beforeImages?: string[];
-  afterImages?: string[];
-  status: 'planned' | 'in_progress' | 'completed';
-  category?: 'performance' | 'appearance' | 'utility' | 'electronics' | 'other';
-  warranty?: string;
-  partNumbers?: string[];
+  mileage?: number;
 }
 
-export interface VehicleTire {
-  id: number;
-  vehicleId: number;
-  brand?: string;
-  model?: string;
-  type?: string;
-  frontSize?: string;
-  rearSize?: string;
-  speedRating?: string;
-  loadRating?: string;
-  dateInstalled?: string;
-  datePurchased?: string;
-  mileage?: number;
-  notes?: string;
-  images?: string[];
-  currentTreadDepthFL?: number;
-  currentTreadDepthFR?: number;
-  currentTreadDepthRL?: number;
-  currentTreadDepthRR?: number;
-  pressureFL?: number;
-  pressureFR?: number;
-  pressureRL?: number;
-  pressureRR?: number;
+export interface VehicleModification {
+  id: string;
+  name: string;
+  category: string; // e.g., "Performance", "Cosmetic", "Functional"
+  description: string;
+  installDate?: string;
+  cost?: number;
+  provider?: string;
+  impact?: {
+    horsepower?: number;
+    torque?: number;
+    weight?: number;
+    handling?: number;
+    aesthetics?: number;
+    acceleration?: number; // Time reduction in 0-60 (negative value means faster)
+  };
 }
 
 export interface MaintenanceRecord {
-  id: number;
-  vehicleId: number;
-  serviceType: string;
-  serviceDate: string;
-  mileage?: number;
-  serviceProvider?: string;
+  id: string;
+  type: string; // e.g., "Oil Change", "Tire Rotation", "Brake Service"
+  date: string;
+  mileage: number;
+  description: string;
   cost?: number;
-  description?: string;
-  receipts?: string[];
-  notes?: string;
+  provider?: string;
+  parts?: string[];
+  nextServiceDue?: {
+    date?: string;
+    mileage?: number;
+  };
 }
 
-export interface GlossTracking {
-  id: number;
-  vehicleId: number;
-  lastDetailDate?: string;
-  nextDetailDate?: string;
-  detailFrequency?: 'weekly' | 'biweekly' | 'monthly' | 'quarterly' | 'yearly';
-  currentProtection?: string;
-  notes?: string;
+export interface DrivingProfile {
+  mode: string; // e.g., "Normal", "Sport", "Track", "Eco", "Comfort"
+  throttleResponse: number; // Scale 1-10
+  suspensionStiffness: number; // Scale 1-10
+  steeringWeight: number; // Scale 1-10
+  transmissionSettings: string; // e.g., "Auto", "Manual", "Sport Auto"
+  exhaustSettings?: string; // e.g., "Quiet", "Sport", "Race"
+  tractionControl: number; // Scale 1-10 (10 being most intrusive)
+  stabilityControl: number; // Scale 1-10 (10 being most intrusive)
+  launchControl?: boolean;
+  autoBlip?: boolean; // For downshifts
 }
 
-export interface Equipment {
-  id: number;
-  vehicleId: number;
+export interface VehicleData {
+  id: string;
   name: string;
-  type: 'detailing' | 'tools' | 'emergency' | 'accessories' | 'other';
-  brand?: string;
-  model?: string;
-  purchaseDate?: string;
-  cost?: number;
-  location?: string;  // where it's stored
-  condition?: 'new' | 'good' | 'used' | 'needs_replacement';
-  notes?: string;
-  images?: string[];
-  lastUsedDate?: string;
-  isConsumable?: boolean;
-  stockLevel?: number;  // for consumables
-  link?: string;        // URL to purchase/info
-  warranty?: string;    // Warranty information
-}
-
-// Define the store interface
-interface VehicleStore {
-  vehicles: Vehicle[];
-  mods: VehicleMod[];
-  tires: VehicleTire[];
+  specs: VehicleSpecs;
+  tireSetup: TireSetup;
+  modifications: VehicleModification[];
   maintenanceRecords: MaintenanceRecord[];
-  glossTracking: GlossTracking[];
-  equipment: Equipment[];
-  
-  // Loading states
-  isLoading: boolean;
-  error: string | null;
-  
-  // Actions
-  loadVehicles: () => Promise<void>;
-  loadVehicleDetails: (vehicleId: number) => Promise<void>;
-  addVehicle: (vehicle: Omit<Vehicle, 'id'>) => Promise<Vehicle | null>;
-  updateVehicle: (id: number, vehicle: Partial<Vehicle>) => Promise<Vehicle | null>;
-  deleteVehicle: (id: number) => Promise<boolean>;
-  
-  // Mods management
-  addMod: (mod: Omit<VehicleMod, 'id'>) => Promise<VehicleMod | null>;
-  updateMod: (id: number, mod: Partial<VehicleMod>) => Promise<VehicleMod | null>;
-  deleteMod: (id: number) => Promise<boolean>;
-  
-  // Tire management
-  getTiresByVehicleId: (vehicleId: number) => VehicleTire[];
-  addTire: (tire: Omit<VehicleTire, 'id'>) => Promise<VehicleTire | null>;
-  updateTire: (id: number, tire: Partial<VehicleTire>) => Promise<VehicleTire | null>;
-  deleteTire: (id: number) => Promise<boolean>;
-  
-  // Maintenance management
-  getMaintenanceRecordsByVehicleId: (vehicleId: number) => MaintenanceRecord[];
-  addMaintenanceRecord: (record: Omit<MaintenanceRecord, 'id'>) => Promise<MaintenanceRecord | null>;
-  updateMaintenanceRecord: (id: number, record: Partial<MaintenanceRecord>) => Promise<MaintenanceRecord | null>;
-  deleteMaintenanceRecord: (id: number) => Promise<boolean>;
-  
-  // Gloss tracking
-  getGlossTrackingByVehicleId: (vehicleId: number) => GlossTracking | null;
-  updateGlossTracking: (id: number, tracking: Partial<GlossTracking>) => Promise<GlossTracking | null>;
-  
-  // Equipment management
-  getEquipmentByVehicleId: (vehicleId: number) => Equipment[];
-  getEquipmentByType: (type: Equipment['type']) => Equipment[];
-  addEquipment: (equipment: Omit<Equipment, 'id'>) => Promise<Equipment | null>;
-  updateEquipment: (id: number, equipment: Partial<Equipment>) => Promise<Equipment | null>;
-  deleteEquipment: (id: number) => Promise<boolean>;
+  drivingProfiles: { [key: string]: DrivingProfile };
+  defaultDrivingProfile: string;
+  lastService?: {
+    date: string;
+    mileage: number;
+    type: string;
+  };
+  alertsAndWarnings?: string[];
+  notes?: string;
 }
 
-// Create the store
-const useVehicleStore = create<VehicleStore>((set, get) => ({
-  vehicles: [],
-  mods: [],
-  tires: [],
-  maintenanceRecords: [],
-  glossTracking: [],
-  isLoading: false,
-  error: null,
-  
-  // Load all vehicles for the current user
-  loadVehicles: async () => {
-    set({ isLoading: true, error: null });
-    try {
-      const { data, error } = await supabase
-        .from('vehicles')
-        .select('*')
-        .order('make', { ascending: true });
-      
-      if (error) throw new Error(error.message);
-      set({ vehicles: data || [], isLoading: false });
-    } catch (error) {
-      console.error('Error loading vehicles:', error);
-      set({ error: error.message, isLoading: false });
+// Mock vehicle data - in a real app this would come from a database
+const vehicleDatabase: VehicleData[] = [
+  {
+    id: "v1",
+    name: "Ferrari F8 Tributo",
+    specs: {
+      make: "Ferrari",
+      model: "F8 Tributo",
+      year: 2022,
+      engine: "3.9L Twin-Turbo V8",
+      horsepower: 710,
+      torque: 568,
+      transmission: "7-Speed Dual-Clutch",
+      drivetrain: "RWD",
+      weight: 3164,
+      acceleration: 2.9,
+      topSpeed: 211,
+      color: "Rosso Corsa",
+      vin: "ZFF92LMA6M0270178"
+    },
+    tireSetup: {
+      brand: "Michelin",
+      model: "Pilot Sport Cup 2",
+      type: "Ultra-High Performance",
+      frontSize: "245/35 ZR20",
+      rearSize: "305/30 ZR20",
+      recommendedPressureFront: 32,
+      recommendedPressureRear: 34,
+      currentPressureFront: 32,
+      currentPressureRear: 34,
+      treadDepthFront: 5.8,
+      treadDepthRear: 6.2,
+      installDate: "2023-06-15",
+      mileage: 2500
+    },
+    modifications: [
+      {
+        id: "mod1",
+        name: "Novitec Carbon Fiber Aero Kit",
+        category: "Performance",
+        description: "Front splitter, side skirts, and rear diffuser in carbon fiber",
+        installDate: "2023-08-10",
+        cost: 12500,
+        provider: "Exotic Car Specialists",
+        impact: {
+          weight: -15,
+          handling: 8
+        }
+      },
+      {
+        id: "mod2",
+        name: "Novitec Sport Exhaust System",
+        category: "Performance",
+        description: "Stainless steel sport exhaust with carbon fiber tips",
+        installDate: "2023-08-12",
+        cost: 8750,
+        provider: "Exotic Car Specialists",
+        impact: {
+          horsepower: 15,
+          torque: 12
+        }
+      }
+    ],
+    maintenanceRecords: [
+      {
+        id: "maint1",
+        type: "Oil Change",
+        date: "2023-11-05",
+        mileage: 5250,
+        description: "Full synthetic oil change with filter",
+        cost: 950,
+        provider: "Ferrari of Nashville",
+        nextServiceDue: {
+          mileage: 11250
+        }
+      },
+      {
+        id: "maint2",
+        type: "Annual Service",
+        date: "2023-11-05",
+        mileage: 5250,
+        description: "Annual service including fluid checks, software updates, and inspection",
+        cost: 2250,
+        provider: "Ferrari of Nashville",
+        nextServiceDue: {
+          date: "2024-11-05"
+        }
+      }
+    ],
+    drivingProfiles: {
+      "Normal": {
+        mode: "Normal",
+        throttleResponse: 6,
+        suspensionStiffness: 5,
+        steeringWeight: 5,
+        transmissionSettings: "Auto",
+        exhaustSettings: "Quiet",
+        tractionControl: 7,
+        stabilityControl: 7,
+        launchControl: false,
+        autoBlip: true
+      },
+      "Sport": {
+        mode: "Sport",
+        throttleResponse: 8,
+        suspensionStiffness: 7,
+        steeringWeight: 7,
+        transmissionSettings: "Sport Auto",
+        exhaustSettings: "Sport",
+        tractionControl: 5,
+        stabilityControl: 5,
+        launchControl: true,
+        autoBlip: true
+      },
+      "Race": {
+        mode: "Race",
+        throttleResponse: 10,
+        suspensionStiffness: 10,
+        steeringWeight: 9,
+        transmissionSettings: "Manual",
+        exhaustSettings: "Race",
+        tractionControl: 3,
+        stabilityControl: 3,
+        launchControl: true,
+        autoBlip: true
+      },
+      "Wet": {
+        mode: "Wet",
+        throttleResponse: 5,
+        suspensionStiffness: 4,
+        steeringWeight: 6,
+        transmissionSettings: "Auto",
+        exhaustSettings: "Quiet",
+        tractionControl: 10,
+        stabilityControl: 10,
+        launchControl: false,
+        autoBlip: true
+      }
+    },
+    defaultDrivingProfile: "Sport",
+    lastService: {
+      date: "2023-11-05",
+      mileage: 5250,
+      type: "Annual Service"
+    },
+    alertsAndWarnings: [
+      "Recommended tire rotation at 8,000 miles"
+    ]
+  },
+  {
+    id: "v2",
+    name: "Porsche 911 Carrera S",
+    specs: {
+      make: "Porsche",
+      model: "911 Carrera S",
+      year: 2023,
+      engine: "3.0L Twin-Turbo Flat-6",
+      horsepower: 443,
+      torque: 390,
+      transmission: "8-Speed PDK",
+      drivetrain: "RWD",
+      weight: 3382,
+      acceleration: 3.5,
+      topSpeed: 191,
+      color: "GT Silver Metallic",
+      vin: "WP0AB2A99LS227735"
+    },
+    tireSetup: {
+      brand: "Pirelli",
+      model: "P Zero",
+      type: "Ultra-High Performance",
+      frontSize: "245/35 ZR20",
+      rearSize: "305/30 ZR21",
+      recommendedPressureFront: 33,
+      recommendedPressureRear: 36,
+      currentPressureFront: 33,
+      currentPressureRear: 36,
+      treadDepthFront: 7.2,
+      treadDepthRear: 7.5,
+      installDate: "2023-03-20",
+      mileage: 1200
+    },
+    modifications: [
+      {
+        id: "mod1",
+        name: "Porsche Sport Exhaust (PSE)",
+        category: "Performance",
+        description: "Factory sport exhaust with switchable valves",
+        installDate: "2023-03-20",
+        cost: 3490,
+        provider: "Porsche of Nashville",
+        impact: {
+          horsepower: 5,
+          torque: 7
+        }
+      },
+      {
+        id: "mod2",
+        name: "Sport Chrono Package",
+        category: "Performance",
+        description: "Includes Sport+ mode, launch control, and dynamic drivetrain mounts",
+        installDate: "2023-03-20",
+        cost: 2790,
+        provider: "Porsche of Nashville",
+        impact: {
+          // Added acceleration as custom property
+          handling: 7
+        }
+      }
+    ],
+    maintenanceRecords: [
+      {
+        id: "maint1",
+        type: "Break-In Service",
+        date: "2023-06-15",
+        mileage: 2000,
+        description: "Initial service including oil change and multi-point inspection",
+        cost: 650,
+        provider: "Porsche of Nashville",
+        nextServiceDue: {
+          mileage: 10000
+        }
+      }
+    ],
+    drivingProfiles: {
+      "Normal": {
+        mode: "Normal",
+        throttleResponse: 5,
+        suspensionStiffness: 5,
+        steeringWeight: 5,
+        transmissionSettings: "Auto",
+        exhaustSettings: "Normal",
+        tractionControl: 8,
+        stabilityControl: 8,
+        launchControl: false,
+        autoBlip: true
+      },
+      "Sport": {
+        mode: "Sport",
+        throttleResponse: 8,
+        suspensionStiffness: 7,
+        steeringWeight: 6,
+        transmissionSettings: "Sport Auto",
+        exhaustSettings: "Sport",
+        tractionControl: 6,
+        stabilityControl: 6,
+        launchControl: false,
+        autoBlip: true
+      },
+      "Sport+": {
+        mode: "Sport+",
+        throttleResponse: 10,
+        suspensionStiffness: 9,
+        steeringWeight: 8,
+        transmissionSettings: "Sport Auto",
+        exhaustSettings: "Sport",
+        tractionControl: 4,
+        stabilityControl: 4,
+        launchControl: true,
+        autoBlip: true
+      },
+      "Individual": {
+        mode: "Individual",
+        throttleResponse: 9,
+        suspensionStiffness: 6,
+        steeringWeight: 7,
+        transmissionSettings: "Sport Auto",
+        exhaustSettings: "Sport",
+        tractionControl: 5,
+        stabilityControl: 5,
+        launchControl: true,
+        autoBlip: true
+      }
+    },
+    defaultDrivingProfile: "Sport",
+    lastService: {
+      date: "2023-06-15",
+      mileage: 2000,
+      type: "Break-In Service"
     }
-  },
-  
-  // Load all details for a specific vehicle
-  loadVehicleDetails: async (vehicleId: number) => {
-    set({ isLoading: true, error: null });
-    try {
-      // Load mods
-      const { data: modsData, error: modsError } = await supabase
-        .from('vehicle_mods')
-        .select('*')
-        .eq('vehicleId', vehicleId);
-      
-      if (modsError) throw new Error(modsError.message);
-      
-      // Load tires
-      const { data: tiresData, error: tiresError } = await supabase
-        .from('vehicle_tires')
-        .select('*')
-        .eq('vehicleId', vehicleId);
-      
-      if (tiresError) throw new Error(tiresError.message);
-      
-      // Load maintenance records
-      const { data: maintenanceData, error: maintenanceError } = await supabase
-        .from('maintenance_records')
-        .select('*')
-        .eq('vehicleId', vehicleId)
-        .order('serviceDate', { ascending: false });
-      
-      if (maintenanceError) throw new Error(maintenanceError.message);
-      
-      // Load gloss tracking
-      const { data: glossData, error: glossError } = await supabase
-        .from('gloss_tracking')
-        .select('*')
-        .eq('vehicleId', vehicleId);
-      
-      if (glossError) throw new Error(glossError.message);
-      
-      set({ 
-        mods: modsData || [], 
-        tires: tiresData || [], 
-        maintenanceRecords: maintenanceData || [],
-        glossTracking: glossData || [],
-        isLoading: false 
-      });
-    } catch (error) {
-      console.error('Error loading vehicle details:', error);
-      set({ error: error.message, isLoading: false });
-    }
-  },
-  
-  // Add a new vehicle
-  addVehicle: async (vehicle) => {
-    set({ isLoading: true, error: null });
-    try {
-      const { data, error } = await supabase
-        .from('vehicles')
-        .insert([vehicle])
-        .select()
-        .single();
-      
-      if (error) throw new Error(error.message);
-      
-      set(state => ({ 
-        vehicles: [...state.vehicles, data],
-        isLoading: false 
-      }));
-      
-      return data;
-    } catch (error) {
-      console.error('Error adding vehicle:', error);
-      set({ error: error.message, isLoading: false });
-      return null;
-    }
-  },
-  
-  // Update an existing vehicle
-  updateVehicle: async (id, vehicle) => {
-    set({ isLoading: true, error: null });
-    try {
-      const { data, error } = await supabase
-        .from('vehicles')
-        .update(vehicle)
-        .eq('id', id)
-        .select()
-        .single();
-      
-      if (error) throw new Error(error.message);
-      
-      set(state => ({
-        vehicles: state.vehicles.map(v => v.id === id ? { ...v, ...data } : v),
-        isLoading: false
-      }));
-      
-      return data;
-    } catch (error) {
-      console.error('Error updating vehicle:', error);
-      set({ error: error.message, isLoading: false });
-      return null;
-    }
-  },
-  
-  // Delete a vehicle
-  deleteVehicle: async (id) => {
-    set({ isLoading: true, error: null });
-    try {
-      const { error } = await supabase
-        .from('vehicles')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw new Error(error.message);
-      
-      set(state => ({
-        vehicles: state.vehicles.filter(v => v.id !== id),
-        isLoading: false
-      }));
-      
-      return true;
-    } catch (error) {
-      console.error('Error deleting vehicle:', error);
-      set({ error: error.message, isLoading: false });
-      return false;
-    }
-  },
-  
-  // Add a new modification
-  addMod: async (mod) => {
-    set({ isLoading: true, error: null });
-    try {
-      const { data, error } = await supabase
-        .from('vehicle_mods')
-        .insert([mod])
-        .select()
-        .single();
-      
-      if (error) throw new Error(error.message);
-      
-      set(state => ({ 
-        mods: [...state.mods, data],
-        isLoading: false 
-      }));
-      
-      return data;
-    } catch (error) {
-      console.error('Error adding modification:', error);
-      set({ error: error.message, isLoading: false });
-      return null;
-    }
-  },
-  
-  // Update an existing modification
-  updateMod: async (id, mod) => {
-    set({ isLoading: true, error: null });
-    try {
-      const { data, error } = await supabase
-        .from('vehicle_mods')
-        .update(mod)
-        .eq('id', id)
-        .select()
-        .single();
-      
-      if (error) throw new Error(error.message);
-      
-      set(state => ({
-        mods: state.mods.map(m => m.id === id ? { ...m, ...data } : m),
-        isLoading: false
-      }));
-      
-      return data;
-    } catch (error) {
-      console.error('Error updating modification:', error);
-      set({ error: error.message, isLoading: false });
-      return null;
-    }
-  },
-  
-  // Delete a modification
-  deleteMod: async (id) => {
-    set({ isLoading: true, error: null });
-    try {
-      const { error } = await supabase
-        .from('vehicle_mods')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw new Error(error.message);
-      
-      set(state => ({
-        mods: state.mods.filter(m => m.id !== id),
-        isLoading: false
-      }));
-      
-      return true;
-    } catch (error) {
-      console.error('Error deleting modification:', error);
-      set({ error: error.message, isLoading: false });
-      return false;
-    }
-  },
-  
-  // Get tires by vehicle ID
-  getTiresByVehicleId: (vehicleId) => {
-    return get().tires.filter(tire => tire.vehicleId === vehicleId);
-  },
-  
-  // Add a new tire
-  addTire: async (tire) => {
-    set({ isLoading: true, error: null });
-    try {
-      const { data, error } = await supabase
-        .from('vehicle_tires')
-        .insert([tire])
-        .select()
-        .single();
-      
-      if (error) throw new Error(error.message);
-      
-      set(state => ({ 
-        tires: [...state.tires, data],
-        isLoading: false 
-      }));
-      
-      return data;
-    } catch (error) {
-      console.error('Error adding tire:', error);
-      set({ error: error.message, isLoading: false });
-      return null;
-    }
-  },
-  
-  // Update an existing tire
-  updateTire: async (id, tire) => {
-    set({ isLoading: true, error: null });
-    try {
-      const { data, error } = await supabase
-        .from('vehicle_tires')
-        .update(tire)
-        .eq('id', id)
-        .select()
-        .single();
-      
-      if (error) throw new Error(error.message);
-      
-      set(state => ({
-        tires: state.tires.map(t => t.id === id ? { ...t, ...data } : t),
-        isLoading: false
-      }));
-      
-      return data;
-    } catch (error) {
-      console.error('Error updating tire:', error);
-      set({ error: error.message, isLoading: false });
-      return null;
-    }
-  },
-  
-  // Delete a tire
-  deleteTire: async (id) => {
-    set({ isLoading: true, error: null });
-    try {
-      const { error } = await supabase
-        .from('vehicle_tires')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw new Error(error.message);
-      
-      set(state => ({
-        tires: state.tires.filter(t => t.id !== id),
-        isLoading: false
-      }));
-      
-      return true;
-    } catch (error) {
-      console.error('Error deleting tire:', error);
-      set({ error: error.message, isLoading: false });
-      return false;
-    }
-  },
-  
-  // Get maintenance records by vehicle ID
-  getMaintenanceRecordsByVehicleId: (vehicleId) => {
-    return get().maintenanceRecords.filter(record => record.vehicleId === vehicleId);
-  },
-  
-  // Add a new maintenance record
-  addMaintenanceRecord: async (record) => {
-    set({ isLoading: true, error: null });
-    try {
-      const { data, error } = await supabase
-        .from('maintenance_records')
-        .insert([record])
-        .select()
-        .single();
-      
-      if (error) throw new Error(error.message);
-      
-      set(state => ({ 
-        maintenanceRecords: [...state.maintenanceRecords, data],
-        isLoading: false 
-      }));
-      
-      return data;
-    } catch (error) {
-      console.error('Error adding maintenance record:', error);
-      set({ error: error.message, isLoading: false });
-      return null;
-    }
-  },
-  
-  // Update an existing maintenance record
-  updateMaintenanceRecord: async (id, record) => {
-    set({ isLoading: true, error: null });
-    try {
-      const { data, error } = await supabase
-        .from('maintenance_records')
-        .update(record)
-        .eq('id', id)
-        .select()
-        .single();
-      
-      if (error) throw new Error(error.message);
-      
-      set(state => ({
-        maintenanceRecords: state.maintenanceRecords.map(r => r.id === id ? { ...r, ...data } : r),
-        isLoading: false
-      }));
-      
-      return data;
-    } catch (error) {
-      console.error('Error updating maintenance record:', error);
-      set({ error: error.message, isLoading: false });
-      return null;
-    }
-  },
-  
-  // Delete a maintenance record
-  deleteMaintenanceRecord: async (id) => {
-    set({ isLoading: true, error: null });
-    try {
-      const { error } = await supabase
-        .from('maintenance_records')
-        .delete()
-        .eq('id', id);
-      
-      if (error) throw new Error(error.message);
-      
-      set(state => ({
-        maintenanceRecords: state.maintenanceRecords.filter(r => r.id !== id),
-        isLoading: false
-      }));
-      
-      return true;
-    } catch (error) {
-      console.error('Error deleting maintenance record:', error);
-      set({ error: error.message, isLoading: false });
-      return false;
-    }
-  },
-  
-  // Get gloss tracking by vehicle ID
-  getGlossTrackingByVehicleId: (vehicleId) => {
-    const tracking = get().glossTracking.find(gt => gt.vehicleId === vehicleId);
-    return tracking || null;
-  },
-  
-  // Update gloss tracking
-  updateGlossTracking: async (id, tracking) => {
-    set({ isLoading: true, error: null });
-    try {
-      const { data, error } = await supabase
-        .from('gloss_tracking')
-        .update(tracking)
-        .eq('id', id)
-        .select()
-        .single();
-      
-      if (error) throw new Error(error.message);
-      
-      set(state => ({
-        glossTracking: state.glossTracking.map(gt => gt.id === id ? { ...gt, ...data } : gt),
-        isLoading: false
-      }));
-      
-      return data;
-    } catch (error) {
-      console.error('Error updating gloss tracking:', error);
-      set({ error: error.message, isLoading: false });
-      return null;
-    }
-  },
-}));
+  }
+];
 
-export default useVehicleStore;
+// Get all vehicles
+export const getAllVehicles = (): VehicleData[] => {
+  return vehicleDatabase;
+};
+
+// Get vehicle by ID
+export const getVehicleById = (id: string): VehicleData | undefined => {
+  return vehicleDatabase.find(vehicle => vehicle.id === id);
+};
+
+// Get vehicle by name (exact match)
+export const getVehicleByName = (name: string): VehicleData | undefined => {
+  return vehicleDatabase.find(vehicle => vehicle.name === name);
+};
+
+// Get vehicle by make and model
+export const getVehicleByMakeModel = (make: string, model: string): VehicleData | undefined => {
+  return vehicleDatabase.find(
+    vehicle => vehicle.specs.make === make && vehicle.specs.model === model
+  );
+};
+
+// Get recommended tire pressure for a vehicle
+export const getRecommendedTirePressure = (vehicleName: string): { front: number, rear: number } | undefined => {
+  const vehicle = getVehicleByName(vehicleName);
+  if (!vehicle) return undefined;
+  
+  return {
+    front: vehicle.tireSetup.recommendedPressureFront,
+    rear: vehicle.tireSetup.recommendedPressureRear
+  };
+};
+
+// Get driving profile for a vehicle
+export const getDrivingProfile = (vehicleName: string, profileName?: string): DrivingProfile | undefined => {
+  const vehicle = getVehicleByName(vehicleName);
+  if (!vehicle) return undefined;
+  
+  // If profile name not specified, return the default profile
+  const profileToUse = profileName || vehicle.defaultDrivingProfile;
+  return vehicle.drivingProfiles[profileToUse];
+};
+
+// Get performance adjustment recommendations based on vehicle and conditions
+export const getPerformanceAdjustments = (
+  vehicleName: string, 
+  weatherCondition: string, 
+  routeDifficulty: number
+): { tirePressureAdjustment: number, torqueAdjustment: number, recommendedDrivingMode: string } => {
+  const vehicle = getVehicleByName(vehicleName);
+  let tirePressureAdjustment = 0;
+  let torqueAdjustment = 0;
+  let recommendedDrivingMode = "Normal";
+  
+  if (!vehicle) {
+    return { tirePressureAdjustment, torqueAdjustment, recommendedDrivingMode };
+  }
+  
+  // Adjust based on weather conditions
+  if (weatherCondition.includes("Rain") || weatherCondition.includes("Snow")) {
+    tirePressureAdjustment = -1; // Lower pressure for wet conditions
+    torqueAdjustment = -3; // Reduce torque for wet conditions
+    recommendedDrivingMode = vehicle.drivingProfiles["Wet"] ? "Wet" : "Normal";
+  } else if (weatherCondition.includes("Hot") || weatherCondition.includes("Sunny")) {
+    tirePressureAdjustment = 1; // Higher pressure for hot conditions
+    torqueAdjustment = 0;
+    recommendedDrivingMode = "Sport";
+  } else {
+    // Default/mild conditions
+    tirePressureAdjustment = 0;
+    torqueAdjustment = 0;
+    recommendedDrivingMode = vehicle.defaultDrivingProfile;
+  }
+  
+  // Further adjust based on route difficulty (1-5 scale)
+  if (routeDifficulty >= 4) {
+    // For challenging routes
+    tirePressureAdjustment += 1;
+    torqueAdjustment += 2;
+    recommendedDrivingMode = vehicle.drivingProfiles["Race"] ? "Race" : 
+                            vehicle.drivingProfiles["Sport+"] ? "Sport+" : "Sport";
+  } else if (routeDifficulty <= 2) {
+    // For easy routes
+    recommendedDrivingMode = "Normal";
+  }
+  
+  return { tirePressureAdjustment, torqueAdjustment, recommendedDrivingMode };
+};
+
+// Store vehicle data to local storage for transfer between components
+export const storeVehicleDataForTransfer = (vehicleName: string): void => {
+  const vehicle = getVehicleByName(vehicleName);
+  if (!vehicle) return;
+  
+  localStorage.setItem('currentVehicleData', JSON.stringify(vehicle));
+};
+
+// Retrieve stored vehicle data
+export const retrieveStoredVehicleData = (): VehicleData | null => {
+  const storedData = localStorage.getItem('currentVehicleData');
+  if (!storedData) return null;
+  
+  try {
+    return JSON.parse(storedData) as VehicleData;
+  } catch (error) {
+    console.error("Error parsing stored vehicle data:", error);
+    return null;
+  }
+};
+
+// Clear stored vehicle data
+export const clearStoredVehicleData = (): void => {
+  localStorage.removeItem('currentVehicleData');
+};
+
+// Export interface for data that should be transferred from Route Planner to Drive Journal
+export interface RouteToJournalTransferData {
+  routeTitle?: string;
+  startLocation: string;
+  endLocation: string;
+  waypoints: string[];
+  vehicle: string;
+  vehicleSpecs: VehicleSpecs;
+  tireSetup: TireSetup;
+  drivingProfile: DrivingProfile;
+  distance: number;
+  duration: number;
+  weatherConditions: any;
+  routeCustomizations: any;
+  performanceSettings: {
+    tirePressureAdjustment: number;
+    torqueAdjustment: number;
+    drivingMode: string;
+    curvatureMetrics?: {
+      intensity: number;
+      trnRange: string;
+    };
+  };
+  altitudeData?: {
+    maxAltitude: number;
+    minAltitude: number;
+    totalAscent: number;
+    totalDescent: number;
+    altitudePoints: number[][];
+  };
+  routeCharacteristics?: {
+    totalTurns: number;
+    sharpTurns: number;
+    straightSections: number;
+    hillClimbs: number;
+    descents: number;
+    averageCornerRadius?: number;
+    technicalSections?: number;
+    maxCornerG?: number;
+  };
+  pointsOfInterest?: {
+    events: any[];
+    culturalSpots: any[];
+  };
+}
+
+// Prepare route data for transfer to Drive Journal
+export const prepareRouteForJournal = (
+  routeData: any, 
+  vehicleName: string, 
+  performanceSettings: any
+): void => {
+  const vehicle = getVehicleByName(vehicleName);
+  if (!vehicle) {
+    console.error("Vehicle not found:", vehicleName);
+    return;
+  }
+  
+  const transferData: RouteToJournalTransferData = {
+    routeTitle: routeData.title,
+    startLocation: routeData.startLocation,
+    endLocation: routeData.endLocation,
+    waypoints: routeData.waypoints || [],
+    vehicle: vehicleName,
+    vehicleSpecs: vehicle.specs,
+    tireSetup: vehicle.tireSetup,
+    drivingProfile: getDrivingProfile(vehicleName, performanceSettings.drivingMode) || 
+                    vehicle.drivingProfiles[vehicle.defaultDrivingProfile],
+    distance: routeData.distance,
+    duration: routeData.duration,
+    weatherConditions: routeData.weatherConditions,
+    routeCustomizations: routeData.routeCustomizations,
+    performanceSettings: performanceSettings,
+    altitudeData: routeData.altitudeData,
+    routeCharacteristics: routeData.routeCharacteristics,
+    pointsOfInterest: routeData.pointsOfInterest
+  };
+  
+  localStorage.setItem('pendingDriveJournal', JSON.stringify(transferData));
+  console.log("Route data prepared for Drive Journal:", transferData);
+};
