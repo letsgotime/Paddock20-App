@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, memo, Suspense, lazy } from 'react';
 import { 
   LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, 
   AreaChart, Area, BarChart, Bar, PieChart, Pie, Cell, RadarChart, Radar, PolarGrid, 
@@ -8,9 +8,134 @@ import {
   Activity, BarChart2, Wind, Thermometer, CornerUpRight, Clock, Calendar, 
   PieChart as PieChartIcon, AlertTriangle, TrendingUp, Droplets, Car, 
   Maximize2, Zap, MapPin, Mountain, Check, RefreshCw, Shield, Wrench,
-  Download, Upload, Camera, ExternalLink
+  Download, Upload, Camera, ExternalLink, Loader
 } from 'lucide-react';
 import { searchImage } from '../services/unsplashService';
+import { useAdaptiveImage, preloadImages, getImageStats } from '../services/adaptiveImageService';
+
+// Lazy load the AdaptiveImage components
+const AdaptiveImage = lazy(() => import('./AdaptiveImage'));
+const AdaptiveImageGrid = lazy(() => import('./AdaptiveImage').then(module => ({ default: module.AdaptiveImageGrid })));
+const AdaptiveHeroImage = lazy(() => import('./AdaptiveImage').then(module => ({ default: module.AdaptiveHeroImage })));
+
+// Vehicle image search terms
+const vehicleSearchTerms = [
+  "professional automotive photography",
+  "exterior front quarter view",
+  "wheel and tire detail",
+  "engine bay",
+  "interior dashboard",
+  "exhaust system",
+  "suspension closeup",
+  "rear angle view",
+  "driving action shot",
+  "night shot with lights on"
+];
+
+// Part image search queries - mapped to maintain consistent imagery
+const partSearchQueries = {
+  // Brake System
+  'brake_disc': 'car brake disc rotor close up',
+  'brake_caliper': 'performance brake caliper',
+  'brake_pad': 'brake pad closeup',
+  'brake_system': 'car brake system diagram',
+  
+  // Tire System
+  'tire_tread': 'tire tread pattern detail',
+  'tire_sidewall': 'tire sidewall close up',
+  'tire_compound': 'performance tire compound',
+  'tire_pressure': 'tire pressure gauge reading',
+  'tire_pressure_gauge': 'digital tire pressure gauge professional',
+  'tire_thermal_monitor': 'racing tire temperature monitor',
+  'wheel_barrel': 'wheel barrel cleaning detail shot',
+  
+  // Engine & Fluids
+  'engine_oil': 'engine oil level check',
+  'coolant_system': 'car coolant reservoir',
+  'brake_fluid': 'brake fluid reservoir',
+  'power_steering': 'power steering fluid check',
+  'washer_fluid': 'windshield washer fluid',
+  'battery': 'car battery testing',
+  'engine_belts': 'engine belt inspection',
+  
+  // Tools & Equipment
+  'torque_wrench': 'digital torque wrench professional',
+  'battery_tester': 'professional battery voltage tester',
+  'thermal_camera': 'infrared thermal imaging camera automotive',
+  'fluid_check': 'car fluid level check',
+  'obd_scanner': 'professional OBD diagnostic scanner',
+  
+  // Gloss & Appearance
+  'car_paint': 'car paint finish closeup',
+  'iron_remover': 'iron fallout remover car detailing',
+  'tar_remover': 'automotive tar spot remover',
+  'water_spot_remover': 'water spot remover detailing',
+  'sap_remover': 'tree sap removal detailing',
+  'bug_remover': 'bug splatter remover car detailing',
+  'polish': 'car polish application detailing',
+  'paint_correction': 'paint correction before after',
+  'glaze': 'car paint glaze application',
+  'ceramic_coating': 'ceramic coating application car',
+  'sealant': 'paint sealant application detailing',
+  'wax': 'car wax application detailing',
+  'paint_meter': 'paint thickness gauge meter',
+  'paint_analysis': 'professional paint analysis automotive',
+  
+  // Body Panels
+  'hood': 'car hood panel paint correction',
+  'roof': 'car roof panel detailing',
+  'trunk': 'car trunk lid detailing',
+  'front_bumper': 'car front bumper detailing',
+  'rear_bumper': 'car rear bumper detailing',
+  'fender': 'car fender panel detailing',
+  'door': 'car door panel detailing',
+  'quarter_panel': 'car quarter panel detailing',
+  
+  // Documentation & Services
+  'documents': 'vehicle documentation folder',
+  'vin_decoder': 'VIN decoder report',
+  'vehicle_history': 'vehicle history report document',
+  'service_history': 'vehicle service history logbook',
+  'ownership_records': 'vehicle ownership documentation',
+  'authentication': 'vehicle authentication certificate',
+  'recall_check': 'vehicle recall check report',
+  'title': 'vehicle title document',
+  'enclosed_transport': 'enclosed vehicle transport trailer',
+  'insurance': 'vehicle insurance document',
+  'identity_verification': 'secure identity verification process',
+  'market_analysis': 'vehicle market value analysis chart',
+  'investment_portfolio': 'automotive investment portfolio',
+  
+  // Interior & Details
+  'racing_harness': 'racing harness seat belt installation',
+  'door_seals': 'car door seal treatment',
+  'glass_cleaner': 'automotive glass cleaning',
+  'interior_detailing': 'car interior detailing',
+  'leather_conditioner': 'leather conditioning treatment car',
+  'tire_dressing': 'tire dressing application',
+  'frothe_spray': 'car detailing spray application',
+  'camera': 'professional automotive photography setup',
+  
+  // Service & Maintenance
+  'service_plan': 'vehicle service plan document',
+  'service_center': 'premium auto service center',
+  'documentation': 'vehicle service documentation',
+  'foam_cannon': 'foam cannon car wash',
+  'inspection_report': 'vehicle inspection report',
+  'engine_detailing': 'engine bay detailing',
+  'wheel_installation': 'professional wheel installation',
+  'key_fob': 'luxury car key fob',
+  'paint_inspection': 'paint inspection detailing',
+  'quick_detailer': 'quick detailer spray application',
+  'interior_cleaning': 'luxury car interior cleaning',
+  'digital_records': 'digital vehicle service records',
+  'maintenance_schedule': 'vehicle maintenance schedule chart',
+  'photo_documentation': 'vehicle photo documentation',
+  
+  // Additions
+  'aerodynamics': 'car aerodynamic components',
+  'brake_inspection': 'professional brake inspection'
+};
 
 const F1TelemetryDashboard = ({ vehicle, vehicleData }) => {
   const [activeTab, setActiveTab] = useState('performance');
@@ -383,57 +508,102 @@ const F1TelemetryDashboard = ({ vehicle, vehicleData }) => {
     }
   };
 
-  // Get image URL for a part
-  const getPartImageUrl = (partKey) => {
-    return partImages[partKey] || 'https://via.placeholder.com/400x300?text=Loading+Part+Image';
+  // Import our AdaptiveImage components
+  const AdaptiveImage = React.lazy(() => import('./AdaptiveImage'));
+  const { AdaptiveHeroImage, AdaptiveImageGrid } = React.lazy(() => import('./AdaptiveImage'));
+  
+  // Fallback component for lazy loading
+  const ImageFallback = () => (
+    <div className="bg-gray-800 animate-pulse w-full h-full flex items-center justify-center">
+      <Loader className="h-6 w-6 text-blue-400 animate-spin" />
+    </div>
+  );
+  
+
+  
+  // Get query string for a part image
+  const getPartQuery = (partKey, vehicleInfo = '') => {
+    const baseQuery = partSearchQueries[partKey] || partKey;
+    return vehicleInfo ? `${vehicleInfo} ${baseQuery}` : baseQuery;
   };
 
-  // Get vehicle image URL
-  const getVehicleImageUrl = (index = 0) => {
-    return carImages[index] || 'https://via.placeholder.com/800x400?text=Loading+Vehicle+Image';
+  // Get query string for a vehicle image
+  const getVehicleQuery = (index = 0) => {
+    const searchTerm = vehicleSearchTerms[index] || vehicleSearchTerms[0];
+    return vehicle ? 
+      `${vehicle.year} ${vehicle.make} ${vehicle.model} ${searchTerm}` : 
+      searchTerm;
   };
 
-  // Load images for all parts and vehicles
+  // Load images using adaptive loading with preloading
   useEffect(() => {
-    const loadImages = async () => {
-      // Load vehicle images
-      const carImagesObj = {};
-      for (let i = 0; i < vehicleSearchTerms.length; i++) {
-        try {
-          const query = vehicle ? 
-            `${vehicle.year} ${vehicle.make} ${vehicle.model} ${vehicleSearchTerms[i]}` : 
-            vehicleSearchTerms[i];
-            
-          const imageUrl = await searchImage(query);
-          if (imageUrl) {
-            carImagesObj[i] = imageUrl;
-          }
-        } catch (error) {
-          console.error(`Error fetching vehicle image ${i}:`, error);
+    const loadImagesAdaptively = async () => {
+      try {
+        console.log('Initializing adaptive image loading for F1 Telemetry Dashboard...');
+        
+        // Build vehicle search queries
+        const vehicleQueries = vehicleSearchTerms.map(term => {
+          return vehicle ? 
+            `${vehicle.year} ${vehicle.make} ${vehicle.model} ${term}` : 
+            term;
+        });
+        
+        // Preload high-priority vehicle images (first 4) immediately
+        const highPriorityVehicleQueries = vehicleQueries.slice(0, 4);
+        console.log(`Preloading ${highPriorityVehicleQueries.length} high-priority vehicle images...`);
+        await preloadImages(highPriorityVehicleQueries, { priority: 'high' });
+        
+        // Preload high-priority part images based on current active tab
+        let highPriorityPartKeys = [];
+        if (activeTab === 'maintenance') {
+          highPriorityPartKeys = ['brake_disc', 'brake_caliper', 'brake_pad', 'tire_tread', 'tire_sidewall', 'engine_oil', 'battery'];
+        } else if (activeTab === 'gloss') {
+          highPriorityPartKeys = ['car_paint', 'polish', 'ceramic_coating', 'paint_correction'];
+        } else if (activeTab === 'concierge') {
+          highPriorityPartKeys = telemetryData.concierge?.[selectedChecklist]?.items
+            ?.slice(0, 5)
+            ?.map(item => item.part) || [];
+        } else { // Performance tab
+          highPriorityPartKeys = ['engine_oil', 'tire_tread', 'brake_disc'];
         }
-      }
-      setCarImages(carImagesObj);
-      
-      // Load part images
-      const partImagesObj = {};
-      const partKeys = Object.keys(partSearchQueries);
-      for (const partKey of partKeys) {
-        try {
-          const imageUrl = await searchImage(partSearchQueries[partKey]);
-          if (imageUrl) {
-            partImagesObj[partKey] = imageUrl;
-          }
-        } catch (error) {
-          console.error(`Error fetching part image for ${partKey}:`, error);
+        
+        // Preload high-priority part images
+        const highPriorityPartQueries = highPriorityPartKeys.map(key => getPartQuery(key));
+        if (highPriorityPartQueries.length > 0) {
+          console.log(`Preloading ${highPriorityPartQueries.length} high-priority part images...`);
+          await preloadImages(highPriorityPartQueries, { priority: 'high' });
         }
+        
+        // Preload remaining vehicle images with medium priority
+        const mediumPriorityVehicleQueries = vehicleQueries.slice(4);
+        if (mediumPriorityVehicleQueries.length > 0) {
+          console.log(`Preloading ${mediumPriorityVehicleQueries.length} medium-priority vehicle images...`);
+          preloadImages(mediumPriorityVehicleQueries, { priority: 'medium' });
+        }
+        
+        // Prepare remaining part keys for low-priority preloading
+        const remainingPartKeys = Object.keys(partSearchQueries).filter(key => !highPriorityPartKeys.includes(key));
+        
+        // Only preload the most relevant remaining parts (first 20) to avoid overwhelming the system
+        const lowPriorityPartQueries = remainingPartKeys.slice(0, 20).map(key => getPartQuery(key));
+        if (lowPriorityPartQueries.length > 0) {
+          console.log(`Preloading ${lowPriorityPartQueries.length} low-priority part images...`);
+          preloadImages(lowPriorityPartQueries, { priority: 'low' });
+        }
+        
+        // Log stats after preloading
+        console.log('Image loading statistics:', getImageStats());
+        
+        // Set loading state to false after high-priority images are loaded
+        setLoading(false);
+      } catch (error) {
+        console.error('Error in adaptive image loading:', error);
+        setLoading(false);
       }
-      setPartImages(partImagesObj);
-      
-      setLoading(false);
     };
     
-    loadImages();
-  }, [vehicle]);
+    loadImagesAdaptively();
+  }, [vehicle, activeTab, selectedChecklist]);
 
   // Initialize concierge checklists data
   useEffect(() => {
