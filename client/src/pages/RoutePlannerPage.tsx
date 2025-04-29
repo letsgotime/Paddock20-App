@@ -5689,13 +5689,7 @@ const RoutePlannerPage = () => {
         </div>
       )}
 
-      {/* Route Planning Button */}
-      <button
-        onClick={submitRoute}
-        className="bg-blue-500 hover:bg-blue-400 text-black font-montserrat px-8 py-4 rounded w-full mb-8"
-      >
-        🚀 Plan Route
-      </button>
+      {/* Route Planning Button - Removed as requested */}
       
       {/* Drive Journal Integration & Navigation Launch Section */}
       {routeWaypoints.length > 0 && (
