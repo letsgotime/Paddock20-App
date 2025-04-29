@@ -1102,6 +1102,51 @@ function TimepieceTelemetry({
       {/* Performance Tab - NEW */}
       {activeTab === 'performance' && (
         <div className="space-y-6">
+          {/* 3D Model Viewer Section */}
+          <div className="apex-card p-6">
+            <h3 className="font-orbitron text-lg text-teal-400 mb-6">Interactive 3D Model Viewer</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+              <TimepieceModelViewer 
+                timepiece={timepiece} 
+                className="col-span-1 md:col-span-1"
+              />
+              
+              <div className="col-span-1 md:col-span-1 bg-black/30 rounded-lg p-4 border border-gray-800">
+                <h4 className="text-white font-medium mb-3">Interactive Features</h4>
+                <ul className="space-y-3">
+                  <li className="flex items-start">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-teal-900/30 flex items-center justify-center mr-3">
+                      <RotateCw className="h-4 w-4 text-teal-400" />
+                    </div>
+                    <div>
+                      <p className="text-white font-medium">360° Rotation</p>
+                      <p className="text-gray-400 text-sm">Drag to rotate the timepiece in any direction</p>
+                    </div>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-teal-900/30 flex items-center justify-center mr-3">
+                      <ZoomIn className="h-4 w-4 text-teal-400" />
+                    </div>
+                    <div>
+                      <p className="text-white font-medium">Zoom Controls</p>
+                      <p className="text-gray-400 text-sm">Examine fine details with precision zoom</p>
+                    </div>
+                  </li>
+                  <li className="flex items-start">
+                    <div className="flex-shrink-0 w-8 h-8 rounded-full bg-teal-900/30 flex items-center justify-center mr-3">
+                      <Eye className="h-4 w-4 text-teal-400" />
+                    </div>
+                    <div>
+                      <p className="text-white font-medium">Multiple Views</p>
+                      <p className="text-gray-400 text-sm">Examine dial, case back, and movement</p>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
           {/* Movement Analytics */}
           <div className="apex-card p-6">
             <h3 className="font-orbitron text-lg text-purple-400 mb-6">Movement Performance Analytics</h3>
