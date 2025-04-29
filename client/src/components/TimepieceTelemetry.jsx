@@ -4,7 +4,7 @@ import {
   RefreshCw, FileText, ClipboardCheck, Settings, Wrench as Tool, 
   DollarSign, Package, Shield, BarChart, Battery, Droplet, Activity, Info,
   PlusCircle, Circle, LineChart, MapPin, Award, Eye, Save,
-  RotateCcw, CircleCheck, Bookmark, Compass, ZoomIn, RotateCw
+  RotateCcw, CircleCheck, Bookmark, Compass, ZoomIn, RotateCw, Search
 } from 'lucide-react';
 import EditableTelemetry from './EditableTelemetry';
 import timepieceDataService from '../services/timepieceDataService';
@@ -1343,7 +1343,18 @@ function TimepieceTelemetry({
           
           {/* Movement Analytics */}
           <div className="apex-card p-6">
-            <h3 className="font-orbitron text-lg text-purple-400 mb-6">Movement Performance Analytics</h3>
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h3 className="font-orbitron text-lg text-purple-400 mb-1">Movement Performance Analytics</h3>
+                <p className="text-gray-400 text-sm">High-precision mechanical analysis</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="bg-purple-900/30 px-3 py-1 rounded text-sm text-purple-300 border border-purple-800/50 flex items-center">
+                  <Activity className="h-4 w-4 mr-1" />
+                  Master Chronometer
+                </div>
+              </div>
+            </div>
             
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
               {/* Core Movement Metrics Panel */}
