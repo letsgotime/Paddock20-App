@@ -883,6 +883,29 @@ const DriveJournalPage: React.FC = () => {
                 </div>
               </div>
               
+              {/* Driver Mood & Energy Tracking */}
+              <div className="mb-6">
+                <h3 className="text-blue-400 font-semibold mb-4">Driver Mood & Energy Tracking</h3>
+                <MoodEnergyTracker
+                  moodEnergyData={editForm.moodEnergy || {
+                    mood: 8,
+                    energy: 8,
+                    focus: 8,
+                    confidence: 8,
+                    comfort: 8,
+                    trackFamiliarity: 5,
+                    excitementFactor: 8,
+                    stressLevel: 3,
+                    timestamps: {
+                      "0": { mood: 8, energy: 8, note: "Starting the drive" }
+                    }
+                  }}
+                  onChange={handleMoodEnergyChange}
+                  isEditing={true}
+                  distanceMiles={editForm.distanceMiles || 0}
+                />
+              </div>
+              
               {/* Telemetry and Performance Metrics */}
               <div>
                 <button
@@ -1344,6 +1367,29 @@ const DriveJournalPage: React.FC = () => {
                       </div>
                     ))}
                   </div>
+                </div>
+              )}
+              
+              {/* Driver Mood & Energy Tracking */}
+              {selectedDrive.moodEnergy && (
+                <div className="mb-8">
+                  <MoodEnergyTracker
+                    moodEnergyData={selectedDrive.moodEnergy}
+                    onChange={handleMoodEnergyChange}
+                    isEditing={false}
+                    distanceMiles={selectedDrive.distanceMiles}
+                  />
+                </div>
+              )}
+              
+              {/* Route Analytics & Telemetry */}
+              {(selectedDrive.altitudeData || selectedDrive.routeCharacteristics) && (
+                <div className="mb-8">
+                  <RouteAnalytics
+                    altitudeData={selectedDrive.altitudeData}
+                    routeCharacteristics={selectedDrive.routeCharacteristics}
+                    distance={selectedDrive.distanceMiles}
+                  />
                 </div>
               )}
               
