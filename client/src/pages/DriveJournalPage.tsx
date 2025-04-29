@@ -4,6 +4,7 @@ import MoodEnergyTracker from '../components/MoodEnergyTracker';
 import RouteAnalytics from '../components/RouteAnalytics';
 import EnhancedDriveTelemetry from '../components/EnhancedDriveTelemetry';
 import WeatherDriveImpactAnalyzer from '../components/WeatherDriveImpactAnalyzer';
+import PageHeader from '../components/PageHeader';
 
 // Define interfaces for type safety
 interface MoodEnergy {
@@ -621,9 +622,30 @@ const DriveJournalPage: React.FC = () => {
     }));
   };
   
+  // Export function for PageHeader
+  const handleExport = (type: 'pdf' | 'csv' | 'print') => {
+    // Handle export functionality
+    if (type === 'pdf') {
+      console.log('Exporting as PDF');
+      // PDF export logic
+    } else if (type === 'csv') {
+      console.log('Exporting as CSV');
+      // CSV export logic
+    } else if (type === 'print') {
+      console.log('Printing');
+      // Print logic
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <h1 className="text-blue-400 font-orbitron text-4xl mb-8">📔 Drive Journal</h1>
+      <PageHeader 
+        title="Drive Journal" 
+        subtitle="Record and analyze your driving experiences"
+        showBackButton={true}
+        showExportOptions={true}
+        onExport={handleExport}
+      />
       
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Left Sidebar - Drive Entries List */}

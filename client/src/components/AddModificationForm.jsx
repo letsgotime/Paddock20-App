@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X } from 'lucide-react';
+import React, { useState, useRef, useEffect } from 'react';
+import { X, Camera, Mic, Video, Upload, MapPin, Link2, ExternalLink, ArrowLeft, ArrowRight } from 'lucide-react';
 
 const AddModificationForm = ({ onSubmit, onCancel, vehicleId }) => {
   const [formData, setFormData] = useState({
@@ -19,8 +19,48 @@ const AddModificationForm = ({ onSubmit, onCancel, vehicleId }) => {
     image_url: '',
     link_url: '',
     link_label: '',
-    notes: ''
+    notes: '',
+    // New media fields
+    before_photos: [],
+    after_photos: [],
+    voice_notes: [],
+    videos: [],
+    // Location data
+    location: {
+      enabled: false,
+      latitude: null,
+      longitude: null,
+      address: '',
+    },
+    // Product information from link
+    product_info: {
+      extracted: false,
+      title: '',
+      description: '',
+      price: '',
+      specifications: [],
+      manufacturer: '',
+    },
+    // Document management
+    documents: [], // Array of document objects with metadata
+    document_categories: [], // Selected categories for organizing docs
+    receipt_included: false, // Flag to indicate if a receipt is included
   });
+  
+  // Add state for media file uploads and preview
+  const [uploadingPhotos, setUploadingPhotos] = useState(false);
+  const [recordingVoice, setRecordingVoice] = useState(false);
+  const [recordingVideo, setRecordingVideo] = useState(false);
+  const [gpsLocating, setGpsLocating] = useState(false);
+  const [activeTab, setActiveTab] = useState('before'); // 'before' or 'after' photos
+  const [productLinkLoading, setProductLinkLoading] = useState(false);
+  const [productLinkError, setProductLinkError] = useState('');
+  
+  // Refs for file inputs and media recording
+  const beforePhotoInputRef = useRef(null);
+  const afterPhotoInputRef = useRef(null);
+  const videoInputRef = useRef(null);
+  const audioRecorderRef = useRef(null);
 
   const modificationTypes = [
     'Performance',
