@@ -1,164 +1,177 @@
 /**
- * Unsplash API Service
- * Handles image fetching and caching for marketplace listings
+ * Unsplash service for searching and retrieving images
  */
 
-// In-memory image cache to avoid excessive API calls
-const imageCache = new Map();
-
-// Access key from environment variables
-const accessKey = import.meta.env.VITE_UNSPLASH_ACCESS_KEY || import.meta.env.UNSPLASH_ACCESS_KEY || "2JgRSbUMLc1H5x1-PH_apKjy8jzGF4KLluer_xCO9kk";
-
-// Fallback images for when API fails
-import ferrariImg from '@assets/Ferrari-458-With-HRE-P101-Wheels-By-TAG-Motorsports-2.jpg';
-import patekImg from '@assets/5711_1A_014_1@2x.jpg';
-
-// Store URLs for manually added images to use later if needed
-// For now, we'll rely on Unsplash for images
-const PRECISE_IMAGE_MAPPING = {
-  // We'll keep these URLs for future reference, but not use them for now
-};
-
-/**
- * Initialize cache with common search terms to avoid rate limiting during browsing
- */
-export const initializeImageCache = async () => {
-  console.log('Unsplash access key available:', !!accessKey);
-  console.log('Access key value:', import.meta.env.VITE_UNSPLASH_ACCESS_KEY);
-  
-  if (!accessKey) {
-    console.warn('Unsplash API key not found. Image fetching will use fallback images.');
-    return;
-  }
-
-  try {
-    // Pre-fetch common search terms to populate cache
-    const commonSearches = [
-      'Ferrari sports car',
-      'Porsche 911',
-      'BMW M3',
-      'Rolex watch',
-      'Patek Philippe watch',
-      'Audemars Piguet watch'
-    ];
-
-    try {
-      // Execute searches in parallel, but limit to 3 at a time to avoid rate limits
-      const batchSize = 3;
-      for (let i = 0; i < commonSearches.length; i += batchSize) {
-        const batch = commonSearches.slice(i, i + batchSize);
-        await Promise.all(batch.map(term => searchImage(term, true)));
-        
-        // Small delay to avoid overwhelming the API
-        if (i + batchSize < commonSearches.length) {
-          await new Promise(resolve => setTimeout(resolve, 300));
-        }
-      }
-    } catch (error) {
-      console.warn('Image prefetching partially failed:', error.message);
-    }
-
-    return true;
-  } catch (error) {
-    console.error('Error initializing image cache:', error);
-    return false;
-  }
-};
+// Default key from environment variable
+const UNSPLASH_ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY || process.env.UNSPLASH_ACCESS_KEY;
 
 /**
  * Search for an image on Unsplash
  * @param {string} query - Search query
- * @param {boolean} silent - Silent mode (no errors)
- * @returns {Promise<string|null>} - Image URL or null
+ * @param {Object} options - Additional options
+ * @param {number} options.page - Page number (default: 1)
+ * @param {number} options.perPage - Results per page (default: 10)
+ * @param {string} options.orientation - Image orientation (landscape, portrait, squarish)
+ * @returns {Promise<Object>} - Search results
  */
-export const searchImage = async (query, silent = false) => {
-  if (!accessKey) {
-    if (!silent) console.warn('Unsplash API key not found');
-    return null;
-  }
-
-  // Check cache first
-  if (imageCache.has(query)) {
-    return imageCache.get(query);
-  }
-
+export const searchImage = async (query, options = {}) => {
   try {
-    // Enhanced query parameters for better results:
-    // - orientation=landscape for vehicle images (better aspect ratio)
-    // - content_filter=high to ensure appropriate images
-    // - per_page=3 to get more variety
-    // - order_by=relevant for better matching
-    const orientation = query.includes('car') || query.includes('vehicle') ? 'landscape' : 'squarish';
+    if (!UNSPLASH_ACCESS_KEY) {
+      console.warn('Unsplash access key is not set. Using local images.');
+      // Return empty array to encourage local image usage
+      return { results: [] };
+    }
     
-    const response = await fetch(
-      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=3&orientation=${orientation}&content_filter=high&order_by=relevant`,
-      {
-        headers: {
-          Authorization: `Client-ID ${accessKey}`
-        }
+    const {
+      page = 1,
+      perPage = 10,
+      orientation = 'landscape'
+    } = options;
+    
+    const params = new URLSearchParams({
+      query,
+      page,
+      per_page: perPage,
+      orientation,
+      content_filter: 'high'
+    });
+    
+    const response = await fetch(`https://api.unsplash.com/search/photos?${params}`, {
+      headers: {
+        Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}`
       }
-    );
-
+    });
+    
     if (!response.ok) {
-      throw new Error(`Unsplash API error: ${response.status}`);
-    }
-
-    const data = await response.json();
-    
-    if (data.results && data.results.length > 0) {
-      // Use some randomness to get variety in the images
-      const randomIndex = Math.floor(Math.random() * Math.min(data.results.length, 3));
-      const imageUrl = data.results[randomIndex].urls.regular;
-      
-      // Cache the result
-      imageCache.set(query, imageUrl);
-      
-      return imageUrl;
+      throw new Error(`Unsplash API error: ${response.status} ${response.statusText}`);
     }
     
-    return null;
+    return await response.json();
   } catch (error) {
-    if (!silent) console.error('Error fetching image from Unsplash:', error);
+    console.error('Error searching Unsplash:', error);
+    return { results: [] };
+  }
+};
+
+/**
+ * Get a random image from Unsplash
+ * @param {Object} options - Options
+ * @param {string} options.query - Search query
+ * @param {string} options.username - Limit to a specific Unsplash user
+ * @param {string} options.collections - Collection ID(s)
+ * @param {string} options.orientation - Image orientation (landscape, portrait, squarish)
+ * @returns {Promise<Object>} - Random image
+ */
+export const getRandomImage = async (options = {}) => {
+  try {
+    if (!UNSPLASH_ACCESS_KEY) {
+      console.warn('Unsplash access key is not set. Using local images.');
+      // Return null to encourage local image usage
+      return null;
+    }
+    
+    const params = new URLSearchParams();
+    
+    if (options.query) params.append('query', options.query);
+    if (options.username) params.append('username', options.username);
+    if (options.collections) params.append('collections', options.collections);
+    if (options.orientation) params.append('orientation', options.orientation);
+    
+    const response = await fetch(`https://api.unsplash.com/photos/random?${params}`, {
+      headers: {
+        Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Unsplash API error: ${response.status} ${response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error getting random image from Unsplash:', error);
     return null;
   }
 };
 
 /**
- * Get image for a specific listing item type (vehicle or timepiece)
- * @param {string} type - Item type ('vehicle' or 'timepiece')
- * @param {string} brand - Brand name
- * @param {string} model - Model name
- * @returns {string|null} - Image URL or null
+ * Get car-related images for different makes
+ * @returns {Promise<Object>} - Collection of car images by make
  */
-export const getImageForItem = (type, brand, model) => {
-  // First check our precise mapping for exact models
-  // Try various combinations of the brand and model to increase match chances
-  const fullName = `${brand} ${model}`;
-  const matchKeys = [
-    fullName,
-    brand + ' ' + model.split(' ')[0], // Just the first word of model
-    model
-  ];
-  
-  // Try each possible match pattern
-  for (const key of matchKeys) {
-    for (const [mappingKey, url] of Object.entries(PRECISE_IMAGE_MAPPING)) {
-      if (key.includes(mappingKey) || mappingKey.includes(key)) {
-        return url;
-      }
+export const getCarImages = async () => {
+  try {
+    // First check if we should use local images
+    if (!UNSPLASH_ACCESS_KEY) {
+      console.warn('Unsplash access key is not set. Using local images.');
+      // Return null to encourage local image usage
+      return null;
     }
+    
+    // Popular car makes to search for
+    const makes = ['porsche', 'ferrari', 'lamborghini', 'mercedes', 'bmw', 'audi', 'tesla'];
+    
+    const results = {};
+    
+    // Fetch images for each make in parallel
+    await Promise.all(
+      makes.map(async (make) => {
+        const data = await searchImage(make + ' car', { perPage: 5 });
+        
+        if (data && data.results && data.results.length > 0) {
+          results[make] = data.results.map(img => ({
+            id: img.id,
+            url: img.urls.regular,
+            thumb: img.urls.thumb,
+            alt: img.alt_description || `${make} car`,
+            user: {
+              name: img.user.name,
+              link: img.user.links.html
+            }
+          }));
+        }
+      })
+    );
+    
+    return results;
+  } catch (error) {
+    console.error('Error fetching car images:', error);
+    return null;
   }
-  
-  // If no exact match found, try the cached Unsplash API results
-  const cacheKey = `${brand} ${model} ${type === 'vehicle' ? 'car' : 'watch'}`;
-  return imageCache.get(cacheKey) || null;
 };
 
 /**
- * Get fallback images for different types
- * @param {string} type - Item type ('vehicle' or 'timepiece')
- * @returns {string} - Fallback image URL
+ * Get a specific image by ID
+ * @param {string} id - Unsplash image ID
+ * @returns {Promise<Object>} - Image details
  */
-export const getFallbackImage = (type) => {
-  return type === 'vehicle' ? ferrariImg : patekImg;
+export const getImage = async (id) => {
+  try {
+    if (!UNSPLASH_ACCESS_KEY) {
+      console.warn('Unsplash access key is not set. Using local images.');
+      return null;
+    }
+    
+    const response = await fetch(`https://api.unsplash.com/photos/${id}`, {
+      headers: {
+        Authorization: `Client-ID ${UNSPLASH_ACCESS_KEY}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Unsplash API error: ${response.status} ${response.statusText}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error(`Error getting image ${id} from Unsplash:`, error);
+    return null;
+  }
+};
+
+// Export all functions
+export default {
+  searchImage,
+  getRandomImage,
+  getCarImages,
+  getImage
 };
