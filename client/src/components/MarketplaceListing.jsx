@@ -1,13 +1,10 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { 
-  Tag, Clock, Shield, ChevronRight, 
-  Check, AlertTriangle, ChevronDown, MapPin, 
-  Star, DollarSign, Info, ExternalLink, 
-  Activity, BarChart3, Gauge, Zap, ImageIcon
+  Tag, Clock, Shield, ChevronDown, MapPin, 
+  Star, ExternalLink, Activity, Zap
 } from 'lucide-react';
-import { getImageForItem, searchImage } from '../services/unsplashService';
 
-// Fallback images for when API fails
+// Local high-quality images
 import ferrariImg from '@assets/Ferrari-458-With-HRE-P101-Wheels-By-TAG-Motorsports-2.jpg';
 import patekImg from '@assets/5711_1A_014_1@2x.jpg';
 
