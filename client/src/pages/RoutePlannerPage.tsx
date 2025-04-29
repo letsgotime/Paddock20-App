@@ -2932,7 +2932,7 @@ const RoutePlannerPage = () => {
                 Items are tailored specifically for your {selectedVehicle || 'vehicle'} and current conditions.
               </p>
               
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                 <div className="bg-black/40 p-3 rounded-lg border border-green-900/30 shadow-inner transition-all hover:border-green-500/30 group relative">
                   <div className="absolute top-0 right-0 bg-green-600/20 text-green-400 text-xs px-2 py-0.5 rounded-bl">
                     Critical
