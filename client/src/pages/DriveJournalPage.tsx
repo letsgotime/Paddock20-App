@@ -1,7 +1,47 @@
 import React, { useState, useEffect } from 'react';
 import { format } from 'date-fns';
+import MoodEnergyTracker from '../components/MoodEnergyTracker';
+import RouteAnalytics from '../components/RouteAnalytics';
 
 // Define interfaces for type safety
+interface MoodEnergy {
+  mood: number; // 1-10 scale for driver mood
+  energy: number; // 1-10 scale for energy level
+  focus: number; // 1-10 scale for driver focus
+  confidence: number; // 1-10 scale for driver confidence
+  comfort: number; // 1-10 scale for comfort level
+  trackFamiliarity: number; // 1-10 scale for driver familiarity with route
+  excitementFactor: number; // 1-10 scale for driver excitement
+  stressLevel: number; // 1-10 scale for driver stress
+  timestamps?: { // Optional timestamps for mood/energy changes
+    [key: string]: {
+      mood?: number;
+      energy?: number;
+      note?: string;
+    }
+  };
+  notes?: string; // Optional notes about mood/energy
+}
+
+interface AltitudeData {
+  maxAltitude: number; // Maximum altitude in meters or feet
+  minAltitude: number; // Minimum altitude
+  totalAscent: number; // Total uphill in meters or feet
+  totalDescent: number; // Total downhill
+  altitudePoints?: number[][]; // [distance, altitude] pairs for visualization
+}
+
+interface RouteCharacteristics {
+  totalTurns: number; // Total number of turns on route
+  sharpTurns: number; // Number of sharp turns
+  straightSections: number; // Number of straight sections
+  hillClimbs: number; // Number of uphill sections
+  descents: number; // Number of downhill sections
+  averageCornerRadius?: number; // Average radius of corners
+  technicalSections?: number; // Number of technical driving sections
+  maxCornerG?: number; // Maximum G-force in corners
+}
+
 interface DriveEntry {
   id: string;
   date: string;
@@ -34,6 +74,9 @@ interface DriveEntry {
   photos?: string[];
   rating?: number;
   isFromRoutePlanner: boolean;
+  moodEnergy?: MoodEnergy; // New field for mood and energy tracking
+  altitudeData?: AltitudeData; // New field for altitude tracking
+  routeCharacteristics?: RouteCharacteristics; // New field for route characteristics
 }
 
 // Mock data for the wireframe
@@ -80,7 +123,45 @@ const mockDriveEntries: DriveEntry[] = [
       "/assets/mockdrive1_photo2.jpg"
     ],
     rating: 5,
-    isFromRoutePlanner: true
+    isFromRoutePlanner: true,
+    moodEnergy: {
+      mood: 9,
+      energy: 8,
+      focus: 9,
+      confidence: 8,
+      comfort: 9,
+      trackFamiliarity: 7,
+      excitementFactor: 9,
+      stressLevel: 3,
+      timestamps: {
+        "0": { mood: 8, energy: 7, note: "Starting the journey - excited but a bit anxious" },
+        "25": { mood: 9, energy: 8, note: "Settling into the rhythm of the parkway" },
+        "50": { mood: 10, energy: 9, note: "Perfect driving conditions near Craggy Gardens" },
+        "75": { mood: 9, energy: 7, note: "Taking in the views, slightly tiring but still focused" }
+      },
+      notes: "Started slightly nervous but quickly got into the flow. The Ferrari was responsive and inspiring confidence throughout."
+    },
+    altitudeData: {
+      maxAltitude: 5721, // in feet
+      minAltitude: 3165,
+      totalAscent: 3250,
+      totalDescent: 2950,
+      altitudePoints: [
+        [0, 3520], [10, 3850], [20, 4200], [30, 4780], 
+        [40, 5250], [50, 5721], [60, 5400], [70, 4850], 
+        [80, 3750], [82.5, 3165]
+      ]
+    },
+    routeCharacteristics: {
+      totalTurns: 147,
+      sharpTurns: 28,
+      straightSections: 12,
+      hillClimbs: 14,
+      descents: 12,
+      averageCornerRadius: 85, // feet
+      technicalSections: 6,
+      maxCornerG: 0.8
+    }
   },
   {
     id: "2",
@@ -119,7 +200,45 @@ const mockDriveEntries: DriveEntry[] = [
     notes: "Long drive but the Porsche was comfortable the entire way.",
     photos: [],
     rating: 4,
-    isFromRoutePlanner: true
+    isFromRoutePlanner: true,
+    moodEnergy: {
+      mood: 7,
+      energy: 6, 
+      focus: 8,
+      confidence: 9,
+      comfort: 9,
+      trackFamiliarity: 6,
+      excitementFactor: 5,
+      stressLevel: 4,
+      timestamps: {
+        "0": { mood: 8, energy: 8, note: "Fresh and ready for a long drive" },
+        "80": { mood: 7, energy: 7, note: "Smooth driving through Winston-Salem" },
+        "160": { mood: 6, energy: 5, note: "Starting to feel the fatigue near Raleigh" },
+        "240": { mood: 5, energy: 4, note: "Long stretches of highway getting monotonous" },
+        "300": { mood: 7, energy: 6, note: "Energy picking up as we approach the coast" }
+      },
+      notes: "Highway driving was comfortable but monotonous at times. The Porsche's comfort features made the long journey bearable."
+    },
+    altitudeData: {
+      maxAltitude: 3333, // in feet
+      minAltitude: 35,
+      totalAscent: 850,
+      totalDescent: 4150,
+      altitudePoints: [
+        [0, 3333], [50, 2800], [100, 2100], [150, 1450], 
+        [200, 900], [250, 400], [300, 150], [330, 35]
+      ]
+    },
+    routeCharacteristics: {
+      totalTurns: 92,
+      sharpTurns: 8,
+      straightSections: 37,
+      hillClimbs: 5,
+      descents: 15,
+      averageCornerRadius: 120, // feet
+      technicalSections: 2,
+      maxCornerG: 0.4
+    }
   }
 ];
 
@@ -284,7 +403,34 @@ const DriveJournalPage: React.FC = () => {
       },
       weatherConditions: null,
       isFromRoutePlanner: false,
-      date: new Date().toISOString()
+      date: new Date().toISOString(),
+      moodEnergy: {
+        mood: 8,
+        energy: 8,
+        focus: 8,
+        confidence: 8,
+        comfort: 8,
+        trackFamiliarity: 5,
+        excitementFactor: 8,
+        stressLevel: 3,
+        timestamps: {
+          "0": { mood: 8, energy: 8, note: "Starting the drive" }
+        }
+      },
+      altitudeData: {
+        maxAltitude: 0,
+        minAltitude: 0,
+        totalAscent: 0,
+        totalDescent: 0,
+        altitudePoints: []
+      },
+      routeCharacteristics: {
+        totalTurns: 0,
+        sharpTurns: 0,
+        straightSections: 0,
+        hillClimbs: 0,
+        descents: 0
+      }
     });
     setIsAddingNew(true);
     setIsEditMode(true);
@@ -364,6 +510,14 @@ const DriveJournalPage: React.FC = () => {
           trnRange: getTrnDescription(intensity)
         }
       }
+    }));
+  };
+  
+  // Handle mood and energy data changes
+  const handleMoodEnergyChange = (data: MoodEnergy) => {
+    setEditForm(prev => ({
+      ...prev,
+      moodEnergy: data
     }));
   };
   
