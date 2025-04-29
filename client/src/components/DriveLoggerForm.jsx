@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import supabase from '../services/supabaseClient';
 import MoodEnergyTracker from './MoodEnergyTracker';
+import { getTelemetryChartData, addMoodEnergyEntry } from '../services/moodEnergyService';
 
 function DriveLoggerForm() {
   const [formData, setFormData] = useState({
@@ -19,19 +20,86 @@ function DriveLoggerForm() {
   });
   
   const [moodEnergyEntries, setMoodEnergyEntries] = useState([]);
+  const [activeMoodEnergy, setActiveMoodEnergy] = useState({
+    mood: 5,
+    energy: 5,
+    note: ''
+  });
+
+  // Load mood and energy telemetry data
+  useEffect(() => {
+    const loadTelemetryData = async () => {
+      const data = await getTelemetryChartData();
+      setMoodEnergyEntries(data);
+    };
+    
+    loadTelemetryData();
+  }, []);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
   };
 
+  // Handle mood/energy tracker save
+  const handleMoodEnergySave = async (entry) => {
+    // Add the new entry
+    const newEntry = await addMoodEnergyEntry({
+      ...entry,
+      vehicleId: 1 // Default to first vehicle
+    });
+    
+    // Update local state with new entry
+    const updatedEntries = [
+      {
+        date: new Date(newEntry.date).toLocaleDateString(),
+        time: new Date(newEntry.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        mood: newEntry.mood,
+        energy: newEntry.energy,
+        note: newEntry.note || ""
+      },
+      ...moodEnergyEntries
+    ];
+    
+    setMoodEnergyEntries(updatedEntries);
+    
+    // Update the form data with the new mood and energy values
+    setFormData(prev => ({
+      ...prev,
+      moodValue: entry.mood,
+      energyValue: entry.energy,
+      moodEnergyNote: entry.note,
+      mood: getMoodTerm(entry.mood) // Use the F1 terminology for the mood field
+    }));
+    
+    // Show feedback
+    alert('Telemetry data recorded for this drive!');
+  };
+  
+  // Get F1-style terminology for mood levels
+  const getMoodTerm = (value) => {
+    if (value <= 2) return 'Pit Stop Needed';
+    if (value <= 4) return 'Out of the Racing Line';
+    if (value <= 6) return 'On the Grid';
+    if (value <= 8) return 'Flying Lap';
+    return 'Pole Position';
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await supabase.from('DriveJournal').insert([{
+      // Include the mood/energy data with the drive journal entry
+      const journalEntry = {
         user_id: (await supabase.auth.getUser()).data.user.id,
-        ...formData
-      }]);
+        ...formData,
+        telemetryMood: activeMoodEnergy.mood,
+        telemetryEnergy: activeMoodEnergy.energy,
+        telemetryNotes: activeMoodEnergy.note
+      };
+      
+      await supabase.from('DriveJournal').insert([journalEntry]);
       alert('Drive Entry Saved!');
+      
+      // Reset form
       setFormData({
         car: '',
         location: '',
@@ -41,7 +109,17 @@ function DriveLoggerForm() {
         mood: '',
         notes: '',
         photoUrl: '',
-        date: ''
+        date: '',
+        moodValue: 5,
+        energyValue: 5,
+        moodEnergyNote: ''
+      });
+      
+      // Reset mood/energy state
+      setActiveMoodEnergy({
+        mood: 5,
+        energy: 5,
+        note: ''
       });
     } catch (error) {
       console.error('Error saving drive entry:', error.message);
@@ -81,9 +159,23 @@ function DriveLoggerForm() {
 
         <label htmlFor="date" className="text-white">Date (required)</label>
         <input type="date" name="date" id="date" value={formData.date} onChange={handleChange} required className="p-3 rounded-lg bg-black border border-gray-700 text-white" />
+        
+        {/* Driver Telemetry Tracking */}
+        <div className="mt-8 mb-6">
+          <h3 className="text-lg font-orbitron text-blue-400 mb-4 flex items-center justify-center">
+            Driver Telemetry
+          </h3>
+          <MoodEnergyTracker
+            entries={moodEnergyEntries}
+            onSave={handleMoodEnergySave}
+            currentMood={activeMoodEnergy.mood}
+            currentEnergy={activeMoodEnergy.energy}
+            showHistory={true}
+          />
+        </div>
 
-        <button type="submit" className="apex-button w-full" aria-label="Save Drive Entry">
-          Save Drive
+        <button type="submit" className="apex-button w-full mt-6" aria-label="Save Drive Entry">
+          Save Drive Journal Entry
         </button>
       </form>
     </div>
