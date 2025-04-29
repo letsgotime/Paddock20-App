@@ -1615,7 +1615,10 @@ function GarageVaultPage() {
                     </div>
                     
                     <div className="mt-4 flex justify-end">
-                      <button className="apex-button-sm mr-2">
+                      <button 
+                        className="apex-button-sm mr-2"
+                        onClick={() => setShowAddMaintenanceForm(true)}
+                      >
                         <PlusCircle size={16} className="mr-1" />
                         Add Record
                       </button>
