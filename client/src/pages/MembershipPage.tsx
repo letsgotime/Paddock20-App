@@ -2,6 +2,7 @@ import React, { useState, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { Crown, Shield, Star, Check, X, Info } from 'lucide-react';
 import ExportOptions from '../components/ExportOptions';
+import PageHeader from '../components/PageHeader';
 
 interface MembershipTier {
   id: string;
@@ -156,22 +157,30 @@ const MembershipPage: React.FC = () => {
     }
   ];
 
+  const handleExport = (type: 'pdf' | 'csv' | 'print') => {
+    // Handle export based on type
+    if (contentRef.current) {
+      if (type === 'pdf') {
+        // PDF export logic
+      } else if (type === 'csv') {
+        // CSV export logic  
+      } else if (type === 'print') {
+        // Print logic
+      }
+    }
+  };
+
   return (
     <div className="min-h-screen bg-black text-white">
       <div className="max-w-7xl mx-auto px-4 py-12">
-        {/* Export Options */}
-        <div className="flex justify-end mb-6">
-          <ExportOptions 
-            contentRef={contentRef}
-            title="Paddock20 Membership"
-            pageName="Membership"
-            data={membershipTiers.map(tier => ({
-              name: tier.name,
-              price: tier.price,
-              features: tier.features.filter(f => f.included).map(f => f.name)
-            }))}
-          />
-        </div>
+        {/* Page Header with Back Button */}
+        <PageHeader 
+          title="Paddock20™ Membership"
+          subtitle="Explore membership tiers and benefits"
+          showBackButton={true}
+          showExportOptions={true}
+          onExport={handleExport}
+        />
         
         <div ref={contentRef}>
           {/* Header */}
