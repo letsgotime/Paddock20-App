@@ -11,6 +11,7 @@ import ExportOptions from '../components/ExportOptions';
 import TimepiVault from '../components/TimepiVault';
 import TimepieceTelemetry from '../components/TimepieceTelemetry';
 import TimepieceModelViewer from '../components/TimepieceModelViewer';
+import VehicleTelemetry from '../components/VehicleTelemetry';
 import timepieceDataService from '../services/timepieceDataService';
 import marketplaceService from '../services/marketplaceService';
 import MarketplaceListing from '../components/MarketplaceListing';
