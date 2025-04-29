@@ -59,7 +59,7 @@ const GoalTileGrid: React.FC<GoalTileGridProps> = ({
               cursor-pointer
             `}
           >
-            {/* Dream Cover Image */}
+            {/* Goal Cover Image */}
             <div 
               className="h-44 bg-cover bg-center"
               style={{

@@ -32,6 +32,7 @@ import SpiritFocusComponent from '../components/ManifestationStation/SpiritFocus
 import CelebrationComponent from '../components/ManifestationStation/CelebrationComponent';
 import LibraryComponent from '../components/ManifestationStation/LibraryComponent';
 import ResourceLibraryComponent from '../components/ManifestationStation/ResourceLibraryComponent';
+import GoalTileGrid from '../components/ManifestationStation/GoalTileGrid';
 
 // Mock data - in a real app, this would come from API/database
 const MOCK_GOALS: Goal[] = [
