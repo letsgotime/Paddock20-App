@@ -18,6 +18,30 @@ const AdaptiveImage = lazy(() => import('./AdaptiveImage'));
 const AdaptiveImageGrid = lazy(() => import('./AdaptiveImage').then(module => ({ default: module.AdaptiveImageGrid })));
 const AdaptiveHeroImage = lazy(() => import('./AdaptiveImage').then(module => ({ default: module.AdaptiveHeroImage })));
 
+// Helper function to get vehicle images
+const getVehicleImageUrl = (vehicle, index) => {
+  if (!vehicle) {
+    // Default image queries when no vehicle is provided
+    const defaultQueries = [
+      'luxury sports car',
+      'performance car',
+      'car wheel detail',
+      'sports car engine'
+    ];
+    return `https://source.unsplash.com/random/1200x800/?${defaultQueries[index % defaultQueries.length]}`;
+  }
+  
+  // Vehicle-specific queries
+  const queries = [
+    `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
+    `${vehicle.make} ${vehicle.model} performance`,
+    `${vehicle.make} ${vehicle.model} wheel`,
+    `${vehicle.make} ${vehicle.model} engine`
+  ];
+  
+  return `https://source.unsplash.com/random/1200x800/?${queries[index % queries.length]}`;
+};
+
 // Vehicle image search terms
 const vehicleSearchTerms = [
   "professional automotive photography",
@@ -623,7 +647,7 @@ const F1TelemetryDashboard = ({ vehicle, vehicleData }) => {
       {/* Hero Vehicle Image Banner */}
       <div className="vehicle-hero-image mb-6 overflow-hidden rounded-lg border border-blue-500/30 relative">
         <img 
-          src={getVehicleImageUrl(0)} 
+          src={vehicle ? vehicle.image_url || `https://source.unsplash.com/random/1200x800/?${vehicle.year}+${vehicle.make}+${vehicle.model}` : "https://source.unsplash.com/random/1200x800/?luxury+sports+car"} 
           alt={vehicle ? `${vehicle.year} ${vehicle.make} ${vehicle.model}` : "Featured Vehicle"} 
           className="w-full h-64 object-cover"
         />
@@ -711,7 +735,7 @@ const F1TelemetryDashboard = ({ vehicle, vehicleData }) => {
           {/* Vehicle Performance Images */}
           <div className="performance-imagery grid grid-cols-1 lg:grid-cols-3 gap-4 mb-6">
             <div className="bg-gray-800 rounded-lg overflow-hidden border border-blue-500/20">
-              <img src={getVehicleImageUrl(1)} alt="Performance View" className="w-full h-48 object-cover" />
+              <img src={getVehicleImageUrl(vehicle, 1)} alt="Performance View" className="w-full h-48 object-cover" />
               <div className="p-3">
                 <h4 className="text-blue-400 font-orbitron">Performance View</h4>
                 <p className="text-gray-400 text-sm">Engine & Dynamics</p>
