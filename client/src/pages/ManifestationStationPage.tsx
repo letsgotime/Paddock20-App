@@ -634,9 +634,9 @@ const ManifestationStationPage: React.FC = () => {
                 </div>
               )}
             </div>
-            <div className="mt-3 mb-5 max-w-4xl">
+            <div className="mt-3 mb-5 w-full">
               {/* Carbon fiber background pattern for the entire section */}
-              <div className="bg-black bg-opacity-80 backdrop-blur-sm rounded-xl overflow-hidden border border-gray-800 relative">
+              <div className="bg-black bg-opacity-80 backdrop-blur-sm rounded-xl overflow-hidden border border-gray-800 relative w-full">
                 <div 
                   className="absolute inset-0 z-0 opacity-20" 
                   style={{ 
@@ -646,19 +646,19 @@ const ManifestationStationPage: React.FC = () => {
                 />
 
                 {/* Header section */}
-                <div className="relative z-10 p-4 border-b border-gray-700 bg-gradient-to-r from-gray-900 to-gray-800">
-                  <h2 className="font-['Orbitron'] text-xl text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-green-400">MANIFESTATION STATION™ METHODOLOGY</h2>
+                <div className="relative z-10 p-4 border-b border-gray-700 bg-gradient-to-r from-gray-900 via-black to-gray-900">
+                  <h2 className="font-bold text-2xl text-center text-white">MANIFESTATION METHODOLOGY</h2>
                 </div>
                 
                 {/* Three column layout */}
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-0 relative z-10">
                   <div className="p-5 border-r border-gray-800 flex flex-col h-full">
                     <div className="mb-3 pb-2 border-b border-gray-700">
-                      <h3 className="font-['Orbitron'] text-lg bg-clip-text text-transparent bg-gradient-to-r from-gray-100 to-blue-300">WHY YOU'RE HERE</h3>
+                      <h3 className="font-['Orbitron'] text-lg text-white">WHY YOU'RE HERE</h3>
                     </div>
                     <div className="bg-black bg-opacity-50 p-4 rounded-lg flex-grow border border-gray-800 shadow-inner">
                       <p className="text-gray-300 text-sm leading-relaxed">
-                        Manifestation Station™ isn't about "wishing." <span className="text-blue-400 font-semibold">It's about working.</span> 
+                        Manifestation Station isn't about "wishing." <span className="text-blue-400 font-semibold">It's about working.</span> 
                         <br /><br />
                         Every goal you log here — every car, watch, home, or milestone — comes with a plan built the way real winners build: 
                         <br /><br />
@@ -671,11 +671,11 @@ const ManifestationStationPage: React.FC = () => {
                   
                   <div className="p-5 border-r border-gray-800 flex flex-col h-full">
                     <div className="mb-3 pb-2 border-b border-gray-700">
-                      <h3 className="font-['Orbitron'] text-lg bg-clip-text text-transparent bg-gradient-to-r from-gray-100 to-blue-300">WHAT YOU GET</h3>
+                      <h3 className="font-['Orbitron'] text-lg text-white">WHAT YOU GET</h3>
                     </div>
                     <div className="bg-black bg-opacity-50 p-4 rounded-lg flex-grow border border-gray-800 shadow-inner">
-                      <div className="mb-3 px-3 py-2 bg-gradient-to-r from-blue-900/40 to-green-900/40 rounded-md border border-blue-800/50">
-                        <p className="text-blue-300 font-semibold text-center text-sm">
+                      <div className="mb-3 px-3 py-2 bg-green-600 rounded-md shadow-lg">
+                        <p className="text-white font-semibold text-center text-sm">
                           The First Hustle Planner Designed for Auto Enthusiasts
                         </p>
                       </div>
@@ -702,23 +702,19 @@ const ManifestationStationPage: React.FC = () => {
                         </li>
                       </ul>
                       <p className="text-gray-400 text-xs mt-3 italic text-center">
-                        Methods used by the creators who built this app
+                        Methods used by people who have earned the results you're fighting for
                       </p>
                     </div>
                   </div>
                   
                   <div className="p-5 flex flex-col h-full">
                     <div className="mb-3 pb-2 border-b border-gray-700">
-                      <h3 className="font-['Orbitron'] text-lg bg-clip-text text-transparent bg-gradient-to-r from-gray-100 to-blue-300">HOW TO USE IT</h3>
+                      <h3 className="font-['Orbitron'] text-lg text-white">HOW TO USE IT</h3>
                     </div>
                     <div className="bg-black bg-opacity-50 p-4 rounded-lg flex-grow border border-gray-800 shadow-inner">
-                      <div className="mb-4 p-3 bg-gradient-to-r from-blue-900/60 to-green-900/60 rounded-md border border-green-700/50 shadow-lg relative overflow-hidden">
-                        <div className="absolute inset-0 bg-black opacity-20" style={{ 
-                          backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h20L0 20z' fill='%233b82f6' fill-opacity='0.2' fill-rule='evenodd'/%3E%3C/svg%3E")`,
-                          backgroundSize: '6px 6px'
-                        }}></div>
+                      <div className="mb-4 p-3 bg-green-600 rounded-md shadow-lg relative overflow-hidden">
                         <h4 className="text-center font-['Orbitron'] text-white font-bold text-sm mb-1 relative z-10">GOTIME'S 7 ELEMENTS SYSTEM</h4>
-                        <p className="text-gray-300 text-xs text-center relative z-10">The proven method to turn visions into reality through consistent daily actions</p>
+                        <p className="text-white text-xs text-center relative z-10">The proven method to turn visions into reality through consistent daily actions</p>
                       </div>
                       <ul className="text-gray-300 text-sm space-y-2">
                         <li className="flex items-start">
@@ -747,8 +743,8 @@ const ManifestationStationPage: React.FC = () => {
                 </div>
                 
                 {/* Footer quote */}
-                <div className="relative z-10 p-3 border-t border-gray-700 bg-gradient-to-r from-gray-900 to-black">
-                  <p className="text-center text-sm bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-green-300 font-medium">
+                <div className="relative z-10 p-3 border-t border-gray-700 bg-gradient-to-r from-gray-900 via-black to-gray-900">
+                  <p className="text-center text-sm text-white font-medium">
                     DREAM BIGGER • WORK SHARPER • DRIVE HARDER • LIVE BETTER
                   </p>
                 </div>
