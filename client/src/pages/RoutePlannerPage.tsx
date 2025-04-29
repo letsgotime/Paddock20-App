@@ -2170,6 +2170,81 @@ const RoutePlannerPage = () => {
                 </div>
               </div>
             </div>
+            
+            {/* Route Customization - Moved here as requested */}
+            <div className="mt-6 bg-gray-900/60 p-4 rounded-lg border border-blue-900/30">
+              <h3 className="text-blue-400 font-orbitron text-lg mb-3 flex items-center">
+                <span className="mr-2">⚙️</span> Route Customizations
+              </h3>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {/* Trip Configuration */}
+                <div className="bg-gray-800/60 p-3 rounded-lg border border-gray-700">
+                  <h4 className="text-green-500 font-semibold mb-2 text-sm uppercase tracking-wide">Trip Type</h4>
+                  <div className="space-y-2">
+                    <label className="flex items-center p-2 hover:bg-gray-800 rounded transition-colors">
+                      <input
+                        type="checkbox"
+                        name="roundTrip"
+                        checked={routeCustomizations.roundTrip}
+                        onChange={handleRouteCustomizationChange}
+                        className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5"
+                      />
+                      <div>
+                        <span className="text-white font-medium">Round Trip</span>
+                        <p className="text-gray-400 text-xs">Return to starting point</p>
+                      </div>
+                    </label>
+                    <label className="flex items-center p-2 hover:bg-gray-800 rounded transition-colors">
+                      <input
+                        type="checkbox"
+                        name="scenic"
+                        checked={routeCustomizations.scenic}
+                        onChange={handleRouteCustomizationChange}
+                        className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5"
+                      />
+                      <div>
+                        <span className="text-white font-medium">Scenic Route</span>
+                        <p className="text-gray-400 text-xs">Prioritize roads with views</p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+                
+                {/* Stop Configurations */}
+                <div className="bg-gray-800/60 p-3 rounded-lg border border-gray-700">
+                  <h4 className="text-green-500 font-semibold mb-2 text-sm uppercase tracking-wide">Route Options</h4>
+                  <div className="space-y-2">
+                    <label className="flex items-center p-2 hover:bg-gray-800 rounded transition-colors">
+                      <input
+                        type="checkbox"
+                        name="avoidTolls"
+                        checked={routeCustomizations.avoidTolls}
+                        onChange={handleRouteCustomizationChange}
+                        className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5"
+                      />
+                      <div>
+                        <span className="text-white font-medium">Avoid Tolls</span>
+                        <p className="text-gray-400 text-xs">Find toll-free routes</p>
+                      </div>
+                    </label>
+                    <label className="flex items-center p-2 hover:bg-gray-800 rounded transition-colors">
+                      <input
+                        type="checkbox"
+                        name="gasStop"
+                        checked={routeCustomizations.gasStop}
+                        onChange={handleRouteCustomizationChange}
+                        className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5"
+                      />
+                      <div>
+                        <span className="text-white font-medium">Include Gas Stops</span>
+                        <p className="text-gray-400 text-xs">Add premium fuel stations to route</p>
+                      </div>
+                    </label>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           
           {/* Vehicle Selection Section */}
