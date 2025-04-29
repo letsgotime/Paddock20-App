@@ -4,9 +4,10 @@ import React, { useState, useRef, useEffect, useCallback } from "react";
 import { getWeatherData, getOneCallData } from '@/services/openWeatherService';
 import CarEventsExplorer from '@/components/CarEventsExplorer';
 import CarCultureSpotsExplorer from '@/components/CarCultureSpotsExplorer';
+import RoutePerformanceHeatmap, { generateSampleHeatmapData, HeatmapDataPoint } from '@/components/RoutePerformanceHeatmap';
 import { StrutEvent } from '@/services/strutAPI';
 import { CarCultureSpot } from '@/services/speedhuntersAPI';
-import { Users, MapPin, Wind, Thermometer, Droplets, Sun, CloudRain, BarChart3, Compass, Mountain, Clock, RotateCw } from 'lucide-react';
+import { Users, MapPin, Wind, Thermometer, Droplets, Sun, CloudRain, BarChart3, Compass, Mountain, Clock, RotateCw, Activity } from 'lucide-react';
 
 // Helper functions for weather metrics
 const calculateAirDensity = (tempF: number, pressureHpa: number): string => {
@@ -671,6 +672,11 @@ const RoutePlannerPage = () => {
   // Route analysis data
   const [routeAnalysisEnabled, setRouteAnalysisEnabled] = useState(false);
   const [routeSegments, setRouteSegments] = useState<RouteCondition[]>([]);
+  
+  // Performance heatmap data
+  const [heatmapData, setHeatmapData] = useState<HeatmapDataPoint[]>([]);
+  const [selectedHeatmapMetric, setSelectedHeatmapMetric] = useState('performance');
+  const [showHeatmap, setShowHeatmap] = useState(false);
   
   // Waypoints for Strut API and Speedhunters API
   const [routeWaypoints, setRouteWaypoints] = useState<Array<{lat: number, lng: number}>>([]);
