@@ -1921,41 +1921,82 @@ const RoutePlannerPage = () => {
 
   return (
     <div className="min-h-screen bg-black max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-      <div className="flex justify-between items-center mb-8">
-        <h1 className="text-blue-400 font-orbitron text-4xl">🛣️ Route Planner</h1>
-        
-        {/* Live Telemetry Controls */}
-        <div className="flex items-center space-x-4">
-          {!gpsTrackingEnabled ? (
-            <button 
-              onClick={startGpsTracking}
-              className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 hover:scale-105"
-            >
-              <MapPin className="h-5 w-5" />
-              <span className="font-orbitron">Start GPS Tracking</span>
-            </button>
-          ) : (
-            <div className="flex items-center gap-4">
-              <div className="bg-black/40 rounded-lg border border-blue-500/30 px-4 py-2 flex items-center gap-3">
-                <div className="flex items-center gap-2">
-                  <div className="h-3 w-3 rounded-full bg-green-500 animate-pulse"></div>
-                  <span className="text-green-400 font-orbitron text-sm">TRACKING ACTIVE</span>
-                </div>
-                <div className="text-gray-300 text-sm">
-                  {gpsTrackHistory.length > 0 && (
-                    <span>{calculateTotalDistance(gpsTrackHistory).toFixed(1)} mi</span>
-                  )}
-                </div>
-              </div>
+      <div className="mb-8">
+        <div className="flex justify-between items-center mb-4">
+          <h1 className="text-blue-400 font-orbitron text-4xl">🛣️ Route Planner</h1>
+          
+          {/* Live Telemetry Controls */}
+          <div className="flex items-center space-x-4">
+            {!gpsTrackingEnabled ? (
               <button 
-                onClick={stopGpsTracking}
-                className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 hover:scale-105"
+                onClick={startGpsTracking}
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 hover:scale-105"
               >
-                <RotateCw className="h-5 w-5" />
-                <span className="font-orbitron">End & Save</span>
+                <MapPin className="h-5 w-5" />
+                <span className="font-orbitron">Start GPS Tracking</span>
               </button>
+            ) : (
+              <div className="flex items-center gap-4">
+                <div className="bg-black/40 rounded-lg border border-blue-500/30 px-4 py-2 flex items-center gap-3">
+                  <div className="flex items-center gap-2">
+                    <div className="h-3 w-3 rounded-full bg-green-500 animate-pulse"></div>
+                    <span className="text-green-400 font-orbitron text-sm">TRACKING ACTIVE</span>
+                  </div>
+                  <div className="text-gray-300 text-sm">
+                    {gpsTrackHistory.length > 0 && (
+                      <span>{calculateTotalDistance(gpsTrackHistory).toFixed(1)} mi</span>
+                    )}
+                  </div>
+                </div>
+                <button 
+                  onClick={stopGpsTracking}
+                  className="flex items-center gap-2 bg-red-600 hover:bg-red-500 text-white px-4 py-2 rounded-lg shadow-lg transition-all duration-300 hover:scale-105"
+                >
+                  <RotateCw className="h-5 w-5" />
+                  <span className="font-orbitron">End & Save</span>
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+        
+        {/* Navigation App Selection - Moved to top for better UX */}
+        <div className="bg-gray-900/60 rounded-lg p-3 border border-blue-900/30 mb-4">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex-shrink-0">
+              <label className="text-blue-400 font-orbitron text-sm">Navigation App:</label>
             </div>
-          )}
+            <div className="flex-grow flex items-center gap-3">
+              <select
+                value={preferredNavApp}
+                onChange={(e) => setPreferredNavApp(e.target.value)}
+                className="bg-gray-800 border border-gray-700 text-white rounded-lg px-3 py-2 text-sm"
+              >
+                <option value="Google Maps">Google Maps</option>
+                <option value="Waze">Waze</option>
+                <option value="Apple Maps">Apple Maps</option>
+              </select>
+              
+              <label className="inline-flex items-center ml-2 cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showAdvancedSettings}
+                  onChange={() => setShowAdvancedSettings(!showAdvancedSettings)}
+                  className="form-checkbox text-blue-500 rounded h-4 w-4"
+                />
+                <span className="ml-2 text-gray-300 text-sm">Advanced Options</span>
+              </label>
+              
+              {showAdvancedSettings && (
+                <button
+                  onClick={() => document.getElementById('navigation-advanced-settings')?.scrollIntoView({ behavior: 'smooth' })}
+                  className="text-blue-400 hover:text-blue-300 text-sm underline"
+                >
+                  Configure Navigation Settings
+                </button>
+              )}
+            </div>
+          </div>
         </div>
       </div>
 
