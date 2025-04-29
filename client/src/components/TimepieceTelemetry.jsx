@@ -4,7 +4,7 @@ import {
   RefreshCw, FileText, ClipboardCheck, Settings, Wrench as Tool, 
   DollarSign, Package, Shield, BarChart, Battery, Droplet, Activity, Info,
   PlusCircle, Circle, LineChart, MapPin, Award, Eye, Save,
-  RotateCcw, CircleCheck, Bookmark, Compass
+  RotateCcw, CircleCheck, Bookmark, Compass, ZoomIn
 } from 'lucide-react';
 import EditableTelemetry from './EditableTelemetry';
 import timepieceDataService from '../services/timepieceDataService';
