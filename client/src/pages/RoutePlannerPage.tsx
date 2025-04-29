@@ -678,6 +678,98 @@ const RoutePlannerPage = () => {
   const [selectedHeatmapMetric, setSelectedHeatmapMetric] = useState('performance');
   const [showHeatmap, setShowHeatmap] = useState(false);
   
+  // Effect for initializing heatmap data
+  useEffect(() => {
+    // Generate initial heatmap data when component mounts
+    if (heatmapData.length === 0) {
+      const sampleData = generateSampleHeatmapData(40, 36.1627, -86.7816, 0.1);
+      setHeatmapData(sampleData);
+    }
+  }, []);
+  
+  // Generate performance heatmap data based on route
+  const generateRouteHeatmapData = (waypoints?: Array<{lat: number, lng: number}>) => {
+    // Use provided waypoints or generate random ones around Nashville area if none available
+    const points = waypoints && waypoints.length >= 2 
+      ? waypoints 
+      : Array(20).fill(0).map((_, i) => ({
+          lat: 36.1627 + (Math.random() * 0.2 - 0.1),
+          lng: -86.7816 + (Math.random() * 0.2 - 0.1)
+        }));
+    
+    // Sort points to create a logical path (this would be unnecessary with real route data)
+    if (!waypoints) {
+      points.sort((a, b) => a.lng - b.lng);
+    }
+    
+    // Create detailed heatmap data with performance metrics
+    const heatmapPoints: HeatmapDataPoint[] = [];
+    const currentTime = Date.now();
+    const selectedMetric = selectedHeatmapMetric; // Use the currently selected metric
+    
+    // For each route point, create a data point with realistic values
+    points.forEach((point, i) => {
+      // Generate realistic values based on point position and surrounding terrain
+      const progress = i / (points.length - 1); // 0 to 1 along route
+      
+      // These would be real telemetry in production version
+      const speed = 30 + Math.sin(progress * Math.PI * 2) * 30 + Math.random() * 20; // 0-80 mph
+      const acceleration = 0.2 + Math.cos(progress * Math.PI * 3) * 0.3 + Math.random() * 0.2; // G forces
+      const cornering = 0.1 + Math.sin(progress * Math.PI * 5) * 0.4 + Math.random() * 0.3; // Lateral G
+      const elevation = 400 + Math.sin(progress * Math.PI) * 500 + Math.random() * 100; // Feet
+      const gradient = Math.sin(progress * Math.PI * 2) * 8; // -8% to 8%
+      const temperature = 75 + Math.sin(progress * Math.PI) * 10 + Math.random() * 5; // °F
+      
+      // Calculate a performance value based on our selected metrics
+      // Higher values = better performance
+      let value: number;
+      
+      switch(selectedMetric) {
+        case 'speed':
+          value = speed;
+          break;
+        case 'acceleration':
+          value = acceleration * 100; // Scale to 0-100 range
+          break;
+        case 'cornering':
+          value = cornering * 100; // Scale to 0-100 range
+          break;
+        case 'elevation':
+          value = elevation / 10; // Scale to 0-100 range
+          break;
+        case 'temperature':
+          value = temperature;
+          break;
+        case 'performance':
+        default:
+          // Composite score favoring sporty driving within reasonable limits
+          value = (speed / 80 * 40) + // 40% from speed (normalized to 0-40)
+                 (cornering / 0.8 * 30) + // 30% from cornering (normalized to 0-30)
+                 (1 - Math.abs(acceleration - 0.4) / 0.4 * 20) + // 20% from acceleration (optimal ~0.4G)
+                 (1 - Math.abs(gradient) / 8 * 10); // 10% from gradient (flatter is better)
+          break;
+      }
+      
+      heatmapPoints.push({
+        position: { lat: point.lat, lng: point.lng },
+        value,
+        metric: selectedMetric,
+        timestamp: currentTime - (points.length - i) * 5000, // 5 seconds between points
+        details: {
+          speed,
+          acceleration,
+          cornering,
+          elevation,
+          gradient,
+          temperature
+        }
+      });
+    });
+    
+    setHeatmapData(heatmapPoints);
+    setShowHeatmap(true);
+  };
+  
   // Waypoints for Strut API and Speedhunters API
   const [routeWaypoints, setRouteWaypoints] = useState<Array<{lat: number, lng: number}>>([]);
   
