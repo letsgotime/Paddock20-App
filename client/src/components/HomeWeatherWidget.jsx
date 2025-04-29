@@ -8,7 +8,11 @@ import {
   formatTime,
   getWeatherIconUrl
 } from '@/services/openWeatherService';
-import { MapPin, Locate, Search, AlertTriangle, ThermometerSun, Droplets, Wind, Sunrise, Sunset, Calendar } from 'lucide-react';
+import { 
+  MapPin, Locate, Search, AlertTriangle, ThermometerSun, 
+  Droplets, Wind, Sunrise, Sunset, Calendar, Settings,
+  LocateFixed, Eye, SaveIcon, RotateCcw, Sliders, Check
+} from 'lucide-react';
 
 const HomeWeatherWidget = () => {
   const [weatherData, setWeatherData] = useState(null);
@@ -16,14 +20,33 @@ const HomeWeatherWidget = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
   const [unit, setUnit] = useState('imperial');
-  const [location, setLocation] = useState(defaultLocation);
+  const [location, setLocation] = useState(null); // Start null to trigger geolocation
   const [locationInput, setLocationInput] = useState('');
   const [isSearching, setIsSearching] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
+  const [showSettings, setShowSettings] = useState(false);
+  const [useCurrentLocation, setUseCurrentLocation] = useState(true); // Default to using current location
+  const [savedLocations, setSavedLocations] = useState([
+    { name: "Monaco Circuit", lat: 43.7384, lon: 7.4246, isF1: true },
+    { name: "Suzuka Circuit", lat: 34.8431, lon: 136.5415, isF1: true },
+    { name: "Circuit of the Americas", lat: 30.2672, lon: -97.7431, isF1: true }
+  ]);
+
+  // Get current location on initial load
+  useEffect(() => {
+    if (useCurrentLocation && !location) {
+      getCurrentLocation();
+    } else if (!location) {
+      setLocation(defaultLocation);
+    }
+  }, []);
 
   // Fetch weather data based on the selected location
   useEffect(() => {
     async function fetchWeatherData() {
+      // Skip if location is not set yet
+      if (!location) return;
+      
       try {
         setIsLoading(true);
         setError(null);
