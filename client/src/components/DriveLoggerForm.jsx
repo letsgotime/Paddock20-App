@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import supabase from '../services/supabaseClient';
+import MoodEnergyTracker from './MoodEnergyTracker';
 
 function DriveLoggerForm() {
   const [formData, setFormData] = useState({
@@ -11,8 +12,13 @@ function DriveLoggerForm() {
     mood: '',
     notes: '',
     photoUrl: '',
-    date: ''
+    date: '',
+    moodValue: 5,
+    energyValue: 5,
+    moodEnergyNote: ''
   });
+  
+  const [moodEnergyEntries, setMoodEnergyEntries] = useState([]);
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
