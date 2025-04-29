@@ -413,11 +413,19 @@ const RoutePlannerPage = () => {
     favoriteRoutes: true,
     trafficCamerasLayer: false,
     weatherAlerts: true,
+    weatherForecastIntegration: true,  // Enhanced weather integration
+    weatherPreferDry: false,           // Prefer routes with less precipitation
+    weatherTempRange: [55, 85],        // Preferred temperature range for driving
+    weatherOptimizeSunlight: false,    // Optimize for best sunlight conditions
     roadClosures: true,
     constructionZones: true,
     alternateRoutes: true,
-    curvyRoads: false,  // For enthusiasts who prefer twisty roads
-    curveIntensity: 3,  // 1-5 scale corresponding to TRN/km values (Total Route Number per km)
+    curvyRoads: false,                 // For enthusiasts who prefer twisty roads
+    curveIntensity: 3,                 // 1-5 scale corresponding to TRN/km values
+    curvatureMode: 'balanced',         // 'mild', 'balanced', 'aggressive', 'technical'
+    curveDirection: 'both',            // 'left', 'right', 'both'
+    elevationChanges: false,           // Preference for routes with elevation changes
+    elevationIntensity: 2,             // 1-5 scale for elevation change intensity
     motorcycleMode: false,
     hov: false,
     optimizeForSportsCars: false, // Sports car specific optimizations
@@ -3931,70 +3939,287 @@ const RoutePlannerPage = () => {
               <div className="bg-gray-900 p-3 rounded-lg border border-gray-700">
                 <h3 className="text-green-500 font-semibold mb-2 text-sm uppercase tracking-wide">Advanced Features</h3>
                 <div className="space-y-2">
-                  <div className="space-y-1 p-2 hover:bg-gray-800 rounded transition-colors">
-                    <div className="flex items-center">
-                      <input
-                        type="checkbox"
-                        checked={navigationFeatures.curvyRoads}
-                        onChange={(e) => setNavigationFeatures(prev => ({
-                          ...prev,
-                          curvyRoads: e.target.checked
-                        }))}
-                        className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5"
-                      />
-                      <div>
-                        <span className="text-white font-medium">Curvature Preference</span>
-                        <p className="text-gray-400 text-xs">Routes with higher % of curves (TRN value)</p>
+                  <div className="bg-gray-800/80 p-3 rounded-lg border border-blue-900/30 hover:border-blue-500/40 transition-all">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={navigationFeatures.curvyRoads}
+                          onChange={(e) => setNavigationFeatures(prev => ({
+                            ...prev,
+                            curvyRoads: e.target.checked
+                          }))}
+                          className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5"
+                        />
+                        <div>
+                          <span className="text-white font-medium">Curvature Preference</span>
+                          <p className="text-gray-400 text-xs">Routes with higher % of curves (TRN value)</p>
+                        </div>
                       </div>
+                      {navigationFeatures.curvyRoads && (
+                        <span className="bg-green-600/20 text-green-400 text-xs px-2 py-1 rounded-full font-medium">
+                          Active
+                        </span>
+                      )}
                     </div>
                     
                     {navigationFeatures.curvyRoads && (
-                      <div className="pl-8 pt-2">
-                        <div className="mb-1">
-                          <span className="text-xs text-gray-300">Curvature Intensity (TRN/km):</span>
+                      <div className="mt-4 bg-black/30 p-3 rounded-lg border border-blue-900/20 space-y-4">
+                        <div>
+                          <div className="mb-1 flex justify-between items-center">
+                            <span className="text-sm text-blue-400 font-semibold">Curvature Intensity</span>
+                            <span className="text-xs bg-blue-900/30 text-blue-300 px-2 py-1 rounded-full">
+                              {
+                                navigationFeatures.curveIntensity === 1 ? "Minimal (0-2 TRN/km)" :
+                                navigationFeatures.curveIntensity === 2 ? "Gentle (2-4 TRN/km)" :
+                                navigationFeatures.curveIntensity === 3 ? "Moderate (4-6 TRN/km)" :
+                                navigationFeatures.curveIntensity === 4 ? "Spirited (6-8 TRN/km)" :
+                                "Technical (8-12+ TRN/km)"
+                              }
+                            </span>
+                          </div>
+                          <div className="flex items-center space-x-3 text-xs mt-2">
+                            <span className="text-gray-400 w-20">Gentle</span>
+                            <input
+                              type="range"
+                              min="1"
+                              max="5"
+                              value={navigationFeatures.curveIntensity || 3}
+                              onChange={(e) => setNavigationFeatures(prev => ({
+                                ...prev,
+                                curveIntensity: parseInt(e.target.value)
+                              }))}
+                              className="flex-grow h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
+                            />
+                            <span className="text-gray-400 w-20 text-right">Technical</span>
+                          </div>
                         </div>
-                        <div className="flex items-center space-x-1 text-xs">
-                          <span className="text-blue-300">Gentle (2-4)</span>
-                          <input
-                            type="range"
-                            min="1"
-                            max="5"
-                            value={navigationFeatures.curveIntensity || 3}
-                            onChange={(e) => setNavigationFeatures(prev => ({
-                              ...prev,
-                              curveIntensity: parseInt(e.target.value)
-                            }))}
-                            className="w-24 h-1.5 bg-gray-700 rounded-lg appearance-none cursor-pointer"
-                          />
-                          <span className="text-blue-300">Twisty (8-12+)</span>
+                        
+                        <div>
+                          <div className="mb-2">
+                            <label className="text-sm text-blue-400 font-semibold">Curvature Mode</label>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            {['mild', 'balanced', 'aggressive', 'technical'].map((mode) => (
+                              <div 
+                                key={mode}
+                                onClick={() => setNavigationFeatures(prev => ({
+                                  ...prev,
+                                  curvatureMode: mode
+                                }))}
+                                className={`
+                                  cursor-pointer p-2 rounded-lg border transition-all text-center text-sm
+                                  ${navigationFeatures.curvatureMode === mode 
+                                    ? 'border-blue-500 bg-blue-900/30 text-blue-300'
+                                    : 'border-gray-700 bg-black/20 text-gray-400 hover:bg-gray-800/60'}
+                                `}
+                              >
+                                {mode.charAt(0).toUpperCase() + mode.slice(1)}
+                              </div>
+                            ))}
+                          </div>
                         </div>
-                        <div className="text-right text-xs text-gray-400 mt-1">
-                          {
-                            navigationFeatures.curveIntensity === 1 ? "Minimal (0-2 TRN/km)" :
-                            navigationFeatures.curveIntensity === 2 ? "Gentle (2-4 TRN/km)" :
-                            navigationFeatures.curveIntensity === 3 ? "Moderate (4-6 TRN/km)" :
-                            navigationFeatures.curveIntensity === 4 ? "Spirited (6-8 TRN/km)" :
-                            "Technical (8-12+ TRN/km)"
-                          }
+                        
+                        <div>
+                          <div className="mb-2">
+                            <label className="text-sm text-blue-400 font-semibold">Curve Direction Preference</label>
+                          </div>
+                          <div className="grid grid-cols-3 gap-2">
+                            {['left', 'both', 'right'].map((direction) => (
+                              <div 
+                                key={direction}
+                                onClick={() => setNavigationFeatures(prev => ({
+                                  ...prev,
+                                  curveDirection: direction
+                                }))}
+                                className={`
+                                  cursor-pointer p-2 rounded-lg border transition-all text-center text-sm
+                                  ${navigationFeatures.curveDirection === direction 
+                                    ? 'border-blue-500 bg-blue-900/30 text-blue-300'
+                                    : 'border-gray-700 bg-black/20 text-gray-400 hover:bg-gray-800/60'}
+                                `}
+                              >
+                                {direction === 'left' && '⟲ Left Turns'}
+                                {direction === 'both' && '↺↻ Balanced'}
+                                {direction === 'right' && '⟳ Right Turns'}
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="checkbox"
+                              checked={navigationFeatures.elevationChanges}
+                              onChange={(e) => setNavigationFeatures(prev => ({
+                                ...prev,
+                                elevationChanges: e.target.checked
+                              }))}
+                              className="form-checkbox text-blue-500 rounded h-5 w-5"
+                            />
+                            <span className="text-white">Include Elevation Changes</span>
+                          </div>
+                          
+                          {navigationFeatures.elevationChanges && (
+                            <select
+                              value={navigationFeatures.elevationIntensity}
+                              onChange={(e) => setNavigationFeatures(prev => ({
+                                ...prev,
+                                elevationIntensity: parseInt(e.target.value)
+                              }))}
+                              className="bg-black/30 border border-gray-700 text-white rounded px-2 py-1 text-sm"
+                            >
+                              <option value={1}>Minimal Elevation</option>
+                              <option value={2}>Light Hills</option>
+                              <option value={3}>Moderate Mountains</option>
+                              <option value={4}>Steep Ascents</option>
+                              <option value={5}>Alpine Style</option>
+                            </select>
+                          )}
                         </div>
                       </div>
                     )}
                   </div>
-                  <label className="flex items-center p-2 hover:bg-gray-800 rounded transition-colors">
-                    <input
-                      type="checkbox"
-                      checked={navigationFeatures.weatherAlerts}
-                      onChange={(e) => setNavigationFeatures(prev => ({
-                        ...prev,
-                        weatherAlerts: e.target.checked
-                      }))}
-                      className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5"
-                    />
-                    <div>
-                      <span className="text-white font-medium">Weather Insights</span>
-                      <p className="text-gray-400 text-xs">Include weather alerts and forecasts</p>
+                  <div className="bg-gray-800/80 p-3 rounded-lg border border-blue-900/30 hover:border-blue-500/40 transition-all">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        <input
+                          type="checkbox"
+                          checked={navigationFeatures.weatherAlerts}
+                          onChange={(e) => setNavigationFeatures(prev => ({
+                            ...prev,
+                            weatherAlerts: e.target.checked
+                          }))}
+                          className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5"
+                        />
+                        <div>
+                          <span className="text-white font-medium">Weather Insights</span>
+                          <p className="text-gray-400 text-xs">Include weather alerts and forecasts</p>
+                        </div>
+                      </div>
+                      {navigationFeatures.weatherAlerts && (
+                        <span className="bg-green-600/20 text-green-400 text-xs px-2 py-1 rounded-full font-medium">
+                          Active
+                        </span>
+                      )}
                     </div>
-                  </label>
+                    
+                    {navigationFeatures.weatherAlerts && (
+                      <div className="mt-4 bg-black/30 p-3 rounded-lg border border-blue-900/20 space-y-4">
+                        <div className="flex items-center justify-between mb-2">
+                          <label className="text-sm text-blue-400 font-semibold">Weather Optimizations</label>
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <label className="flex items-center justify-between p-2 hover:bg-black/20 rounded-lg">
+                            <div className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={navigationFeatures.weatherForecastIntegration}
+                                onChange={(e) => setNavigationFeatures(prev => ({
+                                  ...prev,
+                                  weatherForecastIntegration: e.target.checked
+                                }))}
+                                className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5"
+                              />
+                              <span className="text-white text-sm">Include Hourly Forecasts</span>
+                            </div>
+                            <div className="text-xs text-blue-300">Full Route</div>
+                          </label>
+                          
+                          <label className="flex items-center justify-between p-2 hover:bg-black/20 rounded-lg">
+                            <div className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={navigationFeatures.weatherPreferDry}
+                                onChange={(e) => setNavigationFeatures(prev => ({
+                                  ...prev,
+                                  weatherPreferDry: e.target.checked
+                                }))}
+                                className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5"
+                              />
+                              <span className="text-white text-sm">Prefer Dry Conditions</span>
+                            </div>
+                            <div className="text-xs text-blue-300">Less Precipitation</div>
+                          </label>
+                          
+                          <label className="flex items-center justify-between p-2 hover:bg-black/20 rounded-lg">
+                            <div className="flex items-center">
+                              <input
+                                type="checkbox"
+                                checked={navigationFeatures.weatherOptimizeSunlight}
+                                onChange={(e) => setNavigationFeatures(prev => ({
+                                  ...prev,
+                                  weatherOptimizeSunlight: e.target.checked
+                                }))}
+                                className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5"
+                              />
+                              <span className="text-white text-sm">Optimize for Sunlight</span>
+                            </div>
+                            <div className="text-xs text-blue-300">Best Visibility</div>
+                          </label>
+                        </div>
+                        
+                        <div>
+                          <label className="text-sm text-blue-400 font-semibold block mb-2">Preferred Temperature Range</label>
+                          <div className="flex items-center justify-between space-x-4">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="number"
+                                min="0"
+                                max="120"
+                                value={navigationFeatures.weatherTempRange[0]}
+                                onChange={(e) => setNavigationFeatures(prev => ({
+                                  ...prev,
+                                  weatherTempRange: [parseInt(e.target.value), prev.weatherTempRange[1]]
+                                }))}
+                                className="w-16 bg-black/20 border border-gray-700 text-white rounded p-1 text-center"
+                              />
+                              <span className="text-gray-400">°F Min</span>
+                            </div>
+                            
+                            <div className="flex-1 bg-gray-700 h-[2px] relative">
+                              <div className="absolute -top-1 left-0 right-0 text-xs text-center text-blue-400">
+                                Ideal driving temperature range
+                              </div>
+                            </div>
+                            
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="number"
+                                min="0"
+                                max="120"
+                                value={navigationFeatures.weatherTempRange[1]}
+                                onChange={(e) => setNavigationFeatures(prev => ({
+                                  ...prev,
+                                  weatherTempRange: [prev.weatherTempRange[0], parseInt(e.target.value)]
+                                }))}
+                                className="w-16 bg-black/20 border border-gray-700 text-white rounded p-1 text-center"
+                              />
+                              <span className="text-gray-400">°F Max</span>
+                            </div>
+                          </div>
+                          <div className="text-xs text-gray-400 text-center mt-1">
+                            {navigationFeatures.weatherTempRange[0]}°F - {navigationFeatures.weatherTempRange[1]}°F optimal for drivetrain and tire performance
+                          </div>
+                        </div>
+                        
+                        <div className="bg-blue-900/10 rounded-lg p-2 border border-blue-900/20">
+                          <div className="flex items-center">
+                            <div className="w-8 h-8 bg-blue-900/30 rounded-full flex items-center justify-center text-blue-300 mr-2">
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                            </div>
+                            <div className="text-xs text-blue-300">
+                              Weather insights require location permissions. Data powered by OpenWeather API.
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
             </div>
