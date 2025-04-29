@@ -5200,39 +5200,68 @@ const RoutePlannerPage = () => {
                 onClick={startGpsTracking}
                 disabled={!startLocation || !endLocation || !selectedVehicle}
                 className={`
-                  relative overflow-hidden group
+                  relative group
                   ${!startLocation || !endLocation || !selectedVehicle ? 
                     'opacity-60 cursor-not-allowed' : 
-                    'hover:scale-105 hover:shadow-2xl'
+                    'hover:scale-105 hover:shadow-[0_0_40px_rgba(220,38,38,0.5)]'
                   }
                   transition-all duration-300 ease-in-out
-                  flex flex-col items-center justify-center
-                  w-56 h-56 rounded-full 
-                  bg-gradient-to-br from-red-700 to-red-600
+                  flex items-center justify-center 
+                  w-60 h-60 rounded-full 
+                  bg-gradient-to-br from-red-700 via-red-600 to-red-800
                   border-8 border-gray-800
-                  shadow-lg
+                  shadow-[0_0_30px_rgba(220,38,38,0.3)]
                 `}
               >
+                {/* Outer ring with carbon fiber texture */}
+                <div className="absolute inset-0 rounded-full bg-gray-900 bg-opacity-30 border-4 border-red-700 overflow-hidden">
+                  {/* Carbon fiber pattern */}
+                  <div className="absolute inset-0 opacity-10" style={{ 
+                    backgroundImage: 'repeating-linear-gradient(45deg, #222 0, #222 1px, transparent 1px, transparent 8px), repeating-linear-gradient(135deg, #222 0, #222 1px, transparent 1px, transparent 8px)',
+                    backgroundSize: '8px 8px'
+                  }}></div>
+                </div>
+                
                 {/* Inner circle - resembling Ferrari start button */}
-                <div className="absolute inset-4 rounded-full bg-black border-4 border-red-700 flex items-center justify-center">
+                <div className="absolute inset-8 rounded-full bg-black border-4 border-red-700 flex items-center justify-center z-10 shadow-inner">
                   {/* Button text */}
                   <div className="flex flex-col items-center justify-center">
                     <span className="font-orbitron text-lg text-white tracking-wider">START</span>
-                    <span className="font-orbitron text-2xl text-red-500 font-bold tracking-wider">GPS</span>
+                    <span className="font-orbitron text-3xl text-red-500 font-bold tracking-wider mb-1">GPS</span>
                     
-                    {/* Ferrari-inspired Sports Car icon */}
-                    <div className="mt-2">
-                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" className="w-14 h-10 text-red-500 group-hover:animate-pulse">
+                    {/* Ferrari-inspired Sports Car icon with glow effect */}
+                    <div className="mt-1 relative">
+                      <div className="absolute inset-0 blur-sm bg-red-500 opacity-30 rounded-full"></div>
+                      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" className="w-16 h-12 text-red-500 group-hover:animate-pulse relative z-10">
                         <path d="M96 256c0-8.8 7.2-16 16-16h67.3c5.5 0 10.7 2.9 13.6 7.5l22.3 35.7c2.9 4.7 8.1 7.5 13.6 7.5h44.4c5.5 0 10.7-2.9 13.6-7.5l22.3-35.7c2.9-4.7 8.1-7.5 13.6-7.5H390.4c8.8 0 16 7.2 16 16v24c0 8.8-7.2 16-16 16h-9c-33.4 0-60.4 27-60.4 60.4v43c0 8.2-6 15-14 16.2c-9.1 1.3-17-6-17-15V384.4c0-16.5-13.5-30-30-30s-30 13.5-30 30v16.2c0 9-7.9 16.3-17 15c-8-1.1-14-8-14-16.2v-43c0-33.4-27-60.4-60.4-60.4H112c-8.8 0-16-7.2-16-16V256zm-32 0v24c0 26.5 21.5 48 48 48h9c15.1 0 27.3 12.2 27.3 27.3v43c0 37.2 29.3 67.6 66.4 67.6c33.4 0 61.3-24.4 66.1-56.6c4.9 32.1 32.9 56.6 66.1 56.6c37.1 0 66.4-30.4 66.4-67.6v-43c0-15.1 12.2-27.3 27.3-27.3h9c26.5 0 48-21.5 48-48V256c0-26.5-21.5-48-48-48H322.8l-11.2 17.8c-8.7 14-24.3 22.5-40.9 22.5H233.2c-16.6 0-32.3-8.6-40.9-22.5L181.2 208H112c-26.5 0-48 21.5-48 48zm368 32a16 16 0 1 0 -32 0 16 16 0 1 0 32 0zm-320 0a16 16 0 1 0 -32 0 16 16 0 1 0 32 0z"/>
                       </svg>
                     </div>
                     
-                    <span className="mt-2 text-xs text-gray-400">Click to Begin Journey</span>
+                    <span className="mt-2 text-xs text-gray-400 font-medium">Click to Begin Journey</span>
                   </div>
                 </div>
                 
                 {/* Pulsing effect */}
                 <div className="absolute inset-0 rounded-full bg-red-500 opacity-0 group-hover:opacity-20 group-hover:scale-110 transition-all duration-700 ease-out"></div>
+                
+                {/* Ferrari-inspired metal ring */}
+                <div className="absolute -inset-1 rounded-full border-2 border-gray-700 opacity-30"></div>
+                
+                {/* Speed indicator marks resembling Ferrari tachometer */}
+                <div className="absolute inset-0">
+                  {[...Array(12)].map((_, i) => (
+                    <div 
+                      key={i} 
+                      className="absolute w-1 h-3 bg-gray-300 opacity-50" 
+                      style={{ 
+                        top: '50%', 
+                        left: '50%', 
+                        transformOrigin: '0 -116px',
+                        transform: `rotate(${i * 30}deg) translateX(-50%)` 
+                      }} 
+                    />
+                  ))}
+                </div>
               </button>
             </div>
             
