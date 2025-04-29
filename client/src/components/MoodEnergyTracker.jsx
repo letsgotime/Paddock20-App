@@ -1,396 +1,276 @@
 import React, { useState, useEffect } from 'react';
-import { Line } from 'recharts';
-import { ResponsiveContainer, ComposedChart, CartesianGrid, XAxis, YAxis, Tooltip, Legend, Area } from 'recharts';
-import { Calendar } from '@/components/ui/calendar';
-import { Button } from '@/components/ui/button';
-import { Slider } from '@/components/ui/slider';
-import { useToast } from '@/hooks/use-toast';
 import { 
-  AlertCircle, 
-  ThumbsUp, 
-  ThumbsDown, 
-  Frown, 
-  Smile, 
-  Meh, 
-  Zap, 
-  BatteryLow, 
-  BatteryMedium, 
-  BatteryFull, 
-  Calendar as CalendarIcon 
+  Smile, Frown, Battery, Gauge, Sparkles, 
+  TrendingUp, Calendar, Clock, ChevronDown, Activity,
+  Zap, Flame, Minus, BarChart3, Wind
 } from 'lucide-react';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover"
-import { format } from 'date-fns';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, AreaChart, Area } from 'recharts';
 
-const MoodEnergyTracker = () => {
-  const { toast } = useToast();
-  const [date, setDate] = useState(new Date());
-  const [mood, setMood] = useState(3); // 1-5 scale
-  const [energy, setEnergy] = useState(3); // 1-5 scale
-  const [notes, setNotes] = useState('');
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [historyData, setHistoryData] = useState([]);
-  const [view, setView] = useState('week'); // 'week', 'month', 'year'
-  
-  // Initialize or load data from localStorage on component mount
+const MoodEnergyTracker = ({ 
+  entries = [], 
+  onSave, 
+  currentMood = 5, 
+  currentEnergy = 5,
+  showHistory = true 
+}) => {
+  const [mood, setMood] = useState(currentMood);
+  const [energy, setEnergy] = useState(currentEnergy);
+  const [note, setNote] = useState("");
+  const [showFullHistory, setShowFullHistory] = useState(false);
+  const [chartData, setChartData] = useState([]);
+
+  // Process entries for chart display whenever entries change
   useEffect(() => {
-    const savedData = localStorage.getItem('moodEnergyData');
-    if (savedData) {
-      try {
-        const parsedData = JSON.parse(savedData);
-        setHistoryData(parsedData);
-        
-        // Check if there's an entry for today
-        const today = format(new Date(), 'yyyy-MM-dd');
-        const todayEntry = parsedData.find(entry => entry.date === today);
-        
-        if (todayEntry) {
-          setMood(todayEntry.mood);
-          setEnergy(todayEntry.energy);
-          setNotes(todayEntry.notes || '');
-        }
-      } catch (err) {
-        console.error('Error parsing saved mood/energy data:', err);
-      }
-    }
-  }, []);
+    if (!entries?.length) return;
+    
+    // Format data for chart display
+    const formattedData = entries.map(entry => ({
+      date: new Date(entry.date).toLocaleDateString(),
+      time: new Date(entry.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      mood: entry.mood,
+      energy: entry.energy,
+      note: entry.note || ""
+    }));
+    
+    setChartData(formattedData);
+  }, [entries]);
 
-  // Save data to localStorage whenever historyData changes
-  useEffect(() => {
-    if (historyData.length > 0) {
-      localStorage.setItem('moodEnergyData', JSON.stringify(historyData));
-    }
-  }, [historyData]);
-
-  const handleSaveEntry = () => {
-    const formattedDate = format(date, 'yyyy-MM-dd');
-    const existingEntryIndex = historyData.findIndex(entry => entry.date === formattedDate);
-    
-    const newEntry = {
-      date: formattedDate,
-      displayDate: format(date, 'MMM d'),
-      mood,
-      energy,
-      notes,
-      timestamp: new Date().toISOString()
-    };
-    
-    let newHistoryData;
-    
-    if (existingEntryIndex >= 0) {
-      // Update existing entry
-      newHistoryData = [...historyData];
-      newHistoryData[existingEntryIndex] = newEntry;
-    } else {
-      // Add new entry and sort by date
-      newHistoryData = [...historyData, newEntry].sort((a, b) => 
-        new Date(a.date) - new Date(b.date)
-      );
-    }
-    
-    setHistoryData(newHistoryData);
-    
-    toast({
-      title: existingEntryIndex >= 0 ? "Entry Updated" : "Entry Added",
-      description: `Your mood and energy levels for ${format(date, 'MMMM d, yyyy')} have been saved.`,
-      variant: "success",
-    });
+  const handleMoodChange = (e) => {
+    setMood(parseInt(e.target.value, 10));
   };
 
-  const getFilteredData = () => {
-    const now = new Date();
-    let startDate;
-    
-    switch(view) {
-      case 'week':
-        startDate = new Date(now);
-        startDate.setDate(now.getDate() - 7);
-        break;
-      case 'month':
-        startDate = new Date(now);
-        startDate.setMonth(now.getMonth() - 1);
-        break;
-      case 'year':
-        startDate = new Date(now);
-        startDate.setFullYear(now.getFullYear() - 1);
-        break;
-      default:
-        startDate = new Date(now);
-        startDate.setDate(now.getDate() - 7);
+  const handleEnergyChange = (e) => {
+    setEnergy(parseInt(e.target.value, 10));
+  };
+
+  const handleSave = () => {
+    if (onSave) {
+      onSave({
+        mood,
+        energy,
+        note,
+        date: new Date().toISOString()
+      });
+      setNote("");
     }
-    
-    return historyData.filter(entry => new Date(entry.date) >= startDate);
   };
 
-  // Calculate average mood and energy for the selected time period
-  const getAverages = () => {
-    const filteredData = getFilteredData();
-    
-    if (filteredData.length === 0) return { avgMood: 0, avgEnergy: 0 };
-    
-    const moodSum = filteredData.reduce((sum, entry) => sum + entry.mood, 0);
-    const energySum = filteredData.reduce((sum, entry) => sum + entry.energy, 0);
-    
-    return {
-      avgMood: (moodSum / filteredData.length).toFixed(1),
-      avgEnergy: (energySum / filteredData.length).toFixed(1)
-    };
-  };
-
-  // Mood emoji based on the value
   const getMoodEmoji = (value) => {
-    switch (value) {
-      case 1: return <Frown className="text-red-500" size={24} />;
-      case 2: return <Meh className="text-yellow-500" size={24} />;
-      case 3: return <Meh className="text-blue-400" size={24} />;
-      case 4: return <Smile className="text-green-400" size={24} />;
-      case 5: return <ThumbsUp className="text-green-500" size={24} />;
-      default: return <Meh className="text-gray-400" size={24} />;
-    }
+    if (value <= 3) return '😞';
+    if (value <= 5) return '😐';
+    if (value <= 7) return '🙂';
+    return '😄';
   };
 
-  // Energy icon based on the value
-  const getEnergyIcon = (value) => {
-    switch (value) {
-      case 1: return <BatteryLow className="text-red-500" size={24} />;
-      case 2: return <BatteryLow className="text-yellow-500" size={24} />;
-      case 3: return <BatteryMedium className="text-blue-400" size={24} />;
-      case 4: return <BatteryMedium className="text-green-400" size={24} />;
-      case 5: return <BatteryFull className="text-green-500" size={24} />;
-      default: return <BatteryMedium className="text-gray-400" size={24} />;
-    }
+  const getEnergyEmoji = (value) => {
+    if (value <= 3) return '🔋';
+    if (value <= 5) return '🔋🔋';
+    if (value <= 7) return '🔋🔋🔋';
+    return '⚡';
   };
 
-  const { avgMood, avgEnergy } = getAverages();
-  const filteredData = getFilteredData();
+  const getMoodColor = (value) => {
+    if (value <= 3) return 'text-red-500';
+    if (value <= 5) return 'text-yellow-500';
+    if (value <= 7) return 'text-blue-400';
+    return 'text-green-500';
+  };
+
+  const getEnergyColor = (value) => {
+    if (value <= 3) return 'text-red-500';
+    if (value <= 5) return 'text-yellow-500';
+    if (value <= 7) return 'text-blue-400';
+    return 'text-green-500';
+  };
 
   return (
-    <div className="bg-black/30 rounded-lg border border-gray-800 p-4">
-      <h2 className="bts-header-green mb-4">Mood & Energy Tracker</h2>
+    <div className="bg-gray-900 border border-gray-800 rounded-lg p-4 animate-fadeIn shadow-lg">
+      <h3 className="text-lg font-medium text-white mb-4 flex items-center">
+        <Sparkles className="mr-2 h-5 w-5 text-blue-400" />
+        Dynamic Mood & Energy Tracker
+      </h3>
       
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        {/* Left column: Today's Entry */}
+      {/* Current Mood & Energy Input */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
         <div className="space-y-4">
-          <div className="flex items-center justify-between mb-2">
-            <h3 className="text-xl font-orbitron text-blue-400">
-              {format(date, 'MMMM d, yyyy')}
-            </h3>
-            <Popover open={showCalendar} onOpenChange={setShowCalendar}>
-              <PopoverTrigger asChild>
-                <Button 
-                  variant="outline" 
-                  className="border-green-500 text-green-500 hover:bg-green-900/20"
-                >
-                  <CalendarIcon className="mr-2 h-4 w-4" /> Change Date
-                </Button>
-              </PopoverTrigger>
-              <PopoverContent className="w-auto p-0 bg-black border border-gray-700">
-                <Calendar
-                  mode="single"
-                  selected={date}
-                  onSelect={(date) => {
-                    if (date) {
-                      setDate(date);
-                      
-                      // Look for existing entry for this date
-                      const formattedDate = format(date, 'yyyy-MM-dd');
-                      const existingEntry = historyData.find(entry => entry.date === formattedDate);
-                      
-                      if (existingEntry) {
-                        setMood(existingEntry.mood);
-                        setEnergy(existingEntry.energy);
-                        setNotes(existingEntry.notes || '');
-                      } else {
-                        // Reset to defaults for new date
-                        setMood(3);
-                        setEnergy(3);
-                        setNotes('');
-                      }
-                      
-                      setShowCalendar(false);
-                    }
-                  }}
-                  className="bg-black"
-                />
-              </PopoverContent>
-            </Popover>
-          </div>
-          
-          {/* Mood Slider */}
-          <div className="space-y-2">
-            <div className="flex justify-between items-center">
-              <label className="text-gray-300">Mood</label>
-              <div>{getMoodEmoji(mood)}</div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Smile className={`h-5 w-5 mr-2 ${getMoodColor(mood)}`} />
+              <span className="text-white">Mood</span>
             </div>
-            <Slider 
-              value={[mood]} 
-              min={1} 
-              max={5} 
-              step={1} 
-              onValueChange={(value) => setMood(value[0])}
-              className="cursor-pointer"
-            />
-            <div className="flex justify-between text-xs text-gray-400">
-              <span>Low</span>
-              <span>High</span>
+            <div className="flex items-center">
+              <span className="text-xl mr-2">{getMoodEmoji(mood)}</span>
+              <span className={`font-bold ${getMoodColor(mood)}`}>{mood}/10</span>
             </div>
           </div>
           
-          {/* Energy Slider */}
-          <div className="space-y-2 mt-4">
-            <div className="flex justify-between items-center">
-              <label className="text-gray-300">Energy</label>
-              <div>{getEnergyIcon(energy)}</div>
-            </div>
-            <Slider 
-              value={[energy]} 
-              min={1} 
-              max={5} 
-              step={1} 
-              onValueChange={(value) => setEnergy(value[0])}
-              className="cursor-pointer"
-            />
-            <div className="flex justify-between text-xs text-gray-400">
-              <span>Low</span>
-              <span>High</span>
-            </div>
-          </div>
+          <input
+            type="range"
+            min="1"
+            max="10"
+            value={mood}
+            onChange={handleMoodChange}
+            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+          />
           
-          {/* Notes */}
-          <div className="space-y-2 mt-4">
-            <label className="text-gray-300">Notes</label>
-            <textarea 
-              value={notes}
-              onChange={(e) => setNotes(e.target.value)}
-              className="w-full bg-black/50 border border-gray-700 rounded-md p-2 text-white"
-              placeholder="Add any notes about your day..."
-              rows={3}
-            />
+          <div className="flex justify-between text-xs text-gray-500">
+            <span>Low</span>
+            <span>Neutral</span>
+            <span>High</span>
           </div>
-          
-          <Button 
-            onClick={handleSaveEntry}
-            className="w-full bg-green-600 hover:bg-green-700 text-white"
-          >
-            Save Entry
-          </Button>
         </div>
         
-        {/* Right column: History Graph */}
         <div className="space-y-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-xl font-orbitron text-blue-400">Trends</h3>
-            <div className="flex space-x-2">
-              <Button 
-                variant={view === 'week' ? 'default' : 'outline'} 
-                size="sm"
-                onClick={() => setView('week')}
-                className={view === 'week' ? 'bg-green-600 hover:bg-green-700' : 'border-green-500 text-green-500'}
-              >
-                Week
-              </Button>
-              <Button 
-                variant={view === 'month' ? 'default' : 'outline'} 
-                size="sm"
-                onClick={() => setView('month')}
-                className={view === 'month' ? 'bg-green-600 hover:bg-green-700' : 'border-green-500 text-green-500'}
-              >
-                Month
-              </Button>
-              <Button 
-                variant={view === 'year' ? 'default' : 'outline'} 
-                size="sm"
-                onClick={() => setView('year')}
-                className={view === 'year' ? 'bg-green-600 hover:bg-green-700' : 'border-green-500 text-green-500'}
-              >
-                Year
-              </Button>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              <Battery className={`h-5 w-5 mr-2 ${getEnergyColor(energy)}`} />
+              <span className="text-white">Energy</span>
+            </div>
+            <div className="flex items-center">
+              <span className="text-xl mr-2">{getEnergyEmoji(energy)}</span>
+              <span className={`font-bold ${getEnergyColor(energy)}`}>{energy}/10</span>
             </div>
           </div>
           
-          {/* Average Indicators */}
-          <div className="grid grid-cols-2 gap-4 mb-4">
-            <div className="bg-black/50 p-3 rounded-lg border border-gray-800">
-              <div className="text-sm text-gray-400">Average Mood</div>
-              <div className="flex items-center mt-1">
-                <div className="text-2xl font-bold mr-2">{avgMood}</div>
-                {getMoodEmoji(Math.round(avgMood))}
-              </div>
-            </div>
-            <div className="bg-black/50 p-3 rounded-lg border border-gray-800">
-              <div className="text-sm text-gray-400">Average Energy</div>
-              <div className="flex items-center mt-1">
-                <div className="text-2xl font-bold mr-2">{avgEnergy}</div>
-                {getEnergyIcon(Math.round(avgEnergy))}
-              </div>
-            </div>
-          </div>
+          <input
+            type="range"
+            min="1"
+            max="10"
+            value={energy}
+            onChange={handleEnergyChange}
+            className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer accent-green-500"
+          />
           
-          {/* Chart */}
-          {filteredData.length > 0 ? (
-            <div className="h-64">
-              <ResponsiveContainer width="100%" height="100%">
-                <ComposedChart data={filteredData}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                  <XAxis 
-                    dataKey="displayDate" 
-                    stroke="#666" 
-                    tick={{ fill: '#999' }}
-                  />
-                  <YAxis 
-                    domain={[0, 5]} 
-                    stroke="#666" 
-                    tick={{ fill: '#999' }}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: '#111', 
-                      borderColor: '#333',
-                      color: '#fff'
-                    }}
-                  />
-                  <Legend />
-                  <Area 
-                    type="monotone" 
-                    dataKey="mood" 
-                    fill="rgba(34, 197, 94, 0.2)" 
-                    stroke="#22c55e" 
-                    activeDot={{ r: 8 }}
-                    name="Mood"
-                  />
-                  <Line 
-                    type="monotone" 
-                    dataKey="energy" 
-                    stroke="#3b82f6" 
-                    activeDot={{ r: 8 }}
-                    name="Energy"
-                    strokeWidth={2}
-                  />
-                </ComposedChart>
-              </ResponsiveContainer>
-            </div>
-          ) : (
-            <div className="flex flex-col items-center justify-center h-64 bg-black/20 rounded-lg border border-gray-800">
-              <AlertCircle className="text-yellow-500 mb-2" size={32} />
-              <p className="text-gray-400">No data for this period</p>
-              <p className="text-xs text-gray-500">Add entries to see your trends</p>
-            </div>
-          )}
-          
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 gap-2 text-sm">
-            <div className="bg-black/40 p-2 rounded-lg border border-gray-800">
-              <span className="text-gray-400">Entries:</span> {filteredData.length}
-            </div>
-            <div className="bg-black/40 p-2 rounded-lg border border-gray-800">
-              <span className="text-gray-400">Period:</span> {view.charAt(0).toUpperCase() + view.slice(1)}
-            </div>
+          <div className="flex justify-between text-xs text-gray-500">
+            <span>Drained</span>
+            <span>Steady</span>
+            <span>Energized</span>
           </div>
         </div>
       </div>
+      
+      {/* Optional Note */}
+      <div className="mb-4">
+        <textarea
+          className="w-full p-2 rounded bg-gray-800 text-white border border-gray-700 focus:border-blue-500 focus:ring-1 focus:ring-blue-500 focus:outline-none"
+          rows="2"
+          placeholder="Add a note about how you're feeling... (optional)"
+          value={note}
+          onChange={(e) => setNote(e.target.value)}
+        ></textarea>
+      </div>
+      
+      <div className="flex justify-end mb-6">
+        <button
+          onClick={handleSave}
+          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-all duration-200 flex items-center"
+        >
+          <span>Save</span>
+          <TrendingUp className="ml-2 h-4 w-4" />
+        </button>
+      </div>
+      
+      {/* History Section */}
+      {showHistory && chartData.length > 0 && (
+        <div className="mt-6 border-t border-gray-800 pt-4">
+          <div 
+            className="flex items-center justify-between cursor-pointer mb-4"
+            onClick={() => setShowFullHistory(!showFullHistory)}
+          >
+            <div className="flex items-center">
+              <Calendar className="h-5 w-5 mr-2 text-blue-400" />
+              <h4 className="text-md font-medium text-white">Mood & Energy History</h4>
+            </div>
+            <ChevronDown className={`h-5 w-5 text-gray-400 transition-transform ${showFullHistory ? 'transform rotate-180' : ''}`} />
+          </div>
+          
+          {showFullHistory && (
+            <div className="animate-fadeIn">
+              <div className="w-full h-64 mb-4">
+                <ResponsiveContainer width="100%" height="100%">
+                  <LineChart
+                    data={chartData}
+                    margin={{
+                      top: 5,
+                      right: 30,
+                      left: 20,
+                      bottom: 5,
+                    }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" stroke="#444" />
+                    <XAxis 
+                      dataKey="date" 
+                      stroke="#999"
+                      tick={{fill: '#999'}}
+                    />
+                    <YAxis domain={[0, 10]} stroke="#999" tick={{fill: '#999'}} />
+                    <Tooltip 
+                      contentStyle={{
+                        backgroundColor: '#111',
+                        border: '1px solid #333',
+                        borderRadius: '4px',
+                        color: '#fff'
+                      }}
+                    />
+                    <Legend />
+                    <Line
+                      type="monotone"
+                      dataKey="mood"
+                      stroke="#3b82f6"
+                      activeDot={{ r: 8 }}
+                      strokeWidth={2}
+                    />
+                    <Line
+                      type="monotone"
+                      dataKey="energy"
+                      stroke="#22c55e"
+                      strokeWidth={2}
+                    />
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+              
+              <div className="space-y-2 max-h-80 overflow-y-auto pr-2 styled-scrollbar">
+                {chartData.slice().reverse().map((entry, index) => (
+                  <div key={index} className="bg-gray-800 p-3 rounded-lg">
+                    <div className="flex justify-between items-start mb-2">
+                      <div className="flex items-center">
+                        <Calendar className="h-4 w-4 mr-1 text-gray-500" />
+                        <span className="text-sm text-gray-400">{entry.date}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Clock className="h-4 w-4 mr-1 text-gray-500" />
+                        <span className="text-sm text-gray-400">{entry.time}</span>
+                      </div>
+                    </div>
+                    
+                    <div className="flex justify-between mb-1">
+                      <div className="flex items-center">
+                        <Smile className={`h-4 w-4 mr-1 ${getMoodColor(entry.mood)}`} />
+                        <span className={`text-sm font-medium ${getMoodColor(entry.mood)}`}>
+                          Mood: {entry.mood}/10
+                        </span>
+                      </div>
+                      <div className="flex items-center">
+                        <Battery className={`h-4 w-4 mr-1 ${getEnergyColor(entry.energy)}`} />
+                        <span className={`text-sm font-medium ${getEnergyColor(entry.energy)}`}>
+                          Energy: {entry.energy}/10
+                        </span>
+                      </div>
+                    </div>
+                    
+                    {entry.note && (
+                      <div className="mt-2 text-sm text-gray-300 bg-gray-700/50 p-2 rounded">
+                        {entry.note}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+        </div>
+      )}
     </div>
   );
 };
