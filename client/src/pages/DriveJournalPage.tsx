@@ -3,6 +3,7 @@ import { format } from 'date-fns';
 import MoodEnergyTracker from '../components/MoodEnergyTracker';
 import RouteAnalytics from '../components/RouteAnalytics';
 import EnhancedDriveTelemetry from '../components/EnhancedDriveTelemetry';
+import WeatherDriveImpactAnalyzer from '../components/WeatherDriveImpactAnalyzer';
 
 // Define interfaces for type safety
 interface MoodEnergy {
@@ -1480,6 +1481,21 @@ const DriveJournalPage: React.FC = () => {
                 </div>
               )}
               
+              {/* Weather Impact Analysis - NEW */}
+              {selectedDrive && selectedDrive.weatherConditions && (
+                <div className="mb-8">
+                  <WeatherDriveImpactAnalyzer
+                    weatherData={selectedDrive.weatherConditions}
+                    vehicleType={selectedDrive.vehicle && selectedDrive.vehicle.includes('Ferrari') ? 'supercar' : 
+                               selectedDrive.vehicle && selectedDrive.vehicle.includes('Porsche') ? 'sports' : 
+                               selectedDrive.vehicle && (selectedDrive.vehicle.includes('SUV') || selectedDrive.vehicle.includes('Truck')) ? 'suv' : 'sports'}
+                    tireType={selectedDrive.performanceSettings?.tireSetup?.tireType || 'performance'}
+                    drivingMode={selectedDrive.performanceSettings?.drivingMode?.toLowerCase() || 'sport'}
+                    className="mb-6"
+                  />
+                </div>
+              )}
+              
               {/* Enhanced F1-Style Telemetry Analysis */}
               {selectedDrive && (
                 <div className="mb-8">
@@ -1488,6 +1504,17 @@ const DriveJournalPage: React.FC = () => {
                     durationMinutes={selectedDrive.durationMinutes || 0}
                     vehicleSpecs={selectedDrive.performanceSettings?.vehicleSpecs}
                     drivingProfile={selectedDrive.performanceSettings?.drivingProfile}
+                    weatherImpact={selectedDrive.weatherConditions ? {
+                      condition: selectedDrive.weatherConditions.condition,
+                      temperature: selectedDrive.weatherConditions.temperature,
+                      humidity: selectedDrive.weatherConditions.humidity,
+                      windSpeed: selectedDrive.weatherConditions.windSpeed,
+                      precipitation: selectedDrive.weatherConditions.precipitation || 0,
+                      performanceImpact: selectedDrive.weatherConditions.condition?.toLowerCase().includes('rain') ? -2 :
+                                        selectedDrive.weatherConditions.condition?.toLowerCase().includes('snow') ? -5 :
+                                        selectedDrive.weatherConditions.condition?.toLowerCase().includes('fog') ? -3 :
+                                        selectedDrive.weatherConditions.condition?.toLowerCase().includes('clear') ? 2 : 0
+                    } : undefined}
                     showFullTelemetry={true}
                     isLapTrack={false}
                   />
