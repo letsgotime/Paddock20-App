@@ -542,71 +542,89 @@ function GarageVaultPage() {
         </div>
         
         {/* Mobile Navigation */}
-        <div className="flex md:hidden overflow-x-auto py-3 gap-3 mt-4">
-          <button 
-            onClick={() => setActiveSection('dashboard')}
-            className={`px-3 py-1 text-sm whitespace-nowrap rounded-md transition ${
-              activeSection === 'dashboard' ? 'bg-green-500 text-black font-bold' : 'text-white bg-gray-800'
-            }`}
-          >
-            Dashboard
-          </button>
-          <button 
-            onClick={() => setActiveSection('garage')}
-            className={`px-3 py-1 text-sm whitespace-nowrap rounded-md transition ${
-              activeSection === 'garage' ? 'bg-green-500 text-black font-bold' : 'text-white bg-gray-800'
-            }`}
-          >
-            Garage
-          </button>
-          <button 
-            onClick={() => setActiveSection('telemetry')}
-            className={`px-3 py-1 text-sm whitespace-nowrap rounded-md transition ${
-              activeSection === 'telemetry' ? 'bg-green-500 text-black font-bold' : 'text-white bg-gray-800'
-            }`}
-          >
-            Telemetry
-          </button>
-          <button 
-            onClick={() => setActiveSection('maintenance')}
-            className={`px-3 py-1 text-sm whitespace-nowrap rounded-md transition ${
-              activeSection === 'maintenance' ? 'bg-green-500 text-black font-bold' : 'text-white bg-gray-800'
-            }`}
-          >
-            Maintenance
-          </button>
-          <button 
-            onClick={() => setActiveSection('modifications')}
-            className={`px-3 py-1 text-sm whitespace-nowrap rounded-md transition ${
-              activeSection === 'modifications' ? 'bg-green-500 text-black font-bold' : 'text-white bg-gray-800'
-            }`}
-          >
-            Modifications
-          </button>
-          <button 
-            onClick={() => setActiveSection('juicebox')}
-            className={`px-3 py-1 text-sm whitespace-nowrap rounded-md transition ${
-              activeSection === 'juicebox' ? 'bg-green-500 text-black font-bold' : 'text-white bg-gray-800'
-            }`}
-          >
-            JuiceBox™
-          </button>
-          <button 
-            onClick={() => setActiveSection('seasonal')}
-            className={`px-3 py-1 text-sm whitespace-nowrap rounded-md transition ${
-              activeSection === 'seasonal' ? 'bg-green-500 text-black font-bold' : 'text-white bg-gray-800'
-            }`}
-          >
-            Seasonal
-          </button>
-          <button 
-            onClick={() => setActiveSection('gloss')}
-            className={`px-3 py-1 text-sm whitespace-nowrap rounded-md transition ${
-              activeSection === 'gloss' ? 'bg-green-500 text-black font-bold' : 'text-white bg-gray-800'
-            }`}
-          >
-            Gloss
-          </button>
+        <div className="flex md:hidden overflow-x-auto py-3 mt-4">
+          <div className="flex gap-1.5 bg-gray-900/60 backdrop-blur-sm rounded-md p-1.5 border border-blue-900/30">
+            <button 
+              onClick={() => setActiveSection('dashboard')}
+              className={`px-3 py-1.5 text-xs whitespace-nowrap rounded transition-all duration-200 ${
+                activeSection === 'dashboard' 
+                  ? 'bg-green-500 text-black font-bold shadow-md shadow-green-500/20' 
+                  : 'text-white bg-gray-800/50 hover:bg-gray-800'
+              }`}
+            >
+              Dashboard
+            </button>
+            <button 
+              onClick={() => setActiveSection('garage')}
+              className={`px-3 py-1.5 text-xs whitespace-nowrap rounded transition-all duration-200 ${
+                activeSection === 'garage' 
+                  ? 'bg-green-500 text-black font-bold shadow-md shadow-green-500/20' 
+                  : 'text-white bg-gray-800/50 hover:bg-gray-800'
+              }`}
+            >
+              Garage
+            </button>
+            <button 
+              onClick={() => setActiveSection('telemetry')}
+              className={`px-3 py-1.5 text-xs whitespace-nowrap rounded transition-all duration-200 ${
+                activeSection === 'telemetry' 
+                  ? 'bg-green-500 text-black font-bold shadow-md shadow-green-500/20' 
+                  : 'text-white bg-gray-800/50 hover:bg-gray-800'
+              }`}
+            >
+              Telemetry
+            </button>
+            <button 
+              onClick={() => setActiveSection('maintenance')}
+              className={`px-3 py-1.5 text-xs whitespace-nowrap rounded transition-all duration-200 ${
+                activeSection === 'maintenance' 
+                  ? 'bg-green-500 text-black font-bold shadow-md shadow-green-500/20' 
+                  : 'text-white bg-gray-800/50 hover:bg-gray-800'
+              }`}
+            >
+              Maintain
+            </button>
+            <button 
+              onClick={() => setActiveSection('modifications')}
+              className={`px-3 py-1.5 text-xs whitespace-nowrap rounded transition-all duration-200 ${
+                activeSection === 'modifications' 
+                  ? 'bg-green-500 text-black font-bold shadow-md shadow-green-500/20' 
+                  : 'text-white bg-gray-800/50 hover:bg-gray-800'
+              }`}
+            >
+              Mods
+            </button>
+            <button 
+              onClick={() => setActiveSection('juicebox')}
+              className={`px-3 py-1.5 text-xs whitespace-nowrap rounded transition-all duration-200 ${
+                activeSection === 'juicebox' 
+                  ? 'bg-green-500 text-black font-bold shadow-md shadow-green-500/20' 
+                  : 'text-white bg-gray-800/50 hover:bg-gray-800'
+              }`}
+            >
+              Juice™
+            </button>
+            <button 
+              onClick={() => setActiveSection('seasonal')}
+              className={`px-3 py-1.5 text-xs whitespace-nowrap rounded transition-all duration-200 ${
+                activeSection === 'seasonal' 
+                  ? 'bg-green-500 text-black font-bold shadow-md shadow-green-500/20' 
+                  : 'text-white bg-gray-800/50 hover:bg-gray-800'
+              }`}
+            >
+              Season
+            </button>
+            <button 
+              onClick={() => setActiveSection('gloss')}
+              className={`px-3 py-1.5 text-xs whitespace-nowrap rounded transition-all duration-200 ${
+                activeSection === 'gloss' 
+                  ? 'bg-green-500 text-black font-bold shadow-md shadow-green-500/20' 
+                  : 'text-white bg-gray-800/50 hover:bg-gray-800'
+              }`}
+            >
+              Gloss
+            </button>
+          </div>
         </div>
       </div>
       
