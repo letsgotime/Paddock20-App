@@ -182,6 +182,12 @@ const RoutePlannerPage = () => {
   const [isEventRally, setIsEventRally] = useState(false);
   const [eventRallyName, setEventRallyName] = useState("");
   const [eventRallyOrganizer, setEventRallyOrganizer] = useState("");
+  const [eventRallyUrl, setEventRallyUrl] = useState("");
+  const [eventRallyDate, setEventRallyDate] = useState("");
+  const [eventRallyTime, setEventRallyTime] = useState("");
+  const [eventRallyDescription, setEventRallyDescription] = useState("");
+  const [eventRallyLocation, setEventRallyLocation] = useState("");
+  const [eventRallyUrlLoading, setEventRallyUrlLoading] = useState(false);
   const [eventMapFile, setEventMapFile] = useState<File | null>(null);
   const [eventMapUrl, setEventMapUrl] = useState<string | null>(null);
   
@@ -1083,6 +1089,60 @@ const RoutePlannerPage = () => {
     return 'Normal';
   };
 
+  // Handle event URL pasting and information extraction
+  const handleEventUrlFetch = async () => {
+    if (!eventRallyUrl) return;
+    
+    setEventRallyUrlLoading(true);
+    
+    try {
+      // In a real implementation, we would:
+      // 1. Call a server-side function to fetch and parse the URL
+      // 2. Extract event details (name, date, time, location, description)
+      // 3. Automatically fill in the form fields
+      
+      // For demo purposes, we'll simulate success with a timeout
+      setTimeout(() => {
+        // Extract data from URL - would be done via API in production
+        const urlObj = new URL(eventRallyUrl);
+        const domain = urlObj.hostname;
+        
+        // Set event location to end location if it's empty
+        if (!endLocation) {
+          setEndLocation("Event Location (would be extracted from URL)");
+        }
+        
+        // Sample data based on domain - in production this would come from API
+        if (domain.includes("motorsport")) {
+          setEventRallyName("Motorsport Event (extracted from URL)");
+          setEventRallyOrganizer("Motorsport Organization");
+          setEventRallyDate("2025-05-15");
+          setEventRallyTime("09:00");
+          setEventRallyDescription("Details extracted from the event page");
+          setEventRallyLocation("Circuit Location");
+        } else if (domain.includes("carsandcoffee")) {
+          setEventRallyName("Cars & Coffee Event");
+          setEventRallyOrganizer("Local Cars & Coffee Chapter");
+          setEventRallyDate("2025-05-20");
+          setEventRallyTime("08:00");
+          setEventRallyDescription("Details extracted from the event page");
+          setEventRallyLocation("Meet-up Location");
+        } else {
+          setEventRallyName("Event from " + domain);
+          setEventRallyDate("2025-05-25");
+          setEventRallyTime("10:00");
+          setEventRallyDescription("Auto event details would be extracted from URL");
+        }
+        
+        setEventRallyUrlLoading(false);
+      }, 1500);
+    } catch (error) {
+      console.error("Error processing event URL:", error);
+      setEventRallyUrlLoading(false);
+      alert("Could not process the event URL. Please enter event details manually.");
+    }
+  };
+  
   // Process the complete route plan submission
   const handleRoutePlanSubmit = () => {
     if (!startLocation || !endLocation) {
@@ -1630,6 +1690,11 @@ const RoutePlannerPage = () => {
       eventRally: isEventRally ? {
         name: eventRallyName,
         organizer: eventRallyOrganizer,
+        url: eventRallyUrl,
+        date: eventRallyDate,
+        time: eventRallyTime,
+        description: eventRallyDescription,
+        location: eventRallyLocation || endLocation,
         hasMap: !!eventMapFile
       } : null,
       // Add driving companions
