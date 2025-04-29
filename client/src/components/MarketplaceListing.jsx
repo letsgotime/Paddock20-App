@@ -22,16 +22,16 @@ const MarketplaceListing = ({ listing, isAdmin, onEdit, onDelete, onViewTelemetr
       try {
         setImageLoading(true);
         
-        // Try to get image from cache first
+        // Try to get image from our precise mapping first (uses enhanced matching logic)
         let url = getImageForItem(listing.type, listing.brand, listing.model);
         
-        // If not in cache, fetch from Unsplash
+        // If not in our precise mapping, fetch from Unsplash as a backup
         if (!url) {
           const searchQuery = `${listing.brand} ${listing.model} ${listing.type === 'vehicle' ? 'car' : 'watch'}`;
           url = await searchImage(searchQuery);
         }
         
-        // If still no image, use our local image assets as fallback
+        // If still no image, use our local image assets as final fallback
         if (!url) {
           // Use local fallback images based on type
           url = listing.type === 'vehicle' ? ferrariImg : patekImg;
