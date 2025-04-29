@@ -648,6 +648,9 @@ const ManifestationStationPage: React.FC = () => {
                 
                 <div className="bg-gray-900 rounded-lg p-4 border border-blue-800">
                   <h3 className="text-blue-400 font-medium text-lg mb-2">What You Get</h3>
+                  <p className="text-gray-300 text-sm font-semibold mb-2">
+                    The First Hustle Planner Designed for Auto Enthusiasts
+                  </p>
                   <ul className="text-gray-300 text-sm list-disc pl-5 space-y-1">
                     <li>Dream Vault: Log your cars, watches, experiences, investments</li>
                     <li>Goal Telemetry: Set your target, funding path, and timeline</li>
@@ -655,13 +658,20 @@ const ManifestationStationPage: React.FC = () => {
                     <li>Daily Discipline Tracker: Mind, Body, Spirit focus areas</li>
                     <li>Proof of Progress System: See your real manifestation rate</li>
                   </ul>
+                  <p className="text-gray-300 text-sm mt-2 italic">
+                    Methods used by the creators who built this app
+                  </p>
                 </div>
                 
                 <div className="bg-gray-900 rounded-lg p-4 border border-blue-800">
                   <h3 className="text-blue-400 font-medium text-lg mb-2">How to Use It</h3>
+                  <div className="bg-blue-900/30 p-2 rounded mb-3 border border-blue-700/50">
+                    <h4 className="text-blue-300 font-medium text-sm mb-1">GoTime's 7 Elements System</h4>
+                    <p className="text-gray-300 text-xs">The proven method to turn visions into reality through consistent daily actions</p>
+                  </div>
                   <ul className="text-gray-300 text-sm list-disc pl-5 space-y-1">
                     <li>Set Goals: Add dream assets or experiences</li>
-                    <li>Link Daily Disciplines: Choose your mind, body, spirit focuses</li>
+                    <li>Implement Daily Actions: Focus on the 7 elements consistently</li>
                     <li>Track Progress: Update every week or day as you advance</li>
                     <li>Celebrate Completions: Archive manifested goals</li>
                     <li>Level Up: After each goal, raise your standards</li>
