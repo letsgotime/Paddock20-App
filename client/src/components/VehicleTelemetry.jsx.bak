@@ -573,16 +573,72 @@ function VehicleTelemetry({ listingId }) {
                   )}
                   <div className="flex justify-between">
                     <span className="text-gray-400">Brakes:</span>
-                    <span className="text-white">{vehicle.brakes || "N/A"}</span>
-                  </div>
-                  {vehicle.trackData && vehicle.trackData.performance && vehicle.trackData.performance.braking60to0 && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">60-0 Braking:</span>
-                      <span className="text-white">{vehicle.trackData.performance.braking60to0} feet</span>
-                    </div>
-                  )}
-                </div>
+                <span className="text-white">{vehicle.brakes || "N/A"}</span>
               </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Exterior Color:</span>
+                <span className="text-white">{vehicle.exteriorColor}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Interior Color:</span>
+                <span className="text-white">{vehicle.interiorColor}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Fuel Economy:</span>
+                <span className="text-white">{vehicle.fuelEconomy || "N/A"} mpg</span>
+              </div>
+              {vehicle.aerodynamics && (
+                <>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Drag Coefficient:</span>
+                    <span className="text-white">{vehicle.aerodynamics.dragCoefficient || "N/A"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Downforce:</span>
+                    <span className="text-white">{vehicle.aerodynamics.downforce || "N/A"}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Active Aero:</span>
+                    <span className="text-white">{vehicle.aerodynamics.activeAero ? "Yes" : "No"}</span>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
+        </div>
+        
+        {/* Service History */}
+        <div className="bg-gradient-to-br from-gray-900 to-black p-6 rounded-xl border border-gray-800 mb-6">
+          <div className="flex items-center justify-between mb-4" onClick={() => toggleSection('history')}>
+            <h4 className="text-lg font-semibold text-white flex items-center cursor-pointer">
+              <Wrench className="mr-2 h-5 w-5 text-amber-500" />
+              Service History
+            </h4>
+            <button className="text-gray-400 hover:text-white">
+              {expanded.history ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+            </button>
+          </div>
+          
+          {expanded.history && vehicle.maintenanceRecords && (
+            <div className="space-y-4">
+              {vehicle.maintenanceRecords.map((record, index) => (
+                <div key={index} className="bg-gray-900/40 p-4 rounded-lg border border-gray-800">
+                  <div className="flex justify-between mb-2">
+                    <div className="font-medium text-white">{record.service}</div>
+                    <div className="text-gray-400 text-sm">{record.date}</div>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <div className="text-gray-400">Mileage: <span className="text-white">{record.mileage.toLocaleString()}</span></div>
+                    <div className="text-gray-400">Cost: <span className="text-green-400">${record.cost.toLocaleString()}</span></div>
+                  </div>
+                </div>
+              ))}
+              
+              {!vehicle.maintenanceRecords.length && (
+                <div className="text-center py-6 text-gray-400">
+                  No service records available
+                </div>
+              )}
             </div>
           )}
         </div>
