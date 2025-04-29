@@ -361,6 +361,30 @@ function GarageVaultPage() {
   
   return (
     <div id="garageVaultSection" className="bg-black min-h-screen" aria-labelledby="garageVaultHeading">
+      {/* Form Modals */}
+      {showAddVehicleForm && (
+        <AddVehicleForm 
+          onSubmit={handleAddVehicle} 
+          onCancel={() => setShowAddVehicleForm(false)} 
+        />
+      )}
+      
+      {showAddModForm && activeVehicle && (
+        <AddModificationForm 
+          onSubmit={handleAddModification} 
+          onCancel={() => setShowAddModForm(false)} 
+          vehicleId={activeVehicle.id} 
+        />
+      )}
+      
+      {showAddMaintenanceForm && activeVehicle && (
+        <AddMaintenanceForm 
+          onSubmit={handleAddMaintenance} 
+          onCancel={() => setShowAddMaintenanceForm(false)} 
+          vehicleId={activeVehicle.id} 
+        />
+      )}
+      
       {/* Modernized Header & Dashboard Controls */}
       <div className="p-4 md:p-6 border-b border-gray-800">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
@@ -404,6 +428,14 @@ function GarageVaultPage() {
                 }`}
               >
                 Maintenance
+              </button>
+              <button 
+                onClick={() => setActiveSection('modifications')}
+                className={`px-3 py-1 text-sm rounded-md transition ${
+                  activeSection === 'modifications' ? 'bg-green-500 text-black font-bold' : 'text-white hover:bg-gray-800'
+                }`}
+              >
+                Modifications
               </button>
               <button 
                 onClick={() => setActiveSection('juicebox')}
@@ -512,6 +544,14 @@ function GarageVaultPage() {
             }`}
           >
             Maintenance
+          </button>
+          <button 
+            onClick={() => setActiveSection('modifications')}
+            className={`px-3 py-1 text-sm whitespace-nowrap rounded-md transition ${
+              activeSection === 'modifications' ? 'bg-green-500 text-black font-bold' : 'text-white bg-gray-800'
+            }`}
+          >
+            Modifications
           </button>
           <button 
             onClick={() => setActiveSection('juicebox')}
