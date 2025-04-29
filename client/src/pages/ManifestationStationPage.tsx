@@ -388,8 +388,8 @@ const ManifestationStationPage: React.FC = () => {
       <div className="container px-4 md:px-6 mx-auto">
         <header className="mb-8">
           <div className="flex justify-between items-center mb-6">
-            <h1 className="text-3xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-              Manifestation Station
+            <h1 className="text-3xl font-orbitron text-blue-400">
+              MANIFESTATION STATION
             </h1>
             
             {!isCreatingNewDream && selectedGoal && (
