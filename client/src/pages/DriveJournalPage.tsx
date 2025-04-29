@@ -472,8 +472,13 @@ const DriveJournalPage: React.FC = () => {
     setIsEditMode(true);
   };
   
+  // State for tracking if we're adding a past experience
+  const [isPastExperience, setIsPastExperience] = useState(false);
+  
   // Initialize new drive form
-  const initializeNewDriveForm = () => {
+  const initializeNewDriveForm = (isPast = false) => {
+    setIsPastExperience(isPast);
+    
     setEditForm({
       title: "",
       startLocation: "",
@@ -491,7 +496,10 @@ const DriveJournalPage: React.FC = () => {
       },
       weatherConditions: null,
       isFromRoutePlanner: false,
-      date: new Date().toISOString(),
+      // Use current date for new entries, or yesterday for past experiences as a default
+      date: isPast 
+        ? new Date(Date.now() - 86400000).toISOString() // Yesterday by default for past experiences
+        : new Date().toISOString(),
       moodEnergy: {
         mood: 8,
         energy: 8,
@@ -502,7 +510,7 @@ const DriveJournalPage: React.FC = () => {
         excitementFactor: 8,
         stressLevel: 3,
         timestamps: {
-          "0": { mood: 8, energy: 8, note: "Starting the drive" }
+          "0": { mood: 8, energy: 8, note: isPast ? "Reflecting on this experience" : "Starting the drive" }
         }
       },
       altitudeData: {
@@ -518,7 +526,11 @@ const DriveJournalPage: React.FC = () => {
         straightSections: 0,
         hillClimbs: 0,
         descents: 0
-      }
+      },
+      // Add experience type field to track if this is a track day, road trip, etc.
+      experienceType: isPast ? "track_day" : "drive",
+      // Add a field to store the venue or track name for track day experiences
+      venue: "",
     });
     setIsAddingNew(true);
     setIsEditMode(true);
@@ -619,15 +631,28 @@ const DriveJournalPage: React.FC = () => {
           {/* Controls */}
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-white font-orbitron text-xl">Drive Log</h2>
-            <button
-              onClick={initializeNewDriveForm}
-              className="bg-green-500 hover:bg-green-400 text-black font-medium px-4 py-2 rounded flex items-center gap-1"
-            >
-              <span>New Entry</span>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
-              </svg>
-            </button>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => initializeNewDriveForm(true)}
+                className="bg-blue-600 hover:bg-blue-500 text-white font-medium px-4 py-2 rounded flex items-center gap-1"
+                title="Log a past track day, road trip, or driving experience"
+              >
+                <span>Log Past Experience</span>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path d="M5 4a2 2 0 012-2h6a2 2 0 012 2v14l-5-2.5L5 18V4z" />
+                </svg>
+              </button>
+              
+              <button
+                onClick={() => initializeNewDriveForm(false)}
+                className="bg-green-500 hover:bg-green-400 text-black font-medium px-4 py-2 rounded flex items-center gap-1"
+              >
+                <span>New Entry</span>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M10 5a1 1 0 011 1v3h3a1 1 0 110 2h-3v3a1 1 0 11-2 0v-3H6a1 1 0 110-2h3V6a1 1 0 011-1z" clipRule="evenodd" />
+                </svg>
+              </button>
+            </div>
           </div>
           
           {/* Filter Options - Collapsed by default */}
