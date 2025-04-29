@@ -5,7 +5,7 @@ import {
   Activity, Info, BarChart, LayoutDashboard, GitCompare,
   CloudOff, Database, Award, BarChart2, BarChart3,
   ArrowUpDown, Zap, PieChart, MoveHorizontal, History, Hammer,
-  Fingerprint, Globe, Filter, DollarSign, ShoppingBag
+  Fingerprint, Globe, Filter, DollarSign, ShoppingBag, FileText
 } from 'lucide-react';
 import ExportOptions from '../components/ExportOptions';
 import TimepiVault from '../components/TimepiVault';
