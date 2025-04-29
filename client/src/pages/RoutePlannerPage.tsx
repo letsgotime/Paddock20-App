@@ -4462,7 +4462,7 @@ const RoutePlannerPage = () => {
             
             {/* Advanced Navigation Settings */}
             {showAdvancedSettings && (
-              <div className="bg-gray-900 p-4 rounded-lg border border-gray-800 space-y-5">
+              <div id="navigation-advanced-settings" className="bg-gray-900 p-4 rounded-lg border border-gray-800 space-y-5">
                 {/* Common Navigation Features - show for any app */}
                 <div>
                   <h3 className="text-green-400 font-orbitron text-md mb-2">Universal Features</h3>
