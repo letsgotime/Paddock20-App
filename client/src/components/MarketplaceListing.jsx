@@ -5,6 +5,8 @@ import {
   Star, DollarSign, Info, ExternalLink, 
   Activity, BarChart3, Gauge, Zap
 } from 'lucide-react';
+import ferrariImg from '@assets/Ferrari-458-With-HRE-P101-Wheels-By-TAG-Motorsports-2.jpg';
+import patekImg from '@assets/5711_1A_014_1@2x.jpg';
 
 const MarketplaceListing = ({ listing, isAdmin, onEdit, onDelete, onViewTelemetry, expandedByDefault = false }) => {
   const [expanded, setExpanded] = useState(expandedByDefault);
@@ -36,22 +38,47 @@ const MarketplaceListing = ({ listing, isAdmin, onEdit, onDelete, onViewTelemetr
     }
   };
 
+  // Use imported assets
+  
+  const getImageForListing = (listing) => {
+    // Map listings to available images in attached_assets
+    if (listing.type === 'vehicle') {
+      if (listing.brand === 'Ferrari') {
+        return ferrariImg;
+      }
+      // Default car image if specific one not found
+      return ferrariImg;
+    } else if (listing.type === 'timepiece') {
+      if (listing.brand === 'Patek Philippe' && listing.reference === '5711/1A-014') {
+        return patekImg;
+      }
+      // Default watch image if specific one not found
+      return patekImg;
+    }
+    return null;
+  };
+
   const renderListingImage = () => {
-    if (listing.images && listing.images.length > 0) {
-      // In production, these would be real image paths
+    // Get appropriate image for this listing
+    const imageUrl = getImageForListing(listing);
+    
+    if (imageUrl) {
       return (
         <div className="flex-shrink-0 relative w-28 h-28 md:w-36 md:h-36 rounded-lg overflow-hidden bg-gray-900 border border-gray-800">
-          <div className="absolute inset-0 flex items-center justify-center text-gray-600">
-            <span className="text-xs">{listing.brand} {listing.model}</span>
-          </div>
+          <img 
+            src={imageUrl} 
+            alt={`${listing.brand} ${listing.model}`}
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 hover:scale-110"
+          />
         </div>
       );
     }
     
+    // Fallback if no image mapping found
     return (
       <div className="flex-shrink-0 w-28 h-28 md:w-36 md:h-36 rounded-lg bg-gray-900 border border-gray-800 flex items-center justify-center">
         <div className="text-gray-700 text-center p-2">
-          <span className="text-xs">No Image</span>
+          <span className="text-xs">{listing.brand} {listing.model}</span>
         </div>
       </div>
     );
