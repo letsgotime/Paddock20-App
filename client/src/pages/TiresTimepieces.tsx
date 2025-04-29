@@ -1136,6 +1136,421 @@ const TiresTimepieces: React.FC = () => {
             )}
           </div>
         )}
+
+        {activeTab === 'certification' && (
+          <div className="mb-6">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-orbitron text-teal-500 mb-3">Official Certification</h2>
+              <p className="text-gray-400 max-w-3xl mx-auto">
+                Obtain and manage official certifications for your luxury timepieces and vehicles through our trusted network of experts.
+              </p>
+            </div>
+            
+            {/* Certification Types */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-8">
+              <div className="bg-gradient-to-br from-gray-900 to-gray-900/40 rounded-xl border border-gray-800 p-6 flex flex-col">
+                <div className="w-14 h-14 bg-teal-900/20 rounded-full flex items-center justify-center mb-4">
+                  <Award className="h-6 w-6 text-teal-500" />
+                </div>
+                <h3 className="text-xl font-medium text-white mb-2">Authenticity Certification</h3>
+                <p className="text-gray-400 mb-4 text-sm flex-grow">
+                  Comprehensive verification of timepiece authenticity with detailed documentation and digital certificate.
+                </p>
+                <button className="w-full py-2 mt-2 bg-teal-900/50 text-teal-300 rounded-lg border border-teal-800 hover:bg-teal-800/50">
+                  Request Certification
+                </button>
+              </div>
+              
+              <div className="bg-gradient-to-br from-gray-900 to-gray-900/40 rounded-xl border border-gray-800 p-6 flex flex-col">
+                <div className="w-14 h-14 bg-blue-900/20 rounded-full flex items-center justify-center mb-4">
+                  <Shield className="h-6 w-6 text-blue-500" />
+                </div>
+                <h3 className="text-xl font-medium text-white mb-2">Insurance Appraisal</h3>
+                <p className="text-gray-400 mb-4 text-sm flex-grow">
+                  Professional valuation reports for insurance purposes with detailed condition assessment and market analysis.
+                </p>
+                <button className="w-full py-2 mt-2 bg-blue-900/50 text-blue-300 rounded-lg border border-blue-800 hover:bg-blue-800/50">
+                  Request Appraisal
+                </button>
+              </div>
+              
+              <div className="bg-gradient-to-br from-gray-900 to-gray-900/40 rounded-xl border border-gray-800 p-6 flex flex-col">
+                <div className="w-14 h-14 bg-purple-900/20 rounded-full flex items-center justify-center mb-4">
+                  <History className="h-6 w-6 text-purple-500" />
+                </div>
+                <h3 className="text-xl font-medium text-white mb-2">Heritage Certificate</h3>
+                <p className="text-gray-400 mb-4 text-sm flex-grow">
+                  Detailed provenance research and historical documentation, including original specifications and production details.
+                </p>
+                <button className="w-full py-2 mt-2 bg-purple-900/50 text-purple-300 rounded-lg border border-purple-800 hover:bg-purple-800/50">
+                  Request Heritage Certificate
+                </button>
+              </div>
+            </div>
+
+            {/* Certification Form */}
+            <div className="bg-gradient-to-br from-gray-900 to-gray-900/40 rounded-xl border border-gray-800 mb-8">
+              <div className="p-6 border-b border-gray-800">
+                <h3 className="text-xl font-medium text-white">Request New Certification</h3>
+              </div>
+              <div className="p-6">
+                <form className="space-y-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">
+                        Asset Type
+                      </label>
+                      <select className="w-full bg-black border border-gray-700 rounded-lg p-3 text-white">
+                        <option value="">Select Type</option>
+                        <option value="timepiece">Luxury Timepiece</option>
+                        <option value="vehicle">Exotic Vehicle</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">
+                        Certification Type
+                      </label>
+                      <select className="w-full bg-black border border-gray-700 rounded-lg p-3 text-white">
+                        <option value="">Select Certification</option>
+                        <option value="authentication">Authentication Certificate</option>
+                        <option value="appraisal">Insurance Appraisal</option>
+                        <option value="heritage">Heritage Certificate</option>
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">
+                        Brand/Make
+                      </label>
+                      <input 
+                        type="text" 
+                        className="w-full bg-black border border-gray-700 rounded-lg p-3 text-white" 
+                        placeholder="E.g. Patek Philippe, Ferrari"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">
+                        Model/Reference
+                      </label>
+                      <input 
+                        type="text" 
+                        className="w-full bg-black border border-gray-700 rounded-lg p-3 text-white" 
+                        placeholder="E.g. Nautilus 5711, 458 Italia"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">
+                        Serial Number
+                      </label>
+                      <input 
+                        type="text" 
+                        className="w-full bg-black border border-gray-700 rounded-lg p-3 text-white" 
+                        placeholder="Enter serial number"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-400 mb-2">
+                        Year
+                      </label>
+                      <input 
+                        type="text" 
+                        className="w-full bg-black border border-gray-700 rounded-lg p-3 text-white" 
+                        placeholder="E.g. 2021"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-400 mb-2">
+                      Special Instructions
+                    </label>
+                    <textarea 
+                      className="w-full bg-black border border-gray-700 rounded-lg p-3 text-white min-h-[120px]" 
+                      placeholder="Any special requirements or details about your certification request"
+                    ></textarea>
+                  </div>
+                  
+                  <div className="flex justify-end">
+                    <button className="px-6 py-3 bg-teal-900 text-teal-100 rounded-lg border border-teal-700 hover:bg-teal-800 transition-colors">
+                      Submit Certification Request
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        {activeTab === 'analytics' && (
+          <div className="mb-6">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-orbitron text-indigo-500 mb-3">Market Analytics</h2>
+              <p className="text-gray-400 max-w-3xl mx-auto">
+                Comprehensive market data and trend analysis for luxury timepieces and exotic vehicles.
+              </p>
+            </div>
+            
+            {/* Market Overview Cards */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              <div className="bg-gradient-to-br from-gray-900 to-black p-6 rounded-xl border border-gray-800">
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-blue-900/20 rounded-full flex items-center justify-center mr-4">
+                    <BarChart3 className="h-6 w-6 text-blue-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-white">Market Indices</h3>
+                    <p className="text-gray-400 text-sm">Current status: Strong</p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-gray-400">Luxury Timepiece Index</span>
+                      <span className="text-green-400">+3.2%</span>
+                    </div>
+                    <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                      <div className="h-full bg-blue-500" style={{ width: '76%' }}></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-gray-400">Exotic Vehicle Index</span>
+                      <span className="text-green-400">+1.8%</span>
+                    </div>
+                    <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                      <div className="h-full bg-green-500" style={{ width: '62%' }}></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-gray-400">Collectibles Volume</span>
+                      <span className="text-amber-400">+0.5%</span>
+                    </div>
+                    <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                      <div className="h-full bg-amber-500" style={{ width: '45%' }}></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gradient-to-br from-gray-900 to-black p-6 rounded-xl border border-gray-800">
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-purple-900/20 rounded-full flex items-center justify-center mr-4">
+                    <ArrowUpDown className="h-6 w-6 text-purple-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-white">Top Performers</h3>
+                    <p className="text-gray-400 text-sm">Last 12 months</p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div className="bg-black/30 p-3 rounded border border-gray-800">
+                    <div className="flex justify-between items-center">
+                      <span className="text-white">Patek Philippe Nautilus</span>
+                      <span className="text-green-400">+18.7%</span>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">Ref. 5711/1A-014</div>
+                  </div>
+                  <div className="bg-black/30 p-3 rounded border border-gray-800">
+                    <div className="flex justify-between items-center">
+                      <span className="text-white">Ferrari 458 Speciale</span>
+                      <span className="text-green-400">+12.4%</span>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">2014-2015</div>
+                  </div>
+                  <div className="bg-black/30 p-3 rounded border border-gray-800">
+                    <div className="flex justify-between items-center">
+                      <span className="text-white">Rolex Daytona</span>
+                      <span className="text-green-400">+8.3%</span>
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">Ref. 116500LN</div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gradient-to-br from-gray-900 to-black p-6 rounded-xl border border-gray-800">
+                <div className="flex items-center mb-4">
+                  <div className="w-12 h-12 bg-amber-900/20 rounded-full flex items-center justify-center mr-4">
+                    <PieChart className="h-6 w-6 text-amber-500" />
+                  </div>
+                  <div>
+                    <h3 className="text-lg font-medium text-white">Market Distribution</h3>
+                    <p className="text-gray-400 text-sm">By category & region</p>
+                  </div>
+                </div>
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-gray-400">North America</span>
+                      <span className="text-white">42%</span>
+                    </div>
+                    <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                      <div className="h-full bg-blue-500" style={{ width: '42%' }}></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-gray-400">Europe</span>
+                      <span className="text-white">31%</span>
+                    </div>
+                    <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                      <div className="h-full bg-green-500" style={{ width: '31%' }}></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-gray-400">Asia-Pacific</span>
+                      <span className="text-white">25%</span>
+                    </div>
+                    <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                      <div className="h-full bg-amber-500" style={{ width: '25%' }}></div>
+                    </div>
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-sm mb-1">
+                      <span className="text-gray-400">Rest of World</span>
+                      <span className="text-white">2%</span>
+                    </div>
+                    <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                      <div className="h-full bg-purple-500" style={{ width: '2%' }}></div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Market Trends Chart */}
+            <div className="bg-gradient-to-br from-gray-900 to-gray-900/40 rounded-xl border border-gray-800 mb-8">
+              <div className="p-6 border-b border-gray-800 flex justify-between items-center">
+                <h3 className="text-xl font-medium text-white">Market Value Trends</h3>
+                <div className="flex space-x-2">
+                  <select className="bg-black border border-gray-700 rounded px-3 py-1 text-sm text-white">
+                    <option value="12m">Last 12 Months</option>
+                    <option value="3y">3 Years</option>
+                    <option value="5y">5 Years</option>
+                  </select>
+                </div>
+              </div>
+              
+              <div className="p-6">
+                <div className="h-64 flex items-center justify-center bg-black/30 rounded border border-gray-800">
+                  <div className="text-center p-6">
+                    <BarChart2 className="h-16 w-16 text-indigo-500/50 mx-auto mb-4" />
+                    <p className="text-gray-400">
+                      Advanced analytics charts will appear here. Select assets for detailed market analysis.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Analytics Categories */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+              <div className="bg-gradient-to-br from-gray-900 to-gray-900/40 rounded-xl border border-gray-800">
+                <div className="p-6 border-b border-gray-800">
+                  <h3 className="text-xl font-medium text-white">Investment Insights</h3>
+                </div>
+                <div className="p-6">
+                  <div className="space-y-4">
+                    <div className="bg-black/30 p-4 rounded border border-gray-800">
+                      <h4 className="text-blue-400 font-medium mb-1">Limited Production Investments</h4>
+                      <p className="text-sm text-gray-400 mb-2">
+                        Timepieces with limited production numbers continue to outperform the broader market by 3.2x.
+                      </p>
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>Confidence: High</span>
+                        <span>Data Quality: 87%</span>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-black/30 p-4 rounded border border-gray-800">
+                      <h4 className="text-green-400 font-medium mb-1">Exotic Performance Vehicle Trends</h4>
+                      <p className="text-sm text-gray-400 mb-2">
+                        Limited-production naturally aspirated performance cars show 7.5% higher appreciation than comparable turbo models.
+                      </p>
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>Confidence: Medium</span>
+                        <span>Data Quality: 76%</span>
+                      </div>
+                    </div>
+                    
+                    <div className="bg-black/30 p-4 rounded border border-gray-800">
+                      <h4 className="text-amber-400 font-medium mb-1">Regional Market Analysis</h4>
+                      <p className="text-sm text-gray-400 mb-2">
+                        European market recovery outpacing North American growth with a 2.3% advantage in Q1 2025.
+                      </p>
+                      <div className="flex justify-between text-xs text-gray-500">
+                        <span>Confidence: Medium-High</span>
+                        <span>Data Quality: 82%</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gradient-to-br from-gray-900 to-gray-900/40 rounded-xl border border-gray-800">
+                <div className="p-6 border-b border-gray-800">
+                  <h3 className="text-xl font-medium text-white">Your Portfolio Analytics</h3>
+                </div>
+                <div className="p-6">
+                  <div className="flex flex-col space-y-4">
+                    <div className="p-4 rounded border border-gray-800 bg-black/30">
+                      <div className="flex items-center justify-between mb-2">
+                        <div className="flex items-center">
+                          <div className="w-10 h-10 bg-blue-900/20 rounded-full flex items-center justify-center mr-3">
+                            <Zap className="h-5 w-5 text-blue-400" />
+                          </div>
+                          <div>
+                            <h4 className="font-medium text-white">Portfolio Performance</h4>
+                            <p className="text-xs text-gray-500">Last 12 months</p>
+                          </div>
+                        </div>
+                        <div className="text-green-400 font-bold">+8.4%</div>
+                      </div>
+                      <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                        <div className="h-full bg-blue-500" style={{ width: '84%' }}></div>
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="p-4 rounded border border-gray-800 bg-black/30">
+                        <h4 className="text-sm text-gray-400 mb-1">Total Value</h4>
+                        <div className="text-xl font-bold text-white">$1.72M</div>
+                        <div className="text-xs text-green-400 mt-1">+$134k Year-to-Date</div>
+                      </div>
+                      
+                      <div className="p-4 rounded border border-gray-800 bg-black/30">
+                        <h4 className="text-sm text-gray-400 mb-1">Diversification Score</h4>
+                        <div className="text-xl font-bold text-amber-400">7.4/10</div>
+                        <div className="text-xs text-amber-400/70 mt-1">Consider adding vintage</div>
+                      </div>
+                      
+                      <div className="p-4 rounded border border-gray-800 bg-black/30">
+                        <h4 className="text-sm text-gray-400 mb-1">Liquidity Rating</h4>
+                        <div className="text-xl font-bold text-blue-400">A-</div>
+                        <div className="text-xs text-blue-400/70 mt-1">Strong seller's market</div>
+                      </div>
+                      
+                      <div className="p-4 rounded border border-gray-800 bg-black/30">
+                        <h4 className="text-sm text-gray-400 mb-1">Top Performer</h4>
+                        <div className="text-white font-medium text-sm">Patek Nautilus</div>
+                        <div className="text-xs text-green-400 mt-1">+23.5% appreciation</div>
+                      </div>
+                    </div>
+                    
+                    <button className="w-full py-3 bg-indigo-900/50 text-indigo-300 rounded-lg border border-indigo-800 hover:bg-indigo-800/50 mt-2">
+                      View Detailed Portfolio Analytics
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
         
         {activeTab === 'overview' && (
           <div ref={contentRef}>
