@@ -396,7 +396,7 @@ const TiresTimepieces: React.FC = () => {
                 
                 <div className="bg-gradient-to-br from-gray-900 to-black p-6 rounded-xl border border-gray-800">
                   <div className="w-12 h-12 bg-green-900/20 rounded-full flex items-center justify-center mb-4">
-                    <FileText className="h-6 w-6 text-green-500" />
+                    <DollarSign className="h-6 w-6 text-green-500" />
                   </div>
                   <h4 className="text-lg font-medium text-white mb-2">WTA Trader Special</h4>
                   <p className="text-gray-400 text-sm mb-4">
