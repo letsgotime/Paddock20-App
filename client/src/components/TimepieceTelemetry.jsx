@@ -1341,6 +1341,107 @@ function TimepieceTelemetry({
             </div>
           </div>
           
+          {/* Historical Value Tracking - NEW */}
+          <div className="apex-card p-6">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h3 className="font-orbitron text-lg text-teal-400 mb-1">Historical Value Tracking</h3>
+                <p className="text-gray-400 text-sm">Complete investment performance analysis</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="bg-teal-900/30 px-3 py-1 rounded text-sm text-teal-300 border border-teal-800/50 flex items-center">
+                  <LineChart className="h-4 w-4 mr-1" />
+                  5-Year Analysis
+                </div>
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Main Chart Area */}
+              <div className="lg:col-span-2 bg-black/30 rounded-lg p-4 border border-gray-800">
+                <div className="flex justify-between items-center mb-4">
+                  <h4 className="text-white font-medium">Value Trend Analysis</h4>
+                  <div className="flex space-x-2">
+                    <button className="px-2 py-1 text-xs bg-teal-900/30 text-teal-300 rounded border border-teal-900/50">1Y</button>
+                    <button className="px-2 py-1 text-xs bg-teal-500/20 text-teal-400 rounded border border-teal-500/50 font-medium">2Y</button>
+                    <button className="px-2 py-1 text-xs bg-teal-900/30 text-teal-300 rounded border border-teal-900/50">5Y</button>
+                    <button className="px-2 py-1 text-xs bg-teal-900/30 text-teal-300 rounded border border-teal-900/50">MAX</button>
+                  </div>
+                </div>
+                
+                <div className="h-64 w-full">
+                  <ProgressSparkline 
+                    data={valueHistory}
+                    dataKey="value"
+                    height={240}
+                    interactive={true}
+                    showTooltip={true}
+                    gradient
+                    gradientFrom="#0d9488"
+                    gradientTo="#115e59"
+                    strokeColor="#2dd4bf"
+                    areaFill
+                  />
+                </div>
+                
+                <div className="mt-4 pt-4 border-t border-gray-800 grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
+                  <div>
+                    <div className="text-gray-400 text-xs mb-1">Current Value</div>
+                    <div className="text-white font-medium">${(timepiece.marketValue || 35000).toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-400 text-xs mb-1">24M Change</div>
+                    <div className="text-green-400 font-medium">+8.7%</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-400 text-xs mb-1">Peak Value</div>
+                    <div className="text-amber-400 font-medium">${((timepiece.marketValue || 35000) * 1.12).toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <div className="text-gray-400 text-xs mb-1">Market Rating</div>
+                    <div className="text-blue-400 font-medium">Strong</div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Value Metrics Panel */}
+              <div className="bg-black/30 rounded-lg p-4 border border-gray-800">
+                <h4 className="text-white font-medium mb-3">Investment Metrics</h4>
+                
+                <div className="space-y-4">
+                  <div className="bg-black/40 rounded-lg p-3 border border-gray-800">
+                    <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">CAGR (5 Year)</div>
+                    <div className="flex items-baseline">
+                      <div className="text-2xl font-bold text-teal-400">6.8%</div>
+                      <div className="text-xs text-gray-400 ml-2">Compound Annual Growth Rate</div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-black/40 rounded-lg p-3 border border-gray-800">
+                    <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Volatility</div>
+                    <div className="flex items-baseline">
+                      <div className="text-2xl font-bold text-blue-400">Low</div>
+                      <div className="text-xs text-gray-400 ml-2">5.4% annual standard deviation</div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-black/40 rounded-lg p-3 border border-gray-800">
+                    <div className="text-xs text-gray-500 uppercase tracking-wider mb-1">Market Correlation</div>
+                    <div className="flex items-baseline">
+                      <div className="text-2xl font-bold text-amber-400">0.32</div>
+                      <div className="text-xs text-gray-400 ml-2">Low correlation to stock market</div>
+                    </div>
+                  </div>
+                  
+                  <div className="flex justify-between items-center mt-4 pt-4 border-t border-gray-800">
+                    <span className="text-white text-sm">Collectibility Score:</span>
+                    <span className="text-lg font-bold text-teal-400">8.7/10</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
           {/* Movement Analytics */}
           <div className="apex-card p-6">
             <div className="flex justify-between items-center mb-4">
@@ -1585,6 +1686,134 @@ function TimepieceTelemetry({
                     <div>
                       <div className="text-white text-sm">COSC Certified Chronometer</div>
                       <div className="text-gray-400 text-xs">Certificate No. {timepiece.certificateNumber || "CH-47382-92"}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Service History Timeline - NEW */}
+            <div className="bg-black/30 rounded-lg p-4 border border-gray-800 mb-6">
+              <div className="flex justify-between items-center mb-4">
+                <h4 className="text-white font-medium">Service History Timeline</h4>
+                <button className="px-2 py-1 bg-blue-900/30 text-blue-300 rounded text-xs border border-blue-800 flex items-center">
+                  <PlusCircle className="h-3 w-3 mr-1" /> Add Service Record
+                </button>
+              </div>
+              
+              <div className="relative pl-8 space-y-6 before:absolute before:left-4 before:top-2 before:h-full before:w-[2px] before:bg-gray-800">
+                {/* Most Recent Service */}
+                <div className="relative">
+                  <div className="absolute left-[-27px] top-0 w-5 h-5 rounded-full bg-blue-900 border-2 border-blue-400 z-10"></div>
+                  <div className="bg-black/40 rounded-lg p-3 border border-gray-800">
+                    <div className="flex justify-between mb-2">
+                      <div className="flex items-center">
+                        <Calendar className="h-4 w-4 text-blue-400 mr-2" />
+                        <span className="text-white font-medium">{new Date(timepiece.lastService || '2023-10-15').toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                      </div>
+                      <div className="text-xs px-2 py-0.5 bg-blue-900/30 text-blue-300 rounded border border-blue-800">Full Service</div>
+                    </div>
+                    
+                    <div className="text-gray-400 text-sm mb-2">
+                      Performed by: <span className="text-white">Authorized {timepiece.brand} Service Center</span>
+                    </div>
+                    
+                    <div className="space-y-1 text-xs text-gray-400">
+                      <div className="flex items-start">
+                        <CheckCircle className="h-3 w-3 text-green-400 mr-1 mt-0.5 flex-shrink-0" />
+                        <span>Complete movement overhaul and lubrication</span>
+                      </div>
+                      <div className="flex items-start">
+                        <CheckCircle className="h-3 w-3 text-green-400 mr-1 mt-0.5 flex-shrink-0" />
+                        <span>Water resistance testing (10 ATM)</span>
+                      </div>
+                      <div className="flex items-start">
+                        <CheckCircle className="h-3 w-3 text-green-400 mr-1 mt-0.5 flex-shrink-0" />
+                        <span>Case refinishing and bracelet adjustment</span>
+                      </div>
+                      <div className="flex items-start">
+                        <CheckCircle className="h-3 w-3 text-green-400 mr-1 mt-0.5 flex-shrink-0" />
+                        <span>Timing adjustment and regulation</span>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-3 pt-2 border-t border-gray-800 flex justify-between items-center">
+                      <div className="text-xs text-gray-500">Service Cost: <span className="text-white">$850</span></div>
+                      <button className="text-xs text-blue-400 flex items-center hover:text-blue-300">
+                        <Eye className="h-3 w-3 mr-1" /> View Invoice
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Previous Service */}
+                <div className="relative">
+                  <div className="absolute left-[-27px] top-0 w-5 h-5 rounded-full bg-gray-800 border-2 border-gray-600 z-10"></div>
+                  <div className="bg-black/40 rounded-lg p-3 border border-gray-800 opacity-80">
+                    <div className="flex justify-between mb-2">
+                      <div className="flex items-center">
+                        <Calendar className="h-4 w-4 text-gray-400 mr-2" />
+                        <span className="text-white font-medium">January 14, 2019</span>
+                      </div>
+                      <div className="text-xs px-2 py-0.5 bg-gray-900/30 text-gray-300 rounded border border-gray-800">Minor Service</div>
+                    </div>
+                    
+                    <div className="text-gray-400 text-sm mb-2">
+                      Performed by: <span className="text-white">Authorized {timepiece.brand} Service Center</span>
+                    </div>
+                    
+                    <div className="space-y-1 text-xs text-gray-400">
+                      <div className="flex items-start">
+                        <CheckCircle className="h-3 w-3 text-green-400 mr-1 mt-0.5 flex-shrink-0" />
+                        <span>Basic movement service and timing adjustment</span>
+                      </div>
+                      <div className="flex items-start">
+                        <CheckCircle className="h-3 w-3 text-green-400 mr-1 mt-0.5 flex-shrink-0" />
+                        <span>Water resistance testing</span>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-3 pt-2 border-t border-gray-800 flex justify-between items-center">
+                      <div className="text-xs text-gray-500">Service Cost: <span className="text-white">$380</span></div>
+                      <button className="text-xs text-blue-400 flex items-center hover:text-blue-300">
+                        <Eye className="h-3 w-3 mr-1" /> View Invoice
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Purchase/Original Service */}
+                <div className="relative">
+                  <div className="absolute left-[-27px] top-0 w-5 h-5 rounded-full bg-gray-800 border-2 border-gray-600 z-10"></div>
+                  <div className="bg-black/40 rounded-lg p-3 border border-gray-800 opacity-70">
+                    <div className="flex justify-between mb-2">
+                      <div className="flex items-center">
+                        <Calendar className="h-4 w-4 text-gray-400 mr-2" />
+                        <span className="text-white font-medium">May 22, 2015</span>
+                      </div>
+                      <div className="text-xs px-2 py-0.5 bg-amber-900/30 text-amber-300 rounded border border-amber-800">Factory New</div>
+                    </div>
+                    
+                    <div className="text-gray-400 text-sm mb-2">
+                      Performed by: <span className="text-white">{timepiece.brand} Manufacture</span>
+                    </div>
+                    
+                    <div className="space-y-1 text-xs text-gray-400">
+                      <div className="flex items-start">
+                        <CheckCircle className="h-3 w-3 text-green-400 mr-1 mt-0.5 flex-shrink-0" />
+                        <span>Factory quality control certification</span>
+                      </div>
+                      <div className="flex items-start">
+                        <CheckCircle className="h-3 w-3 text-green-400 mr-1 mt-0.5 flex-shrink-0" />
+                        <span>Chronometer certification</span>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-3 pt-2 border-t border-gray-800 flex justify-between items-center">
+                      <div className="text-xs text-gray-500">Original Purchase: <span className="text-white">${(timepiece.purchasePrice || 25000).toLocaleString()}</span></div>
+                      <button className="text-xs text-blue-400 flex items-center hover:text-blue-300">
+                        <Eye className="h-3 w-3 mr-1" /> View Certificate
+                      </button>
                     </div>
                   </div>
                 </div>
