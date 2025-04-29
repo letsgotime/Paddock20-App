@@ -1537,7 +1537,7 @@ const F1TelemetryDashboard = ({ vehicle, vehicleData }) => {
                 selectedChecklist === 'service' ? 'bg-green-500 text-black font-bold' : 'bg-gray-800 text-white'
               } transition-all`}
             >
-              <Tool className="h-4 w-4" />
+              <Wrench className="h-4 w-4" />
               Service
               <span className="ml-1 bg-gray-900 text-green-400 px-2 py-0.5 rounded-full text-xs">
                 {calculateCompletionPercentage('service')}%

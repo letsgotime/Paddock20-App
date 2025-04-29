@@ -3,8 +3,8 @@ import {
   BarChart2, Thermometer, Clock, Calendar, PieChart, AlertTriangle, TrendingUp, 
   ChevronRight, ChevronDown, ChevronUp, Gauge, Info, Fuel, Droplets, Battery, 
   Car, Maximize2, Zap, MapPin, Mountain, Wrench, Shield, Camera, Clipboard,
-  Tool, ExternalLink, FileText, DownloadCloud, Target, Eye, Award, Truck,
-  Settings, Sliders, Tag, Disc, CornerUpRight, CornerDownRight, Activity, FileBarChart
+  ExternalLink, FileText, DownloadCloud, Target, Eye, Award, Truck,
+  Settings, Tag, Disc, CornerUpRight, CornerDownRight, Activity, FileBarChart
 } from 'lucide-react';
 import VehicleGallery from './VehicleGallery';
 import TireTracker from './TireTracker';
@@ -41,7 +41,7 @@ const EnhancedVehicleDetail = ({ vehicle, carMetrics, onImageSearch }) => {
     { id: 'interior', label: 'Interior', icon: <Settings size={16} /> },
     { id: 'engine', label: 'Engine Bay', icon: <Zap size={16} /> },
     { id: 'wheels', label: 'Wheels & Tires', icon: <Disc size={16} /> },
-    { id: 'modifications', label: 'Modifications', icon: <Tool size={16} /> },
+    { id: 'modifications', label: 'Modifications', icon: <Wrench size={16} /> },
     { id: 'damage', label: 'Damage Reports', icon: <AlertTriangle size={16} /> },
     { id: 'documents', label: 'Documents', icon: <FileText size={16} /> },
   ];
@@ -326,7 +326,7 @@ const EnhancedVehicleDetail = ({ vehicle, carMetrics, onImageSearch }) => {
                 <span>Last driven: {carMetrics.daysSinceLastDrive} days ago</span>
               </div>
               <div className="flex items-center">
-                <Tool className="mr-1 h-4 w-4 text-yellow-500" />
+                <Wrench className="mr-1 h-4 w-4 text-yellow-500" />
                 <span>Service: {carMetrics.nextServiceDue}</span>
               </div>
               <div className="flex items-center">
