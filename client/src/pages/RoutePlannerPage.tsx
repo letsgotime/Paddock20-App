@@ -677,6 +677,9 @@ const RoutePlannerPage = () => {
   const [heatmapData, setHeatmapData] = useState<HeatmapDataPoint[]>([]);
   const [selectedHeatmapMetric, setSelectedHeatmapMetric] = useState('performance');
   const [showHeatmap, setShowHeatmap] = useState(false);
+  const [heatmapMode, setHeatmapMode] = useState<'real-time' | 'simulated'>('real-time');
+  const [isCollectingData, setIsCollectingData] = useState(false);
+  const [sensorPermissionsGranted, setSensorPermissionsGranted] = useState(false);
   
   // Effect for initializing heatmap data
   useEffect(() => {
@@ -686,6 +689,60 @@ const RoutePlannerPage = () => {
       setHeatmapData(sampleData);
     }
   }, []);
+  
+  // Function to request device sensor permissions for real-time heatmap
+  const requestSensorPermissions = () => {
+    if (typeof DeviceOrientationEvent !== 'undefined' && 
+        typeof (DeviceOrientationEvent as any).requestPermission === 'function') {
+      // iOS 13+ requires explicit permission
+      (DeviceOrientationEvent as any).requestPermission()
+        .then((response: string) => {
+          if (response === 'granted') {
+            setSensorPermissionsGranted(true);
+            // Also request motion permission
+            if (typeof DeviceMotionEvent !== 'undefined' && 
+                typeof (DeviceMotionEvent as any).requestPermission === 'function') {
+              (DeviceMotionEvent as any).requestPermission()
+                .then((motionResponse: string) => {
+                  if (motionResponse === 'granted') {
+                    // Both permissions granted
+                    console.log('Motion and orientation permissions granted');
+                  }
+                })
+                .catch(console.error);
+            }
+          }
+        })
+        .catch(console.error);
+    } else {
+      // Most Android devices and older iOS don't need explicit permission
+      setSensorPermissionsGranted(true);
+    }
+  };
+  
+  // Start collecting real-time sensor data for heatmap
+  const startRealTimeCollection = () => {
+    if (!sensorPermissionsGranted) {
+      requestSensorPermissions();
+    }
+    
+    setIsCollectingData(true);
+    // This would be connected to sensor listeners in a real implementation
+    console.log('Started real-time heatmap data collection');
+    
+    // In a real implementation, we would set up event listeners for:
+    // - Geolocation updates (navigator.geolocation.watchPosition)
+    // - Device orientation (window.addEventListener('deviceorientation'))
+    // - Device motion/acceleration (window.addEventListener('devicemotion'))
+  };
+  
+  // Stop collecting real-time sensor data
+  const stopRealTimeCollection = () => {
+    setIsCollectingData(false);
+    console.log('Stopped real-time heatmap data collection');
+    
+    // In a real implementation, we would clear the event listeners here
+  };
   
   // Generate performance heatmap data based on route
   const generateRouteHeatmapData = (waypoints?: Array<{lat: number, lng: number}>) => {
