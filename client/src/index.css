@@ -2,6 +2,11 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Dropdown Menu Custom Styles */
+.menu-open .menu-content {
+  display: block !important;
+}
+
 :root {
       --background: 0 0% 100%;
 --foreground: 20 14.3% 4.1%;

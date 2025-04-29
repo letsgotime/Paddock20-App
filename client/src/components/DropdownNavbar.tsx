@@ -35,7 +35,12 @@ const DropdownNavbar = () => {
             <Link to="/garage-vault" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>🚗 Garage Vault</Link>
             <Link to="/tires-timepieces" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>🛞 Tires & Timepieces Brokerage</Link>
             <Link to="/manifestation-station" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>🧭 Manifestation Station™</Link>
-            <Link to="/mod-planner" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>📐 Mod Planner</Link>
+            <Link to="/manifestation-station" className="hover:text-green-400 block" onClick={() => {
+              // Route mod planner to Manifestation Station with hustle planner view
+              window.localStorage.setItem('manifestation_activeView', 'hustle-planner');
+              window.localStorage.setItem('manifestation_context', 'vehicle-mods');
+              setIsOpen(false);
+            }}>📐 Mod Planner</Link>
             <Link to="/drive-journal" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>📝 Drive Journal</Link>
             <Link to="/manifestation-station" className="hover:text-green-400 block" onClick={() => {
               // Directly navigate to the Manifestation Station with the hustle planner view
@@ -51,7 +56,16 @@ const DropdownNavbar = () => {
             <Link to="/discounts" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>💸 Discounts & Promotions</Link>
             
             {/* Checklists Dropdown */}
-            <div className="relative group">
+            <div className="relative group" 
+                 onMouseEnter={(e) => e.currentTarget.classList.add('menu-open')}
+                 onMouseLeave={(e) => {
+                    // Add a delay before removing the class
+                    setTimeout(() => {
+                      if (!e.currentTarget.matches(':hover')) {
+                        e.currentTarget.classList.remove('menu-open');
+                      }
+                    }, 500); // 500ms delay
+                 }}>
               <button className="flex items-center hover:text-green-400 w-full">
                 ✅ Checklists
                 <svg
@@ -64,10 +78,10 @@ const DropdownNavbar = () => {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7"></path>
                 </svg>
               </button>
-              <div className="absolute top-0 right-full mr-2 hidden group-hover:block bg-gray-900 border border-gray-700 rounded-lg shadow-lg p-4 z-10 w-48">
-                <Link to="/checklists/tire" className="block hover:text-green-400 mb-2" onClick={() => setIsOpen(false)}>🛞 Tire Checklist</Link>
-                <Link to="/checklists/maintenance" className="block hover:text-green-400 mb-2" onClick={() => setIsOpen(false)}>🛠️ Maintenance Checklist</Link>
-                <Link to="/checklists/pre-drive" className="block hover:text-green-400" onClick={() => setIsOpen(false)}>🛡️ Pre-Drive Checklist</Link>
+              <div className="absolute top-0 right-full mr-2 hidden menu-content bg-gray-900 border border-gray-700 rounded-lg shadow-lg p-4 z-10 w-48">
+                <Link to="/seasonal-checklist" className="block hover:text-green-400 mb-2" onClick={() => setIsOpen(false)}>🌡️ Seasonal Checklist</Link>
+                <Link to="/pre-drive-checklist" className="block hover:text-green-400 mb-2" onClick={() => setIsOpen(false)}>🛡️ Pre-Drive Checklist</Link>
+                <Link to="/juicebox" className="block hover:text-green-400 mb-2" onClick={() => setIsOpen(false)}>🧼 Detailing Checklist</Link>
               </div>
             </div>
 
