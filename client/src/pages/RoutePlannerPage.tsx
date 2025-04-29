@@ -1682,31 +1682,170 @@ const RoutePlannerPage = () => {
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <div className="space-y-6">
-          {/* Start Location */}
-          <div>
-            <label className="block text-gray-300 mb-1">Starting Point</label>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <input
-                type="text"
-                placeholder="Start Location"
-                value={startLocation}
-                onChange={(e) => setStartLocation(e.target.value)}
-                className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
-              />
-              <div>
-                <label className="text-gray-400 text-sm mb-1 block">Departure Date</label>
+          {/* Route Planning Section */}
+          <div className="bg-gray-900/60 rounded-lg p-4 border border-blue-900/30">
+            <h3 className="text-blue-400 font-orbitron text-xl mb-4">🛣️ Route Planner</h3>
+            
+            {/* Start Location */}
+            <div className="mb-6">
+              <label className="block text-gray-300 mb-1">Starting Point</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <input
-                  type="date"
-                  value={startDate}
-                  onChange={(e) => setStartDate(e.target.value)}
+                  type="text"
+                  placeholder="Start Location"
+                  value={startLocation}
+                  onChange={(e) => setStartLocation(e.target.value)}
                   className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
                 />
+                <div>
+                  <label className="text-gray-400 text-sm mb-1 block">Departure Date</label>
+                  <input
+                    type="date"
+                    value={startDate}
+                    onChange={(e) => setStartDate(e.target.value)}
+                    className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
+                  />
+                </div>
+              </div>
+            </div>
+            
+            {/* Multi-city Route Stops */}
+            <div className="mb-6">
+              <label className="block text-gray-300 mb-1">Additional Stops (Multi-City)</label>
+              <div className="bg-gray-900 p-4 rounded-lg border border-gray-800 mb-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                  <div>
+                    <label className="text-gray-400 text-sm mb-1 block">Stop Location</label>
+                    <input
+                      type="text"
+                      placeholder="Add a stopover location"
+                      value={newStopLocation}
+                      onChange={handleStopLocationChange}
+                      className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-gray-400 text-sm mb-1 block">Arrival Date</label>
+                    <input
+                      type="date"
+                      value={newStopDate}
+                      onChange={handleStopDateChange}
+                      className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
+                    />
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-3">
+                  <div>
+                    <label className="text-gray-400 text-sm mb-1 block">Stay Duration (Days)</label>
+                    <input
+                      type="number"
+                      min="0"
+                      value={stayDuration}
+                      onChange={handleStayDurationChange}
+                      className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
+                    />
+                  </div>
+                  <div className="flex items-center">
+                    <input
+                      type="checkbox"
+                      id="overnight"
+                      checked={isOvernight}
+                      onChange={handleOvernightChange}
+                      className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5"
+                    />
+                    <label htmlFor="overnight" className="text-gray-300">Overnight Stay</label>
+                  </div>
+                </div>
+                
+                <div className="mb-3">
+                  <label className="text-gray-400 text-sm mb-1 block">Notes</label>
+                  <textarea
+                    placeholder="Any special notes for this stop (optional)"
+                    value={stopNotes}
+                    onChange={handleStopNotesChange}
+                    className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700 min-h-[60px]"
+                  ></textarea>
+                </div>
+                
+                <button
+                  onClick={addRouteStop}
+                  className="bg-green-500 hover:bg-green-400 text-black font-montserrat px-6 py-3 rounded whitespace-nowrap"
+                >
+                  ➕ Add Stop
+                </button>
+              </div>
+              
+              {routeStops.length > 0 && (
+                <div className="my-3">
+                  <div className="flex justify-between items-center mb-2">
+                    <p className="text-gray-300">Route Stops ({routeStops.length})</p>
+                    <div className="flex items-center">
+                      <div className="w-3 h-3 rounded-full bg-green-500 mr-2"></div>
+                      <span className="text-xs text-green-400">Includes weather forecasts</span>
+                    </div>
+                  </div>
+                  <ul className="space-y-3 max-h-64 overflow-y-auto pr-2">
+                    {routeStops.map((stop, index) => (
+                      <li key={index} className="bg-gray-800 rounded-lg border border-gray-700 overflow-hidden">
+                        <div className="bg-gray-700 px-3 py-2 flex justify-between items-center">
+                          <span className="text-white font-orbitron text-sm">{index + 1}. {stop.location}</span>
+                          <button
+                            onClick={() => removeRouteStop(index)}
+                            className="text-red-400 hover:text-red-300 p-1"
+                          >
+                            ✖
+                          </button>
+                        </div>
+                        <div className="p-3 grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <span className="text-gray-400 block">Arrival:</span>
+                            <span className="text-white">{stop.arrivalDate || 'Not specified'}</span>
+                          </div>
+                          <div>
+                            <span className="text-gray-400 block">Stay:</span>
+                            <span className="text-white">{stop.stayDuration} day{stop.stayDuration !== 1 ? 's' : ''}</span>
+                          </div>
+                          {stop.notes && (
+                            <div className="col-span-2 mt-1 border-t border-gray-700 pt-2">
+                              <span className="text-gray-400 block">Notes:</span>
+                              <span className="text-white">{stop.notes}</span>
+                            </div>
+                          )}
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+            </div>
+            
+            {/* End Location */}
+            <div>
+              <label className="block text-gray-300 mb-1">Final Destination</label>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <input
+                  type="text"
+                  placeholder="End Location"
+                  value={endLocation}
+                  onChange={(e) => setEndLocation(e.target.value)}
+                  className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
+                />
+                <div>
+                  <label className="text-gray-400 text-sm mb-1 block">Arrival Date</label>
+                  <input
+                    type="date"
+                    value={endDate}
+                    onChange={(e) => setEndDate(e.target.value)}
+                    className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
+                  />
+                </div>
               </div>
             </div>
           </div>
-
-          {/* Pre-Drive Performance Checklist */}
-          <div>
+          
+          {/* Pre-Drive Performance Checklist - Now in its own section */}
+          <div className="bg-gray-900/60 rounded-lg p-4 border border-green-900/30">
             <div className="flex items-center justify-between mb-2">
               <div className="flex items-center">
                 <span className="text-blue-400 font-orbitron text-xl">🏁 Pre-Drive Checklist</span>
