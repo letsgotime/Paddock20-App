@@ -294,28 +294,46 @@ function TimepieceTelemetry({
           {/* Serial Number and Authentication Details - Highlighted for Shoppers */}
           <div className="mt-4 pt-4 border-t border-gray-800">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-              <div className="col-span-1 md:col-span-1 flex flex-col">
-                <div className="text-xs text-gray-500 uppercase tracking-wider">Serial Number</div>
-                <div className="text-xl font-bold text-purple-300 font-mono">{timepiece.serialNumber || "5711/1A-014-8742913"}</div>
+              <div className="col-span-1 md:col-span-1 flex flex-col bg-purple-900/10 p-3 border border-purple-800/40 rounded-lg">
+                <div className="flex justify-between items-center mb-1">
+                  <div className="text-xs text-gray-500 uppercase tracking-wider">Serial Number (VIN)</div>
+                  <div className="bg-purple-900/30 px-2 py-0.5 rounded-full text-xs text-purple-300 border border-purple-800/50">
+                    Verified
+                  </div>
+                </div>
+                <div className="text-xl font-bold text-purple-300 font-mono tracking-wide">{timepiece.serialNumber || "5711/1A-014-8742913"}</div>
                 <div className="mt-1 text-xs text-gray-400 flex items-center">
                   <Shield className="h-3 w-3 mr-1 text-purple-400" />
-                  Verified Authentic
+                  <span className="text-purple-300">Blockchain Authenticated</span>
                 </div>
               </div>
               
-              <div className="col-span-1 md:col-span-2 bg-black/20 rounded p-3 border border-gray-800">
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+              <div className="col-span-1 md:col-span-2 bg-black/20 rounded-lg p-3 border border-gray-800">
+                <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">Production Details</div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   <div>
                     <div className="text-xs text-gray-500">Production Batch</div>
-                    <div className="text-sm text-white">{timepiece.productionBatch || "Series 4/B21"}</div>
+                    <div className="text-sm text-white font-medium">{timepiece.productionBatch || "Series 4/B21"}</div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500">Factory Location</div>
-                    <div className="text-sm text-white">{timepiece.factoryLocation || "Geneva, CH"}</div>
+                    <div className="text-sm text-white font-medium">{timepiece.factoryLocation || "Geneva, CH"}</div>
                   </div>
                   <div>
                     <div className="text-xs text-gray-500">Registration Date</div>
-                    <div className="text-sm text-white">{timepiece.registrationDate || "10/15/2021"}</div>
+                    <div className="text-sm text-white font-medium">{timepiece.registrationDate || "10/15/2021"}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500">Movement Number</div>
+                    <div className="text-sm text-white font-medium font-mono">{timepiece.movementNumber || "324 SC-3846"}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500">Case Hallmarks</div>
+                    <div className="text-sm text-white font-medium">{timepiece.caseHallmarks || "750 / 18K"}</div>
+                  </div>
+                  <div>
+                    <div className="text-xs text-gray-500">Limited Edition</div>
+                    <div className="text-sm text-white font-medium">{timepiece.limitedEdition ? `#${timepiece.limitedEditionNumber} of ${timepiece.limitedEditionTotal}` : "Standard Production"}</div>
                   </div>
                 </div>
               </div>
@@ -536,6 +554,137 @@ function TimepieceTelemetry({
       {/* Overview Tab */}
       {activeTab === 'overview' && (
         <div className="space-y-6">
+          {/* Provenance - Like a VIN report for a timepiece */}
+          <div className="apex-card p-6">
+            <div className="flex justify-between items-center mb-4">
+              <div>
+                <h3 className="font-orbitron text-lg text-purple-400 mb-1">Provenance History</h3>
+                <p className="text-gray-400 text-sm">Complete ownership and service history</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="bg-purple-900/30 px-3 py-1 rounded text-sm text-purple-300 border border-purple-800/50 flex items-center">
+                  <Shield className="h-4 w-4 mr-1" />
+                  Blockchain Verified
+                </div>
+                <div className="bg-green-900/30 px-3 py-1 rounded text-sm text-green-300 border border-green-800/50 flex items-center">
+                  <Check className="h-4 w-4 mr-1" />
+                  2 Owners
+                </div>
+              </div>
+            </div>
+            
+            <div className="relative mb-4">
+              {/* Timeline track */}
+              <div className="absolute left-4 top-0 bottom-0 w-0.5 bg-gray-700"></div>
+              
+              {/* History points */}
+              <div className="space-y-6 ml-10 relative">
+                {/* Current Owner */}
+                <div className="relative">
+                  <div className="absolute -left-10 mt-1">
+                    <div className="w-6 h-6 bg-purple-500 border-4 border-gray-900 rounded-full"></div>
+                  </div>
+                  <div className="bg-purple-900/20 border border-purple-800 rounded-lg p-4">
+                    <div className="flex flex-wrap justify-between items-start gap-2">
+                      <div>
+                        <h5 className="text-purple-400 font-medium">Current Owner</h5>
+                        <p className="text-gray-300 text-sm mt-1">
+                          {timepiece.currentOwner || "Since April 15, 2022"}
+                        </p>
+                      </div>
+                      <div className="bg-black/30 px-3 py-1 rounded border border-gray-700 text-gray-400 text-sm">
+                        Ownership: {timepiece.ownershipDuration || "1 year, 2 months"}
+                      </div>
+                    </div>
+                    
+                    <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div>
+                        <div className="text-xs text-gray-500">Purchase Location</div>
+                        <div className="text-sm text-white">{timepiece.purchaseLocation || "Authorized Dealer - Phillips"}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-500">Documentation</div>
+                        <div className="text-sm text-white">Full Set (Box & Papers)</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-500">Authentication</div>
+                        <div className="text-sm text-white">Manufacturer Certified</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Previous Owner */}
+                <div className="relative">
+                  <div className="absolute -left-10 mt-1">
+                    <div className="w-6 h-6 bg-blue-500 border-4 border-gray-900 rounded-full"></div>
+                  </div>
+                  <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-4">
+                    <div className="flex flex-wrap justify-between items-start gap-2">
+                      <div>
+                        <h5 className="text-blue-400 font-medium">Previous Owner</h5>
+                        <p className="text-gray-300 text-sm mt-1">August 2018 - March 2022</p>
+                      </div>
+                      <div className="bg-black/30 px-3 py-1 rounded border border-gray-700 text-gray-400 text-sm">
+                        Ownership: 3 years, 7 months
+                      </div>
+                    </div>
+                    
+                    <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div>
+                        <div className="text-xs text-gray-500">Purchase Type</div>
+                        <div className="text-sm text-white">First Owner</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-500">Service History</div>
+                        <div className="text-sm text-white">2 Factory Services</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-500">Condition at Sale</div>
+                        <div className="text-sm text-white">Excellent (95%)</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Manufacture Date */}
+                <div className="relative">
+                  <div className="absolute -left-10 mt-1">
+                    <div className="w-6 h-6 bg-green-500 border-4 border-gray-900 rounded-full"></div>
+                  </div>
+                  <div className="bg-green-900/20 border border-green-800 rounded-lg p-4">
+                    <div className="flex flex-wrap justify-between items-start gap-2">
+                      <div>
+                        <h5 className="text-green-400 font-medium">Manufacturer Production</h5>
+                        <p className="text-gray-300 text-sm mt-1">
+                          {timepiece.manufactureDateFull || "July 2018"}
+                        </p>
+                      </div>
+                      <div className="bg-black/30 px-3 py-1 rounded border border-gray-700 text-gray-400 text-sm">
+                        Basel, Switzerland
+                      </div>
+                    </div>
+                    
+                    <div className="mt-3 grid grid-cols-1 md:grid-cols-3 gap-3">
+                      <div>
+                        <div className="text-xs text-gray-500">Original Retail</div>
+                        <div className="text-sm text-white">${timepiece.originalRetailPrice?.toLocaleString() || "35,000"}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-500">Factory Testing</div>
+                        <div className="text-sm text-white">COSC Chronometer Certified</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-gray-500">Quality Control</div>
+                        <div className="text-sm text-white">Master Watchmaker #26</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
           {/* Key Specifications */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <EditableTelemetry
