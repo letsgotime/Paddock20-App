@@ -5,13 +5,16 @@ import {
   Activity, Info, BarChart, LayoutDashboard, GitCompare,
   CloudOff, Database, Award, BarChart2, BarChart3,
   ArrowUpDown, Zap, PieChart, MoveHorizontal, History, Hammer,
-  Fingerprint, Globe
+  Fingerprint, Globe, Filter, DollarSign, ShoppingBag
 } from 'lucide-react';
 import ExportOptions from '../components/ExportOptions';
 import TimepiVault from '../components/TimepiVault';
 import TimepieceTelemetry from '../components/TimepieceTelemetry';
 import TimepieceModelViewer from '../components/TimepieceModelViewer';
 import timepieceDataService from '../services/timepieceDataService';
+import marketplaceService from '../services/marketplaceService';
+import MarketplaceListing from '../components/MarketplaceListing';
+import MarketplaceManager from '../components/MarketplaceManager';
 
 // Define interface for timepiece store state
 interface TimepieceState {
@@ -32,6 +35,17 @@ const TiresTimepieces: React.FC = () => {
   // For analytics functionality
   const [analyticsView, setAnalyticsView] = useState<'market' | 'collection' | 'growth' | 'rarity'>('market');
   const [showCertificationDetails, setShowCertificationDetails] = useState(false);
+  
+  // For marketplace functionality
+  const [isAdminMode, setIsAdminMode] = useState(false);
+  const [activeListingType, setActiveListingType] = useState<'all' | 'timepiece' | 'vehicle'>('all');
+  const useMarketplaceStore = marketplaceService.useMarketplaceStore;
+  const listings = useMarketplaceStore((state: any) => state.listings);
+  const addListing = useMarketplaceStore((state: any) => state.addListing);
+  const updateListing = useMarketplaceStore((state: any) => state.updateListing);
+  const removeListing = useMarketplaceStore((state: any) => state.removeListing);
+  const markAsSold = useMarketplaceStore((state: any) => state.markAsSold);
+  const setAdminStatus = useMarketplaceStore((state: any) => state.setAdminStatus);
   
   // For collection and trading metrics
   const [portfolioMetrics, setPortfolioMetrics] = useState({
@@ -57,6 +71,24 @@ const TiresTimepieces: React.FC = () => {
       setSelectedTimepieceId(timepieces[0].id);
     }
   }, []);
+  
+  // Update admin status in store when admin mode changes
+  useEffect(() => {
+    setAdminStatus(isAdminMode);
+  }, [isAdminMode, setAdminStatus]);
+  
+  // Toggle admin mode for marketplace management
+  const toggleAdminMode = () => {
+    setIsAdminMode(!isAdminMode);
+  };
+  
+  // Get filtered listings based on active type
+  const getFilteredListings = () => {
+    if (activeListingType === 'all') {
+      return listings;
+    }
+    return listings.filter((listing: any) => listing.type === activeListingType && !listing.sold);
+  };
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -164,6 +196,20 @@ const TiresTimepieces: React.FC = () => {
                   <span className="hidden md:inline">Official</span> Certification
                 </span>
               </button>
+              
+              <button
+                onClick={() => setActiveTab('marketplace')}
+                className={`flex items-center justify-center flex-1 px-5 py-3 rounded-lg text-base font-medium ml-2 mt-2 md:mt-0 transition-all duration-200 ${
+                  activeTab === 'marketplace' 
+                    ? 'bg-gradient-to-br from-amber-900 to-amber-800/70 text-amber-100 shadow-inner border border-amber-700' 
+                    : 'text-gray-400 hover:text-white hover:bg-gray-800/50'
+                }`}
+              >
+                <span className="flex items-center">
+                  <Tag className="h-5 w-5 mr-2" /> 
+                  <span className="hidden md:inline">Private</span> Marketplace
+                </span>
+              </button>
             </div>
           </div>
           
@@ -197,6 +243,162 @@ const TiresTimepieces: React.FC = () => {
               </button>
             </div>
             <TimepieceTelemetry timepieceId={selectedTimepieceId} />
+          </div>
+        )}
+        
+        {activeTab === 'marketplace' && (
+          <div className="mb-6">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-orbitron text-amber-500 mb-3">Private Marketplace</h2>
+              <p className="text-gray-400 max-w-3xl mx-auto">
+                Explore curated luxury timepieces and exotic vehicles available exclusively through Paddock20 for members.
+              </p>
+            </div>
+            
+            <MarketplaceManager 
+              isAdmin={isAdminMode} 
+              onAddListing={addListing} 
+              onToggleAdmin={toggleAdminMode} 
+            />
+            
+            {/* Filter Controls */}
+            <div className="flex flex-wrap items-center justify-between mb-6 bg-gray-900/50 p-4 rounded-xl border border-gray-800">
+              <div className="flex items-center space-x-4">
+                <div className="text-sm text-gray-400">Filter by:</div>
+                <div className="flex">
+                  <button
+                    onClick={() => setActiveListingType('all')}
+                    className={`px-4 py-2 text-sm rounded-l-lg ${
+                      activeListingType === 'all' 
+                        ? 'bg-blue-900 text-blue-100' 
+                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                    }`}
+                  >
+                    All
+                  </button>
+                  <button
+                    onClick={() => setActiveListingType('timepiece')}
+                    className={`px-4 py-2 text-sm flex items-center ${
+                      activeListingType === 'timepiece' 
+                        ? 'bg-purple-900 text-purple-100' 
+                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                    }`}
+                  >
+                    <Watch className="h-4 w-4 mr-1" />
+                    Watches
+                  </button>
+                  <button
+                    onClick={() => setActiveListingType('vehicle')}
+                    className={`px-4 py-2 text-sm rounded-r-lg flex items-center ${
+                      activeListingType === 'vehicle' 
+                        ? 'bg-green-900 text-green-100' 
+                        : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
+                    }`}
+                  >
+                    <Car className="h-4 w-4 mr-1" />
+                    Vehicles
+                  </button>
+                </div>
+              </div>
+              <div className="flex items-center mt-2 md:mt-0">
+                <div className="text-sm text-gray-400 mr-2">Sort by:</div>
+                <select 
+                  className="bg-gray-800 border border-gray-700 rounded px-3 py-1 text-sm text-white"
+                >
+                  <option value="newest">Newest First</option>
+                  <option value="oldest">Oldest First</option>
+                  <option value="price-high">Price: High to Low</option>
+                  <option value="price-low">Price: Low to High</option>
+                </select>
+              </div>
+            </div>
+            
+            {/* Marketplace Listings */}
+            <div className="space-y-6">
+              {getFilteredListings().length > 0 ? (
+                getFilteredListings().map((listing: any) => (
+                  <MarketplaceListing 
+                    key={listing.id} 
+                    listing={listing} 
+                    isAdmin={isAdminMode}
+                    onEdit={(listing) => {
+                      // In a real implementation, open edit form with listing data
+                      console.log('Edit listing:', listing);
+                    }}
+                    onDelete={(id) => {
+                      if (window.confirm('Are you sure you want to remove this listing?')) {
+                        removeListing(id);
+                      }
+                    }}
+                  />
+                ))
+              ) : (
+                <div className="text-center py-12 bg-gray-900/30 rounded-xl border border-gray-800">
+                  <ShoppingBag className="h-12 w-12 text-gray-600 mb-4 mx-auto" />
+                  <h3 className="text-xl font-medium text-gray-400 mb-2">No listings found</h3>
+                  <p className="text-gray-500 max-w-md mx-auto">
+                    {isAdminMode 
+                      ? 'Add a new listing using the form above.' 
+                      : 'There are no listings available for the selected filter.'}
+                  </p>
+                </div>
+              )}
+            </div>
+            
+            {/* Services and Expert Support */}
+            <div className="mt-12">
+              <h3 className="text-xl font-medium text-white mb-6 border-b border-gray-800 pb-2">Premium Marketplace Services</h3>
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-gradient-to-br from-gray-900 to-black p-6 rounded-xl border border-gray-800">
+                  <div className="w-12 h-12 bg-amber-900/20 rounded-full flex items-center justify-center mb-4">
+                    <Shield className="h-6 w-6 text-amber-500" />
+                  </div>
+                  <h4 className="text-lg font-medium text-white mb-2">Timepiece Presentation Service</h4>
+                  <p className="text-gray-400 text-sm mb-4">
+                    Complete authentication and inspection by Bennisson watchmakers. Includes detailed photography and condition report.
+                  </p>
+                  <div className="text-amber-400 font-medium">$200</div>
+                </div>
+                
+                <div className="bg-gradient-to-br from-gray-900 to-black p-6 rounded-xl border border-gray-800">
+                  <div className="w-12 h-12 bg-blue-900/20 rounded-full flex items-center justify-center mb-4">
+                    <DollarSign className="h-6 w-6 text-blue-500" />
+                  </div>
+                  <h4 className="text-lg font-medium text-white mb-2">Escrow Service</h4>
+                  <p className="text-gray-400 text-sm mb-4">
+                    Secure third-party escrow service for high-value transactions. Includes authentication and transfer verification.
+                  </p>
+                  <div className="text-blue-400 font-medium">$75</div>
+                </div>
+                
+                <div className="bg-gradient-to-br from-gray-900 to-black p-6 rounded-xl border border-gray-800">
+                  <div className="w-12 h-12 bg-green-900/20 rounded-full flex items-center justify-center mb-4">
+                    <FileText className="h-6 w-6 text-green-500" />
+                  </div>
+                  <h4 className="text-lg font-medium text-white mb-2">WTA Trader Special</h4>
+                  <p className="text-gray-400 text-sm mb-4">
+                    Comprehensive package including presentation service, escrow options, and full appraisal for insurance and resale.
+                  </p>
+                  <div className="text-green-400 font-medium">$360</div>
+                </div>
+                
+                <div className="bg-gradient-to-br from-gray-900 to-black p-6 rounded-xl border border-gray-800 md:col-span-3">
+                  <div className="flex flex-col md:flex-row items-start md:items-center">
+                    <div className="flex-grow">
+                      <h4 className="text-lg font-medium text-white mb-2">Insured Worldwide Shipping</h4>
+                      <p className="text-gray-400 text-sm">
+                        Secure your high-value shipments with our specialized insurance coverage protecting against loss, damage, or theft during transit. Exclusive partnership with FedEx and Wexler Insurance Agency.
+                      </p>
+                    </div>
+                    <div className="mt-4 md:mt-0 md:ml-6">
+                      <button className="px-4 py-2 bg-gray-800 text-gray-300 hover:bg-gray-700 rounded-lg border border-gray-700 transition-colors">
+                        Request Quote
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
         
