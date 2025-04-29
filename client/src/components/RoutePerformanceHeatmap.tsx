@@ -1,300 +1,389 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 
 export interface HeatmapDataPoint {
-  position: { lat: number; lng: number };
-  value: number; // Performance value (0-100)
-  metric: string; // What this measures (speed, acceleration, etc.)
-  timestamp: number;
-  details?: {
-    speed?: number;
-    acceleration?: number;
-    cornering?: number;
-    elevation?: number;
-    gradient?: number;
-    temperature?: number;
-  }
+  lat: number;
+  lng: number;
+  value: number; // 0-100 intensity value
+  metric: 'speed' | 'g-force' | 'engine-load' | 'temperature' | 'combined';
 }
 
 interface RoutePerformanceHeatmapProps {
-  routeData: HeatmapDataPoint[];
+  points: HeatmapDataPoint[];
   width?: number;
   height?: number;
-  selectedMetric?: string;
-  onPointClick?: (point: HeatmapDataPoint) => void;
+  colorScale?: 'temperature' | 'performance' | 'danger';
+  showLegend?: boolean;
+  realTimeMode?: boolean;
+  onHeatmapClick?: (point: HeatmapDataPoint) => void;
 }
 
-const RoutePerformanceHeatmap: React.FC<RoutePerformanceHeatmapProps> = ({
-  routeData,
-  width = 800,
-  height = 300,
-  selectedMetric = 'speed',
-  onPointClick
+// Helper function to generate sample heatmap data for testing/demo
+export function generateSampleHeatmapData(
+  centerLat: number, 
+  centerLng: number, 
+  pointCount: number = 20,
+  radiusKm: number = 0.5
+): HeatmapDataPoint[] {
+  const points: HeatmapDataPoint[] = [];
+  const metrics: Array<'speed' | 'g-force' | 'engine-load' | 'temperature' | 'combined'> = [
+    'speed', 'g-force', 'engine-load', 'temperature', 'combined'
+  ];
+  
+  // Earth's radius in kilometers
+  const earthRadius = 6371;
+  
+  // Generate points in a circular pattern around the center coordinates
+  for (let i = 0; i < pointCount; i++) {
+    // Random angle
+    const angle = Math.random() * Math.PI * 2;
+    
+    // Random distance (concentrated toward center with sqrt)
+    const distance = Math.sqrt(Math.random()) * radiusKm;
+    
+    // Convert distance and angle to lat/lng offset
+    // This is an approximation that works for small distances
+    const latOffset = (distance / earthRadius) * (180 / Math.PI);
+    const lngOffset = (distance / earthRadius) * (180 / Math.PI) / Math.cos(centerLat * Math.PI / 180);
+    
+    const lat = centerLat + latOffset * Math.cos(angle);
+    const lng = centerLng + lngOffset * Math.sin(angle);
+    
+    // Value decreases with distance from center
+    const normalizedDistance = distance / radiusKm;
+    const value = Math.round(100 * (1 - normalizedDistance * 0.8 + Math.random() * 0.2));
+    
+    // Randomly select a metric
+    const metric = metrics[Math.floor(Math.random() * metrics.length)];
+    
+    points.push({ lat, lng, value, metric });
+  }
+  
+  return points;
+}
+
+const RoutePerformanceHeatmap: React.FC<RoutePerformanceHeatmapProps> = ({ 
+  points, 
+  width = 800, 
+  height = 400, 
+  colorScale = 'performance',
+  showLegend = true,
+  realTimeMode = true,
+  onHeatmapClick
 }) => {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [hoveredPoint, setHoveredPoint] = useState<HeatmapDataPoint | null>(null);
-  const [isDrawing, setIsDrawing] = useState(false);
   
-  // Compute data ranges for visualization
-  const minValue = Math.min(...routeData.map(d => d.value));
-  const maxValue = Math.max(...routeData.map(d => d.value));
-  
-  // Helper function to get color based on value
-  const getColorForValue = (value: number): string => {
-    // Normalize value to 0-1 range
-    const normalizedValue = (value - minValue) / (maxValue - minValue);
+  // Convert GPS coordinates to canvas X,Y positions (simplified)
+  const gpsToCanvasPosition = (points: HeatmapDataPoint[]) => {
+    if (points.length === 0) return [];
     
-    if (normalizedValue < 0.25) {
-      // Blue (cold) for low values
-      return `rgb(0, 0, ${Math.round(255 * (normalizedValue * 4))})`;
-    } else if (normalizedValue < 0.5) {
-      // Green for medium-low values
-      return `rgb(0, ${Math.round(255 * ((normalizedValue - 0.25) * 4))}, 255)`;
-    } else if (normalizedValue < 0.75) {
-      // Yellow for medium-high values
-      return `rgb(${Math.round(255 * ((normalizedValue - 0.5) * 4))}, 255, 0)`;
-    } else {
-      // Red (hot) for high values
-      return `rgb(255, ${Math.round(255 * (1 - (normalizedValue - 0.75) * 4))}, 0)`;
-    }
-  };
-  
-  useEffect(() => {
-    if (!canvasRef.current || routeData.length === 0) return;
-    
-    setIsDrawing(true);
-    const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    
-    if (!ctx) return;
-    
-    // Clear canvas
-    ctx.clearRect(0, 0, width, height);
-    
-    // Find min/max lat/lng to normalize positions
-    const lats = routeData.map(point => point.position.lat);
-    const lngs = routeData.map(point => point.position.lng);
+    // Find min/max coordinates to scale properly
+    const lats = points.map(p => p.lat);
+    const lngs = points.map(p => p.lng);
     const minLat = Math.min(...lats);
     const maxLat = Math.max(...lats);
     const minLng = Math.min(...lngs);
     const maxLng = Math.max(...lngs);
     
-    // Draw route points
-    ctx.lineWidth = 3;
-    ctx.lineCap = 'round';
-    ctx.lineJoin = 'round';
+    // Add padding
+    const latRange = (maxLat - minLat) || 0.01; // Avoid division by zero
+    const lngRange = (maxLng - minLng) || 0.01;
     
-    // First draw the connecting lines
-    ctx.beginPath();
-    routeData.forEach((point, i) => {
-      // Normalize position to canvas dimensions
-      const x = ((point.position.lng - minLng) / (maxLng - minLng)) * (width - 20) + 10;
-      const y = height - (((point.position.lat - minLat) / (maxLat - minLat)) * (height - 20) + 10);
-      
-      if (i === 0) {
-        ctx.moveTo(x, y);
+    // Map each point to canvas coordinates
+    return points.map(point => ({
+      x: ((point.lng - minLng) / lngRange) * (width - 40) + 20, // 20px padding on each side
+      y: height - ((point.lat - minLat) / latRange) * (height - 40) - 20,
+      value: point.value,
+      metric: point.metric,
+      originalPoint: point
+    }));
+  };
+  
+  // Get color based on value and selected color scale
+  const getColor = (value: number) => {
+    if (colorScale === 'temperature') {
+      // Blue (cold) to Red (hot)
+      if (value < 25) return `rgba(0, 0, 255, ${value/100 + 0.2})`;
+      if (value < 50) return `rgba(0, ${value*5.1}, 255, ${value/100 + 0.3})`;
+      if (value < 75) return `rgba(${(value-50)*10.2}, 255, ${255 - (value-50)*10.2}, ${value/100 + 0.4})`;
+      return `rgba(255, ${255 - (value-75)*10.2}, 0, ${value/100 + 0.5})`;
+    } else if (colorScale === 'danger') {
+      // Green (safe) to Red (dangerous)
+      if (value < 50) {
+        return `rgba(0, ${100 + value*3.1}, 0, ${value/100 + 0.3})`;
       } else {
-        ctx.lineTo(x, y);
+        return `rgba(${(value-50)*5.1}, ${255 - (value-50)*3.1}, 0, ${value/100 + 0.4})`;
       }
-    });
+    } else { // default 'performance'
+      // Blue (low) to Green (medium) to Red (high performance)
+      if (value < 33) return `rgba(0, ${value*7.7}, 255, ${value/100 + 0.3})`;
+      if (value < 66) return `rgba(0, 255, ${255 - (value-33)*7.7}, ${value/100 + 0.4})`;
+      return `rgba(${(value-66)*7.7}, ${255 - (value-66)*7.7}, 0, ${value/100 + 0.5})`;
+    }
+  };
+  
+  useEffect(() => {
+    if (!canvasRef.current || points.length === 0) return;
     
-    // Use gradient for the line
-    const gradient = ctx.createLinearGradient(0, 0, width, 0);
-    routeData.forEach((point, i) => {
-      const position = i / (routeData.length - 1);
-      gradient.addColorStop(position, getColorForValue(point.value));
-    });
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
     
-    ctx.strokeStyle = gradient;
-    ctx.stroke();
+    // Clear canvas
+    ctx.clearRect(0, 0, width, height);
     
-    // Then draw data points
-    routeData.forEach((point, i) => {
-      // Normalize position to canvas dimensions
-      const x = ((point.position.lng - minLng) / (maxLng - minLng)) * (width - 20) + 10;
-      const y = height - (((point.position.lat - minLat) / (maxLat - minLat)) * (height - 20) + 10);
-      
+    // Draw background with grid
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+    ctx.fillRect(0, 0, width, height);
+    
+    // Draw grid lines
+    ctx.strokeStyle = 'rgba(50, 50, 50, 0.5)';
+    ctx.lineWidth = 0.5;
+    
+    // Draw horizontal grid lines
+    for (let i = 0; i <= 10; i++) {
       ctx.beginPath();
-      ctx.arc(x, y, 5, 0, Math.PI * 2);
-      ctx.fillStyle = getColorForValue(point.value);
+      ctx.moveTo(0, i * (height / 10));
+      ctx.lineTo(width, i * (height / 10));
+      ctx.stroke();
+    }
+    
+    // Draw vertical grid lines
+    for (let i = 0; i <= 10; i++) {
+      ctx.beginPath();
+      ctx.moveTo(i * (width / 10), 0);
+      ctx.lineTo(i * (width / 10), height);
+      ctx.stroke();
+    }
+    
+    // Convert GPS points to canvas coordinates
+    const canvasPoints = gpsToCanvasPosition(points);
+    
+    // Draw heatmap points
+    canvasPoints.forEach((point, index) => {
+      const radius = 15 + (point.value / 10); // Size based on value
+      const gradient = ctx.createRadialGradient(
+        point.x, point.y, 0,
+        point.x, point.y, radius
+      );
+      
+      const color = getColor(point.value);
+      gradient.addColorStop(0, color);
+      gradient.addColorStop(1, 'rgba(0, 0, 0, 0)');
+      
+      ctx.fillStyle = gradient;
+      ctx.beginPath();
+      ctx.arc(point.x, point.y, radius, 0, Math.PI * 2);
       ctx.fill();
       
-      // Label significant points (e.g., top 10% and bottom 10%)
-      if (point.value >= maxValue * 0.9 || point.value <= minValue * 1.1) {
-        ctx.fillStyle = '#fff';
-        ctx.font = '10px Arial';
-        ctx.fillText(Math.round(point.value).toString(), x + 8, y);
+      // Connect points with a line
+      if (index > 0) {
+        const prevPoint = canvasPoints[index - 1];
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.moveTo(prevPoint.x, prevPoint.y);
+        ctx.lineTo(point.x, point.y);
+        ctx.stroke();
       }
     });
     
-    // Add legend
-    const legendHeight = 20;
-    const legendY = height - legendHeight - 10;
-    const legendWidth = width * 0.8;
-    const legendX = (width - legendWidth) / 2;
+    // Draw route start and end markers
+    if (canvasPoints.length > 0) {
+      // Start point (green)
+      const startPoint = canvasPoints[0];
+      ctx.fillStyle = 'rgba(0, 255, 0, 0.8)';
+      ctx.beginPath();
+      ctx.arc(startPoint.x, startPoint.y, 8, 0, Math.PI * 2);
+      ctx.fill();
+      
+      // End point (red)
+      const endPoint = canvasPoints[canvasPoints.length - 1];
+      ctx.fillStyle = 'rgba(255, 0, 0, 0.8)';
+      ctx.beginPath();
+      ctx.arc(endPoint.x, endPoint.y, 8, 0, Math.PI * 2);
+      ctx.fill();
+    }
     
-    const legendGradient = ctx.createLinearGradient(legendX, 0, legendX + legendWidth, 0);
-    legendGradient.addColorStop(0, 'blue');
-    legendGradient.addColorStop(0.33, 'green');
-    legendGradient.addColorStop(0.66, 'yellow');
-    legendGradient.addColorStop(1, 'red');
+    // Draw legend
+    if (showLegend) {
+      const legendWidth = 240;
+      const legendHeight = 60;
+      const legendX = width - legendWidth - 10;
+      const legendY = height - legendHeight - 10;
+      
+      // Legend background
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.fillRect(legendX, legendY, legendWidth, legendHeight);
+      ctx.strokeStyle = 'rgba(100, 100, 100, 0.5)';
+      ctx.strokeRect(legendX, legendY, legendWidth, legendHeight);
+      
+      // Legend gradient
+      const legendGradientWidth = legendWidth - 40;
+      const legendGradientX = legendX + 20;
+      const legendGradientY = legendY + 20;
+      const legendGradientHeight = 20;
+      
+      const gradient = ctx.createLinearGradient(
+        legendGradientX, 
+        legendGradientY, 
+        legendGradientX + legendGradientWidth, 
+        legendGradientY
+      );
+      
+      // Add color stops based on the selected color scale
+      if (colorScale === 'temperature') {
+        gradient.addColorStop(0, 'rgba(0, 0, 255, 0.8)');
+        gradient.addColorStop(0.33, 'rgba(0, 128, 255, 0.8)');
+        gradient.addColorStop(0.66, 'rgba(128, 255, 128, 0.8)');
+        gradient.addColorStop(1, 'rgba(255, 0, 0, 0.8)');
+      } else if (colorScale === 'danger') {
+        gradient.addColorStop(0, 'rgba(0, 200, 0, 0.8)');
+        gradient.addColorStop(0.5, 'rgba(255, 255, 0, 0.8)');
+        gradient.addColorStop(1, 'rgba(255, 0, 0, 0.8)');
+      } else { // default 'performance'
+        gradient.addColorStop(0, 'rgba(0, 0, 255, 0.8)');
+        gradient.addColorStop(0.5, 'rgba(0, 255, 0, 0.8)');
+        gradient.addColorStop(1, 'rgba(255, 0, 0, 0.8)');
+      }
+      
+      ctx.fillStyle = gradient;
+      ctx.fillRect(legendGradientX, legendGradientY, legendGradientWidth, legendGradientHeight);
+      
+      // Legend labels
+      ctx.fillStyle = 'rgba(200, 200, 200, 0.9)';
+      ctx.font = '10px Arial';
+      ctx.textAlign = 'center';
+      
+      if (colorScale === 'temperature') {
+        ctx.fillText('Cold', legendGradientX, legendGradientY - 5);
+        ctx.fillText('Hot', legendGradientX + legendGradientWidth, legendGradientY - 5);
+      } else if (colorScale === 'danger') {
+        ctx.fillText('Safe', legendGradientX, legendGradientY - 5);
+        ctx.fillText('Caution', legendGradientX + legendGradientWidth/2, legendGradientY - 5);
+        ctx.fillText('Danger', legendGradientX + legendGradientWidth, legendGradientY - 5);
+      } else { // default 'performance'
+        ctx.fillText('Low', legendGradientX, legendGradientY - 5);
+        ctx.fillText('Medium', legendGradientX + legendGradientWidth/2, legendGradientY - 5);
+        ctx.fillText('High', legendGradientX + legendGradientWidth, legendGradientY - 5);
+      }
+      
+      // Title of the legend based on color scale
+      ctx.fillStyle = 'rgba(180, 230, 255, 0.9)';
+      ctx.font = 'bold 12px Arial';
+      ctx.textAlign = 'center';
+      const legendTitle = colorScale === 'temperature' 
+        ? 'Temperature Gradient' 
+        : colorScale === 'danger'
+          ? 'Risk Assessment'
+          : 'Performance Profile';
+      ctx.fillText(legendTitle, legendX + legendWidth/2, legendY + 12);
+    }
     
-    ctx.fillStyle = legendGradient;
-    ctx.fillRect(legendX, legendY, legendWidth, legendHeight);
+    // Draw "Real-time" indicator if in real-time mode
+    if (realTimeMode) {
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.7)';
+      ctx.fillRect(10, 10, 100, 25);
+      ctx.strokeStyle = 'rgba(0, 255, 0, 0.7)';
+      ctx.strokeRect(10, 10, 100, 25);
+      
+      ctx.fillStyle = 'rgba(0, 255, 0, 0.8)';
+      ctx.font = 'bold 12px Arial';
+      ctx.textAlign = 'center';
+      ctx.fillText('REAL-TIME', 60, 26);
+    }
     
-    // Add legend labels
-    ctx.fillStyle = '#fff';
-    ctx.font = '12px Arial';
-    ctx.fillText(Math.round(minValue).toString(), legendX, legendY - 5);
-    ctx.fillText(Math.round(maxValue).toString(), legendX + legendWidth - 20, legendY - 5);
-    ctx.fillText(selectedMetric.charAt(0).toUpperCase() + selectedMetric.slice(1), width / 2 - 20, legendY - 5);
+    // Draw hovered point details if any
+    if (hoveredPoint) {
+      const canvasPoint = gpsToCanvasPosition([hoveredPoint])[0];
+      
+      // Highlight point
+      ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.arc(canvasPoint.x, canvasPoint.y, 20, 0, Math.PI * 2);
+      ctx.stroke();
+      
+      // Draw info box
+      const infoX = canvasPoint.x + 25;
+      const infoY = canvasPoint.y - 60;
+      const infoWidth = 150;
+      const infoHeight = 80;
+      
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+      ctx.fillRect(infoX, infoY, infoWidth, infoHeight);
+      ctx.strokeStyle = 'rgba(100, 100, 255, 0.6)';
+      ctx.strokeRect(infoX, infoY, infoWidth, infoHeight);
+      
+      // Write data
+      ctx.fillStyle = 'rgba(255, 255, 255, 0.9)';
+      ctx.font = '12px Arial';
+      ctx.textAlign = 'left';
+      ctx.fillText(`Metric: ${hoveredPoint.metric}`, infoX + 10, infoY + 20);
+      ctx.fillText(`Value: ${hoveredPoint.value}`, infoX + 10, infoY + 40);
+      ctx.fillText(`Lat: ${hoveredPoint.lat.toFixed(6)}`, infoX + 10, infoY + 60);
+      ctx.fillText(`Lng: ${hoveredPoint.lng.toFixed(6)}`, infoX + 10, infoY + 75);
+    }
     
-    setIsDrawing(false);
-  }, [routeData, width, height, selectedMetric, minValue, maxValue]);
+  }, [points, width, height, colorScale, showLegend, hoveredPoint, realTimeMode]);
   
-  // Handle canvas interactions
-  const handleCanvasMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
-    if (!canvasRef.current || routeData.length === 0) return;
+  // Handle canvas mouse events
+  const handleMouseMove = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!canvasRef.current || points.length === 0) return;
     
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     
-    // Find min/max lat/lng to normalize positions
-    const lats = routeData.map(point => point.position.lat);
-    const lngs = routeData.map(point => point.position.lng);
-    const minLat = Math.min(...lats);
-    const maxLat = Math.max(...lats);
-    const minLng = Math.min(...lngs);
-    const maxLng = Math.max(...lngs);
+    const canvasPoints = gpsToCanvasPosition(points);
     
-    // Find the closest point
-    let closestPoint: HeatmapDataPoint | null = null;
-    let closestDistance = Infinity;
-    
-    routeData.forEach(point => {
-      // Normalize position to canvas dimensions
-      const pointX = ((point.position.lng - minLng) / (maxLng - minLng)) * (width - 20) + 10;
-      const pointY = height - (((point.position.lat - minLat) / (maxLat - minLat)) * (height - 20) + 10);
-      
-      const distance = Math.sqrt(Math.pow(x - pointX, 2) + Math.pow(y - pointY, 2));
-      
-      if (distance < closestDistance && distance < 15) {
-        closestDistance = distance;
-        closestPoint = point;
-      }
+    // Find if mouse is over any point
+    const hovered = canvasPoints.find(point => {
+      const distance = Math.sqrt(Math.pow(point.x - x, 2) + Math.pow(point.y - y, 2));
+      return distance < 20; // 20px radius for hover detection
     });
     
-    setHoveredPoint(closestPoint);
-  };
-  
-  const handleCanvasClick = () => {
-    if (hoveredPoint && onPointClick) {
-      onPointClick(hoveredPoint);
+    if (hovered) {
+      setHoveredPoint(hovered.originalPoint);
+      document.body.style.cursor = 'pointer';
+    } else {
+      setHoveredPoint(null);
+      document.body.style.cursor = 'default';
     }
   };
   
+  const handleMouseLeave = () => {
+    setHoveredPoint(null);
+    document.body.style.cursor = 'default';
+  };
+  
+  const handleClick = (e: React.MouseEvent<HTMLCanvasElement>) => {
+    if (!onHeatmapClick || !hoveredPoint) return;
+    onHeatmapClick(hoveredPoint);
+  };
+  
   return (
-    <div className="route-performance-heatmap relative">
-      <canvas
+    <div className="route-performance-heatmap-container">
+      <canvas 
         ref={canvasRef}
         width={width}
         height={height}
-        className="bg-gray-900 border border-gray-700 rounded-lg"
-        onMouseMove={handleCanvasMouseMove}
-        onClick={handleCanvasClick}
+        className="border border-blue-800 rounded-lg shadow-inner bg-black"
+        onMouseMove={handleMouseMove}
+        onMouseLeave={handleMouseLeave}
+        onClick={handleClick}
       />
       
-      {isDrawing && (
-        <div className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 text-blue-400">
-          Loading...
-        </div>
-      )}
-      
-      {hoveredPoint && (
-        <div 
-          className="absolute bg-black bg-opacity-80 text-white p-2 rounded-md z-10 pointer-events-none border border-blue-500"
-          style={{
-            left: ((hoveredPoint.position.lng - Math.min(...routeData.map(d => d.position.lng))) / 
-                  (Math.max(...routeData.map(d => d.position.lng)) - Math.min(...routeData.map(d => d.position.lng)))) * 
-                  (width - 20) + 25,
-            top: height - (((hoveredPoint.position.lat - Math.min(...routeData.map(d => d.position.lat))) / 
-                 (Math.max(...routeData.map(d => d.position.lat)) - Math.min(...routeData.map(d => d.position.lat)))) * 
-                 (height - 20) + 10) - 60
-          }}
-        >
-          <div className="font-bold">{hoveredPoint.metric}: {Math.round(hoveredPoint.value)}</div>
-          {hoveredPoint.details && (
-            <div className="text-xs">
-              {hoveredPoint.details.speed !== undefined && (
-                <div>Speed: {hoveredPoint.details.speed} mph</div>
-              )}
-              {hoveredPoint.details.acceleration !== undefined && (
-                <div>Accel: {hoveredPoint.details.acceleration.toFixed(2)} G</div>
-              )}
-              {hoveredPoint.details.cornering !== undefined && (
-                <div>Cornering: {hoveredPoint.details.cornering.toFixed(2)} G</div>
-              )}
-              {hoveredPoint.details.elevation !== undefined && (
-                <div>Elevation: {hoveredPoint.details.elevation.toFixed(0)} ft</div>
-              )}
-              {hoveredPoint.details.temperature !== undefined && (
-                <div>Temp: {hoveredPoint.details.temperature.toFixed(1)}°F</div>
-              )}
-            </div>
-          )}
+      {points.length === 0 && (
+        <div className="absolute inset-0 flex items-center justify-center text-gray-400">
+          {realTimeMode ? 
+            "Real-time heatmap will appear when GPS tracking starts" :
+            "No heatmap data available for this route yet"}
         </div>
       )}
     </div>
   );
-};
-
-// Example data generator for previewing component
-export const generateSampleHeatmapData = (
-  pointCount: number = 50, 
-  centerLat: number = 37.7749, 
-  centerLng: number = -122.4194,
-  radius: number = 0.05
-): HeatmapDataPoint[] => {
-  const points: HeatmapDataPoint[] = [];
-  const currentTime = Date.now();
-  
-  for (let i = 0; i < pointCount; i++) {
-    // Generate random position around center point
-    const angle = 2 * Math.PI * (i / pointCount);
-    const distance = radius * Math.sqrt(Math.random());
-    const lat = centerLat + distance * Math.cos(angle);
-    const lng = centerLng + distance * Math.sin(angle);
-    
-    // Generate some random values for this point
-    const speed = 25 + Math.random() * 75; // 25-100 mph
-    const acceleration = Math.random() * 0.8; // 0-0.8 G
-    const cornering = Math.random() * 0.9; // 0-0.9 G
-    const elevation = 100 + Math.random() * 1000; // 100-1100 ft
-    const gradient = Math.random() * 10 - 5; // -5% to +5% grade
-    const temperature = 65 + Math.random() * 30; // 65-95°F
-    
-    // Calculate a composite performance score for this point
-    // Here we're favoring high speed, high cornering G, moderate acceleration
-    const value = (speed / 100 * 40) + (cornering / 0.9 * 40) + (1 - Math.abs(acceleration - 0.4) / 0.4 * 20);
-    
-    points.push({
-      position: { lat, lng },
-      value,
-      metric: 'Performance',
-      timestamp: currentTime - (pointCount - i) * 10000, // 10 seconds between points
-      details: {
-        speed,
-        acceleration, 
-        cornering,
-        elevation,
-        gradient,
-        temperature
-      }
-    });
-  }
-  
-  return points;
 };
 
 export default RoutePerformanceHeatmap;
