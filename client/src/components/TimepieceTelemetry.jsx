@@ -3,12 +3,13 @@ import {
   Watch, Clock, Calendar, AlertTriangle, CheckCircle, 
   RefreshCw, FileText, ClipboardCheck, Settings, Wrench as Tool, 
   DollarSign, Package, Shield, BarChart, Battery, Droplet, Activity, Info,
-  PlusCircle, Circle, Trending, MapPin, History, Eye, Save,
-  RotateCcw, CircleCheck, SaveIcon, LocateFixed
+  PlusCircle, Circle, LineChart, MapPin, Award, Eye, Save,
+  RotateCcw, CircleCheck, Bookmark, Compass
 } from 'lucide-react';
 import EditableTelemetry from './EditableTelemetry';
 import timepieceDataService from '../services/timepieceDataService';
 import ProgressSparkline from './ProgressSparkline';
+import TimepieceModelViewer from './TimepieceModelViewer';
 
 /**
  * TimepieceTelemetry Component
@@ -1098,6 +1099,339 @@ function TimepieceTelemetry({
       )}
       
       {/* Market Tab - Enhanced with Global Rarity Indicators */}
+      {/* Performance Tab - NEW */}
+      {activeTab === 'performance' && (
+        <div className="space-y-6">
+          {/* Movement Analytics */}
+          <div className="apex-card p-6">
+            <h3 className="font-orbitron text-lg text-purple-400 mb-6">Movement Performance Analytics</h3>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+              {/* Core Movement Metrics Panel */}
+              <div className="col-span-1 md:col-span-2 bg-black/30 rounded-lg p-4 border border-gray-800">
+                <h4 className="text-white font-medium mb-3">Core Movement Metrics</h4>
+                
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="relative bg-black/40 rounded-lg p-3 border border-gray-800">
+                    <div className="absolute top-2 right-2">
+                      <span className="inline-block px-2 py-0.5 text-xs bg-purple-900/50 text-purple-300 rounded-full border border-purple-800">
+                        Excellent
+                      </span>
+                    </div>
+                    
+                    <div className="pt-4">
+                      <div className="text-xs text-gray-500 uppercase tracking-wider">Frequency (VPH)</div>
+                      <div className="text-3xl font-bold text-white">28,800</div>
+                      <div className="text-gray-400 text-xs">Vibrations Per Hour</div>
+                    </div>
+                    
+                    <div className="mt-2 text-xs text-gray-400">
+                      <span className="text-purple-400">8</span> oscillations per second
+                    </div>
+                  </div>
+                  
+                  <div className="relative bg-black/40 rounded-lg p-3 border border-gray-800">
+                    <div className="absolute top-2 right-2">
+                      <span className="inline-block px-2 py-0.5 text-xs bg-purple-900/50 text-purple-300 rounded-full border border-purple-800">
+                        Excellent
+                      </span>
+                    </div>
+                    
+                    <div className="pt-4">
+                      <div className="text-xs text-gray-500 uppercase tracking-wider">Daily Rate</div>
+                      <div className="text-3xl font-bold text-white">+2.1</div>
+                      <div className="text-gray-400 text-xs">Seconds per day</div>
+                    </div>
+                    
+                    <div className="mt-2 text-xs text-gray-400">
+                      <span className="text-purple-400">99.998%</span> accuracy
+                    </div>
+                  </div>
+                  
+                  <div className="relative bg-black/40 rounded-lg p-3 border border-gray-800">
+                    <div className="absolute top-2 right-2">
+                      <span className="inline-block px-2 py-0.5 text-xs bg-green-900/50 text-green-300 rounded-full border border-green-800">
+                        Very Good
+                      </span>
+                    </div>
+                    
+                    <div className="pt-4">
+                      <div className="text-xs text-gray-500 uppercase tracking-wider">Amplitude</div>
+                      <div className="text-3xl font-bold text-white">275°</div>
+                      <div className="text-gray-400 text-xs">Optimal: 270°-310°</div>
+                    </div>
+                    
+                    <div className="mt-2 text-xs text-gray-400">
+                      <span className="text-green-400">Good energy transmission</span>
+                    </div>
+                  </div>
+                  
+                  <div className="relative bg-black/40 rounded-lg p-3 border border-gray-800">
+                    <div className="absolute top-2 right-2">
+                      <span className="inline-block px-2 py-0.5 text-xs bg-purple-900/50 text-purple-300 rounded-full border border-purple-800">
+                        Excellent
+                      </span>
+                    </div>
+                    
+                    <div className="pt-4">
+                      <div className="text-xs text-gray-500 uppercase tracking-wider">Beat Error</div>
+                      <div className="text-3xl font-bold text-white">0.2ms</div>
+                      <div className="text-gray-400 text-xs">Optimal: less than 0.5ms</div>
+                    </div>
+                    
+                    <div className="mt-2 text-xs text-gray-400">
+                      <span className="text-purple-400">Highly balanced escapement</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Position Variation Chart */}
+                <div className="mt-4 bg-black/40 rounded-lg p-3 border border-gray-800">
+                  <h5 className="text-white text-sm font-medium mb-3">Position Variation</h5>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-gray-300 text-xs">Dial Up</span>
+                        <span className="text-green-400 text-xs">+1.2 s/d</span>
+                      </div>
+                      <div className="w-full bg-gray-800 rounded-full h-1.5">
+                        <div className="bg-green-500 h-1.5 rounded-full" style={{ width: '60%', marginLeft: '50%' }}></div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-gray-300 text-xs">Dial Down</span>
+                        <span className="text-green-400 text-xs">+1.8 s/d</span>
+                      </div>
+                      <div className="w-full bg-gray-800 rounded-full h-1.5">
+                        <div className="bg-green-500 h-1.5 rounded-full" style={{ width: '65%', marginLeft: '50%' }}></div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-gray-300 text-xs">Crown Up</span>
+                        <span className="text-green-400 text-xs">+2.4 s/d</span>
+                      </div>
+                      <div className="w-full bg-gray-800 rounded-full h-1.5">
+                        <div className="bg-green-500 h-1.5 rounded-full" style={{ width: '72%', marginLeft: '50%' }}></div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-gray-300 text-xs">Crown Down</span>
+                        <span className="text-green-400 text-xs">+2.1 s/d</span>
+                      </div>
+                      <div className="w-full bg-gray-800 rounded-full h-1.5">
+                        <div className="bg-green-500 h-1.5 rounded-full" style={{ width: '68%', marginLeft: '50%' }}></div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-gray-300 text-xs">Crown Left</span>
+                        <span className="text-green-400 text-xs">+2.7 s/d</span>
+                      </div>
+                      <div className="w-full bg-gray-800 rounded-full h-1.5">
+                        <div className="bg-green-500 h-1.5 rounded-full" style={{ width: '77%', marginLeft: '50%' }}></div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-gray-300 text-xs">Crown Right</span>
+                        <span className="text-green-400 text-xs">+2.3 s/d</span>
+                      </div>
+                      <div className="w-full bg-gray-800 rounded-full h-1.5">
+                        <div className="bg-green-500 h-1.5 rounded-full" style={{ width: '70%', marginLeft: '50%' }}></div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-3 pt-3 border-t border-gray-700/30 text-xs text-gray-400">
+                    <span className="text-white font-medium">Maximum Deviation:</span> 1.5 seconds (excellent positional performance)
+                  </div>
+                </div>
+              </div>
+              
+              {/* Performance Score Panel */}
+              <div className="bg-black/30 rounded-lg p-4 border border-gray-800">
+                <h4 className="text-white font-medium mb-3">Performance Score</h4>
+                
+                <div className="flex justify-center mb-4">
+                  <div className="relative w-48 h-48">
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-40 h-40 rounded-full border-8 border-gray-800"></div>
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="w-40 h-40 rounded-full border-8 border-purple-500 border-t-transparent border-r-transparent border-b-transparent transform rotate-[45deg]"></div>
+                    </div>
+                    <div className="absolute inset-0 flex items-center justify-center">
+                      <div className="text-center">
+                        <div className="text-4xl font-bold text-white">9.3</div>
+                        <div className="text-purple-400 font-medium">Exceptional</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-3">
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-gray-300 text-xs flex items-center">
+                        <Circle className="h-2 w-2 text-purple-400 mr-1 fill-current" /> Timekeeping
+                      </span>
+                      <span className="text-purple-400 text-xs">9.4/10</span>
+                    </div>
+                    <div className="w-full bg-gray-800 rounded-full h-1.5">
+                      <div className="bg-purple-500 h-1.5 rounded-full" style={{ width: '94%' }}></div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-gray-300 text-xs flex items-center">
+                        <Circle className="h-2 w-2 text-green-400 mr-1 fill-current" /> Power Reserve
+                      </span>
+                      <span className="text-green-400 text-xs">9.2/10</span>
+                    </div>
+                    <div className="w-full bg-gray-800 rounded-full h-1.5">
+                      <div className="bg-green-500 h-1.5 rounded-full" style={{ width: '92%' }}></div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-gray-300 text-xs flex items-center">
+                        <Circle className="h-2 w-2 text-blue-400 mr-1 fill-current" /> Mechanical Efficiency
+                      </span>
+                      <span className="text-blue-400 text-xs">9.1/10</span>
+                    </div>
+                    <div className="w-full bg-gray-800 rounded-full h-1.5">
+                      <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: '91%' }}></div>
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <div className="flex justify-between items-center mb-1">
+                      <span className="text-gray-300 text-xs flex items-center">
+                        <Circle className="h-2 w-2 text-amber-400 mr-1 fill-current" /> Positional Stability
+                      </span>
+                      <span className="text-amber-400 text-xs">9.5/10</span>
+                    </div>
+                    <div className="w-full bg-gray-800 rounded-full h-1.5">
+                      <div className="bg-amber-500 h-1.5 rounded-full" style={{ width: '95%' }}></div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="mt-6 bg-black/40 rounded-lg p-3 border border-gray-800">
+                  <h5 className="text-white text-sm font-medium mb-2">Certification</h5>
+                  <div className="flex items-center">
+                    <Shield className="h-5 w-5 text-purple-400 mr-2" />
+                    <div>
+                      <div className="text-white text-sm">COSC Certified Chronometer</div>
+                      <div className="text-gray-400 text-xs">Certificate No. {timepiece.certificateNumber || "CH-47382-92"}</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            {/* Advanced Movement Analytics - NEW */}
+            <div className="bg-black/30 rounded-lg p-4 border border-gray-800">
+              <h4 className="text-white font-medium mb-4">Advanced Movement Analytics</h4>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div className="bg-black/40 rounded-lg p-3 border border-gray-800">
+                  <h5 className="text-purple-400 text-sm font-medium mb-3">Movement Components</h5>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-300 text-xs">Jewels</span>
+                      <span className="text-white text-xs">{timepiece.jewels || "31"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-300 text-xs">Functional Plates</span>
+                      <span className="text-white text-xs">5</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-300 text-xs">Bridges</span>
+                      <span className="text-white text-xs">7</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-300 text-xs">Wheels</span>
+                      <span className="text-white text-xs">11</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-300 text-xs">Total Components</span>
+                      <span className="text-white text-xs">{timepiece.components || "218"}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-black/40 rounded-lg p-3 border border-gray-800">
+                  <h5 className="text-purple-400 text-sm font-medium mb-3">Technical Specifications</h5>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-300 text-xs">Mechanism Type</span>
+                      <span className="text-white text-xs">{timepiece.mechanismType || "Self-winding automatic"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-300 text-xs">Winding Direction</span>
+                      <span className="text-white text-xs">Bidirectional</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-300 text-xs">Power Reserve</span>
+                      <span className="text-white text-xs">{timepiece.powerReserve || "45 hours"}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-300 text-xs">Balance Wheel</span>
+                      <span className="text-white text-xs">Free-sprung, variable inertia</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-300 text-xs">Complication Count</span>
+                      <span className="text-white text-xs">{timepiece.complications?.length || "3"}</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="bg-black/40 rounded-lg p-3 border border-gray-800">
+                  <h5 className="text-purple-400 text-sm font-medium mb-3">Performance Metrics</h5>
+                  
+                  <div className="space-y-2">
+                    <div className="flex justify-between">
+                      <span className="text-gray-300 text-xs">Mainspring Unwinding Curve</span>
+                      <span className="text-white text-xs">Optimal (linear)</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-300 text-xs">Power Reserve Variance</span>
+                      <span className="text-white text-xs">±2.3 hours</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-300 text-xs">Timing Stability</span>
+                      <span className="text-white text-xs">Superior (±0.8 s/d)</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-300 text-xs">Optimal Temperature Range</span>
+                      <span className="text-white text-xs">16-30°C</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-300 text-xs">Magnetic Resistance</span>
+                      <span className="text-white text-xs">{timepiece.magneticResistance || "4,800 A/m"}</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
       {activeTab === 'market' && (
         <div className="space-y-6">
           {/* Market Value */}
