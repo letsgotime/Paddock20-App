@@ -2,17 +2,17 @@ import React, { useState } from 'react';
 import { Goal } from '../../types/manifestation';
 import { 
   Heart, 
-  CheckCircle, 
-  PlusCircle, 
-  Edit, 
+  Sun, 
+  Moon, 
   Save, 
-  Trash2, 
-  Sparkles,
-  Sun,
-  Moon,
-  Clock,
+  Edit, 
+  PlusCircle, 
+  Clock, 
+  CheckCircle, 
+  Trash2,
   Calendar,
-  ArrowRight
+  ArrowRight,
+  Sparkles
 } from 'lucide-react';
 
 interface SpiritFocusComponentProps {
@@ -137,7 +137,7 @@ const SpiritFocusComponent: React.FC<SpiritFocusComponentProps> = ({ goal, onUpd
   
   return (
     <div className="bg-gray-900 rounded-lg p-4">
-      <h3 className="text-xl text-purple-400 font-orbitron flex items-center mb-4">
+      <h3 className="text-xl text-blue-400 font-orbitron flex items-center mb-4">
         <Heart className="mr-2 h-5 w-5" />
         SPIRIT FOCUS
       </h3>
@@ -147,7 +147,7 @@ const SpiritFocusComponent: React.FC<SpiritFocusComponentProps> = ({ goal, onUpd
         {isEditing ? (
           <div className="space-y-3">
             <div>
-              <label className="block text-sm text-purple-400 mb-1">
+              <label className="block text-sm text-blue-400 mb-1">
                 Your Spirit Focus Statement
               </label>
               <textarea
@@ -170,7 +170,7 @@ const SpiritFocusComponent: React.FC<SpiritFocusComponentProps> = ({ goal, onUpd
               </button>
               <button
                 onClick={saveSpiritFocus}
-                className="px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-md text-sm flex items-center"
+                className="px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm flex items-center"
               >
                 <Save className="h-3.5 w-3.5 mr-1.5" />
                 <span>Save Focus</span>
@@ -178,12 +178,12 @@ const SpiritFocusComponent: React.FC<SpiritFocusComponentProps> = ({ goal, onUpd
             </div>
           </div>
         ) : (
-          <div className="bg-purple-900/20 border border-purple-800 rounded-lg p-4">
+          <div className="bg-blue-900/20 border border-blue-800 rounded-lg p-4">
             <div className="flex justify-between items-start">
-              <h4 className="text-purple-400 font-medium mb-2">Spirit Focus Statement</h4>
+              <h4 className="text-blue-400 font-medium mb-2">Spirit Focus Statement</h4>
               <button
                 onClick={() => setIsEditing(true)}
-                className="text-gray-400 hover:text-purple-400"
+                className="text-gray-400 hover:text-blue-400"
               >
                 <Edit className="h-4 w-4" />
               </button>
@@ -196,7 +196,7 @@ const SpiritFocusComponent: React.FC<SpiritFocusComponentProps> = ({ goal, onUpd
                 <p className="text-gray-500">No spirit focus statement defined yet.</p>
                 <button
                   onClick={() => setIsEditing(true)}
-                  className="mt-2 px-3 py-1.5 bg-purple-600 hover:bg-purple-500 text-white rounded-md text-sm flex items-center mx-auto"
+                  className="mt-2 px-3 py-1.5 bg-blue-600 hover:bg-blue-500 text-white rounded-md text-sm flex items-center mx-auto"
                 >
                   <PlusCircle className="h-3.5 w-3.5 mr-1.5" />
                   <span>Define Spirit Focus</span>
@@ -217,10 +217,10 @@ const SpiritFocusComponent: React.FC<SpiritFocusComponentProps> = ({ goal, onUpd
         <div className="bg-gray-800 rounded-lg p-4 mb-4">
           <div className="flex justify-between items-center mb-3">
             <div>
-              <h5 className="text-purple-400 font-medium">Your Spiritual Routine</h5>
+              <h5 className="text-blue-400 font-medium">Your Spiritual Routine</h5>
               <p className="text-gray-400 text-sm">Daily gratitude and alignment</p>
             </div>
-            <div className="bg-purple-900/50 text-purple-300 py-1 px-3 rounded-full flex items-center">
+            <div className="bg-blue-900/50 text-blue-300 py-1 px-3 rounded-full flex items-center">
               <Sparkles className="h-3.5 w-3.5 mr-1.5" />
               <span>{practices.filter(p => p.isActive).length} Practices</span>
             </div>
@@ -249,7 +249,7 @@ const SpiritFocusComponent: React.FC<SpiritFocusComponentProps> = ({ goal, onUpd
                     className="mt-0.5 mr-3 flex-shrink-0"
                   >
                     {practice.isActive ? (
-                      <CheckCircle className="h-5 w-5 text-purple-500" />
+                      <CheckCircle className="h-5 w-5 text-blue-500" />
                     ) : (
                       <CheckCircle className="h-5 w-5 text-gray-700" />
                     )}
@@ -337,35 +337,40 @@ const SpiritFocusComponent: React.FC<SpiritFocusComponentProps> = ({ goal, onUpd
             disabled={!newPractice.name.trim()}
             className={`w-full py-2 rounded flex items-center justify-center ${
               newPractice.name.trim()
-                ? 'bg-purple-600 hover:bg-purple-500 text-white'
-                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                ? 'bg-blue-600 hover:bg-blue-500 text-white'
+                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
             }`}
           >
-            <PlusCircle className="h-4 w-4 mr-2" />
+            <PlusCircle className="h-4 w-4 mr-1.5" />
             <span>Add Practice</span>
           </button>
         </div>
       </div>
       
-      {/* Spiritual Alignment Tips */}
-      <div className="mt-6 p-4 bg-purple-900/20 border border-purple-800 rounded-md">
-        <h5 className="text-purple-400 font-medium mb-2">Spiritual Alignment Tips</h5>
+      {/* Gratitude tips */}
+      <div className="mt-6 bg-blue-900/20 rounded-lg p-4">
+        <h4 className="text-blue-400 font-medium mb-3">Gratitude Practice Tips</h4>
+        
         <ul className="text-sm text-gray-300 space-y-2">
           <li className="flex items-start">
-            <ArrowRight className="h-4 w-4 text-purple-400 mt-0.5 mr-2 flex-shrink-0" />
-            <span>Gratitude shifts your energy toward abundance and opens you to receiving.</span>
+            <ArrowRight className="h-4 w-4 text-blue-400 mt-0.5 mr-2 flex-shrink-0" />
+            <span>Be specific - name exactly what you're grateful for and why it matters to you</span>
           </li>
           <li className="flex items-start">
-            <ArrowRight className="h-4 w-4 text-purple-400 mt-0.5 mr-2 flex-shrink-0" />
-            <span>Feel the emotions of having already achieved your dream when you practice.</span>
+            <ArrowRight className="h-4 w-4 text-blue-400 mt-0.5 mr-2 flex-shrink-0" />
+            <span>Feel it - let the gratitude sensations fully expand in your body</span>
           </li>
           <li className="flex items-start">
-            <ArrowRight className="h-4 w-4 text-purple-400 mt-0.5 mr-2 flex-shrink-0" />
-            <span>Connect to the deeper meaning behind your dream - what it represents for you.</span>
+            <ArrowRight className="h-4 w-4 text-blue-400 mt-0.5 mr-2 flex-shrink-0" />
+            <span>Include both material and immaterial blessings in your practice</span>
           </li>
           <li className="flex items-start">
-            <ArrowRight className="h-4 w-4 text-purple-400 mt-0.5 mr-2 flex-shrink-0" />
-            <span>Trust in perfect timing. Release attachment to when and how your dream will manifest.</span>
+            <ArrowRight className="h-4 w-4 text-blue-400 mt-0.5 mr-2 flex-shrink-0" />
+            <span>Thank the universe in advance for your manifestation as if it has already arrived</span>
+          </li>
+          <li className="flex items-start">
+            <ArrowRight className="h-4 w-4 text-blue-400 mt-0.5 mr-2 flex-shrink-0" />
+            <span>Consider integrating giving back - volunteering time or sharing skills can enhance your gratitude practice</span>
           </li>
         </ul>
       </div>

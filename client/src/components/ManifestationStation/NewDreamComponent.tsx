@@ -479,7 +479,7 @@ const NewDreamComponent: React.FC<NewDreamComponentProps> = ({ onDreamCreated })
                 }`}
             >
               {step > stepNum ? (
-                <CheckCircle className="h-5 w-5" />
+                <ArrowRight className="h-5 w-5" />
               ) : (
                 <span>{stepNum}</span>
               )}

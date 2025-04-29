@@ -2,14 +2,13 @@ import React, { useState } from 'react';
 import { Goal } from '../../types/manifestation';
 import { 
   Brain, 
-  CheckCircle, 
-  PlusCircle, 
-  Edit, 
+  Eye, 
   Save, 
-  Trash2, 
-  ClipboardList,
-  Eye,
-  Clock,
+  Edit, 
+  PlusCircle, 
+  Clock, 
+  CheckCircle, 
+  Trash2,
   CalendarDays,
   ArrowRight
 } from 'lucide-react';
@@ -338,34 +337,39 @@ const MindFocusComponent: React.FC<MindFocusComponentProps> = ({ goal, onUpdate 
             className={`w-full py-2 rounded flex items-center justify-center ${
               newRoutine.name.trim()
                 ? 'bg-blue-600 hover:bg-blue-500 text-white'
-                : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                : 'bg-gray-600 text-gray-400 cursor-not-allowed'
             }`}
           >
-            <PlusCircle className="h-4 w-4 mr-2" />
-            <span>Add to Routine</span>
+            <PlusCircle className="h-4 w-4 mr-1.5" />
+            <span>Add Routine</span>
           </button>
         </div>
       </div>
       
-      {/* Mind Mastery Tips */}
-      <div className="mt-6 p-4 bg-blue-900/20 border border-blue-800 rounded-md">
-        <h5 className="text-blue-400 font-medium mb-2">Mind Mastery Tips</h5>
+      {/* Visualization tips */}
+      <div className="mt-6 bg-blue-900/20 rounded-lg p-4">
+        <h4 className="text-blue-400 font-medium mb-3">Visualization Tips</h4>
+        
         <ul className="text-sm text-gray-300 space-y-2">
           <li className="flex items-start">
             <ArrowRight className="h-4 w-4 text-blue-400 mt-0.5 mr-2 flex-shrink-0" />
-            <span>Visualize in first person, as if you're actually experiencing it now.</span>
+            <span>Engage all your senses - imagine the sights, sounds, smells, and textures of achieving your dream.</span>
           </li>
           <li className="flex items-start">
             <ArrowRight className="h-4 w-4 text-blue-400 mt-0.5 mr-2 flex-shrink-0" />
-            <span>Engage all senses - what do you see, hear, feel, smell, and taste?</span>
+            <span>Visualize in first person - see through your own eyes, not as an observer.</span>
           </li>
           <li className="flex items-start">
             <ArrowRight className="h-4 w-4 text-blue-400 mt-0.5 mr-2 flex-shrink-0" />
-            <span>Add emotion to your visualization. Feel the joy and satisfaction of achievement.</span>
+            <span>Experience the emotions - feel the joy, satisfaction, and accomplishment.</span>
           </li>
           <li className="flex items-start">
             <ArrowRight className="h-4 w-4 text-blue-400 mt-0.5 mr-2 flex-shrink-0" />
-            <span>Consistency matters more than duration. Better to do 5 minutes daily than 30 minutes occasionally.</span>
+            <span>Practice consistently - visualization is a skill that improves with repetition.</span>
+          </li>
+          <li className="flex items-start">
+            <ArrowRight className="h-4 w-4 text-blue-400 mt-0.5 mr-2 flex-shrink-0" />
+            <span>Visualize giving back - include volunteering and community service in your mental imagery to align success with positive social impact.</span>
           </li>
         </ul>
       </div>
