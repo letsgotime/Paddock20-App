@@ -3651,31 +3651,7 @@ const RoutePlannerPage = () => {
             </div>
             
             <div className="mt-4">
-              <div className="flex items-center space-x-2 mb-2">
-                <input
-                  type="checkbox"
-                  id="hasPassengers"
-                  checked={hasPassengers}
-                  onChange={(e) => setHasPassengers(e.target.checked)}
-                  className="form-checkbox text-blue-500 rounded mr-3 h-5 w-5"
-                />
-                <label htmlFor="hasPassengers" className="text-gray-300">Add Passengers</label>
-              </div>
-              
-              {hasPassengers && (
-                <div className="space-y-2 mb-2 pl-3 border-l-2 border-blue-900/40">
-                  {[0, 1, 2].map((index) => (
-                    <input
-                      key={index}
-                      type="text"
-                      placeholder={`Passenger ${index + 1} Name`}
-                      value={passengers[index]}
-                      onChange={(e) => updatePassenger(index, e.target.value)}
-                      className="w-full p-2 bg-gray-800 text-white rounded-lg border border-gray-700"
-                    />
-                  ))}
-                </div>
-              )}
+              {/* Passenger section removed to prevent duplication - now using the improved Driving Companions widget */}
             </div>
             
             {/* Link to Garage Vault */}
