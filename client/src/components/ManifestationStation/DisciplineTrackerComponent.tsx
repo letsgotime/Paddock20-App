@@ -469,6 +469,29 @@ const DisciplineTrackerComponent: React.FC<DisciplineTrackerComponentProps> = ({
                   </div>
                 </div>
               </div>
+              
+              {/* Submit Button */}
+              <div className="mt-5 flex justify-center">
+                <button
+                  onClick={() => {
+                    if (todayLog) {
+                      // Save all changes by pushing to the parent component
+                      onUpdate({
+                        ...goal,
+                        dailyProgress: {
+                          ...goal.dailyProgress,
+                          logs: dailyLogs,
+                          lastUpdated: new Date().toISOString()
+                        }
+                      });
+                    }
+                  }}
+                  className="px-5 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium flex items-center"
+                >
+                  <Save className="h-4 w-4 mr-2" />
+                  Submit Daily Check-in
+                </button>
+              </div>
             </div>
           )}
           

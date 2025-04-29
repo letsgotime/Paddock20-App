@@ -600,12 +600,12 @@ const ManifestationStationPage: React.FC = () => {
               </h1>
               
               {!isCreatingNewDream && selectedGoal && (
-                <div className="flex">
+                <div className="flex overflow-hidden rounded-md">
                   <button
                     onClick={() => setActiveView('dashboard')}
-                    className={`px-3 py-1.5 rounded-l text-sm ${
+                    className={`px-3 py-1.5 text-sm border-r border-gray-700 ${
                       activeView === 'dashboard' 
-                        ? 'bg-blue-600 text-white' 
+                        ? 'bg-green-600 text-white' 
                         : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                     }`}
                   >
@@ -613,9 +613,9 @@ const ManifestationStationPage: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setActiveView('hustle-planner')}
-                    className={`px-3 py-1.5 text-sm ${
+                    className={`px-3 py-1.5 text-sm border-r border-gray-700 ${
                       activeView === 'hustle-planner' 
-                        ? 'bg-blue-600 text-white' 
+                        ? 'bg-green-600 text-white' 
                         : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                     }`}
                   >
@@ -623,9 +623,9 @@ const ManifestationStationPage: React.FC = () => {
                   </button>
                   <button
                     onClick={() => setActiveView('discipline-tracker')}
-                    className={`px-3 py-1.5 rounded-r text-sm ${
+                    className={`px-3 py-1.5 text-sm ${
                       activeView === 'discipline-tracker' 
-                        ? 'bg-blue-600 text-white' 
+                        ? 'bg-green-600 text-white' 
                         : 'bg-gray-800 text-gray-400 hover:bg-gray-700'
                     }`}
                   >
