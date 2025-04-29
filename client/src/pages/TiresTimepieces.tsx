@@ -24,13 +24,13 @@ const TiresTimepieces: React.FC = () => {
   const activeTimepiece = useTimepieceStore((state: TimepieceState) => state.getActiveTimepiece());
   const setActiveTimepiece = useTimepieceStore((state: TimepieceState) => state.setActiveTimepiece);
   
-  // Set initial active timepiece if not already set
+  // Set initial active timepiece if not already set - only on first render
   useEffect(() => {
-    if (timepieces.length > 0 && !activeTimepiece) {
+    if (timepieces.length > 0 && !activeTimepiece && !selectedTimepieceId) {
       setActiveTimepiece(timepieces[0].id);
       setSelectedTimepieceId(timepieces[0].id);
     }
-  }, [timepieces, activeTimepiece, setActiveTimepiece]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-black text-white">

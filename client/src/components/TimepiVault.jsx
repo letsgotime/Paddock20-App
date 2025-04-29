@@ -22,13 +22,11 @@ const formatCurrency = (amount) => {
  * A comprehensive dashboard for managing and displaying luxury timepiece collections
  */
 function TimepiVault() {
-  // Access timepiece data from the store
+  // Access timepiece data from the store - avoid state object destructuring to prevent re-renders
   const useTimepieceStore = timepieceDataService.useTimepieceStore;
-  const { timepieces, isLoading, setActiveTimepiece } = useTimepieceStore(state => ({
-    timepieces: state.timepieces,
-    isLoading: state.isLoading,
-    setActiveTimepiece: state.setActiveTimepiece
-  }));
+  const timepieces = useTimepieceStore(state => state.timepieces);
+  const isLoading = useTimepieceStore(state => state.isLoading);
+  const setActiveTimepiece = useTimepieceStore(state => state.setActiveTimepiece);
   
   // Access progress metrics from the progress store
   const useProgressStore = progressDataService.useProgressStore;

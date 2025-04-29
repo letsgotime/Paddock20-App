@@ -17,9 +17,12 @@ const Paddock20HomePage: React.FC = () => {
       {/* Hero Section */}
       <section className="text-center mb-12">
         <h1 className="text-blue-400 font-orbitron text-5xl mb-6">Paddock20™</h1>
-        <p className="text-white font-openSans text-xl mb-4">Drive Life. Document Legacy.</p>
+        <p className="text-white font-openSans text-xl mb-4">Paddock20™ isn't just an app.</p>
         <p className="text-gray-300 font-openSans text-base">
-          Built for the serious. Designed for the seamless.
+          It's where enthusiasts level up. It's where lifestyle becomes legacy. It's where every mile moves the story forward.
+        </p>
+        <p className="text-gray-300 font-openSans text-base mt-2">
+          Join the operators who don't chase. They build.
         </p>
       </section>
 
@@ -225,13 +228,9 @@ const Paddock20HomePage: React.FC = () => {
 
       {/* Final Hook */}
       <section className="text-center mt-16">
-        <h2 className="text-blue-400 font-orbitron text-3xl mb-4">Paddock20™ isn't just an app.</h2>
+        <h2 className="text-blue-400 font-orbitron text-3xl mb-4">Drive Life. Document Legacy.</h2>
         <p className="text-white font-openSans text-lg mb-6">
-          It's where enthusiasts level up. It's where lifestyle becomes legacy. 
-          It's where every mile moves the story forward.
-        </p>
-        <p className="text-gray-300 font-openSans text-sm">
-          Join the operators who don't chase. They build.
+          Built for the serious. Designed for the seamless.
         </p>
       </section>
       </div>
