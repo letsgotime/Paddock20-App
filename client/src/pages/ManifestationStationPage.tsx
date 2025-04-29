@@ -634,16 +634,18 @@ const ManifestationStationPage: React.FC = () => {
                 </div>
               )}
             </div>
-            <div className="mt-3 mb-5 w-full">
-              {/* Carbon fiber background pattern for the entire section */}
-              <div className="bg-black bg-opacity-80 backdrop-blur-sm rounded-xl overflow-hidden border border-gray-800 relative w-full">
-                <div 
-                  className="absolute inset-0 z-0 opacity-20" 
-                  style={{ 
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23444444' fill-opacity='0.4' fill-rule='evenodd'%3E%3Cpath d='M0 20L20 0L40 20L20 40z' /%3E%3C/g%3E%3C/svg%3E")`,
-                    backgroundSize: '8px 8px'
-                  }}
-                />
+            {/* Only show methodology on the dashboard view */}
+            {activeView === 'dashboard' && (
+              <div className="mt-3 mb-5 w-full">
+                {/* Carbon fiber background pattern for the entire section */}
+                <div className="bg-black bg-opacity-80 backdrop-blur-sm rounded-xl overflow-hidden border border-gray-800 relative w-full">
+                  <div 
+                    className="absolute inset-0 z-0 opacity-20" 
+                    style={{ 
+                      backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23444444' fill-opacity='0.4' fill-rule='evenodd'%3E%3Cpath d='M0 20L20 0L40 20L20 40z' /%3E%3C/g%3E%3C/svg%3E")`,
+                      backgroundSize: '8px 8px'
+                    }}
+                  />
 
                 {/* Header section */}
                 <div className="relative z-10 p-4 border-b border-gray-700 bg-gradient-to-r from-gray-900 via-black to-gray-900">
@@ -674,10 +676,9 @@ const ManifestationStationPage: React.FC = () => {
                       <h3 className="font-['Orbitron'] text-lg text-white">WHAT YOU GET</h3>
                     </div>
                     <div className="bg-black bg-opacity-50 p-4 rounded-lg flex-grow border border-gray-800 shadow-inner">
-                      <div className="mb-3 px-3 py-2 bg-green-600 rounded-md shadow-lg">
-                        <p className="text-white font-semibold text-center text-sm">
-                          The First Hustle Planner Designed for Auto Enthusiasts
-                        </p>
+                      <div className="mb-3 p-3 bg-green-600 rounded-md shadow-lg relative overflow-hidden">
+                        <h4 className="text-center font-['Orbitron'] text-white font-bold text-sm mb-1 relative z-10">THE FIRST HUSTLE PLANNER</h4>
+                        <p className="text-white text-xs text-center relative z-10">Designed specifically for automotive enthusiasts</p>
                       </div>
                       <ul className="text-gray-300 text-sm space-y-2">
                         <li className="flex items-start">
@@ -750,6 +751,7 @@ const ManifestationStationPage: React.FC = () => {
                 </div>
               </div>
             </div>
+            )}
           </div>
           
           {!isCreatingNewDream && goals.length > 1 && (
