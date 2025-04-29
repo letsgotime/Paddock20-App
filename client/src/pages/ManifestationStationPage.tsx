@@ -533,6 +533,49 @@ const ManifestationStationPage: React.FC = () => {
             <ArrowUpRight className="h-5 w-5 text-gray-400" />
           </div>
         </button>
+        
+        {/* All Dreams Section Header */}
+        <div className="mt-12 mb-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-orbitron text-blue-400">ACTIVE DREAMS</h2>
+            <button
+              onClick={() => setIsCreatingNewDream(true)}
+              className="px-4 py-2 rounded-full bg-blue-600 hover:bg-blue-500 text-white whitespace-nowrap flex items-center"
+            >
+              <Plus className="h-4 w-4 mr-1.5" />
+              <span>New Dream</span>
+            </button>
+          </div>
+          <div className="h-0.5 bg-gradient-to-r from-blue-500 to-transparent mt-2"></div>
+        </div>
+        
+        {/* Active Dreams Tile Grid */}
+        <GoalTileGrid 
+          goals={goals} 
+          onSelectGoal={setSelectedGoalId} 
+          activeGoal={selectedGoal} 
+          type="active" 
+        />
+        
+        {/* Completed Dreams Section */}
+        <div className="mt-12 mb-6">
+          <div className="flex justify-between items-center">
+            <h2 className="text-2xl font-orbitron text-green-400">COMPLETED DREAMS</h2>
+            <div className="flex items-center">
+              <Trophy className="h-5 w-5 text-yellow-400 mr-2" />
+              <span className="text-gray-300">{goals.filter(goal => goal.manifestStatus === 'completed' || goal.manifestStatus === 'complete').length} Achievements</span>
+            </div>
+          </div>
+          <div className="h-0.5 bg-gradient-to-r from-green-500 to-transparent mt-2"></div>
+        </div>
+        
+        {/* Completed Dreams Tile Grid */}
+        <GoalTileGrid 
+          goals={goals} 
+          onSelectGoal={setSelectedGoalId} 
+          activeGoal={selectedGoal} 
+          type="completed" 
+        />
       </div>
     );
   };
