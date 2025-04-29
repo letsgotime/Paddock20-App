@@ -168,6 +168,177 @@ const RoutePlannerPage = () => {
     setPassengers(newPassengers);
   };
   
+  // Photo gallery handlers
+  const handlePhotoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    
+    const selectedFiles = Array.from(e.target.files);
+    
+    // Limit to 5 photos total
+    if (carPhotos.length + selectedFiles.length > 5) {
+      alert("You can only upload up to 5 photos in total.");
+      return;
+    }
+    
+    // Add new photos
+    const newPhotos = [...carPhotos, ...selectedFiles];
+    setCarPhotos(newPhotos);
+    
+    // Generate preview URLs
+    const newPreviewUrls = selectedFiles.map(file => URL.createObjectURL(file));
+    setPhotoPreviewUrls([...photoPreviewUrls, ...newPreviewUrls]);
+  };
+  
+  const removePhoto = (index: number) => {
+    // Remove the photo and its preview URL
+    const newPhotos = [...carPhotos];
+    const newPreviewUrls = [...photoPreviewUrls];
+    
+    // Release the object URL to avoid memory leaks
+    URL.revokeObjectURL(newPreviewUrls[index]);
+    
+    newPhotos.splice(index, 1);
+    newPreviewUrls.splice(index, 1);
+    
+    setCarPhotos(newPhotos);
+    setPhotoPreviewUrls(newPreviewUrls);
+  };
+  
+  // Video gallery handlers
+  const handleVideoUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (!e.target.files) return;
+    
+    const selectedFiles = Array.from(e.target.files).filter(file => 
+      file.type.startsWith('video/') // Ensure only video files are accepted
+    );
+    
+    if (selectedFiles.length === 0) {
+      alert("Please select valid video files (MP4, WebM, etc.)");
+      return;
+    }
+    
+    // Limit to 3 videos total
+    if (carVideos.length + selectedFiles.length > 3) {
+      alert("You can only upload up to 3 videos in total.");
+      return;
+    }
+    
+    // Check file sizes (limit to 100MB per video)
+    const oversizedVideos = selectedFiles.filter(file => file.size > 100 * 1024 * 1024);
+    if (oversizedVideos.length > 0) {
+      alert("Some videos exceed the 100MB size limit and won't be uploaded.");
+      return;
+    }
+    
+    // Add new videos
+    const newVideos = [...carVideos, ...selectedFiles];
+    setCarVideos(newVideos);
+    
+    // Generate preview URLs
+    const newPreviewUrls = selectedFiles.map(file => URL.createObjectURL(file));
+    setVideoPreviewUrls([...videoPreviewUrls, ...newPreviewUrls]);
+  };
+  
+  const removeVideo = (index: number) => {
+    // Remove the video and its preview URL
+    const newVideos = [...carVideos];
+    const newPreviewUrls = [...videoPreviewUrls];
+    
+    // Release the object URL to avoid memory leaks
+    URL.revokeObjectURL(newPreviewUrls[index]);
+    
+    newVideos.splice(index, 1);
+    newPreviewUrls.splice(index, 1);
+    
+    setCarVideos(newVideos);
+    setVideoPreviewUrls(newPreviewUrls);
+  };
+  
+  // Voice recording handlers
+  const startRecording = async () => {
+    try {
+      // Reset previous recording
+      setAudioChunks([]);
+      setRecordingTime(0);
+      
+      // Request microphone access
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      
+      // Create a new media recorder
+      const recorder = new MediaRecorder(stream);
+      setMediaRecorder(recorder);
+      
+      // Set up data handling
+      recorder.ondataavailable = (e) => {
+        if (e.data.size > 0) {
+          setAudioChunks(prev => [...prev, e.data]);
+        }
+      };
+      
+      // Handle recording stop
+      recorder.onstop = () => {
+        // Combine chunks into a single blob
+        const audioBlob = new Blob(audioChunks, { type: 'audio/webm' });
+        setAudioBlob(audioBlob);
+        
+        // Create a URL for the blob for playback
+        const url = URL.createObjectURL(audioBlob);
+        setAudioUrl(url);
+        
+        // Stop all tracks in the stream
+        stream.getTracks().forEach(track => track.stop());
+      };
+      
+      // Start recording
+      recorder.start();
+      setIsRecording(true);
+      
+      // Start the timer
+      const timer = setInterval(() => {
+        setRecordingTime(prev => prev + 1);
+      }, 1000);
+      
+      // Store the timer ID to clear it later
+      (window as any).recordingTimer = timer;
+    } catch (error) {
+      console.error("Error accessing microphone:", error);
+      alert("Unable to access microphone. Please check your browser permissions.");
+    }
+  };
+  
+  const stopRecording = () => {
+    if (!mediaRecorder) return;
+    
+    // Stop the recorder
+    mediaRecorder.stop();
+    setIsRecording(false);
+    
+    // Clear the timer
+    if ((window as any).recordingTimer) {
+      clearInterval((window as any).recordingTimer);
+    }
+  };
+  
+  const playRecording = () => {
+    if (!audioUrl) return;
+    
+    // Play the audio
+    const audio = new Audio(audioUrl);
+    audio.play();
+  };
+  
+  const deleteRecording = () => {
+    // Clear the recording
+    if (audioUrl) {
+      URL.revokeObjectURL(audioUrl);
+    }
+    
+    setAudioBlob(null);
+    setAudioUrl(null);
+    setAudioChunks([]);
+    setRecordingTime(0);
+  };
+  
   // F1-grade telemetry and advanced settings
   const [selectedTireSetup, setSelectedTireSetup] = useState("");
   const [drivePurpose, setDrivePurpose] = useState("leisure");
@@ -198,6 +369,22 @@ const RoutePlannerPage = () => {
   const [newCompanionVehicle, setNewCompanionVehicle] = useState<string>('');
   const [newCompanionVehicleDetails, setNewCompanionVehicleDetails] = useState<string>('');
   const [companionsListView, setCompanionsListView] = useState<'grid' | 'list'>('grid');
+  
+  // Car photo gallery states
+  const [carPhotos, setCarPhotos] = useState<File[]>([]);
+  const [photoPreviewUrls, setPhotoPreviewUrls] = useState<string[]>([]);
+  
+  // Video gallery states
+  const [carVideos, setCarVideos] = useState<File[]>([]);
+  const [videoPreviewUrls, setVideoPreviewUrls] = useState<string[]>([]);
+  
+  // Voice note states
+  const [isRecording, setIsRecording] = useState(false);
+  const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const [mediaRecorder, setMediaRecorder] = useState<MediaRecorder | null>(null);
+  const [audioChunks, setAudioChunks] = useState<BlobPart[]>([]);
   
   // Route customization options
   const [routeCustomizations, setRouteCustomizations] = useState({
