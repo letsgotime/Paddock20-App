@@ -26,7 +26,12 @@ const getVehicleImageUrl = (vehicle, index) => {
       'luxury sports car',
       'performance car',
       'car wheel detail',
-      'sports car engine'
+      'sports car engine',
+      'brake system',
+      'car interior luxury',
+      'carbon fiber car parts',
+      'suspension car',
+      'engine detail'
     ];
     return `https://source.unsplash.com/random/1200x800/?${defaultQueries[index % defaultQueries.length]}`;
   }
@@ -36,10 +41,21 @@ const getVehicleImageUrl = (vehicle, index) => {
     `${vehicle.year} ${vehicle.make} ${vehicle.model}`,
     `${vehicle.make} ${vehicle.model} performance`,
     `${vehicle.make} ${vehicle.model} wheel`,
-    `${vehicle.make} ${vehicle.model} engine`
+    `${vehicle.make} ${vehicle.model} engine`,
+    `${vehicle.make} ${vehicle.model} brake`,
+    `${vehicle.make} ${vehicle.model} interior`,
+    `${vehicle.make} ${vehicle.model} carbon`,
+    `${vehicle.make} ${vehicle.model} suspension`,
+    `${vehicle.make} ${vehicle.model} detail`
   ];
   
   return `https://source.unsplash.com/random/1200x800/?${queries[index % queries.length]}`;
+};
+
+// Helper function to get part images
+const getPartImageUrl = (partType) => {
+  const query = partSearchQueries[partType] || partType;
+  return `https://source.unsplash.com/random/800x600/?${query}`;
 };
 
 // Vehicle image search terms
@@ -742,14 +758,14 @@ const F1TelemetryDashboard = ({ vehicle, vehicleData }) => {
               </div>
             </div>
             <div className="bg-gray-800 rounded-lg overflow-hidden border border-blue-500/20">
-              <img src={getVehicleImageUrl(2)} alt="Wheel & Tire Detail" className="w-full h-48 object-cover" />
+              <img src={getVehicleImageUrl(vehicle, 2)} alt="Wheel & Tire Detail" className="w-full h-48 object-cover" />
               <div className="p-3">
                 <h4 className="text-blue-400 font-orbitron">Wheel & Tire</h4>
                 <p className="text-gray-400 text-sm">Grip & Handling</p>
               </div>
             </div>
             <div className="bg-gray-800 rounded-lg overflow-hidden border border-blue-500/20">
-              <img src={getVehicleImageUrl(3)} alt="Engine Bay" className="w-full h-48 object-cover" />
+              <img src={getVehicleImageUrl(vehicle, 3)} alt="Engine Bay" className="w-full h-48 object-cover" />
               <div className="p-3">
                 <h4 className="text-blue-400 font-orbitron">Engine Bay</h4>
                 <p className="text-gray-400 text-sm">Power & Performance</p>
@@ -945,7 +961,7 @@ const F1TelemetryDashboard = ({ vehicle, vehicleData }) => {
           {/* Maintenance Hero Images */}
           <div className="grid grid-cols-1 lg:grid-cols-4 gap-4 mb-6">
             <div className="lg:col-span-2 bg-gray-800 rounded-lg overflow-hidden relative border border-blue-500/20">
-              <img src={getVehicleImageUrl(4)} alt="Brake System" className="w-full h-48 object-cover" />
+              <img src={getVehicleImageUrl(vehicle, 4)} alt="Brake System" className="w-full h-48 object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
               <div className="absolute bottom-0 left-0 p-3">
                 <h4 className="text-blue-400 font-orbitron">Brake Systems</h4>
@@ -953,7 +969,7 @@ const F1TelemetryDashboard = ({ vehicle, vehicleData }) => {
               </div>
             </div>
             <div className="bg-gray-800 rounded-lg overflow-hidden relative border border-blue-500/20">
-              <img src={getVehicleImageUrl(5)} alt="Interior" className="w-full h-48 object-cover" />
+              <img src={getVehicleImageUrl(vehicle, 5)} alt="Interior" className="w-full h-48 object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
               <div className="absolute bottom-0 left-0 p-3">
                 <h4 className="text-blue-400 font-orbitron">Interior</h4>
@@ -961,7 +977,7 @@ const F1TelemetryDashboard = ({ vehicle, vehicleData }) => {
               </div>
             </div>
             <div className="bg-gray-800 rounded-lg overflow-hidden relative border border-blue-500/20">
-              <img src={getVehicleImageUrl(6)} alt="Carbon Fiber" className="w-full h-48 object-cover" />
+              <img src={getVehicleImageUrl(vehicle, 6)} alt="Carbon Fiber" className="w-full h-48 object-cover" />
               <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
               <div className="absolute bottom-0 left-0 p-3">
                 <h4 className="text-blue-400 font-orbitron">Carbon Fiber</h4>
