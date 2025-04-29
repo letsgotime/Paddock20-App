@@ -60,9 +60,10 @@ const DropdownNavbar = () => {
                  onMouseEnter={(e) => e.currentTarget.classList.add('menu-open')}
                  onMouseLeave={(e) => {
                     // Add a delay before removing the class
+                    const currentElem = e.currentTarget;
                     setTimeout(() => {
-                      if (!e.currentTarget.matches(':hover')) {
-                        e.currentTarget.classList.remove('menu-open');
+                      if (currentElem && !currentElem.classList.contains('hover-active')) {
+                        currentElem.classList.remove('menu-open');
                       }
                     }, 500); // 500ms delay
                  }}>
