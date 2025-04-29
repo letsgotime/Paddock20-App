@@ -1,514 +1,279 @@
 import React, { useState } from 'react';
-import supabase from '../services/supabaseClient';
-import { X, Save, Calendar, Wrench, Clock, FileText, Link, AlertTriangle } from 'lucide-react';
+import { X, Upload } from 'lucide-react';
 
-/**
- * Add Maintenance Form Component
- * A user-friendly form for adding maintenance records to vehicles
- */
-const AddMaintenanceForm = ({ onClose, vehicleId, onMaintenanceAdded }) => {
+const AddMaintenanceForm = ({ onSubmit, onCancel, vehicleId }) => {
   const [formData, setFormData] = useState({
-    service_type: '',
-    description: '',
-    date_performed: new Date().toISOString().split('T')[0],
+    serviceType: '',
+    serviceDate: '',
     mileage: '',
-    provider: '',
-    technician: '',
-    cost: '',
-    parts_replaced: '',
-    labor_hours: '',
-    warranty_info: '',
-    invoice_number: '',
-    priority: 'Normal',
-    status: 'Completed',
+    serviceCost: '',
+    serviceProvider: '',
     notes: '',
-    reminder_date: '',
-    document_url: '',
-    document_label: '',
-    recurring: false,
-    recurring_interval: '',
-    recurring_unit: 'months',
+    receipts: [] // Will store file URLs
   });
-  
-  const [loading, setLoading] = useState(false);
-  const [errors, setErrors] = useState({});
-  
-  // Common service types
+
   const serviceTypes = [
-    'Oil Change', 'Tire Rotation', 'Brake Service', 'Inspection', 
-    'Fluid Change', 'Engine Service', 'Electrical', 'Cooling System', 
-    'Transmission Service', 'Air Filter', 'Fuel System', 'Battery Service',
-    'Detailing', 'Paint Correction', 'Ceramic Coating', 'PPF Installation'
+    'Oil Change',
+    'Tire Rotation',
+    'Brake Service',
+    'Air Filter',
+    'Cabin Filter',
+    'Transmission Service',
+    'Engine Tune-Up',
+    'Wheel Alignment',
+    'Coolant Flush',
+    'Battery Replacement',
+    'Spark Plugs',
+    'Fuel System',
+    'Diagnostic',
+    'Inspection',
+    'Detailing',
+    'Other'
   ];
-  
-  // Status options
-  const statusOptions = [
-    'Completed', 'Scheduled', 'Pending', 'In Progress', 'Postponed', 'Cancelled'
-  ];
-  
-  // Priority levels
-  const priorityLevels = [
-    'Low', 'Normal', 'High', 'Critical'
-  ];
-  
-  // Service providers (common shops and dealers)
-  const commonProviders = [
-    'Dealer Service', 'Independent Shop', 'Specialty Shop', 'DIY', 
-    'Mobile Mechanic', 'Tire Shop', 'Detailing Shop'
-  ];
-  
-  // Recurring interval units
-  const recurringUnits = [
-    'days', 'weeks', 'months', 'years', 'miles'
-  ];
-  
-  // Handle form input changes
+
+  // For a real app, this would handle file uploads to a storage service
+  const [uploadedFiles, setUploadedFiles] = useState([]);
+  const [fileUploadProgress, setFileUploadProgress] = useState(0);
+  const [isUploading, setIsUploading] = useState(false);
+
   const handleChange = (e) => {
-    const { name, value, type, checked } = e.target;
-    setFormData({
+    const { name, value } = e.target;
+    setFormData(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
+  // Simulates a file upload progress
+  const handleFileChange = (e) => {
+    const files = Array.from(e.target.files);
+    
+    if (files.length === 0) return;
+    
+    setIsUploading(true);
+    setFileUploadProgress(0);
+    
+    // Simulate upload progress
+    const interval = setInterval(() => {
+      setFileUploadProgress(prev => {
+        if (prev >= 100) {
+          clearInterval(interval);
+          setIsUploading(false);
+          
+          // Create file URLs (in a real app, these would be from your server/storage)
+          const newFiles = files.map(file => ({
+            name: file.name,
+            type: file.type,
+            size: file.size,
+            url: URL.createObjectURL(file) // In a real app, this would be the uploaded file URL
+          }));
+          
+          setUploadedFiles(prev => [...prev, ...newFiles]);
+          
+          // Update form data with new receipt URLs
+          setFormData(prev => ({
+            ...prev,
+            receipts: [...prev.receipts, ...newFiles.map(f => f.url)]
+          }));
+          
+          return 0;
+        }
+        return prev + 5;
+      });
+    }, 100);
+  };
+
+  const removeFile = (index) => {
+    const newFiles = [...uploadedFiles];
+    newFiles.splice(index, 1);
+    setUploadedFiles(newFiles);
+    
+    const newReceipts = [...formData.receipts];
+    newReceipts.splice(index, 1);
+    setFormData(prev => ({
+      ...prev,
+      receipts: newReceipts
+    }));
+  };
+
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    onSubmit({
       ...formData,
-      [name]: type === 'checkbox' ? checked : value
+      vehicleId: vehicleId
     });
   };
-  
-  // Validate form before submission
-  const validateForm = () => {
-    const newErrors = {};
-    
-    if (!formData.service_type.trim()) newErrors.service_type = 'Service type is required';
-    if (!formData.date_performed) newErrors.date_performed = 'Service date is required';
-    if (formData.mileage && isNaN(Number(formData.mileage))) newErrors.mileage = 'Mileage must be a number';
-    if (formData.cost && isNaN(Number(formData.cost))) newErrors.cost = 'Cost must be a number';
-    if (formData.labor_hours && isNaN(Number(formData.labor_hours))) newErrors.labor_hours = 'Labor hours must be a number';
-    
-    // Validate URL if provided
-    if (formData.document_url && !formData.document_url.match(/^(http|https):\/\/[^ "]+$/)) {
-      newErrors.document_url = 'Please enter a valid URL starting with http:// or https://';
-    }
-    
-    // If recurring is checked, validate interval
-    if (formData.recurring && (!formData.recurring_interval || isNaN(Number(formData.recurring_interval)))) {
-      newErrors.recurring_interval = 'Recurring interval must be a number';
-    }
-    
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-  
-  // Submit the form to add a new maintenance record
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    
-    if (!validateForm()) return;
-    
-    setLoading(true);
-    
-    try {
-      // Format numeric fields
-      const maintenanceData = {
-        ...formData,
-        vehicle_id: vehicleId,
-        mileage: formData.mileage ? Number(formData.mileage) : null,
-        cost: formData.cost ? Number(formData.cost) : null,
-        labor_hours: formData.labor_hours ? Number(formData.labor_hours) : null,
-        recurring_interval: formData.recurring_interval ? Number(formData.recurring_interval) : null,
-        created_at: new Date().toISOString()
-      };
-      
-      const { data, error } = await supabase
-        .from('Maintenance')
-        .insert([maintenanceData])
-        .select();
-      
-      if (error) throw error;
-      
-      if (data && data.length > 0) {
-        if (onMaintenanceAdded) onMaintenanceAdded(data[0]);
-        onClose();
-      }
-    } catch (error) {
-      console.error('Error adding maintenance record:', error.message);
-      setErrors({ form: 'Failed to add maintenance record. ' + error.message });
-    }
-    
-    setLoading(false);
-  };
-  
+
   return (
-    <div className="fixed inset-0 flex items-center justify-center z-50 bg-black bg-opacity-80" onClick={onClose}>
-      <div 
-        className="bg-gray-900 border border-blue-500/20 rounded-xl p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto"
-        onClick={e => e.stopPropagation()}
-      >
-        <div className="flex justify-between items-center mb-6">
-          <h2 className="text-blue-400 font-orbitron text-2xl">Add Maintenance Record</h2>
-          <button onClick={onClose} className="text-gray-400 hover:text-white">
+    <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4">
+      <div className="bg-gray-900 border border-green-500 rounded-lg w-full max-w-4xl max-h-[90vh] overflow-y-auto">
+        <div className="flex justify-between items-center p-6 border-b border-gray-800">
+          <h2 className="text-xl font-orbitron text-blue-400">Add Maintenance Record</h2>
+          <button onClick={onCancel} className="text-gray-400 hover:text-white">
             <X size={24} />
           </button>
         </div>
         
-        {errors.form && (
-          <div className="bg-red-900 bg-opacity-20 border border-red-500 text-red-500 p-3 rounded-md mb-4">
-            {errors.form}
-          </div>
-        )}
-        
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Basic Service Details */}
-          <div className="bg-black p-4 rounded-xl border border-gray-800">
-            <h3 className="text-green-500 font-orbitron text-lg mb-4">Service Details</h3>
+        <form onSubmit={handleSubmit} className="p-6 space-y-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Service Type */}
+            <div>
+              <label className="block text-gray-300 mb-2">Service Type*</label>
+              <select
+                name="serviceType"
+                value={formData.serviceType}
+                onChange={handleChange}
+                required
+                className="w-full bg-gray-800 border border-gray-700 rounded-md py-2 px-3 text-white"
+              >
+                <option value="">Select Service Type</option>
+                {serviceTypes.map(type => (
+                  <option key={type} value={type}>{type}</option>
+                ))}
+              </select>
+            </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Service Type */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Service Type*</label>
-                <input
-                  type="text"
-                  name="service_type"
-                  value={formData.service_type}
-                  onChange={handleChange}
-                  list="service-types"
-                  className={`w-full bg-gray-800 border ${errors.service_type ? 'border-red-500' : 'border-gray-700'} rounded-md px-3 py-2 text-white`}
-                  placeholder="e.g. Oil Change"
-                />
-                <datalist id="service-types">
-                  {serviceTypes.map((type) => (
-                    <option key={type} value={type} />
-                  ))}
-                </datalist>
-                {errors.service_type && <p className="text-red-500 text-xs mt-1">{errors.service_type}</p>}
-              </div>
-              
-              {/* Service Date */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Service Date*</label>
-                <input
-                  type="date"
-                  name="date_performed"
-                  value={formData.date_performed}
-                  onChange={handleChange}
-                  className={`w-full bg-gray-800 border ${errors.date_performed ? 'border-red-500' : 'border-gray-700'} rounded-md px-3 py-2 text-white`}
-                />
-                {errors.date_performed && <p className="text-red-500 text-xs mt-1">{errors.date_performed}</p>}
-              </div>
-              
-              {/* Mileage */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Mileage at Service</label>
-                <input
-                  type="text"
-                  name="mileage"
-                  value={formData.mileage}
-                  onChange={handleChange}
-                  className={`w-full bg-gray-800 border ${errors.mileage ? 'border-red-500' : 'border-gray-700'} rounded-md px-3 py-2 text-white`}
-                  placeholder="e.g. 15000"
-                />
-                {errors.mileage && <p className="text-red-500 text-xs mt-1">{errors.mileage}</p>}
-              </div>
-              
-              {/* Status */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Status</label>
-                <select
-                  name="status"
-                  value={formData.status}
-                  onChange={handleChange}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white"
-                >
-                  {statusOptions.map((status) => (
-                    <option key={status} value={status}>{status}</option>
-                  ))}
-                </select>
-              </div>
-              
-              {/* Priority */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Priority</label>
-                <select
-                  name="priority"
-                  value={formData.priority}
-                  onChange={handleChange}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white"
-                >
-                  {priorityLevels.map((level) => (
-                    <option key={level} value={level}>{level}</option>
-                  ))}
-                </select>
-              </div>
-              
-              {/* Cost */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Cost ($)</label>
-                <input
-                  type="text"
-                  name="cost"
-                  value={formData.cost}
-                  onChange={handleChange}
-                  className={`w-full bg-gray-800 border ${errors.cost ? 'border-red-500' : 'border-gray-700'} rounded-md px-3 py-2 text-white`}
-                  placeholder="e.g. 175.50"
-                />
-                {errors.cost && <p className="text-red-500 text-xs mt-1">{errors.cost}</p>}
-              </div>
+            {/* Service Date */}
+            <div>
+              <label className="block text-gray-300 mb-2">Service Date*</label>
+              <input
+                type="date"
+                name="serviceDate"
+                value={formData.serviceDate}
+                onChange={handleChange}
+                required
+                className="w-full bg-gray-800 border border-gray-700 rounded-md py-2 px-3 text-white"
+              />
             </div>
           </div>
           
-          {/* Service Provider Details */}
-          <div className="bg-black p-4 rounded-xl border border-gray-800">
-            <h3 className="text-green-500 font-orbitron text-lg mb-4">Service Provider</h3>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {/* Mileage */}
+            <div>
+              <label className="block text-gray-300 mb-2">Mileage</label>
+              <input
+                type="number"
+                name="mileage"
+                value={formData.mileage}
+                onChange={handleChange}
+                min="0"
+                className="w-full bg-gray-800 border border-gray-700 rounded-md py-2 px-3 text-white"
+              />
+            </div>
             
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              {/* Provider */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Service Provider</label>
-                <input
-                  type="text"
-                  name="provider"
-                  value={formData.provider}
-                  onChange={handleChange}
-                  list="service-providers"
-                  className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white"
-                  placeholder="e.g. Main Street Auto Shop"
-                />
-                <datalist id="service-providers">
-                  {commonProviders.map((provider) => (
-                    <option key={provider} value={provider} />
-                  ))}
-                </datalist>
-              </div>
-              
-              {/* Technician */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Technician Name</label>
-                <input
-                  type="text"
-                  name="technician"
-                  value={formData.technician}
-                  onChange={handleChange}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white"
-                  placeholder="e.g. John Smith"
-                />
-              </div>
-              
-              {/* Labor Hours */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Labor Hours</label>
-                <input
-                  type="text"
-                  name="labor_hours"
-                  value={formData.labor_hours}
-                  onChange={handleChange}
-                  className={`w-full bg-gray-800 border ${errors.labor_hours ? 'border-red-500' : 'border-gray-700'} rounded-md px-3 py-2 text-white`}
-                  placeholder="e.g. 2.5"
-                />
-                {errors.labor_hours && <p className="text-red-500 text-xs mt-1">{errors.labor_hours}</p>}
-              </div>
-              
-              {/* Invoice Number */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Invoice Number</label>
-                <input
-                  type="text"
-                  name="invoice_number"
-                  value={formData.invoice_number}
-                  onChange={handleChange}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white"
-                  placeholder="e.g. INV-12345"
-                />
-              </div>
+            {/* Service Cost */}
+            <div>
+              <label className="block text-gray-300 mb-2">Service Cost</label>
+              <input
+                type="number"
+                name="serviceCost"
+                value={formData.serviceCost}
+                onChange={handleChange}
+                min="0"
+                step="0.01"
+                className="w-full bg-gray-800 border border-gray-700 rounded-md py-2 px-3 text-white"
+              />
+            </div>
+            
+            {/* Service Provider */}
+            <div>
+              <label className="block text-gray-300 mb-2">Service Provider</label>
+              <input
+                type="text"
+                name="serviceProvider"
+                value={formData.serviceProvider}
+                onChange={handleChange}
+                className="w-full bg-gray-800 border border-gray-700 rounded-md py-2 px-3 text-white"
+              />
             </div>
           </div>
           
-          {/* Parts and Warranty */}
-          <div className="bg-black p-4 rounded-xl border border-gray-800">
-            <h3 className="text-green-500 font-orbitron text-lg mb-4">Parts & Warranty</h3>
-            
-            <div className="grid grid-cols-1 gap-4">
-              {/* Parts Replaced */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Parts Replaced</label>
-                <input
-                  type="text"
-                  name="parts_replaced"
-                  value={formData.parts_replaced}
-                  onChange={handleChange}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white"
-                  placeholder="e.g. Oil filter, air filter, oil (5W-30 synthetic)"
-                />
-              </div>
-              
-              {/* Warranty Info */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Warranty Information</label>
-                <input
-                  type="text"
-                  name="warranty_info"
-                  value={formData.warranty_info}
-                  onChange={handleChange}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white"
-                  placeholder="e.g. Parts warranty: 12 months / Labor warranty: 90 days"
-                />
-              </div>
-            </div>
+          {/* Notes */}
+          <div>
+            <label className="block text-gray-300 mb-2">Notes</label>
+            <textarea
+              name="notes"
+              value={formData.notes}
+              onChange={handleChange}
+              rows="4"
+              className="w-full bg-gray-800 border border-gray-700 rounded-md py-2 px-3 text-white"
+            ></textarea>
           </div>
           
-          {/* Recurring & Reminders */}
-          <div className="bg-black p-4 rounded-xl border border-gray-800">
-            <h3 className="text-green-500 font-orbitron text-lg mb-4">Recurring & Reminders</h3>
+          {/* Receipt Uploads */}
+          <div>
+            <label className="block text-gray-300 mb-2">Upload Receipts</label>
+            <div className="border border-dashed border-gray-600 rounded-md p-6 text-center bg-gray-800/50">
+              <input
+                type="file"
+                id="receipt-upload"
+                onChange={handleFileChange}
+                multiple
+                className="hidden"
+                accept="image/*,.pdf"
+              />
+              <label
+                htmlFor="receipt-upload"
+                className="flex flex-col items-center justify-center cursor-pointer"
+              >
+                <Upload size={32} className="text-gray-400 mb-2" />
+                <p className="text-gray-300">Drag and drop files here or click to browse</p>
+                <p className="text-gray-500 text-sm mt-1">Supports images and PDF documents</p>
+              </label>
+            </div>
             
-            <div className="space-y-4">
-              {/* Recurring Checkbox */}
-              <div className="flex items-center">
-                <input
-                  type="checkbox"
-                  id="recurring"
-                  name="recurring"
-                  checked={formData.recurring}
-                  onChange={handleChange}
-                  className="mr-2 h-4 w-4"
-                />
-                <label htmlFor="recurring" className="text-white">
-                  This maintenance is recurring
-                </label>
-              </div>
-              
-              {/* Recurring Details - Show only if recurring is checked */}
-              {formData.recurring && (
-                <div className="grid grid-cols-2 gap-4 pt-2">
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-1">Repeat Every</label>
-                    <input
-                      type="text"
-                      name="recurring_interval"
-                      value={formData.recurring_interval}
-                      onChange={handleChange}
-                      className={`w-full bg-gray-800 border ${errors.recurring_interval ? 'border-red-500' : 'border-gray-700'} rounded-md px-3 py-2 text-white`}
-                      placeholder="e.g. 6"
-                    />
-                    {errors.recurring_interval && <p className="text-red-500 text-xs mt-1">{errors.recurring_interval}</p>}
-                  </div>
-                  
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-1">Interval Unit</label>
-                    <select
-                      name="recurring_unit"
-                      value={formData.recurring_unit}
-                      onChange={handleChange}
-                      className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white"
-                    >
-                      {recurringUnits.map((unit) => (
-                        <option key={unit} value={unit}>{unit}</option>
-                      ))}
-                    </select>
-                  </div>
+            {isUploading && (
+              <div className="mt-4">
+                <div className="h-2 w-full bg-gray-700 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-green-500 rounded-full" 
+                    style={{ width: `${fileUploadProgress}%` }}
+                  ></div>
                 </div>
-              )}
-              
-              {/* Reminder Date */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Reminder Date (Next Service)</label>
-                <input
-                  type="date"
-                  name="reminder_date"
-                  value={formData.reminder_date}
-                  onChange={handleChange}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white"
-                />
+                <p className="text-gray-400 text-sm mt-1">Uploading: {fileUploadProgress}%</p>
               </div>
-            </div>
-          </div>
-          
-          {/* Documentation */}
-          <div className="bg-black p-4 rounded-xl border border-gray-800">
-            <h3 className="text-green-500 font-orbitron text-lg mb-4">Documentation</h3>
+            )}
             
-            <div className="grid grid-cols-1 gap-4">
-              {/* Document URL */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Document URL (Invoice/Receipt)</label>
-                <div className="flex">
-                  <span className="inline-flex items-center px-3 bg-gray-700 border border-r-0 border-gray-700 rounded-l-md">
-                    <Link size={16} className="text-gray-400" />
-                  </span>
-                  <input
-                    type="url"
-                    name="document_url"
-                    value={formData.document_url}
-                    onChange={handleChange}
-                    className={`flex-1 bg-gray-800 border ${errors.document_url ? 'border-red-500' : 'border-gray-700'} rounded-r-md px-3 py-2 text-white`}
-                    placeholder="https://drive.google.com/invoice-doc"
-                  />
+            {uploadedFiles.length > 0 && (
+              <div className="mt-4 space-y-2">
+                <h4 className="text-gray-300 font-medium">Uploaded Files</h4>
+                <div className="space-y-2">
+                  {uploadedFiles.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between bg-gray-800 p-2 rounded-md">
+                      <div className="flex items-center">
+                        <div className="text-white">{file.name}</div>
+                        <div className="text-gray-500 text-sm ml-2">
+                          ({(file.size / 1024).toFixed(1)} KB)
+                        </div>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => removeFile(index)}
+                        className="text-gray-400 hover:text-white"
+                      >
+                        <X size={16} />
+                      </button>
+                    </div>
+                  ))}
                 </div>
-                {errors.document_url && <p className="text-red-500 text-xs mt-1">{errors.document_url}</p>}
               </div>
-              
-              {/* Document Label */}
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Document Label</label>
-                <input
-                  type="text"
-                  name="document_label"
-                  value={formData.document_label}
-                  onChange={handleChange}
-                  className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white"
-                  placeholder="e.g. Invoice #12345"
-                />
-              </div>
-            </div>
+            )}
           </div>
           
-          {/* Description and Notes */}
-          <div className="bg-black p-4 rounded-xl border border-gray-800">
-            <h3 className="text-green-500 font-orbitron text-lg mb-4">Description & Notes</h3>
-            
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Description</label>
-                <textarea
-                  name="description"
-                  value={formData.description}
-                  onChange={handleChange}
-                  rows="3"
-                  className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white"
-                  placeholder="Detailed description of the maintenance performed..."
-                ></textarea>
-              </div>
-              
-              <div>
-                <label className="block text-sm text-gray-400 mb-1">Additional Notes</label>
-                <textarea
-                  name="notes"
-                  value={formData.notes}
-                  onChange={handleChange}
-                  rows="3"
-                  className="w-full bg-gray-800 border border-gray-700 rounded-md px-3 py-2 text-white"
-                  placeholder="Any additional notes, recommendations, or follow-up details..."
-                ></textarea>
-              </div>
-            </div>
-          </div>
-          
-          {/* Submit Button */}
-          <div className="flex justify-end gap-3">
+          <div className="flex justify-end space-x-4 mt-6">
             <button
               type="button"
-              onClick={onClose}
-              className="px-5 py-2 bg-gray-800 text-white rounded-lg hover:bg-gray-700"
+              onClick={onCancel}
+              className="px-4 py-2 bg-gray-700 text-white rounded-md hover:bg-gray-600"
             >
               Cancel
             </button>
             <button
               type="submit"
-              className="px-5 py-2 bg-green-500 text-black font-medium rounded-lg hover:bg-green-400 flex items-center"
-              disabled={loading}
+              className="px-4 py-2 bg-green-600 text-white rounded-md hover:bg-green-500"
+              disabled={isUploading}
             >
-              {loading ? (
-                <span className="animate-pulse">Adding...</span>
-              ) : (
-                <>
-                  <Save size={18} className="mr-2" />
-                  Add Maintenance Record
-                </>
-              )}
+              Add Maintenance Record
             </button>
           </div>
         </form>

@@ -10,6 +10,9 @@ import VaultStorageServices from '../components/VaultStorageServices';
 import GlossTracker from '../components/GlossTracker';
 import F1TelemetryDashboard from '../components/F1TelemetryDashboard';
 import JuiceBoxChecklists from '../components/JuiceBoxChecklists';
+import AddVehicleForm from '../components/AddVehicleForm';
+import AddModificationForm from '../components/AddModificationForm';
+import AddMaintenanceForm from '../components/AddMaintenanceForm';
 
 // Enhanced telemetry and data services
 import vehicleDataService from '../services/vehicleDataService';
@@ -43,6 +46,15 @@ function GarageVaultPage() {
     type: 'all',
     status: 'all'
   });
+  
+  // Form display states
+  const [showAddVehicleForm, setShowAddVehicleForm] = useState(false);
+  const [showAddModForm, setShowAddModForm] = useState(false);
+  const [showAddMaintenanceForm, setShowAddMaintenanceForm] = useState(false);
+  
+  // Data states
+  const [modifications, setModifications] = useState([]);
+  const [maintenanceRecords, setMaintenanceRecords] = useState([]);
   
   // Metrics and dynamic data
   const [carMetrics, setCarMetrics] = useState({
@@ -252,6 +264,101 @@ function GarageVaultPage() {
     return `${vehicle.year} ${vehicle.make} ${vehicle.model} ${vehicle.trim || ''} professional photography`;
   };
   
+  // Form handlers
+  const handleAddVehicle = (newVehicle) => {
+    // In a real app, this would send data to the database
+    const vehicleWithId = {
+      ...newVehicle,
+      id: vehicles.length + 1,
+      car_id: `V${vehicles.length + 1}`,
+      created_at: new Date().toISOString()
+    };
+    
+    setVehicles([...vehicles, vehicleWithId]);
+    setShowAddVehicleForm(false);
+    
+    // Optionally select the new vehicle
+    setActiveVehicle(vehicleWithId);
+  };
+  
+  const handleAddModification = (newMod) => {
+    // In a real app, this would send data to the database
+    const modWithId = {
+      ...newMod,
+      id: modifications.length + 1,
+      vehicleId: activeVehicle.id,
+      created_at: new Date().toISOString()
+    };
+    
+    setModifications([...modifications, modWithId]);
+    setShowAddModForm(false);
+  };
+  
+  const handleAddMaintenance = (newRecord) => {
+    // In a real app, this would send data to the database
+    const recordWithId = {
+      ...newRecord,
+      id: maintenanceRecords.length + 1,
+      vehicleId: activeVehicle.id,
+      created_at: new Date().toISOString()
+    };
+    
+    setMaintenanceRecords([...maintenanceRecords, recordWithId]);
+    setShowAddMaintenanceForm(false);
+  };
+  
+  // Handle hyperlink processing - automatically fetch latest data
+  const handleHyperlinkClick = async (url, type) => {
+    // This would connect to an API to fetch the latest information
+    // For demo purposes, we'll simulate a fetch and update
+    
+    console.log(`Fetching latest data from ${url} for ${type}`);
+    
+    // Simulate API delay
+    setLoading(true);
+    
+    setTimeout(() => {
+      if (type === 'vehicle') {
+        // Example of updating vehicle data
+        if (activeVehicle) {
+          const updatedVehicle = {
+            ...activeVehicle,
+            mileage: activeVehicle.mileage + Math.floor(Math.random() * 500),
+            last_updated: new Date().toISOString(),
+            status: Math.random() > 0.8 ? 'Service Due' : 'Ready'
+          };
+          
+          // Update the vehicles array with the new data
+          setVehicles(vehicles.map(v => 
+            v.id === activeVehicle.id ? updatedVehicle : v
+          ));
+          
+          // Update active vehicle
+          setActiveVehicle(updatedVehicle);
+        }
+      } else if (type === 'modification') {
+        // Example of updating modification data
+        if (activeMod) {
+          const updatedMod = {
+            ...activeMod,
+            status: Math.random() > 0.7 ? 'Updated' : activeMod.status,
+            warranty_expires: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString()
+          };
+          
+          // Update the modifications array
+          setModifications(modifications.map(m => 
+            m.id === activeMod.id ? updatedMod : m
+          ));
+          
+          // Update active modification
+          setActiveMod(updatedMod);
+        }
+      }
+      
+      setLoading(false);
+    }, 1500);
+  };
+  
   return (
     <div id="garageVaultSection" className="bg-black min-h-screen" aria-labelledby="garageVaultHeading">
       {/* Modernized Header & Dashboard Controls */}
@@ -363,7 +470,7 @@ function GarageVaultPage() {
             </div>
             
             <button 
-              onClick={() => setShowAddForm(true)}
+              onClick={() => setShowAddVehicleForm(true)}
               className="apex-button-sm flex items-center bg-green-600 hover:bg-green-700"
             >
               <Plus size={16} className="mr-2" />
