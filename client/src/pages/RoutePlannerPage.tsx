@@ -3172,7 +3172,34 @@ const RoutePlannerPage = () => {
                 F1-Grade Performance Telemetry
               </h3>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              {/* Vehicle Selection - Top Priority */}
+              <div className="mb-4 bg-gradient-to-r from-blue-900/30 to-gray-900 p-3 rounded-lg border border-blue-900/50">
+                <label className="block text-blue-400 font-medium mb-1">Vehicle Selection</label>
+                <select
+                  value={selectedVehicle}
+                  onChange={(e) => setSelectedVehicle(e.target.value)}
+                  className="w-full p-2 bg-gray-800 text-white rounded border border-blue-700"
+                >
+                  <option value="">Select your vehicle</option>
+                  <option value="Ferrari F8 Tributo">Ferrari F8 Tributo</option>
+                  <option value="Porsche 911 Carrera S">Porsche 911 Carrera S</option>
+                  <option value="BMW M4 G82">BMW M4 G82</option>
+                  
+                  {/* Custom vehicles */}
+                  {Object.keys(customVehicles).length > 0 && (
+                    <optgroup label="Your Vehicles">
+                      {Object.keys(customVehicles).map(vehicle => (
+                        <option key={vehicle} value={vehicle}>{vehicle}</option>
+                      ))}
+                    </optgroup>
+                  )}
+                </select>
+                {!selectedVehicle && 
+                  <p className="text-amber-400 text-xs mt-1">Select a vehicle for accurate telemetry and drive settings</p>
+                }
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">                
                 {/* Driving Style */}
                 <div>
                   <label className="block text-gray-300 text-sm mb-1">Driving Style</label>
@@ -3799,8 +3826,8 @@ const RoutePlannerPage = () => {
         </div>
 
         <div className="space-y-6">
-          {/* Route Customization */}
-          <div className="bg-gradient-to-r from-gray-900 to-black rounded-lg border border-gray-800 p-4 shadow-xl">
+          {/* Route Customization - Widened with overflow handling */}
+          <div className="bg-gradient-to-r from-gray-900 to-black rounded-lg border border-gray-800 p-4 shadow-xl overflow-x-auto">
             <h2 className="text-blue-400 font-orbitron text-xl mb-4 flex items-center">
               <span className="mr-2">⚙️</span> Route Customizations
             </h2>
