@@ -5,7 +5,8 @@ import {
   Activity, Info, BarChart, LayoutDashboard, GitCompare,
   CloudOff, Database, Award, BarChart2, BarChart3,
   ArrowUpDown, Zap, PieChart, MoveHorizontal, History, Hammer,
-  Fingerprint, Globe, Filter, DollarSign, ShoppingBag, FileText
+  Fingerprint, Globe, Filter, DollarSign, ShoppingBag, FileText,
+  PlusCircle
 } from 'lucide-react';
 import ExportOptions from '../components/ExportOptions';
 import TimepiVault from '../components/TimepiVault';
@@ -233,18 +234,64 @@ const TiresTimepieces: React.FC = () => {
           <TimepiVault />
         )}
         
-        {activeTab === 'telemetry' && selectedTimepieceId && (
+        {activeTab === 'telemetry' && (
           <div className="mb-6">
-            <div className="flex justify-start mb-4">
-              <button
-                onClick={() => setActiveTab('timepiece-vault')}
-                className="inline-flex items-center text-gray-400 hover:text-white"
-              >
-                <ChevronLeft className="h-5 w-5 mr-1" />
-                Back to Timepiece Vault
-              </button>
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6">
+              <div>
+                <button
+                  onClick={() => setActiveTab('timepiece-vault')}
+                  className="inline-flex items-center text-gray-400 hover:text-white mb-4 md:mb-0"
+                >
+                  <ChevronLeft className="h-5 w-5 mr-1" />
+                  Back to Timepiece Vault
+                </button>
+              </div>
+              
+              <div className="flex flex-col md:flex-row space-y-3 md:space-y-0 md:space-x-4 w-full md:w-auto">
+                {/* Dropdown for selecting timepiece */}
+                <div className="flex-grow max-w-md">
+                  <select 
+                    className="w-full bg-gray-900 border border-gray-700 rounded-lg p-2 text-white"
+                    value={selectedTimepieceId || ''}
+                    onChange={(e) => setSelectedTimepieceId(e.target.value)}
+                  >
+                    <option value="">Select a Timepiece</option>
+                    {timepieces.map((timepiece: any) => (
+                      <option key={timepiece.id} value={timepiece.id}>
+                        {timepiece.brand} {timepiece.model} {timepiece.reference ? `(${timepiece.reference})` : ''}
+                      </option>
+                    ))}
+                  </select>
+                </div>
+                
+                <button
+                  onClick={() => setActiveTab('timepiece-vault')}
+                  className="flex items-center justify-center px-4 py-2 bg-blue-900/50 text-blue-300 rounded-lg border border-blue-800 hover:bg-blue-800/50"
+                >
+                  <PlusCircle className="h-4 w-4 mr-2" />
+                  Add New Timepiece
+                </button>
+              </div>
             </div>
-            <TimepieceTelemetry timepieceId={selectedTimepieceId} />
+            
+            {selectedTimepieceId ? (
+              <TimepieceTelemetry timepieceId={selectedTimepieceId} />
+            ) : (
+              <div className="apex-card p-12 text-center">
+                <Watch className="h-16 w-16 text-gray-700 mx-auto mb-6" />
+                <h3 className="text-xl font-medium text-gray-300 mb-2">No Timepiece Selected</h3>
+                <p className="text-gray-500 mb-6">
+                  Select a timepiece from the dropdown above or add a new one to view detailed telemetry data.
+                </p>
+                <button
+                  onClick={() => setActiveTab('timepiece-vault')}
+                  className="inline-flex items-center px-6 py-3 bg-blue-900/50 text-blue-300 rounded-lg border border-blue-800 hover:bg-blue-800/50"
+                >
+                  <PlusCircle className="h-5 w-5 mr-2" />
+                  Add Your First Timepiece
+                </button>
+              </div>
+            )}
           </div>
         )}
         
