@@ -4033,14 +4033,14 @@ const RoutePlannerPage = () => {
                                   curveDirection: direction
                                 }))}
                                 className={`
-                                  cursor-pointer p-2 rounded-lg border transition-all text-center text-sm
+                                  cursor-pointer p-2 rounded-lg border transition-all text-center text-xs
                                   ${navigationFeatures.curveDirection === direction 
                                     ? 'border-blue-500 bg-blue-900/30 text-blue-300'
                                     : 'border-gray-700 bg-black/20 text-gray-400 hover:bg-gray-800/60'}
                                 `}
                               >
                                 {direction === 'left' && '⟲ Left Turns'}
-                                {direction === 'both' && '↺↻ Balanced'}
+                                {direction === 'both' && '⟶ Balanced'}
                                 {direction === 'right' && '⟳ Right Turns'}
                               </div>
                             ))}
@@ -4162,46 +4162,54 @@ const RoutePlannerPage = () => {
                         </div>
                         
                         <div>
-                          <label className="text-sm text-blue-400 font-semibold block mb-2">Preferred Temperature Range</label>
-                          <div className="flex items-center justify-between space-x-4">
-                            <div className="flex items-center space-x-2">
-                              <input
-                                type="number"
-                                min="0"
-                                max="120"
-                                value={navigationFeatures.weatherTempRange[0]}
-                                onChange={(e) => setNavigationFeatures(prev => ({
-                                  ...prev,
-                                  weatherTempRange: [parseInt(e.target.value), prev.weatherTempRange[1]]
-                                }))}
-                                className="w-16 bg-black/20 border border-gray-700 text-white rounded p-1 text-center"
-                              />
-                              <span className="text-gray-400">°F Min</span>
-                            </div>
-                            
-                            <div className="flex-1 bg-gray-700 h-[2px] relative">
-                              <div className="absolute -top-1 left-0 right-0 text-xs text-center text-blue-400">
-                                Ideal driving temperature range
+                          <label className="text-sm text-blue-400 font-semibold block mb-3">Preferred Temperature Range</label>
+                          
+                          <div className="grid grid-cols-2 gap-4 mb-3">
+                            <div className="bg-black/20 p-2 rounded-lg border border-gray-700">
+                              <label className="text-xs text-gray-400 block mb-1">Minimum Temp</label>
+                              <div className="flex items-center">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="120"
+                                  value={navigationFeatures.weatherTempRange[0]}
+                                  onChange={(e) => setNavigationFeatures(prev => ({
+                                    ...prev,
+                                    weatherTempRange: [parseInt(e.target.value), prev.weatherTempRange[1]]
+                                  }))}
+                                  className="w-16 bg-black/30 border border-gray-700 text-white rounded p-1 text-center mr-2"
+                                />
+                                <span className="text-blue-300 font-medium">°F</span>
                               </div>
                             </div>
                             
-                            <div className="flex items-center space-x-2">
-                              <input
-                                type="number"
-                                min="0"
-                                max="120"
-                                value={navigationFeatures.weatherTempRange[1]}
-                                onChange={(e) => setNavigationFeatures(prev => ({
-                                  ...prev,
-                                  weatherTempRange: [prev.weatherTempRange[0], parseInt(e.target.value)]
-                                }))}
-                                className="w-16 bg-black/20 border border-gray-700 text-white rounded p-1 text-center"
-                              />
-                              <span className="text-gray-400">°F Max</span>
+                            <div className="bg-black/20 p-2 rounded-lg border border-gray-700">
+                              <label className="text-xs text-gray-400 block mb-1">Maximum Temp</label>
+                              <div className="flex items-center">
+                                <input
+                                  type="number"
+                                  min="0"
+                                  max="120"
+                                  value={navigationFeatures.weatherTempRange[1]}
+                                  onChange={(e) => setNavigationFeatures(prev => ({
+                                    ...prev,
+                                    weatherTempRange: [prev.weatherTempRange[0], parseInt(e.target.value)]
+                                  }))}
+                                  className="w-16 bg-black/30 border border-gray-700 text-white rounded p-1 text-center mr-2"
+                                />
+                                <span className="text-blue-300 font-medium">°F</span>
+                              </div>
                             </div>
                           </div>
-                          <div className="text-xs text-gray-400 text-center mt-1">
-                            {navigationFeatures.weatherTempRange[0]}°F - {navigationFeatures.weatherTempRange[1]}°F optimal for drivetrain and tire performance
+                          
+                          <div className="w-full bg-blue-900/10 p-2 rounded-lg border border-blue-900/20 text-center">
+                            <span className="text-sm text-white">Optimal Range: </span>
+                            <span className="text-blue-300 font-semibold">
+                              {navigationFeatures.weatherTempRange[0]}°F - {navigationFeatures.weatherTempRange[1]}°F
+                            </span>
+                            <div className="text-xs text-gray-400 mt-1">
+                              For best drivetrain and tire performance
+                            </div>
                           </div>
                         </div>
                         
