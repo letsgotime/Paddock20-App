@@ -4233,25 +4233,8 @@ const RoutePlannerPage = () => {
             </div>
           </div>
 
-          {/* Navigation Preference and Advanced Features */}
+          {/* Navigation Integration section fixed */}
           <div className="space-y-4">
-            <h2 className="text-blue-400 font-orbitron text-xl mb-3">Navigation Integration</h2>
-            
-            {/* Navigation App Selection */}
-            <div>
-              <label className="block text-gray-300 mb-1">Preferred Navigation App</label>
-              <select
-                value={preferredNavApp}
-                onChange={(e) => setPreferredNavApp(e.target.value)}
-                className="w-full p-3 bg-gray-800 text-white rounded-lg border border-gray-700"
-              >
-                <option value="Google Maps">Google Maps</option>
-                <option value="Waze">Waze</option>
-                <option value="Apple Maps">Apple Maps</option>
-              </select>
-            </div>
-            
-            {/* Toggle Advanced Settings */}
             <button 
               onClick={() => setShowAdvancedSettings(!showAdvancedSettings)}
               className="text-blue-400 hover:text-blue-300 flex items-center gap-1 text-sm"
