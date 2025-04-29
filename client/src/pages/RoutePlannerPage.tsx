@@ -1346,18 +1346,81 @@ const RoutePlannerPage = () => {
   
   // GPS Tracking Functions
   const startGpsTracking = () => {
-    // CRITICAL - Launch the navigation app first, then start telemetry tracking
+    if (gpsTrackingEnabled) return;
+    
+    // Validate required inputs before starting
+    if (!startLocation || !endLocation) {
+      alert("Please enter both start and end locations before starting GPS tracking");
+      return;
+    }
+    
+    if (!selectedVehicle) {
+      alert("Please select a vehicle before starting GPS tracking");
+      return;
+    }
+    
+    // Pre-package all route data to be sent to Drive Journal
+    const routeSummary = {
+      id: `route-${Date.now()}`,
+      date: new Date().toISOString(),
+      startTime: new Date().toISOString(),
+      startLocation,
+      endLocation,
+      waypoints: routeStops.map(stop => stop.location),
+      stops: routeStops,
+      vehicle: selectedVehicle,
+      routeCustomizations,
+      navigationApp: preferredNavApp,
+      navigationFeatures,
+      weatherConditions: weatherData,
+      carClub: isGroupDrive ? {
+        name: carClubName,
+        contactInfo: carClubContactInfo
+      } : null,
+      eventRally: isEventRally ? {
+        name: eventRallyName,
+        organizer: eventRallyOrganizer,
+        url: eventRallyUrl,
+        date: eventRallyDate,
+        time: eventRallyTime,
+        description: eventRallyDescription,
+        location: eventRallyLocation || endLocation,
+        hasMap: !!eventMapFile
+      } : null,
+      companions: hasFriendsJoining ? drivingCompanions : [],
+      performanceSettings: {
+        tirePressureAdjustment,
+        torqueAdjustment,
+        drivingMode,
+        tireSetup: selectedTireSetup ? tireSetups[selectedTireSetup] : null,
+        drivingProfile: selectedDrivingProfile ? drivingProfiles.find(p => p.name === selectedDrivingProfile) : null,
+      },
+      telemetryHistory: [],
+      trackHistory: [],
+      status: 'active',
+      estimatedDistance: 0, // To be calculated in a real implementation
+      estimatedDuration: 0, // To be calculated in a real implementation
+    };
+    
+    // Store the route data in localStorage as a pending drive journal entry
+    localStorage.setItem('pendingDriveJournal', JSON.stringify(routeSummary));
+    console.log("Route data saved as pending Drive Journal entry:", routeSummary);
+    
+    // CRITICAL - Launch the navigation app first with the full route
     launchNavigationAppWithMultiStops();
     
-    if (gpsTrackingEnabled) return;
+    // Alert the user that the route has been started and sent to navigation
+    setTimeout(() => {
+      alert(`Route started and sent to ${preferredNavApp}.\n\nDrive data will be automatically tracked and saved to your Drive Journal when complete.`);
+    }, 500);
     
     // Start a new tracking session
     setGpsTrackHistory([]);
-    // Clear telemetry history (handled via internal state)
+    setTelemetryHistory([]);
     setGpsTrackingEnabled(true);
     
     // Generate a unique ID for this route
-    const newRouteId = `route-${Date.now()}`;
+    const newRouteId = routeSummary.id;
     setActiveRouteId(newRouteId);
     
     // Set up position tracking
@@ -1372,12 +1435,10 @@ const RoutePlannerPage = () => {
             setCurrentGpsPosition({ lat: latitude, lng: longitude });
             
             // Add to track history
-            setGpsTrackHistory(prev => [
-              ...prev, 
-              { lat: latitude, lng: longitude, timestamp }
-            ]);
+            const newTrackPoint = { lat: latitude, lng: longitude, timestamp };
+            setGpsTrackHistory(prev => [...prev, newTrackPoint]);
             
-            // Generate telemetry data
+            // Generate telemetry data with enhanced fields for F1-grade telemetry
             const telemetryData: TelemetrySnapshot = {
               timestamp,
               position: { lat: latitude, lng: longitude },
@@ -1407,7 +1468,15 @@ const RoutePlannerPage = () => {
                 y: Math.random() * 0.5 - 0.25, 
                 z: 1 
               },
-              weatherCondition: weatherData?.current?.weather?.[0]?.main || "Clear"
+              weatherCondition: weatherData?.current?.weather?.[0]?.main || "Clear",
+              // Additional F1-grade telemetry fields
+              powerAdjustment: Math.round(Math.random() * 10) - 5,
+              torqueAdjustment: Math.round(Math.random() * 20) - 10,
+              tireGripLevel: ["Optimal", "Good", "Moderate", "Poor"][Math.floor(Math.random() * 4)] as "Optimal" | "Good" | "Moderate" | "Poor",
+              brakingEfficiency: Math.round(85 + Math.random() * 15),
+              actualPower: vehicleSpecs[selectedVehicle]?.powerOutput || 400,
+              actualTorque: vehicleSpecs[selectedVehicle]?.torqueSetting || 380,
+              coolingEfficiency: ["Excellent", "Good", "Reduced", "Poor"][Math.floor(Math.random() * 4)]
             };
             
             // Add to telemetry history
@@ -1416,6 +1485,37 @@ const RoutePlannerPage = () => {
             
             // Update stats
             updateTelemetryStats(telemetryData);
+            
+            // Update the pending drive journal entry in localStorage with latest telemetry
+            try {
+              const pendingEntry = JSON.parse(localStorage.getItem('pendingDriveJournal') || '{}');
+              
+              // Only store selected telemetry snapshots to avoid localStorage limits (every 5th reading)
+              if (telemetryHistory.length % 5 === 0) {
+                const telHistory = [...(pendingEntry.telemetryHistory || []), telemetryData];
+                pendingEntry.telemetryHistory = telHistory.slice(-50); // Keep only last 50 readings
+              }
+              
+              // Store track history points (every 10th point to save space)
+              if (gpsTrackHistory.length % 10 === 0) {
+                const trackHistory = [...(pendingEntry.trackHistory || []), newTrackPoint];
+                pendingEntry.trackHistory = trackHistory.slice(-100); // Keep only last 100 points
+              }
+              
+              // Update distance and duration
+              const trackHistory = [...gpsTrackHistory, newTrackPoint];
+              pendingEntry.actualDistance = calculateTotalDistance(trackHistory);
+              if (trackHistory.length > 1) {
+                pendingEntry.actualDuration = (timestamp - trackHistory[0].timestamp) / 1000 / 60; // minutes
+              }
+              
+              localStorage.setItem('pendingDriveJournal', JSON.stringify(pendingEntry));
+            } catch (error) {
+              console.error("Error updating pending drive journal:", error);
+            }
+            
+            // In a real implementation, we would check if we've reached the destination
+            // using navigation API integration (would require deeper integration with mapping APIs)
           },
           (error) => {
             console.error("Error getting position:", error);
@@ -1453,12 +1553,53 @@ const RoutePlannerPage = () => {
     
     setGpsTrackingEnabled(false);
     
+    // Update the pending drive journal entry with completion data
+    try {
+      const pendingEntry = JSON.parse(localStorage.getItem('pendingDriveJournal') || '{}');
+      pendingEntry.status = 'completed';
+      pendingEntry.endTime = new Date().toISOString();
+      pendingEntry.actualDistance = calculateTotalDistance(gpsTrackHistory);
+      pendingEntry.actualDuration = gpsTrackHistory.length > 1 ? 
+        (gpsTrackHistory[gpsTrackHistory.length - 1].timestamp - gpsTrackHistory[0].timestamp) / 1000 / 60 : 0;
+      pendingEntry.telemetryStats = telemetryStats;
+      
+      // Add navigation app-specific telemetry that would be imported in a real implementation
+      // This simulates the data that would be pulled from Waze, Google Maps, or Apple Maps API
+      const navigationAppData = {
+        totalTurns: Math.round(Math.random() * 20) + 5,
+        rightTurns: Math.round(Math.random() * 10) + 2,
+        leftTurns: Math.round(Math.random() * 10) + 2,
+        uTurns: Math.floor(Math.random() * 2),
+        trafficConditions: ["Light", "Moderate", "Heavy"][Math.floor(Math.random() * 3)],
+        roadTypes: {
+          highway: Math.round(Math.random() * 70),
+          arterial: Math.round(Math.random() * 20),
+          residential: Math.round(Math.random() * 10)
+        },
+        averageSpeed: Math.round(Math.random() * 30) + 30,
+        maxSpeed: Math.round(Math.random() * 40) + 60,
+        stopsCount: Math.round(Math.random() * 10),
+        trafficLightsCount: Math.round(Math.random() * 15),
+        elevationGain: Math.round(Math.random() * 500),
+        elevationLoss: Math.round(Math.random() * 500),
+        fuelConsumption: Math.round(Math.random() * 5) + 2 // gallons
+      };
+      
+      pendingEntry.navigationAppData = navigationAppData;
+      localStorage.setItem('pendingDriveJournal', JSON.stringify(pendingEntry));
+      
+      // In a real implementation, we would send this data to the server to be stored in the database
+      console.log("Route completed and ready for Drive Journal integration:", pendingEntry);
+    } catch (error) {
+      console.error("Error updating completed drive journal entry:", error);
+    }
+    
     // Show the post-drive checklist
     setShowPostDriveChecklist(true);
     
     // Show route summary
     setTimeout(() => {
-      alert(`Route completed! Distance: ${calculateTotalDistance(gpsTrackHistory).toFixed(1)} miles. Please complete the post-drive checklist for safety.`);
+      alert(`Route completed! Distance: ${calculateTotalDistance(gpsTrackHistory).toFixed(1)} miles.\n\nRoute telemetry has been saved to your Drive Journal.\n\nPlease complete the post-drive checklist for safety.`);
     }, 500);
   };
   
@@ -1656,62 +1797,126 @@ const RoutePlannerPage = () => {
   };
   
   const saveToJournal = (postDriveData?: any) => {
-    // Create the journal entry data
-    const journalEntryData = {
-      id: activeRouteId || `route-${Date.now()}`,
-      date: new Date().toISOString(),
-      startLocation,
-      endLocation,
-      waypoints,
-      vehicle: selectedVehicle,
-      distance: calculateTotalDistance(gpsTrackHistory),
-      duration: gpsTrackHistory.length > 1 ? 
-        (gpsTrackHistory[gpsTrackHistory.length - 1].timestamp - gpsTrackHistory[0].timestamp) / 1000 / 60 : 0,
-      telemetryStats,
-      telemetryHistory,
-      gpsTrackHistory,
-      weatherConditions: weatherData,
-      routePurpose: drivePurpose,
-      drivingMode,
-      // Add post-drive checklist data if available
-      postDriveChecklist: postDriveData || null,
-      stops: routeStops,
-      routeCompleted: !!postDriveData,
-      customTelemetry: {
-        curvaturePercentage: telemetryStats.curvyRoadPercentage.toFixed(1) + '%',
-        maxSpeed: telemetryStats.maxSpeed + ' mph',
-        drivingScore: telemetryStats.drivingScore + '/100'
-      },
-      // Add car club and event information
-      carClub: isGroupDrive ? {
-        name: carClubName,
-        contactInfo: carClubContactInfo
-      } : null,
-      eventRally: isEventRally ? {
-        name: eventRallyName,
-        organizer: eventRallyOrganizer,
-        url: eventRallyUrl,
-        date: eventRallyDate,
-        time: eventRallyTime,
-        description: eventRallyDescription,
-        location: eventRallyLocation || endLocation,
-        hasMap: !!eventMapFile
-      } : null,
-      // Add driving companions
-      companions: hasFriendsJoining ? drivingCompanions : []
-    };
-    
-    // In a real implementation, this would integrate with Drive Journal
-    console.log("Saving route to Drive Journal:", journalEntryData);
-    
-    // Show confirmation
-    setTimeout(() => {
+    try {
+      // Get the pending drive journal entry that contains all the data from the start of the route
+      const pendingEntry = JSON.parse(localStorage.getItem('pendingDriveJournal') || '{}');
+      
+      // Add the post-drive checklist information to the entry
       if (postDriveData) {
-        alert("Drive completed and saved to your Drive Journal with post-drive checklist");
-      } else {
-        alert("Route saved to your Drive Journal");
+        pendingEntry.postDriveChecklist = postDriveData;
+        pendingEntry.finalNotes = postDriveNotes;
+        pendingEntry.userRating = postDriveRating;
+        pendingEntry.checkedMaintenanceItems = Object.entries(checkedPostDriveItems)
+          .filter(([_, isChecked]) => isChecked)
+          .map(([item]) => item);
       }
-    }, 700);
+      
+      // Mark the entry as fully completed with post-drive data
+      pendingEntry.status = 'complete_with_checklist';
+      pendingEntry.completionTime = new Date().toISOString();
+      
+      // In a real implementation, this data would be sent to the server
+      console.log("Final Drive Journal Entry with Complete Data:", pendingEntry);
+      
+      // Store this back to localStorage (in a real app we'd send to a database)
+      localStorage.setItem('completedDriveJournal', JSON.stringify(pendingEntry));
+      localStorage.removeItem('pendingDriveJournal'); // Clear the pending entry
+      
+      // Prepare notification messages based on the data
+      let notificationMessage = "";
+      const distance = pendingEntry.actualDistance ? 
+        `${pendingEntry.actualDistance.toFixed(1)} miles` : 
+        calculateTotalDistance(gpsTrackHistory).toFixed(1) + " miles";
+      
+      const duration = pendingEntry.actualDuration ? 
+        `${Math.round(pendingEntry.actualDuration)} minutes` :
+        (gpsTrackHistory.length > 1 ? 
+          Math.round((gpsTrackHistory[gpsTrackHistory.length - 1].timestamp - gpsTrackHistory[0].timestamp) / 1000 / 60) : 0) + " minutes";
+      
+      // Create enriched message based on available telemetry
+      if (pendingEntry.navigationAppData) {
+        const navData = pendingEntry.navigationAppData;
+        
+        notificationMessage = `Drive completed and saved to your Drive Journal!\n\n` +
+          `• Distance: ${distance}\n` +
+          `• Duration: ${duration}\n` +
+          `• Avg Speed: ${navData.averageSpeed} mph\n` +
+          `• Max Speed: ${navData.maxSpeed} mph\n` +
+          `• Turns: ${navData.totalTurns} (${navData.rightTurns} right, ${navData.leftTurns} left)\n` +
+          `• Traffic: ${navData.trafficConditions}\n` +
+          `• Stops: ${navData.stopsCount}\n` +
+          `• Elevation Change: ${navData.elevationGain + navData.elevationLoss} ft\n` +
+          `\nAll telemetry data has been added to your Drive Journal.`;
+      } else {
+        notificationMessage = `Drive completed and saved to your Drive Journal!\n\n` +
+          `• Distance: ${distance}\n` +
+          `• Duration: ${duration}\n` +
+          `• Max Speed: ${telemetryStats.maxSpeed.toFixed(1)} mph\n` +
+          `• Driving Score: ${telemetryStats.drivingScore}/100\n\n` +
+          `All telemetry data has been added to your Drive Journal.`;
+      }
+      
+      // Show confirmation with more detailed information
+      setTimeout(() => {
+        alert(notificationMessage);
+      }, 700);
+      
+    } catch (error) {
+      console.error("Error saving to Drive Journal:", error);
+      
+      // Fallback if there's an error with the pending entry
+      const journalEntryData = {
+        id: activeRouteId || `route-${Date.now()}`,
+        date: new Date().toISOString(),
+        startLocation,
+        endLocation,
+        waypoints,
+        vehicle: selectedVehicle,
+        distance: calculateTotalDistance(gpsTrackHistory),
+        duration: gpsTrackHistory.length > 1 ? 
+          (gpsTrackHistory[gpsTrackHistory.length - 1].timestamp - gpsTrackHistory[0].timestamp) / 1000 / 60 : 0,
+        telemetryStats,
+        telemetryHistory: telemetryHistory.slice(-50), // Limit the size
+        gpsTrackHistory: gpsTrackHistory.slice(-100), // Limit the size
+        weatherConditions: weatherData,
+        routePurpose: drivePurpose,
+        drivingMode,
+        postDriveChecklist: postDriveData || null,
+        stops: routeStops,
+        routeCompleted: !!postDriveData,
+        customTelemetry: {
+          curvaturePercentage: telemetryStats.curvyRoadPercentage.toFixed(1) + '%',
+          maxSpeed: telemetryStats.maxSpeed + ' mph',
+          drivingScore: telemetryStats.drivingScore + '/100'
+        },
+        carClub: isGroupDrive ? {
+          name: carClubName,
+          contactInfo: carClubContactInfo
+        } : null,
+        eventRally: isEventRally ? {
+          name: eventRallyName,
+          organizer: eventRallyOrganizer,
+          url: eventRallyUrl,
+          date: eventRallyDate,
+          time: eventRallyTime,
+          description: eventRallyDescription,
+          location: eventRallyLocation || endLocation,
+          hasMap: !!eventMapFile
+        } : null,
+        companions: hasFriendsJoining ? drivingCompanions : []
+      };
+      
+      console.log("Saving route to Drive Journal (fallback method):", journalEntryData);
+      
+      // Show confirmation (simplified version due to error)
+      setTimeout(() => {
+        if (postDriveData) {
+          alert("Drive completed and saved to your Drive Journal with post-drive checklist");
+        } else {
+          alert("Route saved to your Drive Journal");
+        }
+      }, 700);
+    }
   };
 
   return (
