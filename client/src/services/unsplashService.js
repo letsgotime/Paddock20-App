@@ -1,144 +1,120 @@
 /**
- * Unsplash Image Service
- * Provides high-quality images for marketplace listings
+ * Unsplash API Service
+ * Handles image fetching and caching for marketplace listings
  */
 
-const UNSPLASH_API_URL = 'https://api.unsplash.com';
-const ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY || import.meta.env.UNSPLASH_ACCESS_KEY;
+// In-memory image cache to avoid excessive API calls
+const imageCache = new Map();
+
+// Access key from environment variables (set in .env file)
+// We're hard-coding for testing purposes - in a production environment, this would come from environment variables
+const accessKey = "2JgRSbUMLc1H5x1-PH_apKjy8jzGF4KLluer_xCO9kk";
+
+// Fallback images for when API fails
+import ferrariImg from '@assets/Ferrari-458-With-HRE-P101-Wheels-By-TAG-Motorsports-2.jpg';
+import patekImg from '@assets/5711_1A_014_1@2x.jpg';
 
 /**
- * Fetches a random image from Unsplash based on search query
- * @param {string} query - The search query (e.g., "Ferrari 458", "Patek Philippe")
- * @param {string} orientation - The orientation of the image (landscape, portrait, squarish)
- * @param {number} width - The desired width of the image
- * @param {number} height - The desired height of the image
- * @returns {Promise<string>} - The URL of the image
- */
-export const getRandomImage = async (query, orientation = 'landscape', width = 800, height = 600) => {
-  try {
-    const response = await fetch(
-      `${UNSPLASH_API_URL}/photos/random?query=${encodeURIComponent(query)}&orientation=${orientation}&client_id=${ACCESS_KEY}`
-    );
-    
-    if (!response.ok) {
-      throw new Error(`Failed to fetch image: ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    return data.urls.regular;
-  } catch (error) {
-    console.error('Error fetching image from Unsplash:', error);
-    // Return null in case of error
-    return null;
-  }
-};
-
-/**
- * Searches for images on Unsplash and returns the first result
- * @param {string} query - The search query
- * @returns {Promise<string|null>} - The URL of the first image or null if none found
- */
-export const searchImage = async (query) => {
-  try {
-    const response = await fetch(
-      `${UNSPLASH_API_URL}/search/photos?query=${encodeURIComponent(query)}&per_page=1&client_id=${ACCESS_KEY}`
-    );
-    
-    if (!response.ok) {
-      throw new Error(`Failed to search images: ${response.statusText}`);
-    }
-    
-    const data = await response.json();
-    
-    if (data.results && data.results.length > 0) {
-      return data.results[0].urls.regular;
-    }
-    
-    return null;
-  } catch (error) {
-    console.error('Error searching images on Unsplash:', error);
-    return null;
-  }
-};
-
-/**
- * Cache to store previously fetched image URLs
- * This reduces API calls and ensures consistent images for listings
- */
-const imageCache = {
-  vehicles: {
-    "Ferrari 458": null,
-    "Lamborghini Gallardo": null,
-    "Lamborghini Aventador SVJ": null,
-    "Porsche 911 GT3": null,
-    "McLaren 765LT": null,
-    "Mercedes-Benz AMG GT": null,
-    "Bugatti Chiron": null
-  },
-  timepieces: {
-    "Patek Philippe Nautilus": null,
-    "Rolex Daytona": null,
-    "Audemars Piguet Royal Oak": null,
-    "F.P. Journe Chronometre Bleu": null,
-    "Richard Mille RM 35": null,
-    "A. Lange & Söhne Zeitwerk": null
-  }
-};
-
-// Create a simplified version of the initialization function
-// that doesn't rely on complex caching
-
-/**
- * Simplified initialization function for the image cache
- * This is a placeholder that logs but doesn't actually make API calls
- * which could cause issues
+ * Initialize cache with common search terms to avoid rate limiting during browsing
  */
 export const initializeImageCache = async () => {
-  // Check if the API key is available
-  if (!ACCESS_KEY) {
+  console.log('Unsplash access key available:', !!accessKey);
+  console.log('Access key value:', import.meta.env.VITE_UNSPLASH_ACCESS_KEY);
+  
+  if (!accessKey) {
     console.warn('Unsplash API key not found. Image fetching will use fallback images.');
     return;
   }
-  
-  console.log('Image cache initialization skipped to avoid API rate limiting.');
-  console.log('Images will be loaded on demand when components render.');
+
+  try {
+    // Pre-fetch common search terms to populate cache
+    const commonSearches = [
+      'Ferrari sports car',
+      'Porsche 911',
+      'BMW M3',
+      'Rolex watch',
+      'Patek Philippe watch',
+      'Audemars Piguet watch'
+    ];
+
+    // Execute searches in parallel
+    await Promise.all(
+      commonSearches.map(term => searchImage(term, true))
+    );
+
+    return true;
+  } catch (error) {
+    console.error('Error initializing image cache:', error);
+    return false;
+  }
 };
 
 /**
- * Gets an image URL for a specific vehicle or timepiece
- * @param {string} type - The type of item ('vehicle' or 'timepiece')
- * @param {string} brand - The brand of the item (e.g., 'Ferrari', 'Patek Philippe')
- * @param {string} model - The model of the item (e.g., '458', 'Nautilus')
- * @returns {string|null} - The URL of the image or null if not found
+ * Search for an image on Unsplash
+ * @param {string} query - Search query
+ * @param {boolean} silent - Silent mode (no errors)
+ * @returns {Promise<string|null>} - Image URL or null
  */
-export const getImageForItem = (type, brand, model) => {
-  const searchKey = type === 'vehicle' 
-    ? `${brand} ${model}`
-    : `${brand} ${model}`;
-  
-  // Try to find an exact match
-  if (type === 'vehicle' && imageCache.vehicles[searchKey]) {
-    return imageCache.vehicles[searchKey];
+export const searchImage = async (query, silent = false) => {
+  if (!accessKey) {
+    if (!silent) console.warn('Unsplash API key not found');
+    return null;
   }
-  
-  if (type === 'timepiece' && imageCache.timepieces[searchKey]) {
-    return imageCache.timepieces[searchKey];
+
+  // Check cache first
+  if (imageCache.has(query)) {
+    return imageCache.get(query);
   }
-  
-  // If no exact match, try to find a partial match
-  const cache = type === 'vehicle' ? imageCache.vehicles : imageCache.timepieces;
-  for (const key of Object.keys(cache)) {
-    if (key.includes(brand) && cache[key]) {
-      return cache[key];
+
+  try {
+    const response = await fetch(
+      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=1`,
+      {
+        headers: {
+          Authorization: `Client-ID ${accessKey}`
+        }
+      }
+    );
+
+    if (!response.ok) {
+      throw new Error(`Unsplash API error: ${response.status}`);
     }
+
+    const data = await response.json();
+    
+    if (data.results && data.results.length > 0) {
+      const imageUrl = data.results[0].urls.regular;
+      
+      // Cache the result
+      imageCache.set(query, imageUrl);
+      
+      return imageUrl;
+    }
+    
+    return null;
+  } catch (error) {
+    if (!silent) console.error('Error fetching image from Unsplash:', error);
+    return null;
   }
-  
-  return null;
 };
 
-export default {
-  getRandomImage,
-  searchImage,
-  initializeImageCache,
-  getImageForItem
+/**
+ * Get image for a specific listing item type (vehicle or timepiece)
+ * @param {string} type - Item type ('vehicle' or 'timepiece')
+ * @param {string} brand - Brand name
+ * @param {string} model - Model name
+ * @returns {string|null} - Cached image URL or null
+ */
+export const getImageForItem = (type, brand, model) => {
+  const key = `${brand} ${model} ${type === 'vehicle' ? 'car' : 'watch'}`;
+  return imageCache.get(key) || null;
+};
+
+/**
+ * Get fallback images for different types
+ * @param {string} type - Item type ('vehicle' or 'timepiece')
+ * @returns {string} - Fallback image URL
+ */
+export const getFallbackImage = (type) => {
+  return type === 'vehicle' ? ferrariImg : patekImg;
 };
