@@ -340,7 +340,27 @@ const HustlePlannerComponent: React.FC<HustlePlannerComponentProps> = ({ goal, o
   
   return (
     <div className="bg-gray-900 rounded-lg p-4">
-      <h3 className="text-xl text-blue-400 font-orbitron mb-4">HUSTLE PLANNER: DREAM BUILDER</h3>
+      <div className="flex justify-between items-center mb-4">
+        <h3 className="text-xl text-blue-400 font-orbitron">HUSTLE PLANNER: DREAM BUILDER</h3>
+        <button 
+          onClick={() => {
+            // We'll use the onUpdate function to signal that we want to switch back to dashboard view
+            const updatedGoal = { ...goal };
+            onUpdate(updatedGoal);
+            
+            // Store navigation preference for the parent component
+            window.localStorage.setItem('manifestation_activeView', 'dashboard');
+            
+            // Trigger a state update in the parent
+            window.dispatchEvent(new CustomEvent('manifestation-navigation', { 
+              detail: { view: 'dashboard' } 
+            }));
+          }}
+          className="px-3 py-1 text-sm bg-blue-600 hover:bg-blue-500 border border-green-500 text-white rounded-md flex items-center"
+        >
+          <span>← Back to Dashboard</span>
+        </button>
+      </div>
       
       {/* Main category switcher */}
       <div className="flex mb-4 border-b border-gray-700">

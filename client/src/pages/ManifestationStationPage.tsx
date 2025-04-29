@@ -237,11 +237,27 @@ const ManifestationStationPage: React.FC = () => {
   const initialView = window.localStorage.getItem('manifestation_activeView') || 'dashboard';
   const [activeView, setActiveView] = useState<string>(initialView);
   
-  // Clear the localStorage value after using it
+  // Clear the localStorage value after using it and listen for navigation events
   useEffect(() => {
+    // Handle localStorage view preference
     if (window.localStorage.getItem('manifestation_activeView')) {
+      setActiveView(window.localStorage.getItem('manifestation_activeView') || 'dashboard');
       window.localStorage.removeItem('manifestation_activeView');
     }
+    
+    // Set up event listener for navigation
+    const handleNavigation = (event: CustomEvent) => {
+      if (event.detail && event.detail.view) {
+        setActiveView(event.detail.view);
+      }
+    };
+    
+    window.addEventListener('manifestation-navigation', handleNavigation as EventListener);
+    
+    // Clean up event listener
+    return () => {
+      window.removeEventListener('manifestation-navigation', handleNavigation as EventListener);
+    };
   }, []);
   const [todayAffirmation, setTodayAffirmation] = useState<string>(getTodaysAffirmation());
   const [streakCount, setStreakCount] = useState<number>(7); // Mock streak count
