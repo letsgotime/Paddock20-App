@@ -634,55 +634,125 @@ const ManifestationStationPage: React.FC = () => {
                 </div>
               )}
             </div>
-            <div className="mt-3 mb-5 space-y-4 max-w-4xl">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div className="bg-gray-900 rounded-lg p-4 border border-blue-800">
-                  <h3 className="text-blue-400 font-medium text-lg mb-2">Why You're Here</h3>
-                  <p className="text-gray-300 text-sm">
-                    Manifestation Station™ isn't about "wishing." It's about working. 
-                    Every goal you log here — every car, watch, home, or milestone — comes with a plan built the way real winners build: 
-                    Daily movement. Daily mindset. Daily gratitude. 
-                    Because real manifestation isn't magic—it's momentum.
-                  </p>
+            <div className="mt-3 mb-5 max-w-4xl">
+              {/* Carbon fiber background pattern for the entire section */}
+              <div className="bg-black bg-opacity-80 backdrop-blur-sm rounded-xl overflow-hidden border border-gray-800 relative">
+                <div 
+                  className="absolute inset-0 z-0 opacity-20" 
+                  style={{ 
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='%23444444' fill-opacity='0.4' fill-rule='evenodd'%3E%3Cpath d='M0 20L20 0L40 20L20 40z' /%3E%3C/g%3E%3C/svg%3E")`,
+                    backgroundSize: '8px 8px'
+                  }}
+                />
+
+                {/* Header section */}
+                <div className="relative z-10 p-4 border-b border-gray-700 bg-gradient-to-r from-gray-900 to-gray-800">
+                  <h2 className="font-['Orbitron'] text-xl text-center bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-green-400">MANIFESTATION STATION™ METHODOLOGY</h2>
                 </div>
                 
-                <div className="bg-gray-900 rounded-lg p-4 border border-blue-800">
-                  <h3 className="text-blue-400 font-medium text-lg mb-2">What You Get</h3>
-                  <p className="text-gray-300 text-sm font-semibold mb-2">
-                    The First Hustle Planner Designed for Auto Enthusiasts
-                  </p>
-                  <ul className="text-gray-300 text-sm list-disc pl-5 space-y-1">
-                    <li>Dream Vault: Log your cars, watches, experiences, investments</li>
-                    <li>Goal Telemetry: Set your target, funding path, and timeline</li>
-                    <li>Milestone Tracking: Break down the dream into checkable steps</li>
-                    <li>Daily Discipline Tracker: Mind, Body, Spirit focus areas</li>
-                    <li>Proof of Progress System: See your real manifestation rate</li>
-                  </ul>
-                  <p className="text-gray-300 text-sm mt-2 italic">
-                    Methods used by the creators who built this app
-                  </p>
-                </div>
-                
-                <div className="bg-gray-900 rounded-lg p-4 border border-blue-800">
-                  <h3 className="text-blue-400 font-medium text-lg mb-2">How to Use It</h3>
-                  <div className="bg-blue-900/30 p-2 rounded mb-3 border border-blue-700/50">
-                    <h4 className="text-blue-300 font-medium text-sm mb-1">GoTime's 7 Elements System</h4>
-                    <p className="text-gray-300 text-xs">The proven method to turn visions into reality through consistent daily actions</p>
+                {/* Three column layout */}
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-0 relative z-10">
+                  <div className="p-5 border-r border-gray-800 flex flex-col h-full">
+                    <div className="mb-3 pb-2 border-b border-gray-700">
+                      <h3 className="font-['Orbitron'] text-lg bg-clip-text text-transparent bg-gradient-to-r from-gray-100 to-blue-300">WHY YOU'RE HERE</h3>
+                    </div>
+                    <div className="bg-black bg-opacity-50 p-4 rounded-lg flex-grow border border-gray-800 shadow-inner">
+                      <p className="text-gray-300 text-sm leading-relaxed">
+                        Manifestation Station™ isn't about "wishing." <span className="text-blue-400 font-semibold">It's about working.</span> 
+                        <br /><br />
+                        Every goal you log here — every car, watch, home, or milestone — comes with a plan built the way real winners build: 
+                        <br /><br />
+                        <span className="text-green-400 font-medium">Daily movement. Daily mindset. Daily gratitude.</span> 
+                        <br /><br />
+                        Because real manifestation isn't magic—it's <span className="text-blue-400 font-semibold">momentum</span>.
+                      </p>
+                    </div>
                   </div>
-                  <ul className="text-gray-300 text-sm list-disc pl-5 space-y-1">
-                    <li>Set Goals: Add dream assets or experiences</li>
-                    <li>Implement Daily Actions: Focus on the 7 elements consistently</li>
-                    <li>Track Progress: Update every week or day as you advance</li>
-                    <li>Celebrate Completions: Archive manifested goals</li>
-                    <li>Level Up: After each goal, raise your standards</li>
-                  </ul>
+                  
+                  <div className="p-5 border-r border-gray-800 flex flex-col h-full">
+                    <div className="mb-3 pb-2 border-b border-gray-700">
+                      <h3 className="font-['Orbitron'] text-lg bg-clip-text text-transparent bg-gradient-to-r from-gray-100 to-blue-300">WHAT YOU GET</h3>
+                    </div>
+                    <div className="bg-black bg-opacity-50 p-4 rounded-lg flex-grow border border-gray-800 shadow-inner">
+                      <div className="mb-3 px-3 py-2 bg-gradient-to-r from-blue-900/40 to-green-900/40 rounded-md border border-blue-800/50">
+                        <p className="text-blue-300 font-semibold text-center text-sm">
+                          The First Hustle Planner Designed for Auto Enthusiasts
+                        </p>
+                      </div>
+                      <ul className="text-gray-300 text-sm space-y-2">
+                        <li className="flex items-start">
+                          <span className="text-green-400 mr-2">▪</span> 
+                          <span><span className="text-blue-400 font-medium">Dream Vault:</span> Log your cars, watches, experiences</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-green-400 mr-2">▪</span> 
+                          <span><span className="text-blue-400 font-medium">Goal Telemetry:</span> Set target, funding path, timeline</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-green-400 mr-2">▪</span> 
+                          <span><span className="text-blue-400 font-medium">Milestone Tracking:</span> Break dreams into steps</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-green-400 mr-2">▪</span> 
+                          <span><span className="text-blue-400 font-medium">Discipline Tracker:</span> Mind, Body, Spirit focus</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-green-400 mr-2">▪</span> 
+                          <span><span className="text-blue-400 font-medium">Progress System:</span> Real manifestation rates</span>
+                        </li>
+                      </ul>
+                      <p className="text-gray-400 text-xs mt-3 italic text-center">
+                        Methods used by the creators who built this app
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="p-5 flex flex-col h-full">
+                    <div className="mb-3 pb-2 border-b border-gray-700">
+                      <h3 className="font-['Orbitron'] text-lg bg-clip-text text-transparent bg-gradient-to-r from-gray-100 to-blue-300">HOW TO USE IT</h3>
+                    </div>
+                    <div className="bg-black bg-opacity-50 p-4 rounded-lg flex-grow border border-gray-800 shadow-inner">
+                      <div className="mb-4 p-3 bg-gradient-to-r from-blue-900/60 to-green-900/60 rounded-md border border-green-700/50 shadow-lg relative overflow-hidden">
+                        <div className="absolute inset-0 bg-black opacity-20" style={{ 
+                          backgroundImage: `url("data:image/svg+xml,%3Csvg width='20' height='20' viewBox='0 0 20 20' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M0 0h20L0 20z' fill='%233b82f6' fill-opacity='0.2' fill-rule='evenodd'/%3E%3C/svg%3E")`,
+                          backgroundSize: '6px 6px'
+                        }}></div>
+                        <h4 className="text-center font-['Orbitron'] text-white font-bold text-sm mb-1 relative z-10">GOTIME'S 7 ELEMENTS SYSTEM</h4>
+                        <p className="text-gray-300 text-xs text-center relative z-10">The proven method to turn visions into reality through consistent daily actions</p>
+                      </div>
+                      <ul className="text-gray-300 text-sm space-y-2">
+                        <li className="flex items-start">
+                          <span className="text-green-400 mr-2">▪</span> 
+                          <span><span className="text-blue-400 font-medium">Set Goals:</span> Add dream assets or experiences</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-green-400 mr-2">▪</span> 
+                          <span><span className="text-blue-400 font-medium">Implement Daily:</span> Focus on all 7 elements</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-green-400 mr-2">▪</span> 
+                          <span><span className="text-blue-400 font-medium">Track Progress:</span> Update as you advance</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-green-400 mr-2">▪</span> 
+                          <span><span className="text-blue-400 font-medium">Celebrate Wins:</span> Archive manifested goals</span>
+                        </li>
+                        <li className="flex items-start">
+                          <span className="text-green-400 mr-2">▪</span> 
+                          <span><span className="text-blue-400 font-medium">Level Up:</span> Raise your standards</span>
+                        </li>
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Footer quote */}
+                <div className="relative z-10 p-3 border-t border-gray-700 bg-gradient-to-r from-gray-900 to-black">
+                  <p className="text-center text-sm bg-clip-text text-transparent bg-gradient-to-r from-blue-300 to-green-300 font-medium">
+                    DREAM BIGGER • WORK SHARPER • DRIVE HARDER • LIVE BETTER
+                  </p>
                 </div>
               </div>
-              
-              <p className="text-gray-300 text-sm italic">
-                Manifestation Station™ isn't about posting dreams. It's about engineering victories — one daily choice at a time.
-                Dream bigger. Work sharper. Drive harder. Live better.
-              </p>
             </div>
           </div>
           
