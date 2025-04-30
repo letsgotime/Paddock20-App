@@ -300,7 +300,7 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
     queryFn: async () => {
       if (!selectedLocation) return null;
       try {
-        const data = await fetchAutomotiveWeather(selectedLocation.lat, selectedLocation.lon, unit);
+        const data = await fetchAutomotiveWeather({ lat: selectedLocation.lat, lon: selectedLocation.lon }, unit);
         // Cache successful data
         weatherDataCache.current.automotiveWeatherData = data;
         return data;
@@ -324,7 +324,7 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
         toast({
           title: "Using cached weather data",
           description: "Unable to fetch fresh data. Displaying your last successfully loaded weather information.",
-          variant: "warning",
+          variant: "destructive",
         });
       } else {
         toast({
