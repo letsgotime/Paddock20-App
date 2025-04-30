@@ -14,6 +14,7 @@ import EventsCalendarPage from './pages/EventsCalendarPage';
 import BrokerPortalPage from './pages/BrokerPortalPage';
 import SettingsPage from './pages/SettingsPage';
 import ManifestationStationPage from './pages/ManifestationStationPage';
+import ProjectLauncherModule from './pages/ProjectLauncherModule';
 import NotFoundPage from './pages/NotFoundPage';
 
 // Create a new query client
@@ -44,6 +45,7 @@ const App: React.FC = () => {
               <Route path="/broker" component={BrokerPortalPage} />
               <Route path="/settings" component={SettingsPage} />
               <Route path="/manifestation-station" component={ManifestationStationPage} />
+              <Route path="/new-project" component={ProjectLauncherModule} />
               <Route component={NotFoundPage} />
             </Switch>
           </main>

@@ -28,7 +28,7 @@ const mockVehicles = [
     vin: "ZFF75VHB000123456",
     license_plate: "GLOSS1",
     color: "Rosso Corsa",
-    image_url: "https://images.unsplash.com/photo-1617038260897-41a1f14a8ca0?w=800&auto=format&fit=crop",
+    image_url: "/assets/ferrari-458.jpg",
     purchase_date: "2023-01-15",
     purchase_price: 180000,
     current_value: 195000,
@@ -41,7 +41,16 @@ const mockVehicles = [
     notes: "Weekend car, ceramic coated",
     created_at: "2023-01-20T12:00:00Z",
     updated_at: "2023-06-01T14:30:00Z",
-    user_id: "demo-user"
+    user_id: "demo-user",
+    maintenance_count: 4,
+    modifications_count: 7,
+    documents_count: 12,
+    last_service_date: "2023-11-15",
+    next_service_date: "2024-05-15",
+    next_service_miles: 15000,
+    insurance_renewal_date: "2024-01-15",
+    inspection_due_date: "2024-02-10",
+    last_detailed_date: "2023-12-20"
   },
   {
     id: "v-002",
@@ -52,7 +61,7 @@ const mockVehicles = [
     vin: "WP0AF2A90KS123456",
     license_plate: "GT3LIFE",
     color: "Guards Red",
-    image_url: "https://images.unsplash.com/photo-1580274455191-1c62238fa333?w=800&auto=format&fit=crop",
+    image_url: "/assets/porsche-911.jpg",
     purchase_date: "2022-08-10",
     purchase_price: 200000,
     current_value: 210000,
@@ -65,7 +74,16 @@ const mockVehicles = [
     notes: "Track days only, upgraded brakes",
     created_at: "2022-08-15T10:20:00Z",
     updated_at: "2023-07-20T16:45:00Z",
-    user_id: "demo-user"
+    user_id: "demo-user",
+    maintenance_count: 2,
+    modifications_count: 5,
+    documents_count: 8,
+    last_service_date: "2023-12-05",
+    next_service_date: "2024-06-05",
+    next_service_miles: 10000,
+    insurance_renewal_date: "2024-08-10",
+    inspection_due_date: "2024-07-15",
+    last_detailed_date: "2024-01-05"
   },
   {
     id: "v-003",
@@ -76,7 +94,7 @@ const mockVehicles = [
     vin: "SCFSMGAW0NGJ12345",
     license_plate: "SHAKEN",
     color: "Onyx Black",
-    image_url: "https://images.unsplash.com/photo-1600880292089-90a7e086ee0c?w=800&auto=format&fit=crop",
+    image_url: "/assets/aston-martin.jpg",
     purchase_date: "2023-03-22",
     purchase_price: 160000,
     current_value: 155000,
@@ -89,7 +107,16 @@ const mockVehicles = [
     notes: "Winter storage, summer vehicle",
     created_at: "2023-03-25T09:15:00Z",
     updated_at: "2023-09-10T11:30:00Z",
-    user_id: "demo-user"
+    user_id: "demo-user",
+    maintenance_count: 1,
+    modifications_count: 3,
+    documents_count: 5,
+    last_service_date: "2023-09-10",
+    next_service_date: "2024-03-10",
+    next_service_miles: 7500,
+    insurance_renewal_date: "2024-03-22",
+    inspection_due_date: "2024-04-15",
+    last_detailed_date: "2023-10-20"
   }
 ];
 
