@@ -664,6 +664,13 @@ function App() {
               <Route path="/" component={() => <Link href="/manifestation-station"><Home /></Link>} />
               <Route path="/manifestation-station" component={CompleteManifestationStation} />
               <Route path="/manifestation-station/:subpage*" component={CompleteManifestationStation} />
+              <Route path="/manifestation-station/body" component={() => <CompleteManifestationStation activeTab="body" />} />
+              <Route path="/manifestation-station/mind" component={() => <CompleteManifestationStation activeTab="mind" />} />
+              <Route path="/manifestation-station/spirit" component={() => <CompleteManifestationStation activeTab="spirit" />} />
+              <Route path="/manifestation-station/discipline" component={() => <CompleteManifestationStation activeTab="discipline" />} />
+              <Route path="/manifestation-station/library" component={() => <CompleteManifestationStation activeTab="library" />} />
+              <Route path="/manifestation-station/hustle" component={() => <CompleteManifestationStation activeTab="hustle" />} />
+              <Route path="/manifestation-station/celebration" component={() => <CompleteManifestationStation activeTab="celebration" />} />
               
               {/* Main module routes */}
               <Route path="/garage-vault" component={GTGVault} />
