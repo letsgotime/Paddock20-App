@@ -30,7 +30,7 @@ import EBooksPage from "./pages/eBooksPage";
 import Paddock20HomePage from "./pages/Paddock20HomePage";
 import DropdownNavbar from "./components/DropdownNavbar";
 import Footer from "./components/Footer";
-// WeatherProvider has been temporarily removed
+import { WeatherProvider } from "./contexts/WeatherContext";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import PersonalizedDashboard from "./pages/PersonalizedDashboard";
