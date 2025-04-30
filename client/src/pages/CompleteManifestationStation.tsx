@@ -53,7 +53,7 @@ import {
   Trash,
   Edit,
   Copy,
-  Users,
+  Users, User, LogOut,
   Target,
   Trophy,
   Milestone,
