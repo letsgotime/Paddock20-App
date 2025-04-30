@@ -58,10 +58,11 @@ import {
 
 // Main App Pages
 import CompleteManifestationStation from "@/pages/CompleteManifestationStation";
+import GTGVault from "@/pages/GTGVault";
+import GTGVaultVehicleTabRouter from "@/pages/GTGVaultVehicleTabRouter";
 
 // Sub Pages - Import when modules are created
 /* 
-import GarageVault from "@/pages/GarageVault";
 import MarketplacePage from "@/pages/MarketplacePage";
 import EventsCalendarPage from "@/pages/EventsCalendarPage";
 import RoutePlannerPage from "@/pages/RoutePlannerPage";
@@ -595,7 +596,8 @@ function App() {
               <Route path="/manifestation-station/:subpage*" component={CompleteManifestationStation} />
               
               {/* Main module routes */}
-              <Route path="/garage-vault" component={() => <div>Garage Vault (Coming Soon)</div>} />
+              <Route path="/garage-vault" component={GTGVault} />
+              <Route path="/garage/:id/:tab?" component={GTGVaultVehicleTabRouter} />
               <Route path="/goals" component={() => <div>Goals System (Coming Soon)</div>} />
               <Route path="/projects" component={() => <div>Projects (Coming Soon)</div>} />
               <Route path="/calendar" component={() => <div>Calendar (Coming Soon)</div>} />
