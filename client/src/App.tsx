@@ -69,8 +69,6 @@ import Paddock20HomePage from "@/pages/Paddock20HomePage";
 // Sub Pages - Import when modules are created
 /* 
 import MarketplacePage from "@/pages/MarketplacePage";
-import EventsCalendarPage from "@/pages/EventsCalendarPage";
-import RoutePlannerPage from "@/pages/RoutePlannerPage";
 import SettingsPage from "@/pages/SettingsPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 // Goal System
@@ -96,6 +94,10 @@ import MoodAnalyticsPage from "@/pages/MoodAnalyticsPage";
 import ProfilePage from "@/pages/ProfilePage";
 import AccountSettingsPage from "@/pages/AccountSettingsPage";
 */
+
+// Event Calendar System
+import EventsCalendarPage from "@/pages/EventsCalendarPage";
+import Events from "@/pages/Events";
 
 // Context Providers
 import { VehicleProvider } from "@/context/VehicleContext";
@@ -668,7 +670,8 @@ function App() {
               <Route path="/garage/:id/:tab?" component={GTGVaultVehicleTabRouter} />
               <Route path="/goals" component={() => <div>Goals System (Coming Soon)</div>} />
               <Route path="/projects" component={() => <div>Projects (Coming Soon)</div>} />
-              <Route path="/calendar" component={() => <div>Calendar (Coming Soon)</div>} />
+              <Route path="/calendar" component={Events} />
+              <Route path="/events-calendar" component={EventsCalendarPage} />
               <Route path="/analytics" component={() => <div>Analytics (Coming Soon)</div>} />
               <Route path="/journal" component={DriveJournalPage} />
               <Route path="/route-planner" component={RoutePlannerPage} />
