@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MAIN_CONTENT_ID } from '../lib/accessibility';
 import AutomotiveEnthusiastWeather from '../components/AutomotiveEnthusiastWeather';
 import WorldClockPanel from '../components/WorldClockPanel';
-import F1TelemetryWeatherPanel from '../components/F1TelemetryWeatherPanel';
+import SimplifiedF1TelemetryPanel from '../components/SimplifiedF1TelemetryPanel';
 import { 
   getWeatherData, 
   getOneCallData, 
@@ -459,7 +459,7 @@ function Weather() {
       {/* F1 Pit Wall Telemetry Data */}
       <section className="mb-10" aria-labelledby="f1-telemetry-heading">
         <h2 id="f1-telemetry-heading" className="apex-header-green text-xl mb-4">F1 Pit Wall Weather Telemetry</h2>
-        <F1TelemetryWeatherPanel />
+        <SimplifiedF1TelemetryPanel />
       </section>
 
       {/* Dynamic Drive Planner Section powered by real forecast data */}
