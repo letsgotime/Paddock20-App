@@ -99,6 +99,7 @@ const EnhancedGarageVault: React.FC = () => {
   const [recentDocuments, setRecentDocuments] = useState<Document[]>([]);
   const [activeSection, setActiveSection] = useState<string>("overview");
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [showProjectLauncher, setShowProjectLauncher] = useState<boolean>(false);
   const [dashboardToggles, setDashboardToggles] = useState({
     showMaintenanceAlerts: true,
     showValuationTrends: true,
