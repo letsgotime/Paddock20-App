@@ -36,6 +36,9 @@ const apiHealthStatus: WeatherApiStatus = {
   checkInterval: CHECK_INTERVAL // 4 hours in milliseconds
 };
 
+// Debug value to track server restarts
+const SERVER_START_TIME = new Date();
+
 // List of common timezones for the WorldClock component
 const commonTimezones = [
   // North America
@@ -115,6 +118,22 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Immediately check API health on startup
   await checkWeatherApiHealth();
+  
+  // Simple test endpoint for debugging
+  app.get('/api/test', (req, res) => {
+    // Set cache control headers to prevent caching
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
+    res.json({
+      message: 'API test endpoint is working',
+      server_start_time: SERVER_START_TIME.toISOString(),
+      current_time: new Date().toISOString(),
+      openweather_api_key_length: OPENWEATHER_API_KEY ? OPENWEATHER_API_KEY.length : 0,
+      source: 'direct-api'
+    });
+  });
   
   // Weather API proxy routes
   app.get('/api/weather', async (req, res) => {
