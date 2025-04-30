@@ -32,16 +32,18 @@ const F1TelemetryWeatherPanel = () => {
 
   useEffect(() => {
     async function fetchTelemetryData() {
-      if (!coordinates) return;
+      // Use default location (Charlotte) if no coordinates available
+      const params = coordinates || { lat: 35.2271, lon: -80.8431 };
       
       try {
         setLoadingTelemetry(true);
+        console.log('Fetching F1 telemetry data with params:', params);
         
         // Get comprehensive automotive weather data
         const [automotive, forecast, oneCall] = await Promise.all([
-          getAutomotiveWeatherData(coordinates),
-          getForecastData(coordinates),
-          getOneCallData(coordinates)
+          getAutomotiveWeatherData(params),
+          getForecastData(params),
+          getOneCallData(params)
         ]);
         
         setTelemetryData(automotive);
@@ -75,7 +77,13 @@ const F1TelemetryWeatherPanel = () => {
   if (!telemetryData || !weatherData) {
     return (
       <div className="bg-black/40 p-6 rounded-lg border border-gray-800 text-center">
-        <p className="text-gray-400">No telemetry data available</p>
+        <p className="text-gray-400 mb-2">No telemetry data available</p>
+        <button 
+          onClick={() => window.location.reload()}
+          className="bg-blue-900/50 text-blue-400 hover:bg-blue-800/50 px-4 py-2 rounded text-sm"
+        >
+          Refresh Data
+        </button>
       </div>
     );
   }
