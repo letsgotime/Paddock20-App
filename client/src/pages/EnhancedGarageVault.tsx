@@ -13,13 +13,8 @@ import GarageWeatherDisplay from '../components/GarageWeatherDisplay';
 import VehicleHealthCheck from '../components/VehicleHealthCheck';
 import GarageProjectLauncher from '../components/GarageProjectLauncher';
 
-// Import from EnhancedGarageVault.tsx component
-import { createClient } from '@supabase/supabase-js';
-
-// Initialize Supabase client
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Import mock Supabase client instead of initializing directly
+import supabase from '../services/supabaseClient';
 
 const EnhancedGarageVault: React.FC = () => {
   const { vehicles, activeVehicle, setActiveVehicle, loading: vehiclesLoading } = useVehicles();
