@@ -789,7 +789,7 @@ const ManifestationStation: React.FC = () => {
                                       {name === "ValuationData" && <BarChart className={`h-5 w-5 ${isActive ? 'text-[#7FC844]' : 'text-gray-400'}`} />}
                                       {name === "MoodEnergy" && <Sparkles className={`h-5 w-5 ${isActive ? 'text-[#7FC844]' : 'text-gray-400'}`} />}
                                       {name === "DetailingSchedule" && <Droplets className={`h-5 w-5 ${isActive ? 'text-[#7FC844]' : 'text-gray-400'}`} />}
-                                      {name === "ProjectStatus" && <Tool className={`h-5 w-5 ${isActive ? 'text-[#7FC844]' : 'text-gray-400'}`} />}
+                                      {name === "ProjectStatus" && <Wrench className={`h-5 w-5 ${isActive ? 'text-[#7FC844]' : 'text-gray-400'}`} />}
                                       {name === "WeatherData" && <Sun className={`h-5 w-5 ${isActive ? 'text-[#7FC844]' : 'text-gray-400'}`} />}
                                       {name === "DocumentExpiration" && <FileText className={`h-5 w-5 ${isActive ? 'text-[#7FC844]' : 'text-gray-400'}`} />}
                                     </div>
