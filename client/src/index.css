@@ -1,90 +1,14 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- 
-@layer base {
-  :root {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
- 
-    --card: 0 0% 3.9%;
-    --card-foreground: 0 0% 98%;
- 
-    --popover: 0 0% 3.9%;
-    --popover-foreground: 0 0% 98%;
- 
-    --primary: 210 100% 52%;
-    --primary-foreground: 0 0% 98%;
- 
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
- 
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
- 
-    --accent: 195 89% 46%;
-    --accent-foreground: 0 0% 98%;
- 
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
- 
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 212 93% 54%;
- 
-    --radius: 0.5rem;
-  }
-}
- 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-    font-family: system-ui, sans-serif;
-  }
-}
 
-/* F1 Carolina Blue Themed Styles */
-.apex-header {
-  background: linear-gradient(90deg, #0066cc, #007bff);
-  background-clip: text;
-  -webkit-background-clip: text;
-  color: transparent;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
-}
-
-.font-orbitron {
-  font-family: "Orbitron", system-ui, sans-serif;
-}
-
-/* Weather-specific animation classes */
-.weather-rain {
-  animation: rain-fall 8s linear infinite;
-}
-
-.weather-snow {
-  animation: snow-fall 15s linear infinite;
-}
-
-.weather-fog {
-  animation: fog-drift 20s ease-in-out infinite;
-}
-
-@keyframes rain-fall {
-  0% { opacity: 0.3; transform: translateY(-10px); }
-  100% { opacity: 0.7; transform: translateY(10px); }
-}
-
-@keyframes snow-fall {
-  0% { opacity: 0.4; transform: translate(-5px, -10px) rotate(0deg); }
-  50% { opacity: 0.6; transform: translate(5px, 0px) rotate(180deg); }
-  100% { opacity: 0.4; transform: translate(-5px, 10px) rotate(360deg); }
-}
-
-@keyframes fog-drift {
-  0% { opacity: 0.3; transform: translateX(-10px); }
-  50% { opacity: 0.5; transform: translateX(10px); }
-  100% { opacity: 0.3; transform: translateX(-10px); }
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  background-color: #121212;
+  color: white;
 }
