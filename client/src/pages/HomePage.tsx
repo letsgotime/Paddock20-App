@@ -17,7 +17,7 @@ const HomePage: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
           <Link href="/garage">
-            <a className="bg-gray-900 p-6 rounded-xl border border-gray-800 hover:border-blue-500/30 hover:bg-gray-800/60 transition-all group">
+            <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 hover:border-blue-500/30 hover:bg-gray-800/60 transition-all group cursor-pointer">
               <div className="bg-blue-900/20 rounded-lg w-12 h-12 flex items-center justify-center mb-4 group-hover:bg-blue-900/40 transition-colors">
                 <Car className="text-blue-400 h-6 w-6" />
               </div>
@@ -25,11 +25,11 @@ const HomePage: React.FC = () => {
               <p className="text-gray-400">
                 Your vehicle command center for maintenance, modifications & documentation
               </p>
-            </a>
+            </div>
           </Link>
 
           <Link href="/drive-journal">
-            <a className="bg-gray-900 p-6 rounded-xl border border-gray-800 hover:border-blue-500/30 hover:bg-gray-800/60 transition-all group">
+            <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 hover:border-blue-500/30 hover:bg-gray-800/60 transition-all group cursor-pointer">
               <div className="bg-blue-900/20 rounded-lg w-12 h-12 flex items-center justify-center mb-4 group-hover:bg-blue-900/40 transition-colors">
                 <BookOpen className="text-blue-400 h-6 w-6" />
               </div>
@@ -37,11 +37,11 @@ const HomePage: React.FC = () => {
               <p className="text-gray-400">
                 Record your driving experiences, insights, and emotions
               </p>
-            </a>
+            </div>
           </Link>
 
           <Link href="/route-planner">
-            <a className="bg-gray-900 p-6 rounded-xl border border-gray-800 hover:border-blue-500/30 hover:bg-gray-800/60 transition-all group">
+            <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 hover:border-blue-500/30 hover:bg-gray-800/60 transition-all group cursor-pointer">
               <div className="bg-blue-900/20 rounded-lg w-12 h-12 flex items-center justify-center mb-4 group-hover:bg-blue-900/40 transition-colors">
                 <Map className="text-blue-400 h-6 w-6" />
               </div>
@@ -49,11 +49,11 @@ const HomePage: React.FC = () => {
               <p className="text-gray-400">
                 Discover and plan your perfect drives with weather integration
               </p>
-            </a>
+            </div>
           </Link>
 
           <Link href="/marketplace">
-            <a className="bg-gray-900 p-6 rounded-xl border border-gray-800 hover:border-blue-500/30 hover:bg-gray-800/60 transition-all group">
+            <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 hover:border-blue-500/30 hover:bg-gray-800/60 transition-all group cursor-pointer">
               <div className="bg-blue-900/20 rounded-lg w-12 h-12 flex items-center justify-center mb-4 group-hover:bg-blue-900/40 transition-colors">
                 <Tag className="text-blue-400 h-6 w-6" />
               </div>
@@ -61,11 +61,11 @@ const HomePage: React.FC = () => {
               <p className="text-gray-400">
                 Shop for products with the JuiceBox™ system for your vehicle needs
               </p>
-            </a>
+            </div>
           </Link>
 
           <Link href="/events">
-            <a className="bg-gray-900 p-6 rounded-xl border border-gray-800 hover:border-blue-500/30 hover:bg-gray-800/60 transition-all group">
+            <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 hover:border-blue-500/30 hover:bg-gray-800/60 transition-all group cursor-pointer">
               <div className="bg-blue-900/20 rounded-lg w-12 h-12 flex items-center justify-center mb-4 group-hover:bg-blue-900/40 transition-colors">
                 <Calendar className="text-blue-400 h-6 w-6" />
               </div>
@@ -73,11 +73,11 @@ const HomePage: React.FC = () => {
               <p className="text-gray-400">
                 Discover automotive events and meet-ups near you
               </p>
-            </a>
+            </div>
           </Link>
 
           <Link href="/manifestation-station">
-            <a className="bg-gray-900 p-6 rounded-xl border border-gray-800 hover:border-blue-500/30 hover:bg-gray-800/60 transition-all group">
+            <div className="bg-gray-900 p-6 rounded-xl border border-gray-800 hover:border-blue-500/30 hover:bg-gray-800/60 transition-all group cursor-pointer">
               <div className="bg-blue-900/20 rounded-lg w-12 h-12 flex items-center justify-center mb-4 group-hover:bg-blue-900/40 transition-colors">
                 <Compass className="text-blue-400 h-6 w-6" />
               </div>
@@ -85,7 +85,7 @@ const HomePage: React.FC = () => {
               <p className="text-gray-400">
                 Set and track your automotive and life goals with our 7 Elements System
               </p>
-            </a>
+            </div>
           </Link>
         </div>
       </div>
