@@ -50,31 +50,57 @@ export const APIDebugger: React.FC = () => {
       <h2 className="text-xl font-bold mb-4">API Connection Debugger</h2>
       
       <div className="space-y-2 mb-4">
-        <Button 
-          onClick={() => testEndpoint('/api/test')}
-          disabled={loading}
-          variant="outline"
-          className="mr-2"
-        >
-          Test /api/test
-        </Button>
+        <div className="flex flex-wrap gap-2 mb-2">
+          <Button 
+            onClick={() => testEndpoint('/api/test')}
+            disabled={loading}
+            variant="outline"
+          >
+            Test /api/test
+          </Button>
+          
+          <Button 
+            onClick={() => testEndpoint('/api/weather-health')}
+            disabled={loading}
+            variant="outline"
+          >
+            Test Weather Health
+          </Button>
+          
+          <Button 
+            onClick={() => testEndpoint('/api/weather?lat=35.2271&lon=-80.8431')}
+            disabled={loading}
+            variant="outline"
+          >
+            Test Weather API
+          </Button>
+        </div>
         
-        <Button 
-          onClick={() => testEndpoint('/api/weather-health')}
-          disabled={loading}
-          variant="outline"
-          className="mr-2"
-        >
-          Test Weather Health
-        </Button>
-        
-        <Button 
-          onClick={() => testEndpoint('/api/weather?lat=35.2271&lon=-80.8431')}
-          disabled={loading}
-          variant="outline"
-        >
-          Test Weather API
-        </Button>
+        <div className="flex flex-wrap gap-2">
+          <Button 
+            onClick={() => testEndpoint('/api/automotive-weather?lat=35.2271&lon=-80.8431&units=imperial')}
+            disabled={loading}
+            variant="outline"
+          >
+            Test Automotive Weather
+          </Button>
+          
+          <Button 
+            onClick={() => testEndpoint('/api/unsplash-health')}
+            disabled={loading}
+            variant="outline"
+          >
+            Test Unsplash Health
+          </Button>
+          
+          <Button 
+            onClick={() => testEndpoint('/api/env-check')}
+            disabled={loading}
+            variant="outline"
+          >
+            Check Environment Variables
+          </Button>
+        </div>
       </div>
       
       {loading && (

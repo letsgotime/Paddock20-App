@@ -135,6 +135,99 @@ export async function registerRoutes(app: Express): Promise<Server> {
     });
   });
   
+  // Environment variables check endpoint
+  app.get('/api/env-check', (req, res) => {
+    // Set cache control headers to prevent caching
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
+    // Check for existence of environment variables without exposing their values
+    const envStatus = {
+      OPENWEATHER_API_KEY: {
+        exists: Boolean(process.env.OPENWEATHER_API_KEY),
+        length: process.env.OPENWEATHER_API_KEY?.length || 0
+      },
+      UNSPLASH_ACCESS_KEY: {
+        exists: Boolean(process.env.UNSPLASH_ACCESS_KEY),
+        length: process.env.UNSPLASH_ACCESS_KEY?.length || 0,
+        value_first_char: process.env.UNSPLASH_ACCESS_KEY ? process.env.UNSPLASH_ACCESS_KEY.charAt(0) : null
+      },
+      VITE_UNSPLASH_ACCESS_KEY: {
+        exists: Boolean(process.env.VITE_UNSPLASH_ACCESS_KEY),
+        length: process.env.VITE_UNSPLASH_ACCESS_KEY?.length || 0,
+        value_first_char: process.env.VITE_UNSPLASH_ACCESS_KEY ? process.env.VITE_UNSPLASH_ACCESS_KEY.charAt(0) : null
+      },
+      VITE_ACCUWEATHER_API_KEY: {
+        exists: Boolean(process.env.VITE_ACCUWEATHER_API_KEY),
+        length: process.env.VITE_ACCUWEATHER_API_KEY?.length || 0
+      },
+      SLACK_BOT_TOKEN: {
+        exists: Boolean(process.env.SLACK_BOT_TOKEN)
+      },
+      SLACK_CHANNEL_ID: {
+        exists: Boolean(process.env.SLACK_CHANNEL_ID)
+      },
+      NODE_ENV: process.env.NODE_ENV
+    };
+    
+    res.json({
+      env_status: envStatus,
+      timestamp: new Date().toISOString()
+    });
+  });
+  
+  // Unsplash health check endpoint
+  app.get('/api/unsplash-health', async (req, res) => {
+    // Set cache control headers to prevent caching
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+    res.setHeader('Pragma', 'no-cache');
+    res.setHeader('Expires', '0');
+    
+    const unsplashKey = process.env.UNSPLASH_ACCESS_KEY || process.env.VITE_UNSPLASH_ACCESS_KEY;
+    
+    if (!unsplashKey) {
+      return res.status(500).json({
+        status: 'error',
+        message: 'Unsplash API key not found in environment',
+        env_vars: {
+          UNSPLASH_ACCESS_KEY_exists: Boolean(process.env.UNSPLASH_ACCESS_KEY),
+          VITE_UNSPLASH_ACCESS_KEY_exists: Boolean(process.env.VITE_UNSPLASH_ACCESS_KEY)
+        }
+      });
+    }
+    
+    try {
+      // Try a simple request to the Unsplash API
+      const response = await fetch(`https://api.unsplash.com/photos/random?client_id=${unsplashKey}`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        res.json({
+          status: 'operational',
+          message: 'Unsplash API is working',
+          details: {
+            photo_id: data.id,
+            username: data.user?.username
+          }
+        });
+      } else {
+        const errorText = await response.text();
+        res.status(response.status).json({
+          status: 'error',
+          message: `Unsplash API returned error: ${response.status}`,
+          details: errorText
+        });
+      }
+    } catch (error) {
+      console.error('Unsplash health check error:', error);
+      res.status(500).json({
+        status: 'error',
+        message: (error as Error).message
+      });
+    }
+  });
+  
   // Weather API proxy routes
   app.get('/api/weather', async (req, res) => {
     try {
