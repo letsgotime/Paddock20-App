@@ -53,7 +53,7 @@ import {
   Trash,
   Edit,
   Copy,
-  Users, User, LogOut, MoreHorizontal, Minus, ArrowDown, Square, Minimize, LayoutGrid, CloudSun, Cloud,
+  Users, User, LogOut, MoreHorizontal, Minus, ArrowDown, Square, Minimize, LayoutGrid, CloudSun, Cloud, Tag,
   Target,
   Trophy,
   Milestone,
@@ -1906,7 +1906,7 @@ const ManifestationStation: React.FC = () => {
               <div className="grid grid-cols-2 gap-2 mt-2">
                 {['Working on vehicle', 'Setting goals', 'Making progress', 'Facing challenges'].map(activity => (
                   <div key={activity} className="flex items-center space-x-2">
-                    <Checkbox id={activity.replace(/\s+/g, '_')} />
+                    <div className="w-4 h-4 border border-gray-500 rounded flex items-center justify-center"><Check className="h-3 w-3 hidden" /></div>
                     <Label 
                       htmlFor={activity.replace(/\s+/g, '_')}
                       className="text-sm cursor-pointer"
