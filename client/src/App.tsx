@@ -35,6 +35,7 @@ import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import PersonalizedDashboard from "./pages/PersonalizedDashboard";
 import GarageVaultPage from "./pages/GarageVaultPage";
+import GoTimeGarageVault from "./pages/GoTimeGarageVault";
 import VehicleModsPage from "./pages/VehicleModsPage";
 import MembershipPage from "./pages/MembershipPage";
 import TiresTimepieces from "./pages/TiresTimepieces";
@@ -136,6 +137,8 @@ function App() {
               <Route path="/personalized-dashboard" element={<ProtectedRoute><PersonalizedDashboard /></ProtectedRoute>} />
               {/* Main Garage Vault Hub - Central repository for all vehicle data */}
               <Route path="/garage-vault" element={<ProtectedRoute><GarageVaultPage /></ProtectedRoute>} />
+              {/* New GoTime Garage Vault - Enhanced F1-style vehicle management */}
+              <Route path="/gotime-garage" element={<ProtectedRoute><GoTimeGarageVault /></ProtectedRoute>} />
               {/* Legacy garage route redirects to new Garage Vault structure */}
               <Route path="/garage" element={<Navigate to="/garage-vault" replace />} />
               
