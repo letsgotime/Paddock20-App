@@ -5,7 +5,8 @@ import {
   Car, Wrench, Gauge, Upload, PlusCircle, Layout, LayoutGrid,
   ClipboardList, Map, Calendar, Settings, ChevronRight, Users,
   Award, Shield, AlertTriangle, Check, Clock, FileText, ExternalLink,
-  BookOpen, Download, Droplets, History, Tag, User, ListChecks
+  BookOpen, Download, Droplets, History, Tag, User, ListChecks,
+  Zap, Compass, FileImage
 } from 'lucide-react';
 
 // Import components
