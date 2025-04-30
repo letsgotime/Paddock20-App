@@ -28,6 +28,10 @@ import {
   Thermometer,
   Wind,
   Sun,
+  CheckCircle,
+  X,
+  Circle,
+  Building2,
   CloudRain,
   Zap,
   ChevronDown,
@@ -52,7 +56,18 @@ import { toast } from "@/hooks/use-toast";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Switch } from "@/components/ui/switch";
 import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { 
+  Dialog, 
+  DialogContent, 
+  DialogTrigger,
+  DialogHeader,
+  DialogTitle,
+  DialogDescription 
+} from "@/components/ui/dialog";
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Input } from "@/components/ui/input";
 import ProjectLauncher from "../components/ProjectLauncher";
 import VehicleCustomizationPreviewer from "../components/VehicleCustomizationPreviewer";
@@ -794,6 +809,455 @@ const EnhancedGarageVaultV2: React.FC = () => {
           </DialogContent>
         </Dialog>
       )}
+      
+      {/* Detailed Weather Dialog */}
+      <Dialog open={showDetailedWeather} onOpenChange={setShowDetailedWeather}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-4xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold flex items-center">
+              <CloudRain className="h-6 w-6 text-[#7FC844] mr-2" />
+              Weather & Environment Telemetry
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Detailed weather data and detailing recommendations
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <div className="bg-zinc-800 rounded-lg p-4">
+                <div className="flex items-center mb-3">
+                  <div className="h-14 w-14 bg-blue-900/30 rounded-full flex items-center justify-center mr-4">
+                    <CloudRain className="h-7 w-7 text-blue-400" />
+                  </div>
+                  <div>
+                    <div className="text-3xl font-bold">{weatherData.temp}°F</div>
+                    <div className="text-gray-400">
+                      {weatherData.condition} in {weatherData.location}
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="grid grid-cols-2 gap-3 mt-4">
+                  <div className="bg-zinc-700 rounded p-3">
+                    <div className="text-xs text-gray-300 mb-1">Humidity</div>
+                    <div className="text-xl font-bold">{weatherData.humidity}%</div>
+                    <div className="text-xs text-gray-400 mt-1">
+                      {weatherData.humidity > 70 ? 'High' : weatherData.humidity < 30 ? 'Low' : 'Optimal'}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-zinc-700 rounded p-3">
+                    <div className="text-xs text-gray-300 mb-1">Wind Speed</div>
+                    <div className="text-xl font-bold">{weatherData.wind} mph</div>
+                    <div className="text-xs text-gray-400 mt-1">
+                      {weatherData.wind > 15 ? 'Strong' : weatherData.wind < 5 ? 'Calm' : 'Moderate'}
+                    </div>
+                  </div>
+                  
+                  <div className="bg-zinc-700 rounded p-3">
+                    <div className="text-xs text-gray-300 mb-1">Surface Temp</div>
+                    <div className="text-xl font-bold">78°F</div>
+                    <div className="text-xs text-gray-400 mt-1">
+                      Optimal for detailing
+                    </div>
+                  </div>
+                  
+                  <div className="bg-zinc-700 rounded p-3">
+                    <div className="text-xs text-gray-300 mb-1">Dew Point</div>
+                    <div className="text-xl font-bold">58°F</div>
+                    <div className="text-xs text-gray-400 mt-1">
+                      Low humidity risk
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              <div className={`rounded-lg p-4 text-white ${weatherRecommendation.isGood ? 'bg-green-900/30' : 'bg-red-900/30'}`}>
+                <h3 className="text-lg font-bold mb-2 flex items-center">
+                  {weatherRecommendation.isGood ? 
+                    <CheckCircle className="h-5 w-5 text-green-400 mr-2" /> : 
+                    <AlertTriangle className="h-5 w-5 text-red-400 mr-2" />
+                  }
+                  Detailing Recommendation
+                </h3>
+                <p className="mb-3">{weatherRecommendation.message}</p>
+                <div className="text-sm">
+                  {weatherRecommendation.isGood ? (
+                    <ul className="space-y-1">
+                      <li className="flex items-center">
+                        <Check className="h-4 w-4 text-green-400 mr-2" />
+                        Temperature within optimal range (60-85°F)
+                      </li>
+                      <li className="flex items-center">
+                        <Check className="h-4 w-4 text-green-400 mr-2" />
+                        Humidity levels conducive to proper drying
+                      </li>
+                      <li className="flex items-center">
+                        <Check className="h-4 w-4 text-green-400 mr-2" />
+                        Low wind reduces risk of contaminants
+                      </li>
+                    </ul>
+                  ) : (
+                    <ul className="space-y-1">
+                      <li className="flex items-center">
+                        <X className="h-4 w-4 text-red-400 mr-2" />
+                        Temperature outside optimal range
+                      </li>
+                      <li className="flex items-center">
+                        <X className="h-4 w-4 text-red-400 mr-2" />
+                        High humidity may affect product performance
+                      </li>
+                      <li className="flex items-center">
+                        <X className="h-4 w-4 text-red-400 mr-2" />
+                        Consider rescheduling for better conditions
+                      </li>
+                    </ul>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="space-y-4">
+              <div className="bg-zinc-800 rounded-lg p-4">
+                <h3 className="text-lg font-bold mb-3">Hourly Forecast</h3>
+                <div className="space-y-3">
+                  {[1, 2, 3, 4, 5].map(hour => (
+                    <div key={hour} className="flex items-center justify-between border-b border-zinc-700 pb-2 last:border-0 last:pb-0">
+                      <div className="flex items-center">
+                        <div className="w-10 text-gray-400">{hour}h</div>
+                        <div className="w-8 text-[#7FC844]">
+                          {Math.random() > 0.3 ? <Sun className="h-5 w-5" /> : <CloudRain className="h-5 w-5" />}
+                        </div>
+                        <div className="text-sm">{Math.round(weatherData.temp + (Math.random() * 10 - 5))}°F</div>
+                      </div>
+                      <div className="text-gray-400 text-sm">{Math.round(weatherData.humidity + (Math.random() * 10 - 5))}%</div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="bg-zinc-800 rounded-lg p-4">
+                <h3 className="text-lg font-bold mb-3">Temperature Analysis</h3>
+                <div className="h-48 flex items-end">
+                  {Array.from({ length: 24 }, (_, i) => {
+                    const height = 30 + Math.random() * 70;
+                    return (
+                      <div key={i} className="flex-1 flex flex-col items-center">
+                        <div 
+                          className="w-full bg-gradient-to-t from-blue-500 to-red-500 rounded-t"
+                          style={{ height: `${height}%` }}
+                        ></div>
+                        <div className="text-xs mt-1">{i}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="text-xs text-gray-400 mt-2 text-center">24 Hour Temperature Trend (°F)</div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-4 flex justify-end">
+            <Button variant="outline" onClick={() => setShowDetailedWeather(false)}>
+              Close
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Detailed Maintenance Dialog */}
+      <Dialog open={showDetailedMaintenance} onOpenChange={setShowDetailedMaintenance}>
+        <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-5xl">
+          <DialogHeader>
+            <DialogTitle className="text-2xl font-bold flex items-center">
+              <Wrench className="h-6 w-6 text-[#7FC844] mr-2" />
+              Maintenance & Service Manager
+            </DialogTitle>
+            <DialogDescription className="text-gray-400">
+              Schedule and track all maintenance activities for your vehicles
+            </DialogDescription>
+          </DialogHeader>
+          
+          <Tabs defaultValue="upcoming">
+            <TabsList className="grid grid-cols-3 mb-4">
+              <TabsTrigger value="upcoming">Upcoming</TabsTrigger>
+              <TabsTrigger value="history">Service History</TabsTrigger>
+              <TabsTrigger value="schedule">Schedule Service</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="upcoming">
+              <div className="space-y-4">
+                <div className="bg-zinc-800 rounded-lg overflow-hidden">
+                  <Table>
+                    <TableHeader>
+                      <TableRow className="border-zinc-700 hover:bg-zinc-800">
+                        <TableHead className="text-white">Vehicle</TableHead>
+                        <TableHead className="text-white">Service</TableHead>
+                        <TableHead className="text-white">Due Date</TableHead>
+                        <TableHead className="text-white">Status</TableHead>
+                        <TableHead className="text-white">Actions</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      <TableRow className="border-zinc-700 hover:bg-zinc-700">
+                        <TableCell className="font-medium">Ferrari 458 Italia</TableCell>
+                        <TableCell>Oil Change</TableCell>
+                        <TableCell>In 5 days</TableCell>
+                        <TableCell>
+                          <Badge className="bg-red-600">Urgent</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button variant="outline" size="sm">Schedule</Button>
+                        </TableCell>
+                      </TableRow>
+                      <TableRow className="border-zinc-700 hover:bg-zinc-700">
+                        <TableCell className="font-medium">Porsche 911 GT3</TableCell>
+                        <TableCell>Tire Rotation</TableCell>
+                        <TableCell>In 2 weeks</TableCell>
+                        <TableCell>
+                          <Badge className="bg-yellow-600">Soon</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button variant="outline" size="sm">Schedule</Button>
+                        </TableCell>
+                      </TableRow>
+                      <TableRow className="border-zinc-700 hover:bg-zinc-700">
+                        <TableCell className="font-medium">Aston Martin DB11</TableCell>
+                        <TableCell>Annual Service</TableCell>
+                        <TableCell>In 1 month</TableCell>
+                        <TableCell>
+                          <Badge className="bg-blue-600">Planned</Badge>
+                        </TableCell>
+                        <TableCell>
+                          <Button variant="outline" size="sm">Schedule</Button>
+                        </TableCell>
+                      </TableRow>
+                    </TableBody>
+                  </Table>
+                </div>
+                
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+                  <div className="bg-zinc-800 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-gray-400 mb-2">Service Types</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center">
+                          <Circle className="h-2 w-2 fill-red-500 text-red-500 mr-2" />
+                          <span>Oil Changes</span>
+                        </div>
+                        <span className="text-sm">2</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center">
+                          <Circle className="h-2 w-2 fill-blue-500 text-blue-500 mr-2" />
+                          <span>Tire Services</span>
+                        </div>
+                        <span className="text-sm">1</span>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <div className="flex items-center">
+                          <Circle className="h-2 w-2 fill-green-500 text-green-500 mr-2" />
+                          <span>Annual Service</span>
+                        </div>
+                        <span className="text-sm">1</span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-zinc-800 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-gray-400 mb-2">Priority by Vehicle</h4>
+                    <div className="space-y-3">
+                      <div className="flex justify-between items-center">
+                        <span>Ferrari 458 Italia</span>
+                        <div className="w-24 h-2 rounded-full bg-zinc-700 overflow-hidden">
+                          <div className="h-full bg-red-500 w-3/4"></div>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span>Porsche 911 GT3</span>
+                        <div className="w-24 h-2 rounded-full bg-zinc-700 overflow-hidden">
+                          <div className="h-full bg-yellow-500 w-1/2"></div>
+                        </div>
+                      </div>
+                      <div className="flex justify-between items-center">
+                        <span>Aston Martin DB11</span>
+                        <div className="w-24 h-2 rounded-full bg-zinc-700 overflow-hidden">
+                          <div className="h-full bg-green-500 w-1/4"></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="bg-zinc-800 rounded-lg p-4">
+                    <h4 className="text-sm font-medium text-gray-400 mb-2">Service Providers</h4>
+                    <div className="space-y-3">
+                      <div className="flex items-center">
+                        <Building2 className="h-4 w-4 text-[#7FC844] mr-2" />
+                        <span>Ferrari Service Center</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Building2 className="h-4 w-4 text-[#7FC844] mr-2" />
+                        <span>Porsche Authorized Dealer</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Building2 className="h-4 w-4 text-[#7FC844] mr-2" />
+                        <span>Motorsport Specialist Inc.</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="history">
+              <div className="bg-zinc-800 rounded-lg overflow-hidden mb-4">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="border-zinc-700 hover:bg-zinc-800">
+                      <TableHead className="text-white">Date</TableHead>
+                      <TableHead className="text-white">Vehicle</TableHead>
+                      <TableHead className="text-white">Service</TableHead>
+                      <TableHead className="text-white">Mileage</TableHead>
+                      <TableHead className="text-white">Cost</TableHead>
+                      <TableHead className="text-white">Details</TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    <TableRow className="border-zinc-700 hover:bg-zinc-700">
+                      <TableCell>Jan 15, 2025</TableCell>
+                      <TableCell className="font-medium">Ferrari 458 Italia</TableCell>
+                      <TableCell>Brake Replacement</TableCell>
+                      <TableCell>12,450 mi</TableCell>
+                      <TableCell>$2,850</TableCell>
+                      <TableCell>
+                        <Button variant="outline" size="sm">View</Button>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className="border-zinc-700 hover:bg-zinc-700">
+                      <TableCell>Dec 03, 2024</TableCell>
+                      <TableCell className="font-medium">Porsche 911 GT3</TableCell>
+                      <TableCell>Annual Service</TableCell>
+                      <TableCell>8,320 mi</TableCell>
+                      <TableCell>$1,750</TableCell>
+                      <TableCell>
+                        <Button variant="outline" size="sm">View</Button>
+                      </TableCell>
+                    </TableRow>
+                    <TableRow className="border-zinc-700 hover:bg-zinc-700">
+                      <TableCell>Nov 12, 2024</TableCell>
+                      <TableCell className="font-medium">Ferrari 458 Italia</TableCell>
+                      <TableCell>Oil Change</TableCell>
+                      <TableCell>11,820 mi</TableCell>
+                      <TableCell>$475</TableCell>
+                      <TableCell>
+                        <Button variant="outline" size="sm">View</Button>
+                      </TableCell>
+                    </TableRow>
+                  </TableBody>
+                </Table>
+              </div>
+              
+              <div className="bg-zinc-800 rounded-lg p-4">
+                <h3 className="text-lg font-bold mb-3">Maintenance Cost Analysis</h3>
+                <div className="h-48 flex items-end gap-1">
+                  {Array.from({ length: 12 }, (_, i) => {
+                    const height = 10 + Math.random() * 85;
+                    return (
+                      <div key={i} className="flex-1 flex flex-col items-center">
+                        <div 
+                          className="w-full bg-[#7FC844] rounded-t"
+                          style={{ height: `${height}%` }}
+                        ></div>
+                        <div className="text-xs mt-1">{i+1}</div>
+                      </div>
+                    );
+                  })}
+                </div>
+                <div className="text-xs text-gray-400 mt-2 text-center">Monthly Maintenance Expenses (2024)</div>
+              </div>
+            </TabsContent>
+            
+            <TabsContent value="schedule">
+              <div className="bg-zinc-800 rounded-lg p-4">
+                <h3 className="text-lg font-bold mb-4">Schedule New Service</h3>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="vehicle">Vehicle</Label>
+                      <Select defaultValue="ferrari">
+                        <SelectTrigger className="bg-zinc-900 border-zinc-700">
+                          <SelectValue placeholder="Select vehicle" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-zinc-900 border-zinc-700">
+                          <SelectItem value="ferrari">Ferrari 458 Italia</SelectItem>
+                          <SelectItem value="porsche">Porsche 911 GT3</SelectItem>
+                          <SelectItem value="aston">Aston Martin DB11</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="service-type">Service Type</Label>
+                      <Select defaultValue="oil">
+                        <SelectTrigger className="bg-zinc-900 border-zinc-700">
+                          <SelectValue placeholder="Select service" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-zinc-900 border-zinc-700">
+                          <SelectItem value="oil">Oil Change</SelectItem>
+                          <SelectItem value="tires">Tire Rotation</SelectItem>
+                          <SelectItem value="brakes">Brake Service</SelectItem>
+                          <SelectItem value="annual">Annual Service</SelectItem>
+                          <SelectItem value="custom">Custom Service</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="service-provider">Service Provider</Label>
+                      <Select defaultValue="dealer">
+                        <SelectTrigger className="bg-zinc-900 border-zinc-700">
+                          <SelectValue placeholder="Select provider" />
+                        </SelectTrigger>
+                        <SelectContent className="bg-zinc-900 border-zinc-700">
+                          <SelectItem value="dealer">Authorized Dealer</SelectItem>
+                          <SelectItem value="specialist">Motorsport Specialist</SelectItem>
+                          <SelectItem value="independent">Independent Shop</SelectItem>
+                          <SelectItem value="diy">DIY</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <Label htmlFor="date">Preferred Date</Label>
+                      <Input 
+                        type="date" 
+                        className="bg-zinc-900 border-zinc-700"
+                        defaultValue="2025-05-05"
+                      />
+                    </div>
+                    
+                    <div>
+                      <Label htmlFor="notes">Notes</Label>
+                      <Textarea 
+                        placeholder="Add any specific instructions or concerns..."
+                        className="bg-zinc-900 border-zinc-700 h-[120px]"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="flex justify-end mt-6 gap-2">
+                  <Button variant="outline">Cancel</Button>
+                  <Button>Schedule Service</Button>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
