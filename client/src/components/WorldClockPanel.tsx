@@ -1,29 +1,60 @@
 import React, { useEffect, useState } from "react";
 
-// Define city type for better type safety
+// Define city type with more accurate timezone information
 type City = {
   name: string;
   timezone: string;
   lat: number;
   lon: number;
-  offset: number; // UTC offset in hours
+  dstOffset?: number; // For manually adjusting during daylight savings time
 };
 
-// Available cities to choose from with UTC offsets for calculation
+// Comprehensive list of F1 circuits with accurate timezone data
 const availableCities: City[] = [
-  { name: "Monaco 🇲🇨", timezone: "Europe/Monaco", lat: 43.7384, lon: 7.4246, offset: 2 },
-  { name: "Suzuka 🇯🇵", timezone: "Asia/Tokyo", lat: 34.8431, lon: 136.5415, offset: 9 },
-  { name: "Austin 🇺🇸", timezone: "America/Chicago", lat: 30.2672, lon: -97.7431, offset: -5 },
-  { name: "Silverstone 🇬🇧", timezone: "Europe/London", lat: 52.0786, lon: -1.0169, offset: 1 },
-  { name: "Singapore 🇸🇬", timezone: "Asia/Singapore", lat: 1.2905, lon: 103.8520, offset: 8 },
-  { name: "Barcelona 🇪🇸", timezone: "Europe/Madrid", lat: 41.3851, lon: 2.1734, offset: 2 },
-  { name: "Montreal 🇨🇦", timezone: "America/Toronto", lat: 45.5017, lon: -73.5673, offset: -4 },
-  { name: "Melbourne 🇦🇺", timezone: "Australia/Melbourne", lat: -37.8136, lon: 144.9631, offset: 10 },
-  { name: "Sao Paulo 🇧🇷", timezone: "America/Sao_Paulo", lat: -23.5505, lon: -46.6333, offset: -3 },
-  { name: "Abu Dhabi 🇦🇪", timezone: "Asia/Dubai", lat: 24.4539, lon: 54.3773, offset: 4 },
-  { name: "Monza 🇮🇹", timezone: "Europe/Rome", lat: 45.5722, lon: 9.2777, offset: 2 },
-  { name: "Spa 🇧🇪", timezone: "Europe/Brussels", lat: 50.4373, lon: 5.9699, offset: 2 },
+  { name: "Monaco 🇲🇨", timezone: "Europe/Monaco", lat: 43.7384, lon: 7.4246 },
+  { name: "Suzuka 🇯🇵", timezone: "Asia/Tokyo", lat: 34.8431, lon: 136.5415 },
+  { name: "Austin 🇺🇸", timezone: "America/Chicago", lat: 30.2672, lon: -97.7431 },
+  { name: "Silverstone 🇬🇧", timezone: "Europe/London", lat: 52.0786, lon: -1.0169 },
+  { name: "Singapore 🇸🇬", timezone: "Asia/Singapore", lat: 1.2905, lon: 103.8520 },
+  { name: "Barcelona 🇪🇸", timezone: "Europe/Madrid", lat: 41.3851, lon: 2.1734 },
+  { name: "Montreal 🇨🇦", timezone: "America/Toronto", lat: 45.5017, lon: -73.5673 },
+  { name: "Melbourne 🇦🇺", timezone: "Australia/Melbourne", lat: -37.8136, lon: 144.9631 },
+  { name: "Sao Paulo 🇧🇷", timezone: "America/Sao_Paulo", lat: -23.5505, lon: -46.6333 },
+  { name: "Abu Dhabi 🇦🇪", timezone: "Asia/Dubai", lat: 24.4539, lon: 54.3773 },
+  { name: "Monza 🇮🇹", timezone: "Europe/Rome", lat: 45.5722, lon: 9.2777 },
+  { name: "Spa 🇧🇪", timezone: "Europe/Brussels", lat: 50.4373, lon: 5.9699 },
+  { name: "Imola 🇮🇹", timezone: "Europe/Rome", lat: 44.3439, lon: 11.7167 },
+  { name: "Baku 🇦🇿", timezone: "Asia/Baku", lat: 40.3725, lon: 49.8533 },
+  { name: "Miami 🇺🇸", timezone: "America/New_York", lat: 25.9581, lon: -80.2388 },
+  { name: "Jeddah 🇸🇦", timezone: "Asia/Riyadh", lat: 21.5433, lon: 39.1728 },
+  { name: "Las Vegas 🇺🇸", timezone: "America/Los_Angeles", lat: 36.1147, lon: -115.1728 },
+  { name: "Budapest 🇭🇺", timezone: "Europe/Budapest", lat: 47.5830, lon: 19.2526 },
+  { name: "Zandvoort 🇳🇱", timezone: "Europe/Amsterdam", lat: 52.3888, lon: 4.5444 },
+  { name: "Mexico City 🇲🇽", timezone: "America/Mexico_City", lat: 19.4042, lon: -99.0913 },
 ];
+
+// Timezone offset mapping (hours from UTC) for direct fallback
+const timezoneOffsets: Record<string, number> = {
+  "Europe/Monaco": 2,       // CEST UTC+2
+  "Asia/Tokyo": 9,          // JST UTC+9
+  "America/Chicago": -5,    // CDT UTC-5
+  "Europe/London": 1,       // BST UTC+1
+  "Asia/Singapore": 8,      // SGT UTC+8
+  "Europe/Madrid": 2,       // CEST UTC+2
+  "America/Toronto": -4,    // EDT UTC-4
+  "Australia/Melbourne": 10, // AEST UTC+10
+  "America/Sao_Paulo": -3,  // BRT UTC-3
+  "Asia/Dubai": 4,          // GST UTC+4
+  "Europe/Rome": 2,         // CEST UTC+2
+  "Europe/Brussels": 2,     // CEST UTC+2
+  "Asia/Baku": 4,           // AZT UTC+4
+  "America/New_York": -4,   // EDT UTC-4
+  "Asia/Riyadh": 3,         // AST UTC+3
+  "America/Los_Angeles": -7, // PDT UTC-7
+  "Europe/Budapest": 2,     // CEST UTC+2
+  "Europe/Amsterdam": 2,    // CEST UTC+2
+  "America/Mexico_City": -5, // CDT UTC-5
+};
 
 // Type for weather data
 type WeatherData = {
@@ -40,7 +71,7 @@ type WeatherData = {
   };
 };
 
-// Type for edit mode
+// Type for edit mode (boolean, number for index, or "all")
 type EditMode = boolean | number | "all";
 
 const WorldClockPanel: React.FC = () => {
@@ -48,6 +79,7 @@ const WorldClockPanel: React.FC = () => {
   const [weatherData, setWeatherData] = useState<Record<string, WeatherData>>({});
   const [selectedCities, setSelectedCities] = useState<City[]>([]);
   const [editMode, setEditMode] = useState<EditMode>(false);
+  const [loading, setLoading] = useState<boolean>(true);
 
   // Load saved cities from localStorage on component mount
   useEffect(() => {
@@ -71,6 +103,8 @@ const WorldClockPanel: React.FC = () => {
       console.error("Error loading saved cities:", err);
       // Fallback to default cities
       setSelectedCities(availableCities.slice(0, 5));
+    } finally {
+      setLoading(false);
     }
   }, []);
 
@@ -81,7 +115,7 @@ const WorldClockPanel: React.FC = () => {
     }
   }, [selectedCities]);
 
-  // Calculate time data for selected cities using offsets
+  // Calculate time data for selected cities using Intl.DateTimeFormat
   useEffect(() => {
     if (selectedCities.length === 0) return;
 
@@ -90,29 +124,39 @@ const WorldClockPanel: React.FC = () => {
 
       for (const city of selectedCities) {
         try {
-          // Get current UTC time
+          // Get current date
           const now = new Date();
-          const utcTime = new Date(now.getTime() + now.getTimezoneOffset() * 60000);
           
-          // Apply timezone offset for the city
-          const localDateTime = new Date(utcTime.getTime() + city.offset * 3600000);
-          
-          // Format time for display
-          const localTime = localDateTime.toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true
-          });
+          // Use Intl.DateTimeFormat for more accurate timezone calculations
+          // This handles daylight savings time automatically
+          const localTime = new Intl.DateTimeFormat('en-US', {
+            hour: '2-digit',
+            minute: '2-digit',
+            hour12: true,
+            timeZone: city.timezone,
+          }).format(now);
           
           updatedTimes[city.name] = localTime;
         } catch (err) {
           console.error(`Error calculating time for ${city.name}:`, err);
-          // Use current device time as fallback
-          updatedTimes[city.name] = new Date().toLocaleTimeString([], {
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: true
-          });
+          
+          // Fallback to manual offset calculation if Intl.DateTimeFormat fails
+          try {
+            const fallbackNow = new Date();
+            const offset = timezoneOffsets[city.timezone] || 0;
+            const dstAdjustment = city.dstOffset || 0;
+            const utcTime = new Date(fallbackNow.getTime() + fallbackNow.getTimezoneOffset() * 60000);
+            const localDateTime = new Date(utcTime.getTime() + (offset + dstAdjustment) * 3600000);
+            
+            updatedTimes[city.name] = localDateTime.toLocaleTimeString([], {
+              hour: "2-digit",
+              minute: "2-digit",
+              hour12: true
+            });
+          } catch (fallbackErr) {
+            // Use placeholder as last resort fallback
+            updatedTimes[city.name] = "--:--";
+          }
         }
       }
 
@@ -137,10 +181,20 @@ const WorldClockPanel: React.FC = () => {
 
       for (const city of selectedCities) {
         try {
-          const response = await fetch(`/api/weather?lat=${city.lat}&lon=${city.lon}`);
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 5000); // 5s timeout
+          
+          const response = await fetch(`/api/weather?lat=${city.lat}&lon=${city.lon}`, {
+            signal: controller.signal
+          });
+          
+          clearTimeout(timeoutId);
+          
           if (response.ok) {
             const data = await response.json();
             weatherResults[city.name] = data;
+          } else {
+            console.warn(`Weather API returned ${response.status} for ${city.name}`);
           }
         } catch (error) {
           console.error(`Error fetching weather for ${city.name}:`, error);
@@ -157,11 +211,11 @@ const WorldClockPanel: React.FC = () => {
     return () => clearInterval(weatherInterval);
   }, [selectedCities]);
 
-  // Function to get weather icon
+  // Function to get weather icon with fallback
   const getWeatherIcon = (iconCode: string): string => {
     return `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
   };
-
+  
   // Handle city selection
   const handleSelectCity = (city: City, index: number): void => {
     const newSelectedCities = [...selectedCities];
