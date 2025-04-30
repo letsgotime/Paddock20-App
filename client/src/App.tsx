@@ -662,8 +662,7 @@ function App() {
           <Layout>
             <Switch>
               <Route path="/" component={() => <Link href="/manifestation-station"><Home /></Link>} />
-              <Route path="/manifestation-station" component={CompleteManifestationStation} />
-              <Route path="/manifestation-station/:subpage*" component={CompleteManifestationStation} />
+              <Route path="/manifestation-station" component={() => <CompleteManifestationStation />} />
               <Route path="/manifestation-station/body" component={() => <CompleteManifestationStation activeTab="body" />} />
               <Route path="/manifestation-station/mind" component={() => <CompleteManifestationStation activeTab="mind" />} />
               <Route path="/manifestation-station/spirit" component={() => <CompleteManifestationStation activeTab="spirit" />} />

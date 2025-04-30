@@ -1,5 +1,12 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "wouter";
+import BodyFocusComponent from "../components/ManifestationStation/BodyFocusComponent";
+import MindFocusComponent from "../components/ManifestationStation/MindFocusComponent";
+import SpiritFocusComponent from "../components/ManifestationStation/SpiritFocusComponent";
+import DisciplineTrackerComponent from "../components/ManifestationStation/DisciplineTrackerComponent";
+import ResourceLibraryComponent from "../components/ManifestationStation/ResourceLibraryComponent";
+import HustlePlannerComponent from "../components/ManifestationStation/HustlePlannerComponent";
+import CelebrationComponent from "../components/ManifestationStation/CelebrationComponent";
 import { 
   Car, 
   Wrench, 
@@ -210,7 +217,11 @@ interface DashboardSettings {
 }
 
 // Main component
-const ManifestationStation: React.FC = () => {
+interface ManifestationStationProps {
+  activeTab?: string;
+}
+
+const ManifestationStation: React.FC<ManifestationStationProps> = ({ activeTab: initialTab }) => {
   // ======== STATE MANAGEMENT ========
   const [goals, setGoals] = useState<Goal[]>([]);
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
@@ -219,7 +230,14 @@ const ManifestationStation: React.FC = () => {
   const [isLoading, setIsLoading] = useState<boolean>(true);
 
   // UI state
-  const [activeTab, setActiveTab] = useState<string>("dashboard");
+  const [activeTab, setActiveTab] = useState<string>(initialTab || "dashboard");
+  
+  // Set initial tab from props if provided
+  useEffect(() => {
+    if (initialTab) {
+      setActiveTab(initialTab);
+    }
+  }, [initialTab]);
   const [dashboardSettings, setDashboardSettings] = useState<DashboardSettings>({
     showGoals: true,
     showProjects: true,
@@ -791,31 +809,87 @@ const ManifestationStation: React.FC = () => {
                 <Gauge className="h-4 w-4 md:mr-2" />
                 <span className="hidden md:inline">Dashboard</span>
               </TabsTrigger>
-              <TabsTrigger value="goals" className="data-[state=active]:bg-[#7FC844] data-[state=active]:text-black">
-                <Target className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">Goals</span>
+              
+              {/* 7 Elements System Tabs */}
+              <TabsTrigger value="body" className="data-[state=active]:bg-[#7FC844] data-[state=active]:text-black">
+                <CommandIcon className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">Body</span>
               </TabsTrigger>
-              <TabsTrigger value="vehicles" className="data-[state=active]:bg-[#7FC844] data-[state=active]:text-black">
-                <Car className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">Vehicles</span>
+              <TabsTrigger value="mind" className="data-[state=active]:bg-[#7FC844] data-[state=active]:text-black">
+                <Brain className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">Mind</span>
               </TabsTrigger>
-              <TabsTrigger value="projects" className="data-[state=active]:bg-[#7FC844] data-[state=active]:text-black">
-                <Hammer className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">Projects</span>
+              <TabsTrigger value="spirit" className="data-[state=active]:bg-[#7FC844] data-[state=active]:text-black">
+                <Lightbulb className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">Spirit</span>
               </TabsTrigger>
-              <TabsTrigger value="insights" className="data-[state=active]:bg-[#7FC844] data-[state=active]:text-black">
-                <LineChart className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">Insights</span>
-              </TabsTrigger>
-              <TabsTrigger value="journal" className="data-[state=active]:bg-[#7FC844] data-[state=active]:text-black">
-                <ScrollText className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">Journal</span>
-              </TabsTrigger>
-              <TabsTrigger value="track" className="data-[state=active]:bg-[#7FC844] data-[state=active]:text-black">
+              <TabsTrigger value="discipline" className="data-[state=active]:bg-[#7FC844] data-[state=active]:text-black">
                 <Activity className="h-4 w-4 md:mr-2" />
-                <span className="hidden md:inline">Track</span>
+                <span className="hidden md:inline">Discipline</span>
+              </TabsTrigger>
+              <TabsTrigger value="library" className="data-[state=active]:bg-[#7FC844] data-[state=active]:text-black">
+                <ScrollText className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">Library</span>
+              </TabsTrigger>
+              <TabsTrigger value="hustle" className="data-[state=active]:bg-[#7FC844] data-[state=active]:text-black">
+                <Rocket className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">Hustle</span>
+              </TabsTrigger>
+              <TabsTrigger value="celebration" className="data-[state=active]:bg-[#7FC844] data-[state=active]:text-black">
+                <Trophy className="h-4 w-4 md:mr-2" />
+                <span className="hidden md:inline">Celebrate</span>
               </TabsTrigger>
             </TabsList>
+            
+            {/* 7 Elements System Content */}
+            <TabsContent value="body" className="mt-6">
+              <BodyFocusComponent 
+                goal={{ title: "", status: "not_started" }}
+                onUpdate={() => {}} 
+              />
+            </TabsContent>
+            
+            <TabsContent value="mind" className="mt-6">
+              <MindFocusComponent 
+                goal={{ title: "", status: "not_started" }}
+                onUpdate={() => {}}
+              />
+            </TabsContent>
+            
+            <TabsContent value="spirit" className="mt-6">
+              <SpiritFocusComponent 
+                goal={{ title: "", status: "not_started" }}
+                onUpdate={() => {}}
+              />
+            </TabsContent>
+            
+            <TabsContent value="discipline" className="mt-6">
+              <DisciplineTrackerComponent 
+                goal={{ title: "", status: "not_started" }}
+                onUpdate={() => {}}
+              />
+            </TabsContent>
+            
+            <TabsContent value="library" className="mt-6">
+              <ResourceLibraryComponent 
+                goal={{ title: "", status: "not_started" }}
+                onUpdate={() => {}}
+              />
+            </TabsContent>
+            
+            <TabsContent value="hustle" className="mt-6">
+              <HustlePlannerComponent 
+                goal={{ title: "", status: "not_started" }}
+                onUpdate={() => {}}
+              />
+            </TabsContent>
+            
+            <TabsContent value="celebration" className="mt-6">
+              <CelebrationComponent 
+                goal={{ title: "", status: "not_started" }}
+                onUpdate={() => {}}
+              />
+            </TabsContent>
             
             {/* Dashboard View */}
             <TabsContent value="dashboard" className="mt-6 space-y-6">
