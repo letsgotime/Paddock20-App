@@ -18,6 +18,24 @@ const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY || "2379a18ee0e478c8
 // Cache for geocoding results to avoid repetitive API calls
 const geocodeCache = new Map();
 
+// API Health Monitoring System
+// This tracks the status of our external weather API
+interface WeatherApiStatus {
+  lastChecked: Date;
+  isOperational: boolean;
+  lastError: string | null;
+  consecutiveFailures: number;
+  checkInterval: number; // in milliseconds
+}
+
+const apiHealthStatus: WeatherApiStatus = {
+  lastChecked: new Date(),
+  isOperational: true,
+  lastError: null,
+  consecutiveFailures: 0,
+  checkInterval: 4 * 60 * 60 * 1000 // 4 hours in milliseconds
+};
+
 // List of common timezones for the WorldClock component
 const commonTimezones = [
   // North America
@@ -64,12 +82,73 @@ const commonTimezones = [
   'Africa/Cairo'
 ];
 
+/**
+ * Checks if the OpenWeather API is operational without making a full data request
+ * This is a lightweight test that minimizes API usage
+ */
+async function checkWeatherApiHealth(): Promise<boolean> {
+  try {
+    // Only check if it's been at least 4 hours since the last check
+    const now = new Date();
+    const timeSinceLastCheck = now.getTime() - apiHealthStatus.lastChecked.getTime();
+    
+    if (timeSinceLastCheck < apiHealthStatus.checkInterval) {
+      // Not time to check yet
+      return apiHealthStatus.isOperational;
+    }
+    
+    console.log('Performing periodic OpenWeather API health check...');
+    
+    // Use the geocoding API as it's lightweight and doesn't count against the high-cost endpoints
+    // Using a well-known location (New York City) to ensure valid response
+    const testUrl = `https://api.openweathermap.org/geo/1.0/direct?q=New York&limit=1&appid=${OPENWEATHER_API_KEY}`;
+    
+    const response = await fetch(testUrl);
+    
+    if (!response.ok) {
+      throw new Error(`API health check failed: ${response.status} - ${await response.text()}`);
+    }
+    
+    // We got a valid response
+    apiHealthStatus.lastChecked = now;
+    apiHealthStatus.isOperational = true;
+    apiHealthStatus.lastError = null;
+    apiHealthStatus.consecutiveFailures = 0;
+    
+    console.log('OpenWeather API health check passed successfully');
+    return true;
+  } catch (error) {
+    // Update health status
+    apiHealthStatus.lastChecked = new Date();
+    apiHealthStatus.isOperational = false;
+    apiHealthStatus.lastError = (error as Error).message;
+    apiHealthStatus.consecutiveFailures += 1;
+    
+    console.error('OpenWeather API health check failed:', error);
+    console.error(`Consecutive failures: ${apiHealthStatus.consecutiveFailures}`);
+    
+    // Could trigger additional recovery actions here
+    // For instance, sending an alert if failures persist
+    
+    return false;
+  }
+}
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Using only OpenWeather API for all weather services
+  
+  // Immediately check API health on startup
+  await checkWeatherApiHealth();
   
   // Weather API proxy routes
   app.get('/api/weather', async (req, res) => {
     try {
+      // Check API health status and schedule check if needed
+      const isHealthy = await checkWeatherApiHealth();
+      if (!isHealthy) {
+        console.warn('OpenWeather API may be experiencing issues. Attempting request anyway...');
+      }
+
       const { lat, lon, units } = req.query;
       
       if (!lat || !lon) {
@@ -81,8 +160,20 @@ export async function registerRoutes(app: Express): Promise<Server> {
       
       console.log(`Fetching OpenWeather data for: ${lat},${lon}`);
       const response = await fetch(url);
+      
       if (!response.ok) {
+        // Update health status on failure
+        apiHealthStatus.isOperational = false;
+        apiHealthStatus.lastError = `Weather API error: ${response.status}`;
+        apiHealthStatus.consecutiveFailures += 1;
         throw new Error(`Weather API error: ${response.status} - ${await response.text()}`);
+      }
+      
+      // Reset failure count on success
+      if (apiHealthStatus.consecutiveFailures > 0) {
+        apiHealthStatus.consecutiveFailures = 0;
+        apiHealthStatus.isOperational = true;
+        apiHealthStatus.lastError = null;
       }
       
       const data = await response.json();
@@ -200,6 +291,28 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Error fetching timezones:', error);
       res.status(500).json({ message: 'Failed to fetch timezones' });
+    }
+  });
+  
+  // API Health check endpoint
+  app.get('/api/weather-health', async (req, res) => {
+    try {
+      // Force a health check regardless of time interval
+      apiHealthStatus.lastChecked = new Date(0); // Set to epoch time to force check
+      const isOperational = await checkWeatherApiHealth();
+      
+      res.json({
+        status: isOperational ? 'operational' : 'degraded',
+        lastChecked: apiHealthStatus.lastChecked,
+        consecutiveFailures: apiHealthStatus.consecutiveFailures,
+        lastError: apiHealthStatus.lastError
+      });
+    } catch (error) {
+      console.error('Health check endpoint error:', error);
+      res.status(500).json({ 
+        status: 'error',
+        message: (error as Error).message
+      });
     }
   });
 
