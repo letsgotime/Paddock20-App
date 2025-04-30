@@ -165,7 +165,7 @@ const PersonalizedDashboard: React.FC = () => {
           
           {/* World Clock Panel - Full Width */}
           <div className="lg:col-span-3 bts-card">
-            <h2 className="bts-header-green mb-4">F1 Circuit World Clocks</h2>
+            <h2 className="bts-header-green mb-4">World Clocks</h2>
             <WorldClockPanel />
           </div>
           
