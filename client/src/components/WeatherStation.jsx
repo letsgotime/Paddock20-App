@@ -15,53 +15,110 @@ const WeatherStation = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showSearch, setShowSearch] = useState(false);
   
-  // Fetch weather data 
+  // Fetch weather data based on coordinates
   useEffect(() => {
-    const fetchWeatherData = async () => {
+    const fetchWeatherData = async (lat, lon) => {
       try {
-        // In a real implementation, this would make an API call to OpenWeather
-        // For now we'll just simulate with a placeholder state
         setLoading(true);
         
-        // Always provide default data without trying to access API
-        setTimeout(() => {
-          setWeather({
-            temp: 72,
-            feels_like: 74,
-            temp_min: 68,
-            temp_max: 78,
-            humidity: 65,
-            pressure: 1012,
-            weather: [{ main: 'Clear', description: 'clear sky', icon: '01d' }],
-            wind: { speed: 5.2, deg: 200 },
-            visibility: 10000,
-            name: 'San Francisco',
-            dt: Date.now() / 1000,
-            sys: { sunrise: Date.now() / 1000 - 25200, sunset: Date.now() / 1000 + 25200 }
-          });
-          setLocationName('San Francisco, CA');
-          setLoading(false);
-        }, 700);
+        // Make actual API call to our backend OpenWeather proxy
+        const response = await fetch(`/api/weather?lat=${lat}&lon=${lon}&units=imperial`);
+        
+        if (!response.ok) {
+          throw new Error(`Weather API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        setWeather(data);
+        
+        // Get location name from coordinates using reverse geocoding
+        const geoResponse = await fetch(`/api/reverse-geocode?lat=${lat}&lon=${lon}`);
+        if (geoResponse.ok) {
+          const geoData = await geoResponse.json();
+          if (geoData && geoData.length > 0) {
+            setLocationName(geoData[0].name);
+          } else {
+            setLocationName(data.name || 'Current Location');
+          }
+        } else {
+          setLocationName(data.name || 'Current Location');
+        }
+        
+        setLoading(false);
       } catch (err) {
         console.error('Error fetching weather data:', err);
         setError('Unable to fetch weather data. Please try again later.');
         setLoading(false);
       }
     };
-
-    fetchWeatherData();
+    
+    // Get the user's location when component mounts
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const { latitude, longitude } = position.coords;
+          setCoordinates({ lat: latitude, lon: longitude });
+          fetchWeatherData(latitude, longitude);
+        },
+        (err) => {
+          console.error('Geolocation error:', err);
+          // Default to Nashville, TN coordinates if geolocation fails
+          fetchWeatherData(36.1627, -86.7816);
+          setError('Location access denied. Showing default location.');
+        }
+      );
+    } else {
+      // Default to Nashville, TN coordinates if geolocation not supported
+      fetchWeatherData(36.1627, -86.7816);
+      setError('Geolocation not supported by your browser. Showing default location.');
+    }
   }, []);
 
+  // Helper function to fetch weather by coordinates
+  const fetchWeatherByCoordinates = async (lat, lon) => {
+    try {
+      setLoading(true);
+      
+      // Make actual API call to our backend OpenWeather proxy
+      const response = await fetch(`/api/weather?lat=${lat}&lon=${lon}&units=imperial`);
+      
+      if (!response.ok) {
+        throw new Error(`Weather API error: ${response.status}`);
+      }
+      
+      const data = await response.json();
+      setWeather(data);
+      
+      // Get location name from coordinates using reverse geocoding
+      const geoResponse = await fetch(`/api/reverse-geocode?lat=${lat}&lon=${lon}`);
+      if (geoResponse.ok) {
+        const geoData = await geoResponse.json();
+        if (geoData && geoData.length > 0) {
+          setLocationName(geoData[0].name);
+        } else {
+          setLocationName(data.name || 'Current Location');
+        }
+      } else {
+        setLocationName(data.name || 'Current Location');
+      }
+      
+      setLoading(false);
+    } catch (err) {
+      console.error('Error fetching weather data:', err);
+      setError('Unable to fetch weather data. Please try again later.');
+      setLoading(false);
+    }
+  };
+  
   // Get user's current location
   const getCurrentLocation = () => {
     setLoading(true);
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
-          setCoordinates({
-            lat: position.coords.latitude,
-            lon: position.coords.longitude
-          });
+          const { latitude, longitude } = position.coords;
+          setCoordinates({ lat: latitude, lon: longitude });
+          fetchWeatherByCoordinates(latitude, longitude);
         },
         (err) => {
           console.error('Error getting location:', err);
@@ -75,35 +132,41 @@ const WeatherStation = () => {
     }
   };
 
-  // Handle search location
-  const handleSearchLocation = (e) => {
+  // Handle search location using OpenWeather geocoding API via our server
+  const handleSearchLocation = async (e) => {
     e.preventDefault();
-    if (!searchQuery.trim()) return;
+    const query = searchQuery.trim();
+    if (!query) return;
     
-    // In a real implementation, this would use a geocoding API
-    // For now, we'll just update the state directly
-    setLocationName(searchQuery);
     setShowSearch(false);
     setLoading(true);
     
-    // Simulate API delay
-    setTimeout(() => {
-      setWeather({
-        temp: 68,
-        feels_like: 70,
-        temp_min: 64,
-        temp_max: 72,
-        humidity: 70,
-        pressure: 1010,
-        weather: [{ main: 'Clouds', description: 'few clouds', icon: '02d' }],
-        wind: { speed: 6.8, deg: 225 },
-        visibility: 9000,
-        name: searchQuery,
-        dt: Date.now() / 1000,
-        sys: { sunrise: Date.now() / 1000 - 25200, sunset: Date.now() / 1000 + 25200 }
-      });
+    try {
+      // Use the OpenWeather geocoding API to convert city name to coordinates
+      const geoResponse = await fetch(`/api/geocode?q=${encodeURIComponent(query)}`);
+      
+      if (!geoResponse.ok) {
+        throw new Error('Failed to find location');
+      }
+      
+      const geoData = await geoResponse.json();
+      
+      if (!geoData.length) {
+        throw new Error('Location not found');
+      }
+      
+      // Get the first result's coordinates
+      const { lat, lon, name } = geoData[0];
+      setCoordinates({ lat, lon });
+      setLocationName(name);
+      
+      // Fetch weather data with the coordinates
+      await fetchWeatherByCoordinates(lat, lon);
+    } catch (err) {
+      console.error('Error searching location:', err);
+      setError('Unable to find that location. Please try another search.');
       setLoading(false);
-    }, 700);
+    }
   };
 
   // Get weather icon based on weather condition
