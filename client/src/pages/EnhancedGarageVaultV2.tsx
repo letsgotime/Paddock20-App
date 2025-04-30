@@ -105,6 +105,12 @@ const EnhancedGarageVaultV2: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
+  // Widget detail state
+  const [showDetailedWeather, setShowDetailedWeather] = useState<boolean>(false);
+  const [showDetailedMaintenance, setShowDetailedMaintenance] = useState<boolean>(false);
+  const [showDetailedMoodEnergy, setShowDetailedMoodEnergy] = useState<boolean>(false);
+  const [showDetailedValuation, setShowDetailedValuation] = useState<boolean>(false);
+  
   // Dashboard toggles for UI elements
   const [dashboardToggles, setDashboardToggles] = useState({
     showVehicleTelemetry: true,
@@ -510,18 +516,24 @@ const EnhancedGarageVaultV2: React.FC = () => {
                 Weather & Environment
               </h2>
               
-              <div className="bg-zinc-800 rounded-lg p-4 mb-4">
+              <div 
+                className="bg-zinc-800 rounded-lg p-4 mb-4 cursor-pointer transition-all hover:border hover:border-[#7FC844]"
+                onClick={() => setShowDetailedWeather(true)}
+              >
                 <div className="flex justify-between items-center mb-3">
                   <div>
                     <div className="text-gray-400 text-sm">{weatherData.location}</div>
                     <div className="text-2xl font-bold">{weatherData.temp}°F</div>
                   </div>
                   
-                  <div className="text-5xl text-[#7FC844]">
-                    {weatherData.condition === "Sunny" && <Sun />}
-                    {weatherData.condition === "Rainy" && <CloudRain />}
-                    {weatherData.condition === "Cloudy" && <CloudRain />}
-                    {!["Sunny", "Rainy", "Cloudy"].includes(weatherData.condition) && <Sun />}
+                  <div className="flex items-center">
+                    <div className="text-5xl text-[#7FC844] mr-2">
+                      {weatherData.condition === "Sunny" && <Sun />}
+                      {weatherData.condition === "Rainy" && <CloudRain />}
+                      {weatherData.condition === "Cloudy" && <CloudRain />}
+                      {!["Sunny", "Rainy", "Cloudy"].includes(weatherData.condition) && <Sun />}
+                    </div>
+                    <ChevronRight className="h-5 w-5 text-gray-500" />
                   </div>
                 </div>
                 
@@ -543,10 +555,10 @@ const EnhancedGarageVaultV2: React.FC = () => {
                   </div>
                   
                   <div className="bg-zinc-700 rounded p-2 text-center">
-                    <div className="text-xs text-gray-300 mb-1">UV Index</div>
+                    <div className="text-xs text-gray-300 mb-1">Surface Temp</div>
                     <div className="font-bold flex items-center justify-center">
-                      <Sun className="h-3 w-3 mr-1 text-yellow-400" />
-                      4
+                      <Thermometer className="h-3 w-3 mr-1 text-red-400" />
+                      78°F
                     </div>
                   </div>
                 </div>
@@ -570,7 +582,10 @@ const EnhancedGarageVaultV2: React.FC = () => {
                     Upcoming Maintenance
                   </h3>
                   
-                  <div className="bg-zinc-800 rounded-lg">
+                  <div 
+                    className="bg-zinc-800 rounded-lg cursor-pointer transition-all hover:border hover:border-[#7FC844]"
+                    onClick={() => setShowDetailedMaintenance(true)}
+                  >
                     <div className="p-3 border-b border-zinc-700">
                       <div className="flex justify-between items-center">
                         <div className="flex items-center gap-2">
@@ -584,7 +599,10 @@ const EnhancedGarageVaultV2: React.FC = () => {
                             </div>
                           </div>
                         </div>
-                        <Badge className="bg-red-600">Urgent</Badge>
+                        <div className="flex items-center">
+                          <Badge className="bg-red-600 mr-2">Urgent</Badge>
+                          <ChevronRight className="h-5 w-5 text-gray-500" />
+                        </div>
                       </div>
                     </div>
                     
@@ -601,7 +619,10 @@ const EnhancedGarageVaultV2: React.FC = () => {
                             </div>
                           </div>
                         </div>
-                        <Badge className="bg-yellow-600">Soon</Badge>
+                        <div className="flex items-center">
+                          <Badge className="bg-yellow-600 mr-2">Soon</Badge>
+                          <ChevronRight className="h-5 w-5 text-gray-500" />
+                        </div>
                       </div>
                     </div>
                   </div>
