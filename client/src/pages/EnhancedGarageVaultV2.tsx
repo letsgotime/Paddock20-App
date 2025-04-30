@@ -56,6 +56,7 @@ import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import ProjectLauncher from "../components/ProjectLauncher";
 import VehicleCustomizationPreviewer from "../components/VehicleCustomizationPreviewer";
+import PerformanceAnalytics from "../components/PerformanceAnalytics";
 
 // Vehicle interface for data structure
 interface Vehicle {
@@ -100,6 +101,7 @@ const EnhancedGarageVaultV2: React.FC = () => {
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [showProjectLauncher, setShowProjectLauncher] = useState<boolean>(false);
   const [showCustomizer, setShowCustomizer] = useState<boolean>(false);
+  const [showPerformanceAnalytics, setShowPerformanceAnalytics] = useState<boolean>(false);
   const [searchTerm, setSearchTerm] = useState<string>("");
   const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
   
@@ -683,7 +685,7 @@ const EnhancedGarageVaultV2: React.FC = () => {
                           <Button 
                             variant="outline" 
                             size="sm"
-                            className="border-zinc-700 flex-1"
+                            className="border-zinc-700"
                             onClick={() => {
                               setSelectedVehicle(vehicle);
                               setShowCustomizer(true);
@@ -696,7 +698,20 @@ const EnhancedGarageVaultV2: React.FC = () => {
                           <Button 
                             variant="outline"
                             size="sm"
-                            className="border-zinc-700 flex-1"
+                            className="border-zinc-700"
+                            onClick={() => {
+                              setSelectedVehicle(vehicle);
+                              setShowPerformanceAnalytics(true);
+                            }}
+                          >
+                            <LineChart className="h-4 w-4 mr-2" />
+                            Performance
+                          </Button>
+                          
+                          <Button 
+                            variant="outline"
+                            size="sm"
+                            className="border-zinc-700"
                             onClick={() => {
                               setSelectedVehicle(vehicle);
                               setShowProjectLauncher(true);
@@ -742,6 +757,18 @@ const EnhancedGarageVaultV2: React.FC = () => {
             <VehicleCustomizationPreviewer 
               vehicle={selectedVehicle}
               onClose={() => setShowCustomizer(false)}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Performance Analytics Dialog */}
+      {showPerformanceAnalytics && selectedVehicle && (
+        <Dialog open={showPerformanceAnalytics} onOpenChange={setShowPerformanceAnalytics}>
+          <DialogContent className="bg-zinc-900 border-zinc-800 text-white max-w-7xl">
+            <PerformanceAnalytics 
+              vehicle={selectedVehicle}
+              onClose={() => setShowPerformanceAnalytics(false)}
             />
           </DialogContent>
         </Dialog>
