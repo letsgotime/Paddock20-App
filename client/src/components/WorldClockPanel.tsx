@@ -6,22 +6,23 @@ type City = {
   timezone: string;
   lat: number;
   lon: number;
+  offset: number; // UTC offset in hours
 };
 
-// Available cities to choose from
+// Available cities to choose from with UTC offsets for calculation
 const availableCities: City[] = [
-  { name: "Monaco 🇲🇨", timezone: "Europe/Monaco", lat: 43.7384, lon: 7.4246 },
-  { name: "Suzuka 🇯🇵", timezone: "Asia/Tokyo", lat: 34.8431, lon: 136.5415 },
-  { name: "Austin 🇺🇸", timezone: "America/Chicago", lat: 30.2672, lon: -97.7431 },
-  { name: "Silverstone 🇬🇧", timezone: "Europe/London", lat: 52.0786, lon: -1.0169 },
-  { name: "Singapore 🇸🇬", timezone: "Asia/Singapore", lat: 1.2905, lon: 103.8520 },
-  { name: "Barcelona 🇪🇸", timezone: "Europe/Madrid", lat: 41.3851, lon: 2.1734 },
-  { name: "Montreal 🇨🇦", timezone: "America/Toronto", lat: 45.5017, lon: -73.5673 },
-  { name: "Melbourne 🇦🇺", timezone: "Australia/Melbourne", lat: -37.8136, lon: 144.9631 },
-  { name: "Sao Paulo 🇧🇷", timezone: "America/Sao_Paulo", lat: -23.5505, lon: -46.6333 },
-  { name: "Abu Dhabi 🇦🇪", timezone: "Asia/Dubai", lat: 24.4539, lon: 54.3773 },
-  { name: "Monza 🇮🇹", timezone: "Europe/Rome", lat: 45.5722, lon: 9.2777 },
-  { name: "Spa 🇧🇪", timezone: "Europe/Brussels", lat: 50.4373, lon: 5.9699 },
+  { name: "Monaco 🇲🇨", timezone: "Europe/Monaco", lat: 43.7384, lon: 7.4246, offset: 2 },
+  { name: "Suzuka 🇯🇵", timezone: "Asia/Tokyo", lat: 34.8431, lon: 136.5415, offset: 9 },
+  { name: "Austin 🇺🇸", timezone: "America/Chicago", lat: 30.2672, lon: -97.7431, offset: -5 },
+  { name: "Silverstone 🇬🇧", timezone: "Europe/London", lat: 52.0786, lon: -1.0169, offset: 1 },
+  { name: "Singapore 🇸🇬", timezone: "Asia/Singapore", lat: 1.2905, lon: 103.8520, offset: 8 },
+  { name: "Barcelona 🇪🇸", timezone: "Europe/Madrid", lat: 41.3851, lon: 2.1734, offset: 2 },
+  { name: "Montreal 🇨🇦", timezone: "America/Toronto", lat: 45.5017, lon: -73.5673, offset: -4 },
+  { name: "Melbourne 🇦🇺", timezone: "Australia/Melbourne", lat: -37.8136, lon: 144.9631, offset: 10 },
+  { name: "Sao Paulo 🇧🇷", timezone: "America/Sao_Paulo", lat: -23.5505, lon: -46.6333, offset: -3 },
+  { name: "Abu Dhabi 🇦🇪", timezone: "Asia/Dubai", lat: 24.4539, lon: 54.3773, offset: 4 },
+  { name: "Monza 🇮🇹", timezone: "Europe/Rome", lat: 45.5722, lon: 9.2777, offset: 2 },
+  { name: "Spa 🇧🇪", timezone: "Europe/Brussels", lat: 50.4373, lon: 5.9699, offset: 2 },
 ];
 
 // Type for weather data
@@ -80,28 +81,12 @@ const WorldClockPanel: React.FC = () => {
     }
   }, [selectedCities]);
 
-  // Fetch time data for selected cities using local calculation
+  // Calculate time data for selected cities using offsets
   useEffect(() => {
     if (selectedCities.length === 0) return;
 
     const calculateTimes = () => {
       const updatedTimes: Record<string, string> = {};
-
-      // Define timezone offsets (hours from UTC)
-      const timezoneOffsets: Record<string, number> = {
-        "Europe/Monaco": 2,       // UTC+2
-        "Asia/Tokyo": 9,          // UTC+9
-        "America/Chicago": -5,    // UTC-5
-        "Europe/London": 1,       // UTC+1
-        "Asia/Singapore": 8,      // UTC+8
-        "Europe/Madrid": 2,       // UTC+2
-        "America/Toronto": -4,    // UTC-4
-        "Australia/Melbourne": 10, // UTC+10
-        "America/Sao_Paulo": -3,  // UTC-3
-        "Asia/Dubai": 4,          // UTC+4
-        "Europe/Rome": 2,         // UTC+2
-        "Europe/Brussels": 2      // UTC+2
-      };
 
       for (const city of selectedCities) {
         try {
@@ -110,8 +95,7 @@ const WorldClockPanel: React.FC = () => {
           const utcTime = new Date(now.getTime() + now.getTimezoneOffset() * 60000);
           
           // Apply timezone offset for the city
-          const offset = timezoneOffsets[city.timezone] || 0;
-          const localDateTime = new Date(utcTime.getTime() + offset * 3600000);
+          const localDateTime = new Date(utcTime.getTime() + city.offset * 3600000);
           
           // Format time for display
           const localTime = localDateTime.toLocaleTimeString([], {
