@@ -38,7 +38,11 @@ import {
   ClipboardList,
   CircleDashed,
   BatteryCharging,
-  PlusSquare
+  PlusSquare,
+  Layers,
+  LayoutDashboard,
+  Activity,
+  Minus
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -180,7 +184,7 @@ const ManifestationStation: React.FC = () => {
   const [weatherData, setWeatherData] = useState(mockWeatherData);
   const [isConnectedToOBD, setIsConnectedToOBD] = useState(false);
   
-  // Dashboard display toggles
+  // Dashboard display toggles with category grouping for better organization
   const [dashboardToggles, setDashboardToggles] = useState({
     showTelemetry: true,
     showMaintenanceAlerts: true,
@@ -191,6 +195,16 @@ const ManifestationStation: React.FC = () => {
     showDetailingSchedule: true,
     showProjectStatus: true
   });
+  
+  // Categories for dashboard sections for improved organization
+  const dashboardCategories = {
+    "Vehicle Data": ["Telemetry", "MaintenanceAlerts", "ValuationData"],
+    "Experience": ["MoodEnergy", "DetailingSchedule", "ProjectStatus"],
+    "Information": ["WeatherData", "DocumentExpiration"]
+  };
+  
+  // Touch interactions
+  const [activeToggle, setActiveToggle] = useState<string | null>(null);
 
   // Fetch user profile
   useEffect(() => {
@@ -293,12 +307,29 @@ const ManifestationStation: React.FC = () => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
-  // Handle toggle changes
+  // Handle toggle changes with enhanced touch feedback
   const handleToggleChange = (toggleName: string) => {
+    // Provide haptic-like visual feedback for touch interaction
+    setActiveToggle(toggleName);
+    setTimeout(() => setActiveToggle(null), 300);
+    
     setDashboardToggles(prev => ({
       ...prev,
       [toggleName]: !prev[toggleName]
     }));
+    
+    // Provide toast feedback for touch interactions on mobile
+    const isMobile = window.innerWidth < 768;
+    if (isMobile) {
+      const toggleLabel = toggleName.replace('show', '').replace(/([A-Z])/g, ' $1').trim();
+      const isEnabled = !dashboardToggles[toggleName as keyof typeof dashboardToggles];
+      
+      toast({
+        title: `${toggleLabel} ${isEnabled ? 'Enabled' : 'Disabled'}`,
+        description: `${toggleLabel} section is now ${isEnabled ? 'visible' : 'hidden'} on your dashboard.`,
+        duration: 1500,
+      });
+    }
   };
 
   // Simulate OBD connection
@@ -668,43 +699,119 @@ const ManifestationStation: React.FC = () => {
                     </div>
                   </div>
                 
-                  {/* Dashboard Settings */}
+                  {/* Responsive Touch-Friendly Dashboard Controls */}
                   <div className="bg-zinc-900 border border-zinc-800 rounded-xl mb-6">
                     <div className="flex justify-between items-center p-4 border-b border-zinc-800">
                       <h3 className="text-lg font-semibold flex items-center gap-2">
-                        <Settings className="h-5 w-5 text-[#7FC844]" />
+                        <LayoutDashboard className="h-5 w-5 text-[#7FC844]" />
                         Dashboard Controls
                       </h3>
-                      <button 
-                        onClick={() => {
-                          Object.keys(dashboardToggles).forEach(key => {
-                            setDashboardToggles(prev => ({
-                              ...prev,
-                              [key]: true
-                            }));
-                          });
-                          toast({
-                            title: "Dashboard Reset",
-                            description: "All dashboard components are now visible.",
-                          });
-                        }}
-                        className="text-sm text-[#7FC844] hover:text-[#6cb33a] transition"
-                      >
-                        Show All
-                      </button>
-                    </div>
-                    <div className="p-4 grid grid-cols-2 md:grid-cols-4 gap-3">
-                      {Object.entries(dashboardToggles).map(([key, value]) => (
-                        <div 
-                          key={key}
-                          className="flex items-center justify-between bg-zinc-800 p-3 rounded-lg"
+                      <div className="flex items-center gap-3">
+                        <button 
+                          onClick={() => {
+                            Object.keys(dashboardToggles).forEach(key => {
+                              setDashboardToggles(prev => ({
+                                ...prev,
+                                [key]: true
+                              }));
+                            });
+                            toast({
+                              title: "Dashboard Reset",
+                              description: "All dashboard components are now visible.",
+                            });
+                          }}
+                          className="text-sm bg-zinc-800 hover:bg-zinc-700 px-3 py-1.5 rounded-lg transition flex items-center gap-1"
                         >
-                          <span className="text-sm">{key.replace('show', '').replace(/([A-Z])/g, ' $1').trim()}</span>
-                          <Switch 
-                            checked={value} 
-                            onCheckedChange={() => handleToggleChange(key)} 
-                            className="data-[state=checked]:bg-[#7FC844]"
-                          />
+                          <Layers className="h-4 w-4 text-[#7FC844]" />
+                          <span>Show All</span>
+                        </button>
+                        <button
+                          onClick={() => {
+                            Object.keys(dashboardToggles).forEach(key => {
+                              setDashboardToggles(prev => ({
+                                ...prev,
+                                [key]: false
+                              }));
+                            });
+                            toast({
+                              title: "Dashboard Cleared",
+                              description: "All dashboard components are now hidden.",
+                            });
+                          }}
+                          className="text-sm bg-zinc-800 hover:bg-zinc-700 px-3 py-1.5 rounded-lg transition flex items-center gap-1"
+                        >
+                          <Minus className="h-4 w-4 text-gray-400" />
+                          <span>Hide All</span>
+                        </button>
+                      </div>
+                    </div>
+                    
+                    {/* Category-based dashboard controls */}
+                    <div className="p-4 space-y-6">
+                      {Object.entries(dashboardCategories).map(([category, sectionNames]) => (
+                        <div key={category} className="space-y-3">
+                          <h4 className="text-sm font-medium text-gray-400 flex items-center gap-2">
+                            {category === "Vehicle Data" && <Car className="h-4 w-4 text-[#7FC844]" />}
+                            {category === "Experience" && <Activity className="h-4 w-4 text-[#7FC844]" />}
+                            {category === "Information" && <FileText className="h-4 w-4 text-[#7FC844]" />}
+                            {category}
+                          </h4>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            {sectionNames.map(name => {
+                              const toggleKey = `show${name}` as keyof typeof dashboardToggles;
+                              const isActive = dashboardToggles[toggleKey];
+                              
+                              return (
+                                <div 
+                                  key={name}
+                                  className={`
+                                    flex items-center justify-between 
+                                    p-4 rounded-lg border-2 transition-all duration-200
+                                    ${activeToggle === toggleKey ? 'scale-95' : 'scale-100'}
+                                    ${isActive 
+                                      ? 'bg-zinc-800/70 border-[#7FC844]/30 shadow-md shadow-[#7FC844]/5' 
+                                      : 'bg-zinc-900 border-zinc-800 hover:border-zinc-700'}
+                                    cursor-pointer
+                                  `}
+                                  onClick={() => handleToggleChange(toggleKey)}
+                                  role="button"
+                                  aria-pressed={isActive}
+                                  tabIndex={0}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    {/* Icon based on section type */}
+                                    <div className={`
+                                      h-10 w-10 rounded-full flex items-center justify-center
+                                      ${isActive ? 'bg-[#7FC844]/20' : 'bg-zinc-800'}
+                                    `}>
+                                      {name === "Telemetry" && <Gauge className={`h-5 w-5 ${isActive ? 'text-[#7FC844]' : 'text-gray-400'}`} />}
+                                      {name === "MaintenanceAlerts" && <Wrench className={`h-5 w-5 ${isActive ? 'text-[#7FC844]' : 'text-gray-400'}`} />}
+                                      {name === "ValuationData" && <BarChart className={`h-5 w-5 ${isActive ? 'text-[#7FC844]' : 'text-gray-400'}`} />}
+                                      {name === "MoodEnergy" && <Sparkles className={`h-5 w-5 ${isActive ? 'text-[#7FC844]' : 'text-gray-400'}`} />}
+                                      {name === "DetailingSchedule" && <Droplets className={`h-5 w-5 ${isActive ? 'text-[#7FC844]' : 'text-gray-400'}`} />}
+                                      {name === "ProjectStatus" && <Tool className={`h-5 w-5 ${isActive ? 'text-[#7FC844]' : 'text-gray-400'}`} />}
+                                      {name === "WeatherData" && <Sun className={`h-5 w-5 ${isActive ? 'text-[#7FC844]' : 'text-gray-400'}`} />}
+                                      {name === "DocumentExpiration" && <FileText className={`h-5 w-5 ${isActive ? 'text-[#7FC844]' : 'text-gray-400'}`} />}
+                                    </div>
+                                    <div>
+                                      <p className={`font-medium ${isActive ? 'text-white' : 'text-gray-400'}`}>
+                                        {name.replace(/([A-Z])/g, ' $1').trim()}
+                                      </p>
+                                      <p className="text-xs text-gray-500">
+                                        {isActive ? 'Visible' : 'Hidden'} on dashboard
+                                      </p>
+                                    </div>
+                                  </div>
+                                  
+                                  <Switch 
+                                    checked={isActive} 
+                                    onCheckedChange={() => handleToggleChange(toggleKey)}
+                                    className="data-[state=checked]:bg-[#7FC844]"
+                                  />
+                                </div>
+                              );
+                            })}
+                          </div>
                         </div>
                       ))}
                     </div>
