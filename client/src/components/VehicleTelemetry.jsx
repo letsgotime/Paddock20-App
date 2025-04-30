@@ -1,8 +1,8 @@
 import React from 'react';
 import { 
-  Gauge, Thermometer, Droplets, Battery, 
+  BarChart2 as Gauge, Thermometer, Droplets, Battery, 
   Wind, Timer, RotateCw, Wrench, PaintBucket, Car, 
-  Calendar, Fuel, Ruler, Activity, Map, Zap, SunMoon 
+  Calendar, Droplet as Fuel, Ruler, Activity, Map, Zap, SunMoon 
 } from 'lucide-react';
 
 /**
