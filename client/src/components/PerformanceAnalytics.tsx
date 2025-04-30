@@ -65,6 +65,7 @@ interface PerformanceData {
   fuel_consumption: number[];
   acceleration: number[];
   temperature: number[];
+  surface_temperature: number[];
   boost?: number[];
   airflow?: number[];
 }
