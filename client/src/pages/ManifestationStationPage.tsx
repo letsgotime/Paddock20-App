@@ -303,7 +303,8 @@ const ManifestationStation: React.FC = () => {
   };
 
   // Function to format number with commas
-  const formatNumber = (num: number): string => {
+  const formatNumber = (num: number | undefined): string => {
+    if (num === undefined) return "0";
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
