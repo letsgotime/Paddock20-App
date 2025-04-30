@@ -5,7 +5,7 @@ import { VehicleProvider } from './context/VehicleContext';
 
 // Import pages
 import HomePage from './pages/HomePage';
-import EnhancedGarageVault from './pages/EnhancedGarageVault';
+import SimpleGarageVault from './pages/simpleGarageVault';
 import WeatherPage from './pages/WeatherPage';
 import RoutePlannerPage from './pages/RoutePlannerPage';
 import DriveJournalPage from './pages/DriveJournalPage';
@@ -35,7 +35,7 @@ const App: React.FC = () => {
           <main className="flex flex-col min-h-screen">
             <Switch>
               <Route path="/" component={HomePage} />
-              <Route path="/garage" component={EnhancedGarageVault} />
+              <Route path="/garage" component={SimpleGarageVault} />
               <Route path="/weather" component={WeatherPage} />
               <Route path="/route-planner" component={RoutePlannerPage} />
               <Route path="/drive-journal" component={DriveJournalPage} />
