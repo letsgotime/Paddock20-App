@@ -3,6 +3,7 @@ import supabase from "../services/supabaseClient";
 import { Link } from "wouter";
 import { useVehicleContext } from "../context/VehicleContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import ProjectLauncher from "../components/ProjectLauncher";
 import { 
   Car, 
   Wrench, 
@@ -277,12 +278,21 @@ const EnhancedGarageVault: React.FC = () => {
                   <List className="h-4 w-4" />
                 </button>
               </div>
-              <Link href="/add-vehicle">
-                <button className="bg-[#7FC844] text-black font-medium py-2 px-4 rounded-lg flex items-center gap-2 hover:bg-[#6cb33a] transition">
-                  <PlusCircle className="h-4 w-4" />
-                  Add Vehicle
+              <div className="flex gap-2">
+                <button 
+                  onClick={() => setShowProjectLauncher(true)}
+                  className="bg-[#334155] text-white font-medium py-2 px-4 rounded-lg flex items-center gap-2 hover:bg-[#475569] transition border border-[#475569]"
+                >
+                  <Wrench className="h-4 w-4" />
+                  New Project
                 </button>
-              </Link>
+                <Link href="/add-vehicle">
+                  <button className="bg-[#7FC844] text-black font-medium py-2 px-4 rounded-lg flex items-center gap-2 hover:bg-[#6cb33a] transition">
+                    <PlusCircle className="h-4 w-4" />
+                    Add Vehicle
+                  </button>
+                </Link>
+              </div>
             </div>
           </div>
 
@@ -1513,6 +1523,23 @@ const EnhancedGarageVault: React.FC = () => {
           )}
         </div>
       </div>
+      
+      {/* Project Launcher Modal */}
+      {showProjectLauncher && (
+        <ProjectLauncher
+          vehicles={vehicles}
+          selectedVehicleId={selectedVehicle?.id}
+          onClose={() => setShowProjectLauncher(false)}
+          onProjectSubmit={(project) => {
+            console.log('Project submitted:', project);
+            toast({
+              title: "Project Created",
+              description: `New ${project.type} project has been added to your vehicle`,
+            });
+            setShowProjectLauncher(false);
+          }}
+        />
+      )}
     </div>
   );
 };
