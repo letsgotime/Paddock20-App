@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import WeatherStation from '../components/WeatherStation';
+import WorldClock from '../components/WorldClock';
 import supabase from '../services/supabaseClient';
 import { Calendar, BarChart3, Car, Map, Settings, Bell, Shield, ChevronRight, 
          MessageSquare, HeartHandshake, Star, EyeOff, Gauge, ClipboardCheck, 
-         Wrench, Award, Trophy, FileText, Activity } from 'lucide-react';
+         Wrench, Award, Trophy, FileText, Activity, Clock } from 'lucide-react';
 
 interface UpcomingEvent {
   id: number;
@@ -45,7 +46,7 @@ function DashboardPage() {
   const [recentDrives, setRecentDrives] = useState<RecentDrive[]>([]);
   const [maintenanceAlerts, setMaintenanceAlerts] = useState<MaintenanceAlert[]>([]);
   const [userPreferences, setUserPreferences] = useState<UserPreference[]>([]);
-  const [dashboardLayout, setDashboardLayout] = useState<string[]>(['weather', 'vehicles', 'drives', 'events', 'maintenance']);
+  const [dashboardLayout, setDashboardLayout] = useState<string[]>(['weather', 'world_clock', 'vehicles', 'drives', 'events', 'maintenance']);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [driveStats, setDriveStats] = useState({
     totalDrives: 12,
@@ -121,6 +122,13 @@ function DashboardPage() {
         return (
           <div className="block mb-6">
             <WeatherStation />
+          </div>
+        );
+        
+      case 'world_clock':
+        return (
+          <div className="block mb-6">
+            <WorldClock />
           </div>
         );
         

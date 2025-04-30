@@ -18,6 +18,52 @@ const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY || "2379a18ee0e478c8
 // Cache for geocoding results to avoid repetitive API calls
 const geocodeCache = new Map();
 
+// List of common timezones for the WorldClock component
+const commonTimezones = [
+  // North America
+  'America/New_York',
+  'America/Chicago',
+  'America/Denver',
+  'America/Los_Angeles',
+  'America/Toronto',
+  'America/Vancouver',
+  'America/Mexico_City',
+
+  // Europe
+  'Europe/London',
+  'Europe/Paris',
+  'Europe/Berlin',
+  'Europe/Rome',
+  'Europe/Madrid',
+  'Europe/Moscow',
+  'Europe/Monaco',
+  'Europe/Brussels',
+  'Europe/Amsterdam',
+  'Europe/Zurich',
+  
+  // Asia
+  'Asia/Tokyo',
+  'Asia/Singapore',
+  'Asia/Hong_Kong',
+  'Asia/Dubai',
+  'Asia/Shanghai',
+  'Asia/Seoul',
+  
+  // Oceania
+  'Australia/Sydney',
+  'Australia/Melbourne',
+  'Australia/Perth',
+  'Pacific/Auckland',
+  
+  // South America
+  'America/Sao_Paulo',
+  'America/Buenos_Aires',
+  
+  // Middle East & Africa
+  'Africa/Johannesburg',
+  'Africa/Cairo'
+];
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Using only OpenWeather API for all weather services
   
@@ -143,6 +189,17 @@ export async function registerRoutes(app: Express): Promise<Server> {
     } catch (error) {
       console.error('Reverse geocoding API error:', error);
       res.status(500).json({ message: (error as Error).message || 'Failed to get location name' });
+    }
+  });
+  
+  // Time zone API for the WorldClock component
+  app.get('/api/timezones', (req, res) => {
+    try {
+      // Return the predefined list of common timezones
+      res.json(commonTimezones);
+    } catch (error) {
+      console.error('Error fetching timezones:', error);
+      res.status(500).json({ message: 'Failed to fetch timezones' });
     }
   });
 
