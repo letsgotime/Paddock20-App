@@ -14,6 +14,7 @@ import {
   Calendar, 
   ShoppingBag,
   User,
+  Users,
   Settings,
   FileText,
   ArrowRight,
@@ -60,6 +61,10 @@ import {
 import CompleteManifestationStation from "@/pages/CompleteManifestationStation";
 import GTGVault from "@/pages/GTGVault";
 import GTGVaultVehicleTabRouter from "@/pages/GTGVaultVehicleTabRouter";
+import DriveJournalPage from "@/pages/DriveJournalPage";
+import RoutePlannerPage from "@/pages/RoutePlannerPage";
+import TiresTimepieces from "@/pages/TiresTimepieces";
+import Paddock20HomePage from "@/pages/Paddock20HomePage";
 
 // Sub Pages - Import when modules are created
 /* 
@@ -131,6 +136,26 @@ const Sidebar = ({
       icon: <Car className="h-5 w-5" /> 
     },
     { 
+      name: "Route Planner", 
+      path: "/route-planner",
+      icon: <Compass className="h-5 w-5" /> 
+    },
+    { 
+      name: "Drive Journal", 
+      path: "/journal",
+      icon: <ScrollText className="h-5 w-5" /> 
+    },
+    {
+      name: "Tires & Timepieces",
+      path: "/tires-timepieces",
+      icon: <Clock className="h-5 w-5" />
+    },
+    {
+      name: "Paddock20",
+      path: "/paddock20",
+      icon: <User className="h-5 w-5" />
+    },
+    { 
       name: "Goals", 
       path: "/goals",
       icon: <Target className="h-5 w-5" /> 
@@ -149,11 +174,6 @@ const Sidebar = ({
       name: "Analytics", 
       path: "/analytics",
       icon: <LineChart className="h-5 w-5" /> 
-    },
-    { 
-      name: "Journal", 
-      path: "/journal",
-      icon: <ScrollText className="h-5 w-5" /> 
     },
     { 
       name: "Marketplace", 
@@ -602,8 +622,11 @@ function App() {
               <Route path="/projects" component={() => <div>Projects (Coming Soon)</div>} />
               <Route path="/calendar" component={() => <div>Calendar (Coming Soon)</div>} />
               <Route path="/analytics" component={() => <div>Analytics (Coming Soon)</div>} />
-              <Route path="/journal" component={() => <div>Journal (Coming Soon)</div>} />
+              <Route path="/journal" component={DriveJournalPage} />
+              <Route path="/route-planner" component={RoutePlannerPage} />
               <Route path="/marketplace" component={() => <div>Marketplace (Coming Soon)</div>} />
+              <Route path="/tires-timepieces" component={TiresTimepieces} />
+              <Route path="/paddock20" component={Paddock20HomePage} />
               
               {/* Detail routes */}
               <Route path="/goals/:id" component={() => <div>Goal Details (Coming Soon)</div>} />
