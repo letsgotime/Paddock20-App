@@ -231,7 +231,7 @@ const WorldClockPanel: React.FC = () => {
   return (
     <div className="bg-black/50 p-4 rounded-lg border border-gray-800 mb-6">
       <div className="flex justify-between items-center mb-4">
-        <h2 className="text-blue-400 font-orbitron text-xl">🌎 Global Clocks & Conditions</h2>
+        <h2 className="text-blue-400 font-orbitron text-xl">🌎 It's Your World</h2>
         <div className="flex space-x-2">
           {selectedCities.length < 10 && !editMode && (
             <button
