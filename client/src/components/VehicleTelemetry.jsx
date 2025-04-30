@@ -1,738 +1,606 @@
 import React, { useState, useEffect } from 'react';
+import { useMarketplaceStore } from '../services/marketplaceService';
 import { 
-  Activity, BarChart2, Thermometer, Zap, 
-  DownloadCloud, RefreshCw, Gauge, TrendingUp, 
-  Wind, Droplet, Battery, Clock, ThermometerSun 
+  Activity, 
+  AlertCircle, 
+  Maximize2, 
+  BarChart2, 
+  Clock, 
+  Gauge, 
+  Wind, 
+  TrendingUp, 
+  DollarSign, 
+  Award, 
+  ChevronDown,
+  ChevronRight,
+  Calendar,
+  Wrench, // Changed from Tool which is missing
+  MapPin,
+  Hash,
+  Info,
+  Flag,
+  Zap,
+  Layers,
+  CornerUpRight
 } from 'lucide-react';
-import OBDLiveDashboard from './OBDLiveDashboard';
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-// Import example graph images
-import tempChartPath from '@assets/AdobeStock_1212056636.jpeg';
-
-const VehicleTelemetry = ({ vehicleId }) => {
-  const [telemetryData, setTelemetryData] = useState(null);
-  const [isLoading, setIsLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [showOBDConnect, setShowOBDConnect] = useState(false);
-  const [connected, setConnected] = useState(false);
-
-  // Time formatting
-  const formatTime = () => {
-    return new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-  };
+// This component displays detailed telemetry for a vehicle
+function VehicleTelemetry({ listingId }) {
+  const [expanded, setExpanded] = useState({
+    specs: true,
+    performance: true,
+    market: false,
+    history: false,
+    track: false
+  });
   
-  const [currentTime, setCurrentTime] = useState(formatTime());
+  const getListingById = useMarketplaceStore(state => state.getListingById);
+  const vehicle = getListingById(listingId);
   
-  useEffect(() => {
-    const timer = setInterval(() => {
-      setCurrentTime(formatTime());
-    }, 1000);
-    
-    return () => clearInterval(timer);
-  }, []);
-
-  useEffect(() => {
-    // In a real implementation, fetch telemetry data from API or OBD2
-    const fetchTelemetryData = async () => {
-      setIsLoading(true);
-      try {
-        // Placeholder for real API call
-        // const response = await fetch(`/api/vehicles/${vehicleId}/telemetry`);
-        // const data = await response.json();
-        
-        // For now, we'll use empty data to encourage user interaction
-        setTelemetryData({
-          engine: {
-            rpm: null,
-            temperature: null,
-            oilTemp: null,
-            oilPressure: null,
-            load: null,
-          },
-          performance: {
-            speed: null,
-            acceleration: null,
-            throttlePosition: null,
-            brakePosition: null,
-          },
-          fuel: {
-            level: null,
-            range: null,
-            economy: null,
-            instantConsumption: null,
-          },
-          electrical: {
-            batteryVoltage: null,
-            alternatorOutput: null,
-            batteryHealth: null,
-          },
-          environment: {
-            ambientTemp: null,
-            humidity: null,
-            altitude: null,
-            pressure: null,
-          },
-          sensors: {
-            absActive: false,
-            tractionControl: false,
-            checkEngine: false,
-            oilWarning: false,
-          }
-        });
-      } catch (error) {
-        console.error("Error fetching telemetry data:", error);
-      } finally {
-        setIsLoading(false);
-      }
-    };
-
-    fetchTelemetryData();
-  }, [vehicleId]);
-
-  // Simulate connecting to OBD2
-  const handleConnect = () => {
-    setConnected(true);
-  };
-
-  const resetAllGauges = () => {
-    // This would reset all gauges to zero or null values
-    console.log("Resetting all gauges");
-  };
-
-  // Placeholder for manual data entry (to be implemented)
-  const openManualDataEntry = () => {
-    console.log("Open manual data entry form");
-  };
-
-  if (isLoading) {
+  if (!vehicle) {
     return (
-      <div className="flex items-center justify-center h-64">
-        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+      <div className="flex items-center justify-center h-64 bg-gray-900/50 rounded-xl border border-gray-800">
+        <div className="flex flex-col items-center text-gray-400">
+          <AlertCircle className="h-10 w-10 mb-2 text-red-500" />
+          <p>Vehicle not found</p>
+        </div>
       </div>
     );
   }
 
+  const toggleSection = (section) => {
+    setExpanded({
+      ...expanded,
+      [section]: !expanded[section]
+    });
+  };
+
   return (
-    <div className="vehicle-telemetry">
-      {/* Header Section with Tabs */}
-      <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center">
-        <div>
-          <h2 className="text-blue-400 font-orbitron text-2xl mb-2">Live Vehicle Telemetry</h2>
-          <p className="text-gray-400">
-            Real-time monitoring of your vehicle's vital systems and performance metrics
-          </p>
-        </div>
-        
-        <div className="mt-4 md:mt-0 flex items-center gap-3">
-          <button 
-            onClick={() => setShowOBDConnect(true)}
-            className="bg-blue-900/70 hover:bg-blue-800 text-white px-4 py-2 rounded-md flex items-center text-sm"
-          >
-            <Zap className="h-4 w-4 mr-2" />
-            Connect OBD2
-          </button>
-          
-          <button
-            onClick={resetAllGauges}
-            className="bg-gray-800 hover:bg-gray-700 text-white px-4 py-2 rounded-md flex items-center text-sm"
-          >
-            <RefreshCw className="h-4 w-4 mr-2" />
-            Reset
-          </button>
-        </div>
-      </div>
-      
-      {/* Navigation Tabs */}
-      <div className="mb-6 overflow-x-auto">
-        <div className="inline-flex bg-gray-900/60 backdrop-blur-sm rounded-md p-1 border border-blue-900/30">
-          <button
-            onClick={() => setActiveTab('dashboard')}
-            className={`px-4 py-2 text-sm rounded transition-all duration-200 ${
-              activeTab === 'dashboard' 
-                ? 'bg-green-500 text-black font-bold shadow-lg' 
-                : 'text-white hover:bg-gray-800'
-            }`}
-          >
-            Dashboard
-          </button>
-          <button
-            onClick={() => setActiveTab('engine')}
-            className={`px-4 py-2 text-sm rounded transition-all duration-200 ${
-              activeTab === 'engine' 
-                ? 'bg-green-500 text-black font-bold shadow-lg' 
-                : 'text-white hover:bg-gray-800'
-            }`}
-          >
-            Engine
-          </button>
-          <button
-            onClick={() => setActiveTab('performance')}
-            className={`px-4 py-2 text-sm rounded transition-all duration-200 ${
-              activeTab === 'performance' 
-                ? 'bg-green-500 text-black font-bold shadow-lg' 
-                : 'text-white hover:bg-gray-800'
-            }`}
-          >
-            Performance
-          </button>
-          <button
-            onClick={() => setActiveTab('fuel')}
-            className={`px-4 py-2 text-sm rounded transition-all duration-200 ${
-              activeTab === 'fuel' 
-                ? 'bg-green-500 text-black font-bold shadow-lg' 
-                : 'text-white hover:bg-gray-800'
-            }`}
-          >
-            Fuel
-          </button>
-          <button
-            onClick={() => setActiveTab('electrical')}
-            className={`px-4 py-2 text-sm rounded transition-all duration-200 ${
-              activeTab === 'electrical' 
-                ? 'bg-green-500 text-black font-bold shadow-lg' 
-                : 'text-white hover:bg-gray-800'
-            }`}
-          >
-            Electrical
-          </button>
-          <button
-            onClick={() => setActiveTab('environment')}
-            className={`px-4 py-2 text-sm rounded transition-all duration-200 ${
-              activeTab === 'environment' 
-                ? 'bg-green-500 text-black font-bold shadow-lg' 
-                : 'text-white hover:bg-gray-800'
-            }`}
-          >
-            Environment
-          </button>
-          <button
-            onClick={() => setActiveTab('obd')}
-            className={`px-4 py-2 text-sm rounded transition-all duration-200 ${
-              activeTab === 'obd' 
-                ? 'bg-green-500 text-black font-bold shadow-lg' 
-                : 'text-white hover:bg-gray-800'
-            }`}
-          >
-            OBD2 Raw
-          </button>
-        </div>
-      </div>
-      
-      {/* Main Dashboard */}
-      {activeTab === 'dashboard' && (
-        <div>
-          {/* F1-style Telemetry Dashboard */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
-            {/* RPM Gauge */}
-            <div className="bg-gradient-to-br from-gray-900 to-black rounded-xl overflow-hidden border border-blue-500/20">
-              <div className="p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-blue-400 font-orbitron text-lg">Engine RPM</h3>
-                  <span className="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded">{currentTime}</span>
-                </div>
-                
-                {telemetryData.engine.rpm !== null ? (
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-gray-400 text-sm">Current</span>
-                      <span className="text-green-400 font-bold text-3xl">{telemetryData.engine.rpm}</span>
-                    </div>
-                    
-                    <div className="w-full h-4 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
-                      <div 
-                        className="h-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-500"
-                        style={{ width: `${(telemetryData.engine.rpm / 8000) * 100}%` }}
-                      ></div>
-                    </div>
-                    
-                    <div className="flex justify-between mt-1">
-                      <span className="text-gray-500 text-xs">0</span>
-                      <span className="text-gray-500 text-xs">2000</span>
-                      <span className="text-gray-500 text-xs">4000</span>
-                      <span className="text-gray-500 text-xs">6000</span>
-                      <span className="text-gray-500 text-xs">8000</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="empty-gauge flex flex-col items-center justify-center h-32">
-                    <Gauge className="h-12 w-12 text-gray-700 mb-2" />
-                    <p className="text-gray-500 text-center">Connect OBD2 or enter data to see RPM values</p>
-                    <button 
-                      onClick={openManualDataEntry}
-                      className="mt-3 text-blue-400 text-sm hover:underline"
-                    >
-                      Enter manually
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            {/* Speed Gauge */}
-            <div className="bg-gradient-to-br from-gray-900 to-black rounded-xl overflow-hidden border border-blue-500/20">
-              <div className="p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-blue-400 font-orbitron text-lg">Vehicle Speed</h3>
-                  <span className="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded">{currentTime}</span>
-                </div>
-                
-                {telemetryData.performance.speed !== null ? (
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-gray-400 text-sm">Current</span>
-                      <div className="flex items-end">
-                        <span className="text-green-400 font-bold text-3xl">{telemetryData.performance.speed}</span>
-                        <span className="text-gray-400 text-lg ml-1">mph</span>
-                      </div>
-                    </div>
-                    
-                    <div className="w-full h-4 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
-                      <div 
-                        className="h-full bg-gradient-to-r from-green-500 via-yellow-500 to-red-500"
-                        style={{ width: `${(telemetryData.performance.speed / 160) * 100}%` }}
-                      ></div>
-                    </div>
-                    
-                    <div className="flex justify-between mt-1">
-                      <span className="text-gray-500 text-xs">0</span>
-                      <span className="text-gray-500 text-xs">40</span>
-                      <span className="text-gray-500 text-xs">80</span>
-                      <span className="text-gray-500 text-xs">120</span>
-                      <span className="text-gray-500 text-xs">160</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="empty-gauge flex flex-col items-center justify-center h-32">
-                    <Activity className="h-12 w-12 text-gray-700 mb-2" />
-                    <p className="text-gray-500 text-center">Connect OBD2 or enter data to see speed values</p>
-                    <button 
-                      onClick={openManualDataEntry}
-                      className="mt-3 text-blue-400 text-sm hover:underline"
-                    >
-                      Enter manually
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            {/* Engine Temperature */}
-            <div className="bg-gradient-to-br from-gray-900 to-black rounded-xl overflow-hidden border border-blue-500/20">
-              <div className="p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-blue-400 font-orbitron text-lg">Engine Temp</h3>
-                  <span className="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded">{currentTime}</span>
-                </div>
-                
-                {telemetryData.engine.temperature !== null ? (
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-gray-400 text-sm">Current</span>
-                      <div className="flex items-end">
-                        <span className="text-green-400 font-bold text-3xl">{telemetryData.engine.temperature}</span>
-                        <span className="text-gray-400 text-lg ml-1">°F</span>
-                      </div>
-                    </div>
-                    
-                    <div className="w-full h-4 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
-                      <div 
-                        className="h-full bg-gradient-to-r from-blue-500 via-green-500 to-red-500"
-                        style={{ width: `${((telemetryData.engine.temperature - 100) / 150) * 100}%` }}
-                      ></div>
-                    </div>
-                    
-                    <div className="flex justify-between mt-1">
-                      <span className="text-gray-500 text-xs">100°</span>
-                      <span className="text-gray-500 text-xs">150°</span>
-                      <span className="text-gray-500 text-xs">200°</span>
-                      <span className="text-gray-500 text-xs">250°</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="empty-gauge flex flex-col items-center justify-center h-32">
-                    <ThermometerSun className="h-12 w-12 text-gray-700 mb-2" />
-                    <p className="text-gray-500 text-center">Connect OBD2 or enter data to see temperature</p>
-                    <button 
-                      onClick={openManualDataEntry}
-                      className="mt-3 text-blue-400 text-sm hover:underline"
-                    >
-                      Enter manually
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            {/* Fuel Level */}
-            <div className="bg-gradient-to-br from-gray-900 to-black rounded-xl overflow-hidden border border-blue-500/20">
-              <div className="p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-blue-400 font-orbitron text-lg">Fuel Level</h3>
-                  <span className="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded">{currentTime}</span>
-                </div>
-                
-                {telemetryData.fuel.level !== null ? (
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-gray-400 text-sm">Current</span>
-                      <div className="flex items-end">
-                        <span className="text-green-400 font-bold text-3xl">{telemetryData.fuel.level}</span>
-                        <span className="text-gray-400 text-lg ml-1">%</span>
-                      </div>
-                    </div>
-                    
-                    <div className="w-full h-4 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
-                      <div 
-                        className="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500"
-                        style={{ width: `${telemetryData.fuel.level}%` }}
-                      ></div>
-                    </div>
-                    
-                    <div className="flex justify-between mt-1">
-                      <span className="text-gray-500 text-xs">0%</span>
-                      <span className="text-gray-500 text-xs">25%</span>
-                      <span className="text-gray-500 text-xs">50%</span>
-                      <span className="text-gray-500 text-xs">75%</span>
-                      <span className="text-gray-500 text-xs">100%</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="empty-gauge flex flex-col items-center justify-center h-32">
-                    <Droplet className="h-12 w-12 text-gray-700 mb-2" />
-                    <p className="text-gray-500 text-center">Connect OBD2 or enter data to see fuel level</p>
-                    <button 
-                      onClick={openManualDataEntry}
-                      className="mt-3 text-blue-400 text-sm hover:underline"
-                    >
-                      Enter manually
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            {/* Battery Voltage */}
-            <div className="bg-gradient-to-br from-gray-900 to-black rounded-xl overflow-hidden border border-blue-500/20">
-              <div className="p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-blue-400 font-orbitron text-lg">Battery Voltage</h3>
-                  <span className="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded">{currentTime}</span>
-                </div>
-                
-                {telemetryData.electrical.batteryVoltage !== null ? (
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-gray-400 text-sm">Current</span>
-                      <div className="flex items-end">
-                        <span className="text-green-400 font-bold text-3xl">{telemetryData.electrical.batteryVoltage}</span>
-                        <span className="text-gray-400 text-lg ml-1">V</span>
-                      </div>
-                    </div>
-                    
-                    <div className="w-full h-4 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
-                      <div 
-                        className="h-full bg-gradient-to-r from-red-500 via-yellow-500 to-green-500"
-                        style={{ width: `${((telemetryData.electrical.batteryVoltage - 10) / 5) * 100}%` }}
-                      ></div>
-                    </div>
-                    
-                    <div className="flex justify-between mt-1">
-                      <span className="text-gray-500 text-xs">10V</span>
-                      <span className="text-gray-500 text-xs">11V</span>
-                      <span className="text-gray-500 text-xs">12V</span>
-                      <span className="text-gray-500 text-xs">13V</span>
-                      <span className="text-gray-500 text-xs">15V</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="empty-gauge flex flex-col items-center justify-center h-32">
-                    <Battery className="h-12 w-12 text-gray-700 mb-2" />
-                    <p className="text-gray-500 text-center">Connect OBD2 or enter data to see battery voltage</p>
-                    <button 
-                      onClick={openManualDataEntry}
-                      className="mt-3 text-blue-400 text-sm hover:underline"
-                    >
-                      Enter manually
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-            
-            {/* Throttle Position */}
-            <div className="bg-gradient-to-br from-gray-900 to-black rounded-xl overflow-hidden border border-blue-500/20">
-              <div className="p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <h3 className="text-blue-400 font-orbitron text-lg">Throttle Position</h3>
-                  <span className="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded">{currentTime}</span>
-                </div>
-                
-                {telemetryData.performance.throttlePosition !== null ? (
-                  <div>
-                    <div className="flex justify-between items-center mb-2">
-                      <span className="text-gray-400 text-sm">Current</span>
-                      <div className="flex items-end">
-                        <span className="text-green-400 font-bold text-3xl">{telemetryData.performance.throttlePosition}</span>
-                        <span className="text-gray-400 text-lg ml-1">%</span>
-                      </div>
-                    </div>
-                    
-                    <div className="w-full h-4 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
-                      <div 
-                        className="h-full bg-gradient-to-r from-green-500 to-red-500"
-                        style={{ width: `${telemetryData.performance.throttlePosition}%` }}
-                      ></div>
-                    </div>
-                    
-                    <div className="flex justify-between mt-1">
-                      <span className="text-gray-500 text-xs">0%</span>
-                      <span className="text-gray-500 text-xs">25%</span>
-                      <span className="text-gray-500 text-xs">50%</span>
-                      <span className="text-gray-500 text-xs">75%</span>
-                      <span className="text-gray-500 text-xs">100%</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="empty-gauge flex flex-col items-center justify-center h-32">
-                    <TrendingUp className="h-12 w-12 text-gray-700 mb-2" />
-                    <p className="text-gray-500 text-center">Connect OBD2 or enter data to see throttle position</p>
-                    <button 
-                      onClick={openManualDataEntry}
-                      className="mt-3 text-blue-400 text-sm hover:underline"
-                    >
-                      Enter manually
-                    </button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-          
-          {/* Advanced Telemetry - Charts and Graphs */}
-          <div className="mb-6">
-            <h3 className="text-blue-400 font-orbitron text-lg mb-4">Temperature Trends</h3>
-            <div className="bg-gradient-to-br from-gray-900 to-black rounded-xl p-4 border border-blue-500/20">
-              {telemetryData.engine.temperature !== null ? (
-                <img 
-                  src={tempChartPath} 
-                  alt="Temperature Trend Chart" 
-                  className="w-full h-auto rounded-lg"
-                />
-              ) : (
-                <div className="flex flex-col items-center justify-center h-64">
-                  <BarChart2 className="h-16 w-16 text-gray-700 mb-4" />
-                  <p className="text-gray-400 mb-2">No temperature data recorded yet</p>
-                  <p className="text-gray-500 text-sm mb-4">Connect your OBD2 adapter or enter data manually to see temperature trends over time.</p>
-                </div>
-              )}
-            </div>
-          </div>
-          
-          {/* Sensor Status Panel */}
-          <div>
-            <h3 className="text-blue-400 font-orbitron text-lg mb-4">System Status</h3>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              <div className={`rounded-xl p-3 flex items-center ${
-                telemetryData.sensors.checkEngine 
-                  ? 'bg-red-900/30 border border-red-700/50' 
-                  : 'bg-gray-900 border border-gray-800'
-              }`}>
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${
-                  telemetryData.sensors.checkEngine 
-                    ? 'bg-red-900/50 text-red-400' 
-                    : 'bg-gray-800 text-gray-500'
-                }`}>
-                  <Gauge className="h-5 w-5" />
-                </div>
-                <div>
-                  <div className="text-sm text-gray-400">Check Engine</div>
-                  <div className={`font-medium ${
-                    telemetryData.sensors.checkEngine 
-                      ? 'text-red-400' 
-                      : 'text-green-400'
-                  }`}>
-                    {telemetryData.sensors.checkEngine ? 'Warning' : 'OK'}
-                  </div>
+    <div className="bg-black text-white">
+      <div className="max-w-7xl mx-auto px-4 mb-8">
+        {/* Vehicle Header */}
+        <div className="bg-gradient-to-r from-gray-900 to-black p-6 rounded-xl border border-gray-800 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+            <div className="md:col-span-8">
+              <div className="flex items-center mb-2">
+                <h2 className="text-2xl md:text-3xl font-bold text-white mr-3">{vehicle.brand} {vehicle.model}</h2>
+                <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/50 text-green-300 border border-green-800">
+                  {vehicle.year}
                 </div>
               </div>
               
-              <div className={`rounded-xl p-3 flex items-center ${
-                telemetryData.sensors.oilWarning 
-                  ? 'bg-red-900/30 border border-red-700/50' 
-                  : 'bg-gray-900 border border-gray-800'
-              }`}>
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${
-                  telemetryData.sensors.oilWarning 
-                    ? 'bg-red-900/50 text-red-400' 
-                    : 'bg-gray-800 text-gray-500'
-                }`}>
-                  <Droplet className="h-5 w-5" />
+              <div className="flex flex-wrap gap-4 mb-4 text-sm text-gray-400">
+                <div className="flex items-center">
+                  <Clock className="h-4 w-4 mr-1 text-blue-500" />
+                  <span>Year: <span className="text-white">{vehicle.year}</span></span>
                 </div>
-                <div>
-                  <div className="text-sm text-gray-400">Oil System</div>
-                  <div className={`font-medium ${
-                    telemetryData.sensors.oilWarning 
-                      ? 'text-red-400' 
-                      : 'text-green-400'
-                  }`}>
-                    {telemetryData.sensors.oilWarning ? 'Warning' : 'OK'}
-                  </div>
+                <div className="flex items-center">
+                  <MapPin className="h-4 w-4 mr-1 text-rose-500" />
+                  <span>Location: <span className="text-white">{vehicle.location}</span></span>
                 </div>
-              </div>
-              
-              <div className={`rounded-xl p-3 flex items-center ${
-                telemetryData.sensors.absActive 
-                  ? 'bg-yellow-900/30 border border-yellow-700/50' 
-                  : 'bg-gray-900 border border-gray-800'
-              }`}>
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${
-                  telemetryData.sensors.absActive 
-                    ? 'bg-yellow-900/50 text-yellow-400' 
-                    : 'bg-gray-800 text-gray-500'
-                }`}>
-                  <Activity className="h-5 w-5" />
+                <div className="flex items-center">
+                  <Info className="h-4 w-4 mr-1 text-amber-500" />
+                  <span>Condition: <span className="text-white">{vehicle.condition}</span></span>
                 </div>
-                <div>
-                  <div className="text-sm text-gray-400">ABS System</div>
-                  <div className={`font-medium ${
-                    telemetryData.sensors.absActive 
-                      ? 'text-yellow-400' 
-                      : 'text-green-400'
-                  }`}>
-                    {telemetryData.sensors.absActive ? 'Active' : 'Inactive'}
-                  </div>
+                <div className="flex items-center">
+                  <Activity className="h-4 w-4 mr-1 text-green-500" />
+                  <span>Mileage: <span className="text-white">{vehicle.mileage.toLocaleString()}</span></span>
+                </div>
+                <div className="flex items-center">
+                  <Hash className="h-4 w-4 mr-1 text-violet-500" />
+                  <span>VIN: <span className="text-white font-mono text-xs">{vehicle.vin}</span></span>
                 </div>
               </div>
               
-              <div className={`rounded-xl p-3 flex items-center ${
-                telemetryData.sensors.tractionControl 
-                  ? 'bg-yellow-900/30 border border-yellow-700/50' 
-                  : 'bg-gray-900 border border-gray-800'
-              }`}>
-                <div className={`w-10 h-10 rounded-full flex items-center justify-center mr-3 ${
-                  telemetryData.sensors.tractionControl 
-                    ? 'bg-yellow-900/50 text-yellow-400' 
-                    : 'bg-gray-800 text-gray-500'
-                }`}>
-                  <Wind className="h-5 w-5" />
-                </div>
-                <div>
-                  <div className="text-sm text-gray-400">Traction</div>
-                  <div className={`font-medium ${
-                    telemetryData.sensors.tractionControl 
-                      ? 'text-yellow-400' 
-                      : 'text-green-400'
-                  }`}>
-                    {telemetryData.sensors.tractionControl ? 'Active' : 'Inactive'}
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* OBD2 Raw Tab */}
-      {activeTab === 'obd' && (
-        <div>
-          <div className="bg-gradient-to-br from-gray-900 to-black rounded-xl p-6 border border-blue-500/20">
-            <OBDLiveDashboard />
-          </div>
-        </div>
-      )}
-      
-      {/* Engine Tab */}
-      {activeTab === 'engine' && (
-        <div className="space-y-6">
-          <p className="text-gray-400">Detailed engine metrics and status will appear here once you connect with OBD2 or enter data manually.</p>
-          <div className="bg-gradient-to-br from-gray-900 to-black rounded-xl p-6 border border-blue-500/20 flex flex-col items-center justify-center h-64">
-            <Gauge className="h-16 w-16 text-gray-700 mb-4" />
-            <h3 className="text-xl text-gray-300 mb-2">Engine Data Unavailable</h3>
-            <p className="text-gray-500 text-center max-w-md mb-4">
-              Connect your vehicle with OBD2 or manually enter your engine data to view detailed metrics.
-            </p>
-            <div className="flex gap-4">
-              <button
-                onClick={() => setShowOBDConnect(true)}
-                className="px-4 py-2 bg-blue-900/40 hover:bg-blue-900/60 text-white rounded-md border border-blue-800/40"
-              >
-                Connect OBD2
-              </button>
-              <button 
-                onClick={openManualDataEntry}
-                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-md"
-              >
-                Enter Data Manually
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Other Tabs - Similar placeholders */}
-      {(activeTab === 'performance' || activeTab === 'fuel' || activeTab === 'electrical' || activeTab === 'environment') && (
-        <div className="space-y-6">
-          <p className="text-gray-400">Detailed {activeTab} metrics will appear here once you connect with OBD2 or enter data manually.</p>
-          <div className="bg-gradient-to-br from-gray-900 to-black rounded-xl p-6 border border-blue-500/20 flex flex-col items-center justify-center h-64">
-            <Activity className="h-16 w-16 text-gray-700 mb-4" />
-            <h3 className="text-xl text-gray-300 mb-2">{activeTab.charAt(0).toUpperCase() + activeTab.slice(1)} Data Unavailable</h3>
-            <p className="text-gray-500 text-center max-w-md mb-4">
-              Connect your vehicle with OBD2 or manually enter data to view detailed {activeTab} metrics.
-            </p>
-            <div className="flex gap-4">
-              <button
-                onClick={() => setShowOBDConnect(true)}
-                className="px-4 py-2 bg-blue-900/40 hover:bg-blue-900/60 text-white rounded-md border border-blue-800/40"
-              >
-                Connect OBD2
-              </button>
-              <button 
-                onClick={openManualDataEntry}
-                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-md"
-              >
-                Enter Data Manually
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* OBD Connection Modal */}
-      {showOBDConnect && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
-          <div className="bg-gray-900 rounded-xl max-w-2xl w-full">
-            <div className="border-b border-gray-800 p-4 flex justify-between items-center">
-              <h3 className="text-blue-400 font-orbitron text-xl">Connect OBD2 Device</h3>
-              <button 
-                onClick={() => setShowOBDConnect(false)}
-                className="text-gray-500 hover:text-white"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
-                </svg>
-              </button>
+              <p className="text-gray-400">{vehicle.description}</p>
             </div>
             
-            <div className="p-6">
-              <OBDLiveDashboard />
+            <div className="md:col-span-4 flex flex-col">
+              <div className="text-3xl font-bold text-amber-500 mb-1">${vehicle.price.toLocaleString()}</div>
+              <div className="flex flex-col text-sm space-y-1 mb-4">
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Seller:</span>
+                  <span className="text-white">{vehicle.seller}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Seller Rating:</span>
+                  <span className="text-amber-400">{vehicle.sellerRating} / 5.0</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-gray-400">Listed:</span>
+                  <span className="text-white">{vehicle.dateAdded}</span>
+                </div>
+              </div>
               
-              <div className="mt-6 flex justify-end">
-                <button
-                  onClick={() => {
-                    setShowOBDConnect(false);
-                    setConnected(true);
-                  }}
-                  className="px-4 py-2 bg-gray-800 text-white rounded-md"
-                >
-                  Close
+              <div className="mt-auto space-y-2">
+                <button className="w-full py-2 bg-blue-900 hover:bg-blue-800 transition-colors text-white rounded-lg border border-blue-700">
+                  Contact Seller
+                </button>
+                <button className="w-full py-2 bg-gray-800 hover:bg-gray-700 transition-colors text-gray-200 rounded-lg border border-gray-700">
+                  Schedule Viewing
                 </button>
               </div>
             </div>
           </div>
         </div>
-      )}
+        
+        {/* F1-Style Telemetry Dashboard */}
+        <div className="mb-6">
+          <h3 className="text-xl font-bold text-white mb-4 border-b border-gray-800 pb-2">
+            <span className="text-green-500">Performance</span> Telemetry
+          </h3>
+          
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
+            <div className="bg-gradient-to-br from-gray-900 to-black p-4 rounded-xl border border-gray-800">
+              <div className="flex justify-between items-start mb-2">
+                <div className="text-xs text-gray-400">HORSEPOWER</div>
+                <Zap className="h-4 w-4 text-amber-500" />
+              </div>
+              <div className="text-2xl font-bold text-white">{vehicle.horsePower}</div>
+              <div className="text-xs text-gray-400 mt-1">HP @ RPM</div>
+            </div>
+            
+            <div className="bg-gradient-to-br from-gray-900 to-black p-4 rounded-xl border border-gray-800">
+              <div className="flex justify-between items-start mb-2">
+                <div className="text-xs text-gray-400">TORQUE</div>
+                <Activity className="h-4 w-4 text-blue-500" />
+              </div>
+              <div className="text-2xl font-bold text-white">{vehicle.torque || "N/A"}</div>
+              <div className="text-xs text-gray-400 mt-1">LB-FT</div>
+            </div>
+            
+            <div className="bg-gradient-to-br from-gray-900 to-black p-4 rounded-xl border border-gray-800">
+              <div className="flex justify-between items-start mb-2">
+                <div className="text-xs text-gray-400">0-60 MPH</div>
+                <Wind className="h-4 w-4 text-green-500" />
+              </div>
+              <div className="text-2xl font-bold text-white">{vehicle.acceleration || "N/A"}</div>
+              <div className="text-xs text-gray-400 mt-1">SECONDS</div>
+            </div>
+            
+            <div className="bg-gradient-to-br from-gray-900 to-black p-4 rounded-xl border border-gray-800">
+              <div className="flex justify-between items-start mb-2">
+                <div className="text-xs text-gray-400">TOP SPEED</div>
+                <Gauge className="h-4 w-4 text-rose-500" />
+              </div>
+              <div className="text-2xl font-bold text-white">{vehicle.topSpeed || "N/A"}</div>
+              <div className="text-xs text-gray-400 mt-1">MPH</div>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Track Performance */}
+            <div className="bg-gradient-to-br from-gray-900 to-black p-6 rounded-xl border border-gray-800">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-lg font-semibold text-white flex items-center">
+                  <Flag className="mr-2 h-5 w-5 text-amber-500" />
+                  Track Performance
+                </h4>
+                <button 
+                  onClick={() => toggleSection('track')}
+                  className="text-gray-400 hover:text-white"
+                >
+                  {expanded.track ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+                </button>
+              </div>
+              
+              {expanded.track && vehicle.trackData && (
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="text-sm font-medium text-gray-400">Lap Times</div>
+                    {vehicle.trackData.lapTimes && vehicle.trackData.lapTimes.map((lap, index) => (
+                      <div key={index} className="flex justify-between py-1 border-b border-gray-800">
+                        <span className="text-sm text-gray-400">{lap.track}</span>
+                        <span className="text-sm font-mono text-white">{lap.time}</span>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  {vehicle.trackData.performance && (
+                    <div className="grid grid-cols-2 gap-4 mt-4">
+                      <div className="bg-gray-900/50 p-3 rounded-lg">
+                        <div className="text-xs text-gray-400 mb-1">CORNERING G-FORCE</div>
+                        <div className="text-xl font-bold text-green-500">{vehicle.trackData.performance.corneringG || "N/A"}g</div>
+                      </div>
+                      <div className="bg-gray-900/50 p-3 rounded-lg">
+                        <div className="text-xs text-gray-400 mb-1">BRAKING (60-0)</div>
+                        <div className="text-xl font-bold text-blue-500">{vehicle.trackData.performance.braking60to0 || "N/A"} ft</div>
+                      </div>
+                      <div className="bg-gray-900/50 p-3 rounded-lg col-span-2">
+                        <div className="text-xs text-gray-400 mb-1">QUARTER MILE</div>
+                        <div className="flex justify-between">
+                          <div className="text-xl font-bold text-amber-500">{vehicle.trackData.performance.quarterMile?.time || "N/A"}s</div>
+                          <div className="text-xl font-bold text-rose-500">{vehicle.trackData.performance.quarterMile?.speed || "N/A"} mph</div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+            
+            {/* Market Analysis */}
+            <div className="bg-gradient-to-br from-gray-900 to-black p-6 rounded-xl border border-gray-800">
+              <div className="flex items-center justify-between mb-4">
+                <h4 className="text-lg font-semibold text-white flex items-center">
+                  <BarChart2 className="mr-2 h-5 w-5 text-blue-500" />
+                  Market Analysis
+                </h4>
+                <button 
+                  onClick={() => toggleSection('market')}
+                  className="text-gray-400 hover:text-white"
+                >
+                  {expanded.market ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+                </button>
+              </div>
+              
+              {expanded.market && (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="bg-gray-900/50 p-3 rounded-lg">
+                      <div className="text-xs text-gray-400 mb-1">MARKET TREND</div>
+                      <div className="text-xl font-bold text-green-500 flex items-center">
+                        {vehicle.marketTrend || "N/A"}
+                        {vehicle.marketTrend === "Rising" && <TrendingUp className="ml-1 h-4 w-4" />}
+                      </div>
+                    </div>
+                    <div className="bg-gray-900/50 p-3 rounded-lg">
+                      <div className="text-xs text-gray-400 mb-1">ANNUAL APPRECIATION</div>
+                      <div className="text-xl font-bold text-amber-500">{vehicle.appreciationRate || "N/A"}%</div>
+                    </div>
+                    <div className="bg-gray-900/50 p-3 rounded-lg">
+                      <div className="text-xs text-gray-400 mb-1">MARKET DEMAND</div>
+                      <div className="text-xl font-bold text-violet-500">{vehicle.marketDemand || "N/A"}</div>
+                    </div>
+                    <div className="bg-gray-900/50 p-3 rounded-lg">
+                      <div className="text-xs text-gray-400 mb-1">PRODUCTION COUNT</div>
+                      <div className="text-xl font-bold text-blue-500">{vehicle.productionCount?.toLocaleString() || "N/A"}</div>
+                    </div>
+                  </div>
+                  
+                  {vehicle.valueHistory && vehicle.valueHistory.length > 0 && (
+                    <div className="mt-4">
+                      <div className="text-sm font-medium text-gray-400 mb-2">Value History</div>
+                      <div className="h-48 w-full">
+                        <ResponsiveContainer width="100%" height="100%">
+                          <LineChart
+                            data={vehicle.valueHistory}
+                            margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
+                          >
+                            <CartesianGrid strokeDasharray="3 3" stroke="#333" />
+                            <XAxis dataKey="year" stroke="#666" />
+                            <YAxis 
+                              stroke="#666" 
+                              tickFormatter={(value) => `$${(value / 1000)}k`}
+                            />
+                            <Tooltip 
+                              formatter={(value) => [`$${value.toLocaleString()}`, 'Value']}
+                              labelFormatter={(year) => `Year: ${year}`}
+                              contentStyle={{ backgroundColor: '#111', border: '1px solid #333' }}
+                            />
+                            <Line 
+                              type="monotone" 
+                              dataKey="value" 
+                              stroke="#3b82f6" 
+                              strokeWidth={2}
+                              dot={{ r: 4, fill: '#3b82f6', stroke: '#3b82f6' }}
+                              activeDot={{ r: 6, fill: '#3b82f6', stroke: '#fff' }}
+                            />
+                          </LineChart>
+                        </ResponsiveContainer>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+        
+        {/* Technical Specifications Accordion */}
+        <div className="bg-gradient-to-br from-gray-900 to-black p-6 rounded-xl border border-gray-800 mb-6">
+          <div className="flex items-center justify-between mb-4" onClick={() => toggleSection('specs')}>
+            <h4 className="text-lg font-semibold text-white flex items-center cursor-pointer">
+              <Layers className="mr-2 h-5 w-5 text-blue-500" />
+              Technical Specifications
+            </h4>
+            <button className="text-gray-400 hover:text-white">
+              {expanded.specs ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
+            </button>
+          </div>
+          
+          {expanded.specs && (
+            <div className="space-y-6">
+              {/* Engine & Performance */}
+              <div>
+                <h5 className="text-blue-500 text-md font-medium mb-3 border-b border-gray-800 pb-1">Engine & Performance</h5>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-4 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Engine Type:</span>
+                    <span className="text-white">{vehicle.engineType}</span>
+                  </div>
+                  {vehicle.displacement && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Displacement:</span>
+                      <span className="text-white">{vehicle.displacement} cc</span>
+                    </div>
+                  )}
+                  {vehicle.engineLayout && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Engine Layout:</span>
+                      <span className="text-white">{vehicle.engineLayout}</span>
+                    </div>
+                  )}
+                  {vehicle.cylinderConfig && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Cylinder Config:</span>
+                      <span className="text-white">{vehicle.cylinderConfig}</span>
+                    </div>
+                  )}
+                  {vehicle.valvetrain && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Valvetrain:</span>
+                      <span className="text-white">{vehicle.valvetrain}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Horsepower:</span>
+                    <span className="text-white">{vehicle.horsePower} hp {vehicle.peakPowerRPM ? `@ ${vehicle.peakPowerRPM} rpm` : ''}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Torque:</span>
+                    <span className="text-white">{vehicle.torque || "N/A"} lb-ft {vehicle.peakTorqueRPM ? `@ ${vehicle.peakTorqueRPM} rpm` : ''}</span>
+                  </div>
+                  {vehicle.compression && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Compression Ratio:</span>
+                      <span className="text-white">{vehicle.compression}</span>
+                    </div>
+                  )}
+                  {vehicle.redline && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Redline:</span>
+                      <span className="text-white">{vehicle.redline} rpm</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">0-60 mph:</span>
+                    <span className="text-white">{vehicle.acceleration || "N/A"} seconds</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Top Speed:</span>
+                    <span className="text-white">{vehicle.topSpeed || "N/A"} mph</span>
+                  </div>
+                  {vehicle.trackData && vehicle.trackData.performance && vehicle.trackData.performance.quarterMile && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Quarter Mile:</span>
+                      <span className="text-white">{vehicle.trackData.performance.quarterMile.time}s @ {vehicle.trackData.performance.quarterMile.speed} mph</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Drivetrain */}
+              <div>
+                <h5 className="text-blue-500 text-md font-medium mb-3 border-b border-gray-800 pb-1">Drivetrain</h5>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-4 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Transmission:</span>
+                    <span className="text-white">{vehicle.transmission}</span>
+                  </div>
+                  {vehicle.transmissionDetails && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Transmission Details:</span>
+                      <span className="text-white">{vehicle.transmissionDetails}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Drivetrain:</span>
+                    <span className="text-white">{vehicle.drivetrain}</span>
+                  </div>
+                  {vehicle.powerDistribution && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Power Distribution:</span>
+                      <span className="text-white">{vehicle.powerDistribution}</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+              
+              {/* Chassis & Suspension */}
+              {vehicle.chassis && (
+                <div>
+                  <h5 className="text-blue-500 text-md font-medium mb-3 border-b border-gray-800 pb-1">Chassis & Suspension</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-4 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Chassis Type:</span>
+                      <span className="text-white">{vehicle.chassis.type}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Front Suspension:</span>
+                      <span className="text-white">{vehicle.chassis.frontSuspension}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Rear Suspension:</span>
+                      <span className="text-white">{vehicle.chassis.rearSuspension}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Adjustable Dampers:</span>
+                      <span className="text-white">{vehicle.chassis.adjustableDampers ? 'Yes' : 'No'}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Anti-Roll Bars:</span>
+                      <span className="text-white">{vehicle.chassis.antiRollBars}</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Steering System:</span>
+                      <span className="text-white">{vehicle.chassis.steeringSystem}</span>
+                    </div>
+                    {vehicle.chassis.steeringRatio && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Steering Ratio:</span>
+                        <span className="text-white">{vehicle.chassis.steeringRatio}:1</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              {/* Aerodynamics */}
+              {vehicle.aerodynamics && (
+                <div>
+                  <h5 className="text-blue-500 text-md font-medium mb-3 border-b border-gray-800 pb-1">Aerodynamics</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-4 text-sm">
+                    {vehicle.aerodynamics.dragCoefficient && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Drag Coefficient:</span>
+                        <span className="text-white">{vehicle.aerodynamics.dragCoefficient}</span>
+                      </div>
+                    )}
+                    {vehicle.aerodynamics.downforce && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Downforce:</span>
+                        <span className="text-white">{vehicle.aerodynamics.downforce}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Active Aero:</span>
+                      <span className="text-white">{vehicle.aerodynamics.activeAero ? 'Yes' : 'No'}</span>
+                    </div>
+                    {vehicle.aerodynamics.frontSplitter && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Front Splitter:</span>
+                        <span className="text-white">Yes</span>
+                      </div>
+                    )}
+                    {vehicle.aerodynamics.rearDiffuser && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Rear Diffuser:</span>
+                        <span className="text-white">Yes</span>
+                      </div>
+                    )}
+                    {vehicle.aerodynamics.rearWing && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Rear Wing:</span>
+                        <span className="text-white">{vehicle.aerodynamics.rearWing}</span>
+                      </div>
+                    )}
+                    {vehicle.aerodynamics.underfloorAero && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Underbody:</span>
+                        <span className="text-white">{vehicle.aerodynamics.underfloorAero}</span>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+              
+              {/* Dimensions & Weight */}
+              <div>
+                <h5 className="text-blue-500 text-md font-medium mb-3 border-b border-gray-800 pb-1">Dimensions & Weight</h5>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-4 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Weight:</span>
+                    <span className="text-white">{vehicle.weight?.toLocaleString() || "N/A"} lbs</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Weight Distribution:</span>
+                    <span className="text-white">{vehicle.weightDistribution || "N/A"}</span>
+                  </div>
+                  {vehicle.dimensions && (
+                    <>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Length:</span>
+                        <span className="text-white">{vehicle.dimensions.length} mm</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Width:</span>
+                        <span className="text-white">{vehicle.dimensions.width} mm</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Height:</span>
+                        <span className="text-white">{vehicle.dimensions.height} mm</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Wheelbase:</span>
+                        <span className="text-white">{vehicle.dimensions.wheelbase} mm</span>
+                      </div>
+                      <div className="flex justify-between">
+                        <span className="text-gray-400">Ground Clearance:</span>
+                        <span className="text-white">{vehicle.dimensions.groundClearance} mm</span>
+                      </div>
+                    </>
+                  )}
+                </div>
+              </div>
+              
+              {/* Wheels & Brakes */}
+              <div>
+                <h5 className="text-blue-500 text-md font-medium mb-3 border-b border-gray-800 pb-1">Wheels & Brakes</h5>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-4 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Wheels:</span>
+                    <span className="text-white">{vehicle.wheels || "N/A"}</span>
+                  </div>
+                  {vehicle.frontWheels && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Front Wheels:</span>
+                      <span className="text-white">{vehicle.frontWheels}</span>
+                    </div>
+                  )}
+                  {vehicle.rearWheels && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Rear Wheels:</span>
+                      <span className="text-white">{vehicle.rearWheels}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Tires:</span>
+                    <span className="text-white">{vehicle.tires || "N/A"}</span>
+                  </div>
+                  {vehicle.frontTires && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Front Tires:</span>
+                      <span className="text-white">{vehicle.frontTires}</span>
+                    </div>
+                  )}
+                  {vehicle.rearTires && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">Rear Tires:</span>
+                      <span className="text-white">{vehicle.rearTires}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Brakes:</span>
+                    <span className="text-white">{vehicle.brakes || "N/A"}</span>
+                  </div>
+                  {vehicle.trackData && vehicle.trackData.performance && vehicle.trackData.performance.braking60to0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-400">60-0 Braking:</span>
+                      <span className="text-white">{vehicle.trackData.performance.braking60to0} feet</span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+        
+        {/* Similar Vehicles */}
+        <div className="bg-gradient-to-br from-gray-900 to-black p-6 rounded-xl border border-gray-800">
+          <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
+            <CornerUpRight className="mr-2 h-5 w-5 text-blue-500" />
+            Similar Vehicles
+          </h4>
+          
+          <div className="text-sm text-gray-400 text-center py-6">
+            Similar vehicle recommendations coming soon
+          </div>
+        </div>
+      </div>
     </div>
   );
-};
+}
 
 export default VehicleTelemetry;

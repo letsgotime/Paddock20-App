@@ -1,573 +1,751 @@
 import React, { useState, useEffect } from 'react';
 import { 
-  Snowflake, Sun, CloudSnow, Leaf, 
-  Check, ArrowDown, Calendar, Download, 
-  Printer, Clock, CheckCircle, Thermometer, 
-  ToggleRight, Droplet, Wind, Wrench, Car, ShieldAlert
+  Calendar, Clock, CloudSnow, Sun, Wind, Leaf, 
+  Check, Square, CheckSquare, ChevronDown, ChevronUp, 
+  Save, Download, Upload, Info, Plus, Trash2, Edit, 
+  Clipboard, FileDown, X, Lock, Unlock
 } from 'lucide-react';
 
-// Import example images
-import winterImg from '@assets/Ferrari-458-With-HRE-P101-Wheels-By-TAG-Motorsports-2.jpg';
-import summerImg from '@assets/Copy of IMG_4475.jpg';
-import springImg from '@assets/AAFuWkQu2jM_1741439529758.jpg';
-import fallImg from '@assets/AdobeStock_1212056636.jpeg';
-
-// Sample seasonal checklists
-const seasonalChecklists = {
-  winter: {
-    name: 'Winter Preparation',
-    icon: <Snowflake className="h-5 w-5 text-blue-400" />,
-    image: winterImg,
-    description: 'Prepare your vehicle for winter conditions with this comprehensive checklist',
-    sections: [
-      {
-        title: 'Exterior Protection',
-        items: [
-          { name: 'Apply ceramic coating or durable sealant', completed: false },
-          { name: 'Treat all exterior trim with UV protectant', completed: false },
-          { name: 'Apply rain repellent to all windows', completed: false },
-          { name: 'Check and replace wiper blades if needed', completed: false },
-          { name: 'Seal all exterior rubber and weatherstripping', completed: false },
-          { name: 'Apply tire dressing with winter protection', completed: false },
-          { name: 'Protect wheels with wheel-specific coating', completed: false }
-        ]
-      },
-      {
-        title: 'Mechanical Checks',
-        items: [
-          { name: 'Check antifreeze/coolant levels and condition', completed: false },
-          { name: 'Switch to winter-grade oil if necessary', completed: false },
-          { name: 'Test battery and charging system', completed: false },
-          { name: 'Inspect tire tread depth and pressure', completed: false },
-          { name: 'Check and replace cabin air filter', completed: false },
-          { name: 'Verify all lights are working properly', completed: false },
-          { name: 'Check brake condition and fluid level', completed: false },
-          { name: 'Inspect and test heating system', completed: false }
-        ]
-      },
-      {
-        title: 'Interior Preparation',
-        items: [
-          { name: 'Apply anti-fog treatment to interior glass', completed: false },
-          { name: 'Treat interior leather with conditioner', completed: false },
-          { name: 'Add absorbent mats for snow/water', completed: false },
-          { name: 'Apply fabric guard to upholstery and carpets', completed: false },
-          { name: 'Create winter emergency kit', completed: false },
-          { name: 'Clean and treat door jambs and seals', completed: false }
-        ]
-      }
-    ]
-  },
-  summer: {
-    name: 'Summer Readiness',
-    icon: <Sun className="h-5 w-5 text-yellow-400" />,
-    image: summerImg,
-    description: 'Prepare your vehicle for hot summer conditions with this detailed checklist',
-    sections: [
-      {
-        title: 'Cooling System',
-        items: [
-          { name: 'Check coolant level and condition', completed: false },
-          { name: 'Inspect radiator and hoses for leaks', completed: false },
-          { name: 'Test A/C system performance', completed: false },
-          { name: 'Clean radiator fins and A/C condenser', completed: false },
-          { name: 'Replace cabin air filter', completed: false }
-        ]
-      },
-      {
-        title: 'Exterior Protection',
-        items: [
-          { name: 'Apply high-quality UV-resistant wax or sealant', completed: false },
-          { name: 'Treat all plastic and rubber with UV protectant', completed: false },
-          { name: 'Apply tire dressing with UV protection', completed: false },
-          { name: 'Clean and protect convertible top (if applicable)', completed: false },
-          { name: 'Apply quality glass treatment for rain repellency', completed: false },
-          { name: 'Treat leather with UV conditioner', completed: false }
-        ]
-      },
-      {
-        title: 'Maintenance Checks',
-        items: [
-          { name: 'Check tire pressure and condition', completed: false },
-          { name: 'Inspect brake system', completed: false },
-          { name: 'Check battery condition', completed: false },
-          { name: 'Replace wiper blades if streaking', completed: false },
-          { name: 'Check all exterior and interior lights', completed: false },
-          { name: 'Top off all fluids', completed: false }
-        ]
-      }
-    ]
-  },
-  spring: {
-    name: 'Spring Revival',
-    icon: <Leaf className="h-5 w-5 text-green-400" />,
-    image: springImg,
-    description: 'Refresh your vehicle after winter with this spring preparation checklist',
-    sections: [
-      {
-        title: 'Post-Winter Cleaning',
-        items: [
-          { name: 'Complete underbody wash to remove salt/chemicals', completed: false },
-          { name: 'Deep clean wheel wells and suspension components', completed: false },
-          { name: 'Clean and treat weatherstripping and seals', completed: false },
-          { name: 'Full exterior decontamination (iron remover, clay bar)', completed: false },
-          { name: 'Deep clean interior fabrics and carpets', completed: false },
-          { name: 'Clean and condition leather surfaces', completed: false }
-        ]
-      },
-      {
-        title: 'Paint Correction',
-        items: [
-          { name: 'Assess winter paint damage', completed: false },
-          { name: 'Polish to remove light swirls and scratches', completed: false },
-          { name: 'Apply fresh coating of wax, sealant, or ceramic', completed: false },
-          { name: 'Treat trim and plastic with restorer', completed: false },
-          { name: 'Clean and polish all glass surfaces', completed: false }
-        ]
-      },
-      {
-        title: 'Maintenance',
-        items: [
-          { name: 'Check for winter-related damage or leaks', completed: false },
-          { name: 'Inspect suspension components', completed: false },
-          { name: 'Rotate tires and check alignment', completed: false },
-          { name: 'Check battery performance', completed: false },
-          { name: 'Inspect brake system', completed: false },
-          { name: 'Verify A/C system is functioning properly', completed: false }
-        ]
-      }
-    ]
-  },
-  fall: {
-    name: 'Fall Preparation',
-    icon: <CloudSnow className="h-5 w-5 text-orange-400" />,
-    image: fallImg,
-    description: 'Get your vehicle ready for falling temperatures with this autumn checklist',
-    sections: [
-      {
-        title: 'Exterior Preparation',
-        items: [
-          { name: 'Apply durable sealant or protection before winter', completed: false },
-          { name: 'Protect trim from UV damage', completed: false },
-          { name: 'Treat weatherstripping with silicone protectant', completed: false },
-          { name: 'Apply rain repellent to all glass', completed: false },
-          { name: 'Check and replace wiper blades', completed: false }
-        ]
-      },
-      {
-        title: 'Mechanical Readiness',
-        items: [
-          { name: 'Check heater and defrost system', completed: false },
-          { name: 'Test battery and charging system', completed: false },
-          { name: 'Inspect tire tread depth for winter readiness', completed: false },
-          { name: 'Check all lights and bulbs', completed: false },
-          { name: 'Check brake system', completed: false },
-          { name: 'Check coolant freeze protection level', completed: false }
-        ]
-      },
-      {
-        title: 'Interior Preparation',
-        items: [
-          { name: 'Clean and protect interior surfaces', completed: false },
-          { name: 'Apply leather conditioner before dry winter air', completed: false },
-          { name: 'Clean carpets and apply protectant', completed: false },
-          { name: 'Check for and seal any water leaks', completed: false },
-          { name: 'Verify trunk emergency supplies are ready', completed: false }
-        ]
-      }
-    ]
-  }
-};
-
+/**
+ * SeasonalChecklists Component
+ * 
+ * A comprehensive, season-specific maintenance and care checklist system
+ * for vehicle maintenance and detailing.
+ */
 const SeasonalChecklists = ({ vehicle, onSave, onExport }) => {
-  const [activeSeason, setActiveSeason] = useState('winter');
-  const [checklist, setChecklist] = useState(seasonalChecklists.winter);
-  const [totalItems, setTotalItems] = useState(0);
-  const [completedItems, setCompletedItems] = useState(0);
-  const [showCalendar, setShowCalendar] = useState(false);
-  const [scheduledDate, setScheduledDate] = useState('');
+  // Component state
+  const [activeSeason, setActiveSeason] = useState('spring');
+  const [expandedSections, setExpandedSections] = useState({});
+  const [completedItems, setCompletedItems] = useState({});
+  const [userNotes, setUserNotes] = useState({});
+  const [editingNote, setEditingNote] = useState(null);
+  const [currentNote, setCurrentNote] = useState('');
+  const [customizationMode, setCustomizationMode] = useState(false);
+  const [editableChecklists, setEditableChecklists] = useState(null);
+  const [localLocation, setLocalLocation] = useState('');
+  const [hemisphereMode, setHemisphereMode] = useState('northern');
   
-  // Determine current season for default selection
-  useEffect(() => {
-    const now = new Date();
-    const month = now.getMonth();
-    
-    // Default to current season
-    if (month >= 0 && month < 3) {
-      // Winter: Jan-Mar
-      setActiveSeason('winter');
-      setChecklist(seasonalChecklists.winter);
-    } else if (month >= 3 && month < 6) {
-      // Spring: Apr-Jun
-      setActiveSeason('spring');
-      setChecklist(seasonalChecklists.spring);
-    } else if (month >= 6 && month < 9) {
-      // Summer: Jul-Sep
-      setActiveSeason('summer');
-      setChecklist(seasonalChecklists.summer);
-    } else {
-      // Fall: Oct-Dec
-      setActiveSeason('fall');
-      setChecklist(seasonalChecklists.fall);
+  // Seasonal data
+  const SEASONS = [
+    { id: 'spring', name: 'Spring', icon: <Leaf className="h-5 w-5 text-green-400" /> },
+    { id: 'summer', name: 'Summer', icon: <Sun className="h-5 w-5 text-yellow-400" /> },
+    { id: 'fall', name: 'Fall', icon: <Wind className="h-5 w-5 text-orange-400" /> },
+    { id: 'winter', name: 'Winter', icon: <CloudSnow className="h-5 w-5 text-blue-400" /> }
+  ];
+  
+  // Initial checklist data
+  const initialChecklists = {
+    spring: {
+      name: 'Spring Checklist',
+      description: 'Prepare your vehicle for warmer weather after winter',
+      sections: [
+        {
+          name: 'Exterior Spring Readiness',
+          items: [
+            { id: 'spring-ext-1', text: 'Wash thoroughly including undercarriage', priority: 'high', recommended: true },
+            { id: 'spring-ext-2', text: 'Check for winter damage to paint (chips, scratches)', priority: 'medium', recommended: true },
+            { id: 'spring-ext-3', text: 'Inspect windshield for damage from winter debris', priority: 'high', recommended: true },
+            { id: 'spring-ext-4', text: 'Clean and restore trim (salt damage)', priority: 'medium', recommended: true },
+            { id: 'spring-ext-5', text: 'Apply new wax or ceramic coat protectant', priority: 'high', recommended: true },
+            { id: 'spring-ext-6', text: 'Clean and lubricate door hinges & locks', priority: 'low', recommended: false },
+            { id: 'spring-ext-7', text: 'Inspect and clean exterior lighting fixtures', priority: 'medium', recommended: true },
+          ]
+        },
+        {
+          name: 'Mechanical Spring Maintenance',
+          items: [
+            { id: 'spring-mech-1', text: 'Check and replace wiper blades (winter damage)', priority: 'high', recommended: true },
+            { id: 'spring-mech-2', text: 'Rotate tires and check pressures (adjust for temp change)', priority: 'high', recommended: true },
+            { id: 'spring-mech-3', text: 'Inspect suspension components for winter damage', priority: 'medium', recommended: true },
+            { id: 'spring-mech-4', text: 'Check brakes for winter corrosion', priority: 'high', recommended: true },
+            { id: 'spring-mech-5', text: 'Inspect and clean battery connections', priority: 'medium', recommended: true },
+            { id: 'spring-mech-6', text: 'Change oil and filter (if winter weight was used)', priority: 'high', recommended: true },
+            { id: 'spring-mech-7', text: 'Inspect and replace cabin air filter', priority: 'medium', recommended: true },
+            { id: 'spring-mech-8', text: 'Check cooling system operation for summer readiness', priority: 'high', recommended: true },
+          ]
+        },
+        {
+          name: 'Interior Spring Care',
+          items: [
+            { id: 'spring-int-1', text: 'Deep clean floor mats (salt and winter grime)', priority: 'high', recommended: true },
+            { id: 'spring-int-2', text: 'Vacuum and clean interior thoroughly', priority: 'medium', recommended: true },
+            { id: 'spring-int-3', text: 'Treat leather/upholstery (winter dryness repair)', priority: 'medium', recommended: true },
+            { id: 'spring-int-4', text: 'Check for moisture and mildew issues', priority: 'high', recommended: true },
+            { id: 'spring-int-5', text: 'Clean and treat dashboard (UV protection)', priority: 'medium', recommended: true },
+            { id: 'spring-int-6', text: 'Replace heavy winter floor mats with all-season', priority: 'low', recommended: false },
+          ]
+        }
+      ]
+    },
+    summer: {
+      name: 'Summer Checklist',
+      description: 'Maintain your vehicle during the hot summer months',
+      sections: [
+        {
+          name: 'Exterior Summer Protection',
+          items: [
+            { id: 'summer-ext-1', text: 'Apply paint protection with UV inhibitors', priority: 'high', recommended: true },
+            { id: 'summer-ext-2', text: 'Check window tint integrity for UV protection', priority: 'medium', recommended: false },
+            { id: 'summer-ext-3', text: 'Use hydrophobic windshield treatment for storms', priority: 'medium', recommended: true },
+            { id: 'summer-ext-4', text: 'Protect trim and rubber from UV exposure', priority: 'medium', recommended: true },
+            { id: 'summer-ext-5', text: 'Check for paint blistering or clear coat issues', priority: 'high', recommended: true },
+            { id: 'summer-ext-6', text: 'Apply tire protectant (UV resistance)', priority: 'medium', recommended: true },
+          ]
+        },
+        {
+          name: 'Mechanical Summer Readiness',
+          items: [
+            { id: 'summer-mech-1', text: 'Check cooling system (coolant level & condition)', priority: 'high', recommended: true },
+            { id: 'summer-mech-2', text: 'Inspect radiator and hoses for leaks', priority: 'high', recommended: true },
+            { id: 'summer-mech-3', text: 'Test A/C system performance', priority: 'high', recommended: true },
+            { id: 'summer-mech-4', text: 'Check brake fluid (heat degradation)', priority: 'high', recommended: true },
+            { id: 'summer-mech-5', text: 'Test battery (heat affects performance)', priority: 'medium', recommended: true },
+            { id: 'summer-mech-6', text: 'Check tire pressure frequently (heat expansion)', priority: 'high', recommended: true },
+            { id: 'summer-mech-7', text: 'Inspect drive belts and hoses (heat stress)', priority: 'medium', recommended: true },
+            { id: 'summer-mech-8', text: 'Change to summer-weight oil if needed', priority: 'medium', recommended: false },
+          ]
+        },
+        {
+          name: 'Interior Summer Care',
+          items: [
+            { id: 'summer-int-1', text: 'Use sunshades when parked outside', priority: 'high', recommended: true },
+            { id: 'summer-int-2', text: 'Apply UV protectant to dashboard and trim', priority: 'high', recommended: true },
+            { id: 'summer-int-3', text: 'Check window seals to maximize A/C efficiency', priority: 'medium', recommended: true },
+            { id: 'summer-int-4', text: 'Clean and protect leather from heat damage', priority: 'high', recommended: true },
+            { id: 'summer-int-5', text: 'Use car cover if parked outside for extended periods', priority: 'medium', recommended: false },
+          ]
+        }
+      ]
+    },
+    fall: {
+      name: 'Fall Checklist',
+      description: 'Prepare your vehicle for the upcoming winter season',
+      sections: [
+        {
+          name: 'Exterior Fall Preparation',
+          items: [
+            { id: 'fall-ext-1', text: 'Apply heavy duty wax or paint sealant before winter', priority: 'high', recommended: true },
+            { id: 'fall-ext-2', text: 'Treat rubber trim with protectant for winter', priority: 'high', recommended: true },
+            { id: 'fall-ext-3', text: 'Clean and seal undercarriage', priority: 'high', recommended: true },
+            { id: 'fall-ext-4', text: 'Apply anti-rust spray to vulnerable areas', priority: 'high', recommended: true },
+            { id: 'fall-ext-5', text: 'Check exterior lights for dark winter driving', priority: 'high', recommended: true },
+            { id: 'fall-ext-6', text: 'Apply rain repellent to windshield and windows', priority: 'medium', recommended: true },
+          ]
+        },
+        {
+          name: 'Mechanical Fall Readiness',
+          items: [
+            { id: 'fall-mech-1', text: 'Check heater and defroster operation', priority: 'high', recommended: true },
+            { id: 'fall-mech-2', text: 'Test battery (cold affects performance)', priority: 'high', recommended: true },
+            { id: 'fall-mech-3', text: 'Check antifreeze protection level and condition', priority: 'high', recommended: true },
+            { id: 'fall-mech-4', text: 'Consider winter tire installation', priority: 'high', recommended: true },
+            { id: 'fall-mech-5', text: 'Change to winter-weight oil if needed', priority: 'medium', recommended: true },
+            { id: 'fall-mech-6', text: 'Check all lights and replace any burnt out bulbs', priority: 'high', recommended: true },
+            { id: 'fall-mech-7', text: 'Check wiper blades, replace if needed', priority: 'high', recommended: true },
+            { id: 'fall-mech-8', text: 'Test brake system for winter reliability', priority: 'high', recommended: true },
+          ]
+        },
+        {
+          name: 'Interior Fall Preparation',
+          items: [
+            { id: 'fall-int-1', text: 'Replace floor mats with winter mats', priority: 'medium', recommended: true },
+            { id: 'fall-int-2', text: 'Check door and window seals for drafts', priority: 'medium', recommended: true },
+            { id: 'fall-int-3', text: 'Create winter emergency kit', priority: 'high', recommended: true },
+            { id: 'fall-int-4', text: 'Apply anti-fog treatment to interior glass', priority: 'medium', recommended: true },
+            { id: 'fall-int-5', text: 'Clean and treat leather/upholstery before dry winter air', priority: 'medium', recommended: true },
+          ]
+        }
+      ]
+    },
+    winter: {
+      name: 'Winter Checklist',
+      description: 'Maintain your vehicle during the cold, harsh winter months',
+      sections: [
+        {
+          name: 'Exterior Winter Protection',
+          items: [
+            { id: 'winter-ext-1', text: 'Wash frequently to remove road salt', priority: 'high', recommended: true },
+            { id: 'winter-ext-2', text: 'Use pre-wash spray for touchless cleaning when too cold', priority: 'high', recommended: true },
+            { id: 'winter-ext-3', text: 'Apply spray wax between washes for additional protection', priority: 'medium', recommended: true },
+            { id: 'winter-ext-4', text: 'Keep door locks de-iced with lock lubricant', priority: 'medium', recommended: true },
+            { id: 'winter-ext-5', text: 'Clear snow from all lights before driving', priority: 'high', recommended: true },
+            { id: 'winter-ext-6', text: 'Check wipers aren\'t frozen to windshield before operation', priority: 'high', recommended: true },
+          ]
+        },
+        {
+          name: 'Mechanical Winter Maintenance',
+          items: [
+            { id: 'winter-mech-1', text: 'Keep fuel tank at least half full to prevent fuel line freezing', priority: 'high', recommended: true },
+            { id: 'winter-mech-2', text: 'Check tire pressure weekly (cold decreases pressure)', priority: 'high', recommended: true },
+            { id: 'winter-mech-3', text: 'Use winter-grade windshield washer fluid', priority: 'high', recommended: true },
+            { id: 'winter-mech-4', text: 'Allow extra warm-up time before driving in extreme cold', priority: 'medium', recommended: true },
+            { id: 'winter-mech-5', text: 'Check battery connections for corrosion', priority: 'high', recommended: true },
+            { id: 'winter-mech-6', text: 'Test block heater if equipped', priority: 'medium', recommended: false },
+            { id: 'winter-mech-7', text: 'Monitor exhaust pipe - keep clear of snow when parked', priority: 'high', recommended: true },
+          ]
+        },
+        {
+          name: 'Interior Winter Care',
+          items: [
+            { id: 'winter-int-1', text: 'Use rubber floor mats to contain melted snow', priority: 'high', recommended: true },
+            { id: 'winter-int-2', text: 'Run recirculation mode minimally to reduce condensation', priority: 'medium', recommended: true },
+            { id: 'winter-int-3', text: 'Keep emergency winter kit accessible', priority: 'high', recommended: true },
+            { id: 'winter-int-4', text: 'Use a windshield cover to prevent overnight freezing', priority: 'medium', recommended: false },
+            { id: 'winter-int-5', text: 'Clean interior windows frequently to prevent fogging', priority: 'high', recommended: true },
+            { id: 'winter-int-6', text: 'Keep interior dry with moisture absorbers if needed', priority: 'medium', recommended: true },
+          ]
+        }
+      ]
     }
-  }, []);
+  };
   
-  // Calculate progress
+  // Initialize editable checklist data from the initial structure
   useEffect(() => {
-    let total = 0;
-    let completed = 0;
+    if (!editableChecklists) {
+      setEditableChecklists(JSON.parse(JSON.stringify(initialChecklists)));
+    }
     
-    checklist.sections.forEach(section => {
-      total += section.items.length;
-      completed += section.items.filter(item => item.completed).length;
+    // Expand the first section of the active season by default
+    if (editableChecklists && editableChecklists[activeSeason]?.sections[0]) {
+      setExpandedSections(prev => ({
+        ...prev,
+        [`${activeSeason}-${0}`]: true
+      }));
+    }
+    
+    // Auto-detect the appropriate season based on the current date and hemisphere
+    const detectCurrentSeason = () => {
+      const date = new Date();
+      const month = date.getMonth(); // 0-based: 0 is January, 11 is December
+      
+      // Northern hemisphere seasons
+      if (hemisphereMode === 'northern') {
+        if (month >= 2 && month <= 4) return 'spring';      // Mar-May
+        if (month >= 5 && month <= 7) return 'summer';      // Jun-Aug
+        if (month >= 8 && month <= 10) return 'fall';       // Sep-Nov
+        return 'winter';                                    // Dec-Feb
+      } 
+      // Southern hemisphere seasons (reversed)
+      else {
+        if (month >= 2 && month <= 4) return 'fall';        // Mar-May
+        if (month >= 5 && month <= 7) return 'winter';      // Jun-Aug
+        if (month >= 8 && month <= 10) return 'spring';     // Sep-Nov
+        return 'summer';                                    // Dec-Feb
+      }
+    };
+    
+    setActiveSeason(detectCurrentSeason());
+  }, [hemisphereMode]);
+  
+  // Toggle section expansion
+  const toggleSection = (seasonId, sectionIndex) => {
+    const sectionKey = `${seasonId}-${sectionIndex}`;
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionKey]: !prev[sectionKey]
+    }));
+  };
+  
+  // Toggle item completion
+  const toggleItemCompletion = (itemId) => {
+    setCompletedItems(prev => ({
+      ...prev,
+      [itemId]: !prev[itemId]
+    }));
+    
+    // Auto-save after toggling if onSave function provided
+    if (onSave) {
+      const updatedCompletedItems = {
+        ...completedItems,
+        [itemId]: !completedItems[itemId]
+      };
+      
+      onSave({
+        completedItems: updatedCompletedItems,
+        notes: userNotes,
+        vehicle
+      });
+    }
+  };
+  
+  // Start editing a note
+  const handleStartEditNote = (itemId) => {
+    setEditingNote(itemId);
+    setCurrentNote(userNotes[itemId] || '');
+  };
+  
+  // Save note changes
+  const handleSaveNote = () => {
+    if (!editingNote) return;
+    
+    const updatedNotes = {
+      ...userNotes,
+      [editingNote]: currentNote
+    };
+    
+    setUserNotes(updatedNotes);
+    setEditingNote(null);
+    setCurrentNote('');
+    
+    // Auto-save after editing if onSave function provided
+    if (onSave) {
+      onSave({
+        completedItems,
+        notes: updatedNotes,
+        vehicle
+      });
+    }
+  };
+  
+  // Add a new custom item to a checklist section
+  const addCustomItem = (seasonId, sectionIndex) => {
+    if (!customizationMode) return;
+    
+    const updatedChecklists = { ...editableChecklists };
+    const newItem = {
+      id: `custom-${seasonId}-${sectionIndex}-${Date.now()}`,
+      text: 'New custom item',
+      priority: 'medium',
+      recommended: false,
+      custom: true
+    };
+    
+    updatedChecklists[seasonId].sections[sectionIndex].items.push(newItem);
+    setEditableChecklists(updatedChecklists);
+  };
+  
+  // Remove a custom item
+  const removeCustomItem = (seasonId, sectionIndex, itemId) => {
+    if (!customizationMode) return;
+    
+    const updatedChecklists = { ...editableChecklists };
+    updatedChecklists[seasonId].sections[sectionIndex].items = 
+      updatedChecklists[seasonId].sections[sectionIndex].items.filter(item => item.id !== itemId);
+    
+    setEditableChecklists(updatedChecklists);
+  };
+  
+  // Edit a checklist item
+  const editItem = (seasonId, sectionIndex, itemId, field, value) => {
+    if (!customizationMode) return;
+    
+    const updatedChecklists = { ...editableChecklists };
+    const sectionItems = updatedChecklists[seasonId].sections[sectionIndex].items;
+    const itemIndex = sectionItems.findIndex(item => item.id === itemId);
+    
+    if (itemIndex !== -1) {
+      updatedChecklists[seasonId].sections[sectionIndex].items[itemIndex][field] = value;
+      setEditableChecklists(updatedChecklists);
+    }
+  };
+  
+  // Add a new custom section to a season
+  const addCustomSection = (seasonId) => {
+    if (!customizationMode) return;
+    
+    const updatedChecklists = { ...editableChecklists };
+    const newSection = {
+      name: 'New Custom Section',
+      items: [
+        {
+          id: `custom-${seasonId}-new-section-${Date.now()}`,
+          text: 'New custom item',
+          priority: 'medium',
+          recommended: false,
+          custom: true
+        }
+      ]
+    };
+    
+    updatedChecklists[seasonId].sections.push(newSection);
+    setEditableChecklists(updatedChecklists);
+    
+    // Expand the newly added section
+    const newSectionIndex = updatedChecklists[seasonId].sections.length - 1;
+    setExpandedSections(prev => ({
+      ...prev,
+      [`${seasonId}-${newSectionIndex}`]: true
+    }));
+  };
+  
+  // Calculate completion percentage for a season
+  const calculateCompletion = (seasonId) => {
+    if (!editableChecklists || !editableChecklists[seasonId]) return 0;
+    
+    let totalItems = 0;
+    let completedCount = 0;
+    
+    editableChecklists[seasonId].sections.forEach(section => {
+      section.items.forEach(item => {
+        totalItems++;
+        if (completedItems[item.id]) {
+          completedCount++;
+        }
+      });
     });
     
-    setTotalItems(total);
-    setCompletedItems(completed);
-  }, [checklist]);
-  
-  const handleSeasonChange = (season) => {
-    setActiveSeason(season);
-    setChecklist(seasonalChecklists[season]);
+    return totalItems === 0 ? 0 : Math.round((completedCount / totalItems) * 100);
   };
   
-  const toggleItemCompletion = (sectionIndex, itemIndex) => {
-    const updatedChecklist = { ...checklist };
-    updatedChecklist.sections[sectionIndex].items[itemIndex].completed = 
-      !updatedChecklist.sections[sectionIndex].items[itemIndex].completed;
+  // Export checklist to PDF
+  const handleExport = (format = 'pdf') => {
+    if (!onExport) return;
     
-    setChecklist(updatedChecklist);
+    const exportData = {
+      season: activeSeason,
+      checklist: editableChecklists[activeSeason],
+      completedItems,
+      notes: userNotes,
+      vehicle,
+      format
+    };
     
-    // In a real app, we would call onSave() to persist changes
+    onExport(exportData);
   };
   
-  const handleSchedule = () => {
-    // For demo purposes, just toggle the calendar
-    setShowCalendar(!showCalendar);
+  // Save all changes
+  const handleSaveAll = () => {
+    if (!onSave) return;
+    
+    onSave({
+      completedItems,
+      notes: userNotes,
+      customChecklists: editableChecklists,
+      vehicle
+    });
   };
   
-  const handleExport = () => {
-    // In a real app, this would trigger the export function
-    if (onExport) {
-      onExport(checklist, activeSeason);
-    }
+  // Toggle between Northern and Southern hemispheres
+  const toggleHemisphere = () => {
+    setHemisphereMode(prev => prev === 'northern' ? 'southern' : 'northern');
   };
   
-  const handlePrint = () => {
-    window.print();
-  };
-  
-  const progressPercentage = totalItems > 0 ? Math.round((completedItems / totalItems) * 100) : 0;
-  
-  return (
-    <div className="seasonal-checklists">
-      <div className="mb-8">
-        <div className="flex items-center justify-between mb-6">
-          <div>
-            <h2 className="text-blue-400 font-orbitron text-2xl mb-2">{checklist.name}</h2>
-            <p className="text-gray-400">{checklist.description}</p>
-          </div>
-          
-          <div className="flex items-center space-x-3">
-            <button 
-              className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-md flex items-center text-sm"
-              onClick={handleSchedule}
-            >
-              <Calendar className="h-4 w-4 mr-2" />
-              Schedule
-            </button>
-            
-            <button 
-              className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-md flex items-center text-sm"
-              onClick={handleExport}
-            >
-              <Download className="h-4 w-4 mr-2" />
-              Export
-            </button>
-            
-            <button 
-              className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-md flex items-center text-sm"
-              onClick={handlePrint}
-            >
-              <Printer className="h-4 w-4 mr-2" />
-              Print
-            </button>
-          </div>
-        </div>
-        
-        {/* Season Selector */}
-        <div className="flex flex-wrap gap-3 mb-6">
-          <button 
-            onClick={() => handleSeasonChange('winter')}
-            className={`flex items-center px-4 py-2 rounded-full text-sm transition-all ${
-              activeSeason === 'winter' 
-                ? 'bg-blue-900 text-white font-medium' 
-                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+  // Render seasonal tabs
+  const renderSeasonTabs = () => {
+    return (
+      <div className="flex border-b border-gray-800 mb-6 overflow-x-auto scrollbar-hide">
+        {SEASONS.map(season => (
+          <button
+            key={season.id}
+            className={`px-5 py-3 flex items-center whitespace-nowrap ${
+              activeSeason === season.id
+                ? 'text-white border-b-2 border-green-500'
+                : 'text-gray-400 hover:text-gray-200'
             }`}
+            onClick={() => setActiveSeason(season.id)}
           >
-            <Snowflake className={`h-4 w-4 mr-2 ${activeSeason === 'winter' ? 'text-blue-400' : 'text-gray-400'}`} />
-            Winter
+            <span className="mr-2">{season.icon}</span>
+            <span>{season.name}</span>
+            {calculateCompletion(season.id) > 0 && (
+              <span className="ml-2 px-1.5 py-0.5 text-xs rounded-full bg-gray-800">
+                {calculateCompletion(season.id)}%
+              </span>
+            )}
           </button>
-          
-          <button 
-            onClick={() => handleSeasonChange('spring')}
-            className={`flex items-center px-4 py-2 rounded-full text-sm transition-all ${
-              activeSeason === 'spring' 
-                ? 'bg-green-900 text-white font-medium' 
-                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-            }`}
-          >
-            <Leaf className={`h-4 w-4 mr-2 ${activeSeason === 'spring' ? 'text-green-400' : 'text-gray-400'}`} />
-            Spring
-          </button>
-          
-          <button 
-            onClick={() => handleSeasonChange('summer')}
-            className={`flex items-center px-4 py-2 rounded-full text-sm transition-all ${
-              activeSeason === 'summer' 
-                ? 'bg-yellow-900 text-white font-medium' 
-                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-            }`}
-          >
-            <Sun className={`h-4 w-4 mr-2 ${activeSeason === 'summer' ? 'text-yellow-400' : 'text-gray-400'}`} />
-            Summer
-          </button>
-          
-          <button 
-            onClick={() => handleSeasonChange('fall')}
-            className={`flex items-center px-4 py-2 rounded-full text-sm transition-all ${
-              activeSeason === 'fall' 
-                ? 'bg-orange-900 text-white font-medium' 
-                : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-            }`}
-          >
-            <CloudSnow className={`h-4 w-4 mr-2 ${activeSeason === 'fall' ? 'text-orange-400' : 'text-gray-400'}`} />
-            Fall
-          </button>
-        </div>
-        
-        {/* Featured Checklist Image */}
-        <div className="relative h-48 md:h-64 rounded-xl overflow-hidden mb-6">
-          <img 
-            src={checklist.image} 
-            alt={`${checklist.name} preparation`}
-            className="w-full h-full object-cover"
-          />
-          <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
-          <div className="absolute bottom-0 left-0 p-4">
-            <div className="flex items-center mb-2">
-              {checklist.icon}
-              <span className="ml-2 text-white font-medium">{checklist.name}</span>
-            </div>
-            <div className="flex items-center gap-2">
-              <div className="bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center">
-                <CheckCircle className="h-3 w-3 text-green-500 mr-1" />
-                {completedItems}/{totalItems} completed
-              </div>
-              <div className="bg-black/60 text-white text-xs px-2 py-1 rounded-full flex items-center">
-                <Clock className="h-3 w-3 text-blue-500 mr-1" />
-                Seasonal task
-              </div>
-            </div>
-          </div>
-          
-          {/* Progress Bar */}
-          <div className="absolute bottom-0 left-0 w-full h-1.5">
-            <div className="bg-gray-800 h-full">
-              <div 
-                className="h-full bg-green-500"
-                style={{ width: `${progressPercentage}%` }}
-              ></div>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      {/* Checklist Items */}
-      <div className="space-y-6">
-        {checklist.sections.map((section, sectionIndex) => (
-          <div key={sectionIndex} className="bg-gradient-to-br from-gray-900 to-black p-4 rounded-xl border border-blue-500/20">
-            <h3 className="text-blue-400 mb-4 font-medium text-lg">{section.title}</h3>
-            
-            <div className="space-y-2">
-              {section.items.map((item, itemIndex) => (
-                <div 
-                  key={itemIndex} 
-                  className={`p-3 rounded-lg flex items-center ${
-                    item.completed 
-                      ? 'bg-green-900/20 border border-green-800/30' 
-                      : 'bg-gray-800/50 border border-gray-700/50 hover:bg-gray-800'
-                  }`}
-                >
-                  <button
-                    onClick={() => toggleItemCompletion(sectionIndex, itemIndex)}
-                    className={`w-6 h-6 rounded-md flex items-center justify-center flex-shrink-0 mr-3 ${
-                      item.completed 
-                        ? 'bg-green-600 text-white' 
-                        : 'bg-gray-700 text-gray-400'
-                    }`}
-                  >
-                    {item.completed && <Check className="h-4 w-4" />}
-                  </button>
-                  <span className={`text-sm ${item.completed ? 'text-gray-300 line-through' : 'text-white'}`}>
-                    {item.name}
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
         ))}
       </div>
-      
-      {/* Additional Tips Section */}
-      <div className="mt-8 bg-gradient-to-br from-gray-900 to-black p-4 rounded-xl border border-blue-500/20">
-        <h3 className="text-blue-400 mb-4 font-medium text-lg flex items-center">
-          <ShieldAlert className="h-5 w-5 mr-2" />
-          {activeSeason.charAt(0).toUpperCase() + activeSeason.slice(1)} Vehicle Tips
-        </h3>
-        
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {activeSeason === 'winter' && (
-            <>
-              <div className="p-3 bg-black/30 rounded-lg flex items-start">
-                <Thermometer className="h-5 w-5 text-blue-400 mr-3 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h4 className="text-white text-sm font-medium mb-1">Cold Weather Battery Care</h4>
-                  <p className="text-gray-400 text-xs">Battery performance drops significantly in cold weather. Keep your battery terminals clean and consider a trickle charger for vehicles stored outside.</p>
-                </div>
-              </div>
-              
-              <div className="p-3 bg-black/30 rounded-lg flex items-start">
-                <Droplet className="h-5 w-5 text-blue-400 mr-3 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h4 className="text-white text-sm font-medium mb-1">Winter Fluid Management</h4>
-                  <p className="text-gray-400 text-xs">Make sure all fluids are winter-ready. Use winter-grade washer fluid and check that your coolant has proper antifreeze protection for your climate.</p>
-                </div>
-              </div>
-            </>
-          )}
-          
-          {activeSeason === 'summer' && (
-            <>
-              <div className="p-3 bg-black/30 rounded-lg flex items-start">
-                <Thermometer className="h-5 w-5 text-yellow-400 mr-3 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h4 className="text-white text-sm font-medium mb-1">Heat Protection</h4>
-                  <p className="text-gray-400 text-xs">Use a quality sunshade when parked. Consider ceramic window tint to reduce interior heat buildup and protect your dashboard and interior from UV damage.</p>
-                </div>
-              </div>
-              
-              <div className="p-3 bg-black/30 rounded-lg flex items-start">
-                <Wind className="h-5 w-5 text-yellow-400 mr-3 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h4 className="text-white text-sm font-medium mb-1">Cooling System Maintenance</h4>
-                  <p className="text-gray-400 text-xs">Your vehicle's cooling system works harder in summer. Ensure the radiator is clean and free of debris, and that coolant is at proper levels and concentration.</p>
-                </div>
-              </div>
-            </>
-          )}
-          
-          {activeSeason === 'spring' && (
-            <>
-              <div className="p-3 bg-black/30 rounded-lg flex items-start">
-                <Droplet className="h-5 w-5 text-green-400 mr-3 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h4 className="text-white text-sm font-medium mb-1">Underbody Cleaning</h4>
-                  <p className="text-gray-400 text-xs">Road salt and chemicals can damage your vehicle's undercarriage. Get a thorough underbody wash to remove all winter contaminants and prevent corrosion.</p>
-                </div>
-              </div>
-              
-              <div className="p-3 bg-black/30 rounded-lg flex items-start">
-                <Wrench className="h-5 w-5 text-green-400 mr-3 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h4 className="text-white text-sm font-medium mb-1">Post-Winter Inspection</h4>
-                  <p className="text-gray-400 text-xs">Winter can be hard on your vehicle. Check for suspension damage, exhaust system issues, and worn wiper blades that need replacement.</p>
-                </div>
-              </div>
-            </>
-          )}
-          
-          {activeSeason === 'fall' && (
-            <>
-              <div className="p-3 bg-black/30 rounded-lg flex items-start">
-                <Car className="h-5 w-5 text-orange-400 mr-3 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h4 className="text-white text-sm font-medium mb-1">Lighting Check</h4>
-                  <p className="text-gray-400 text-xs">With shorter days and longer nights, proper lighting is critical. Check all exterior lights, including fog lights and turn signals, and replace any bulbs as needed.</p>
-                </div>
-              </div>
-              
-              <div className="p-3 bg-black/30 rounded-lg flex items-start">
-                <ToggleRight className="h-5 w-5 text-orange-400 mr-3 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h4 className="text-white text-sm font-medium mb-1">Heater System Preparation</h4>
-                  <p className="text-gray-400 text-xs">Test your heating system before cold weather arrives. Check that all vents are functioning properly and that the defrosters work effectively.</p>
-                </div>
-              </div>
-            </>
-          )}
+    );
+  };
+  
+  // Render priority badge
+  const renderPriorityBadge = (priority) => {
+    let color;
+    switch (priority) {
+      case 'high':
+        color = 'text-red-500 bg-red-500/20';
+        break;
+      case 'medium':
+        color = 'text-yellow-500 bg-yellow-500/20';
+        break;
+      case 'low':
+        color = 'text-blue-500 bg-blue-500/20';
+        break;
+      default:
+        color = 'text-gray-500 bg-gray-500/20';
+    }
+    
+    return (
+      <span className={`px-2 py-0.5 text-xs rounded-full ${color}`}>
+        {priority}
+      </span>
+    );
+  };
+  
+  // Render checklist sections
+  const renderSections = () => {
+    if (!editableChecklists || !editableChecklists[activeSeason]) {
+      return (
+        <div className="p-8 text-center text-gray-400">
+          No checklist available for this season
         </div>
-      </div>
-      
-      {/* Calendar Modal */}
-      {showCalendar && (
-        <div className="fixed inset-0 bg-black/80 z-50 flex items-center justify-center">
-          <div className="bg-gray-900 rounded-xl max-w-md w-full p-6">
-            <h3 className="text-blue-400 font-orbitron text-lg mb-4 flex items-center">
-              <Calendar className="h-5 w-5 mr-2" />
-              Schedule {checklist.name}
-            </h3>
+      );
+    }
+    
+    const seasonData = editableChecklists[activeSeason];
+    
+    return (
+      <div className="space-y-6">
+        <div className="flex items-center justify-between mb-4">
+          <div>
+            <h2 className="text-xl font-orbitron text-blue-400">{seasonData.name}</h2>
+            <p className="text-sm text-gray-400 mt-1">{seasonData.description}</p>
+          </div>
+          
+          <div className="flex items-center gap-3">
+            <button 
+              onClick={toggleHemisphere}
+              className="text-sm text-gray-400 hover:text-white flex items-center"
+              title={`Switch to ${hemisphereMode === 'northern' ? 'Southern' : 'Northern'} Hemisphere`}
+            >
+              <Globe className="h-4 w-4 mr-1" />
+              {hemisphereMode === 'northern' ? 'N' : 'S'} Hemisphere
+            </button>
             
-            <div className="mb-4">
-              <label className="block text-gray-400 mb-2 text-sm">Select Date</label>
-              <input 
-                type="date" 
-                value={scheduledDate}
-                onChange={(e) => setScheduledDate(e.target.value)}
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-white"
-              />
-            </div>
-            
-            <div className="mb-4">
-              <label className="block text-gray-400 mb-2 text-sm">Reminder</label>
-              <select className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-white">
-                <option value="day">1 day before</option>
-                <option value="week">1 week before</option>
-                <option value="none">No reminder</option>
-              </select>
-            </div>
-            
-            <div className="mb-4">
-              <label className="block text-gray-400 mb-2 text-sm">Notes</label>
-              <textarea 
-                rows="3"
-                placeholder="Add notes for this service..."
-                className="w-full bg-gray-800 border border-gray-700 rounded-lg p-2.5 text-white"
-              ></textarea>
-            </div>
-            
-            <div className="flex justify-end space-x-3">
-              <button 
-                onClick={() => setShowCalendar(false)}
-                className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-white rounded-md"
+            <div className="flex items-center border-l border-gray-700 pl-3">
+              <button
+                onClick={() => setCustomizationMode(!customizationMode)}
+                className={`p-1.5 rounded-md ${customizationMode ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'}`}
+                title={customizationMode ? "Exit customization mode" : "Enter customization mode"}
               >
-                Cancel
+                {customizationMode ? <Lock size={16} /> : <Unlock size={16} />}
               </button>
-              <button 
-                onClick={() => {
-                  // In a real app, this would save the schedule
-                  setShowCalendar(false);
-                }}
-                className="px-4 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md"
+              
+              <button
+                onClick={() => handleExport('pdf')}
+                className="p-1.5 rounded-md text-gray-400 hover:text-white"
+                title="Export to PDF"
               >
-                Schedule
+                <FileDown size={16} />
               </button>
             </div>
           </div>
         </div>
-      )}
+        
+        {seasonData.sections.map((section, sectionIndex) => (
+          <div key={`${activeSeason}-section-${sectionIndex}`} className="bg-gray-900 border border-gray-800 rounded-lg overflow-hidden">
+            <div 
+              className="flex justify-between items-center p-4 cursor-pointer"
+              onClick={() => toggleSection(activeSeason, sectionIndex)}
+            >
+              <h3 className="text-lg font-medium text-white">
+                {section.name}
+              </h3>
+              <div className="flex items-center">
+                {expandedSections[`${activeSeason}-${sectionIndex}`] ? (
+                  <ChevronUp className="h-5 w-5 text-gray-400" />
+                ) : (
+                  <ChevronDown className="h-5 w-5 text-gray-400" />
+                )}
+              </div>
+            </div>
+            
+            {expandedSections[`${activeSeason}-${sectionIndex}`] && (
+              <div className="p-4 border-t border-gray-800">
+                <ul className="space-y-4">
+                  {section.items.map(item => (
+                    <li 
+                      key={item.id} 
+                      className={`group flex items-start p-3 rounded-md ${
+                        completedItems[item.id] ? 'bg-green-900/20' : 'bg-gray-800/50'
+                      }`}
+                    >
+                      <button
+                        className="mt-0.5 mr-3 flex-shrink-0"
+                        onClick={() => toggleItemCompletion(item.id)}
+                        aria-label={completedItems[item.id] ? "Mark as incomplete" : "Mark as complete"}
+                      >
+                        {completedItems[item.id] ? (
+                          <CheckSquare className="h-5 w-5 text-green-500" />
+                        ) : (
+                          <Square className="h-5 w-5 text-gray-400" />
+                        )}
+                      </button>
+                      
+                      <div className="flex-grow min-w-0">
+                        <div className="flex flex-wrap items-center gap-2 mb-1">
+                          <span className={`font-medium ${completedItems[item.id] ? 'text-gray-400 line-through' : 'text-white'}`}>
+                            {customizationMode ? (
+                              <input
+                                type="text"
+                                value={item.text}
+                                onChange={(e) => editItem(activeSeason, sectionIndex, item.id, 'text', e.target.value)}
+                                className="bg-transparent border-b border-gray-700 focus:border-blue-500 outline-none px-1 w-full"
+                              />
+                            ) : (
+                              item.text
+                            )}
+                          </span>
+                          
+                          {customizationMode ? (
+                            <select 
+                              value={item.priority}
+                              onChange={(e) => editItem(activeSeason, sectionIndex, item.id, 'priority', e.target.value)}
+                              className="bg-gray-800 text-xs rounded px-2 py-1 border border-gray-700"
+                            >
+                              <option value="high">High</option>
+                              <option value="medium">Medium</option>
+                              <option value="low">Low</option>
+                            </select>
+                          ) : (
+                            renderPriorityBadge(item.priority)
+                          )}
+                          
+                          {item.recommended && !customizationMode && (
+                            <span className="px-2 py-0.5 text-xs rounded-full text-blue-400 bg-blue-500/20">
+                              Recommended
+                            </span>
+                          )}
+                          
+                          {customizationMode && (
+                            <div className="flex items-center ml-auto">
+                              <label className="flex items-center text-xs text-gray-400">
+                                <input
+                                  type="checkbox"
+                                  checked={item.recommended}
+                                  onChange={(e) => editItem(activeSeason, sectionIndex, item.id, 'recommended', e.target.checked)}
+                                  className="mr-1"
+                                />
+                                Recommended
+                              </label>
+                              
+                              {(item.custom || customizationMode) && (
+                                <button
+                                  onClick={() => removeCustomItem(activeSeason, sectionIndex, item.id)}
+                                  className="ml-2 text-red-500 hover:text-red-400"
+                                  aria-label="Remove item"
+                                >
+                                  <Trash2 size={14} />
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                        
+                        {/* Notes section */}
+                        {editingNote === item.id ? (
+                          <div className="mt-2">
+                            <textarea
+                              value={currentNote}
+                              onChange={(e) => setCurrentNote(e.target.value)}
+                              className="w-full px-3 py-2 text-sm bg-gray-800 border border-gray-700 rounded-md text-white"
+                              placeholder="Add your notes here..."
+                              rows={2}
+                            />
+                            <div className="flex justify-end mt-2">
+                              <button
+                                onClick={() => setEditingNote(null)}
+                                className="px-2 py-1 text-xs text-gray-400 hover:text-white mr-2"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={handleSaveNote}
+                                className="px-2 py-1 text-xs bg-blue-600 hover:bg-blue-500 text-white rounded"
+                              >
+                                Save
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            {userNotes[item.id] ? (
+                              <div className="mt-2 text-sm bg-gray-800 rounded-md p-2 text-gray-300">
+                                <div className="flex justify-between items-start">
+                                  <div className="flex-grow">{userNotes[item.id]}</div>
+                                  <button
+                                    onClick={() => handleStartEditNote(item.id)}
+                                    className="ml-2 text-gray-500 hover:text-white flex-shrink-0"
+                                  >
+                                    <Edit size={14} />
+                                  </button>
+                                </div>
+                              </div>
+                            ) : (
+                              <button
+                                onClick={() => handleStartEditNote(item.id)}
+                                className="mt-1 text-xs text-gray-500 hover:text-white flex items-center opacity-0 group-hover:opacity-100 transition-opacity"
+                              >
+                                <Edit size={12} className="mr-1" />
+                                Add notes
+                              </button>
+                            )}
+                          </>
+                        )}
+                      </div>
+                    </li>
+                  ))}
+                  
+                  {/* Add custom item button (in customization mode) */}
+                  {customizationMode && (
+                    <li>
+                      <button
+                        onClick={() => addCustomItem(activeSeason, sectionIndex)}
+                        className="w-full p-2 border border-dashed border-gray-700 rounded-md text-gray-400 hover:text-white hover:border-gray-500 flex items-center justify-center"
+                      >
+                        <Plus size={16} className="mr-2" />
+                        Add Custom Item
+                      </button>
+                    </li>
+                  )}
+                </ul>
+              </div>
+            )}
+          </div>
+        ))}
+        
+        {/* Add custom section button (in customization mode) */}
+        {customizationMode && (
+          <button
+            onClick={() => addCustomSection(activeSeason)}
+            className="w-full p-3 border border-dashed border-gray-700 rounded-lg text-gray-400 hover:text-white hover:border-gray-500 flex items-center justify-center"
+          >
+            <Plus size={18} className="mr-2" />
+            Add Custom Section
+          </button>
+        )}
+        
+        {/* Save changes button (in customization mode) */}
+        {customizationMode && (
+          <div className="mt-6 flex justify-end">
+            <button
+              onClick={handleSaveAll}
+              className="px-4 py-2 bg-green-600 hover:bg-green-500 text-white rounded-md flex items-center"
+            >
+              <Save size={16} className="mr-2" />
+              Save All Changes
+            </button>
+          </div>
+        )}
+      </div>
+    );
+  };
+  
+  return (
+    <div className="seasonal-checklists text-white">
+      {renderSeasonTabs()}
+      {renderSections()}
     </div>
   );
 };
+
+// Missing Globe icon component (not included in lucide-react import)
+const Globe = ({ className, size = 24 }) => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="none"
+    stroke="currentColor"
+    strokeWidth="2"
+    strokeLinecap="round"
+    strokeLinejoin="round"
+    className={className}
+  >
+    <circle cx="12" cy="12" r="10" />
+    <line x1="2" y1="12" x2="22" y2="12" />
+    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z" />
+  </svg>
+);
 
 export default SeasonalChecklists;
