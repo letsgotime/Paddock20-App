@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import WeatherStation from '../components/WeatherStation';
 import WorldClock from '../components/WorldClock';
+import APIDebugger from '../components/APIDebugger';
 import supabase from '../services/supabaseClient';
 import { Calendar, BarChart3, Car, Map, Settings, Bell, Shield, ChevronRight, 
          MessageSquare, HeartHandshake, Star, EyeOff, Gauge, ClipboardCheck, 
@@ -559,6 +560,11 @@ function DashboardPage() {
             <Star size={24} className="mx-auto mb-2 text-rose-400 group-hover:scale-110 transition-transform" />
             <span className="text-sm text-white">Juice Box™</span>
           </Link>
+        </div>
+        
+        {/* API Debugger Component - Developer Tool */}
+        <div className="mt-8 mb-6">
+          <APIDebugger />
         </div>
         
         {/* Footer */}
