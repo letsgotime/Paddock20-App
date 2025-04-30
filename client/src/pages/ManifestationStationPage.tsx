@@ -38,11 +38,7 @@ import {
   ClipboardList,
   CircleDashed,
   BatteryCharging,
-  PlusSquare,
-  Layers,
-  LayoutDashboard,
-  Activity,
-  Minus
+  PlusSquare
 } from "lucide-react";
 
 import { Badge } from "@/components/ui/badge";
@@ -184,7 +180,7 @@ const ManifestationStation: React.FC = () => {
   const [weatherData, setWeatherData] = useState(mockWeatherData);
   const [isConnectedToOBD, setIsConnectedToOBD] = useState(false);
   
-  // Dashboard display toggles with category grouping for better organization
+  // Dashboard display toggles
   const [dashboardToggles, setDashboardToggles] = useState({
     showTelemetry: true,
     showMaintenanceAlerts: true,
@@ -195,16 +191,6 @@ const ManifestationStation: React.FC = () => {
     showDetailingSchedule: true,
     showProjectStatus: true
   });
-  
-  // Categories for dashboard sections for improved organization
-  const dashboardCategories = {
-    "Vehicle Data": ["Telemetry", "MaintenanceAlerts", "ValuationData"],
-    "Experience": ["MoodEnergy", "DetailingSchedule", "ProjectStatus"],
-    "Information": ["WeatherData", "DocumentExpiration"]
-  };
-  
-  // Touch interactions
-  const [activeToggle, setActiveToggle] = useState<string | null>(null);
 
   // Fetch user profile
   useEffect(() => {
@@ -303,34 +289,16 @@ const ManifestationStation: React.FC = () => {
   };
 
   // Function to format number with commas
-  const formatNumber = (num: number | undefined): string => {
-    if (num === undefined) return "0";
+  const formatNumber = (num: number): string => {
     return num.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ",");
   };
 
-  // Handle toggle changes with enhanced touch feedback
+  // Handle toggle changes
   const handleToggleChange = (toggleName: string) => {
-    // Provide haptic-like visual feedback for touch interaction
-    setActiveToggle(toggleName);
-    setTimeout(() => setActiveToggle(null), 300);
-    
     setDashboardToggles(prev => ({
       ...prev,
       [toggleName]: !prev[toggleName]
     }));
-    
-    // Provide toast feedback for touch interactions on mobile
-    const isMobile = window.innerWidth < 768;
-    if (isMobile) {
-      const toggleLabel = toggleName.replace('show', '').replace(/([A-Z])/g, ' $1').trim();
-      const isEnabled = !dashboardToggles[toggleName as keyof typeof dashboardToggles];
-      
-      toast({
-        title: `${toggleLabel} ${isEnabled ? 'Enabled' : 'Disabled'}`,
-        description: `${toggleLabel} section is now ${isEnabled ? 'visible' : 'hidden'} on your dashboard.`,
-        duration: 1500,
-      });
-    }
   };
 
   // Simulate OBD connection
@@ -655,51 +623,6 @@ const ManifestationStation: React.FC = () => {
                 
                 {/* Tab Content */}
                 <TabsContent value="dashboard" className="p-0 m-0">
-                  {/* Why You're Here / What You Get / How to Use It Sections */}
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
-                    {/* Why You're Here */}
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-                      <h3 className="text-lg font-semibold flex items-center gap-2 mb-3">
-                        <span className="text-[#7FC844]">🧭</span> Why You're Here
-                      </h3>
-                      <p className="text-gray-300 text-sm mb-3">
-                        Manifestation Station™ isn't about "wishing."
-                        It's about working.
-                        Every goal you log here — every car, watch, home, or milestone — comes with a plan built the way real winners build:
-                        Daily movement. Daily mindset. Daily gratitude.
-                        Because real manifestation isn't magic—it's momentum.
-                      </p>
-                    </div>
-                    
-                    {/* What You Get */}
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-                      <h3 className="text-lg font-semibold flex items-center gap-2 mb-3">
-                        <span className="text-[#7FC844]">✅</span> What You Get
-                      </h3>
-                      <ul className="text-gray-300 text-sm space-y-2">
-                        <li>Dream Vault: Log your cars, watches, experiences, investments.</li>
-                        <li>Goal Telemetry: Set your target, your funding path, and your timeline.</li>
-                        <li>Milestone Tracking: Break down the dream into checkable steps.</li>
-                        <li>Daily Discipline Tracker: Mind, Body, Spirit</li>
-                        <li>Proof of Progress System: See your real manifestation rate, not just your wish rate.</li>
-                      </ul>
-                    </div>
-                    
-                    {/* How to Use It */}
-                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
-                      <h3 className="text-lg font-semibold flex items-center gap-2 mb-3">
-                        <span className="text-[#7FC844]">🚀</span> How to Use It
-                      </h3>
-                      <ul className="text-gray-300 text-sm space-y-2">
-                        <li>Set Goals: Add dream assets or experiences.</li>
-                        <li>Link Daily Disciplines: Choose your mind, body, spirit focuses.</li>
-                        <li>Track Progress: Update every week or day as you advance.</li>
-                        <li>Celebrate Completions: Archive manifested goals with photos, memories, and timestamps.</li>
-                        <li>Level Up: After each goal, raise your standards and manifest smarter.</li>
-                      </ul>
-                    </div>
-                  </div>
-                
                   {/* Dashboard Settings */}
                   <div className="bg-zinc-900 border border-zinc-800 rounded-xl mb-6">
                     <div className="flex justify-between items-center p-4 border-b border-zinc-800">
