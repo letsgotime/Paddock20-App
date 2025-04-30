@@ -111,11 +111,13 @@ import { ThemeProvider } from "@/context/ThemeContext";
 const Sidebar = ({ 
   isSidebarOpen, 
   toggleSidebar, 
-  userProgress = 65 
+  userProgress = 65,
+  buttonRef
 }: { 
   isSidebarOpen: boolean; 
   toggleSidebar: () => void;
   userProgress?: number;
+  buttonRef?: React.RefObject<HTMLButtonElement>;
 }) => {
   const [isActive] = useRoute("/:page*");
   const [location] = useLocation();
@@ -249,6 +251,7 @@ const Sidebar = ({
           </h1>
         </div>
         <Button 
+          ref={buttonRef}
           variant="ghost" 
           size="icon" 
           onClick={toggleSidebar} 
@@ -433,7 +436,13 @@ const TopNavbar = ({
       case 'analytics':
         return 'Performance Analytics';
       case 'journal':
-        return 'Driver Journal';
+        return 'Drive Journal';
+      case 'route-planner':
+        return 'Route Planner';
+      case 'tires-timepieces':
+        return 'Tires & Timepieces';
+      case 'paddock20':
+        return 'Paddock20 Membership';
       case 'marketplace':
         return 'Marketplace';
       default:
@@ -460,7 +469,13 @@ const TopNavbar = ({
       case 'analytics':
         return 'Data-driven insights for your vehicles and progress';
       case 'journal':
-        return 'Document your journey and experiences';
+        return 'Document your drives and automotive experiences';
+      case 'route-planner':
+        return 'Plan and optimize your driving routes and adventures';
+      case 'tires-timepieces':
+        return 'Curated selection of premium tires and luxury timepieces';
+      case 'paddock20':
+        return 'Elite membership for automotive enthusiasts';
       case 'marketplace':
         return 'Discover products and services for your vehicles';
       default:
@@ -573,17 +588,50 @@ const MobileBottomNav = () => {
 // Main Layout Component
 const Layout = ({ children }: { children: React.ReactNode }) => {
   const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const sidebarRef = React.useRef<HTMLDivElement>(null);
+  const buttonRef = React.useRef<HTMLButtonElement>(null);
   
   const toggleSidebar = () => {
     setIsSidebarOpen(!isSidebarOpen);
   };
   
+  // Handle clicks outside the sidebar
+  React.useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      // Skip if sidebar is already closed
+      if (!isSidebarOpen) return;
+      
+      // Skip if this is the toggle button - it has its own handler
+      if (buttonRef.current && buttonRef.current.contains(event.target as Node)) {
+        return;
+      }
+      
+      // Close if clicked outside sidebar and not the toggle button
+      if (sidebarRef.current && !sidebarRef.current.contains(event.target as Node)) {
+        setIsSidebarOpen(false);
+      }
+    };
+    
+    // Only add the listener for medium and larger screens where sidebar can be toggled
+    const mediaQuery = window.matchMedia('(min-width: 768px)');
+    if (mediaQuery.matches) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isSidebarOpen]);
+  
   return (
     <div className="bg-black text-white min-h-screen">
-      <Sidebar 
-        isSidebarOpen={isSidebarOpen} 
-        toggleSidebar={toggleSidebar} 
-      />
+      <div ref={sidebarRef}>
+        <Sidebar 
+          isSidebarOpen={isSidebarOpen} 
+          toggleSidebar={toggleSidebar}
+          buttonRef={buttonRef}
+        />
+      </div>
       <TopNavbar 
         isSidebarOpen={isSidebarOpen}
         toggleSidebar={toggleSidebar}
