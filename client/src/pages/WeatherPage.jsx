@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import WeatherStation from '../components/WeatherStation';
 import WorldClock from '../components/WorldClock';
+import WeatherVehicleImpactAnalyzer from '../components/WeatherVehicleImpactAnalyzer';
 import { 
   Cloud, Sun, Wind, CloudRain, Droplets, Thermometer, 
   Clock, Calendar, AlertTriangle, MapPin, Car, Navigation,
