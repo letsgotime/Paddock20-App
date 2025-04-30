@@ -19,8 +19,9 @@ import EnhancedVehicleDetail from '../components/EnhancedVehicleDetail';
 
 // Import icons and services
 import { Plus, Car, Download, Filter, LayoutGrid, List, Activity, Settings, Clock, Timer, Gauge, Target, 
-         Sun, Shield, Smartphone, Calendar, BarChart3, Share2, Wrench, PaintBucket, User, Camera } from 'lucide-react';
-import { getVehicles } from "../services/vehicleDataService";
+         Sun, Shield, Smartphone, Calendar, BarChart3, Share2, Wrench, PaintBucket, User, Camera, Check } from 'lucide-react';
+// Import utility to get vehicle data
+// import { getAllVehicles } from "../services/vehicleDataService";
 import unsplashService from '../services/unsplashService';
 
 // Define vehicle type
@@ -230,12 +231,15 @@ const GoTimeGarageVault: React.FC = () => {
     
     // Update the statistics for the selected vehicle
     if (selectedVehicle) {
-      const updatedVehicle = {
+      const updatedVehicle: Vehicle = {
         ...selectedVehicle,
         statistics: {
-          ...selectedVehicle.statistics,
+          maintenance_count: selectedVehicle.statistics?.maintenance_count || 0,
           modification_count: (selectedVehicle.statistics?.modification_count || 0) + 1,
-          total_investments: (selectedVehicle.statistics?.total_investments || 0) + (modData.cost || 0)
+          total_investments: (selectedVehicle.statistics?.total_investments || 0) + (modData.cost || 0),
+          drive_count: selectedVehicle.statistics?.drive_count || 0,
+          avg_drive_duration: selectedVehicle.statistics?.avg_drive_duration || 0,
+          mileage: selectedVehicle.statistics?.mileage || 0
         },
         last_update: new Date().toISOString().split('T')[0]
       };
@@ -256,12 +260,15 @@ const GoTimeGarageVault: React.FC = () => {
     
     // Update the statistics for the selected vehicle
     if (selectedVehicle) {
-      const updatedVehicle = {
+      const updatedVehicle: Vehicle = {
         ...selectedVehicle,
         statistics: {
-          ...selectedVehicle.statistics,
           maintenance_count: (selectedVehicle.statistics?.maintenance_count || 0) + 1,
-          total_investments: (selectedVehicle.statistics?.total_investments || 0) + (maintenanceData.cost || 0)
+          modification_count: selectedVehicle.statistics?.modification_count || 0,
+          total_investments: (selectedVehicle.statistics?.total_investments || 0) + (maintenanceData.cost || 0),
+          drive_count: selectedVehicle.statistics?.drive_count || 0,
+          avg_drive_duration: selectedVehicle.statistics?.avg_drive_duration || 0,
+          mileage: selectedVehicle.statistics?.mileage || 0
         },
         last_update: new Date().toISOString().split('T')[0]
       };
