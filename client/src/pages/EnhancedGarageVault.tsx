@@ -40,6 +40,48 @@ interface Vehicle {
   tire_specs?: string;
   gallery?: string[];
   docs?: string[];
+  delivery_photo_url?: string;
+  delivery_date?: string;
+  sold_photo_url?: string;
+  sold_date?: string;
+  voice_notes?: {
+    id: string;
+    url: string;
+    date: string;
+    title?: string;
+  }[];
+  videos?: {
+    id: string;
+    url: string;
+    date: string;
+    title?: string;
+    thumbnail_url?: string;
+  }[];
+  monthly_photos?: {
+    date: string;
+    url: string;
+    notes?: string;
+  }[];
+  detailed_specs?: {
+    exterior_color_code?: string;
+    interior_color_code?: string;
+    factory_options?: string[];
+    production_date?: string;
+    special_edition?: string;
+    engine_number?: string;
+    original_msrp?: number;
+  };
+  purchase_documents?: Document[];
+  service_history?: {
+    date: string;
+    mileage: number;
+    description: string;
+    performed_by?: string;
+    documents?: Document[];
+    photos?: string[];
+    voice_notes?: string[];
+    videos?: string[];
+  }[];
 }
 
 interface Modification {
@@ -55,7 +97,12 @@ interface Modification {
   installation_location?: string;
   cost?: number;
   installer?: string;
+  installer_contact?: string;
   warranty_expires?: string;
+  warranty_details?: string;
+  warranty_provider?: string;
+  warranty_contact?: string;
+  warranty_policy_url?: string;
   status: 'Planned' | 'In Progress' | 'Installed' | 'Removed';
   affected_systems?: string[];
   image_url?: string;
@@ -64,17 +111,77 @@ interface Modification {
   notes?: string;
   before_photos?: string[];
   after_photos?: string[];
+  progress_photos?: string[];
   category?: string;
   created_at: string;
   updated_at: string;
-  voice_note_url?: string;
-  video_url?: string;
+  voice_notes?: {
+    id: string;
+    url: string;
+    date: string;
+    title?: string;
+    duration?: number;
+  }[];
+  videos?: {
+    id: string;
+    url: string;
+    date: string;
+    title?: string;
+    thumbnail_url?: string;
+    duration?: number;
+  }[];
   documents?: Document[];
+  receipts?: Document[];
+  installation_instructions?: Document[];
   location?: {
     latitude: number;
     longitude: number;
     address?: string;
   };
+  shop_photos?: string[];
+  shop_name?: string;
+  shop_contact?: string;
+  shop_website?: string;
+  rating?: number;
+  review_notes?: string;
+  price_comparison?: {
+    shop_name: string;
+    price: number;
+    date: string;
+    notes?: string;
+  }[];
+  installation_steps?: {
+    step_number: number;
+    description: string;
+    photos?: string[];
+    videos?: string[];
+    voice_notes?: string[];
+    time_spent?: number;
+  }[];
+  goals?: {
+    description: string;
+    achieved: boolean;
+    date_achieved?: string;
+    before_metrics?: Record<string, number>;
+    after_metrics?: Record<string, number>;
+    photos?: string[];
+  }[];
+  part_details?: {
+    manufacturer?: string;
+    oem_part_number?: string;
+    weight?: number;
+    dimensions?: string;
+    material?: string;
+    color?: string;
+    country_of_origin?: string;
+    purchase_url?: string;
+    purchase_date?: string;
+    purchase_price?: number;
+    retail_price?: number;
+    discount_amount?: number;
+    discount_percentage?: number;
+  };
+  technical_specs?: Record<string, any>;
 }
 
 interface Maintenance {
@@ -84,23 +191,162 @@ interface Maintenance {
   title: string;
   description?: string;
   performed_by: string;
+  performed_by_type: 'Dealership' | 'Independent Shop' | 'DIY' | 'Friend/Family' | 'Mobile Service' | 'Other';
+  shop_name?: string;
+  shop_contact?: string;
+  shop_address?: string;
+  shop_website?: string;
+  shop_photos?: string[];
   date: string;
+  time_started?: string;
+  time_completed?: string;
+  duration_hours?: number;
   mileage: number;
   cost: number;
-  parts?: string[];
-  status: 'Scheduled' | 'Completed' | 'Postponed';
+  labor_cost?: number;
+  parts_cost?: number;
+  tax_amount?: number;
+  discount_amount?: number;
+  parts?: {
+    name: string;
+    part_number?: string;
+    brand?: string;
+    quantity: number;
+    unit_cost: number;
+    total_cost: number;
+    notes?: string;
+    image_url?: string;
+    replacement_interval?: number;
+    replacement_interval_unit?: 'Miles' | 'Months' | 'Years';
+  }[];
+  status: 'Scheduled' | 'In Progress' | 'Completed' | 'Postponed' | 'Cancelled';
+  diagnostic_codes?: string[];
+  diagnostic_details?: string;
+  symptoms?: string[];
+  priority: 'Critical' | 'High' | 'Normal' | 'Low' | 'Cosmetic';
   image_url?: string;
+  before_photos?: string[];
+  after_photos?: string[];
   receipt_url?: string;
+  invoice_url?: string;
+  estimate_url?: string;
   notes?: string;
+  outcome_notes?: string;
+  follow_up_needed?: boolean;
+  follow_up_date?: string;
+  follow_up_notes?: string;
   created_at: string;
   updated_at: string;
-  voice_note_url?: string;
-  video_url?: string;
+  voice_notes?: {
+    id: string;
+    url: string;
+    date: string;
+    title?: string;
+    duration?: number;
+  }[];
+  videos?: {
+    id: string;
+    url: string;
+    date: string;
+    title?: string;
+    thumbnail_url?: string;
+    duration?: number;
+  }[];
   documents?: Document[];
   location?: {
     latitude: number;
     longitude: number;
     address?: string;
+  };
+  quality_rating?: number;
+  service_rating?: number;
+  price_rating?: number;
+  recommendation_rating?: number;
+  would_use_again?: boolean;
+  review_notes?: string;
+  next_recommended_service_date?: string;
+  next_recommended_service_mileage?: number;
+  warranty_info?: {
+    provider: string;
+    contact?: string;
+    expiration_date?: string;
+    expiration_mileage?: number;
+    details?: string;
+    document_url?: string;
+  };
+  maintenance_steps?: {
+    step_number: number;
+    description: string;
+    time_spent?: number;
+    photos?: string[];
+    videos?: string[];
+    voice_notes?: string[];
+    notes?: string;
+  }[];
+  related_maintenance?: string[]; // IDs of related maintenance records
+  issues_found?: {
+    description: string;
+    severity: 'Critical' | 'Major' | 'Minor' | 'Cosmetic';
+    photos?: string[];
+    fixed?: boolean;
+    fix_description?: string;
+  }[];
+  fluid_levels?: {
+    fluid_type: string;
+    before_level?: string;
+    after_level?: string;
+    fluid_added?: number;
+    fluid_unit?: 'Quarts' | 'Liters' | 'Ounces' | 'Other';
+    fluid_brand?: string;
+    fluid_part_number?: string;
+  }[];
+  tire_data?: {
+    tread_depths?: {
+      FL?: number;
+      FR?: number;
+      RL?: number;
+      RR?: number;
+      spare?: number;
+    };
+    pressures?: {
+      FL?: number;
+      FR?: number;
+      RL?: number;
+      RR?: number;
+      spare?: number;
+    };
+    rotated?: boolean;
+    rotation_pattern?: string;
+  };
+  brake_data?: {
+    pad_measurements?: {
+      FL?: number;
+      FR?: number;
+      RL?: number;
+      RR?: number;
+    };
+    rotor_measurements?: {
+      FL?: number;
+      FR?: number;
+      RL?: number;
+      RR?: number;
+    };
+    caliper_condition?: {
+      FL?: string;
+      FR?: string;
+      RL?: string;
+      RR?: string;
+    };
+    fluid_condition?: string;
+    fluid_changed?: boolean;
+  };
+  battery_data?: {
+    voltage?: number;
+    cold_cranking_amps?: number;
+    brand?: string;
+    model?: string;
+    date_installed?: string;
+    replacement_due?: string;
   };
 }
 
