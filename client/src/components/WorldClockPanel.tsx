@@ -71,7 +71,7 @@ type WeatherData = {
   };
 };
 
-// Type for edit mode (boolean, number for index, or "all")
+// Type for edit mode
 type EditMode = boolean | number | "all";
 
 const WorldClockPanel: React.FC = () => {
@@ -213,6 +213,7 @@ const WorldClockPanel: React.FC = () => {
 
   // Function to get weather icon with fallback
   const getWeatherIcon = (iconCode: string): string => {
+    // Use OpenWeatherMap icon if available
     return `https://openweathermap.org/img/wn/${iconCode}@2x.png`;
   };
   
