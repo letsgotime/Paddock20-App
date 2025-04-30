@@ -10,7 +10,7 @@ import {
   insertGlossLogSchema
 } from "@shared/schema";
 import { handleGoogleOAuth2Callback, handleAppleOAuth2Callback } from "./oauth";
-import { checkSlackIntegration, initializeSlackClient, shareCarProfileToSlack, shareEventToSlack } from "./slack";
+import { checkSlackIntegration, initializeSlackClient, shareVehicleToSlack, shareEventToSlack } from "./slack";
 
 // OpenWeather API key - updated April 28, 2025
 const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY || "2379a18ee0e478c88aa7d4aa1df44410";
@@ -18,8 +18,8 @@ const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY || "2379a18ee0e478c8
 // Cache for geocoding results to avoid repetitive API calls
 const geocodeCache = new Map();
 
-// API Health Monitoring System
-// This tracks the status of our external weather API
+// Legacy API Health Monitoring System
+// This tracks the status of our external weather API - use the new global system instead
 interface WeatherApiStatus {
   lastChecked: Date;
   isOperational: boolean;
@@ -29,11 +29,11 @@ interface WeatherApiStatus {
 }
 
 const apiHealthStatus: WeatherApiStatus = {
-  lastChecked: new Date(),
-  isOperational: true,
+  lastChecked: new Date(0), // Set to epoch time to force immediate check
+  isOperational: true, // Assume operational until first check
   lastError: null,
   consecutiveFailures: 0,
-  checkInterval: 4 * 60 * 60 * 1000 // 4 hours in milliseconds
+  checkInterval: CHECK_INTERVAL // 4 hours in milliseconds
 };
 
 // List of common timezones for the WorldClock component
@@ -82,56 +82,32 @@ const commonTimezones = [
   'Africa/Cairo'
 ];
 
+// Import health monitoring system
+import {
+  registerService,
+  checkServiceHealth,
+  startHealthMonitoring,
+  CHECK_INTERVAL
+} from './healthMonitor';
+
+import {
+  checkOpenWeatherHealth,
+  checkUnsplashHealth,
+  checkAccuWeatherHealth,
+  checkGoogleOAuthHealth,
+  checkAppleOAuthHealth,
+  checkSlackHealth,
+  checkSupabaseHealth,
+  checkTimezoneDBHealth
+} from './apiMonitors';
+
 /**
  * Checks if the OpenWeather API is operational without making a full data request
- * This is a lightweight test that minimizes API usage
+ * This is a lightweight test that minimizes API usage - legacy function, use the monitor system instead
  */
 async function checkWeatherApiHealth(): Promise<boolean> {
-  try {
-    // Only check if it's been at least 4 hours since the last check
-    const now = new Date();
-    const timeSinceLastCheck = now.getTime() - apiHealthStatus.lastChecked.getTime();
-    
-    if (timeSinceLastCheck < apiHealthStatus.checkInterval) {
-      // Not time to check yet
-      return apiHealthStatus.isOperational;
-    }
-    
-    console.log('Performing periodic OpenWeather API health check...');
-    
-    // Use the geocoding API as it's lightweight and doesn't count against the high-cost endpoints
-    // Using a well-known location (New York City) to ensure valid response
-    const testUrl = `https://api.openweathermap.org/geo/1.0/direct?q=New York&limit=1&appid=${OPENWEATHER_API_KEY}`;
-    
-    const response = await fetch(testUrl);
-    
-    if (!response.ok) {
-      throw new Error(`API health check failed: ${response.status} - ${await response.text()}`);
-    }
-    
-    // We got a valid response
-    apiHealthStatus.lastChecked = now;
-    apiHealthStatus.isOperational = true;
-    apiHealthStatus.lastError = null;
-    apiHealthStatus.consecutiveFailures = 0;
-    
-    console.log('OpenWeather API health check passed successfully');
-    return true;
-  } catch (error) {
-    // Update health status
-    apiHealthStatus.lastChecked = new Date();
-    apiHealthStatus.isOperational = false;
-    apiHealthStatus.lastError = (error as Error).message;
-    apiHealthStatus.consecutiveFailures += 1;
-    
-    console.error('OpenWeather API health check failed:', error);
-    console.error(`Consecutive failures: ${apiHealthStatus.consecutiveFailures}`);
-    
-    // Could trigger additional recovery actions here
-    // For instance, sending an alert if failures persist
-    
-    return false;
-  }
+  // Delegate to the health monitoring system
+  return await checkServiceHealth('OpenWeather API');
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
@@ -316,6 +292,24 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
 
+  // Dew point calculation function using Magnus-Tetens formula
+  function calculateDewPoint(tempCelsius: number, relativeHumidity: number): number {
+    // Convert temp to Celsius if using imperial units
+    const tempC = tempCelsius > 100 ? (tempCelsius - 32) * 5/9 : tempCelsius;
+    
+    // Constants for the Magnus-Tetens formula
+    const a = 17.27;
+    const b = 237.7;
+    
+    // Calculate the gamma value
+    const gamma = (a * tempC) / (b + tempC) + Math.log(relativeHumidity / 100.0);
+    
+    // Calculate the dew point
+    const dewPoint = (b * gamma) / (a - gamma);
+    
+    return Math.round(dewPoint * 10) / 10; // Round to 1 decimal place
+  }
+
   // Advanced Automotive Weather API with F1-level metrics
   app.get('/api/automotive-weather', async (req, res) => {
     try {
@@ -348,6 +342,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       const snow = weatherData.snow?.['1h'] || 0;
       const visibility = weatherData.visibility || 10000;
       const pressure = weatherData.main.pressure;
+      
+      // Calculate dew point temperature (essential weather data)
+      const dewPoint = calculateDewPoint(temp, humidity);
       
       // Surface temperature calculations
       const asphaltTemp = calculateAsphaltTemp(temp, clouds, weatherCondition, rain, snow);
@@ -399,6 +396,18 @@ export async function registerRoutes(app: Express): Promise<Server> {
         lon: parseFloat(lon as string),
         timezone: weatherData.timezone,
         timezone_offset: weatherData.timezone,
+        
+        // Basic weather data including dew point
+        weather: {
+          temp: temp,
+          humidity: humidity,
+          pressure: pressure,
+          dewPoint: dewPoint,
+          weatherCondition: weatherCondition,
+          windSpeed: windSpeed,
+          clouds: clouds,
+          visibility: visibility
+        },
         
         // Surface data
         surfaces: {
@@ -1171,7 +1180,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(404).json({ message: 'Vehicle not found' });
       }
       
-      const result = await shareCarProfileToSlack(vehicle);
+      const result = await shareVehicleToSlack(vehicle);
       
       if (result) {
         res.json({ success: true, message: 'Vehicle shared to Slack successfully' });
