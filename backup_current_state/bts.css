@@ -1,0 +1,83 @@
+/* Bespoke Technology Syndicate™ (BTS™) Global Styles */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer components {
+  /* Headings and typography */
+  .bts-header {
+    @apply font-orbitron uppercase text-blue-400 text-2xl;
+  }
+
+  .bts-header-green {
+    @apply font-orbitron uppercase text-green-400 text-xl;
+  }
+
+  .bts-header-gray {
+    @apply font-orbitron uppercase text-gray-400 text-xl;
+  }
+
+  /* Interactive elements */
+  .bts-button {
+    @apply bg-green-500 hover:bg-green-400 text-black font-bold py-2 px-4 rounded-lg transition;
+    @apply focus:outline-none focus:ring-2 focus:ring-green-600 focus:ring-opacity-50;
+  }
+
+  .bts-button[disabled] {
+    @apply opacity-50 cursor-not-allowed;
+  }
+
+  /* Card components */
+  .bts-card {
+    @apply p-6 rounded-xl shadow-lg transition border border-gray-700;
+    background: linear-gradient(45deg, #111111, #1a1a1a);
+  }
+  
+  .bts-card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.3), 0 4px 6px -2px rgba(0, 0, 0, 0.2);
+    transform: translateY(-2px);
+  }
+  
+  /* Accessibility classes */
+  .sr-only {
+    @apply absolute w-[1px] h-[1px] p-0 m-[-1px] overflow-hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border-width: 0;
+  }
+  
+  .sr-only-focusable:focus,
+  .sr-only-focusable:active {
+    @apply absolute w-auto h-auto overflow-visible m-0;
+    clip: auto;
+    white-space: normal;
+  }
+  
+  .focus-visible {
+    @apply outline-none ring-2 ring-green-500 ring-opacity-75;
+  }
+  
+  /* Skip link for keyboard navigation */
+  .skip-link {
+    @apply sr-only sr-only-focusable;
+    @apply fixed top-0 left-0 z-50 px-4 py-2 bg-green-600 text-black;
+  }
+  
+  /* Focus indicators for all interactive elements */
+  a:focus, button:focus, input:focus, select:focus, textarea:focus {
+    @apply outline-none ring-2 ring-green-500;
+  }
+  
+  /* Contrast-enhanced focus for keyboard navigation */
+  a:focus-visible, button:focus-visible, input:focus-visible, 
+  select:focus-visible, textarea:focus-visible {
+    @apply ring-2 ring-green-300 ring-opacity-100;
+  }
+  
+  /* For backwards compatibility - these will redirect to the BTS classes */
+  .apex-header { @apply bts-header; }
+  .apex-header-green { @apply bts-header-green; }
+  .apex-header-gray { @apply bts-header-gray; }
+  .apex-button { @apply bts-button; }
+  .apex-card { @apply bts-card; }
+}
