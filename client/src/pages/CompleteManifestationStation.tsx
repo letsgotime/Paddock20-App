@@ -53,7 +53,7 @@ import {
   Trash,
   Edit,
   Copy,
-  Users, User, LogOut,
+  Users, User, LogOut, MoreHorizontal, Minus, ArrowDown, Square, Minimize, LayoutGrid, CloudSun, Cloud,
   Target,
   Trophy,
   Milestone,
