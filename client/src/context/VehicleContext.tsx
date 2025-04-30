@@ -1,83 +1,33 @@
-import React, { createContext, useState, useEffect, useContext } from 'react';
-import { createClient } from '@supabase/supabase-js';
+import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+// Import our mock Supabase client instead of directly creating one
+import supabase from '../services/supabaseClient';
 
-// Initialize Supabase client - using real credentials from environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
-const supabase = createClient(supabaseUrl, supabaseKey);
-
-// Define the Vehicle and other related interfaces
+// Types
 interface Vehicle {
   id: string;
-  user_id: string;
   make: string;
   model: string;
   year: number;
-  trim: string;
-  vin: string;
-  license_plate: string;
-  color: string;
-  image_url?: string;
+  trim?: string;
+  color?: string;
+  vin?: string;
+  license_plate?: string;
+  mileage?: number;
   purchase_date?: string;
   purchase_price?: number;
-  current_value?: number;
-  status: 'Active' | 'Stored' | 'Sold' | 'Project';
-  notes?: string;
-  created_at: string;
-  updated_at: string;
-  drivetrain?: string;
-  type?: string;
+  status: 'Active' | 'Stored' | 'Sold' | 'Maintenance';
+  image_url?: string;
   engine_type?: string;
   transmission?: string;
-  mileage?: number;
+  drivetrain?: string;
+  fuel_type?: string;
   tire_specs?: string;
-  gallery?: string[];
-  docs?: string[];
-  delivery_photo_url?: string;
-  delivery_date?: string;
-  sold_photo_url?: string;
-  sold_date?: string;
-  voice_notes?: {
-    id: string;
-    url: string;
-    date: string;
-    title?: string;
-  }[];
-  videos?: {
-    id: string;
-    url: string;
-    date: string;
-    title?: string;
-    thumbnail_url?: string;
-  }[];
-  monthly_photos?: {
-    date: string;
-    url: string;
-    notes?: string;
-  }[];
-  detailed_specs?: {
-    exterior_color_code?: string;
-    interior_color_code?: string;
-    factory_options?: string[];
-    production_date?: string;
-    special_edition?: string;
-    engine_number?: string;
-    original_msrp?: number;
-  };
-  purchase_documents?: any[];
-  service_history?: {
-    date: string;
-    mileage: number;
-    description: string;
-    performed_by?: string;
-    documents?: any[];
-    photos?: string[];
-    voice_notes?: string[];
-    videos?: string[];
-  }[];
+  notes?: string;
+  created_at: string;
+  updated_at?: string;
+  user_id: string;
 }
 
-// Context type definition
 interface VehicleContextType {
   vehicles: Vehicle[];
   activeVehicle: Vehicle | null;
@@ -85,145 +35,318 @@ interface VehicleContextType {
   loading: boolean;
   error: string | null;
   refreshVehicles: () => Promise<void>;
-  addVehicle: (vehicleData: Omit<Vehicle, 'id' | 'created_at' | 'updated_at'>) => Promise<Vehicle | null>;
-  updateVehicle: (id: string, vehicleData: Partial<Vehicle>) => Promise<Vehicle | null>;
-  deleteVehicle: (id: string) => Promise<boolean>;
+  addVehicle: (vehicle: Omit<Vehicle, 'id' | 'created_at' | 'user_id'>) => Promise<Vehicle>;
+  updateVehicle: (id: string, updates: Partial<Vehicle>) => Promise<Vehicle>;
+  deleteVehicle: (id: string) => Promise<void>;
 }
 
 // Create the context
-export const VehicleContext = createContext<VehicleContextType | null>(null);
+const VehicleContext = createContext<VehicleContextType | undefined>(undefined);
 
-// Create the provider component
-export const VehicleProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+// Provider component
+export const VehicleProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [activeVehicle, setActiveVehicle] = useState<Vehicle | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
-
+  
   // Fetch vehicles on component mount
   useEffect(() => {
-    refreshVehicles();
+    const fetchVehicles = async () => {
+      try {
+        setLoading(true);
+        setError(null);
+        
+        // Get user ID from auth
+        const { data: authData, error: authError } = await supabase.auth.getUser();
+        
+        if (authError) {
+          throw authError;
+        }
+        
+        if (!authData.user) {
+          // If not authenticated, use demo data or return empty array
+          setVehicles([]);
+          setLoading(false);
+          return;
+        }
+        
+        // Fetch vehicles for the user
+        const { data, error: vehiclesError } = await supabase
+          .from('vehicles')
+          .select('*')
+          .eq('user_id', authData.user.id)
+          .order('created_at', { ascending: false });
+        
+        if (vehiclesError) {
+          throw vehiclesError;
+        }
+        
+        setVehicles(data || []);
+        
+        // Set the first vehicle as active if available
+        if (data && data.length > 0) {
+          setActiveVehicle(data[0]);
+        }
+        
+        setLoading(false);
+      } catch (err) {
+        console.error('Error fetching vehicles:', err);
+        setError('Failed to load vehicles');
+        setLoading(false);
+        
+        // For demo purposes: Use mock data if there's an error
+        // In a production app, we would handle this differently
+        useDemoVehicles();
+      }
+    };
+    
+    fetchVehicles();
   }, []);
-
-  // Function to refresh vehicles
+  
+  // Refresh vehicles data
   const refreshVehicles = async () => {
     try {
       setLoading(true);
       setError(null);
       
-      // Fetch real vehicle data from Supabase
-      const { data, error } = await supabase
+      // Get user ID from auth
+      const { data: authData, error: authError } = await supabase.auth.getUser();
+      
+      if (authError) {
+        throw authError;
+      }
+      
+      if (!authData.user) {
+        setVehicles([]);
+        setLoading(false);
+        return;
+      }
+      
+      // Fetch vehicles for the user
+      const { data, error: vehiclesError } = await supabase
         .from('vehicles')
         .select('*')
+        .eq('user_id', authData.user.id)
         .order('created_at', { ascending: false });
-        
-      if (error) throw error;
       
-      // Update state with fetched vehicles
+      if (vehiclesError) {
+        throw vehiclesError;
+      }
+      
       setVehicles(data || []);
       
-      // If no active vehicle is set but vehicles exist, set the first one as active
-      if (!activeVehicle && data && data.length > 0) {
-        setActiveVehicle(data[0]);
+      // Update active vehicle if needed
+      if (activeVehicle) {
+        const updated = data?.find(v => v.id === activeVehicle.id);
+        if (updated) {
+          setActiveVehicle(updated);
+        } else if (data && data.length > 0) {
+          // If active vehicle not found, set first vehicle as active
+          setActiveVehicle(data[0]);
+        } else {
+          setActiveVehicle(null);
+        }
       }
       
       setLoading(false);
     } catch (err) {
-      console.error('Error fetching vehicles:', err);
-      setError('Failed to load vehicles. Please try again later.');
+      console.error('Error refreshing vehicles:', err);
+      setError('Failed to refresh vehicles');
       setLoading(false);
     }
   };
-
-  // Function to add a new vehicle
-  const addVehicle = async (vehicleData: Omit<Vehicle, 'id' | 'created_at' | 'updated_at'>): Promise<Vehicle | null> => {
+  
+  // Add a new vehicle
+  const addVehicle = async (vehicle: Omit<Vehicle, 'id' | 'created_at' | 'user_id'>): Promise<Vehicle> => {
     try {
-      // Save to Supabase database
-      const { data, error } = await supabase
-        .from('vehicles')
-        .insert([vehicleData])
-        .select();
-        
-      if (error) throw error;
+      // Get user ID from auth
+      const { data: authData, error: authError } = await supabase.auth.getUser();
       
-      // Update local state with the new vehicle
-      if (data && data.length > 0) {
-        setVehicles(prev => [data[0], ...prev]);
-        return data[0];
+      if (authError) {
+        throw authError;
       }
       
-      return null;
+      if (!authData.user) {
+        throw new Error('User not authenticated');
+      }
+      
+      // Insert the new vehicle
+      const { data, error: insertError } = await supabase
+        .from('vehicles')
+        .insert([{ ...vehicle, user_id: authData.user.id }])
+        .select();
+      
+      if (insertError) {
+        throw insertError;
+      }
+      
+      if (!data || data.length === 0) {
+        throw new Error('Failed to add vehicle');
+      }
+      
+      const newVehicle = data[0] as Vehicle;
+      
+      // Update vehicles list
+      setVehicles(prev => [newVehicle, ...prev]);
+      
+      // Set as active vehicle
+      setActiveVehicle(newVehicle);
+      
+      return newVehicle;
     } catch (err) {
       console.error('Error adding vehicle:', err);
-      setError('Failed to add vehicle. Please try again.');
-      return null;
+      throw err;
     }
   };
-
-  // Function to update an existing vehicle
-  const updateVehicle = async (id: string, vehicleData: Partial<Vehicle>): Promise<Vehicle | null> => {
+  
+  // Update an existing vehicle
+  const updateVehicle = async (id: string, updates: Partial<Vehicle>): Promise<Vehicle> => {
     try {
-      // Update in Supabase database
-      const { data, error } = await supabase
+      // Update the vehicle
+      const { data, error: updateError } = await supabase
         .from('vehicles')
-        .update(vehicleData)
+        .update(updates)
         .eq('id', id)
         .select();
-        
-      if (error) throw error;
       
-      // Update local state
-      if (data && data.length > 0) {
-        setVehicles(prev => 
-          prev.map(vehicle => vehicle.id === id ? data[0] : vehicle)
-        );
-        
-        // Update active vehicle if it's the one being updated
-        if (activeVehicle && activeVehicle.id === id) {
-          setActiveVehicle(data[0]);
-        }
-        
-        return data[0];
+      if (updateError) {
+        throw updateError;
       }
       
-      return null;
+      if (!data || data.length === 0) {
+        throw new Error('Failed to update vehicle');
+      }
+      
+      const updatedVehicle = data[0] as Vehicle;
+      
+      // Update vehicles list
+      setVehicles(prev => prev.map(v => (v.id === id ? updatedVehicle : v)));
+      
+      // Update active vehicle if needed
+      if (activeVehicle && activeVehicle.id === id) {
+        setActiveVehicle(updatedVehicle);
+      }
+      
+      return updatedVehicle;
     } catch (err) {
       console.error('Error updating vehicle:', err);
-      setError('Failed to update vehicle. Please try again.');
-      return null;
+      throw err;
     }
   };
-
-  // Function to delete a vehicle
-  const deleteVehicle = async (id: string): Promise<boolean> => {
+  
+  // Delete a vehicle
+  const deleteVehicle = async (id: string): Promise<void> => {
     try {
-      // Delete from Supabase database
-      const { error } = await supabase
+      // Delete the vehicle
+      const { error: deleteError } = await supabase
         .from('vehicles')
         .delete()
         .eq('id', id);
-        
-      if (error) throw error;
       
-      // Update local state
-      setVehicles(prev => prev.filter(vehicle => vehicle.id !== id));
-      
-      // If the active vehicle is the one being deleted, set another one as active or null
-      if (activeVehicle && activeVehicle.id === id) {
-        const remainingVehicles = vehicles.filter(v => v.id !== id);
-        setActiveVehicle(remainingVehicles.length > 0 ? remainingVehicles[0] : null);
+      if (deleteError) {
+        throw deleteError;
       }
       
-      return true;
+      // Update vehicles list
+      setVehicles(prev => prev.filter(v => v.id !== id));
+      
+      // Update active vehicle if needed
+      if (activeVehicle && activeVehicle.id === id) {
+        // Set a new active vehicle if available
+        const nextVehicle = vehicles.find(v => v.id !== id);
+        setActiveVehicle(nextVehicle || null);
+      }
     } catch (err) {
       console.error('Error deleting vehicle:', err);
-      setError('Failed to delete vehicle. Please try again.');
-      return false;
+      throw err;
     }
   };
-
-  // Provide the context value
-  const contextValue: VehicleContextType = {
+  
+  // Use demo vehicles if there's an error or for development purposes
+  const useDemoVehicles = () => {
+    const demoVehicles: Vehicle[] = [
+      {
+        id: '1',
+        make: 'Porsche',
+        model: '911',
+        year: 2020,
+        trim: 'Carrera S',
+        color: 'Guards Red',
+        vin: 'WP0AB2A92LS227599',
+        license_plate: 'P911',
+        mileage: 12500,
+        purchase_date: '2020-06-15',
+        purchase_price: 120000,
+        status: 'Active',
+        image_url: 'https://images.unsplash.com/photo-1611821064430-0d40291138a5?q=80&w=1000&auto=format&fit=crop',
+        engine_type: '3.0L Twin-Turbo Flat-6',
+        transmission: '8-Speed PDK',
+        drivetrain: 'RWD',
+        fuel_type: 'Premium Unleaded',
+        tire_specs: '245/35ZR20 front, 305/30ZR20 rear',
+        notes: 'Regular maintenance at dealer, clear ceramic coating applied',
+        created_at: '2023-01-15T08:00:00Z',
+        updated_at: '2023-06-20T14:30:00Z',
+        user_id: 'demo-user'
+      },
+      {
+        id: '2',
+        make: 'Tesla',
+        model: 'Model S',
+        year: 2022,
+        trim: 'Plaid',
+        color: 'Midnight Silver Metallic',
+        vin: '5YJSA1E40NF000123',
+        license_plate: 'PLAID',
+        mileage: 8700,
+        purchase_date: '2022-03-10',
+        purchase_price: 135000,
+        status: 'Active',
+        image_url: 'https://images.unsplash.com/photo-1617788138017-80ad40651399?q=80&w=1000&auto=format&fit=crop',
+        engine_type: 'Tri-Motor Electric',
+        transmission: 'Single-Speed',
+        drivetrain: 'AWD',
+        fuel_type: 'Electric',
+        tire_specs: '265/35R21',
+        notes: 'FSD package, ceramic tint on all windows',
+        created_at: '2023-03-15T10:20:00Z',
+        updated_at: '2023-07-12T16:45:00Z',
+        user_id: 'demo-user'
+      },
+      {
+        id: '3',
+        make: 'Lexus',
+        model: 'LC 500',
+        year: 2021,
+        trim: 'Coupe',
+        color: 'Nori Green Pearl',
+        vin: 'JTHHP5BC0M5013628',
+        license_plate: 'LC500',
+        mileage: 15800,
+        purchase_date: '2021-08-22',
+        purchase_price: 93000,
+        status: 'Stored',
+        image_url: 'https://images.unsplash.com/photo-1625988361332-8cb424cfef26?q=80&w=1000&auto=format&fit=crop',
+        engine_type: '5.0L V8',
+        transmission: '10-Speed Automatic',
+        drivetrain: 'RWD',
+        fuel_type: 'Premium Unleaded',
+        tire_specs: '245/40RF21 front, 275/35RF21 rear',
+        notes: 'Mark Levinson audio system, limited slip differential',
+        created_at: '2023-02-12T14:15:00Z',
+        updated_at: '2023-05-22T09:10:00Z',
+        user_id: 'demo-user'
+      }
+    ];
+    
+    setVehicles(demoVehicles);
+    setActiveVehicle(demoVehicles[0]);
+    console.log('Using demo vehicles for development');
+  };
+  
+  // Context value
+  const value: VehicleContextType = {
     vehicles,
     activeVehicle,
     setActiveVehicle,
@@ -234,19 +357,23 @@ export const VehicleProvider: React.FC<{ children: React.ReactNode }> = ({ child
     updateVehicle,
     deleteVehicle
   };
-
+  
   return (
-    <VehicleContext.Provider value={contextValue}>
+    <VehicleContext.Provider value={value}>
       {children}
     </VehicleContext.Provider>
   );
 };
 
-// Custom hook to use the vehicle context
+// Custom hook for accessing the context
 export const useVehicles = () => {
   const context = useContext(VehicleContext);
-  if (!context) {
+  
+  if (context === undefined) {
     throw new Error('useVehicles must be used within a VehicleProvider');
   }
+  
   return context;
 };
+
+export default VehicleContext;
