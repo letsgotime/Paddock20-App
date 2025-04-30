@@ -1,776 +1,1047 @@
-import express, { Express, Request, Response } from 'express';
-import { createServer, Server } from 'http';
-import { storage } from './storage';
-import * as schema from '@shared/schema';
-import { z } from 'zod';
+import type { Express, Request, Response } from "express";
+import { createServer, type Server } from "http";
+import { storage } from "./storage";
+import { 
+  insertVehicleSchema, 
+  insertTireSchema, 
+  insertMaintenanceRecordSchema, 
+  insertMaintenanceFlagSchema, 
+  insertGlossTrackingSchema,
+  insertGlossLogSchema
+} from "@shared/schema";
+import { handleGoogleOAuth2Callback, handleAppleOAuth2Callback } from "./oauth";
+import { checkSlackIntegration, initializeSlackClient, shareCarProfileToSlack, shareEventToSlack } from "./slack";
+
+// OpenWeather API key - updated April 28, 2025
+const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY || "2379a18ee0e478c88aa7d4aa1df44410";
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Vehicles API routes
-  app.get('/api/vehicles', async (req: Request, res: Response) => {
+  // Using only OpenWeather API for all weather services
+  
+  // Weather API proxy routes
+  app.get('/api/weather', async (req, res) => {
     try {
-      const vehicles = await storage.getAllVehicles(req.user?.id);
+      const { lat, lon, units } = req.query;
+      
+      if (!lat || !lon) {
+        return res.status(400).json({ message: 'Latitude and longitude are required' });
+      }
+
+      // Use the OpenWeather API key constant
+      const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=${units || 'metric'}&appid=${OPENWEATHER_API_KEY}`;
+      
+      console.log(`Fetching OpenWeather data for: ${lat},${lon}`);
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Weather API error: ${response.status} - ${await response.text()}`);
+      }
+      
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error('OpenWeather API error:', error);
+      res.status(500).json({ message: (error as Error).message || 'Failed to fetch weather data' });
+    }
+  });
+
+  app.get('/api/forecast', async (req, res) => {
+    try {
+      const { lat, lon, units } = req.query;
+      
+      if (!lat || !lon) {
+        return res.status(400).json({ message: 'Latitude and longitude are required' });
+      }
+
+      // Use the OpenWeather API key constant 
+      const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=${units || 'metric'}&appid=${OPENWEATHER_API_KEY}`;
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Forecast API error: ${response.status} - ${await response.text()}`);
+      }
+      
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error('OpenWeather Forecast API error:', error);
+      res.status(500).json({ message: (error as Error).message || 'Failed to fetch forecast data' });
+    }
+  });
+  
+  // OneCall API route
+  app.get('/api/onecall', async (req, res) => {
+    try {
+      const { lat, lon, units, exclude } = req.query;
+      
+      if (!lat || !lon) {
+        return res.status(400).json({ message: 'Latitude and longitude are required' });
+      }
+      
+      const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&units=${units || 'metric'}${exclude ? `&exclude=${exclude}` : ''}&appid=${OPENWEATHER_API_KEY}`;
+      
+      console.log(`Fetching OneCall data for: ${lat},${lon}`);
+      const response = await fetch(url);
+      
+      if (!response.ok) {
+        throw new Error(`OneCall API error: ${response.status} - ${await response.text()}`);
+      }
+      
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error('OpenWeather OneCall API error:', error);
+      res.status(500).json({ message: (error as Error).message || 'Failed to fetch OneCall data' });
+    }
+  });
+  
+  // Geocoding API to search for locations by name
+  app.get('/api/geocode', async (req, res) => {
+    try {
+      const { q } = req.query;
+      
+      if (!q) {
+        return res.status(400).json({ message: 'Search query is required' });
+      }
+
+      const limit = 5; // Limit number of results
+      const url = `https://api.openweathermap.org/geo/1.0/direct?q=${q}&limit=${limit}&appid=${OPENWEATHER_API_KEY}`;
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Geocoding API error: ${response.status} - ${await response.text()}`);
+      }
+      
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error('Geocoding API error:', error);
+      res.status(500).json({ message: (error as Error).message || 'Failed to search location' });
+    }
+  });
+  
+  // Reverse geocoding API to get location name from coordinates
+  app.get('/api/reverse-geocode', async (req, res) => {
+    try {
+      const { lat, lon } = req.query;
+      
+      if (!lat || !lon) {
+        return res.status(400).json({ message: 'Latitude and longitude are required' });
+      }
+
+      const url = `https://api.openweathermap.org/geo/1.0/reverse?lat=${lat}&lon=${lon}&limit=1&appid=${OPENWEATHER_API_KEY}`;
+      
+      const response = await fetch(url);
+      if (!response.ok) {
+        throw new Error(`Reverse geocoding API error: ${response.status} - ${await response.text()}`);
+      }
+      
+      const data = await response.json();
+      res.json(data);
+    } catch (error) {
+      console.error('Reverse geocoding API error:', error);
+      res.status(500).json({ message: (error as Error).message || 'Failed to get location name' });
+    }
+  });
+
+  // Advanced Automotive Weather API with F1-level metrics
+  app.get('/api/automotive-weather', async (req, res) => {
+    try {
+      const { lat, lon, units = 'imperial' } = req.query;
+
+      if (!lat || !lon) {
+        return res.status(400).json({ error: "Missing latitude or longitude" });
+      }
+
+      // Fetch standard weather data first
+      const weatherResponse = await fetch(
+        `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=${units}&appid=${OPENWEATHER_API_KEY}`
+      );
+      
+      if (!weatherResponse.ok) {
+        throw new Error(`OpenWeather API error: ${weatherResponse.status} - ${await weatherResponse.text()}`);
+      }
+      
+      const weatherData = await weatherResponse.json();
+      
+      // Calculate automotive specific data
+      
+      // Calculate surface temperatures (asphalt gets hotter than air temp in sun, cooler in rain)
+      const temp = weatherData.main.temp;
+      const clouds = weatherData.clouds?.all || 0;
+      const weatherCondition = weatherData.weather[0]?.main?.toLowerCase() || '';
+      const humidity = weatherData.main.humidity;
+      const windSpeed = weatherData.wind?.speed || 0;
+      const rain = weatherData.rain?.['1h'] || 0;
+      const snow = weatherData.snow?.['1h'] || 0;
+      const visibility = weatherData.visibility || 10000;
+      const pressure = weatherData.main.pressure;
+      
+      // Surface temperature calculations
+      const asphaltTemp = calculateAsphaltTemp(temp, clouds, weatherCondition, rain, snow);
+      const concreteTemp = calculateConcreteTemp(temp, clouds, weatherCondition, rain, snow);
+      
+      // Surface condition based on weather
+      const surfaceCondition = getSurfaceCondition(weatherCondition, rain, snow, temp);
+      
+      // Grip levels based on conditions
+      const asphaltGrip = calculateGripLevel(surfaceCondition, asphaltTemp, humidity);
+      const concreteGrip = calculateGripLevel(surfaceCondition, concreteTemp, humidity);
+      
+      // Tire warmup calculations (in minutes)
+      const tireWarmup = {
+        sport: calculateTireWarmup(temp, surfaceCondition, 'sport'),
+        summer: calculateTireWarmup(temp, surfaceCondition, 'summer'),
+        allSeason: calculateTireWarmup(temp, surfaceCondition, 'allSeason'),
+        winter: calculateTireWarmup(temp, surfaceCondition, 'winter')
+      };
+      
+      // Engine performance adjustments
+      const airDensityFactor = calculateAirDensityFactor(temp, pressure, humidity);
+      const powerAdjustment = calculatePowerAdjustment(airDensityFactor, temp);
+      const torqueAdjustment = calculateTorqueAdjustment(airDensityFactor);
+      
+      // Aerodynamic performance
+      const aeroEfficiency = calculateAeroEfficiency(temp, windSpeed);
+      const downforceAdjustment = calculateDownforceAdjustment(temp, airDensityFactor);
+      
+      // Cooling efficiency
+      const coolingEfficiency = calculateCoolingEfficiency(temp, windSpeed, humidity);
+      
+      // Braking performance
+      const brakingEfficiency = calculateBrakingEfficiency(surfaceCondition, asphaltTemp);
+      const brakingDistanceAdjustment = calculateBrakingDistanceAdjustment(brakingEfficiency);
+      const heatDissipation = getHeatDissipationRate(temp, humidity, windSpeed);
+      
+      // Risk assessment
+      const riskLevel = calculateRiskLevel(weatherCondition, visibility, windSpeed, rain, snow);
+      const tractionLevel = getTractionLevel(surfaceCondition, asphaltGrip);
+      const visibilityLevel = getVisibilityLevel(visibility, weatherCondition);
+      
+      // Generate driving advisories based on conditions
+      const advisories = generateDrivingAdvisories(weatherCondition, riskLevel, surfaceCondition, temp);
+      
+      // F1-style automotive weather response
+      const automotiveWeatherData = {
+        lat: parseFloat(lat as string),
+        lon: parseFloat(lon as string),
+        timezone: weatherData.timezone,
+        timezone_offset: weatherData.timezone,
+        
+        // Surface data
+        surfaces: {
+          asphalt: {
+            temperature: asphaltTemp,
+            condition: surfaceCondition,
+            gripLevel: asphaltGrip
+          },
+          concrete: {
+            temperature: concreteTemp,
+            condition: surfaceCondition,
+            gripLevel: concreteGrip
+          },
+          gravel: {
+            temperature: temp * 0.95, // Gravel stays cooler
+            condition: surfaceCondition
+          }
+        },
+        
+        // Automotive performance metrics
+        performance: {
+          tireWarmupTime: {
+            sport: tireWarmup.sport,
+            summer: tireWarmup.summer,
+            allSeason: tireWarmup.allSeason,
+            winter: tireWarmup.winter
+          },
+          enginePerformance: {
+            airDensityFactor: airDensityFactor,
+            powerAdjustment: powerAdjustment,
+            torqueAdjustment: torqueAdjustment
+          },
+          aerodynamicPerformance: {
+            efficiency: aeroEfficiency,
+            downforceAdjustment: downforceAdjustment
+          },
+          coolingEfficiency: coolingEfficiency,
+          brakingPerformance: {
+            effectiveCoefficient: brakingEfficiency,
+            distanceAdjustment: brakingDistanceAdjustment,
+            heatDissipation: heatDissipation
+          }
+        },
+        
+        // Overall driving conditions summary
+        drivingConditions: {
+          riskLevel: riskLevel,
+          traction: tractionLevel,
+          visibility: visibilityLevel,
+          advisories: advisories
+        }
+      };
+      
+      return res.json(automotiveWeatherData);
+    } catch (error) {
+      console.error("Error generating automotive weather data:", error);
+      res.status(500).json({ error: "Failed to generate automotive weather data" });
+    }
+  });
+  
+  // Helper functions for automotive weather calculations
+  
+  // Calculate asphalt temperature based on air temperature and conditions
+  function calculateAsphaltTemp(airTemp: number, cloudCover: number, weatherCondition: string, rain: number, snow: number): number {
+    // Base calculation: asphalt heats up more than air temperature in sun
+    let asphaltTemp = airTemp;
+    
+    // Adjust for cloud cover (less sun = less surface heating)
+    const sunExposureFactor = 1 - (cloudCover / 100) * 0.7;
+    
+    // In sunny conditions, asphalt can be 20-30 degrees hotter than air
+    if (weatherCondition.includes('clear') || weatherCondition.includes('sun')) {
+      asphaltTemp += 20 * sunExposureFactor;
+    } else if (cloudCover < 70 && !weatherCondition.includes('rain') && !weatherCondition.includes('snow')) {
+      // Partly cloudy still allows some heating
+      asphaltTemp += 10 * sunExposureFactor;
+    }
+    
+    // Rain and snow cool the surface
+    if (rain > 0) {
+      asphaltTemp -= Math.min(10, rain * 5); // More rain, more cooling
+    }
+    
+    if (snow > 0) {
+      asphaltTemp = Math.min(asphaltTemp, 32); // Snow keeps surface at or below freezing
+    }
+    
+    return asphaltTemp;
+  }
+  
+  // Calculate concrete temperature (generally cooler than asphalt)
+  function calculateConcreteTemp(airTemp: number, cloudCover: number, weatherCondition: string, rain: number, snow: number): number {
+    // Concrete heats up less than asphalt but retains heat longer
+    const asphaltTemp = calculateAsphaltTemp(airTemp, cloudCover, weatherCondition, rain, snow);
+    
+    // Concrete temperature is typically 70-80% of the differential between asphalt and air
+    const differential = asphaltTemp - airTemp;
+    return airTemp + (differential * 0.75);
+  }
+  
+  // Determine surface condition based on weather
+  function getSurfaceCondition(weatherCondition: string, rain: number, snow: number, temp: number): string {
+    if (snow > 0) {
+      return 'Snow-covered';
+    }
+    
+    if (rain > 0.5) {
+      return 'Wet';
+    }
+    
+    if (rain > 0 && rain <= 0.5) {
+      return 'Damp';
+    }
+    
+    if (weatherCondition.includes('fog') || weatherCondition.includes('mist')) {
+      return 'Moist';
+    }
+    
+    if (temp < 32) {
+      return 'Cold';
+    }
+    
+    if (temp > 90) {
+      return 'Hot';
+    }
+    
+    return 'Dry';
+  }
+  
+  // Calculate grip level based on surface condition
+  function calculateGripLevel(surfaceCondition: string, surfaceTemp: number, humidity: number): string {
+    if (surfaceCondition === 'Snow-covered') {
+      return 'Extremely Low';
+    }
+    
+    if (surfaceCondition === 'Wet') {
+      return 'Low';
+    }
+    
+    if (surfaceCondition === 'Damp' || surfaceCondition === 'Moist') {
+      return 'Moderate';
+    }
+    
+    if (surfaceCondition === 'Cold' && surfaceTemp < 45) {
+      return 'Reduced';
+    }
+    
+    if (surfaceCondition === 'Hot' && surfaceTemp > 130) {
+      return 'Degrading';
+    }
+    
+    if (humidity > 85) {
+      return 'Slightly Reduced';
+    }
+    
+    return 'Optimal';
+  }
+  
+  // Calculate tire warmup time in minutes
+  function calculateTireWarmup(airTemp: number, surfaceCondition: string, tireType: string): number {
+    // Base warmup times by tire type (minutes)
+    const baseWarmup = {
+      sport: 3,
+      summer: 5,
+      allSeason: 7,
+      winter: 10
+    };
+    
+    // Temperature adjustment factor
+    let tempFactor = 1.0;
+    
+    if (airTemp < 40) {
+      tempFactor = 1.8; // Cold temps require longer warmup
+    } else if (airTemp < 55) {
+      tempFactor = 1.4;
+    } else if (airTemp > 85) {
+      tempFactor = 0.8; // Hot temps shorten warmup
+    }
+    
+    // Surface condition adjustment
+    let surfaceFactor = 1.0;
+    
+    if (surfaceCondition === 'Wet' || surfaceCondition === 'Damp') {
+      surfaceFactor = 1.5;
+    } else if (surfaceCondition === 'Snow-covered') {
+      surfaceFactor = 2.0;
+    } else if (surfaceCondition === 'Cold') {
+      surfaceFactor = 1.3;
+    }
+    
+    // Calculate adjusted warmup time and round to nearest half minute
+    return Math.round(baseWarmup[tireType as keyof typeof baseWarmup] * tempFactor * surfaceFactor * 2) / 2;
+  }
+  
+  // Calculate air density factor based on temperature, pressure, and humidity
+  function calculateAirDensityFactor(temp: number, pressure: number, humidity: number): number {
+    // Simplified air density calculation (relative to standard conditions)
+    // Standard conditions: 59°F (15°C), 29.92 inHg (1013.25 hPa), 0% humidity
+    
+    // Temperature factor (air density decreases as temperature increases)
+    const tempFactor = 518.7 / (temp + 459.67); // Convert F to Rankine
+    
+    // Pressure factor (air density increases with pressure)
+    const pressureFactor = pressure / 1013.25;
+    
+    // Humidity factor (humid air is less dense than dry air)
+    const humidityFactor = 1 - (humidity / 100) * 0.02;
+    
+    return tempFactor * pressureFactor * humidityFactor;
+  }
+  
+  // Calculate power adjustment based on air density
+  function calculatePowerAdjustment(airDensityFactor: number, temp: number): number {
+    // Power adjustment in percentage
+    // Higher air density = more power, lower air density = less power
+    const basePowerAdjustment = (airDensityFactor - 1) * 100;
+    
+    // Additional temp-based adjustment for very cold engines
+    let tempAdjustment = 0;
+    if (temp < 32) {
+      tempAdjustment = -3; // Cold engines produce less power
+    } else if (temp > 100) {
+      tempAdjustment = -2; // Hot engines lose some efficiency
+    }
+    
+    return Math.round(basePowerAdjustment + tempAdjustment);
+  }
+  
+  // Calculate torque adjustment based on air density
+  function calculateTorqueAdjustment(airDensityFactor: number): number {
+    // Torque adjustment in percentage, slightly less affected than power
+    return Math.round((airDensityFactor - 1) * 80);
+  }
+  
+  // Calculate aerodynamic efficiency based on temperature and wind
+  function calculateAeroEfficiency(temp: number, windSpeed: number): number {
+    // Base efficiency (percentage)
+    let efficiency = 100;
+    
+    // Temperature adjustments
+    if (temp < 32) {
+      efficiency -= 2; // Colder air is denser, slightly increasing drag
+    } else if (temp > 95) {
+      efficiency += 3; // Hotter air is less dense, slightly reducing drag
+    }
+    
+    // Wind adjustments
+    if (windSpeed > 15) {
+      efficiency -= 5; // High winds reduce predictability of aero
+    }
+    
+    return efficiency;
+  }
+  
+  // Calculate downforce adjustment based on temperature and air density
+  function calculateDownforceAdjustment(temp: number, airDensityFactor: number): number {
+    // Downforce adjustment in percentage
+    // Higher air density = more downforce, lower air density = less downforce
+    return Math.round((airDensityFactor - 1) * 100);
+  }
+  
+  // Calculate cooling efficiency based on temperature, wind speed, and humidity
+  function calculateCoolingEfficiency(temp: number, windSpeed: number, humidity: number): string {
+    if (temp > 95) {
+      return 'Reduced';
+    }
+    
+    if (temp < 40) {
+      return 'Excellent';
+    }
+    
+    if (windSpeed > 10) {
+      return 'Enhanced';
+    }
+    
+    if (humidity > 80 && temp > 80) {
+      return 'Diminished';
+    }
+    
+    return 'Normal';
+  }
+  
+  // Calculate braking efficiency coefficient based on surface conditions
+  function calculateBrakingEfficiency(surfaceCondition: string, surfaceTemp: number): number {
+    // Base coefficient (1.0 = ideal)
+    let coefficient = 1.0;
+    
+    // Surface condition adjustments
+    switch (surfaceCondition) {
+      case 'Dry':
+        coefficient = 1.0;
+        break;
+      case 'Hot':
+        coefficient = surfaceTemp > 140 ? 0.95 : 0.98; // Very hot surfaces reduce grip slightly
+        break;
+      case 'Cold':
+        coefficient = surfaceTemp < 32 ? 0.8 : 0.9; // Cold surfaces reduce grip
+        break;
+      case 'Moist':
+        coefficient = 0.9;
+        break;
+      case 'Damp':
+        coefficient = 0.8;
+        break;
+      case 'Wet':
+        coefficient = 0.7;
+        break;
+      case 'Snow-covered':
+        coefficient = 0.3;
+        break;
+      default:
+        coefficient = 1.0;
+    }
+    
+    return coefficient;
+  }
+  
+  // Calculate braking distance adjustment (percentage increase)
+  function calculateBrakingDistanceAdjustment(brakingEfficiency: number): number {
+    // Convert efficiency coefficient to percentage increase in stopping distance
+    return Math.round((1 / brakingEfficiency - 1) * 100);
+  }
+  
+  // Determine brake heat dissipation rate
+  function getHeatDissipationRate(temp: number, humidity: number, windSpeed: number): string {
+    if (temp > 90 && humidity > 80) {
+      return 'Poor';
+    }
+    
+    if (temp > 80) {
+      return 'Reduced';
+    }
+    
+    if (temp < 40 && windSpeed > 10) {
+      return 'Excellent';
+    }
+    
+    if (windSpeed > 15) {
+      return 'Enhanced';
+    }
+    
+    return 'Normal';
+  }
+  
+  // Calculate overall risk level based on weather conditions
+  function calculateRiskLevel(weatherCondition: string, visibility: number, windSpeed: number, rain: number, snow: number): string {
+    if (snow > 0.5 || visibility < 100 || (rain > 1 && windSpeed > 25)) {
+      return 'High';
+    }
+    
+    if (rain > 0.5 || visibility < 1000 || weatherCondition.includes('storm') || windSpeed > 35) {
+      return 'Moderate';
+    }
+    
+    if (rain > 0 || weatherCondition.includes('fog') || visibility < 3000 || windSpeed > 20) {
+      return 'Low';
+    }
+    
+    return 'Minimal';
+  }
+  
+  // Determine traction level based on surface condition and grip
+  function getTractionLevel(surfaceCondition: string, gripLevel: string): string {
+    if (surfaceCondition === 'Snow-covered' || gripLevel === 'Extremely Low') {
+      return 'Very Poor';
+    }
+    
+    if (surfaceCondition === 'Wet' || gripLevel === 'Low') {
+      return 'Poor';
+    }
+    
+    if (surfaceCondition === 'Damp' || surfaceCondition === 'Moist' || gripLevel === 'Moderate' || gripLevel === 'Reduced') {
+      return 'Moderate';
+    }
+    
+    if (gripLevel === 'Slightly Reduced' || gripLevel === 'Degrading') {
+      return 'Good';
+    }
+    
+    return 'Excellent';
+  }
+  
+  // Determine visibility level
+  function getVisibilityLevel(visibility: number, weatherCondition: string): string {
+    if (visibility < 100 || weatherCondition.includes('heavy fog')) {
+      return 'Extremely Poor';
+    }
+    
+    if (visibility < 500 || weatherCondition.includes('fog')) {
+      return 'Poor';
+    }
+    
+    if (visibility < 2000 || weatherCondition.includes('mist')) {
+      return 'Moderate';
+    }
+    
+    if (visibility < 5000 || weatherCondition.includes('haze')) {
+      return 'Good';
+    }
+    
+    return 'Excellent';
+  }
+  
+  // Generate driving advisories based on conditions
+  function generateDrivingAdvisories(weatherCondition: string, riskLevel: string, surfaceCondition: string, temp: number): string[] {
+    const advisories: string[] = [];
+    
+    // Risk-based advisories
+    if (riskLevel === 'High') {
+      advisories.push('Extreme caution advised. Consider postponing performance driving.');
+    } else if (riskLevel === 'Moderate') {
+      advisories.push('Exercise heightened caution. Reduce speeds by 30% in corners.');
+    }
+    
+    // Surface condition advisories
+    if (surfaceCondition === 'Wet' || surfaceCondition === 'Damp') {
+      advisories.push('Reduced traction in all areas. Extend braking zones by 40-50%.');
+      advisories.push('Avoid standing water and painted road markings.');
+    } else if (surfaceCondition === 'Snow-covered') {
+      advisories.push('Winter tires or chains strongly recommended.');
+      advisories.push('Extremely limited traction. Gentle inputs required.');
+    } else if (surfaceCondition === 'Cold' && temp < 45) {
+      advisories.push('Extended tire warm-up period required for optimal grip.');
+    } else if (surfaceCondition === 'Hot' && temp > 95) {
+      advisories.push('Tire pressures will increase significantly during driving.');
+    }
+    
+    // Weather-specific advisories
+    if (weatherCondition.includes('thunderstorm')) {
+      advisories.push('Lightning risk. Seek shelter if conditions worsen.');
+    } else if (weatherCondition.includes('fog')) {
+      advisories.push('Use low-beam headlights and reduce speed to match visibility.');
+    }
+    
+    // If no specific advisories, add a generic one
+    if (advisories.length === 0) {
+      advisories.push('Good driving conditions. Standard performance driving practices recommended.');
+    }
+    
+    return advisories;
+  }
+
+  // Vehicle Management Routes
+  app.post('/api/vehicles', async (req, res) => {
+    try {
+      const vehicleData = insertVehicleSchema.parse(req.body);
+      const vehicle = await storage.createVehicle(vehicleData);
+      res.status(201).json(vehicle);
+    } catch (error) {
+      console.error('Error creating vehicle:', error);
+      res.status(400).json({ message: (error as Error).message || 'Failed to create vehicle' });
+    }
+  });
+
+  app.get('/api/vehicles', async (req, res) => {
+    try {
+      const vehicles = await storage.getVehicles();
       res.json(vehicles);
     } catch (error) {
       console.error('Error fetching vehicles:', error);
-      res.status(500).json({ error: 'Failed to fetch vehicles' });
+      res.status(500).json({ message: (error as Error).message || 'Failed to fetch vehicles' });
     }
   });
 
-  app.get('/api/vehicles/:id', async (req: Request, res: Response) => {
+  app.get('/api/vehicles/:id', async (req, res) => {
     try {
-      const vehicleId = parseInt(req.params.id);
-      const vehicle = await storage.getVehicle(vehicleId, req.user?.id);
+      const id = parseInt(req.params.id);
+      const vehicle = await storage.getVehicle(id);
+      
       if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
+        return res.status(404).json({ message: 'Vehicle not found' });
       }
+      
       res.json(vehicle);
     } catch (error) {
       console.error('Error fetching vehicle:', error);
-      res.status(500).json({ error: 'Failed to fetch vehicle' });
+      res.status(500).json({ message: (error as Error).message || 'Failed to fetch vehicle' });
     }
   });
 
-  app.post('/api/vehicles', async (req: Request, res: Response) => {
+  app.patch('/api/vehicles/:id', async (req, res) => {
     try {
-      const validatedData = schema.insertVehicleSchema.parse({
-        ...req.body,
-        userId: req.user?.id
-      });
-      const newVehicle = await storage.createVehicle(validatedData);
-      res.status(201).json(newVehicle);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: error.errors });
+      const id = parseInt(req.params.id);
+      const vehicleData = insertVehicleSchema.partial().parse(req.body);
+      
+      const updatedVehicle = await storage.updateVehicle(id, vehicleData);
+      
+      if (!updatedVehicle) {
+        return res.status(404).json({ message: 'Vehicle not found' });
       }
-      console.error('Error creating vehicle:', error);
-      res.status(500).json({ error: 'Failed to create vehicle' });
-    }
-  });
-
-  app.patch('/api/vehicles/:id', async (req: Request, res: Response) => {
-    try {
-      const vehicleId = parseInt(req.params.id);
-      const vehicle = await storage.getVehicle(vehicleId, req.user?.id);
-      if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
-      }
-
-      const updatedVehicle = await storage.updateVehicle(vehicleId, req.body);
+      
       res.json(updatedVehicle);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
       console.error('Error updating vehicle:', error);
-      res.status(500).json({ error: 'Failed to update vehicle' });
+      res.status(400).json({ message: (error as Error).message || 'Failed to update vehicle' });
     }
   });
 
-  app.delete('/api/vehicles/:id', async (req: Request, res: Response) => {
+  app.delete('/api/vehicles/:id', async (req, res) => {
     try {
-      const vehicleId = parseInt(req.params.id);
-      const vehicle = await storage.getVehicle(vehicleId, req.user?.id);
-      if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
-      }
-
-      await storage.deleteVehicle(vehicleId);
-      res.status(204).send();
+      const id = parseInt(req.params.id);
+      await storage.deleteVehicle(id);
+      res.sendStatus(204);
     } catch (error) {
       console.error('Error deleting vehicle:', error);
-      res.status(500).json({ error: 'Failed to delete vehicle' });
+      res.status(500).json({ message: (error as Error).message || 'Failed to delete vehicle' });
     }
   });
 
-  // Modifications API routes
-  app.get('/api/vehicles/:id/modifications', async (req: Request, res: Response) => {
+  // Tire Management Routes
+  app.post('/api/tires', async (req, res) => {
     try {
-      const vehicleId = parseInt(req.params.id);
-      const vehicle = await storage.getVehicle(vehicleId, req.user?.id);
-      if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
-      }
-
-      const modifications = await storage.getModificationsByVehicleId(vehicleId);
-      res.json(modifications);
+      const tireData = insertTireSchema.parse(req.body);
+      const tire = await storage.createTire(tireData);
+      res.status(201).json(tire);
     } catch (error) {
-      console.error('Error fetching modifications:', error);
-      res.status(500).json({ error: 'Failed to fetch modifications' });
+      console.error('Error creating tire:', error);
+      res.status(400).json({ message: (error as Error).message || 'Failed to create tire' });
     }
   });
 
-  app.post('/api/modifications', async (req: Request, res: Response) => {
+  app.get('/api/vehicles/:vehicleId/tires', async (req, res) => {
     try {
-      const validatedData = schema.insertModificationSchema.parse(req.body);
-      
-      // Check if the vehicle belongs to the user
-      const vehicle = await storage.getVehicle(validatedData.vehicleId, req.user?.id);
-      if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
-      }
-
-      const newModification = await storage.createModification(validatedData);
-      
-      // Add points for verified modification
-      await storage.addPointsTransaction({
-        userId: req.user?.id,
-        amount: 100, // Base points for adding a modification
-        type: 'earned',
-        source: 'modification',
-        sourceId: newModification.id,
-        description: `Points earned for adding modification: ${newModification.name}`,
-        vehicle_id: validatedData.vehicleId
-      });
-      
-      res.status(201).json(newModification);
+      const vehicleId = parseInt(req.params.vehicleId);
+      const tires = await storage.getTiresByVehicle(vehicleId);
+      res.json(tires);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      console.error('Error creating modification:', error);
-      res.status(500).json({ error: 'Failed to create modification' });
+      console.error('Error fetching tires:', error);
+      res.status(500).json({ message: (error as Error).message || 'Failed to fetch tires' });
     }
   });
 
-  app.patch('/api/modifications/:id', async (req: Request, res: Response) => {
+  // Maintenance Records Routes
+  app.post('/api/maintenance-records', async (req, res) => {
     try {
-      const modificationId = parseInt(req.params.id);
-      const modification = await storage.getModification(modificationId);
-      if (!modification) {
-        return res.status(404).json({ error: 'Modification not found' });
-      }
-
-      // Check if the vehicle belongs to the user
-      const vehicle = await storage.getVehicle(modification.vehicleId, req.user?.id);
-      if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
-      }
-
-      const updatedModification = await storage.updateModification(modificationId, req.body);
-      res.json(updatedModification);
+      const recordData = insertMaintenanceRecordSchema.parse(req.body);
+      const record = await storage.createMaintenanceRecord(recordData);
+      res.status(201).json(record);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      console.error('Error updating modification:', error);
-      res.status(500).json({ error: 'Failed to update modification' });
+      console.error('Error creating maintenance record:', error);
+      res.status(400).json({ message: (error as Error).message || 'Failed to create maintenance record' });
     }
   });
 
-  app.delete('/api/modifications/:id', async (req: Request, res: Response) => {
+  app.get('/api/vehicles/:vehicleId/maintenance-records', async (req, res) => {
     try {
-      const modificationId = parseInt(req.params.id);
-      const modification = await storage.getModification(modificationId);
-      if (!modification) {
-        return res.status(404).json({ error: 'Modification not found' });
-      }
-
-      // Check if the vehicle belongs to the user
-      const vehicle = await storage.getVehicle(modification.vehicleId, req.user?.id);
-      if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
-      }
-
-      await storage.deleteModification(modificationId);
-      res.status(204).send();
-    } catch (error) {
-      console.error('Error deleting modification:', error);
-      res.status(500).json({ error: 'Failed to delete modification' });
-    }
-  });
-
-  // Maintenance Records API routes
-  app.get('/api/vehicles/:id/maintenance-records', async (req: Request, res: Response) => {
-    try {
-      const vehicleId = parseInt(req.params.id);
-      const vehicle = await storage.getVehicle(vehicleId, req.user?.id);
-      if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
-      }
-
-      const maintenanceRecords = await storage.getMaintenanceRecordsByVehicleId(vehicleId);
-      res.json(maintenanceRecords);
+      const vehicleId = parseInt(req.params.vehicleId);
+      const records = await storage.getMaintenanceRecordsByVehicle(vehicleId);
+      res.json(records);
     } catch (error) {
       console.error('Error fetching maintenance records:', error);
-      res.status(500).json({ error: 'Failed to fetch maintenance records' });
+      res.status(500).json({ message: (error as Error).message || 'Failed to fetch maintenance records' });
     }
   });
 
-  app.post('/api/maintenance-records', async (req: Request, res: Response) => {
+  // Maintenance Flags Routes
+  app.post('/api/maintenance-flags', async (req, res) => {
     try {
-      const validatedData = schema.insertMaintenanceRecordSchema.parse(req.body);
-      
-      // Check if the vehicle belongs to the user
-      const vehicle = await storage.getVehicle(validatedData.vehicleId, req.user?.id);
-      if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
-      }
+      const flagData = insertMaintenanceFlagSchema.parse(req.body);
+      const flag = await storage.createMaintenanceFlag(flagData);
+      res.status(201).json(flag);
+    } catch (error) {
+      console.error('Error creating maintenance flag:', error);
+      res.status(400).json({ message: (error as Error).message || 'Failed to create maintenance flag' });
+    }
+  });
 
-      const newRecord = await storage.createMaintenanceRecord(validatedData);
-      
-      // Add points for verified maintenance record
-      await storage.addPointsTransaction({
-        userId: req.user?.id,
-        amount: 50, // Base points for adding a maintenance record
-        type: 'earned',
-        source: 'maintenance',
-        sourceId: newRecord.id,
-        description: `Points earned for adding maintenance record: ${newRecord.title}`,
-        vehicle_id: validatedData.vehicleId
+  app.get('/api/vehicles/:vehicleId/maintenance-flags', async (req, res) => {
+    try {
+      const vehicleId = parseInt(req.params.vehicleId);
+      const flags = await storage.getMaintenanceFlagsByVehicle(vehicleId);
+      res.json(flags);
+    } catch (error) {
+      console.error('Error fetching maintenance flags:', error);
+      res.status(500).json({ message: (error as Error).message || 'Failed to fetch maintenance flags' });
+    }
+  });
+
+  // Gloss Tracking Routes (for paint protection/detailing)
+  app.post('/api/gloss-tracking', async (req, res) => {
+    try {
+      const glossData = insertGlossTrackingSchema.parse(req.body);
+      const glossTracking = await storage.createGlossTracking(glossData);
+      res.status(201).json(glossTracking);
+    } catch (error) {
+      console.error('Error creating gloss tracking:', error);
+      res.status(400).json({ message: (error as Error).message || 'Failed to create gloss tracking' });
+    }
+  });
+
+  app.get('/api/vehicles/:vehicleId/gloss-tracking', async (req, res) => {
+    try {
+      const vehicleId = parseInt(req.params.vehicleId);
+      const glossTracking = await storage.getGlossTrackingByVehicle(vehicleId);
+      res.json(glossTracking);
+    } catch (error) {
+      console.error('Error fetching gloss tracking:', error);
+      res.status(500).json({ message: (error as Error).message || 'Failed to fetch gloss tracking' });
+    }
+  });
+
+  // Gloss Logs Routes (for detailing sessions)
+  app.post('/api/gloss-logs', async (req, res) => {
+    try {
+      const logData = insertGlossLogSchema.parse(req.body);
+      const glossLog = await storage.createGlossLog(logData);
+      res.status(201).json(glossLog);
+    } catch (error) {
+      console.error('Error creating gloss log:', error);
+      res.status(400).json({ message: (error as Error).message || 'Failed to create gloss log' });
+    }
+  });
+
+  app.get('/api/gloss-tracking/:glossTrackingId/logs', async (req, res) => {
+    try {
+      const glossTrackingId = parseInt(req.params.glossTrackingId);
+      const logs = await storage.getGlossLogsByTracking(glossTrackingId);
+      res.json(logs);
+    } catch (error) {
+      console.error('Error fetching gloss logs:', error);
+      res.status(500).json({ message: (error as Error).message || 'Failed to fetch gloss logs' });
+    }
+  });
+
+  // Demo data initialization
+  app.post('/api/init-demo-data', async (req, res) => {
+    try {
+      // Create demo vehicle
+      const vehicle = await storage.createVehicle({
+        make: 'Ferrari',
+        model: '488 GTB',
+        year: 2019,
+        color: 'Rosso Corsa',
+        vin: 'ZFF79ALA7K0240372',
+        licensePlate: 'PDCK-20',
+        purchaseDate: new Date('2023-01-15'),
+        mileage: 8500
       });
       
-      res.status(201).json(newRecord);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      console.error('Error creating maintenance record:', error);
-      res.status(500).json({ error: 'Failed to create maintenance record' });
-    }
-  });
-
-  app.patch('/api/maintenance-records/:id', async (req: Request, res: Response) => {
-    try {
-      const recordId = parseInt(req.params.id);
-      const record = await storage.getMaintenanceRecord(recordId);
-      if (!record) {
-        return res.status(404).json({ error: 'Maintenance record not found' });
-      }
-
-      // Check if the vehicle belongs to the user
-      const vehicle = await storage.getVehicle(record.vehicleId, req.user?.id);
-      if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
-      }
-
-      const updatedRecord = await storage.updateMaintenanceRecord(recordId, req.body);
-      res.json(updatedRecord);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      console.error('Error updating maintenance record:', error);
-      res.status(500).json({ error: 'Failed to update maintenance record' });
-    }
-  });
-
-  app.delete('/api/maintenance-records/:id', async (req: Request, res: Response) => {
-    try {
-      const recordId = parseInt(req.params.id);
-      const record = await storage.getMaintenanceRecord(recordId);
-      if (!record) {
-        return res.status(404).json({ error: 'Maintenance record not found' });
-      }
-
-      // Check if the vehicle belongs to the user
-      const vehicle = await storage.getVehicle(record.vehicleId, req.user?.id);
-      if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
-      }
-
-      await storage.deleteMaintenanceRecord(recordId);
-      res.status(204).send();
-    } catch (error) {
-      console.error('Error deleting maintenance record:', error);
-      res.status(500).json({ error: 'Failed to delete maintenance record' });
-    }
-  });
-
-  // Tire Setups API routes
-  app.get('/api/vehicles/:id/tire-setups', async (req: Request, res: Response) => {
-    try {
-      const vehicleId = parseInt(req.params.id);
-      const vehicle = await storage.getVehicle(vehicleId, req.user?.id);
-      if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
-      }
-
-      const tireSetups = await storage.getTireSetupsByVehicleId(vehicleId);
-      res.json(tireSetups);
-    } catch (error) {
-      console.error('Error fetching tire setups:', error);
-      res.status(500).json({ error: 'Failed to fetch tire setups' });
-    }
-  });
-
-  app.post('/api/tire-setups', async (req: Request, res: Response) => {
-    try {
-      const validatedData = schema.insertTireSetupSchema.parse(req.body);
-      
-      // Check if the vehicle belongs to the user
-      const vehicle = await storage.getVehicle(validatedData.vehicleId, req.user?.id);
-      if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
-      }
-
-      const newSetup = await storage.createTireSetup(validatedData);
-      
-      // Add points for verified tire setup
-      await storage.addPointsTransaction({
-        userId: req.user?.id,
-        amount: 75, // Base points for adding a tire setup
-        type: 'earned',
-        source: 'tire_setup',
-        sourceId: newSetup.id,
-        description: `Points earned for adding tire setup: ${newSetup.brand} ${newSetup.model}`,
-        vehicle_id: validatedData.vehicleId
+      // Create tires for the vehicle
+      await storage.createTire({
+        vehicleId: vehicle.id,
+        brand: 'Michelin',
+        model: 'Pilot Sport 4S',
+        frontSize: '245/35ZR20',
+        rearSize: '305/30ZR20',
+        dateInstalled: new Date('2023-03-10'),
+        mileageInstalled: 7200,
+        currentTreadDepth: 6.5,
+        notes: 'High performance summer tires'
       });
       
-      res.status(201).json(newSetup);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      console.error('Error creating tire setup:', error);
-      res.status(500).json({ error: 'Failed to create tire setup' });
-    }
-  });
-
-  app.patch('/api/tire-setups/:id', async (req: Request, res: Response) => {
-    try {
-      const setupId = parseInt(req.params.id);
-      const setup = await storage.getTireSetup(setupId);
-      if (!setup) {
-        return res.status(404).json({ error: 'Tire setup not found' });
-      }
-
-      // Check if the vehicle belongs to the user
-      const vehicle = await storage.getVehicle(setup.vehicleId, req.user?.id);
-      if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
-      }
-
-      const updatedSetup = await storage.updateTireSetup(setupId, req.body);
-      res.json(updatedSetup);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      console.error('Error updating tire setup:', error);
-      res.status(500).json({ error: 'Failed to update tire setup' });
-    }
-  });
-
-  app.delete('/api/tire-setups/:id', async (req: Request, res: Response) => {
-    try {
-      const setupId = parseInt(req.params.id);
-      const setup = await storage.getTireSetup(setupId);
-      if (!setup) {
-        return res.status(404).json({ error: 'Tire setup not found' });
-      }
-
-      // Check if the vehicle belongs to the user
-      const vehicle = await storage.getVehicle(setup.vehicleId, req.user?.id);
-      if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
-      }
-
-      await storage.deleteTireSetup(setupId);
-      res.status(204).send();
-    } catch (error) {
-      console.error('Error deleting tire setup:', error);
-      res.status(500).json({ error: 'Failed to delete tire setup' });
-    }
-  });
-
-  // Detailing Sessions API routes
-  app.get('/api/vehicles/:id/detailing-sessions', async (req: Request, res: Response) => {
-    try {
-      const vehicleId = parseInt(req.params.id);
-      const vehicle = await storage.getVehicle(vehicleId, req.user?.id);
-      if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
-      }
-
-      const detailingSessions = await storage.getDetailingSessionsByVehicleId(vehicleId);
-      res.json(detailingSessions);
-    } catch (error) {
-      console.error('Error fetching detailing sessions:', error);
-      res.status(500).json({ error: 'Failed to fetch detailing sessions' });
-    }
-  });
-
-  app.post('/api/detailing-sessions', async (req: Request, res: Response) => {
-    try {
-      const validatedData = schema.insertDetailingSessionSchema.parse(req.body);
-      
-      // Check if the vehicle belongs to the user
-      const vehicle = await storage.getVehicle(validatedData.vehicleId, req.user?.id);
-      if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
-      }
-
-      const newSession = await storage.createDetailingSession(validatedData);
-      
-      // Calculate points based on detailing type
-      let points = 25; // Basic wash
-      
-      switch (validatedData.type) {
-        case 'full_detail':
-          points = 150;
-          break;
-        case 'ceramic':
-          points = 200;
-          break;
-        case 'polish':
-          points = 125;
-          break;
-        case 'wax':
-          points = 75;
-          break;
-        case 'interior':
-          points = 100;
-          break;
-        default:
-          points = 25;
-      }
-      
-      // Add more points for documentation
-      if (validatedData.beforePhotos && validatedData.beforePhotos.length > 0) points += 15;
-      if (validatedData.afterPhotos && validatedData.afterPhotos.length > 0) points += 15;
-      if (validatedData.outdoorTemp || validatedData.indoorTemp || validatedData.surfaceTemp) points += 10;
-      if (validatedData.paintThicknessReadings && Object.keys(validatedData.paintThicknessReadings).length > 0) points += 25;
-      
-      // Add points for verified detailing session
-      await storage.addPointsTransaction({
-        userId: req.user?.id,
-        amount: points,
-        type: 'earned',
-        source: 'detailing',
-        sourceId: newSession.id,
-        description: `Points earned for adding detailing session: ${newSession.title}`,
-        vehicle_id: validatedData.vehicleId
+      // Create maintenance records
+      await storage.createMaintenanceRecord({
+        vehicleId: vehicle.id,
+        serviceType: 'Oil Change',
+        serviceDate: new Date('2023-06-15'),
+        mileage: 8000,
+        serviceCost: 450,
+        serviceProvider: 'Ferrari of Central Florida',
+        notes: 'Shell Helix Ultra 5W-40, OEM filter'
       });
       
-      res.status(201).json(newSession);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      console.error('Error creating detailing session:', error);
-      res.status(500).json({ error: 'Failed to create detailing session' });
-    }
-  });
-
-  app.patch('/api/detailing-sessions/:id', async (req: Request, res: Response) => {
-    try {
-      const sessionId = parseInt(req.params.id);
-      const session = await storage.getDetailingSession(sessionId);
-      if (!session) {
-        return res.status(404).json({ error: 'Detailing session not found' });
-      }
-
-      // Check if the vehicle belongs to the user
-      const vehicle = await storage.getVehicle(session.vehicleId, req.user?.id);
-      if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
-      }
-
-      const updatedSession = await storage.updateDetailingSession(sessionId, req.body);
-      res.json(updatedSession);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      console.error('Error updating detailing session:', error);
-      res.status(500).json({ error: 'Failed to update detailing session' });
-    }
-  });
-
-  app.delete('/api/detailing-sessions/:id', async (req: Request, res: Response) => {
-    try {
-      const sessionId = parseInt(req.params.id);
-      const session = await storage.getDetailingSession(sessionId);
-      if (!session) {
-        return res.status(404).json({ error: 'Detailing session not found' });
-      }
-
-      // Check if the vehicle belongs to the user
-      const vehicle = await storage.getVehicle(session.vehicleId, req.user?.id);
-      if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
-      }
-
-      await storage.deleteDetailingSession(sessionId);
-      res.status(204).send();
-    } catch (error) {
-      console.error('Error deleting detailing session:', error);
-      res.status(500).json({ error: 'Failed to delete detailing session' });
-    }
-  });
-
-  // Vehicle Documents API routes
-  app.get('/api/vehicles/:id/documents', async (req: Request, res: Response) => {
-    try {
-      const vehicleId = parseInt(req.params.id);
-      const vehicle = await storage.getVehicle(vehicleId, req.user?.id);
-      if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
-      }
-
-      const documents = await storage.getDocumentsByVehicleId(vehicleId);
-      res.json(documents);
-    } catch (error) {
-      console.error('Error fetching documents:', error);
-      res.status(500).json({ error: 'Failed to fetch documents' });
-    }
-  });
-
-  app.post('/api/vehicle-documents', async (req: Request, res: Response) => {
-    try {
-      const validatedData = schema.insertVehicleDocumentSchema.parse(req.body);
-      
-      // Check if the vehicle belongs to the user
-      const vehicle = await storage.getVehicle(validatedData.vehicleId, req.user?.id);
-      if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
-      }
-
-      const newDocument = await storage.createVehicleDocument(validatedData);
-      
-      // Add points for verified document
-      await storage.addPointsTransaction({
-        userId: req.user?.id,
-        amount: 25, // Base points for adding a document
-        type: 'earned',
-        source: 'document',
-        sourceId: newDocument.id,
-        description: `Points earned for adding vehicle document: ${newDocument.title}`,
-        vehicle_id: validatedData.vehicleId
+      // Create maintenance flag for upcoming service
+      await storage.createMaintenanceFlag({
+        vehicleId: vehicle.id,
+        flagType: 'Scheduled Maintenance',
+        notes: 'Annual service due',
+        dueDate: new Date('2023-12-15'),
+        dueMileage: 10000,
+        isDue: false,
+        isUrgent: false
       });
       
-      res.status(201).json(newDocument);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      console.error('Error creating document:', error);
-      res.status(500).json({ error: 'Failed to create document' });
-    }
-  });
-
-  app.patch('/api/vehicle-documents/:id', async (req: Request, res: Response) => {
-    try {
-      const documentId = parseInt(req.params.id);
-      const document = await storage.getVehicleDocument(documentId);
-      if (!document) {
-        return res.status(404).json({ error: 'Document not found' });
-      }
-
-      // Check if the vehicle belongs to the user
-      const vehicle = await storage.getVehicle(document.vehicleId, req.user?.id);
-      if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
-      }
-
-      const updatedDocument = await storage.updateVehicleDocument(documentId, req.body);
-      res.json(updatedDocument);
-    } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      console.error('Error updating document:', error);
-      res.status(500).json({ error: 'Failed to update document' });
-    }
-  });
-
-  app.delete('/api/vehicle-documents/:id', async (req: Request, res: Response) => {
-    try {
-      const documentId = parseInt(req.params.id);
-      const document = await storage.getVehicleDocument(documentId);
-      if (!document) {
-        return res.status(404).json({ error: 'Document not found' });
-      }
-
-      // Check if the vehicle belongs to the user
-      const vehicle = await storage.getVehicle(document.vehicleId, req.user?.id);
-      if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
-      }
-
-      await storage.deleteVehicleDocument(documentId);
-      res.status(204).send();
-    } catch (error) {
-      console.error('Error deleting document:', error);
-      res.status(500).json({ error: 'Failed to delete document' });
-    }
-  });
-
-  // Drive Journal Entries API routes
-  app.get('/api/vehicles/:id/drive-journals', async (req: Request, res: Response) => {
-    try {
-      const vehicleId = parseInt(req.params.id);
-      const vehicle = await storage.getVehicle(vehicleId, req.user?.id);
-      if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
-      }
-
-      const entries = await storage.getDriveJournalEntriesByVehicleId(vehicleId);
-      res.json(entries);
-    } catch (error) {
-      console.error('Error fetching drive journal entries:', error);
-      res.status(500).json({ error: 'Failed to fetch drive journal entries' });
-    }
-  });
-
-  app.post('/api/drive-journals', async (req: Request, res: Response) => {
-    try {
-      const validatedData = schema.insertDriveJournalEntrySchema.parse({
-        ...req.body,
-        userId: req.user?.id
+      // Create gloss tracking for paint protection
+      const glossTracking = await storage.createGlossTracking({
+        vehicleId: vehicle.id,
+        currentProduct: 'Ceramic Pro 9H',
+        appliedDate: new Date('2023-02-20'),
+        nextWaxDate: new Date('2024-02-20'),
+        protectionLevel: 9,
+        glossLevel: 9,
+        beadingRating: 10,
+        notes: 'Full ceramic coating with 5-year warranty'
       });
       
-      // Check if the vehicle belongs to the user
-      const vehicle = await storage.getVehicle(validatedData.vehicleId, req.user?.id);
-      if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
-      }
-
-      const newEntry = await storage.createDriveJournalEntry(validatedData);
-      
-      // Calculate points based on drive journal details
-      let points = 20; // Base points for a drive entry
-      
-      // Add points for distance
-      if (validatedData.distanceMiles) {
-        if (validatedData.distanceMiles > 100) points += 30;
-        else if (validatedData.distanceMiles > 50) points += 20;
-        else if (validatedData.distanceMiles > 10) points += 10;
-      }
-      
-      // Add points for documentation
-      if (validatedData.photos && validatedData.photos.length > 0) points += 15;
-      if (validatedData.videos && validatedData.videos.length > 0) points += 20;
-      if (validatedData.audioNotes && validatedData.audioNotes.length > 0) points += 15;
-      if (validatedData.gpxFile) points += 25;
-      
-      // Add points for comprehensive data
-      if (validatedData.startOdometer && validatedData.endOdometer) points += 10;
-      if (validatedData.avgSpeed && validatedData.maxSpeed) points += 10;
-      if (validatedData.fuelUsed && validatedData.avgMpg) points += 10;
-      if (validatedData.description && validatedData.description.length > 100) points += 10;
-      
-      // Add points for vehicle performance feedback
-      if (validatedData.handlingFeedback || validatedData.brakesFeedback || 
-          validatedData.accelerationFeedback || validatedData.comfortFeedback) {
-        points += 15;
-      }
-      
-      // Add points for verified drive journal entry
-      await storage.addPointsTransaction({
-        userId: req.user?.id,
-        amount: points,
-        type: 'earned',
-        source: 'drive_journal',
-        sourceId: newEntry.id,
-        description: `Points earned for adding drive journal entry: ${newEntry.title || 'Drive on ' + newEntry.date}`,
-        vehicle_id: validatedData.vehicleId
+      // Create gloss log entry
+      await storage.createGlossLog({
+        glossTrackingId: glossTracking.id,
+        logDate: new Date('2023-05-10'),
+        productUsed: 'Ceramic Pro Sport',
+        processType: 'Maintenance Coat',
+        notes: 'Applied maintenance coat after spring detail'
       });
       
-      res.status(201).json(newEntry);
+      // Create another gloss log entry
+      await storage.createGlossLog({
+        glossTrackingId: glossTracking.id,
+        logDate: new Date('2023-08-15'),
+        productUsed: 'Ceramic Pro Sport',
+        processType: 'Maintenance Coat',
+        notes: 'Applied after summer track day event'
+      });
+      
+      res.status(201).json({ message: 'Demo data initialized successfully' });
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      console.error('Error creating drive journal entry:', error);
-      res.status(500).json({ error: 'Failed to create drive journal entry' });
+      console.error('Error initializing demo data:', error);
+      res.status(500).json({ message: (error as Error).message || 'Failed to initialize demo data' });
     }
   });
 
-  app.patch('/api/drive-journals/:id', async (req: Request, res: Response) => {
+  // OAuth callback routes
+  app.get('/oauth2callback', handleGoogleOAuth2Callback);
+  app.get('/apple-oauth2callback', handleAppleOAuth2Callback);
+  
+  // Google OAuth token exchange endpoint
+  app.post('/api/google-auth/token', async (req, res) => {
     try {
-      const entryId = parseInt(req.params.id);
-      const entry = await storage.getDriveJournalEntry(entryId);
-      if (!entry) {
-        return res.status(404).json({ error: 'Drive journal entry not found' });
+      const { code, redirectUri } = req.body;
+      
+      if (!code || !redirectUri) {
+        return res.status(400).json({ error: 'Missing required parameters' });
       }
-
-      // Check if the entry belongs to the user
-      if (entry.userId !== req.user?.id) {
-        return res.status(403).json({ error: 'Not authorized to access this drive journal entry' });
-      }
-
-      const updatedEntry = await storage.updateDriveJournalEntry(entryId, req.body);
-      res.json(updatedEntry);
+      
+      // Import axios for making HTTP requests
+      const axios = require('axios');
+      
+      // Exchange authorization code for tokens
+      const tokenResponse = await axios.post('https://oauth2.googleapis.com/token', {
+        code,
+        client_id: process.env.VITE_GOOGLE_CLIENT_ID,
+        client_secret: process.env.GOOGLE_CLIENT_SECRET,
+        redirect_uri: redirectUri,
+        grant_type: 'authorization_code'
+      });
+      
+      // Return tokens to client
+      res.json(tokenResponse.data);
     } catch (error) {
-      if (error instanceof z.ZodError) {
-        return res.status(400).json({ error: error.errors });
-      }
-      console.error('Error updating drive journal entry:', error);
-      res.status(500).json({ error: 'Failed to update drive journal entry' });
+      console.error('Error exchanging Google auth code for token:', error.message);
+      res.status(500).json({ error: 'Failed to exchange authorization code for token' });
     }
   });
 
-  app.delete('/api/drive-journals/:id', async (req: Request, res: Response) => {
-    try {
-      const entryId = parseInt(req.params.id);
-      const entry = await storage.getDriveJournalEntry(entryId);
-      if (!entry) {
-        return res.status(404).json({ error: 'Drive journal entry not found' });
-      }
-
-      // Check if the entry belongs to the user
-      if (entry.userId !== req.user?.id) {
-        return res.status(403).json({ error: 'Not authorized to access this drive journal entry' });
-      }
-
-      await storage.deleteDriveJournalEntry(entryId);
-      res.status(204).send();
-    } catch (error) {
-      console.error('Error deleting drive journal entry:', error);
-      res.status(500).json({ error: 'Failed to delete drive journal entry' });
-    }
+  // Social Media Integration Routes
+  
+  // Check if Slack integration is configured
+  app.get('/api/social/slack/status', async (req, res) => {
+    const isConfigured = await checkSlackIntegration();
+    res.json({ 
+      configured: isConfigured,
+      message: isConfigured ? 
+        'Slack integration is configured and working.' : 
+        'Slack integration is not configured. Please add your SLACK_BOT_TOKEN and SLACK_CHANNEL_ID to environment variables.'
+    });
   });
-
-  // Points Transactions API routes
-  app.get('/api/points', async (req: Request, res: Response) => {
+  
+  // Share vehicle to Slack
+  app.post('/api/social/slack/share-vehicle', async (req, res) => {
     try {
-      const points = await storage.getPointsTransactionsByUserId(req.user?.id);
-      res.json(points);
-    } catch (error) {
-      console.error('Error fetching points transactions:', error);
-      res.status(500).json({ error: 'Failed to fetch points transactions' });
-    }
-  });
-
-  app.get('/api/points/balance', async (req: Request, res: Response) => {
-    try {
-      const user = await storage.getUserById(req.user?.id);
-      if (!user) {
-        return res.status(404).json({ error: 'User not found' });
+      const { vehicleId } = req.body;
+      
+      if (!vehicleId) {
+        return res.status(400).json({ message: 'Vehicle ID is required' });
       }
-      res.json({ balance: user.pointsBalance });
-    } catch (error) {
-      console.error('Error fetching points balance:', error);
-      res.status(500).json({ error: 'Failed to fetch points balance' });
-    }
-  });
-
-  app.get('/api/vehicles/:id/points', async (req: Request, res: Response) => {
-    try {
-      const vehicleId = parseInt(req.params.id);
-      const vehicle = await storage.getVehicle(vehicleId, req.user?.id);
+      
+      const vehicle = await storage.getVehicle(vehicleId);
+      
       if (!vehicle) {
-        return res.status(404).json({ error: 'Vehicle not found' });
+        return res.status(404).json({ message: 'Vehicle not found' });
       }
-
-      const pointsTransactions = await storage.getPointsTransactionsByVehicleId(vehicleId);
-      const totalPoints = pointsTransactions.reduce((sum, transaction) => {
-        if (transaction.type === 'earned') {
-          return sum + transaction.amount;
-        }
-        return sum;
-      }, 0);
-
-      res.json({ transactions: pointsTransactions, totalPoints });
+      
+      const result = await shareCarProfileToSlack(vehicle);
+      
+      if (result) {
+        res.json({ success: true, message: 'Vehicle shared to Slack successfully' });
+      } else {
+        res.status(500).json({ success: false, message: 'Failed to share vehicle to Slack. Check your Slack integration.' });
+      }
     } catch (error) {
-      console.error('Error fetching vehicle points:', error);
-      res.status(500).json({ error: 'Failed to fetch vehicle points' });
+      console.error('Error sharing vehicle to Slack:', error);
+      res.status(500).json({ success: false, message: 'An error occurred while sharing to Slack' });
+    }
+  });
+  
+  // Share event to Slack
+  app.post('/api/social/slack/share-event', async (req, res) => {
+    try {
+      const { eventId } = req.body;
+      
+      if (!eventId) {
+        return res.status(400).json({ message: 'Event ID is required' });
+      }
+      
+      // Retrieve event from storage (once implemented)
+      // const event = await storage.getEvent(eventId);
+      
+      // For now, use the provided event data directly
+      const event = req.body;
+      
+      const result = await shareEventToSlack(event);
+      
+      if (result) {
+        res.json({ success: true, message: 'Event shared to Slack successfully' });
+      } else {
+        res.status(500).json({ success: false, message: 'Failed to share event to Slack. Check your Slack integration.' });
+      }
+    } catch (error) {
+      console.error('Error sharing event to Slack:', error);
+      res.status(500).json({ success: false, message: 'An error occurred while sharing to Slack' });
     }
   });
 
-  // Create HTTP server
+  // Initialize Slack client on server startup
+  initializeSlackClient();
+
   const httpServer = createServer(app);
-
   return httpServer;
 }

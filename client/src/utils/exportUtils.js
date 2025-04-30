@@ -1,140 +1,163 @@
-import html2canvas from 'html2canvas';
-import { jsPDF } from 'jspdf';
+/**
+ * Utility functions for exporting and printing data
+ */
+
+import { jsPDF } from "jspdf";
+import html2canvas from "html2canvas";
 
 /**
- * Export an element to PDF
- * @param {HTMLElement} element - The element to export
- * @param {string} filename - The filename to save as
+ * Export a component to PDF format
+ * @param {HTMLElement} element - The DOM element to export
+ * @param {string} filename - The filename for the PDF
  */
-export const exportToPdf = async (element, filename = 'export.pdf') => {
+export const exportToPdf = async (element, filename = "export.pdf") => {
   try {
-    // Get the element dimensions
     const canvas = await html2canvas(element, {
-      scale: 2, // Higher scale for better quality
-      useCORS: true, // Allow images from other domains
-      logging: false
+      scale: 2,
+      logging: false,
+      useCORS: true,
+      allowTaint: true
     });
     
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF({
       orientation: 'portrait',
-      unit: 'px',
-      format: [canvas.width, canvas.height]
+      unit: 'mm',
+      format: 'a4'
     });
     
-    pdf.addImage(imgData, 'PNG', 0, 0, canvas.width, canvas.height);
+    const imgWidth = 210; // A4 width in mm
+    const pageHeight = 295; // A4 height in mm
+    const imgHeight = (canvas.height * imgWidth) / canvas.width;
+    let heightLeft = imgHeight;
+    let position = 0;
+    
+    pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+    heightLeft -= pageHeight;
+    
+    while (heightLeft >= 0) {
+      position = heightLeft - imgHeight;
+      pdf.addPage();
+      pdf.addImage(imgData, 'PNG', 0, position, imgWidth, imgHeight);
+      heightLeft -= pageHeight;
+    }
+    
     pdf.save(filename);
+    return true;
   } catch (error) {
-    console.error('Error exporting to PDF:', error);
+    console.error("Error exporting to PDF:", error);
+    return false;
   }
 };
 
 /**
- * Export data to CSV
+ * Export data to CSV format
  * @param {Array} data - Array of objects to export
- * @param {string} filename - The filename to save as
+ * @param {string} filename - The filename for the CSV
  */
-export const exportToCsv = (data, filename = 'export.csv') => {
+export const exportToCsv = (data, filename = "export.csv") => {
   try {
-    if (!data || !data.length) return;
+    if (!data || !data.length) {
+      throw new Error("No data to export");
+    }
     
-    // Get headers from the first item
+    // Get headers from the first object
     const headers = Object.keys(data[0]);
     
-    // Create CSV content
-    const csvContent = [
-      headers.join(','), // Header row
-      ...data.map(row => {
-        return headers.map(header => {
-          // Handle special characters, quotes, commas, etc.
-          let cell = row[header]?.toString() || '';
-          if (cell.includes(',') || cell.includes('"') || cell.includes("'")) {
-            cell = `"${cell.replace(/"/g, '""')}"`;
-          }
-          return cell;
-        }).join(',');
-      })
-    ].join('\n');
+    // Convert data to CSV format
+    const csvRows = [];
+    csvRows.push(headers.join(','));
     
-    // Create download link
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
+    for (const row of data) {
+      const values = headers.map(header => {
+        const value = row[header];
+        const escaped = String(value).replace(/"/g, '\\"');
+        return `"${escaped}"`;
+      });
+      csvRows.push(values.join(','));
+    }
+    
+    // Create and download CSV file
+    const csvString = csvRows.join('\n');
+    const blob = new Blob([csvString], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
+    
+    const url = URL.createObjectURL(blob);
     link.setAttribute('href', url);
     link.setAttribute('download', filename);
     link.style.visibility = 'hidden';
+    
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+    
+    return true;
   } catch (error) {
-    console.error('Error exporting to CSV:', error);
+    console.error("Error exporting to CSV:", error);
+    return false;
   }
 };
 
 /**
- * Print an element
- * @param {HTMLElement} element - The element to print
+ * Print the content of a specific element
+ * @param {HTMLElement} element - The DOM element to print
+ * @param {string} title - The title for the print page
  */
-export const printElement = (element) => {
+export const printElement = (element, title = "Print") => {
   try {
     const printWindow = window.open('', '_blank');
-    
-    // Create a style element to maintain styles
-    const style = document.createElement('style');
-    style.innerHTML = Array.from(document.styleSheets)
-      .map(styleSheet => {
-        try {
-          return Array.from(styleSheet.cssRules)
-            .map(rule => rule.cssText)
-            .join('');
-        } catch (e) {
-          // Stylesheet from another domain will throw an error
-          return '';
-        }
-      })
-      .join('\n');
-    
-    // Clone the element
-    const clonedElement = element.cloneNode(true);
-    
-    // Set up the print window content
     printWindow.document.write(`
-      <!DOCTYPE html>
       <html>
         <head>
-          <title>Print</title>
-          ${style.outerHTML}
+          <title>${title}</title>
           <style>
             body {
-              font-family: Arial, sans-serif;
-              margin: 20px;
+              font-family: 'Open Sans', Arial, sans-serif;
               color: #333;
+              padding: 20px;
+            }
+            h1, h2, h3, h4, h5, h6 {
+              font-family: 'Orbitron', 'Segoe UI', Tahoma, sans-serif;
+              color: #20B2AA;
+            }
+            .print-content {
+              max-width: 100%;
             }
             @media print {
               body {
+                padding: 0;
                 margin: 0;
+              }
+              .no-print {
+                display: none !important;
               }
             }
           </style>
         </head>
         <body>
-          ${clonedElement.outerHTML}
+          <div class="print-content">${element.innerHTML}</div>
         </body>
       </html>
     `);
     
-    // Close document for writing to avoid memory leaks
     printWindow.document.close();
+    printWindow.focus();
     
-    // Wait for page to load before printing
-    printWindow.onload = function() {
-      printWindow.focus();
+    // Start printing after content has loaded
+    setTimeout(() => {
       printWindow.print();
-      printWindow.onafterprint = function() {
-        printWindow.close();
-      };
-    };
+      printWindow.close();
+    }, 500);
+    
+    return true;
   } catch (error) {
-    console.error('Error printing element:', error);
+    console.error("Error printing element:", error);
+    return false;
   }
+};
+
+export default {
+  exportToPdf,
+  exportToCsv,
+  printElement
 };
