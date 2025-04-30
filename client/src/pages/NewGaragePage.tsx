@@ -1,15 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { createClient } from '@supabase/supabase-js';
 import { 
   Car, ChevronRight, Gauge, Activity, Wrench, Zap, FileText, PlusCircle,
   Calendar, AlertTriangle, TrendingUp, MoreHorizontal, FileDown, Download,
   Printer, Search, Filter, X, RotateCcw
 } from 'lucide-react';
 
-// Initialize Supabase client - using real credentials from environment variables
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL as string;
-const supabaseKey = import.meta.env.VITE_SUPABASE_ANON_KEY as string;
-const supabase = createClient(supabaseUrl, supabaseKey);
+// Import mock Supabase client
+import supabase from '../services/supabaseClient';
 
 // Type definitions for our data structures
 interface Vehicle {
