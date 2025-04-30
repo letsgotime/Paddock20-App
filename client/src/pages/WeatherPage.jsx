@@ -662,6 +662,22 @@ const WeatherPage = () => {
                       </select>
                     </div>
                     
+                    {/* Weather Vehicle Impact Analyzer */}
+                    <div className="mb-6">
+                      <WeatherVehicleImpactAnalyzer 
+                        vehicle={selectedVehicle}
+                        modifications={vehicleModifications}
+                        weatherData={{
+                          main: { temp: 68, humidity: 45 }, // This would be from actual weather API
+                          weather: [{ main: 'Clear' }], // This would be from actual weather API
+                          wind: { speed: 5 }  // This would be from actual weather API
+                        }}
+                        tireHeatingTrends={tireHeatingTrends}
+                        engineWarmUpTime={engineWarmUpTime}
+                        engineCooldownTime={engineCooldownTime}
+                      />
+                    </div>
+                    
                     <div className="grid grid-cols-1 gap-6">
                       {/* Tire Heating Trends Card */}
                       <div className="bg-black/40 rounded-lg overflow-hidden border border-blue-900/20">
