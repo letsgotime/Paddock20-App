@@ -80,77 +80,50 @@ const WorldClockPanel: React.FC = () => {
     }
   }, [selectedCities]);
 
-  // Fetch time data for selected cities
+  // Fetch time data for selected cities using local calculation
   useEffect(() => {
     if (selectedCities.length === 0) return;
 
-    const fetchTimes = async () => {
+    const calculateTimes = () => {
       const updatedTimes: Record<string, string> = {};
+
+      // Define timezone offsets (hours from UTC)
+      const timezoneOffsets: Record<string, number> = {
+        "Europe/Monaco": 2,       // UTC+2
+        "Asia/Tokyo": 9,          // UTC+9
+        "America/Chicago": -5,    // UTC-5
+        "Europe/London": 1,       // UTC+1
+        "Asia/Singapore": 8,      // UTC+8
+        "Europe/Madrid": 2,       // UTC+2
+        "America/Toronto": -4,    // UTC-4
+        "Australia/Melbourne": 10, // UTC+10
+        "America/Sao_Paulo": -3,  // UTC-3
+        "Asia/Dubai": 4,          // UTC+4
+        "Europe/Rome": 2,         // UTC+2
+        "Europe/Brussels": 2      // UTC+2
+      };
 
       for (const city of selectedCities) {
         try {
-          // Calculate time using timezone offset without API
-          // This is more reliable when the worldtimeapi.org API is down
+          // Get current UTC time
           const now = new Date();
-          let localTime = "";
+          const utcTime = new Date(now.getTime() + now.getTimezoneOffset() * 60000);
           
-          // Try API first with timeout
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 3000); // 3s timeout
+          // Apply timezone offset for the city
+          const offset = timezoneOffsets[city.timezone] || 0;
+          const localDateTime = new Date(utcTime.getTime() + offset * 3600000);
           
-          try {
-            const res = await fetch(`https://worldtimeapi.org/api/timezone/${city.timezone}`, {
-              signal: controller.signal
-            });
-            clearTimeout(timeoutId);
-            
-            if (res.ok) {
-              const data = await res.json();
-              localTime = new Date(data.datetime).toLocaleTimeString([], {
-                hour: "2-digit",
-                minute: "2-digit",
-                hour12: true
-              });
-            } else {
-              throw new Error("API response not OK");
-            }
-          } catch (error) {
-            // Fallback: Calculate time using timezone offsets
-            console.log(`Using fallback time calculation for ${city.name}`);
-            
-            // Timezone offset mapping (in hours)
-            const timezoneOffsets: Record<string, number> = {
-              "Europe/Monaco": 2,       // UTC+2
-              "Asia/Tokyo": 9,          // UTC+9
-              "America/Chicago": -5,    // UTC-5
-              "Europe/London": 1,       // UTC+1
-              "Asia/Singapore": 8,      // UTC+8
-              "Europe/Madrid": 2,       // UTC+2
-              "America/Toronto": -4,    // UTC-4
-              "Australia/Melbourne": 10, // UTC+10
-              "America/Sao_Paulo": -3,  // UTC-3
-              "Asia/Dubai": 4,          // UTC+4
-              "Europe/Rome": 2,         // UTC+2
-              "Europe/Brussels": 2      // UTC+2
-            };
-            
-            // Get the UTC time
-            const utcTime = new Date(now.getTime() + now.getTimezoneOffset() * 60000);
-            
-            // Apply the timezone offset
-            const offset = timezoneOffsets[city.timezone] || 0;
-            const localDateTime = new Date(utcTime.getTime() + offset * 3600000);
-            
-            localTime = localDateTime.toLocaleTimeString([], {
-              hour: "2-digit",
-              minute: "2-digit",
-              hour12: true
-            });
-          }
+          // Format time for display
+          const localTime = localDateTime.toLocaleTimeString([], {
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: true
+          });
           
           updatedTimes[city.name] = localTime;
         } catch (err) {
-          console.error(`Error fetching time for ${city.name}:`, err);
+          console.error(`Error calculating time for ${city.name}:`, err);
+          // Use current device time as fallback
           updatedTimes[city.name] = new Date().toLocaleTimeString([], {
             hour: "2-digit",
             minute: "2-digit",
@@ -162,8 +135,11 @@ const WorldClockPanel: React.FC = () => {
       setTimeData(updatedTimes);
     };
 
-    fetchTimes();
-    const interval = setInterval(fetchTimes, 60000);
+    // Initial calculation
+    calculateTimes();
+    
+    // Update times every minute
+    const interval = setInterval(calculateTimes, 60000);
 
     return () => clearInterval(interval);
   }, [selectedCities]);
@@ -269,7 +245,7 @@ const WorldClockPanel: React.FC = () => {
             {/* City display */}
             <h3 className="text-blue-400 font-orbitron text-lg mb-1">{city.name}</h3>
             <p className="text-white text-xl font-bold tracking-wide">
-              {timeData[city.name] || "--:--:--"}
+              {timeData[city.name] || "--:--"}
             </p>
             
             {weatherData[city.name] ? (
