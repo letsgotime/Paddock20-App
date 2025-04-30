@@ -3,7 +3,7 @@ import {
   Droplets, Thermometer, Wind, Cloud, Sun, CloudRain, Snowflake,
   Gauge, BarChart2, TrendingUp, ArrowDown, ArrowUp, Activity,
   Zap, Battery, Fuel, AlertTriangle, Check, Info, Sliders,
-  Clock, Calendar, Car, Wrench
+  Clock, Calendar, Car, Wrench, Eye
 } from 'lucide-react';
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, AreaChart, Area } from 'recharts';
 
