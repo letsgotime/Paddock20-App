@@ -24,8 +24,10 @@ import {
 } from "lucide-react";
 import { MAIN_CONTENT_ID } from '../lib/accessibility';
 import { useQuery } from '@tanstack/react-query';
-import { getWindDirection } from "../utils/weatherUtils";
+import * as weatherUtils from "../utils/weatherUtils";
 import { getWeatherColorScheme, getContainerClasses, getAlertLevelColor } from "../utils/weatherColorScheme";
+
+const { getWindDirection } = weatherUtils;
 import { analyzeWeatherRisk, type WeatherRiskReport } from "../lib/WeatherRiskAnalyzer";
 
 // Default location (Charlotte)
