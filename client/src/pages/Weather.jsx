@@ -14,9 +14,9 @@ function Weather() {
         </p>
       </header>
       
-      {/* Global Circuit Times & Conditions */}
+      {/* Global Time & Conditions */}
       <section className="mb-6" aria-labelledby="global-circuit-heading">
-        <h2 id="global-circuit-heading" className="apex-header-green text-xl mb-4">Global Circuit Times & Conditions</h2>
+        <h2 id="global-circuit-heading" className="apex-header-green text-xl mb-4">Global Time & Conditions</h2>
         <WorldClockPanel />
       </section>
       
