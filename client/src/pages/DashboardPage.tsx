@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import WeatherStation from '../components/WeatherStation';
-import WorldClock from '../components/WorldClock';
+import WorldClockPanel from '../components/WorldClockPanel';
 import APIDebugger from '../components/APIDebugger';
 import supabase from '../services/supabaseClient';
 import { Calendar, BarChart3, Car, Map, Settings, Bell, Shield, ChevronRight, 
@@ -129,7 +129,7 @@ function DashboardPage() {
       case 'world_clock':
         return (
           <div className="block mb-6">
-            <WorldClock />
+            <WorldClockPanel />
           </div>
         );
         
