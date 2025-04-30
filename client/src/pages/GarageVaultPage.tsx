@@ -257,10 +257,10 @@ const GarageVaultPage: React.FC = () => {
     };
   }, [exportMenuRef]);
   
-  // Handle form submissions
+  // Handle form submissions - using real API data only
   const handleAddVehicle = async (vehicleData: any) => {
     try {
-      // In real app, save to Supabase
+      // Save to Supabase database using production API
       const { data, error } = await supabase
         .from('vehicles')
         .insert([vehicleData])
@@ -268,30 +268,22 @@ const GarageVaultPage: React.FC = () => {
         
       if (error) throw error;
       
-      // Reload vehicles
-      const newVehicles = [...vehicles];
+      // Update state with real API response data
       if (data && data.length > 0) {
-        newVehicles.unshift(data[0]);
+        // Use the actual response from Supabase
+        const newVehicles = [data[0], ...vehicles];
         setVehicles(newVehicles);
         setActiveVehicle(data[0]);
+        
+        // Fetch real vehicle data for the new vehicle
+        fetchVehicleData(data[0].id);
       }
       
       setShowAddVehicleForm(false);
     } catch (error) {
       console.error('Error adding vehicle:', error);
-      
-      // Demo mode: add to local state only
-      const newVehicle = {
-        ...vehicleData,
-        id: `demo-${Date.now()}`,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      const newVehicles = [newVehicle, ...vehicles];
-      setVehicles(newVehicles);
-      setActiveVehicle(newVehicle);
-      setShowAddVehicleForm(false);
+      // Show error message to user
+      alert('Failed to add vehicle. Please try again.');
     }
   };
   
@@ -304,7 +296,7 @@ const GarageVaultPage: React.FC = () => {
         vehicle_id: activeVehicle.id
       };
       
-      // In real app, save to Supabase
+      // Save to Supabase database using production API
       const { data, error } = await supabase
         .from('modifications')
         .insert([newMod])
@@ -312,30 +304,17 @@ const GarageVaultPage: React.FC = () => {
         
       if (error) throw error;
       
-      // Update local state
-      const newModifications = [...modifications];
+      // Update state with real API response data
       if (data && data.length > 0) {
-        newModifications.unshift(data[0]);
-        setModifications(newModifications);
+        // Use the actual response from Supabase
+        setModifications([data[0], ...modifications]);
       }
       
       setShowAddModificationForm(false);
     } catch (error) {
       console.error('Error adding modification:', error);
-      
-      // Demo mode: add to local state only
-      const newMod = {
-        ...modificationData,
-        id: `demo-${Date.now()}`,
-        vehicle_id: activeVehicle?.id || '',
-        status: modificationData.status || 'Installed',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      const newModifications = [newMod, ...modifications];
-      setModifications(newModifications);
-      setShowAddModificationForm(false);
+      // Show error message to user
+      alert('Failed to add modification. Please try again.');
     }
   };
   
@@ -348,7 +327,7 @@ const GarageVaultPage: React.FC = () => {
         vehicle_id: activeVehicle.id
       };
       
-      // In real app, save to Supabase
+      // Save to Supabase database using production API
       const { data, error } = await supabase
         .from('maintenance')
         .insert([newMaintenance])
@@ -356,30 +335,17 @@ const GarageVaultPage: React.FC = () => {
         
       if (error) throw error;
       
-      // Update local state
-      const newMaintenanceRecords = [...maintenanceRecords];
+      // Update state with real API response data
       if (data && data.length > 0) {
-        newMaintenanceRecords.unshift(data[0]);
-        setMaintenanceRecords(newMaintenanceRecords);
+        // Use the actual response from Supabase
+        setMaintenanceRecords([data[0], ...maintenanceRecords]);
       }
       
       setShowAddMaintenanceForm(false);
     } catch (error) {
       console.error('Error adding maintenance record:', error);
-      
-      // Demo mode: add to local state only
-      const newMaintenance = {
-        ...maintenanceData,
-        id: `demo-${Date.now()}`,
-        vehicle_id: activeVehicle?.id || '',
-        status: maintenanceData.status || 'Completed',
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
-      };
-      
-      const newMaintenanceRecords = [newMaintenance, ...maintenanceRecords];
-      setMaintenanceRecords(newMaintenanceRecords);
-      setShowAddMaintenanceForm(false);
+      // Show error message to user
+      alert('Failed to add maintenance record. Please try again.');
     }
   };
   
