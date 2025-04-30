@@ -290,7 +290,7 @@ const WeatherStation = () => {
           <div className="flex flex-col items-center mb-4">
             {getWeatherIcon(weather.weather[0].main)}
             <div className="text-3xl font-bold text-white mt-2">
-              {Math.round(weather.temp)}°F
+              {Math.round(weather.main.temp)}°F
             </div>
             <div className="text-gray-400 text-sm">
               {weather.weather[0].description}
@@ -303,7 +303,7 @@ const WeatherStation = () => {
               <ThermometerSun className="h-4 w-4 text-yellow-500 mr-2" />
               <div>
                 <div className="text-gray-400">Feels Like</div>
-                <div className="text-white">{Math.round(weather.feels_like)}°F</div>
+                <div className="text-white">{Math.round(weather.main.feels_like)}°F</div>
               </div>
             </div>
             
@@ -319,7 +319,7 @@ const WeatherStation = () => {
               <Droplets className="h-4 w-4 text-blue-500 mr-2" />
               <div>
                 <div className="text-gray-400">Humidity</div>
-                <div className="text-white">{weather.humidity}%</div>
+                <div className="text-white">{weather.main.humidity}%</div>
               </div>
             </div>
             
@@ -327,7 +327,7 @@ const WeatherStation = () => {
               <Umbrella className="h-4 w-4 text-purple-400 mr-2" />
               <div>
                 <div className="text-gray-400">Pressure</div>
-                <div className="text-white">{weather.pressure} hPa</div>
+                <div className="text-white">{weather.main.pressure} hPa</div>
               </div>
             </div>
           </div>
