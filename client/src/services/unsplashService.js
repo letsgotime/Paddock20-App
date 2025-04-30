@@ -3,7 +3,7 @@
  */
 
 // Default key from environment variable
-const UNSPLASH_ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY || process.env.UNSPLASH_ACCESS_KEY;
+const UNSPLASH_ACCESS_KEY = import.meta.env.VITE_UNSPLASH_ACCESS_KEY || '2JgRSbUMLc1H5x1-PH_apKjy8jzGF4KLluer_xCO9kk';
 
 /**
  * Search for an image on Unsplash
@@ -168,10 +168,107 @@ export const getImage = async (id) => {
   }
 };
 
+/**
+ * Get relevant image for a specific item/component
+ * @param {string} itemType - Type of item to get image for (car, weather, route, etc.)
+ * @param {Object} options - Additional options for the search
+ * @returns {Promise<Object>} - Image details
+ */
+export const getImageForItem = async (itemType, options = {}) => {
+  try {
+    if (!UNSPLASH_ACCESS_KEY) {
+      console.warn('Unsplash access key is not set. Using local images.');
+      return null;
+    }
+    
+    // Default query based on item type
+    let query = itemType;
+    
+    // Enhance query based on item type
+    switch (itemType) {
+      case 'car':
+        query = options.make ? `${options.make} car` : 'luxury car';
+        break;
+      case 'weather':
+        query = options.condition ? `${options.condition} weather` : 'weather';
+        break;
+      case 'route':
+        query = 'scenic drive road';
+        break;
+      case 'maintenance':
+        query = 'car maintenance';
+        break;
+      default:
+        // Use provided query or default to itemType
+        query = options.query || itemType;
+    }
+    
+    // Search for image
+    const searchResults = await searchImage(query, {
+      perPage: 1,
+      orientation: options.orientation || 'landscape'
+    });
+    
+    if (searchResults && searchResults.results && searchResults.results.length > 0) {
+      const img = searchResults.results[0];
+      return {
+        id: img.id,
+        url: img.urls.regular,
+        thumb: img.urls.thumb,
+        alt: img.alt_description || query,
+        user: {
+          name: img.user.name,
+          link: img.user.links.html
+        }
+      };
+    }
+    
+    return null;
+  } catch (error) {
+    console.error(`Error getting image for ${itemType}:`, error);
+    return null;
+  }
+};
+
+/**
+ * Initialize image cache with commonly used categories
+ * @param {Array} categories - Categories to pre-cache
+ * @returns {Promise<Object>} - Object with cached images by category
+ */
+export const initializeImageCache = async (categories = ['car', 'weather', 'route', 'maintenance']) => {
+  try {
+    const cache = {};
+    
+    // Optional - don't make API calls if key isn't set
+    if (!UNSPLASH_ACCESS_KEY) {
+      console.warn('Unsplash access key is not set. Skipping image cache initialization.');
+      return cache;
+    }
+    
+    // Fetch images for each category in parallel
+    await Promise.all(
+      categories.map(async (category) => {
+        const image = await getImageForItem(category);
+        if (image) {
+          cache[category] = image;
+        }
+      })
+    );
+    
+    console.log(`Initialized image cache with ${Object.keys(cache).length} categories`);
+    return cache;
+  } catch (error) {
+    console.error('Error initializing image cache:', error);
+    return {};
+  }
+};
+
 // Export all functions
 export default {
   searchImage,
   getRandomImage,
   getCarImages,
-  getImage
+  getImage,
+  getImageForItem,
+  initializeImageCache
 };

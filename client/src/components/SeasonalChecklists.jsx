@@ -3,7 +3,7 @@ import {
   Snowflake, Sun, CloudSnow, Leaf, 
   Check, ArrowDown, Calendar, Download, 
   Printer, Clock, CheckCircle, Thermometer, 
-  ToggleRight, Droplet, Wind, Tool, Car, ShieldAlert
+  ToggleRight, Droplet, Wind, Wrench, Car, ShieldAlert
 } from 'lucide-react';
 
 // Import example images
@@ -478,7 +478,7 @@ const SeasonalChecklists = ({ vehicle, onSave, onExport }) => {
               </div>
               
               <div className="p-3 bg-black/30 rounded-lg flex items-start">
-                <Tool className="h-5 w-5 text-green-400 mr-3 mt-0.5 flex-shrink-0" />
+                <Wrench className="h-5 w-5 text-green-400 mr-3 mt-0.5 flex-shrink-0" />
                 <div>
                   <h4 className="text-white text-sm font-medium mb-1">Post-Winter Inspection</h4>
                   <p className="text-gray-400 text-xs">Winter can be hard on your vehicle. Check for suspension damage, exhaust system issues, and worn wiper blades that need replacement.</p>

@@ -2,7 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { 
   ChevronDown, ChevronRight, Droplet, Sun, 
   Snowflake, Activity, CheckSquare, Play, Loader, Shield, 
-  Star, Award, Zap, Tool, AlignLeft, ListChecks
+  Star, Award, Zap, Wrench, AlignLeft, ListChecks
 } from 'lucide-react';
 
 // Sample curated checklist data - actual data would come from a real API
