@@ -17,7 +17,7 @@ import EnhancedVehicleDetail from "../components/EnhancedVehicleDetail";
 import OBDLiveDashboard from "../components/OBDLiveDashboard";
 
 // Service Imports
-import vehicleDataService from "../services/vehicleDataService";
+import * as vehicleDataService from "../services/vehicleDataService";
 import { searchImage } from "../services/unsplashService";
 
 // Icon Imports
