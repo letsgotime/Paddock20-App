@@ -300,7 +300,17 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
     queryFn: async () => {
       if (!selectedLocation) return null;
       try {
-        const data = await fetchAutomotiveWeather({ lat: selectedLocation.lat, lon: selectedLocation.lon }, unit);
+        // Use direct fetch with string parameters to fix API call issues
+        const response = await fetch(
+          `/api/automotive-weather?lat=${selectedLocation.lat}&lon=${selectedLocation.lon}&units=${unit}`
+        );
+        
+        if (!response.ok) {
+          throw new Error(`Automotive weather API error: ${response.status}`);
+        }
+        
+        const data = await response.json();
+        
         // Cache successful data
         weatherDataCache.current.automotiveWeatherData = data;
         return data;
