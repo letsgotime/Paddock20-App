@@ -623,6 +623,51 @@ const ManifestationStation: React.FC = () => {
                 
                 {/* Tab Content */}
                 <TabsContent value="dashboard" className="p-0 m-0">
+                  {/* Why You're Here / What You Get / How to Use It Sections */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+                    {/* Why You're Here */}
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
+                      <h3 className="text-lg font-semibold flex items-center gap-2 mb-3">
+                        <span className="text-[#7FC844]">🧭</span> Why You're Here
+                      </h3>
+                      <p className="text-gray-300 text-sm mb-3">
+                        Manifestation Station™ isn't about "wishing."
+                        It's about working.
+                        Every goal you log here — every car, watch, home, or milestone — comes with a plan built the way real winners build:
+                        Daily movement. Daily mindset. Daily gratitude.
+                        Because real manifestation isn't magic—it's momentum.
+                      </p>
+                    </div>
+                    
+                    {/* What You Get */}
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
+                      <h3 className="text-lg font-semibold flex items-center gap-2 mb-3">
+                        <span className="text-[#7FC844]">✅</span> What You Get
+                      </h3>
+                      <ul className="text-gray-300 text-sm space-y-2">
+                        <li>Dream Vault: Log your cars, watches, experiences, investments.</li>
+                        <li>Goal Telemetry: Set your target, your funding path, and your timeline.</li>
+                        <li>Milestone Tracking: Break down the dream into checkable steps.</li>
+                        <li>Daily Discipline Tracker: Mind, Body, Spirit</li>
+                        <li>Proof of Progress System: See your real manifestation rate, not just your wish rate.</li>
+                      </ul>
+                    </div>
+                    
+                    {/* How to Use It */}
+                    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-5">
+                      <h3 className="text-lg font-semibold flex items-center gap-2 mb-3">
+                        <span className="text-[#7FC844]">🚀</span> How to Use It
+                      </h3>
+                      <ul className="text-gray-300 text-sm space-y-2">
+                        <li>Set Goals: Add dream assets or experiences.</li>
+                        <li>Link Daily Disciplines: Choose your mind, body, spirit focuses.</li>
+                        <li>Track Progress: Update every week or day as you advance.</li>
+                        <li>Celebrate Completions: Archive manifested goals with photos, memories, and timestamps.</li>
+                        <li>Level Up: After each goal, raise your standards and manifest smarter.</li>
+                      </ul>
+                    </div>
+                  </div>
+                
                   {/* Dashboard Settings */}
                   <div className="bg-zinc-900 border border-zinc-800 rounded-xl mb-6">
                     <div className="flex justify-between items-center p-4 border-b border-zinc-800">
