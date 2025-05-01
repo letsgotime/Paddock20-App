@@ -34,11 +34,12 @@ const NavigationControls: React.FC = () => {
 
   // Initialize history with current location if empty
   useEffect(() => {
-    if (navigationHistory.length === 0) {
+    // If location is valid and history is empty, initialize it
+    if (location && location.pathname && navigationHistory.length === 0) {
       setNavigationHistory([location.pathname]);
       setCurrentIndex(0);
     }
-  }, []);
+  }, [location]);
 
   // Save navigation state to sessionStorage when it changes
   useEffect(() => {
@@ -50,6 +51,9 @@ const NavigationControls: React.FC = () => {
 
   // Track navigation history
   useEffect(() => {
+    // Guard against undefined location
+    if (!location || !location.pathname) return;
+    
     // Only update if we have a valid history and the path has changed
     if (navigationHistory.length > 0 && navigationHistory[currentIndex] !== location.pathname) {
       // If we navigated forward/back and then clicked a link, trim the "future" history
@@ -65,7 +69,7 @@ const NavigationControls: React.FC = () => {
         setCurrentIndex(newHistory.length - 1);
       }
     }
-  }, [location.pathname]);
+  }, [location?.pathname, navigationHistory, currentIndex]);
 
   // Update back/forward button states
   useEffect(() => {
@@ -75,16 +79,22 @@ const NavigationControls: React.FC = () => {
 
   // Handle browser forward/back buttons
   useEffect(() => {
+    // Skip if location isn't available yet
+    if (!location || !location.pathname) return;
+    
     const handlePopState = () => {
-      const pathIndex = navigationHistory.indexOf(location.pathname);
-      if (pathIndex >= 0) {
-        setCurrentIndex(pathIndex);
+      // Safely check if pathname exists and is in history
+      if (location?.pathname) {
+        const pathIndex = navigationHistory.indexOf(location.pathname);
+        if (pathIndex >= 0) {
+          setCurrentIndex(pathIndex);
+        }
       }
     };
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [navigationHistory, location.pathname]);
+  }, [navigationHistory, location?.pathname]);
 
   const goBack = () => {
     if (canGoBack) {
@@ -103,36 +113,51 @@ const NavigationControls: React.FC = () => {
   };
 
   const goHome = () => {
-    // Add home to history only if we're not already there
-    if (location.pathname !== '/') {
+    // Add home to history only if we're not already there and location is valid
+    if (location?.pathname && location.pathname !== '/') {
       navigate('/');
     }
   };
 
   // Get a friendly name for the current path
-  const getPathDisplayName = (path: string): string => {
+  const getPathDisplayName = (path: string | undefined): string => {
+    // Handle undefined or null path
+    if (!path) return 'Home';
+    
+    // Handle root path
     if (path === '/') return 'Home';
     
-    // Remove leading slash and convert hyphens to spaces
-    const baseName = path.substring(1).replace(/-/g, ' ');
-    
-    // Handle special cases
+    // Handle special cases - check these first
     if (path.startsWith('/new-weather-center')) return 'Weather Center';
     if (path.startsWith('/garage-vault')) return 'Garage Vault';
     if (path.startsWith('/manifestation-station')) return 'Manifestation Station';
     
-    // Capitalize each word
-    return baseName
-      .split(' ')
-      .map(word => word.charAt(0).toUpperCase() + word.slice(1))
-      .join(' ');
+    try {
+      // Remove leading slash and convert hyphens to spaces
+      const baseName = path.substring(1).replace(/-/g, ' ');
+      
+      // Capitalize each word
+      return baseName
+        .split(' ')
+        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .join(' ');
+    } catch (error) {
+      console.error('Error formatting path name:', error);
+      return 'Unknown Page';
+    }
   };
 
-  const currentPageName = getPathDisplayName(location.pathname);
+  // Safely get the current page name
+  const currentPageName = location?.pathname ? getPathDisplayName(location.pathname) : 'Home';
   
   // Previous and next page names
-  const prevPageName = canGoBack ? getPathDisplayName(navigationHistory[currentIndex - 1]) : '';
-  const nextPageName = canGoForward ? getPathDisplayName(navigationHistory[currentIndex + 1]) : '';
+  const prevPageName = canGoBack && navigationHistory[currentIndex - 1] 
+    ? getPathDisplayName(navigationHistory[currentIndex - 1]) 
+    : '';
+    
+  const nextPageName = canGoForward && navigationHistory[currentIndex + 1] 
+    ? getPathDisplayName(navigationHistory[currentIndex + 1]) 
+    : '';
 
   return (
     <div className="fixed top-16 left-0 z-40 w-full flex justify-center pb-1 pt-2 bg-gradient-to-b from-black to-transparent">
