@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Link } from "wouter";
 import { useWeather } from "../contexts/WeatherContext";
 import { AutomotiveWeatherData } from "../types/automotive-weather";
@@ -11,13 +11,13 @@ import {
 } from "lucide-react";
 
 const Paddock20HomePage: React.FC = () => {
-  const { weatherData, automotiveWeatherData } = useWeather();
+  const { weatherData, automotiveWeatherData, isLoading, error, isUsingFallbackData } = useWeather();
   
   const [currentTime, setCurrentTime] = useState(new Date());
   const [elapsedTime, setElapsedTime] = useState(0);
   const [activeSection, setActiveSection] = useState('command-center');
   
-  // Update clock every second
+  // Update clock every second, but not faster
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -144,6 +144,16 @@ const Paddock20HomePage: React.FC = () => {
         
         {/* Main Content Area - Changes based on active section */}
         <div className="min-h-[600px]">
+          {/* Rate limit warning banner when applicable */}
+          {error && String(error).includes('rate limit') && (
+            <div className="mb-6 bg-yellow-900/20 border border-yellow-600/30 rounded-lg p-3 text-center">
+              <p className="text-yellow-400 text-sm">
+                <span className="inline-block animate-pulse mr-2">⚠️</span> 
+                Weather data syncing. Using cached data temporarily.
+              </p>
+            </div>
+          )}
+          
           {activeSection === 'command-center' && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               {/* Left Column - Weather & Time */}
@@ -156,7 +166,13 @@ const Paddock20HomePage: React.FC = () => {
                       Full Weather Center →
                     </Link>
                   </div>
-                  <OneTapWeatherSnapshot className="h-full" />
+                  {isLoading ? (
+                    <div className="flex items-center justify-center h-40 bg-black/40 rounded-lg border border-blue-900/20">
+                      <div className="text-blue-400 text-sm">Loading weather data...</div>
+                    </div>
+                  ) : (
+                    <OneTapWeatherSnapshot className="h-full" />
+                  )}
                 </div>
                 
                 {/* World Clock - F1 Style */}
