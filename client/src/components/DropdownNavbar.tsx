@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "wouter";
 import {
   ChevronRight, Home, LayoutDashboard, Cloud, MapPin,
   Calendar, Flag, Car, Watch, Compass, Ruler,

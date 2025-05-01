@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "wouter";
 import { useWeather } from "../contexts/WeatherContext";
+import { AutomotiveWeatherData } from "../types/automotive-weather";
 import OneTapWeatherSnapshot from "../components/OneTapWeatherSnapshot";
 import WorldClockPanel from "../components/WorldClockPanel";
 import { 
