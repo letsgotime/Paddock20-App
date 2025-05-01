@@ -146,7 +146,7 @@ const DetailedCommuteAnalytics: React.FC<DetailedCommuteAnalyticsProps> = ({ loc
       currentTime = new Date(currentTime.getTime() + 15 * 60 * 1000);
     }
     
-    // Calculate journey impact metrics
+    // Calculate route impact metrics
     const windImpact = calculateWindImpact(closestForecast.wind.speed);
     const precipitationImpact = calculatePrecipitationImpact(closestForecast);
     const temperatureImpact = calculateTemperatureImpact(closestForecast.main.temp);
