@@ -300,7 +300,9 @@ const NewGTGWeatherPage: React.FC = () => {
     isLoading: isWeatherContextLoading, 
     unit: units,
     error: weatherContextError,
-    lastUpdated
+    lastUpdated,
+    failureCount,
+    isUsingFallbackData
   } = useWeather();
   
   // Format the error message properly
