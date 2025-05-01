@@ -19,7 +19,16 @@ const sampleWeatherData = {
   drivingConditions: {
     asphalt_temperature: 85,
     grip_index: 78,
-    surface_moisture: 5
+    surface_moisture: 5,
+    track_temp: 85,
+    track_condition: "Dry",
+    alert_level: "Low"
+  },
+  performanceData: {
+    braking_efficiency: 92,
+    acceleration_factor: 98,
+    cornering_grip: 95,
+    tire_performance: 90
   },
   hourly: [
     { dt: Date.now() / 1000, temp: 72, weather: [{ icon: '01d' }], pop: 0.1 },
@@ -63,11 +72,11 @@ export function SimpleWeatherProvider({ children }) {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   
-  const fetchWeatherData = async (lat, lon) => {
+  const fetchWeatherData = async (lat = 35.2271, lon = -80.8431) => {
     setLoading(true);
     try {
-      // Get server time in milliseconds
-      const response = await fetch('/api/automotive-weather');
+      // Get weather data with default location (Charlotte)
+      const response = await fetch(`/api/automotive-weather?lat=${lat}&lon=${lon}&units=imperial`);
       
       if (!response.ok) {
         throw new Error(`Error fetching weather data: ${response.statusText}`);
@@ -79,6 +88,8 @@ export function SimpleWeatherProvider({ children }) {
     } catch (err) {
       console.error('Error fetching weather data:', err);
       setError(err);
+      // Fall back to sample data on error
+      setWeatherData(sampleWeatherData);
     } finally {
       setLoading(false);
     }

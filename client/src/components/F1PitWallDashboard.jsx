@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import CommuteTimeEstimator from './CommuteTimeEstimator';
 import LocationManager from './LocationManager';
 import WeatherImpactIndicator from './WeatherImpactIndicator';
+import { useWeather } from '../contexts/SimpleWeatherContext';
 
 // Component for displaying a Formula 1 style gauge
 const F1Gauge = ({ value, min, max, label, units, danger = false, warning = false, optimum = false }) => {
@@ -567,9 +568,8 @@ const EnginePerformance = ({ selectedVehicle, weatherData }) => {
 
 // Main Component
 function F1PitWallDashboard() {
-  const [weatherData, setWeatherData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  // Get weather data from context
+  const { weatherData, loading, error, fetchWeatherData } = useWeather();
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [vehicles, setVehicles] = useState([]);
   
@@ -577,35 +577,10 @@ function F1PitWallDashboard() {
   const [originLocation, setOriginLocation] = useState(null);
   const [destinationLocation, setDestinationLocation] = useState(null);
   
-  // Default location (Charlotte)
-  const DEFAULT_LOCATION = { lat: 35.2271, lon: -80.8431 };
-  
-  // Fetch weather data
+  // Fetch vehicle data when component mounts
   useEffect(() => {
-    async function fetchWeatherData() {
-      try {
-        setLoading(true);
-        const response = await fetch(
-          `/api/automotive-weather?lat=${DEFAULT_LOCATION.lat}&lon=${DEFAULT_LOCATION.lon}&units=imperial`
-        );
-        
-        if (!response.ok) {
-          throw new Error("Failed to fetch weather data");
-        }
-        
-        const data = await response.json();
-        setWeatherData(data);
-        setError(null);
-      } catch (err) {
-        console.error("Error fetching weather data:", err);
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    }
-    
-    // Fetch dummy vehicle data
-    function fetchVehicleData() {
+    // Fetch vehicle data
+    const fetchVehicleData = () => {
       // This would typically come from an API or database
       const dummyVehicles = [
         {
@@ -672,16 +647,19 @@ function F1PitWallDashboard() {
       
       setVehicles(dummyVehicles);
       setSelectedVehicle(dummyVehicles[0]); // Select first vehicle by default
-    }
+    };
     
+    // Fetch data on mount
     fetchWeatherData();
     fetchVehicleData();
     
-    // Refresh every 15 minutes
-    const intervalId = setInterval(fetchWeatherData, 15 * 60 * 1000);
+    // Refresh weather data every 15 minutes
+    const refreshInterval = setInterval(() => {
+      fetchWeatherData();
+    }, 15 * 60 * 1000);
     
-    return () => clearInterval(intervalId);
-  }, []);
+    return () => clearInterval(refreshInterval);
+  }, [fetchWeatherData]);
   
   // Loading state
   if (loading && !weatherData) {
