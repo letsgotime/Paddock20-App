@@ -232,10 +232,14 @@ export function SimpleWeatherProvider({ children }) {
   // Fetch weather data on mount - use default location
   useEffect(() => {
     console.log('SimpleWeatherContext: Initial weather data fetch');
-    fetchWeatherData()
-      .catch(err => {
-        console.error('SimpleWeatherContext: Initial weather fetch failed:', err);
-      });
+    
+    // Only fetch on initial mount if we don't have data yet
+    if (!weatherData) {
+      fetchWeatherData()
+        .catch(err => {
+          console.error('SimpleWeatherContext: Initial weather fetch failed:', err);
+        });
+    }
     
     // Set up auto-refresh interval (every 15 minutes)
     const refreshInterval = setInterval(() => {
