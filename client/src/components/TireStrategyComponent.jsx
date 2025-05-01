@@ -1,12 +1,12 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
+import { Gauge, ThermometerSnowflake, Droplets, Wind, Sunset, Locate, Settings } from 'lucide-react';
 import { useWeather } from '../hooks/useWeather';
 import { useLocation } from '../hooks/useLocation';
 import { useUnits } from '../hooks/useUnits';
-import { ChevronDown, ChevronUp, ThermometerSun, Droplets, Wind, Snowflake } from 'lucide-react';
 
 /**
- * TireStrategyComponent - Displays tire recommendations based on current weather conditions
- * This component is designed to go under the Drive Time Analysis section
+ * TireStrategyComponent - Provides F1-inspired tire recommendations based on weather conditions
+ * This component goes under Drive Time Analysis (CommuteTimeEstimator)
  */
 const TireStrategyComponent = () => {
   const { currentWeather, isLoading } = useWeather();
@@ -14,211 +14,434 @@ const TireStrategyComponent = () => {
   const { units } = useUnits();
   const [expanded, setExpanded] = useState(false);
   
-  // Default tire information for different conditions
-  const tireTypes = {
-    dry: {
-      name: 'Performance/Summer Tires',
-      description: 'Ideal for warm, dry conditions. Provides maximum grip on dry surfaces.',
-      temperatureRange: 'Above 45°F (7°C)',
-      characteristics: ['Excellent dry grip', 'Short braking distances', 'Lower rolling resistance', 'Poor performance in cold/wet']
-    },
-    allSeason: {
-      name: 'All-Season Tires',
-      description: 'Good for moderate weather conditions. Balances performance across various conditions.',
-      temperatureRange: '25°F to 90°F (-4°C to 32°C)',
-      characteristics: ['Good year-round performance', 'Moderate wet grip', 'Acceptable snow traction', 'Compromise in extreme conditions']
-    },
-    wet: {
-      name: 'Wet/All-Season Tires',
-      description: 'Engineered for improved performance in wet conditions with deeper tread patterns.',
-      temperatureRange: '40°F to 85°F (4°C to 29°C)',
-      characteristics: ['Excellent hydroplaning resistance', 'Good wet braking', 'Improved handling in rain', 'Reduced dry performance']
-    },
-    winter: {
-      name: 'Winter/Snow Tires',
-      description: 'Specially designed for cold temperatures and snow/ice conditions.',
-      temperatureRange: 'Below 45°F (7°C)',
-      characteristics: ['Superior snow and ice traction', 'Flexible in cold temperatures', 'Better cold weather braking', 'Poor warm weather performance']
-    }
-  };
+  // Tire compound recommendations based on weather conditions
+  const [tireCompound, setTireCompound] = useState({
+    recommended: 'all-season',
+    alternatives: ['winter']
+  });
   
-  // Determine recommended tire type based on weather conditions
-  const getTireRecommendation = () => {
-    if (!currentWeather) return tireTypes.allSeason;
-    
-    const temp = units === 'imperial' 
-      ? currentWeather.main.temp 
-      : (currentWeather.main.temp * 9/5) + 32; // Convert to Fahrenheit for evaluation
-    
-    const hasSnow = currentWeather.weather?.[0]?.id >= 600 && currentWeather.weather?.[0]?.id < 700;
-    const isRaining = currentWeather.weather?.[0]?.id >= 500 && currentWeather.weather?.[0]?.id < 600;
-    const roadCondition = currentWeather.rain ? 'wet' : 'dry';
-    
-    // Decision tree for tire recommendation
-    if (hasSnow || temp < 45) {
-      return tireTypes.winter;
-    } else if (isRaining || roadCondition === 'wet') {
-      return tireTypes.wet;
-    } else if (temp > 45 && roadCondition === 'dry') {
-      return tireTypes.dry;
-    } else {
-      return tireTypes.allSeason;
-    }
-  };
+  // Determine PSI adjustments based on conditions
+  const [psiAdjustments, setPsiAdjustments] = useState({
+    front: 0,
+    rear: 0,
+    description: ''
+  });
   
-  const recommendedTire = getTireRecommendation();
+  // Road grip estimate (0-100%)
+  const [roadGrip, setRoadGrip] = useState(85);
   
-  // Weather factors that affect tire performance
-  const getTirePerformanceFactors = () => {
-    if (!currentWeather) return [];
+  useEffect(() => {
+    if (!currentWeather) return;
     
-    const temp = currentWeather.main.temp;
-    const tempF = units === 'imperial' ? temp : (temp * 9/5) + 32;
-    const humidity = currentWeather.main.humidity;
+    // Extract weather conditions from data
+    const weatherId = currentWeather.weather?.[0]?.id || 800;
+    const temp = currentWeather.main?.temp || 70;
+    const humidity = currentWeather.main?.humidity || 50;
     const windSpeed = currentWeather.wind?.speed || 0;
     
-    const factors = [];
+    // Set road grip and determine recommended tire compound
+    determineRoadGrip(weatherId, temp, humidity);
+    determineTireCompound(weatherId, temp);
+    calculatePsiAdjustments(temp, weatherId);
     
-    // Temperature impact
-    if (tempF < 32) {
-      factors.push({
-        factor: 'Temperature',
-        icon: <Snowflake size={16} className="text-blue-400" />,
-        value: `${Math.round(temp)}${units === 'imperial' ? '°F' : '°C'}`,
-        impact: 'Cold temperatures reduce tire flexibility and grip'
-      });
-    } else if (tempF > 85) {
-      factors.push({
-        factor: 'Temperature',
-        icon: <ThermometerSun size={16} className="text-red-400" />,
-        value: `${Math.round(temp)}${units === 'imperial' ? '°F' : '°C'}`,
-        impact: 'High temperatures may cause overheating and increased wear'
-      });
-    } else {
-      factors.push({
-        factor: 'Temperature',
-        icon: <ThermometerSun size={16} className="text-green-400" />,
-        value: `${Math.round(temp)}${units === 'imperial' ? '°F' : '°C'}`,
-        impact: 'Optimal temperature range for most tires'
-      });
+  }, [currentWeather]);
+  
+  // Calculate estimated road grip percentage
+  const determineRoadGrip = (weatherId, temp, humidity) => {
+    // Start with base grip level
+    let gripLevel = 85; // Default good grip
+    
+    // Weather condition impacts
+    // Rain conditions (500-599)
+    if (weatherId >= 500 && weatherId < 600) {
+      if (weatherId < 510) {
+        // Light rain
+        gripLevel -= 15;
+      } else if (weatherId < 520) {
+        // Moderate rain
+        gripLevel -= 30;
+      } else {
+        // Heavy rain
+        gripLevel -= 45;
+      }
     }
     
-    // Humidity impact
-    if (humidity > 80) {
-      factors.push({
-        factor: 'Humidity',
-        icon: <Droplets size={16} className="text-blue-400" />,
-        value: `${humidity}%`,
-        impact: 'High humidity increases risk of hydroplaning'
-      });
-    } else {
-      factors.push({
-        factor: 'Humidity',
-        icon: <Droplets size={16} className="text-green-400" />,
-        value: `${humidity}%`,
-        impact: 'Moderate humidity has minimal impact on tire performance'
-      });
+    // Snow conditions (600-699)
+    if (weatherId >= 600 && weatherId < 700) {
+      if (weatherId < 610) {
+        // Light snow
+        gripLevel -= 30;
+      } else {
+        // Heavy snow
+        gripLevel -= 60;
+      }
     }
     
-    // Wind impact
-    if (windSpeed > 15) {
-      factors.push({
-        factor: 'Wind',
-        icon: <Wind size={16} className="text-yellow-400" />,
-        value: `${Math.round(windSpeed)} ${units === 'imperial' ? 'mph' : 'km/h'}`,
-        impact: 'Strong crosswinds may affect vehicle stability'
-      });
-    } else {
-      factors.push({
-        factor: 'Wind',
-        icon: <Wind size={16} className="text-green-400" />,
-        value: `${Math.round(windSpeed)} ${units === 'imperial' ? 'mph' : 'km/h'}`,
-        impact: 'Light winds have minimal impact on vehicle stability'
-      });
+    // Fog/mist conditions (700-799)
+    if (weatherId >= 700 && weatherId < 800) {
+      // Fog usually means damp roads
+      gripLevel -= 10;
     }
     
-    return factors;
+    // Temperature impacts
+    if (temp < 32) {
+      // Freezing
+      gripLevel -= 25;
+    } else if (temp < 45) {
+      // Cold but not freezing
+      gripLevel -= 15;
+    } else if (temp < 65) {
+      // Cool
+      gripLevel -= 5;
+    } else if (temp > 90) {
+      // Very hot (can cause greasy roads)
+      gripLevel -= 5;
+    }
+    
+    // Humidity impacts (high humidity can make roads slippery)
+    if (humidity > 90) {
+      gripLevel -= 10;
+    } else if (humidity > 75) {
+      gripLevel -= 5;
+    }
+    
+    // Ensure grip stays within 0-100 range
+    gripLevel = Math.max(0, Math.min(100, gripLevel));
+    
+    setRoadGrip(gripLevel);
   };
   
-  const tireFactors = getTirePerformanceFactors();
+  // Determine recommended tire compounds
+  const determineTireCompound = (weatherId, temp) => {
+    // Rain/snow conditions
+    const isRaining = weatherId >= 500 && weatherId < 600;
+    const isSnowing = weatherId >= 600 && weatherId < 700;
+    const isFreezing = temp <= 32;
+    const isCold = temp <= 45;
+    const isWarm = temp >= 70;
+    const isHot = temp >= 85;
+    
+    // Main compound determination logic
+    let recommended = 'all-season';
+    let alternatives = [];
+    
+    if (isSnowing || (isRaining && isFreezing)) {
+      // Snowy or icy conditions
+      recommended = 'winter';
+      alternatives = ['studded', 'all-season'];
+    } else if (isFreezing || (isCold && (isRaining || weatherId >= 700 && weatherId < 800))) {
+      // Cold and wet or misty
+      recommended = 'winter';
+      alternatives = ['all-season', 'all-terrain'];
+    } else if (isRaining) {
+      // Rainy but not freezing
+      if (weatherId >= 520) {
+        // Heavy rain
+        recommended = 'all-season';
+        alternatives = ['touring', 'winter'];
+      } else {
+        // Light/moderate rain
+        recommended = 'touring';
+        alternatives = ['all-season', 'grand-touring'];
+      }
+    } else if (isCold) {
+      // Cold but not wet
+      recommended = 'all-season';
+      alternatives = ['touring', 'winter'];
+    } else if (isHot) {
+      // Hot conditions
+      recommended = 'summer';
+      alternatives = ['grand-touring', 'performance'];
+    } else if (isWarm) {
+      // Warm, nice conditions
+      recommended = 'grand-touring';
+      alternatives = ['touring', 'performance'];
+    } else {
+      // Moderate/Default conditions
+      recommended = 'all-season';
+      alternatives = ['touring', 'grand-touring'];
+    }
+    
+    setTireCompound({
+      recommended,
+      alternatives
+    });
+  };
   
-  if (isLoading) {
+  // Calculate PSI adjustments based on conditions
+  const calculatePsiAdjustments = (temp, weatherId) => {
+    let frontAdjustment = 0;
+    let rearAdjustment = 0;
+    let description = '';
+    
+    // Cold temperature adjustments
+    if (temp < 32) {
+      // Very cold
+      frontAdjustment = 2;
+      rearAdjustment = 2;
+      description = 'Cold temperatures decrease tire pressure';
+    } else if (temp < 45) {
+      // Cold
+      frontAdjustment = 1;
+      rearAdjustment = 1;
+      description = 'Cold temperatures slightly decrease tire pressure';
+    } else if (temp > 85) {
+      // Hot (increases tire pressure)
+      frontAdjustment = -1;
+      rearAdjustment = -1;
+      description = 'Hot temperatures increase tire pressure';
+    } else if (temp > 95) {
+      // Very hot
+      frontAdjustment = -2;
+      rearAdjustment = -2;
+      description = 'High temperatures significantly increase tire pressure';
+    }
+    
+    // Wet condition adjustments
+    if (weatherId >= 500 && weatherId < 600) {
+      // Rain - lower pressure for more contact patch
+      frontAdjustment -= 1;
+      rearAdjustment -= 1;
+      
+      if (description) {
+        description += ' and wet conditions suggest slightly lower pressure for grip';
+      } else {
+        description = 'Wet conditions suggest slightly lower pressure for grip';
+      }
+    }
+    
+    setPsiAdjustments({
+      front: frontAdjustment,
+      rear: rearAdjustment,
+      description: description || 'Current conditions require no pressure adjustment'
+    });
+  };
+  
+  // Format the tire compound name for display
+  const formatCompoundName = (compound) => {
+    switch (compound) {
+      case 'winter':
+        return 'Winter';
+      case 'all-season':
+        return 'All-Season';
+      case 'touring':
+        return 'Touring';
+      case 'grand-touring':
+        return 'Grand Touring';
+      case 'summer':
+        return 'Summer';
+      case 'performance':
+        return 'Performance';
+      case 'all-terrain':
+        return 'All-Terrain';
+      case 'studded':
+        return 'Studded Winter';
+      default:
+        return compound;
+    }
+  };
+  
+  // Get the grip status text and color
+  const getGripStatus = () => {
+    if (roadGrip >= 80) {
+      return { text: 'Excellent', color: 'text-green-400' };
+    } else if (roadGrip >= 60) {
+      return { text: 'Good', color: 'text-green-400' };
+    } else if (roadGrip >= 40) {
+      return { text: 'Moderate', color: 'text-amber-400' };
+    } else if (roadGrip >= 20) {
+      return { text: 'Poor', color: 'text-orange-400' };
+    } else {
+      return { text: 'Critical', color: 'text-red-400' };
+    }
+  };
+  
+  // Generate F1-style tires graphic with color coding
+  const TireIcon = ({ compound }) => {
+    let color;
+    
+    switch (compound) {
+      case 'winter':
+        color = 'bg-blue-500';
+        break;
+      case 'all-season':
+        color = 'bg-green-500';
+        break;
+      case 'touring':
+        color = 'bg-teal-500';
+        break;
+      case 'grand-touring':
+        color = 'bg-purple-500';
+        break;
+      case 'summer':
+        color = 'bg-yellow-500';
+        break;
+      case 'performance':
+        color = 'bg-red-500';
+        break;
+      case 'all-terrain':
+        color = 'bg-amber-600';
+        break;
+      case 'studded':
+        color = 'bg-indigo-600';
+        break;
+      default:
+        color = 'bg-gray-500';
+    }
+    
     return (
-      <div className="bg-gray-800 rounded-lg p-4 animate-pulse">
-        <div className="h-4 bg-gray-700 rounded w-3/4 mb-2"></div>
-        <div className="h-4 bg-gray-700 rounded w-1/2"></div>
+      <div className="relative">
+        <div className={`w-6 h-10 ${color} rounded-full flex items-center justify-center`}>
+          <div className="w-4 h-8 bg-gray-900 rounded-full"></div>
+        </div>
+      </div>
+    );
+  };
+  
+  if (isLoading || !currentWeather) {
+    return (
+      <div className="bg-gray-800/80 backdrop-blur-sm rounded-lg p-4 animate-pulse">
+        <div className="h-4 bg-gray-700 rounded w-1/2 mb-3"></div>
+        <div className="space-y-3">
+          <div className="h-8 bg-gray-700 rounded"></div>
+          <div className="h-12 bg-gray-700 rounded"></div>
+          <div className="h-6 bg-gray-700 rounded"></div>
+        </div>
       </div>
     );
   }
   
+  const gripStatus = getGripStatus();
+  
   return (
     <div className="bg-gray-800/80 backdrop-blur-sm rounded-lg overflow-hidden">
-      {/* Main overview section */}
       <div className="p-4">
-        <div className="flex items-center justify-between mb-2">
-          <h3 className="text-sm font-semibold text-blue-400">Tire Strategy</h3>
-          <button 
-            className="text-gray-400 hover:text-white"
-            onClick={() => setExpanded(!expanded)}
-            aria-label={expanded ? "Show less" : "Show more"}
-          >
-            {expanded ? <ChevronUp size={18} /> : <ChevronDown size={18} />}
-          </button>
-        </div>
+        <h3 className="flex items-center text-blue-400 font-medium mb-3">
+          <Settings className="mr-2 h-5 w-5" />
+          Tire Strategy
+        </h3>
         
-        <div className="text-lg font-medium mb-1 text-white">{recommendedTire.name}</div>
-        <p className="text-sm text-gray-300 mb-3">{recommendedTire.description}</p>
-        
-        <div className="text-xs text-gray-400 mb-2">
-          <span className="font-medium">Recommended Temperature Range:</span> {recommendedTire.temperatureRange}
-        </div>
-        
-        <div className="h-1 w-full bg-gray-700 rounded-full mb-3">
-          <div className="h-1 bg-blue-500 rounded-full w-3/4"></div>
+        <div className="space-y-4">
+          {/* Primary tire recommendation */}
+          <div>
+            <div className="text-sm text-gray-400 mb-1">Recommended Compound</div>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <TireIcon compound={tireCompound.recommended} />
+                <div>
+                  <div className="text-lg font-bold text-white">
+                    {formatCompoundName(tireCompound.recommended)}
+                  </div>
+                  <div className="text-xs text-gray-400">
+                    for {activeLocationData?.name || 'current'} conditions
+                  </div>
+                </div>
+              </div>
+              
+              <div className="text-right">
+                <div className="text-sm mb-1">Road Grip</div>
+                <div className={`font-medium ${gripStatus.color}`}>
+                  {gripStatus.text} ({roadGrip}%)
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Pressure adjustments */}
+          <div className="pt-3 border-t border-gray-700">
+            <div className="text-sm text-gray-400 mb-1">Pressure Adjustments</div>
+            <div className="flex items-center justify-between mb-1">
+              <div className="flex items-center space-x-1">
+                <Gauge size={16} className="text-gray-400" />
+                <div className="text-sm text-white">Front Tires</div>
+              </div>
+              <div className={`text-sm font-medium ${psiAdjustments.front > 0 ? 'text-blue-400' : psiAdjustments.front < 0 ? 'text-amber-400' : 'text-gray-400'}`}>
+                {psiAdjustments.front > 0 ? `+${psiAdjustments.front}` : psiAdjustments.front} PSI
+              </div>
+            </div>
+            
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-1">
+                <Gauge size={16} className="text-gray-400" />
+                <div className="text-sm text-white">Rear Tires</div>
+              </div>
+              <div className={`text-sm font-medium ${psiAdjustments.rear > 0 ? 'text-blue-400' : psiAdjustments.rear < 0 ? 'text-amber-400' : 'text-gray-400'}`}>
+                {psiAdjustments.rear > 0 ? `+${psiAdjustments.rear}` : psiAdjustments.rear} PSI
+              </div>
+            </div>
+            
+            <div className="mt-2 text-xs text-gray-400 italic">
+              {psiAdjustments.description}
+            </div>
+          </div>
+          
+          {/* Condition factors */}
+          <div className="pt-3 border-t border-gray-700">
+            <div className="text-sm text-gray-400 mb-1">Weather Factors</div>
+            <div className="grid grid-cols-3 gap-2">
+              <div className="flex flex-col items-center p-2 bg-gray-700 rounded-md">
+                <ThermometerSnowflake size={14} className="text-blue-400 mb-1" />
+                <div className="text-xs text-center text-white">
+                  {currentWeather && currentWeather.main ? 
+                    `${Math.round(currentWeather.main.temp)}°${units === 'imperial' ? 'F' : 'C'}` : 
+                    'N/A'}
+                </div>
+              </div>
+              
+              <div className="flex flex-col items-center p-2 bg-gray-700 rounded-md">
+                <Droplets size={14} className="text-blue-400 mb-1" />
+                <div className="text-xs text-center text-white">
+                  {currentWeather && currentWeather.main ? 
+                    `${currentWeather.main.humidity}% Humidity` : 
+                    'N/A'}
+                </div>
+              </div>
+              
+              <div className="flex flex-col items-center p-2 bg-gray-700 rounded-md">
+                <Wind size={14} className="text-blue-400 mb-1" />
+                <div className="text-xs text-center text-white">
+                  {currentWeather && currentWeather.wind ? 
+                    `${Math.round(currentWeather.wind.speed)} ${units === 'imperial' ? 'mph' : 'km/h'}` : 
+                    'N/A'}
+                </div>
+              </div>
+            </div>
+          </div>
         </div>
       </div>
       
-      {/* Expanded content */}
+      {/* Expanded section with alternative compounds */}
+      <div className="bg-gray-750 border-t border-gray-700">
+        <button
+          onClick={() => setExpanded(!expanded)}
+          className="w-full p-3 flex items-center justify-center text-xs text-blue-400 hover:text-blue-300"
+        >
+          {expanded ? 'Show Less' : 'Show Alternative Compounds'}
+        </button>
+      </div>
+      
       {expanded && (
-        <div className="border-t border-gray-700 p-4">
-          <h4 className="text-sm font-medium text-gray-300 mb-2">Tire Characteristics</h4>
-          <ul className="mb-4 space-y-1">
-            {recommendedTire.characteristics.map((item, index) => (
-              <li key={index} className="text-xs text-gray-400 flex items-center">
-                <span className="mr-2 text-blue-400">•</span>
-                {item}
-              </li>
-            ))}
-          </ul>
-          
-          <h4 className="text-sm font-medium text-gray-300 mb-2">Current Weather Impact</h4>
-          <div className="space-y-2">
-            {tireFactors.map((factor, index) => (
-              <div key={index} className="flex items-center justify-between text-xs">
-                <div className="flex items-center">
-                  <span className="mr-2">{factor.icon}</span>
-                  <span className="text-gray-300">{factor.factor}:</span>
+        <div className="p-4 bg-gray-750 border-t border-gray-700">
+          <div className="text-sm text-gray-300 mb-2">Alternative Compounds</div>
+          <div className="grid grid-cols-2 gap-2">
+            {tireCompound.alternatives.map((compound, index) => (
+              <div key={index} className="flex items-center p-2 bg-gray-700 rounded-md">
+                <TireIcon compound={compound} />
+                <div className="ml-3">
+                  <div className="text-sm text-white">{formatCompoundName(compound)}</div>
+                  <div className="text-xs text-gray-400">
+                    {index === 0 ? 'Primary alternative' : 'Secondary choice'}
+                  </div>
                 </div>
-                <div className="text-gray-400">{factor.value}</div>
               </div>
             ))}
           </div>
           
-          <div className="mt-3 pt-3 border-t border-gray-700">
-            <div className="text-xs text-gray-400">
-              {tireFactors.map((factor, index) => (
-                <div key={index} className="mb-1">
-                  <span className="inline-block w-4 mr-1">{factor.icon}</span>
-                  <span>{factor.impact}</span>
-                </div>
-              ))}
-            </div>
-          </div>
-          
-          <div className="mt-3 pt-3 border-t border-gray-700">
-            <div className="text-xs text-gray-500 italic">
-              Note: This recommendation is based on general weather conditions. Check your vehicle's manual for specific tire requirements.
-            </div>
+          <div className="mt-3 text-xs text-gray-400">
+            <p>
+              Recommendations based on weather conditions, temperature, precipitation, and road conditions.
+              Consult your tire manufacturer for specific guidelines.
+            </p>
           </div>
         </div>
       )}

@@ -1,726 +1,315 @@
-/**
- * Specialized automotive-focused weather data API
- * Provides enhanced metrics specifically for driving enthusiasts
- */
-
+const express = require('express');
+const router = express.Router();
 const axios = require('axios');
 
-// Cache management to limit API calls
-const cache = {
-  data: {},
-  timestamp: {},
-  CACHE_DURATION: 15 * 60 * 1000 // 15 minutes
+// OpenWeatherMap API key
+const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY || '2379a18ee0e478c88aa7d4aa1df44410';
+
+// F1-style grip levels
+const GRIP_LEVELS = {
+  excellent: 'Excellent grip conditions with optimal track temperature',
+  good: 'Good grip with standard racing line',
+  moderate: 'Moderate grip - approaching track limits with caution advised',
+  poor: 'Poor grip - reduced traction and potential slippery sections',
+  critical: 'Critical grip - extreme caution required, minimal traction'
 };
 
+// Cache to store weather data (avoid rate limiting)
+const weatherCache = new Map();
+const CACHE_DURATION = 5 * 60 * 1000; // 5 minutes
+
+// Initialize cache with default Atlanta data
+const initializeCache = async () => {
+  try {
+    const atlantaData = await fetchWeatherData(33.749, -84.388, 'imperial');
+    weatherCache.set('33.749,-84.388', {
+      data: atlantaData,
+      timestamp: Date.now()
+    });
+    console.log('Weather cache initialized with Atlanta data');
+  } catch (error) {
+    console.error('Failed to initialize weather cache:', error);
+  }
+};
+
+initializeCache();
+
 /**
- * Retrieves enhanced automotive-focused weather data
- * 
- * @param {object} req - Express request object
- * @param {object} res - Express response object
+ * Fetch weather data from OpenWeatherMap
  */
-async function getAutomotiveWeather(req, res) {
+async function fetchWeatherData(lat, lon, units = 'imperial') {
+  try {
+    const response = await axios.get(`https://api.openweathermap.org/data/2.5/weather`, {
+      params: {
+        lat,
+        lon,
+        units,
+        appid: OPENWEATHER_API_KEY
+      }
+    });
+    
+    return response.data;
+  } catch (error) {
+    console.error('Error fetching weather data:', error.message);
+    throw error;
+  }
+}
+
+/**
+ * Get weather data with caching
+ */
+async function getWeatherData(lat, lon, units = 'imperial') {
+  const cacheKey = `${lat},${lon}`;
+  const now = Date.now();
+  
+  // Check if we have cached data and it's not expired
+  if (weatherCache.has(cacheKey)) {
+    const cachedData = weatherCache.get(cacheKey);
+    if (now - cachedData.timestamp < CACHE_DURATION) {
+      return cachedData.data;
+    }
+  }
+  
+  // If no valid cache, fetch new data
+  const freshData = await fetchWeatherData(lat, lon, units);
+  
+  // Update cache
+  weatherCache.set(cacheKey, {
+    data: freshData,
+    timestamp: now
+  });
+  
+  return freshData;
+}
+
+/**
+ * Calculate additional automotive-specific data based on weather
+ */
+function calculateAutomotiveWeatherData(weatherData, units = 'imperial') {
+  // Base data
+  const temp = weatherData.main.temp;
+  const humidity = weatherData.main.humidity;
+  const weatherId = weatherData.weather[0].id;
+  const windSpeed = weatherData.wind.speed;
+  const pressure = weatherData.main.pressure;
+  
+  // Determine precipitation and road conditions
+  const hasRain = weatherId >= 500 && weatherId < 600;
+  const hasSnow = weatherId >= 600 && weatherId < 700;
+  const hasFog = weatherId >= 700 && weatherId < 800;
+  
+  // F1-inspired grip calculation
+  let gripPercentage = 100; // Start with perfect grip
+  
+  // Weather impacts
+  if (hasRain) {
+    if (weatherId >= 502) {
+      // Heavy rain
+      gripPercentage -= 40;
+    } else {
+      // Light/moderate rain
+      gripPercentage -= 20;
+    }
+  }
+  
+  if (hasSnow) {
+    gripPercentage -= 60;
+  }
+  
+  if (hasFog) {
+    gripPercentage -= 10; // Fog typically means dampness
+  }
+  
+  // Temperature impacts
+  if (temp < 32) {
+    // Freezing - ice risk
+    gripPercentage -= 30;
+  } else if (temp < 40) {
+    // Very cold
+    gripPercentage -= 15;
+  } else if (temp < 50) {
+    // Cold
+    gripPercentage -= 5;
+  } else if (temp > 100) {
+    // Extremely hot - greasy surface
+    gripPercentage -= 8;
+  } else if (temp > 90) {
+    // Very hot - some grip loss
+    gripPercentage -= 3;
+  }
+  
+  // Humidity impacts
+  if (humidity > 90) {
+    gripPercentage -= 8;
+  } else if (humidity > 75) {
+    gripPercentage -= 3;
+  }
+  
+  // Wind impacts
+  if (windSpeed > 30) {
+    gripPercentage -= 7; // Strong winds affect vehicle stability
+  } else if (windSpeed > 20) {
+    gripPercentage -= 3;
+  }
+  
+  // Ensure grip percentage is within bounds
+  gripPercentage = Math.max(0, Math.min(100, gripPercentage));
+  
+  // Determine grip level
+  let gripLevel;
+  if (gripPercentage >= 80) {
+    gripLevel = 'excellent';
+  } else if (gripPercentage >= 60) {
+    gripLevel = 'good';
+  } else if (gripPercentage >= 40) {
+    gripLevel = 'moderate';
+  } else if (gripPercentage >= 20) {
+    gripLevel = 'poor';
+  } else {
+    gripLevel = 'critical';
+  }
+  
+  // Calculate the road temperature (typically different from air temperature)
+  // Road surface temps are typically higher than air temp in sunlight, especially when hot
+  let roadTemperature = temp;
+  const isClear = weatherId >= 800;
+  const isDaytime = weatherData.sys.sunrise < weatherData.dt && weatherData.dt < weatherData.sys.sunset;
+  
+  if (isDaytime && isClear) {
+    roadTemperature += Math.round((temp > 70) ? 15 : 10);
+  } else if (isDaytime) {
+    roadTemperature += Math.round((temp > 70) ? 8 : 5);
+  } else if (hasRain || hasSnow) {
+    roadTemperature -= 2; // Cooling effect of precipitation at night
+  }
+  
+  // Create enhanced automotive weather data
+  const automotiveData = {
+    weather: weatherData,
+    road_conditions: {
+      grip_percentage: gripPercentage,
+      grip_level: gripLevel,
+      grip_description: GRIP_LEVELS[gripLevel],
+      road_temperature: roadTemperature,
+      road_temperature_unit: units === 'imperial' ? 'F' : 'C',
+      precipitation: hasRain ? 'rain' : hasSnow ? 'snow' : 'none',
+      precipitation_intensity: hasRain || hasSnow ? 
+        (weatherId % 10 >= 2 ? 'heavy' : weatherId % 10 >= 1 ? 'moderate' : 'light') : 'none',
+      visibility_reduced: hasFog || weatherData.visibility < 5000
+    },
+    driving_recommendations: {
+      reduced_speed_recommended: gripPercentage < 70,
+      increased_following_distance: gripPercentage < 80,
+      caution_level: gripPercentage < 40 ? 'high' : gripPercentage < 60 ? 'moderate' : 'low',
+      // Tire pressure adjustment (PSI) - simplistic model
+      tire_pressure_adjustment: temp < 45 ? 2 : temp > 85 ? -2 : 0
+    }
+  };
+  
+  return automotiveData;
+}
+
+// Routes
+
+/**
+ * Automotive weather API endpoint
+ * GET /api/automotive-weather?lat=33.749&lon=-84.388&units=imperial
+ */
+router.get('/', async (req, res) => {
   try {
     const { lat, lon, units = 'imperial' } = req.query;
-
+    
     if (!lat || !lon) {
       return res.status(400).json({ error: 'Latitude and longitude are required' });
     }
-
-    console.log('Automotive weather API called with params:', req.query);
-
-    // Check cache first
-    const cacheKey = `${lat}-${lon}-${units}`;
-    const now = Date.now();
     
-    if (
-      cache.data[cacheKey] && 
-      cache.timestamp[cacheKey] && 
-      now - cache.timestamp[cacheKey] < cache.CACHE_DURATION
-    ) {
-      console.log('Returning cached automotive weather data');
-      return res.json(cache.data[cacheKey]);
-    }
-
-    // Need to fetch fresh data
-    console.log(`Fetching weather data from OpenWeather for automotive calculations: lat=${lat}, lon=${lon}`);
+    // Get weather data (with caching)
+    const weatherData = await getWeatherData(lat, lon, units);
     
-    const apiKey = process.env.OPENWEATHER_API_KEY || "2379a18ee0e478c88aa7d4aa1df44410";
+    // Calculate automotive-specific data
+    const automotiveData = calculateAutomotiveWeatherData(weatherData, units);
     
-    // Get multiple data sources for better calculations
-    const [currentWeather, oneCall, forecast] = await Promise.all([
-      // Current conditions
-      axios.get(`https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&appid=${apiKey}&units=${units}`),
-      
-      // One Call API for more detailed data
-      axios.get(`https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&appid=${apiKey}&units=${units}`),
-      
-      // Forecast for trend analysis
-      axios.get(`https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${apiKey}&units=${units}`)
-    ]);
-    
-    console.log('Successfully fetched weather data from OpenWeather');
-    
-    // Extract relevant data from responses
-    const current = currentWeather.data;
-    const oneCallData = oneCall.data;
-    const forecastData = forecast.data;
-    
-    // Calculate automotive-specific weather metrics
-    const automotiveData = calculateAutomotiveMetrics(current, oneCallData, forecastData, units);
-    
-    // Update cache
-    cache.data[cacheKey] = automotiveData;
-    cache.timestamp[cacheKey] = now;
-    
-    console.log('Successfully generated automotive weather data, sending response');
-    res.json(automotiveData);
+    res.json(automotiveData.weather);
   } catch (error) {
-    console.error('Error fetching automotive weather data:', error.message);
-    res.status(500).json({ 
-      error: 'Failed to fetch automotive weather data',
-      message: error.message
-    });
+    console.error('Error in automotive weather API:', error);
+    res.status(500).json({ error: 'Failed to retrieve weather data' });
   }
-}
+});
 
 /**
- * Calculate enhanced driving-focused weather metrics
+ * Geocoding endpoint 
+ * GET /api/geocode?query=Atlanta
  */
-function calculateAutomotiveMetrics(current, oneCall, forecast, units) {
-  // Current standard weather data
-  const airTemp = current.main.temp;
-  const feelsLike = current.main.feels_like;
-  const humidity = current.main.humidity;
-  const pressure = current.main.pressure;
-  const windSpeed = current.wind.speed;
-  const windDegree = current.wind.deg;
-  const cloudCover = current.clouds.all;
-  const condition = current.weather[0].main;
-  const visibility = current.visibility / 1000; // convert to km
-
-  // Get rain and snow if available
-  const rainVolume = current.rain ? current.rain['1h'] || 0 : 0;
-  const snowVolume = current.snow ? current.snow['1h'] || 0 : 0;
-  
-  // Calculate track surface temperature
-  const trackTemp = calculateTrackTemp(airTemp, cloudCover, condition, units);
-  
-  // UV Index from OneCall API if available
-  const uvIndex = oneCall.current.uvi || 0;
-  
-  // Dew point
-  const dewPoint = oneCall.current.dew_point || calculateDewPoint(airTemp, humidity, units);
-  
-  // Calculate grip level
-  const gripIndex = calculateGripLevel(condition, trackTemp, humidity, rainVolume, snowVolume);
-  
-  // Calculate track evolution 
-  const trackEvolution = calculateTrackEvolution(condition, rainVolume, snowVolume, cloudCover);
-  
-  // Tire data calculations
-  const tireData = calculateTireMetrics(trackTemp, airTemp, condition, humidity, rainVolume);
-  
-  // Calculate performance impact metrics
-  const performanceData = calculatePerformanceImpact(
-    airTemp, 
-    pressure, 
-    humidity, 
-    windSpeed, 
-    windDegree, 
-    condition, 
-    visibility,
-    rainVolume,
-    snowVolume
-  );
-  
-  // Precipitation probability from OneCall
-  const precipProbability = oneCall.hourly[0].pop * 100; // Convert to percentage
-  
-  // Get forecast trend data
-  const forecastTrend = analyzeForecastTrend(forecast);
-  
-  return {
-    lat: current.coord.lat,
-    lon: current.coord.lon,
-    timezone: oneCall.timezone,
-    timezone_offset: oneCall.timezone_offset,
-    location: {
-      name: current.name,
-      country: current.sys.country
-    },
-    currentConditions: {
-      dt: current.dt,
-      sunrise: current.sys.sunrise,
-      sunset: current.sys.sunset,
-      temp: airTemp,
-      feels_like: feelsLike,
-      pressure,
-      humidity,
-      dew_point: dewPoint,
-      uvi: uvIndex,
-      clouds: cloudCover,
-      visibility,
-      wind_speed: windSpeed,
-      wind_deg: windDegree,
-      wind_direction: getWindDirection(windDegree),
-      weather: current.weather,
-      rain: rainVolume,
-      snow: snowVolume,
-      is_day: isDaytime(current.dt, current.sys.sunrise, current.sys.sunset)
-    },
-    drivingConditions: {
-      track_temp: trackTemp,
-      track_condition: gripIndex.condition,
-      grip_index: gripIndex.index,
-      grip_assessment: assessGrip(gripIndex.index),
-      track_evolution: trackEvolution,
-      track_evolution_trend: assessEvolution(trackEvolution),
-      precipitation_probability: precipProbability,
-      precipitation_intensity: assessPrecipitation(rainVolume, snowVolume),
-    },
-    tireData,
-    performanceData,
-    alertLevel: calculateAlertLevel(condition, visibility, windSpeed, rainVolume, snowVolume),
-    drivingRecommendation: generateDrivingRecommendation(
-      condition, 
-      trackTemp, 
-      gripIndex, 
-      visibility, 
-      performanceData.crosswind_effect
-    ),
-    forecastTrend
-  };
-}
-
-/**
- * Calculate estimated track temperature based on weather conditions
- */
-function calculateTrackTemp(airTemp, cloudCover, condition, units) {
-  // Base calculation: track temp is generally warmer than air temp
-  let trackTemp = airTemp;
-  
-  // Factor by which track warms above air temp depends on units
-  const tempFactor = units === 'imperial' ? 20 : 11; // 20°F or 11°C
-  
-  // Sunlight warms the track (more with less cloud cover)
-  const sunExposureFactor = (100 - cloudCover) / 100;
-  
-  if (condition === 'Clear') {
-    // Clear sky - maximum heating
-    trackTemp += tempFactor * sunExposureFactor;
-  } else if (condition === 'Clouds' && cloudCover < 70) {
-    // Partly cloudy still allows some heating
-    trackTemp += (tempFactor / 2) * sunExposureFactor;
-  }
-  
-  // Rain and snow cool the surface
-  if (condition === 'Rain' || condition === 'Drizzle') {
-    const rainCooling = units === 'imperial' ? 5 : 2.8; // 5°F or 2.8°C
-    trackTemp -= rainCooling;
-  }
-  
-  if (condition === 'Snow') {
-    const freezingTemp = units === 'imperial' ? 32 : 0;
-    trackTemp = Math.min(trackTemp, freezingTemp); // Snow keeps surface at or below freezing
-  }
-  
-  return Math.round(trackTemp);
-}
-
-/**
- * Calculate grip level based on track conditions
- */
-function calculateGripLevel(condition, trackTemp, humidity, rainVolume, snowVolume) {
-  let gripIndex = 0;
-  let gripCondition = 'Dry';
-  
-  // Conditions that affect grip
-  if ((condition === 'Rain' || condition === 'Drizzle' || condition === 'Thunderstorm') && rainVolume > 0.5) {
-    gripIndex = 40; // Wet conditions have poor grip
-    gripCondition = 'Wet';
-  } else if ((condition === 'Rain' || condition === 'Drizzle') && rainVolume > 0) {
-    gripIndex = 60; // Light rain
-    gripCondition = 'Damp';
-  } else if (condition === 'Snow' || snowVolume > 0) {
-    gripIndex = 20; // Snow has very poor grip
-    gripCondition = 'Snow-covered';
-  } else if (condition === 'Mist' || condition === 'Fog' || humidity > 90) {
-    gripIndex = 70; // Damp has reduced grip
-    gripCondition = 'Damp';
-  } else {
-    // Dry conditions, but temperature affects grip
-    if (trackTemp >= 70 && trackTemp <= 110) {
-      gripIndex = 100; // Ideal temperature range
-      gripCondition = 'Optimal';
-    } else if (trackTemp > 110) {
-      gripIndex = 85; // Too hot - rubber degrades
-      gripCondition = 'Hot';
-    } else if (trackTemp >= 50) {
-      gripIndex = 90; // Slightly cool
-      gripCondition = 'Good';
-    } else {
-      gripIndex = 80; // Too cold
-      gripCondition = 'Cold';
-    }
-  }
-  
-  return { index: gripIndex, condition: gripCondition };
-}
-
-/**
- * Calculate track evolution (rubber buildup)
- */
-function calculateTrackEvolution(condition, rainVolume, snowVolume, cloudCover) {
-  // Base evolution
-  let evolution = 70;
-  
-  // Rain washes away rubber
-  if ((condition === 'Rain' || condition === 'Drizzle' || condition === 'Thunderstorm') && rainVolume > 0.5) {
-    evolution = 30; // Heavy rain washes away rubber
-  } else if ((condition === 'Rain' || condition === 'Drizzle') && rainVolume > 0) {
-    evolution = 50; // Light rain partially washes away rubber
-  } else if (condition === 'Snow' || snowVolume > 0) {
-    evolution = 20; // Snow/ice cover
-  }
-  
-  return evolution;
-}
-
-/**
- * Calculate tire-related metrics
- */
-function calculateTireMetrics(trackTemp, airTemp, condition, humidity, rainVolume) {
-  // Base warmup times (minutes)
-  let warmupTimes = {
-    sport: 4,
-    street: 7,
-    all_season: 10
-  };
-  
-  // Temperature adjustment
-  let tempFactor = 1.0;
-  
-  if (airTemp < 40) {
-    tempFactor = 1.7; // Cold makes it much harder to warm tires
-  } else if (airTemp < 60) {
-    tempFactor = 1.3; // Cool makes it harder to warm tires
-  } else if (airTemp > 85) {
-    tempFactor = 0.8; // Hot makes it easier to warm tires
-  }
-  
-  // Condition adjustment
-  let conditionFactor = 1.0;
-  
-  if ((condition === 'Rain' || condition === 'Drizzle') && rainVolume > 0) {
-    conditionFactor = 1.5; // Wet makes it harder to warm tires
-  } else if (condition === 'Snow') {
-    conditionFactor = 2.0; // Snow makes it much harder to warm tires
-  }
-  
-  // Calculate tire surface and core temperatures
-  const tireSurfaceTemp = Math.round(trackTemp * 1.05);
-  const tireCoreTemp = Math.round(trackTemp * 0.95);
-  
-  // Determine optimal tire compound
-  let optimalCompound;
-  
-  if (condition === 'Rain' || condition === 'Drizzle' || condition === 'Thunderstorm') {
-    optimalCompound = 'Wet';
-  } else if (condition === 'Snow') {
-    optimalCompound = 'Winter';
-  } else if (trackTemp < 60) {
-    optimalCompound = 'Soft';
-  } else if (trackTemp > 100) {
-    optimalCompound = 'Hard';
-  } else {
-    optimalCompound = 'Medium';
-  }
-  
-  // Calculate adjusted warmup times
-  for (const tireType in warmupTimes) {
-    warmupTimes[tireType] = Math.round(warmupTimes[tireType] * tempFactor * conditionFactor);
-  }
-  
-  // Estimated tire wear rate (1-10 scale, 10 being fastest wear)
-  let tireWearRate = 5; // Default medium wear
-  
-  if (trackTemp > 100) {
-    tireWearRate = 8; // Hot temps increase wear
-  } else if (trackTemp < 40) {
-    tireWearRate = 3; // Cold reduces wear but also grip
-  }
-  
-  if (condition === 'Rain' || condition === 'Drizzle') {
-    tireWearRate = 4; // Wet conditions generally reduce wear
-  }
-  
-  return {
-    tire_surface_temp: tireSurfaceTemp,
-    tire_core_temp: tireCoreTemp,
-    optimal_compound: optimalCompound,
-    warmup_times: warmupTimes,
-    wear_rate: tireWearRate,
-    wear_pattern: getTireWearPattern(trackTemp, condition, humidity)
-  };
-}
-
-/**
- * Calculate expected tire wear pattern
- */
-function getTireWearPattern(trackTemp, condition, humidity) {
-  if (condition === 'Rain' || condition === 'Drizzle') {
-    return 'Even with reduced overall wear';
-  }
-  
-  if (trackTemp > 100) {
-    return 'Accelerated center wear with thermal degradation';
-  }
-  
-  if (trackTemp < 40) {
-    return 'Uneven wear with limited contact patch';
-  }
-  
-  if (humidity > 80 && trackTemp > 70) {
-    return 'Tendency toward shoulder wear in humid conditions';
-  }
-  
-  return 'Balanced wear pattern expected';
-}
-
-/**
- * Calculate performance impact metrics
- */
-function calculatePerformanceImpact(
-  airTemp, 
-  pressure, 
-  humidity, 
-  windSpeed, 
-  windDegree, 
-  condition, 
-  visibility,
-  rainVolume,
-  snowVolume
-) {
-  // Calculate power adjustment based on air density
-  // Standard conditions
-  const standardTemp = 59; // 15°C or 59°F
-  const standardPressure = 1013.25; // hPa
-  const standardHumidity = 0; // Dry air
-  
-  // Simple air density calculation (simplified)
-  const tempFactor = (standardTemp + 460) / (airTemp + 460); // Convert to Rankine
-  const pressureFactor = pressure / standardPressure;
-  const humidityFactor = 1 - (humidity / 100) * 0.02; // Simplified - humidity reduces air density
-  
-  const airDensityRatio = (tempFactor * pressureFactor * humidityFactor);
-  
-  // Power is roughly proportional to air density
-  const powerChange = (airDensityRatio - 1) * 100;
-  
-  // Calculate braking efficiency
-  let brakingEfficiency = 1.0;
-  
-  // Conditions that affect braking
-  if ((condition === 'Rain' || condition === 'Drizzle' || condition === 'Thunderstorm') && rainVolume > 0.5) {
-    brakingEfficiency = 0.7; // Wet conditions reduce braking significantly
-  } else if ((condition === 'Rain' || condition === 'Drizzle') && rainVolume > 0) {
-    brakingEfficiency = 0.8; // Light rain reduces braking
-  } else if (condition === 'Snow' || snowVolume > 0) {
-    brakingEfficiency = 0.4; // Snow severely reduces braking
-  } else if (condition === 'Mist' || condition === 'Fog') {
-    brakingEfficiency = 0.9; // Slightly reduced in damp conditions
-  }
-  
-  // Calculate crosswind effect
-  let crosswindEffect;
-  
-  if (windSpeed < 5) {
-    crosswindEffect = 'Negligible';
-  } else if (windSpeed < 10) {
-    crosswindEffect = 'Minimal';
-  } else if (windSpeed < 15) {
-    crosswindEffect = 'Moderate';
-  } else if (windSpeed < 25) {
-    crosswindEffect = 'Significant';
-  } else {
-    crosswindEffect = 'Severe';
-  }
-  
-  // Assess visibility
-  let visibilityAssessment;
-  
-  if (condition === 'Fog' || condition === 'Mist') {
-    visibilityAssessment = 'Poor';
-  } else if (condition === 'Rain' || condition === 'Drizzle' || condition === 'Thunderstorm' || condition === 'Snow') {
-    visibilityAssessment = 'Reduced';
-  } else if (visibility < 2) {
-    visibilityAssessment = 'Poor';
-  } else if (visibility < 5) {
-    visibilityAssessment = 'Moderate';
-  } else {
-    visibilityAssessment = 'Excellent';
-  }
-  
-  return {
-    power_adjustment: parseFloat(powerChange.toFixed(1)), 
-    braking_efficiency: parseFloat((brakingEfficiency * 100).toFixed(0)),
-    cornering_grip: gripAssessmentToValue(assessGrip(calculateGripLevel(condition, airTemp, humidity, rainVolume, snowVolume).index)),
-    crosswind_effect: crosswindEffect,
-    visibility: visibilityAssessment
-  };
-}
-
-/**
- * Map grip assessment to numeric value
- */
-function gripAssessmentToValue(assessment) {
-  const mapping = {
-    'Excellent': 95,
-    'Good': 85,
-    'Moderate': 70,
-    'Poor': 50,
-    'Very Poor': 30
-  };
-  
-  return mapping[assessment] || 70;
-}
-
-/**
- * Calculate alert level based on severe weather conditions
- */
-function calculateAlertLevel(condition, visibility, windSpeed, rainVolume, snowVolume) {
-  // Start with no alert
-  let alertLevel = 'None';
-  
-  // Check for severe conditions
-  if (condition === 'Thunderstorm' || 
-      condition === 'Tornado' || 
-      windSpeed > 30 || 
-      visibility < 0.5 || 
-      rainVolume > 10 || 
-      snowVolume > 5) {
-    alertLevel = 'Severe';
-  } 
-  // Check for moderate alerts
-  else if (condition === 'Snow' || 
-           windSpeed > 20 || 
-           visibility < 2 || 
-           rainVolume > 5) {
-    alertLevel = 'Moderate';
-  }
-  // Check for minor alerts
-  else if (condition === 'Rain' || 
-           condition === 'Drizzle' || 
-           condition === 'Fog' || 
-           condition === 'Mist' || 
-           windSpeed > 15 || 
-           visibility < 5) {
-    alertLevel = 'Minor';
-  }
-  
-  return alertLevel;
-}
-
-/**
- * Generate driving recommendations based on conditions
- */
-function generateDrivingRecommendation(condition, trackTemp, gripIndex, visibility, crossWindEffect) {
-  if (condition === 'Thunderstorm' || visibility < 1) {
-    return "Hazardous driving conditions. Consider postponing performance driving activities. If necessary to drive, use extreme caution with significantly reduced speeds.";
-  }
-  
-  if (condition === 'Snow' || gripIndex.condition === 'Snow-covered') {
-    return "Winter conditions require specialized driving techniques. Use winter tires, gentle inputs, and increased following distances. Limit performance driving activities.";
-  }
-  
-  if ((condition === 'Rain' || condition === 'Drizzle') && gripIndex.condition === 'Wet') {
-    return "Wet conditions. Reduced grip requires smooth inputs, earlier braking points, and gentle accelerator application. Avoid standing water and be aware of hydroplaning risk.";
-  }
-  
-  if (gripIndex.condition === 'Damp') {
-    return "Damp conditions can be deceptive. Grip levels may vary throughout a journey. Exercise caution particularly in shaded areas. Smooth, progressive inputs recommended.";
-  }
-  
-  if (crossWindEffect === 'Significant' || crossWindEffect === 'Severe') {
-    return "Strong crosswinds detected. Vehicle stability may be compromised, particularly at higher speeds or when passing large vehicles. Maintain a firm grip on the steering wheel.";
-  }
-  
-  if (trackTemp < 40) {
-    return "Cold surface temperatures will limit grip, particularly in the first few miles. Extended warm-up period recommended for both vehicle and tires before spirited driving.";
-  }
-  
-  if (trackTemp > 110) {
-    return "Hot track conditions may lead to accelerated tire wear and potential overheating. Monitor temps closely during extended driving sessions and moderate pace accordingly.";
-  }
-  
-  if (gripIndex.condition === 'Optimal') {
-    return "Optimal driving conditions. Surface temperatures and grip levels ideal for performance driving. Standard reference points and techniques apply.";
-  }
-  
-  return "Standard driving conditions. No specific adjustments needed beyond regular safe driving practices.";
-}
-
-/**
- * Analyze 5-day forecast data for trend information
- */
-function analyzeForecastTrend(forecastData) {
-  const forecast = forecastData.list;
-  
-  if (!forecast || forecast.length === 0) {
-    return {
-      temperature_trend: 'Stable',
-      condition_trend: 'Stable',
-      next_precipitation: null
-    };
-  }
-  
-  // Check temperature trend
-  const startTemp = forecast[0].main.temp;
-  const midTemp = forecast[Math.floor(forecast.length / 2)].main.temp;
-  const endTemp = forecast[forecast.length - 1].main.temp;
-  
-  let temperatureTrend;
-  if (endTemp > startTemp + 5) {
-    temperatureTrend = 'Rising';
-  } else if (endTemp < startTemp - 5) {
-    temperatureTrend = 'Falling';
-  } else {
-    temperatureTrend = 'Stable';
-  }
-  
-  // Check for condition changes
-  const currentCondition = forecast[0].weather[0].main;
-  
-  // Find next precipitation
-  let nextPrecipitation = null;
-  for (let i = 1; i < forecast.length; i++) {
-    const forecastItem = forecast[i];
-    const condition = forecastItem.weather[0].main;
+router.get('/geocode', async (req, res) => {
+  try {
+    const { query } = req.query;
     
-    if (condition === 'Rain' || condition === 'Snow' || condition === 'Drizzle' || condition === 'Thunderstorm') {
-      nextPrecipitation = {
-        condition: condition,
-        time: forecastItem.dt,
-        temp: forecastItem.main.temp
-      };
-      break;
+    if (!query) {
+      return res.status(400).json({ error: 'Search query is required' });
     }
+    
+    const response = await axios.get(`https://api.openweathermap.org/geo/1.0/direct`, {
+      params: {
+        q: query,
+        limit: 5,
+        appid: OPENWEATHER_API_KEY
+      }
+    });
+    
+    // Format results
+    const results = response.data.map(location => ({
+      name: location.name,
+      state: location.state,
+      country: location.country,
+      lat: location.lat,
+      lon: location.lon
+    }));
+    
+    res.json({ results });
+  } catch (error) {
+    console.error('Error in geocoding API:', error);
+    res.status(500).json({ error: 'Failed to geocode location' });
   }
-  
-  // Check for significant condition changes
-  const conditionCounts = {};
-  forecast.forEach(item => {
-    const condition = item.weather[0].main;
-    conditionCounts[condition] = (conditionCounts[condition] || 0) + 1;
-  });
-  
-  const mainCondition = Object.keys(conditionCounts).reduce((a, b) => 
-    conditionCounts[a] > conditionCounts[b] ? a : b
-  );
-  
-  let conditionTrend;
-  if (mainCondition !== currentCondition) {
-    conditionTrend = `Changing to ${mainCondition}`;
-  } else if (nextPrecipitation) {
-    conditionTrend = `Precipitation expected`;
-  } else {
-    conditionTrend = 'Stable';
+});
+
+/**
+ * Reverse geocoding endpoint
+ * GET /api/reverse-geocode?lat=33.749&lon=-84.388
+ */
+router.get('/reverse-geocode', async (req, res) => {
+  try {
+    const { lat, lon } = req.query;
+    
+    if (!lat || !lon) {
+      return res.status(400).json({ error: 'Latitude and longitude are required' });
+    }
+    
+    const response = await axios.get(`https://api.openweathermap.org/geo/1.0/reverse`, {
+      params: {
+        lat,
+        lon,
+        limit: 1,
+        appid: OPENWEATHER_API_KEY
+      }
+    });
+    
+    if (response.data.length === 0) {
+      return res.status(404).json({ error: 'Location not found' });
+    }
+    
+    const location = response.data[0];
+    
+    res.json({
+      name: location.name,
+      state: location.state,
+      country: location.country,
+      lat: parseFloat(lat),
+      lon: parseFloat(lon)
+    });
+  } catch (error) {
+    console.error('Error in reverse geocoding API:', error);
+    res.status(500).json({ error: 'Failed to reverse geocode coordinates' });
   }
-  
-  return {
-    temperature_trend: temperatureTrend,
-    condition_trend: conditionTrend,
-    next_precipitation: nextPrecipitation
-  };
-}
+});
 
-/**
- * Convert wind direction degrees to human-readable direction
- */
-function getWindDirection(degrees) {
-  const directions = [
-    'N', 'NNE', 'NE', 'ENE', 
-    'E', 'ESE', 'SE', 'SSE', 
-    'S', 'SSW', 'SW', 'WSW', 
-    'W', 'WNW', 'NW', 'NNW'
-  ];
-  const index = Math.round(degrees / 22.5) % 16;
-  return directions[index];
-}
-
-/**
- * Determine if it's currently daytime
- */
-function isDaytime(currentTime, sunrise, sunset) {
-  return currentTime >= sunrise && currentTime < sunset;
-}
-
-/**
- * Calculate dew point if not provided
- */
-function calculateDewPoint(temp, humidity, units) {
-  // Magnus approximation
-  const a = units === 'imperial' ? 17.27 : 17.27;
-  const b = units === 'imperial' ? 237.7 : 237.7;
-  
-  // Convert to Celsius for calculation if imperial
-  let tempC = units === 'imperial' ? (temp - 32) * 5/9 : temp;
-  
-  // Calculate
-  const alpha = ((a * tempC) / (b + tempC)) + Math.log(humidity/100);
-  const dewPointC = (b * alpha) / (a - alpha);
-  
-  // Convert back to Fahrenheit if needed
-  return units === 'imperial' ? (dewPointC * 9/5) + 32 : dewPointC;
-}
-
-/**
- * Assess grip level quality
- */
-function assessGrip(gripIndex) {
-  if (gripIndex >= 90) {
-    return 'Excellent';
-  } else if (gripIndex >= 75) {
-    return 'Good';
-  } else if (gripIndex >= 50) {
-    return 'Moderate';
-  } else if (gripIndex >= 30) {
-    return 'Poor';
-  } else {
-    return 'Very Poor';
-  }
-}
-
-/**
- * Assess track evolution trend
- */
-function assessEvolution(evolutionValue) {
-  if (evolutionValue >= 80) {
-    return 'Rapid';
-  } else if (evolutionValue >= 60) {
-    return 'Steady';
-  } else if (evolutionValue >= 40) {
-    return 'Slow';
-  } else {
-    return 'Minimal';
-  }
-}
-
-/**
- * Assess precipitation intensity
- */
-function assessPrecipitation(rainVolume, snowVolume) {
-  const totalPrecip = rainVolume + snowVolume;
-  
-  if (totalPrecip === 0) {
-    return 'None';
-  } else if (totalPrecip < 1) {
-    return 'Light';
-  } else if (totalPrecip < 4) {
-    return 'Moderate';
-  } else {
-    return 'Heavy';
-  }
-}
-
-module.exports = { getAutomotiveWeather };
+module.exports = router;

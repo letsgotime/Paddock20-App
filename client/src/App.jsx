@@ -1,37 +1,31 @@
 import React from 'react';
-import { Route, Switch } from 'wouter';
-import { WeatherProvider } from './contexts/WeatherContext';
+import { Switch, Route } from "wouter";
+import WeatherPaddockDashboard from './pages/WeatherPaddockDashboard';
+import WeatherProvider from './contexts/WeatherContext';
 import LocationProvider from './contexts/LocationContext';
 import { UnitsProvider } from './contexts/UnitsContext';
-import { TileProvider } from './contexts/TileContext';
-import WeatherRouteAnalysisPage from './pages/WeatherRouteAnalysisPage';
-import WeatherPaddockDashboard from './pages/WeatherPaddockDashboard'; 
-import F1PitWallDashboard from './components/F1PitWallDashboard';  // Keep for backward compatibility
-import ExpandedTileView from './pages/ExpandedTileView';
-import { Toaster } from '@/components/ui/toaster';
 
 function App() {
-  // Check if we should use the new dashboard (you can change this based on a URL parameter or localStorage setting)
-  const useNewDashboard = false; // Set to true to use the new dashboard
-
   return (
-    <UnitsProvider>
-      <LocationProvider>
+    <LocationProvider>
+      <UnitsProvider>
         <WeatherProvider>
-          <TileProvider>
-            <div className="min-h-screen bg-gray-900 text-white">
-              <Switch>
-                <Route path="/" component={useNewDashboard ? WeatherPaddockDashboard : F1PitWallDashboard} />
-                <Route path="/new-dashboard" component={WeatherPaddockDashboard} />
-                <Route path="/route-analysis" component={WeatherRouteAnalysisPage} />
-                <Route path="/tile/:id" component={ExpandedTileView} />
-              </Switch>
-              <Toaster />
-            </div>
-          </TileProvider>
+          <div className="min-h-screen bg-gray-900 text-white">
+            <Switch>
+              <Route path="/" component={WeatherPaddockDashboard} />
+              <Route>
+                <div className="flex items-center justify-center min-h-screen">
+                  <div className="text-center">
+                    <h1 className="text-3xl font-bold mb-4">Page Not Found</h1>
+                    <p className="text-gray-400">The page you're looking for doesn't exist.</p>
+                  </div>
+                </div>
+              </Route>
+            </Switch>
+          </div>
         </WeatherProvider>
-      </LocationProvider>
-    </UnitsProvider>
+      </UnitsProvider>
+    </LocationProvider>
   );
 }
 
