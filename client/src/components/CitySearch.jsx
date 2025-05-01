@@ -15,7 +15,7 @@ const CitySearch = ({ open, onOpenChange }) => {
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState(null);
 
-  // Mocked search functionality (would normally call OpenWeather geocoding API)
+  // Real search functionality using OpenWeather geocoding API
   const searchCities = async (query) => {
     if (!query.trim()) return;
     
@@ -23,25 +23,35 @@ const CitySearch = ({ open, onOpenChange }) => {
     setError(null);
     
     try {
-      // Implement throttled API call to geocoding service
-      // Would normally use: fetch(`/api/geocode?q=${encodeURIComponent(query)}`)
-      // For now, show a few major cities to prevent API overuse
+      // Make real API call to OpenWeather geocoding API
+      const response = await fetch(`https://api.openweathermap.org/geo/1.0/direct?q=${encodeURIComponent(query)}&limit=5&appid=2379a18ee0e478c88aa7d4aa1df44410`);
       
-      const mockResults = [
-        { id: 1, name: "Atlanta", state: "GA", country: "US", coordinates: { lat: 33.749, lon: -84.388 }},
-        { id: 2, name: "Charlotte", state: "NC", country: "US", coordinates: { lat: 35.227, lon: -80.843 }},
-        { id: 3, name: "New York", state: "NY", country: "US", coordinates: { lat: 40.714, lon: -74.006 }},
-        { id: 4, name: "Los Angeles", state: "CA", country: "US", coordinates: { lat: 34.052, lon: -118.243 }},
-        { id: 5, name: "Chicago", state: "IL", country: "US", coordinates: { lat: 41.878, lon: -87.629 }},
-      ].filter(city => 
-        city.name.toLowerCase().includes(query.toLowerCase()) ||
-        city.state.toLowerCase().includes(query.toLowerCase())
-      );
+      if (!response.ok) {
+        throw new Error(`Search failed: ${response.status} ${response.statusText}`);
+      }
       
-      setSearchResults(mockResults);
+      const data = await response.json();
+      
+      // Transform the data to match our expected format
+      const formattedResults = data.map((item, index) => ({
+        id: index,
+        name: item.name,
+        state: item.state || '',
+        country: item.country,
+        coordinates: {
+          lat: item.lat,
+          lon: item.lon
+        }
+      }));
+      
+      setSearchResults(formattedResults);
+      
+      if (formattedResults.length === 0) {
+        setError("No locations found for your search. Try a different search term.");
+      }
     } catch (err) {
       console.error("Error searching cities:", err);
-      setError("Failed to search locations. Please try again.");
+      setError(`Failed to search locations: ${err.message}`);
     } finally {
       setSearching(false);
     }

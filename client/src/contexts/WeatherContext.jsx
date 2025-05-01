@@ -24,11 +24,31 @@ export function WeatherProvider({ children }) {
   const unitsContext = useUnits();
   const locationContext = useLocations();
   
+  // Cache the last requested coordinates to prevent redundant fetches
+  const lastRequestRef = useRef({ lat: null, lon: null, timestamp: 0, units: null });
+  
+  // Minimum time between fetches for the same coordinates (5 minutes = 300000ms)
+  const MIN_FETCH_INTERVAL = 300000;
+  
   // Fetch weather data - memoized to avoid recreation on renders
   const fetchWeatherData = useCallback(async (lat = DEFAULT_LOCATION.lat, lon = DEFAULT_LOCATION.lon) => {
     // Prevent concurrent fetches
     if (fetchInProgress.current) {
       console.log("Fetch already in progress, skipping...");
+      return weatherData;
+    }
+    
+    // Check if this is a duplicate request within the throttle window
+    const now = Date.now();
+    const lastRequest = lastRequestRef.current;
+    const isSameCoordinates = 
+      lastRequest.lat === lat && 
+      lastRequest.lon === lon &&
+      lastRequest.units === unitsContext.unitSystem;
+    const isWithinThrottleWindow = (now - lastRequest.timestamp) < MIN_FETCH_INTERVAL;
+    
+    if (isSameCoordinates && isWithinThrottleWindow && weatherData) {
+      console.log(`Throttling fetch for ${lat},${lon} - last fetched ${Math.round((now - lastRequest.timestamp)/1000)}s ago`);
       return weatherData;
     }
       
@@ -40,6 +60,14 @@ export function WeatherProvider({ children }) {
       if (!refreshing) {
         setLoading(true);
       }
+      
+      // Update the last request details before the fetch
+      lastRequestRef.current = {
+        lat,
+        lon,
+        units: unitsContext.unitSystem,
+        timestamp: now
+      };
       
       const response = await fetch(`/api/automotive-weather?lat=${lat}&lon=${lon}&units=${unitsContext.unitSystem}`);
       
@@ -67,7 +95,11 @@ export function WeatherProvider({ children }) {
     } finally {
       setLoading(false);
       setRefreshing(false);
-      fetchInProgress.current = false;
+      
+      // Add a small delay before allowing new fetches to prevent rapid succession calls
+      setTimeout(() => {
+        fetchInProgress.current = false;
+      }, 500);
     }
   // Removed weatherData from dependency array - it causes infinite loops
   }, [unitsContext.unitSystem, refreshing]);
@@ -113,19 +145,32 @@ export function WeatherProvider({ children }) {
   // Initial data fetch - only on mount
   useEffect(() => {
     if (!initialFetchDone.current) {
+      console.log("Performing initial weather data fetch");
       initialFetchDone.current = true;
-      fetchWeatherData();
+      
+      // Initial fetch with artificial delay to prevent race conditions
+      setTimeout(() => {
+        if (!fetchInProgress.current) {
+          fetchWeatherData().catch(console.error);
+        }
+      }, 100);
       
       // Setup periodic refresh every 15 minutes
       const refreshInterval = setInterval(() => {
         console.log("Performing scheduled refresh");
-        setRefreshing(true);
         
-        if (weatherData?.location?.coordinates) {
-          const { lat, lon } = weatherData.location.coordinates;
-          fetchWeatherData(lat, lon).catch(console.error);
+        // Only refresh if we're not already fetching
+        if (!fetchInProgress.current) {
+          setRefreshing(true);
+          
+          if (weatherData?.location?.coordinates) {
+            const { lat, lon } = weatherData.location.coordinates;
+            fetchWeatherData(lat, lon).catch(console.error);
+          } else {
+            fetchWeatherData().catch(console.error);
+          }
         } else {
-          fetchWeatherData().catch(console.error);
+          console.log("Skipping scheduled refresh - fetch already in progress");
         }
       }, 15 * 60 * 1000); // 15 minutes
       
