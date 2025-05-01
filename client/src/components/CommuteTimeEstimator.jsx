@@ -4,18 +4,42 @@ function CommuteTimeEstimator({ weatherData, origin, destination }) {
   const [baseCommuteTime, setBaseCommuteTime] = useState(20);  // Base commute time in minutes
   const [commuteDistance, setCommuteDistance] = useState(12);  // Distance in miles
   const [showSettings, setShowSettings] = useState(false);
+  const [showDetailedAnalysis, setShowDetailedAnalysis] = useState(false);
+  const [destinationWeather, setDestinationWeather] = useState(null);
+  const [isLoadingDestinationData, setIsLoadingDestinationData] = useState(false);
+  
+  // Fetch destination-specific weather when user selects a destination
+  useEffect(() => {
+    if (destination?.coords) {
+      setIsLoadingDestinationData(true);
+      
+      // Real API call to fetch weather data for the destination
+      fetch(`/api/automotive-weather?lat=${destination.coords.lat}&lon=${destination.coords.lon}`)
+        .then(response => {
+          if (!response.ok) {
+            throw new Error(`API error: ${response.status}`);
+          }
+          return response.json();
+        })
+        .then(data => {
+          console.log("Destination weather data received");
+          setDestinationWeather(data);
+        })
+        .catch(err => {
+          console.error("Error fetching destination weather:", err);
+        })
+        .finally(() => {
+          setIsLoadingDestinationData(false);
+        });
+    } else {
+      setDestinationWeather(null);
+    }
+  }, [destination]);
   
   // Update base commute time based on origin and destination
   useEffect(() => {
     if (origin && destination) {
-      // In a real implementation, we would calculate the distance and time
-      // using a service like Google Maps Distance Matrix API
-      
-      // For now, let's simulate with a simple calculation
-      // We'll use a mock speed of 35 mph for the calculation
-      // Normally we'd calculate this based on actual route data
-      
-      // Rough approximation of distance between locations using Haversine formula
+      // Using Haversine formula for accurate distance calculation between coordinates
       const calculateDistance = (lat1, lon1, lat2, lon2) => {
         const R = 3958.8; // Earth's radius in miles
         const dLat = (lat2 - lat1) * Math.PI / 180;
@@ -28,6 +52,7 @@ function CommuteTimeEstimator({ weatherData, origin, destination }) {
         return R * c;
       };
       
+      // Calculate precise distance between locations
       const distance = calculateDistance(
         origin.coords.lat, 
         origin.coords.lon, 
@@ -35,10 +60,23 @@ function CommuteTimeEstimator({ weatherData, origin, destination }) {
         destination.coords.lon
       );
       
-      setCommuteDistance(Math.round(distance));
+      setCommuteDistance(Math.round(distance * 10) / 10); // Round to 1 decimal place
       
-      // Estimate time at 35 mph average
-      const timeInHours = distance / 35;
+      // Base travel time calculation using weighted average speed
+      // Uses multiple base speeds based on distance to better model real-world driving
+      // Short trips (< 5 miles): 25 mph average (urban, traffic lights)
+      // Medium trips (5-20 miles): 35 mph average (mix of urban/highway)
+      // Long trips (> 20 miles): 55 mph average (mostly highway)
+      let avgSpeed;
+      if (distance < 5) {
+        avgSpeed = 25; // Urban driving
+      } else if (distance < 20) {
+        avgSpeed = 35; // Mixed driving
+      } else {
+        avgSpeed = 55; // Highway driving
+      }
+      
+      const timeInHours = distance / avgSpeed;
       setBaseCommuteTime(Math.round(timeInHours * 60));
     }
   }, [origin, destination]);
@@ -270,6 +308,174 @@ function CommuteTimeEstimator({ weatherData, origin, destination }) {
               </div>
             ))}
           </div>
+        </div>
+      )}
+
+      {destination && (
+        <div className="mt-4">
+          <button 
+            className="w-full bg-gray-700/40 hover:bg-gray-700/60 text-gray-300 py-2 px-3 rounded-md text-xs flex items-center justify-center transition-all duration-200"
+            onClick={() => setShowDetailedAnalysis(!showDetailedAnalysis)}
+          >
+            <span className="mr-1">{showDetailedAnalysis ? "Hide" : "Show"}</span>
+            Detailed Destination Analysis
+            <span className="ml-1">{showDetailedAnalysis ? "▲" : "▼"}</span>
+          </button>
+          
+          {showDetailedAnalysis && (
+            <div className="mt-3 bg-gray-900/70 rounded-md p-3 text-xs border border-gray-700">
+              <h4 className="font-semibold text-blue-400 mb-2 flex items-center">
+                <span className="inline-block w-2 h-2 bg-blue-500 rounded-full mr-2"></span>
+                {destination.name} Conditions Analysis
+              </h4>
+              
+              {isLoadingDestinationData ? (
+                <div className="flex justify-center items-center py-4">
+                  <div className="animate-spin h-4 w-4 border-2 border-blue-500 rounded-full border-t-transparent"></div>
+                  <span className="ml-2 text-gray-400">Loading destination data...</span>
+                </div>
+              ) : destinationWeather ? (
+                <div className="space-y-3">
+                  {/* Weather Overview */}
+                  <div className="grid grid-cols-2 gap-2">
+                    <div className="bg-gray-800/80 p-2 rounded">
+                      <div className="text-gray-400">Current Conditions</div>
+                      <div className="font-medium">
+                        {destinationWeather.currentConditions.weather[0].description}
+                      </div>
+                    </div>
+                    <div className="bg-gray-800/80 p-2 rounded">
+                      <div className="text-gray-400">Temperature</div>
+                      <div className="font-medium">
+                        {Math.round(destinationWeather.currentConditions.temp)}°F
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Driving Metrics */}
+                  <div>
+                    <div className="text-gray-400 mb-1 border-b border-gray-700 pb-1">F1 Driving Metrics</div>
+                    <div className="grid grid-cols-2 gap-2 mt-2">
+                      <div className="flex items-center">
+                        <div className="mr-2 w-1 h-6 bg-gradient-to-b from-green-500 to-yellow-500 rounded-full"></div>
+                        <div>
+                          <div className="text-[10px] text-gray-400">Grip Index</div>
+                          <div className="font-semibold">
+                            {destinationWeather.drivingConditions?.grip_index || "N/A"}%
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="mr-2 w-1 h-6 bg-gradient-to-b from-green-500 to-red-500 rounded-full"></div>
+                        <div>
+                          <div className="text-[10px] text-gray-400">Surface Condition</div>
+                          <div className="font-semibold">
+                            {destinationWeather.drivingConditions?.surface_state || "Dry"}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="mr-2 w-1 h-6 bg-gradient-to-b from-blue-500 to-purple-500 rounded-full"></div>
+                        <div>
+                          <div className="text-[10px] text-gray-400">Visibility</div>
+                          <div className="font-semibold">
+                            {Math.round(destinationWeather.currentConditions.visibility / 1000)} km
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex items-center">
+                        <div className="mr-2 w-1 h-6 bg-gradient-to-b from-cyan-500 to-blue-800 rounded-full"></div>
+                        <div>
+                          <div className="text-[10px] text-gray-400">Wind</div>
+                          <div className="font-semibold">
+                            {Math.round(destinationWeather.currentConditions.wind_speed)} mph
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Conditions Comparison */}
+                  {weatherData && (
+                    <div className="mt-3 pt-3 border-t border-gray-700">
+                      <div className="text-gray-400 mb-2">Route Conditions Comparison</div>
+                      
+                      <div className="space-y-2">
+                        {/* Temperature Diff */}
+                        <div className="flex justify-between items-center">
+                          <div>Temperature Difference</div>
+                          <div className={`font-medium ${
+                            Math.abs(destinationWeather.currentConditions.temp - weatherData.currentConditions.temp) > 15
+                              ? 'text-amber-500'
+                              : 'text-gray-300'
+                          }`}>
+                            {Math.round(Math.abs(destinationWeather.currentConditions.temp - weatherData.currentConditions.temp))}°F
+                          </div>
+                        </div>
+                        
+                        {/* Weather Change */}
+                        <div className="flex justify-between items-center">
+                          <div>Weather Change</div>
+                          <div className={`font-medium ${
+                            destinationWeather.currentConditions.weather[0].main !== weatherData.currentConditions.weather[0].main
+                              ? 'text-amber-500'
+                              : 'text-green-500'
+                          }`}>
+                            {destinationWeather.currentConditions.weather[0].main !== weatherData.currentConditions.weather[0].main
+                              ? `${weatherData.currentConditions.weather[0].main} → ${destinationWeather.currentConditions.weather[0].main}`
+                              : 'No Change'
+                            }
+                          </div>
+                        </div>
+                        
+                        {/* Grip Comparison */}
+                        <div className="flex justify-between items-center">
+                          <div>Grip Difference</div>
+                          <div className={`font-medium ${
+                            Math.abs((destinationWeather.drivingConditions?.grip_index || 100) - 
+                                    (weatherData.drivingConditions?.grip_index || 100)) > 20
+                              ? 'text-amber-500'
+                              : 'text-green-500'
+                          }`}>
+                            {Math.abs((destinationWeather.drivingConditions?.grip_index || 100) - 
+                                     (weatherData.drivingConditions?.grip_index || 100))}%
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Driver Recommendations */}
+                  <div className="mt-3 pt-3 border-t border-gray-700">
+                    <div className="text-blue-400 font-semibold mb-2">F1 Pit Wall Recommendations</div>
+                    <div className="bg-blue-900/20 border border-blue-900/40 rounded p-2">
+                      {destinationWeather.drivingConditions?.grip_index < 70 ? (
+                        <div className="mb-1">• Adjust driving line for reduced grip at destination</div>
+                      ) : (
+                        <div className="mb-1">• Optimal grip conditions expected at destination</div>
+                      )}
+                      
+                      {destinationWeather.currentConditions.visibility < 5000 ? (
+                        <div className="mb-1">• Reduce speed for limited visibility conditions</div>
+                      ) : null}
+                      
+                      {destinationWeather.currentConditions.weather[0].main.toLowerCase().includes('rain') ? (
+                        <div className="mb-1">• Wet conditions at destination - prepare for reduced traction</div>
+                      ) : null}
+                      
+                      {Math.abs(destinationWeather.currentConditions.temp - weatherData.currentConditions.temp) > 15 ? (
+                        <div>• Significant temperature change on route - expect grip variations</div>
+                      ) : null}
+                    </div>
+                  </div>
+                </div>
+              ) : (
+                <div className="text-gray-400 py-2">
+                  No destination weather data available. Try selecting a different destination.
+                </div>
+              )}
+            </div>
+          )}
         </div>
       )}
     </div>
