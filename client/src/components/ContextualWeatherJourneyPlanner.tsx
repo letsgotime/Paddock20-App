@@ -319,7 +319,7 @@ const ContextualWeatherRoutePlanner: React.FC<RoutePlannerProps> = ({
       <div className="bg-blue-900/20 px-4 py-2 flex justify-between items-center">
         <h3 className="text-blue-400 font-semibold flex items-center">
           <Route className="h-4 w-4 mr-2" />
-          <span>Contextual Weather Journey Planner</span>
+          <span>Contextual Weather Route Planner</span>
         </h3>
         <span className="text-xs text-gray-400">Road conditions forecast</span>
       </div>
@@ -328,7 +328,7 @@ const ContextualWeatherRoutePlanner: React.FC<RoutePlannerProps> = ({
         {!showPlannerResults ? (
           <div className="animate-fadein">
             <p className="text-gray-300 text-sm mb-4">
-              Plan your journey with real-time weather insights along your route to optimize driving conditions:
+              Plan your route with real-time weather insights to optimize driving conditions:
             </p>
             
             <div className="space-y-4 mb-6">
@@ -400,7 +400,7 @@ const ContextualWeatherRoutePlanner: React.FC<RoutePlannerProps> = ({
                 </div>
                 
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">Journey Duration (min)</label>
+                  <label className="block text-sm text-gray-400 mb-1">Route Duration (min)</label>
                   <div className="relative">
                     <input 
                       type="number" 
@@ -426,12 +426,12 @@ const ContextualWeatherRoutePlanner: React.FC<RoutePlannerProps> = ({
               {loadingPlan ? (
                 <>
                   <div className="animate-spin mr-2 h-4 w-4 border-2 border-white border-t-transparent rounded-full"></div>
-                  Planning Journey...
+                  Planning Route...
                 </>
               ) : (
                 <>
                   <Compass className="h-4 w-4 mr-2" />
-                  Plan Journey
+                  Plan Route
                 </>
               )}
             </button>
