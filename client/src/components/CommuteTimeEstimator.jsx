@@ -212,8 +212,45 @@ function CommuteTimeEstimator({ weatherData, origin, destination }) {
                   <span className="text-indigo-400 mr-2">🏁</span>
                   <span>To: <span className="font-medium">{destination.name}</span></span>
                 </div>
-                <div className="mt-2 text-xs text-gray-400">
-                  Distance: {commuteDistance} miles
+                
+                <div className="mt-2 p-2 border-t border-gray-700 text-xs">
+                  <div className="text-blue-400 mb-2">Route Analytics</div>
+                  <div className="grid grid-cols-2 gap-2 mb-2">
+                    <div>
+                      <div className="text-gray-400">Direct Distance:</div>
+                      <div className="font-medium">{commuteDistance} miles</div>
+                    </div>
+                    <div>
+                      <div className="text-gray-400">Terrain Type:</div>
+                      <div className="font-medium">{weatherData?.currentConditions?.elevation > 500 ? 'Hilly' : 'Flat'}</div>
+                    </div>
+                  </div>
+                  
+                  <div className="mt-3 space-y-1">
+                    <div className="text-gray-400">Destination Weather:</div>
+                    <div className="flex items-center">
+                      <span className="w-24 text-gray-400">Condition:</span>
+                      <span className="font-medium">{weatherData?.currentConditions?.weather[0]?.description || 'Unknown'}</span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="w-24 text-gray-400">Road Surface:</span>
+                      <span className="font-medium">
+                        {weatherData?.drivingConditions?.surface_condition || 
+                         (weatherData?.currentConditions?.weather[0]?.main.toLowerCase().includes('rain') ? 'Wet' : 'Dry')}
+                      </span>
+                    </div>
+                    <div className="flex items-center">
+                      <span className="w-24 text-gray-400">Grip Level:</span>
+                      <span className={`font-medium ${
+                        (weatherData?.drivingConditions?.grip_index || 100) > 80 ? 'text-green-400' : 
+                        (weatherData?.drivingConditions?.grip_index || 100) > 60 ? 'text-yellow-400' : 'text-red-400'
+                      }`}>
+                        {weatherData?.drivingConditions?.grip_index ? 
+                          `${weatherData.drivingConditions.grip_index}%` : 
+                          (weatherData?.currentConditions?.weather[0]?.main.toLowerCase().includes('rain') ? 'Reduced' : 'Optimal')}
+                      </span>
+                    </div>
+                  </div>
                 </div>
               </div>
             ) : (
