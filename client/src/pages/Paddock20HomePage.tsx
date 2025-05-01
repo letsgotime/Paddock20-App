@@ -400,11 +400,7 @@ const Paddock20HomePage: React.FC = () => {
                       <div className="absolute top-0 left-0 w-1 h-full bg-green-500"></div>
                       <div className="text-green-400/70 text-xs mb-1 font-medium uppercase tracking-wider">UV Index</div>
                       <div className="text-white text-xl font-mono font-semibold">
-                        {automotiveWeatherData && 
-                         automotiveWeatherData.conditions && 
-                         typeof automotiveWeatherData.conditions.uv_index === 'number'
-                          ? automotiveWeatherData.conditions.uv_index.toFixed(1)
-                          : "N/A"}
+                        {safeAutomotiveValue('conditions.uv_index', 'N/A')}
                       </div>
                     </div>
                     
@@ -412,11 +408,7 @@ const Paddock20HomePage: React.FC = () => {
                       <div className="absolute top-0 left-0 w-1 h-full bg-green-500"></div>
                       <div className="text-green-400/70 text-xs mb-1 font-medium uppercase tracking-wider">Dew Point</div>
                       <div className="text-white text-xl font-mono font-semibold">
-                        {automotiveWeatherData && 
-                         automotiveWeatherData.conditions && 
-                         typeof automotiveWeatherData.conditions.humidity === 'number'
-                          ? automotiveWeatherData.conditions.humidity.toFixed(1) + "%"
-                          : "N/A"}
+                        {safeAutomotiveValue('conditions.humidity', 'N/A', '%')}
                       </div>
                     </div>
                     
@@ -424,9 +416,7 @@ const Paddock20HomePage: React.FC = () => {
                       <div className="absolute top-0 left-0 w-1 h-full bg-green-500"></div>
                       <div className="text-green-400/70 text-xs mb-1 font-medium uppercase tracking-wider">Wind Speed</div>
                       <div className="text-white text-xl font-mono font-semibold">
-                        {weatherData && weatherData.wind && typeof weatherData.wind.speed === 'number'
-                          ? weatherData.wind.speed + " mph" 
-                          : "N/A"}
+                        {safeWeatherValue('wind.speed', 'N/A') + " mph"}
                       </div>
                     </div>
                   </div>
@@ -441,42 +431,31 @@ const Paddock20HomePage: React.FC = () => {
                       <div>
                         <div className="text-gray-500 text-xs mb-1">Surface Condition</div>
                         <div className="text-white text-sm font-medium">
-                          {automotiveWeatherData && 
-                           automotiveWeatherData.automotive_metrics && 
-                           automotiveWeatherData.automotive_metrics.track_surface && 
-                           automotiveWeatherData.automotive_metrics.track_surface.condition
-                            ? automotiveWeatherData.automotive_metrics.track_surface.condition
-                            : "N/A"}
+                          {safeAutomotiveValue('automotive_metrics.track_surface.condition', 'N/A')}
                         </div>
                       </div>
                       <div>
                         <div className="text-gray-500 text-xs mb-1">Grip Level</div>
                         <div className="text-white text-sm font-medium">
-                          {automotiveWeatherData && 
-                           automotiveWeatherData.automotive_metrics && 
-                           automotiveWeatherData.automotive_metrics.track_surface && 
-                           automotiveWeatherData.automotive_metrics.track_surface.grip_level
-                            ? automotiveWeatherData.automotive_metrics.track_surface.grip_level
-                            : "N/A"}
+                          {safeAutomotiveValue('automotive_metrics.track_surface.grip_level', 'N/A')}
                         </div>
                       </div>
                       <div>
                         <div className="text-gray-500 text-xs mb-1">Power Adjustment</div>
                         <div className="text-white text-sm font-medium">
-                          {automotiveWeatherData && 
-                           automotiveWeatherData.automotive_metrics && 
-                           automotiveWeatherData.automotive_metrics.drive_recommendations && 
-                           typeof automotiveWeatherData.automotive_metrics.drive_recommendations.torque_management?.recommended_percentage === 'number'
-                            ? (automotiveWeatherData.automotive_metrics.drive_recommendations.torque_management.recommended_percentage > 0 ? "+" : "") + 
-                              automotiveWeatherData.automotive_metrics.drive_recommendations.torque_management.recommended_percentage + "%"
-                            : "N/A"}
+                          {(() => {
+                            const rawValue = safeAutomotiveValue('automotive_metrics.drive_recommendations.torque_management.recommended_percentage', 'N/A');
+                            if (rawValue === 'N/A') return 'N/A';
+                            const numValue = parseFloat(rawValue);
+                            return (numValue > 0 ? "+" : "") + numValue + "%";
+                          })()}
                         </div>
                       </div>
                       <div>
                         <div className="text-gray-500 text-xs mb-1">Visibility</div>
                         <div className="text-white text-sm font-medium">
-                          {weatherData && weatherData.visibility
-                            ? (weatherData.visibility / 1609).toFixed(1) + " mi"
+                          {weatherData && weatherData.visibility || weatherDataRef.current?.visibility
+                            ? ((weatherData?.visibility ?? weatherDataRef.current?.visibility) / 1609).toFixed(1) + " mi"
                             : "N/A"}
                         </div>
                       </div>
