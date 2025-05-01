@@ -28,10 +28,9 @@ const OneTapWeatherSnapshot: React.FC<OneTapWeatherSnapshotProps> = ({
   className = ''
 }) => {
   const { 
-    weatherData, 
-    locationName,
+    weatherData,
     selectedLocation,
-    automotiveWeather 
+    automotiveWeatherData
   } = useWeather();
   
   // Initialize snapshots from localStorage if available
@@ -50,7 +49,7 @@ const OneTapWeatherSnapshot: React.FC<OneTapWeatherSnapshotProps> = ({
   
   // Function to capture the weather snapshot
   const captureSnapshot = async () => {
-    if (!weatherData || !automotiveWeather) return;
+    if (!weatherData || !automotiveWeatherData) return;
     
     setIsCapturing(true);
     
@@ -61,13 +60,13 @@ const OneTapWeatherSnapshot: React.FC<OneTapWeatherSnapshotProps> = ({
       const humidity = weatherData.main?.humidity || 0;
       const windSpeed = weatherData.wind?.speed || 0;
       const feelsLike = weatherData.main?.feels_like || temp;
-      const surfaceTemp = automotiveWeather?.roadSurfaceTemperature || temp;
+      const surfaceTemp = automotiveWeatherData?.automotive_metrics?.track_surface?.temperature || temp;
       
       // Create a new snapshot object with real API data
       const newSnapshot: WeatherSnapshot = {
         id: `snapshot-${Date.now()}`,
         timestamp: Date.now(),
-        location: locationName || 'Unknown Location',
+        location: selectedLocation?.name || 'Unknown Location',
         temperature: temp || 0,
         condition: condition,
         humidity: humidity,
@@ -164,7 +163,7 @@ const OneTapWeatherSnapshot: React.FC<OneTapWeatherSnapshotProps> = ({
   };
 
   // Return null if no weather data available
-  if (!weatherData) {
+  if (!weatherData || !automotiveWeatherData) {
     return null;
   }
 
