@@ -7,7 +7,8 @@ import ApiKeyModal from '../components/ApiKeyModal';
 import { submitApiKey } from '../services/apiKeyManager';
 import { 
   Cloud, Sun, Wind, CloudRain, Thermometer, 
-  Droplets, AlertTriangle, Gauge, Calendar, Car, Key
+  Droplets, AlertTriangle, Gauge, Calendar, Car, Key,
+  Crosshair
 } from 'lucide-react';
 
 // Mock drive quality data - would be calculated from real weather in production
@@ -321,6 +322,10 @@ const NewGTGWeatherPage: React.FC = () => {
   const [performanceAdjustments, setPerformanceAdjustments] = useState<any[]>([]);
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
   
+  // Manifestation Station style UI state
+  const [activeTab, setActiveTab] = useState<'telemetry' | 'driveWindows' | 'recommendations' | 'performance'>('telemetry');
+  const [selectedDriveWindow, setSelectedDriveWindow] = useState<any>(null);
+  
   // Add a controlled delay to ensure components load properly
   useEffect(() => {
     if (!isWeatherContextLoading) {
@@ -469,14 +474,266 @@ const NewGTGWeatherPage: React.FC = () => {
         </div>
       ) : (
         <>
-          {/* F1-style motorsport weather dashboard */}
-          <section className="mb-10" aria-labelledby="paddock-weather-heading">
-            <h2 id="paddock-weather-heading" className="apex-header-green text-xl mb-4 flex items-center">
+          {/* Weather Manifestation Command Center */}
+          <section className="mb-10" aria-labelledby="weather-manifestation-heading">
+            <h2 id="weather-manifestation-heading" className="apex-header-green text-xl mb-4 flex items-center">
               <Gauge className="h-5 w-5 mr-2 text-green-500" />
-              <span>Motorsport Weather Telemetry</span>
+              <span>Weather Manifestation Command Center</span>
             </h2>
-            <div className="rounded-lg bg-gradient-to-br from-[#111111] to-[#1a1a1a] border border-gray-800 p-6">
-              {isDataReady && <F1TelemetryWeatherStation />}
+            <div className="rounded-lg bg-gradient-to-br from-[#111111] to-[#1a1a1a] border border-gray-800">
+              {/* Interactive Navigation Tabs */}
+              <div className="flex border-b border-blue-900/30 p-2 overflow-x-auto hide-scrollbar">
+                <button
+                  className={`px-4 py-2 mr-2 rounded-t-lg ${
+                    activeTab === 'telemetry' 
+                      ? 'bg-blue-900/30 text-blue-400 border-b-2 border-blue-500' 
+                      : 'text-gray-400 hover:text-blue-400 hover:bg-blue-900/10'
+                  } transition-all flex items-center`}
+                  onClick={() => setActiveTab('telemetry')}
+                >
+                  <Gauge className="h-4 w-4 mr-2" />
+                  <span>F1 Telemetry</span>
+                </button>
+                <button
+                  className={`px-4 py-2 mr-2 rounded-t-lg ${
+                    activeTab === 'driveWindows' 
+                      ? 'bg-blue-900/30 text-blue-400 border-b-2 border-blue-500' 
+                      : 'text-gray-400 hover:text-blue-400 hover:bg-blue-900/10'
+                  } transition-all flex items-center`}
+                  onClick={() => setActiveTab('driveWindows')}
+                >
+                  <Calendar className="h-4 w-4 mr-2" />
+                  <span>Drive Windows</span>
+                </button>
+                <button
+                  className={`px-4 py-2 mr-2 rounded-t-lg ${
+                    activeTab === 'recommendations' 
+                      ? 'bg-blue-900/30 text-blue-400 border-b-2 border-blue-500' 
+                      : 'text-gray-400 hover:text-blue-400 hover:bg-blue-900/10'
+                  } transition-all flex items-center`}
+                  onClick={() => setActiveTab('recommendations')}
+                >
+                  <Car className="h-4 w-4 mr-2" />
+                  <span>Driver Recommendations</span>
+                </button>
+                <button
+                  className={`px-4 py-2 mr-2 rounded-t-lg ${
+                    activeTab === 'performance' 
+                      ? 'bg-blue-900/30 text-blue-400 border-b-2 border-blue-500' 
+                      : 'text-gray-400 hover:text-blue-400 hover:bg-blue-900/10'
+                  } transition-all flex items-center`}
+                  onClick={() => setActiveTab('performance')}
+                >
+                  <Crosshair className="h-4 w-4 mr-2" />
+                  <span>Performance Settings</span>
+                </button>
+              </div>
+              
+              {/* Tab content area */}
+              <div className="p-6">
+                {/* F1 Telemetry Tab */}
+                {activeTab === 'telemetry' && (
+                  <div className="animate-fadeIn">
+                    {isDataReady && <F1TelemetryWeatherStation />}
+                  </div>
+                )}
+                
+                {/* Drive Windows Tab */}
+                {activeTab === 'driveWindows' && (
+                  <div className="animate-fadeIn">
+                    {selectedDriveWindow ? (
+                      <div className="bg-black/30 rounded-lg p-4 border border-blue-900/30 relative">
+                        <button 
+                          onClick={() => setSelectedDriveWindow(null)}
+                          className="absolute top-2 right-2 text-gray-400 hover:text-white"
+                          aria-label="Close drive window details"
+                        >
+                          ✕
+                        </button>
+                        
+                        <div className="flex items-center mb-3">
+                          <Calendar className="h-5 w-5 mr-2 text-blue-400" />
+                          <h4 className="text-blue-400 font-bold">Drive Window: {selectedDriveWindow.day}, {selectedDriveWindow.timeRange}</h4>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                          <div className="bg-black/20 p-3 rounded-lg">
+                            <div className="text-xs text-gray-500 mb-1">Drive Quality</div>
+                            <div className="text-white">{renderStars(selectedDriveWindow.rating)}</div>
+                          </div>
+                          <div className="bg-black/20 p-3 rounded-lg">
+                            <div className="text-xs text-gray-500 mb-1">Weather</div>
+                            <div className="text-white capitalize">{selectedDriveWindow.raw.weatherDesc}</div>
+                          </div>
+                          <div className="bg-black/20 p-3 rounded-lg">
+                            <div className="text-xs text-gray-500 mb-1">Temperature</div>
+                            <div className="text-white">{Math.round(selectedDriveWindow.raw.temp)}°{units === 'imperial' ? 'F' : 'C'}</div>
+                          </div>
+                        </div>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div>
+                            <h4 className="text-gray-300 mb-2 text-sm">Recommended Drive Type:</h4>
+                            <div className="p-3 rounded-lg bg-blue-900/20 text-blue-300">
+                              {selectedDriveWindow.rating >= 4 ? 'Performance Drive - Ideal conditions for spirited driving.' : 
+                               selectedDriveWindow.rating >= 3 ? 'Leisure Drive - Good conditions for enjoying the scenery.' :
+                               selectedDriveWindow.rating >= 2 ? 'Casual Drive - Take it easy and be more cautious.' :
+                               'Essential Drive Only - Consider postponing unless necessary.'}
+                            </div>
+                          </div>
+                          <div>
+                            <h4 className="text-gray-300 mb-2 text-sm">Weather Impact:</h4>
+                            <div className="p-3 rounded-lg bg-blue-900/20 text-blue-300">
+                              Temperature: {Math.round(selectedDriveWindow.raw.temp)}°{units === 'imperial' ? 'F' : 'C'}<br />
+                              Humidity: {selectedDriveWindow.raw.humidity}%<br />
+                              Wind: {Math.round(selectedDriveWindow.raw.windSpeed)}{units === 'imperial' ? 'mph' : 'km/h'}
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="mt-6 flex justify-center">
+                          <button className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-md hover:from-blue-700 hover:to-blue-900 transition-all">
+                            Add to Driving Calendar
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="text-gray-400 mb-4">Select the optimal driving time based on weather conditions:</p>
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                          {driveWindows.length > 0 ? (
+                            driveWindows.map((window, index) => (
+                              <div 
+                                key={index} 
+                                className={`rounded-lg p-4 border bg-gradient-to-br ${window.colorClass} ${window.borderClass} hover:border-blue-500 transition-all cursor-pointer`}
+                                onClick={() => setSelectedDriveWindow(window)}
+                              >
+                                <div className="flex justify-between items-center mb-2">
+                                  <span className="text-white font-semibold">{window.day}</span>
+                                  <span className="text-gray-300 text-sm">{window.timeRange}</span>
+                                </div>
+                                <div className="mb-2">
+                                  {renderStars(window.rating)}
+                                </div>
+                                <p className="text-gray-300 text-sm mb-3">{window.description}</p>
+                                <div className="grid grid-cols-2 gap-2 text-xs text-gray-400">
+                                  <div>Temp: <span className="text-gray-300">{Math.round(window.raw.temp)}°{units === 'imperial' ? 'F' : 'C'}</span></div>
+                                  <div>Humidity: <span className="text-gray-300">{window.raw.humidity}%</span></div>
+                                  <div>Wind: <span className="text-gray-300">{Math.round(window.raw.windSpeed)}{units === 'imperial' ? 'mph' : 'km/h'}</span></div>
+                                  <div>Conditions: <span className="text-gray-300">{window.raw.weatherDesc}</span></div>
+                                </div>
+                              </div>
+                            ))
+                          ) : (
+                            <div className="col-span-3 text-center p-4 rounded-lg bg-gradient-to-br from-gray-900 to-black border border-gray-800">
+                              <p className="text-gray-400">No forecast data available to generate drive windows.</p>
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
+                  </div>
+                )}
+                
+                {/* Driver Recommendations Tab */}
+                {activeTab === 'recommendations' && (
+                  <div className="animate-fadeIn">
+                    <div className="rounded-lg border border-green-900/30 overflow-hidden mb-6">
+                      <div className="bg-green-900/20 px-4 py-2 flex justify-between items-center">
+                        <h3 className="text-green-400 font-semibold">Current Driving Tips</h3>
+                        <span className="text-xs text-gray-400">Based on current weather</span>
+                      </div>
+                      <div className="p-4 bg-black/20">
+                        <ul className="space-y-3">
+                          {drivingTips.length > 0 ? (
+                            drivingTips.map((item, index) => (
+                              <li key={index} className="flex items-start p-2 hover:bg-blue-900/10 rounded-md transition-colors group">
+                                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-900/30 flex items-center justify-center text-xs text-green-400 mr-3 mt-0.5 group-hover:bg-green-800/50">
+                                  {index + 1}
+                                </span>
+                                <div>
+                                  <span className="text-gray-300 text-sm">{item.tip}</span>
+                                  <div className="mt-1 text-xs text-gray-500 hidden group-hover:block transition-all">
+                                    <button className="bg-green-900/20 text-green-400 px-2 py-1 rounded-l border border-green-900/30">Apply</button>
+                                    <button className="bg-black/50 text-gray-400 px-2 py-1 rounded-r border border-gray-800">Ignore</button>
+                                  </div>
+                                </div>
+                              </li>
+                            ))
+                          ) : (
+                            <li className="text-gray-400">No driving tips available with current data.</li>
+                          )}
+                        </ul>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 border border-blue-900/30 rounded-lg bg-blue-900/10">
+                      <h3 className="text-blue-400 font-semibold mb-2">Add Custom Driving Goal</h3>
+                      <div className="flex items-center space-x-2">
+                        <input 
+                          type="text" 
+                          placeholder="Enter your driving goal..." 
+                          className="flex-1 bg-black/50 border border-blue-900/30 rounded px-3 py-2 text-white placeholder-gray-500 focus:border-blue-500 outline-none"
+                        />
+                        <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
+                          Add
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Performance Settings Tab */}
+                {activeTab === 'performance' && (
+                  <div className="animate-fadeIn">
+                    <div className="rounded-lg border border-blue-900/30 overflow-hidden">
+                      <div className="bg-blue-900/20 px-4 py-2 flex justify-between items-center">
+                        <h3 className="text-blue-400 font-semibold">Weather-Based Performance Settings</h3>
+                        <span className="text-xs text-gray-400">Current conditions applied</span>
+                      </div>
+                      <div className="p-4 bg-black/20">
+                        <ul className="space-y-3 mb-6">
+                          {performanceAdjustments.length > 0 ? (
+                            performanceAdjustments.map((item, index) => (
+                              <li key={index} className="flex items-start p-3 bg-black/30 rounded-md border border-blue-900/20 hover:border-blue-700/40 transition-all cursor-pointer">
+                                <span className="flex-shrink-0 w-6 h-6 rounded-full bg-blue-900/30 flex items-center justify-center text-xs text-blue-400 mr-3 mt-0.5">
+                                  {index + 1}
+                                </span>
+                                <div className="flex-1">
+                                  <span className="text-gray-300 text-sm">{item.adjustment}</span>
+                                  <div className="mt-2 flex items-center justify-between">
+                                    <div className="text-xs text-gray-500">
+                                      Apply to vehicle profile?
+                                    </div>
+                                    <div className="flex space-x-2">
+                                      <button className="text-xs bg-blue-900/30 hover:bg-blue-800/50 text-blue-400 px-2 py-1 rounded transition-colors">
+                                        Yes
+                                      </button>
+                                      <button className="text-xs bg-gray-900/30 hover:bg-gray-800/50 text-gray-400 px-2 py-1 rounded transition-colors">
+                                        No
+                                      </button>
+                                    </div>
+                                  </div>
+                                </div>
+                              </li>
+                            ))
+                          ) : (
+                            <li className="text-gray-400">No performance adjustments available.</li>
+                          )}
+                        </ul>
+                        
+                        {performanceAdjustments.length > 0 && (
+                          <div className="mt-6 flex justify-center">
+                            <button className="px-6 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-md hover:from-blue-700 hover:to-purple-700 transition-all text-sm">
+                              Apply All Recommended Settings
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </section>
           
