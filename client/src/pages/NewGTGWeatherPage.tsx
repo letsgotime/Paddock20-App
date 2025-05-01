@@ -540,10 +540,10 @@ const NewGTGWeatherPage: React.FC = () => {
                   ⟳ Synchronize Now
                 </button>
                 <button 
-                  onClick={() => setShowApiKeyModal(true)} 
+                  onClick={() => window.location.reload()} 
                   className="px-4 py-2 bg-black border border-blue-700 text-blue-400 rounded-md hover:bg-blue-900/20 transition-colors flex items-center"
                 >
-                  <Key className="h-4 w-4 mr-2" /> Use My API Key
+                  <Signal className="h-4 w-4 mr-2" /> Stop
                 </button>
               </div>
             </>
