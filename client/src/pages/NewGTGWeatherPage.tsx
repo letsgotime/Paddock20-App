@@ -8,7 +8,7 @@ import PrecipitationWidget from '../components/PrecipitationWidget';
 import NavigationLinkWidget from '../components/NavigationLinkWidget';
 import ApiKeyModal from '../components/ApiKeyModal';
 import { submitApiKey } from '../services/apiKeyManager';
-import ContextualWeatherJourneyPlanner from '../components/ContextualWeatherJourneyPlanner';
+import ContextualWeatherRoutePlanner from '../components/ContextualWeatherJourneyPlanner';
 import PersonalizedWeatherClothingRecommendations from '../components/PersonalizedWeatherClothingRecommendations';
 import EcoDrivingPerformanceTracker from '../components/EcoDrivingPerformanceTracker';
 import DetailedCommuteAnalytics from '../components/DetailedCommuteAnalytics';
@@ -612,7 +612,7 @@ const NewGTGWeatherPage: React.FC = () => {
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
               <div className="lg:col-span-1">
-                <ContextualWeatherJourneyPlanner 
+                <ContextualWeatherRoutePlanner 
                   favoriteLocations={favoriteLocations.map(loc => ({
                     id: loc.id,
                     name: loc.name,

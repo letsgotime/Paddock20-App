@@ -233,7 +233,7 @@ const WorldClockPanel: React.FC = () => {
       <div className="flex justify-between items-center mb-4">
         <div>
           <h2 className="text-blue-400 font-orbitron text-xl">🌎 Global Clocks</h2>
-          <p className="text-gray-400 text-xs">At Your World</p>
+          <p className="text-gray-400 text-xs">It's Your World</p>
         </div>
         <div className="flex space-x-2">
           {selectedCities.length < 10 && !editMode && (
