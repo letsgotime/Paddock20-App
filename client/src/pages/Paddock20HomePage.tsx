@@ -290,9 +290,9 @@ const Paddock20HomePage: React.FC = () => {
                       <div className="text-green-400/70 text-xs mb-1 font-medium uppercase tracking-wider">Dew Point</div>
                       <div className="text-white text-xl font-mono font-semibold">
                         {automotiveWeatherData && 
-                         automotiveWeatherData.weather && 
-                         typeof automotiveWeatherData.weather.dewPoint === 'number'
-                          ? automotiveWeatherData.weather.dewPoint.toFixed(1) + "°F"
+                         automotiveWeatherData.conditions && 
+                         typeof automotiveWeatherData.conditions.humidity === 'number'
+                          ? automotiveWeatherData.conditions.humidity.toFixed(1) + "%"
                           : "N/A"}
                       </div>
                     </div>
@@ -342,10 +342,10 @@ const Paddock20HomePage: React.FC = () => {
                         <div className="text-white text-sm font-medium">
                           {automotiveWeatherData && 
                            automotiveWeatherData.automotive_metrics && 
-                           automotiveWeatherData.automotive_metrics.engine_performance && 
-                           typeof automotiveWeatherData.automotive_metrics.engine_performance.power_adjustment === 'number'
-                            ? (automotiveWeatherData.automotive_metrics.engine_performance.power_adjustment > 0 ? "+" : "") + 
-                              automotiveWeatherData.automotive_metrics.engine_performance.power_adjustment + "%"
+                           automotiveWeatherData.automotive_metrics.drive_recommendations && 
+                           typeof automotiveWeatherData.automotive_metrics.drive_recommendations.power_adjustment === 'number'
+                            ? (automotiveWeatherData.automotive_metrics.drive_recommendations.power_adjustment > 0 ? "+" : "") + 
+                              automotiveWeatherData.automotive_metrics.drive_recommendations.power_adjustment + "%"
                             : "N/A"}
                         </div>
                       </div>
@@ -571,9 +571,9 @@ const Paddock20HomePage: React.FC = () => {
                       <div className="text-green-400/70 text-xs mb-1 font-medium uppercase tracking-wider">Dew Point</div>
                       <div className="text-white text-2xl font-mono font-semibold">
                         {automotiveWeatherData && 
-                        automotiveWeatherData.weather && 
-                        typeof automotiveWeatherData.weather.dewPoint === 'number'
-                          ? automotiveWeatherData.weather.dewPoint.toFixed(1) + "°F"
+                        automotiveWeatherData.conditions && 
+                        typeof automotiveWeatherData.conditions.dewPoint === 'number'
+                          ? automotiveWeatherData.conditions.dewPoint.toFixed(1) + "°F"
                           : "N/A"}
                       </div>
                     </div>
