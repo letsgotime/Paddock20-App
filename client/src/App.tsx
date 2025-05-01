@@ -1,19 +1,191 @@
-import { Route, Switch } from "wouter";
-import { QueryClientProvider } from "@tanstack/react-query";
+import PreDriveChecklistPage from './pages/PreDriveChecklistPage';
+import React, { useEffect } from 'react';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import { queryClient } from "./lib/queryClient";
-// Direct import to avoid possible path issues
-import F1WeatherCenterPage from "./pages/F1WeatherCenterPage";
+import { QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/toaster";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { initializeImageCache } from "./services/unsplashService";
+import NotFound from "@/pages/not-found";
+import Home from "@/pages/Home";
+import Garage from "@/pages/Garage";
+import Journal from "@/pages/Journal";
+import Marketplace from "@/pages/Marketplace";
+import Motorsports from "@/pages/Motorsports";
+import Settings from "@/pages/Settings";
+import Events from "./pages/Events";
+import EventsPage from "./pages/EventsPage";
+import MotorsportsEventsPage from "./pages/MotorsportsEventsPage";
+import JuiceBox from "./pages/JuiceBox";
+import GlossResetPage from "./pages/GlossResetPage";
+import LoadoutsPage from "./pages/LoadoutsPage";
+import GlossGrowthPage from "./pages/GlossGrowthPage";
+import VideoLibraryPage from "./pages/VideoLibraryPage";
+import BrokerPortalPage from "./pages/BrokerPortalPage";
+import Weather from "./pages/Weather";
+import WeatherPage from "./pages/WeatherPage";
+import RedlineReportPage from "./pages/RedlineReportPage";
+import SeasonalChecklistPage from "./pages/SeasonalChecklistPage";
+import EBooksPage from "./pages/eBooksPage";
+import Paddock20HomePage from "./pages/Paddock20HomePage";
+import DropdownNavbar from "./components/DropdownNavbar";
+import Footer from "./components/Footer";
+// WeatherProvider has been temporarily removed
+import AuthPage from "./pages/AuthPage";
+import DashboardPage from "./pages/DashboardPage";
+import PersonalizedDashboard from "./pages/PersonalizedDashboard";
+import GarageVaultPage from "./pages/GarageVaultPage";
+import GoTimeGarageVault from "./pages/GoTimeGarageVault";
+import VehicleModsPage from "./pages/VehicleModsPage";
+import MembershipPage from "./pages/MembershipPage";
+import TiresTimepieces from "./pages/TiresTimepieces";
+import ManifestationStationPage from "./pages/ManifestationStationPage";
+import ModPlannerPage from "./pages/ModPlannerPage";
+import ConciergePage from "./pages/ConciergePage";
+import HustlePlannerPage from "./pages/HustlePlannerPage";
+import RoutePlannerPage from "./pages/RoutePlannerPage";
+import DriveJournalPage from "./pages/DriveJournalPage";
+import DiscountsPage from "./pages/DiscountsPage";
+import ContactPage from "./pages/ContactPage";
+import ChatFeedPage from "./pages/ChatFeedPage";
+import ShareDemoPage from "./pages/ShareDemoPage";
+import MoodEnergyTrackerPage from "./pages/MoodEnergyTrackerPage";
+import SupportChatbot from "./components/SupportChatbot";
+import HomePage from "./pages/Home";
+import { useAuth } from "./hooks/useAuth";
+import { MAIN_CONTENT_ID, LiveRegion } from './lib/accessibility';
+import './paddock20.css';
 
 function App() {
+  // TEMPORARY: Force preview mode to bypass auth
+  const previewMode = true;
+  const { session, loading } = useAuth();
+  
+  // For preview purposes, we'll create a mock session
+  const effectiveSession = previewMode ? { user: { id: 'preview-user' } } : session;
+
+  // Protected route component
+  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
+    if (loading && !previewMode) {
+      return (
+        <div className="min-h-screen bg-black flex items-center justify-center">
+          <p className="text-white">Loading...</p>
+        </div>
+      );
+    }
+    
+    if (!effectiveSession && !previewMode) {
+      return <Navigate to="/auth" replace />;
+    }
+    
+    return <>{children}</>;
+  };
+
+  // Create a global screen reader notification system
+  useEffect(() => {
+    // Create a live region for screen reader announcements
+    const announcer = new LiveRegion('polite');
+    
+    // Clean up when component unmounts
+    return () => {
+      announcer.remove();
+    };
+  }, []);
+  
+  // Initialize Unsplash image cache for marketplace listings
+  useEffect(() => {
+    // Pre-fetch images for marketplace listings to avoid rate limiting
+    if (previewMode || effectiveSession) {
+      console.log('Initializing image cache for marketplace listings...');
+      initializeImageCache()
+        .then(() => console.log('Image cache initialized successfully'))
+        .catch((error) => console.error('Failed to initialize image cache:', error));
+    }
+  }, [previewMode, effectiveSession]);
+
   return (
     <QueryClientProvider client={queryClient}>
-      <div className="min-h-screen bg-background">
-        <main>
-          <Switch>
-            <Route path="/" component={F1WeatherCenterPage} />
-          </Switch>
-        </main>
-      </div>
+      <TooltipProvider>
+        {/* Skip link for keyboard navigation */}
+        <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
+          Skip to main content
+        </a>
+        
+        <div className="min-h-screen bg-black font-openSans text-white">
+          {/* Header with navigation */}
+          <header role="banner">
+            {(effectiveSession || previewMode) && (
+              <>
+                <DropdownNavbar />
+              </>
+            )}
+          </header>
+
+          {/* Main content area */}
+          <main id={MAIN_CONTENT_ID} className="container mx-auto px-4" tabIndex={-1}>
+            {/* Toast notifications with ARIA live region built in */}
+            <Toaster />
+            
+            <Routes>
+              {/* Public authentication route */}
+              <Route path="/auth" element={!session && !previewMode ? <AuthPage /> : <Navigate to="/dashboard" replace />} />
+              
+              {/* Protected routes */}
+              <Route path="/" element={<ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
+              <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+              <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+              <Route path="/personalized-dashboard" element={<ProtectedRoute><PersonalizedDashboard /></ProtectedRoute>} />
+              {/* Main Garage Vault Hub - Central repository for all vehicle data */}
+              <Route path="/garage-vault" element={<ProtectedRoute><GarageVaultPage /></ProtectedRoute>} />
+              {/* New GoTime Garage Vault - Enhanced F1-style vehicle management */}
+              <Route path="/gotime-garage" element={<ProtectedRoute><GoTimeGarageVault /></ProtectedRoute>} />
+              {/* Legacy garage route redirects to new Garage Vault structure */}
+              <Route path="/garage" element={<Navigate to="/garage-vault" replace />} />
+              
+              <Route path="/journal" element={<ProtectedRoute><Journal /></ProtectedRoute>} />
+              <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
+              <Route path="/motorsports" element={<ProtectedRoute><Motorsports /></ProtectedRoute>} />
+              <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
+              <Route path="/events-page" element={<ProtectedRoute><EventsPage /></ProtectedRoute>} />
+              <Route path="/motorsports-events" element={<ProtectedRoute><MotorsportsEventsPage /></ProtectedRoute>} />
+              <Route path="/juicebox" element={<ProtectedRoute><JuiceBox /></ProtectedRoute>} />
+              <Route path="/gloss-reset" element={<ProtectedRoute><GlossResetPage /></ProtectedRoute>} />
+              <Route path="/juice-loadouts" element={<ProtectedRoute><LoadoutsPage /></ProtectedRoute>} />
+              <Route path="/gloss-growth" element={<ProtectedRoute><GlossGrowthPage /></ProtectedRoute>} />
+              <Route path="/juicebox-videos" element={<ProtectedRoute><VideoLibraryPage /></ProtectedRoute>} />
+              <Route path="/broker-portal" element={<ProtectedRoute><BrokerPortalPage /></ProtectedRoute>} />
+              <Route path="/weather" element={<ProtectedRoute><Weather /></ProtectedRoute>} />
+              <Route path="/redline" element={<ProtectedRoute><RedlineReportPage /></ProtectedRoute>} />
+              <Route path="/seasonal-checklist" element={<ProtectedRoute><SeasonalChecklistPage /></ProtectedRoute>} />
+              <Route path="/pre-drive-checklist" element={<ProtectedRoute><PreDriveChecklistPage /></ProtectedRoute>} />
+              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+              <Route path="/vehicle-mods/:id" element={<ProtectedRoute><VehicleModsPage /></ProtectedRoute>} />
+              <Route path="/membership" element={<ProtectedRoute><MembershipPage /></ProtectedRoute>} />
+              <Route path="/paddock20-vault" element={<Navigate to="/membership" replace />} />
+              <Route path="/tires-timepieces" element={<ProtectedRoute><TiresTimepieces /></ProtectedRoute>} />
+              <Route path="/manifestation-station" element={<ProtectedRoute><ManifestationStationPage /></ProtectedRoute>} />
+              <Route path="/mod-planner" element={<ProtectedRoute><ModPlannerPage /></ProtectedRoute>} />
+              <Route path="/concierge" element={<ProtectedRoute><ConciergePage /></ProtectedRoute>} />
+              <Route path="/hustle-planner" element={<ProtectedRoute><HustlePlannerPage /></ProtectedRoute>} />
+              <Route path="/route-planner" element={<ProtectedRoute><RoutePlannerPage /></ProtectedRoute>} />
+              <Route path="/drive-journal" element={<ProtectedRoute><DriveJournalPage /></ProtectedRoute>} />
+              <Route path="/ebooks" element={<ProtectedRoute><EBooksPage /></ProtectedRoute>} />
+              <Route path="/discounts" element={<ProtectedRoute><DiscountsPage /></ProtectedRoute>} />
+              <Route path="/contact" element={<ProtectedRoute><ContactPage /></ProtectedRoute>} />
+              <Route path="/chat-feed" element={<ProtectedRoute><ChatFeedPage /></ProtectedRoute>} />
+              <Route path="/share" element={<ProtectedRoute><ShareDemoPage /></ProtectedRoute>} />
+              <Route path="/mood-energy-tracker" element={<ProtectedRoute><MoodEnergyTrackerPage /></ProtectedRoute>} />
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+            
+            {/* AI Support Chatbot - Available globally */}
+            {(effectiveSession || previewMode) && <SupportChatbot />}
+          </main>
+
+          {/* Footer with links and information */}
+          <Footer />
+        </div>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }

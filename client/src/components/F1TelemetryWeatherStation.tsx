@@ -229,7 +229,7 @@ const F1TelemetryWeatherStation: React.FC = () => {
   const fetchAutomotiveWeatherData = async () => {
     try {
       console.log(`F1TelemetryWeatherStation: Fetching automotive data for location ${location.lat},${location.lon}`);
-      const response = await fetch(`/api/automotive-weather?lat=${location.lat}&lon=${location.lon}`);
+      const response = await fetch(`/api/automotive-weather?lat=${location.lat}&lon=${location.lon}&units=imperial`);
       
       if (!response.ok) {
         console.error(`Automotive weather API error: ${response.status}`);
@@ -237,37 +237,47 @@ const F1TelemetryWeatherStation: React.FC = () => {
       }
       
       const data = await response.json();
-      console.log('F1TelemetryWeatherStation: Automotive data received successfully');
+      console.log('F1TelemetryWeatherStation: Automotive data received:', data.drivingConditions?.riskLevel);
       
-      if (!data) {
-        console.error('F1TelemetryWeatherStation: No automotive data received');
-        throw new Error('No automotive data received');
+      if (!data || !data.surfaces || !data.performance || !data.drivingConditions) {
+        console.error('F1TelemetryWeatherStation: Invalid automotive data structure received');
+        throw new Error('Invalid automotive data structure');
       }
       
       setAutomotiveData(data);
       return data;
     } catch (error) {
       console.error("Error fetching automotive data:", error);
-      toast({
-        title: "Weather Data Error",
-        description: "Unable to fetch automotive telemetry data. Retrying...",
-        variant: "destructive",
-      });
       
-      // Attempt to retry once after a short delay
-      setTimeout(() => {
-        console.log('F1TelemetryWeatherStation: Retrying automotive data fetch');
-        fetch(`/api/automotive-weather?lat=${location.lat}&lon=${location.lon}`)
-          .then(res => res.json())
-          .then(data => {
-            console.log('F1TelemetryWeatherStation: Retry successful, setting automotive data');
-            setAutomotiveData(data);
-          })
-          .catch(err => {
-            console.error('F1TelemetryWeatherStation: Retry failed', err);
-            throw error; // Re-throw for the outer catch handler
-          });
-      }, 2000);
+      // Set default automotive data
+      const defaultData = {
+        surfaces: {
+          asphalt: { 
+            temperature: 75,
+            condition: "Dry",
+            gripLevel: "Optimal"
+          }
+        },
+        performance: {
+          brakingPerformance: { 
+            effectiveCoefficient: 0.9,
+            heatDissipation: "Normal" 
+          },
+          aerodynamicPerformance: { 
+            efficiency: 0.92 
+          },
+          coolingEfficiency: "Normal"
+        },
+        drivingConditions: {
+          visibility: "Excellent",
+          riskLevel: "Minimal",
+          traction: "Optimal",
+          advisories: ["Ideal driving conditions", "Perfect day for spirited driving"]
+        }
+      };
+      
+      console.log('F1TelemetryWeatherStation: Setting default automotive data due to error');
+      setAutomotiveData(defaultData);
       
       toast({
         title: "Using default telemetry values",

@@ -148,7 +148,7 @@ const WorldClock = () => {
       <div className="bg-gray-900 py-2 px-4 flex justify-between items-center">
         <div className="flex items-center">
           <Clock className="h-4 w-4 text-blue-400 mr-2" />
-          <h3 className="text-gray-200 font-medium text-sm">It's Your World</h3>
+          <h3 className="text-gray-200 font-medium text-sm">World Clock</h3>
         </div>
         <div className="flex space-x-2">
           <button 
