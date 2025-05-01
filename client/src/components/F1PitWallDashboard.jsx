@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import CommuteTimeEstimator from './CommuteTimeEstimator';
 import LocationManager from './LocationManager';
-import CommuteRouteWeatherImpact from './CommuteRouteWeatherImpact';
+import WeatherImpactIndicator from './WeatherImpactIndicator';
 
 // Component for displaying a Formula 1 style gauge
 const F1Gauge = ({ value, min, max, label, units, danger = false, warning = false, optimum = false }) => {
