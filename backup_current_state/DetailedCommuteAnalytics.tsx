@@ -765,6 +765,11 @@ const DetailedCommuteAnalytics: React.FC<DetailedCommuteAnalyticsProps> = ({ loc
     }
   };
   
+  // Helper function to format time
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: 'numeric', minute: '2-digit' });
+  };
+  
   return (
     <div className="bg-black/20 p-5 rounded-lg space-y-6 animate-fadein">
       {loadingProjections ? (
