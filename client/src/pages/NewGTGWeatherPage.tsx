@@ -573,6 +573,17 @@ const NewGTGWeatherPage: React.FC = () => {
               <div className="flex border-b border-blue-900/30 p-2 overflow-x-auto hide-scrollbar">
                 <button
                   className={`px-4 py-2 mr-2 rounded-t-lg ${
+                    activeTab === 'commute' 
+                      ? 'bg-blue-900/30 text-blue-400 border-b-2 border-blue-500' 
+                      : 'text-gray-400 hover:text-blue-400 hover:bg-blue-900/10'
+                  } transition-all flex items-center`}
+                  onClick={() => setActiveTab('commute')}
+                >
+                  <Navigation className="h-4 w-4 mr-2" />
+                  <span>Commute Tracker</span>
+                </button>
+                <button
+                  className={`px-4 py-2 mr-2 rounded-t-lg ${
                     activeTab === 'telemetry' 
                       ? 'bg-blue-900/30 text-blue-400 border-b-2 border-blue-500' 
                       : 'text-gray-400 hover:text-blue-400 hover:bg-blue-900/10'
@@ -614,17 +625,6 @@ const NewGTGWeatherPage: React.FC = () => {
                 >
                   <Crosshair className="h-4 w-4 mr-2" />
                   <span>Performance Settings</span>
-                </button>
-                <button
-                  className={`px-4 py-2 mr-2 rounded-t-lg ${
-                    activeTab === 'commute' 
-                      ? 'bg-blue-900/30 text-blue-400 border-b-2 border-blue-500' 
-                      : 'text-gray-400 hover:text-blue-400 hover:bg-blue-900/10'
-                  } transition-all flex items-center`}
-                  onClick={() => setActiveTab('commute')}
-                >
-                  <Navigation className="h-4 w-4 mr-2" />
-                  <span>Commute Tracker</span>
                 </button>
               </div>
               
@@ -1048,147 +1048,244 @@ const NewGTGWeatherPage: React.FC = () => {
             </div>
           </section>
           
-          {/* Current Weather Overview Card */}
-          <section className="mb-10" aria-labelledby="current-weather-heading">
-            <h2 id="current-weather-heading" className="apex-header-green text-xl mb-4 flex items-center">
-              <Cloud className="h-5 w-5 mr-2 text-green-500" />
-              <span>Current Weather</span>
+          {/* Vehicle Weather Impact Dashboard */}
+          <section className="mb-10" aria-labelledby="vehicle-weather-dashboard-heading">
+            <h2 id="vehicle-weather-dashboard-heading" className="apex-header-green text-xl mb-4 flex items-center">
+              <Car className="h-5 w-5 mr-2 text-green-500" />
+              <span>Vehicle Weather Impact Dashboard</span>
             </h2>
-            <div className="grid grid-cols-1 lg:grid-cols-5 gap-6">
-              {/* Main weather card */}
-              <div className="lg:col-span-3 bg-gradient-to-br from-gray-900 to-black border border-gray-800 rounded-lg overflow-hidden">
-                <div className="p-5">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-xl text-white flex items-center gap-2">
-                        {location?.name || "Current Location"}
-                        {currentWeather.weather && getWeatherIcon(currentWeather.weather[0].id)}
-                      </h3>
-                      <p className="text-gray-400 capitalize">{currentWeather.weather[0].description}</p>
-                      <div className="mt-4 flex flex-wrap gap-6">
-                        <div>
-                          <p className="text-4xl font-orbitron text-blue-400">
-                            {Math.round(currentWeather.main.temp)}°{units === 'imperial' ? 'F' : 'C'}
-                          </p>
-                          <p className="text-xs text-gray-500 mt-1">
-                            Feels like {Math.round(currentWeather.main.feels_like)}°{units === 'imperial' ? 'F' : 'C'}
-                          </p>
-                        </div>
-                        <div className="flex flex-col gap-1">
-                          <div className="flex items-center gap-2">
-                            <Thermometer className="h-4 w-4 text-blue-500" />
-                            <span className="text-gray-300">High: {Math.round(currentWeather.main.temp_max)}°</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Thermometer className="h-4 w-4 text-blue-500" />
-                            <span className="text-gray-300">Low: {Math.round(currentWeather.main.temp_min)}°</span>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div className="text-right">
-                      <div className="inline-block rounded-full bg-green-900/30 border border-green-900/50 px-3 py-1">
-                        <p className="text-sm text-green-400 flex items-center">
-                          <Car className="h-3 w-3 mr-1" />
-                          Drive Rating: {renderStars(getDriveQualityRating(
-                            currentWeather.main.temp,
-                            currentWeather.main.humidity,
-                            currentWeather.wind.speed
-                          ))}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Vehicle Systems Impact Card */}
+              <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 rounded-lg overflow-hidden">
+                <div className="bg-blue-900/20 px-4 py-2 flex justify-between items-center">
+                  <h3 className="text-blue-400 font-semibold">Vehicle Systems Impact</h3>
+                  <span className="text-xs text-gray-400">Current conditions applied</span>
                 </div>
-                
-                {/* Weather metrics grid */}
-                <div className="grid grid-cols-2 sm:grid-cols-4 border-t border-gray-800">
-                  <div className="p-3 border-r border-gray-800">
-                    <div className="flex items-center gap-2">
-                      <Wind className="h-4 w-4 text-blue-500" />
-                      <p className="text-gray-400 text-sm">Wind</p>
+                <div className="p-5">
+                  <ul className="space-y-4">
+                    <li className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-blue-900/20">
+                      <div className="flex items-center">
+                        <span className="w-8 h-8 rounded-full bg-blue-900/30 flex items-center justify-center text-blue-400 mr-3">
+                          <Gauge className="h-4 w-4" />
+                        </span>
+                        <div>
+                          <h4 className="text-white text-md">Engine Performance</h4>
+                          <p className="text-xs text-gray-400">
+                            {currentWeather.main.temp < 32 ? 'Cold start may reduce efficiency' : 
+                             currentWeather.main.temp > 95 ? 'Heat affecting air density' : 
+                             'Optimal temperature range'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0">
+                        {renderStars(
+                          currentWeather.main.temp < 32 ? 3 : 
+                          currentWeather.main.temp > 95 ? 4 : 
+                          5
+                        )}
+                      </div>
+                    </li>
+                    
+                    <li className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-blue-900/20">
+                      <div className="flex items-center">
+                        <span className="w-8 h-8 rounded-full bg-blue-900/30 flex items-center justify-center text-blue-400 mr-3">
+                          <Droplets className="h-4 w-4" />
+                        </span>
+                        <div>
+                          <h4 className="text-white text-md">Fluid Systems</h4>
+                          <p className="text-xs text-gray-400">
+                            {currentWeather.main.temp < 32 ? 'Check antifreeze levels' : 
+                             currentWeather.main.temp > 95 ? 'Monitor coolant and oil temp' : 
+                             'Normal operating conditions'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0">
+                        {renderStars(
+                          currentWeather.main.temp < 32 ? 3 : 
+                          currentWeather.main.temp > 95 ? 3 : 
+                          5
+                        )}
+                      </div>
+                    </li>
+                    
+                    <li className="flex items-center justify-between p-3 bg-black/30 rounded-lg border border-blue-900/20">
+                      <div className="flex items-center">
+                        <span className="w-8 h-8 rounded-full bg-blue-900/30 flex items-center justify-center text-blue-400 mr-3">
+                          <AlertTriangle className="h-4 w-4" />
+                        </span>
+                        <div>
+                          <h4 className="text-white text-md">Battery Performance</h4>
+                          <p className="text-xs text-gray-400">
+                            {currentWeather.main.temp < 32 ? 'Cold reducing battery capacity' : 
+                             currentWeather.main.temp > 95 ? 'Heat accelerating fluid evaporation' : 
+                             'Optimal temperature range'}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex-shrink-0">
+                        {renderStars(
+                          currentWeather.main.temp < 32 ? 2 : 
+                          currentWeather.main.temp > 95 ? 3 : 
+                          5
+                        )}
+                      </div>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              
+              {/* Tire Performance Card */}
+              <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 rounded-lg overflow-hidden">
+                <div className="bg-blue-900/20 px-4 py-2 flex justify-between items-center">
+                  <h3 className="text-blue-400 font-semibold">Tire Performance Metrics</h3>
+                  <span className="text-xs text-gray-400">F1-derived analysis</span>
+                </div>
+                <div className="p-5 space-y-4">
+                  <div>
+                    <div className="flex justify-between mb-1">
+                      <span className="text-gray-400 flex items-center">
+                        <Thermometer className="h-4 w-4 mr-1 text-blue-500" />
+                        Optimal Pressure Adjustment
+                      </span>
+                      <span className="text-white font-bold">
+                        {currentWeather.main.temp < 50 ? '+2.0 psi' : 
+                         currentWeather.main.temp > 85 ? '-1.5 psi' : 
+                         'Standard'}
+                      </span>
                     </div>
-                    <p className="text-white">{Math.round(currentWeather.wind.speed)} {units === 'imperial' ? 'mph' : 'km/h'}</p>
+                    <div className="mt-2 bg-black/40 rounded-lg p-3 border border-blue-900/20">
+                      <p className="text-xs text-gray-300">
+                        {currentWeather.main.temp < 50 ? 'Cold temperature reduces tire pressure. Slight increase recommended for optimal contact patch.' : 
+                         currentWeather.main.temp > 85 ? 'Heat increases tire pressure. Slight reduction needed to prevent overinflation.' : 
+                         'Current conditions ideal for manufacturer-recommended pressure settings.'}
+                      </p>
+                    </div>
                   </div>
-                  <div className="p-3 sm:border-r border-gray-800">
-                    <div className="flex items-center gap-2">
-                      <Droplets className="h-4 w-4 text-blue-500" />
-                      <p className="text-gray-400 text-sm">Humidity</p>
+                  
+                  <div>
+                    <div className="flex justify-between mb-1">
+                      <span className="text-gray-400 flex items-center">
+                        <Gauge className="h-4 w-4 mr-1 text-blue-500" />
+                        Grip Level
+                      </span>
+                      <span className="text-white font-bold">
+                        {currentWeather.weather[0].id >= 500 && currentWeather.weather[0].id < 600 ? 'Reduced (Wet)' : 
+                         currentWeather.main.humidity > 80 ? 'Moderate (Humid)' : 
+                         'Optimal'}
+                      </span>
                     </div>
-                    <p className="text-white">{currentWeather.main.humidity}%</p>
+                    <div className="w-full bg-gray-800 rounded-full h-2 mb-1">
+                      <div 
+                        className={`h-2 rounded-full ${
+                          currentWeather.weather[0].id >= 500 && currentWeather.weather[0].id < 600 ? 'bg-yellow-500' : 
+                          currentWeather.main.humidity > 80 ? 'bg-blue-500' : 
+                          'bg-green-500'
+                        }`} 
+                        style={{ 
+                          width: `${
+                            currentWeather.weather[0].id >= 500 && currentWeather.weather[0].id < 600 ? 40 : 
+                            currentWeather.main.humidity > 80 ? 70 : 
+                            95
+                          }%` 
+                        }}
+                      ></div>
+                    </div>
+                    <p className="text-xs text-gray-400">
+                      {currentWeather.weather[0].id >= 500 && currentWeather.weather[0].id < 600 ? 'Precipitation significantly reducing traction' : 
+                       currentWeather.main.humidity > 80 ? 'High humidity affecting road surface grip' : 
+                       'Ideal conditions for maximum tire performance'}
+                    </p>
                   </div>
-                  <div className="p-3 border-t sm:border-t-0 border-r border-gray-800">
-                    <div className="flex items-center gap-2">
-                      <Cloud className="h-4 w-4 text-blue-500" />
-                      <p className="text-gray-400 text-sm">Pressure</p>
+                  
+                  <div>
+                    <div className="flex justify-between mb-1">
+                      <span className="text-gray-400 flex items-center">
+                        <Timer className="h-4 w-4 mr-1 text-blue-500" />
+                        Tire Wear Factor
+                      </span>
+                      <span className="text-white font-bold">
+                        {currentWeather.main.temp > 90 ? 'Accelerated' : 
+                         currentWeather.weather[0].id >= 500 && currentWeather.weather[0].id < 600 ? 'Uneven' : 
+                         'Normal'}
+                      </span>
                     </div>
-                    <p className="text-white">{currentWeather.main.pressure} hPa</p>
-                  </div>
-                  <div className="p-3 border-t sm:border-t-0 border-gray-800">
-                    <div className="flex items-center gap-2">
-                      <Sun className="h-4 w-4 text-yellow-500" />
-                      <p className="text-gray-400 text-sm">Visibility</p>
+                    <div className="mt-2 bg-black/40 rounded-lg p-3 border border-blue-900/20">
+                      <p className="text-xs text-gray-300">
+                        {currentWeather.main.temp > 90 ? 'Hot surface temperatures accelerate rubber compound breakdown. Monitor tread more frequently.' : 
+                         currentWeather.weather[0].id >= 500 && currentWeather.weather[0].id < 600 ? 'Wet conditions can cause hydroplaning and uneven wear patterns. Check alignment after driving in rain.' : 
+                         'Current conditions allow for normal tire wear progression.'}
+                      </p>
                     </div>
-                    <p className="text-white">{(currentWeather.visibility / 1000).toFixed(1)} km</p>
                   </div>
                 </div>
               </div>
               
-              {/* Drive quality metrics */}
-              <div className="lg:col-span-2 bg-gradient-to-br from-gray-900 to-black border border-gray-800 rounded-lg p-5">
-                <h3 className="text-green-500 text-lg font-orbitron mb-3">Drive Quality Metrics</h3>
-                <div className="space-y-4">
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <span className="text-gray-400">Road Grip</span>
-                      <span className="text-blue-400">{renderStars(Math.min(5, Math.max(1, 5 - (currentWeather.main.humidity / 20))))}</span>
+              {/* Driving Strategy Card */}
+              <div className="bg-gradient-to-br from-gray-900 to-black border border-gray-800 rounded-lg overflow-hidden">
+                <div className="bg-blue-900/20 px-4 py-2 flex justify-between items-center">
+                  <h3 className="text-blue-400 font-semibold">Weather-Optimized Driving Strategy</h3>
+                  <span className="text-xs text-gray-400">Current analysis</span>
+                </div>
+                <div className="p-5">
+                  <div className="mb-4 text-center">
+                    <div className="inline-block rounded-full bg-blue-900/30 px-5 py-2.5 border border-blue-900/50">
+                      <h4 className="text-lg font-orbitron text-blue-400">
+                        {currentWeather.weather[0].id >= 500 && currentWeather.weather[0].id < 600 ? 'Safety-Focused' : 
+                         currentWeather.weather[0].id >= 200 && currentWeather.weather[0].id < 300 ? 'Weather Avoidance' : 
+                         currentWeather.main.temp < 32 ? 'Cold Weather Protocol' :
+                         currentWeather.main.temp > 90 ? 'Heat Management' :
+                         'Performance Optimal'}
+                      </h4>
                     </div>
-                    <div className="w-full bg-gray-800 rounded-full h-1.5">
-                      <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: `${Math.min(100, 100 - (currentWeather.main.humidity))}%` }}></div>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {currentWeather.main.humidity > 80 ? 'Poor due to high humidity' : 
-                       currentWeather.main.humidity > 60 ? 'Fair grip conditions' : 'Excellent grip'}
-                    </p>
                   </div>
                   
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <span className="text-gray-400">Visibility Factor</span>
-                      <span className="text-blue-400">{renderStars(
-                        currentWeather.weather[0].id >= 700 && currentWeather.weather[0].id < 800 ? 2 :
-                        currentWeather.weather[0].id >= 300 && currentWeather.weather[0].id < 700 ? 3 :
-                        5
-                      )}</span>
-                    </div>
-                    <div className="w-full bg-gray-800 rounded-full h-1.5">
-                      <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: `${
-                        currentWeather.weather[0].id >= 700 && currentWeather.weather[0].id < 800 ? 40 :
-                        currentWeather.weather[0].id >= 300 && currentWeather.weather[0].id < 700 ? 60 :
-                        100
-                      }%` }}></div>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {currentWeather.weather[0].id >= 700 && currentWeather.weather[0].id < 800 ? 'Reduced visibility conditions' :
-                       currentWeather.weather[0].id >= 300 && currentWeather.weather[0].id < 700 ? 'Moderate visibility' :
-                       'Excellent visibility'}
-                    </p>
-                  </div>
+                  <ul className="space-y-3 mb-4">
+                    <li className="flex items-start p-3 bg-black/30 rounded-lg border border-blue-900/20">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-900/30 flex items-center justify-center text-xs text-green-400 mr-3 mt-0.5">
+                        1
+                      </span>
+                      <span className="text-gray-300 text-sm">
+                        {currentWeather.weather[0].id >= 500 && currentWeather.weather[0].id < 600 ? 'Increase following distance by 2-3x normal gap' : 
+                         currentWeather.weather[0].id >= 200 && currentWeather.weather[0].id < 300 ? 'Seek covered parking; avoid metal objects during lightning' : 
+                         currentWeather.main.temp < 32 ? 'Allow 5-7 minutes warm-up time before driving' :
+                         currentWeather.main.temp > 90 ? 'Pre-cool cabin before entry; minimize AC load during acceleration' :
+                         'Ideal conditions for spirited driving with normal safety margins'}
+                      </span>
+                    </li>
+                    
+                    <li className="flex items-start p-3 bg-black/30 rounded-lg border border-blue-900/20">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-900/30 flex items-center justify-center text-xs text-green-400 mr-3 mt-0.5">
+                        2
+                      </span>
+                      <span className="text-gray-300 text-sm">
+                        {currentWeather.weather[0].id >= 500 && currentWeather.weather[0].id < 600 ? 'Utilize gentle throttle inputs; avoid sudden braking' : 
+                         currentWeather.weather[0].id >= 200 && currentWeather.weather[0].id < 300 ? 'Be prepared for sudden visibility changes; use low beams' : 
+                         currentWeather.main.temp < 32 ? 'Anticipate reduced battery capacity and longer stopping distances' :
+                         currentWeather.main.temp > 90 ? 'Monitor coolant temperature during extended idle periods' :
+                         'Vehicle systems operating at peak efficiency; enjoy responsive handling'}
+                      </span>
+                    </li>
+                    
+                    <li className="flex items-start p-3 bg-black/30 rounded-lg border border-blue-900/20">
+                      <span className="flex-shrink-0 w-6 h-6 rounded-full bg-green-900/30 flex items-center justify-center text-xs text-green-400 mr-3 mt-0.5">
+                        3
+                      </span>
+                      <span className="text-gray-300 text-sm">
+                        {currentWeather.weather[0].id >= 500 && currentWeather.weather[0].id < 600 ? 'Stay in higher gear to reduce torque to wheels' : 
+                         currentWeather.weather[0].id >= 200 && currentWeather.weather[0].id < 300 ? 'Plan for route changes and potential traffic delays' : 
+                         currentWeather.main.temp < 32 ? 'Check tire pressure after temperature stabilization' :
+                         currentWeather.main.temp > 90 ? 'Consider shorter driving sessions with cool-down periods' :
+                         'Road surface conditions ideal for testing vehicle limits safely'}
+                      </span>
+                    </li>
+                  </ul>
                   
-                  <div>
-                    <div className="flex justify-between mb-1">
-                      <span className="text-gray-400">Comfort Rating</span>
-                      <span className="text-blue-400">{renderStars(Math.min(5, Math.max(1, 5 - Math.abs(currentWeather.main.temp - 70) / 10)))}</span>
-                    </div>
-                    <div className="w-full bg-gray-800 rounded-full h-1.5">
-                      <div className="bg-blue-500 h-1.5 rounded-full" style={{ width: `${Math.min(100, 100 - (Math.abs(currentWeather.main.temp - 70) * 3))}%` }}></div>
-                    </div>
-                    <p className="text-xs text-gray-500 mt-1">
-                      {Math.abs(currentWeather.main.temp - 70) > 20 ? 'Weather extremes affecting comfort' :
-                       Math.abs(currentWeather.main.temp - 70) > 10 ? 'Moderate comfort level' :
-                       'Ideal temperature for driving comfort'}
-                    </p>
+                  <div className="mt-4 flex justify-center">
+                    <button className="px-4 py-2 bg-blue-800/50 hover:bg-blue-700/50 text-blue-400 rounded-md border border-blue-700/30 font-medium flex items-center">
+                      <Car className="h-4 w-4 mr-2" />
+                      Apply to Active Drive
+                    </button>
                   </div>
                 </div>
               </div>
