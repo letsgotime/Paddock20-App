@@ -3,7 +3,7 @@ import { useWeather } from '../contexts/WeatherContext';
 import { Route, CalendarCheck, Compass, Thermometer, Wind, CloudRain, MapPin, Clock, AlertTriangle, Car, CheckCircle2, XCircle } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
 
-interface JourneyPlannerProps {
+interface RoutePlannerProps {
   favoriteLocations?: Array<{
     id: string | number;
     name: string;
@@ -14,7 +14,7 @@ interface JourneyPlannerProps {
   }>;
 }
 
-const ContextualWeatherJourneyPlanner: React.FC<JourneyPlannerProps> = ({
+const ContextualWeatherRoutePlanner: React.FC<RoutePlannerProps> = ({
   favoriteLocations = []
 }) => {
   const { weatherData, forecastData, unit } = useWeather();
@@ -558,4 +558,4 @@ const ContextualWeatherJourneyPlanner: React.FC<JourneyPlannerProps> = ({
   );
 };
 
-export default ContextualWeatherJourneyPlanner;
+export default ContextualWeatherRoutePlanner;
