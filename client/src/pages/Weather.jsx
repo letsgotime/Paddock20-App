@@ -2,7 +2,7 @@ import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { MAIN_CONTENT_ID } from '../lib/accessibility';
 import { useWeather } from '../contexts/WeatherContext';
 import WorldClockPanel from '../components/WorldClockPanel';
-import { getDriveRecommendations } from '../services/driveWeatherService';
+import { getDriveRecommendations } from '../services/driveRecommendations';
 import { Wind, Droplets, Thermometer, AlertTriangle } from 'lucide-react';
 
 // Lazy load the automotive weather component to improve initial loading performance
