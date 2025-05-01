@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import EventsPreview from '../components/EventsPreview';
 import OneTapWeatherSnapshot from '../components/OneTapWeatherSnapshot';
+import MotorsportsGallery from '../components/MotorsportsGallery';
 import { useWeather } from '../contexts/WeatherContext';
 import { Thermometer, Droplets, Wind, Sun, Leaf, Gauge, Cloud, ArrowUp, Compass, Timer } from 'lucide-react';
 
@@ -273,11 +274,12 @@ const Paddock20HomePage: React.FC = () => {
         <EventsPreview />
       </section>
 
-      {/* GoTime Event Gallery */}
+      {/* GoTime Motorsports Gallery - F1 Style */}
       <section className="mb-12">
         <div className="flex justify-between items-center mb-4">
-          <h2 className="font-orbitron text-blue-400 text-2xl">
-            GoTime Event Gallery
+          <h2 className="font-orbitron text-blue-400 text-2xl flex items-center">
+            <span className="inline-block w-1.5 h-6 bg-green-500 mr-2"></span>
+            GoTime Motorsports Gallery
           </h2>
           <a 
             href="https://www.instagram.com/gotimemotorsports/" 
@@ -292,67 +294,41 @@ const Paddock20HomePage: React.FC = () => {
           </a>
         </div>
         
-        <div className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg shadow-lg border border-gray-700 p-6">
-          <p className="text-blue-400 text-sm mb-4">
-            Connect directly with the latest events and activities from the GoTime Motorsports community.
-          </p>
-          
-          {/* Instagram Feed Grid */}
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
-            {/* These Instagram post previews link directly to the posts on Instagram */}
-            <a 
-              href="https://www.instagram.com/gotimemotorsports/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="block aspect-square bg-black rounded-lg overflow-hidden border border-gray-800 hover:border-blue-500 transition-colors"
-            >
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-900 to-black">
-                <span className="text-4xl">🏎️</span>
-              </div>
-            </a>
-            <a 
-              href="https://www.instagram.com/gotimemotorsports/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="block aspect-square bg-black rounded-lg overflow-hidden border border-gray-800 hover:border-blue-500 transition-colors"
-            >
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-900 to-black">
-                <span className="text-4xl">💨</span>
-              </div>
-            </a>
-            <a 
-              href="https://www.instagram.com/gotimemotorsports/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="block aspect-square bg-black rounded-lg overflow-hidden border border-gray-800 hover:border-blue-500 transition-colors"
-            >
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-900 to-black">
-                <span className="text-4xl">🔧</span>
-              </div>
-            </a>
-            <a 
-              href="https://www.instagram.com/gotimemotorsports/" 
-              target="_blank" 
-              rel="noopener noreferrer"
-              className="block aspect-square bg-black rounded-lg overflow-hidden border border-gray-800 hover:border-blue-500 transition-colors"
-            >
-              <div className="w-full h-full flex items-center justify-center bg-gradient-to-br from-gray-900 to-black">
-                <span className="text-4xl">⚡</span>
-              </div>
-            </a>
+        {/* Import the F1-inspired Motorsports Gallery component */}
+        <div className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg p-6 shadow-xl">
+          <div className="mb-4">
+            <p className="text-blue-400 text-sm">
+              Experience GoTime Motorsports events and activities through our F1-inspired gallery. 
+              Every image tells a story of performance, precision, and passion.
+            </p>
           </div>
           
-          <div className="mt-6 pt-4 border-t border-gray-800 flex justify-between items-center">
-            <p className="text-gray-400 text-sm">
-              To view our full gallery of events, races, and builds, visit our Instagram profile.
-            </p>
+          {/* Embedded Motorsports Gallery with F1 styling */}
+          <div className="mt-4">
+            <MotorsportsGallery />
+          </div>
+          
+          <div className="mt-6 pt-4 border-t border-gray-800 flex flex-col sm:flex-row justify-between gap-4 items-center">
+            <div className="flex items-center">
+              <div className="h-10 w-1 bg-green-500 mr-3"></div>
+              <div>
+                <p className="text-white text-sm font-medium">Elevating automotive excellence through community</p>
+                <p className="text-gray-400 text-xs mt-1">
+                  Exclusive drives, elite events, and motorsports culture
+                </p>
+              </div>
+            </div>
             <a 
               href="https://www.instagram.com/gotimemotorsports/" 
               target="_blank"
               rel="noopener noreferrer" 
-              className="bg-gradient-to-r from-purple-600 to-pink-600 text-white text-sm px-4 py-2 rounded-full hover:from-purple-700 hover:to-pink-700 transition-all"
+              className="bg-gradient-to-r from-blue-600 to-green-600 text-white text-sm px-4 py-2 rounded hover:from-blue-700 hover:to-green-700 transition-all flex items-center gap-2"
             >
-              View Instagram
+              <span>Full Gallery</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14"></path>
+                <path d="M12 5l7 7-7 7"></path>
+              </svg>
             </a>
           </div>
         </div>
@@ -462,12 +438,77 @@ const Paddock20HomePage: React.FC = () => {
         </div>
       </section>
 
+      {/* Manifestation Station Call-Out */}
+      <section className="mb-12 bg-gradient-to-r from-black/90 to-gray-900/80 rounded-xl p-6 border border-green-900/30 shadow-lg backdrop-blur-sm">
+        <div className="flex flex-col md:flex-row gap-8 items-center">
+          <div className="md:w-2/3">
+            <h2 className="text-blue-400 font-orbitron text-3xl mb-4">Drive Like a Champion. <span className="text-green-500">Build Your Legacy.</span></h2>
+            <p className="text-white font-openSans text-lg mb-4">
+              Beyond weather tracking and route planning, Paddock20™ offers something truly unique: <span className="text-green-400 font-semibold">The Manifestation Station</span>.
+            </p>
+            <p className="text-gray-300 font-openSans mb-6">
+              Our seven powerful elements help you transform automotive dreams into reality — whether it's exotic cars, luxury timepieces, or dream properties. We don't just track conditions; we help create them.
+            </p>
+            <div className="flex flex-wrap gap-4">
+              <Link to="/manifestation-station" className="bg-gradient-to-r from-green-600 to-green-800 text-white px-5 py-2.5 rounded-lg font-medium hover:from-green-700 hover:to-green-900 transition duration-300 flex items-center gap-2">
+                <span>Explore Manifestation Station</span>
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M5 12h14"></path>
+                  <path d="M12 5l7 7-7 7"></path>
+                </svg>
+              </Link>
+              <Link to="/membership" className="bg-gradient-to-r from-blue-600 to-blue-800 text-white px-5 py-2.5 rounded-lg font-medium hover:from-blue-700 hover:to-blue-900 transition duration-300">
+                Become a Member
+              </Link>
+            </div>
+          </div>
+          <div className="md:w-1/3 bg-black/40 p-4 rounded-lg border border-green-900/20">
+            <div className="text-center mb-4">
+              <span className="inline-block h-4 w-4 rounded-full bg-green-500 animate-pulse"></span>
+              <h3 className="text-green-400 font-orbitron text-xl mt-2">Beyond Automotive</h3>
+              <div className="h-0.5 w-16 bg-green-500/50 mx-auto my-2"></div>
+            </div>
+            <ul className="space-y-2">
+              <li className="flex items-center text-gray-300">
+                <svg className="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span>Goal Visualization Framework</span>
+              </li>
+              <li className="flex items-center text-gray-300">
+                <svg className="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span>Structured Achievement System</span>
+              </li>
+              <li className="flex items-center text-gray-300">
+                <svg className="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span>Community Accountability</span>
+              </li>
+              <li className="flex items-center text-gray-300">
+                <svg className="h-5 w-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+                <span>From Dream Cars to Dream Life</span>
+              </li>
+            </ul>
+          </div>
+        </div>
+      </section>
+      
       {/* Final Hook */}
       <section className="text-center mt-16">
         <h2 className="text-blue-400 font-orbitron text-3xl mb-4">Drive Life. Document Legacy.</h2>
         <p className="text-white font-openSans text-lg mb-6">
           Built for the serious. Designed for the seamless.
         </p>
+        <div className="mt-8">
+          <Link to="/membership" className="bg-gradient-to-r from-green-600 to-blue-600 text-white px-8 py-3 rounded-lg font-bold text-lg hover:from-green-700 hover:to-blue-700 transition duration-300 shadow-lg">
+            Join Paddock20™ Today
+          </Link>
+        </div>
       </section>
       </div>
     </div>
