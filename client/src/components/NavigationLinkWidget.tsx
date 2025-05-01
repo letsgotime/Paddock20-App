@@ -41,6 +41,7 @@ const NavigationLinkWidget: React.FC<NavigationLinkWidgetProps> = ({
     }
   ] 
 }) => {
+  const { weatherData } = useWeather();
   const [selectedLocation, setSelectedLocation] = useState<{id: string | number, latitude: number, longitude: number, name: string} | null>(null);
   
   // Create deep links for various navigation apps
@@ -217,8 +218,37 @@ const NavigationLinkWidget: React.FC<NavigationLinkWidgetProps> = ({
   
   // Helper function to get current weather description
   function getCurrentWeatherConditionText() {
-    // This would normally access the weather context, but is simplified here
-    return "current conditions";
+    if (!weatherData || !weatherData.weather || !weatherData.weather[0]) {
+      return "current conditions";
+    }
+    
+    const { weather, main } = weatherData;
+    const weatherCondition = weather[0].description;
+    const temp = Math.round(main.temp);
+    
+    // Determine if there are any driving considerations based on weather conditions
+    const weatherId = weather[0].id;
+    
+    // Thunderstorm
+    if (weatherId >= 200 && weatherId < 300) {
+      return `thunderstorm conditions with reduced visibility and potentially hazardous lightning`;
+    }
+    // Drizzle/Rain
+    else if ((weatherId >= 300 && weatherId < 400) || (weatherId >= 500 && weatherId < 600)) {
+      return `${weatherCondition} that may affect traction (${temp}°${weatherData.units === 'imperial' ? 'F' : 'C'})`;
+    }
+    // Snow
+    else if (weatherId >= 600 && weatherId < 700) {
+      return `${weatherCondition} that requires reduced speed and increased following distance`;
+    }
+    // Fog/Mist/Haze
+    else if (weatherId >= 700 && weatherId < 800) {
+      return `${weatherCondition} with potentially limited visibility`;
+    }
+    // Clear/Clouds
+    else {
+      return `${weatherCondition} (${temp}°${weatherData.units === 'imperial' ? 'F' : 'C'})`;
+    }
   }
 };
 

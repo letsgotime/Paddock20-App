@@ -4,6 +4,8 @@ import { useWeather } from '../contexts/WeatherContext';
 import WorldClockPanel from '../components/WorldClockPanel';
 import CurrentWeatherWidget from '../components/CurrentWeatherWidget';
 import F1TelemetryWeatherStation from '../components/F1TelemetryWeatherStation';
+import PrecipitationWidget from '../components/PrecipitationWidget';
+import NavigationLinkWidget from '../components/NavigationLinkWidget';
 import ApiKeyModal from '../components/ApiKeyModal';
 import { submitApiKey } from '../services/apiKeyManager';
 import { 
