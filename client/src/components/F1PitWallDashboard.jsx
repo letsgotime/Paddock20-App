@@ -1,5 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import CommuteTimeEstimator from './CommuteTimeEstimator';
+import LocationManager from './LocationManager';
+import CommuteRouteWeatherImpact from './CommuteRouteWeatherImpact';
 
 // Component for displaying a Formula 1 style gauge
 const F1Gauge = ({ value, min, max, label, units, danger = false, warning = false, optimum = false }) => {
@@ -25,10 +27,31 @@ const F1Gauge = ({ value, min, max, label, units, danger = false, warning = fals
   );
 };
 
-// World Clock component showing times at different race locations
+// World Clock component showing times at different global locations
 const WorldClocks = () => {
   const [time, setTime] = useState(new Date());
   const [expandedTimezone, setExpandedTimezone] = useState(null);
+  const [showAddLocation, setShowAddLocation] = useState(false);
+  const [newLocationName, setNewLocationName] = useState('');
+  const [newLocationTimezone, setNewLocationTimezone] = useState('');
+  const [searchTerm, setSearchTerm] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
+  
+  // Default locations - stored in local storage to persist user's choices
+  const defaultLocations = [
+    { name: "Charlotte", timezone: "America/New_York", flag: "🇺🇸" },
+    { name: "Monaco", timezone: "Europe/Monaco", flag: "🇲🇨" },
+    { name: "Silverstone", timezone: "Europe/London", flag: "🇬🇧" },
+    { name: "Suzuka", timezone: "Asia/Tokyo", flag: "🇯🇵" },
+    { name: "Melbourne", timezone: "Australia/Melbourne", flag: "🇦🇺" },
+    { name: "Sao Paulo", timezone: "America/Sao_Paulo", flag: "🇧🇷" }
+  ];
+  
+  // Use local storage to persist user's timezone selections
+  const [locations, setLocations] = useState(() => {
+    const savedLocations = localStorage.getItem('worldClockLocations');
+    return savedLocations ? JSON.parse(savedLocations) : defaultLocations;
+  });
   
   // Update time every second
   useEffect(() => {
@@ -39,37 +62,178 @@ const WorldClocks = () => {
     return () => clearInterval(timer);
   }, []);
   
-  // Major racing locations and their timezones
-  const locations = [
-    { name: "Charlotte", timezone: "America/New_York", flag: "🇺🇸" },
-    { name: "Monaco", timezone: "Europe/Monaco", flag: "🇲🇨" },
-    { name: "Silverstone", timezone: "Europe/London", flag: "🇬🇧" },
-    { name: "Suzuka", timezone: "Asia/Tokyo", flag: "🇯🇵" },
-    { name: "Melbourne", timezone: "Australia/Melbourne", flag: "🇦🇺" },
-    { name: "Sao Paulo", timezone: "America/Sao_Paulo", flag: "🇧🇷" }
+  // Save locations to local storage when they change
+  useEffect(() => {
+    localStorage.setItem('worldClockLocations', JSON.stringify(locations));
+  }, [locations]);
+  
+  // Format time for display
+  const formatTimeForTimezone = (timezone) => {
+    try {
+      return new Intl.DateTimeFormat('en-US', {
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false,
+        timeZone: timezone
+      }).format(time);
+    } catch (error) {
+      console.error("Invalid timezone:", timezone);
+      return "Invalid";
+    }
+  };
+  
+  // Common timezones for easy selection
+  const commonTimezones = [
+    { name: "New York", timezone: "America/New_York", region: "North America" },
+    { name: "Los Angeles", timezone: "America/Los_Angeles", region: "North America" },
+    { name: "Chicago", timezone: "America/Chicago", region: "North America" },
+    { name: "London", timezone: "Europe/London", region: "Europe" },
+    { name: "Paris", timezone: "Europe/Paris", region: "Europe" },
+    { name: "Berlin", timezone: "Europe/Berlin", region: "Europe" },
+    { name: "Moscow", timezone: "Europe/Moscow", region: "Europe" },
+    { name: "Dubai", timezone: "Asia/Dubai", region: "Asia" },
+    { name: "Tokyo", timezone: "Asia/Tokyo", region: "Asia" },
+    { name: "Shanghai", timezone: "Asia/Shanghai", region: "Asia" },
+    { name: "Singapore", timezone: "Asia/Singapore", region: "Asia" },
+    { name: "Sydney", timezone: "Australia/Sydney", region: "Australia/Pacific" },
+    { name: "Auckland", timezone: "Pacific/Auckland", region: "Australia/Pacific" },
+    { name: "Rio de Janeiro", timezone: "America/Sao_Paulo", region: "South America" },
+    { name: "Buenos Aires", timezone: "America/Argentina/Buenos_Aires", region: "South America" },
+    { name: "Johannesburg", timezone: "Africa/Johannesburg", region: "Africa" },
+    { name: "Cairo", timezone: "Africa/Cairo", region: "Africa" }
   ];
   
-  const formatTimeForTimezone = (timezone) => {
-    return new Intl.DateTimeFormat('en-US', {
-      hour: '2-digit',
-      minute: '2-digit',
-      second: '2-digit',
-      hour12: false,
-      timeZone: timezone
-    }).format(time);
+  // Handle location search
+  useEffect(() => {
+    if (searchTerm.length < 2) {
+      setSearchResults([]);
+      return;
+    }
+    
+    const filteredResults = commonTimezones.filter(item => 
+      item.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.region.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+    
+    setSearchResults(filteredResults);
+  }, [searchTerm]);
+  
+  // Add a new location to the clock
+  const addLocation = (name, timezone) => {
+    // Get flag emoji based on timezone
+    let flag = "🌍"; // Default flag
+    
+    if (timezone.startsWith("America")) flag = "🇺🇸";
+    else if (timezone.startsWith("Europe")) flag = "🇪🇺";
+    else if (timezone.startsWith("Asia")) flag = "🌏";
+    else if (timezone.startsWith("Australia") || timezone.startsWith("Pacific")) flag = "🇦🇺";
+    else if (timezone.startsWith("Africa")) flag = "🌍";
+    
+    // Add the new location
+    setLocations(prev => {
+      // Don't add duplicates
+      if (prev.some(loc => loc.name === name)) {
+        return prev;
+      }
+      return [...prev, { name, timezone, flag }];
+    });
+    
+    // Reset form
+    setNewLocationName('');
+    setNewLocationTimezone('');
+    setShowAddLocation(false);
+    setSearchTerm('');
+    setSearchResults([]);
+  };
+  
+  // Remove a location from the clock
+  const removeLocation = (index) => {
+    setLocations(prev => prev.filter((_, i) => i !== index));
   };
   
   return (
     <div className="bg-gray-800/80 rounded-lg border border-gray-700 p-3">
-      <h3 className="text-sm font-semibold mb-2 text-gray-300 flex items-center">
-        <span className="h-2 w-2 bg-green-500 rounded-full mr-2"></span>
-        WORLD TIME
-      </h3>
+      <div className="flex justify-between items-center mb-2">
+        <h3 className="text-sm font-semibold text-gray-300 flex items-center">
+          <span className="h-2 w-2 bg-green-500 rounded-full mr-2"></span>
+          WORLD TIME
+        </h3>
+        <button 
+          className="text-xs text-gray-400 hover:text-white flex items-center"
+          onClick={() => setShowAddLocation(!showAddLocation)}
+        >
+          {showAddLocation ? "Cancel" : "Add Location"}
+        </button>
+      </div>
+      
+      {showAddLocation && (
+        <div className="mb-3 p-2 bg-gray-900/70 rounded-md">
+          <div className="mb-2">
+            <input
+              type="text"
+              placeholder="Search for a city..."
+              className="w-full bg-gray-800 border border-gray-700 rounded p-1 text-xs"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          
+          {searchResults.length > 0 && (
+            <div className="max-h-32 overflow-y-auto mb-2 bg-gray-800 rounded border border-gray-700">
+              {searchResults.map((result, index) => (
+                <div 
+                  key={index}
+                  className="p-1 text-xs hover:bg-gray-700 cursor-pointer flex justify-between"
+                  onClick={() => addLocation(result.name, result.timezone)}
+                >
+                  <span>{result.name}</span>
+                  <span className="text-gray-400">{result.region}</span>
+                </div>
+              ))}
+            </div>
+          )}
+          
+          <div className="flex space-x-2">
+            <input
+              type="text"
+              placeholder="Custom location name"
+              className="flex-1 bg-gray-800 border border-gray-700 rounded p-1 text-xs"
+              value={newLocationName}
+              onChange={(e) => setNewLocationName(e.target.value)}
+            />
+            <select
+              className="bg-gray-800 border border-gray-700 rounded p-1 text-xs"
+              value={newLocationTimezone}
+              onChange={(e) => setNewLocationTimezone(e.target.value)}
+            >
+              <option value="">Select timezone</option>
+              {commonTimezones.map((tz, index) => (
+                <option key={index} value={tz.timezone}>
+                  {tz.name} ({tz.timezone})
+                </option>
+              ))}
+            </select>
+            <button
+              className="bg-blue-600 hover:bg-blue-700 text-white rounded px-2 py-1 text-xs"
+              onClick={() => {
+                if (newLocationName && newLocationTimezone) {
+                  addLocation(newLocationName, newLocationTimezone);
+                }
+              }}
+              disabled={!newLocationName || !newLocationTimezone}
+            >
+              Add
+            </button>
+          </div>
+        </div>
+      )}
+      
       <div className="grid grid-cols-3 gap-2 text-xs">
-        {locations.map((location) => (
+        {locations.map((location, index) => (
           <div 
-            key={location.name}
-            className="bg-gray-900/60 rounded p-2 cursor-pointer hover:bg-gray-700/40"
+            key={`${location.name}-${index}`}
+            className="bg-gray-900/60 rounded p-2 cursor-pointer hover:bg-gray-700/40 relative"
             onClick={() => setExpandedTimezone(expandedTimezone === location.timezone ? null : location.timezone)}
           >
             <div className="flex justify-between items-center">
@@ -81,12 +245,23 @@ const WorldClocks = () => {
             </div>
             {expandedTimezone === location.timezone && (
               <div className="mt-2 text-gray-400 text-xs">
-                {new Intl.DateTimeFormat('en-US', {
-                  weekday: 'short',
-                  month: 'short',
-                  day: 'numeric',
-                  timeZone: location.timezone
-                }).format(time)}
+                <div>
+                  {new Intl.DateTimeFormat('en-US', {
+                    weekday: 'short',
+                    month: 'short',
+                    day: 'numeric',
+                    timeZone: location.timezone
+                  }).format(time)}
+                </div>
+                <button 
+                  className="text-xs text-red-400 hover:text-red-300 mt-1"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    removeLocation(index);
+                  }}
+                >
+                  Remove
+                </button>
               </div>
             )}
           </div>
@@ -397,6 +572,10 @@ function F1PitWallDashboard() {
   const [error, setError] = useState(null);
   const [selectedVehicle, setSelectedVehicle] = useState(null);
   const [vehicles, setVehicles] = useState([]);
+  
+  // State for route planning with selected locations
+  const [originLocation, setOriginLocation] = useState(null);
+  const [destinationLocation, setDestinationLocation] = useState(null);
   
   // Default location (Charlotte)
   const DEFAULT_LOCATION = { lat: 35.2271, lon: -80.8431 };
@@ -739,13 +918,89 @@ function F1PitWallDashboard() {
           {/* Right sidebar */}
           <div className="space-y-6">
             <WorldClocks />
+            
+            {/* Location Manager for saved locations */}
+            <LocationManager 
+              onSelectLocation={(location) => {
+                // If no origin set, set as origin
+                if (!originLocation) {
+                  setOriginLocation(location);
+                }
+                // If origin set but no destination, set as destination
+                else if (!destinationLocation) {
+                  setDestinationLocation(location);
+                }
+                // If both set, replace destination
+                else {
+                  setDestinationLocation(location);
+                }
+              }} 
+            />
+            
+            {/* Route Weather Impact */}
+            {(originLocation || destinationLocation) && (
+              <div className="bg-gray-800/80 rounded-lg border border-gray-700 p-3">
+                <h3 className="text-sm font-semibold mb-2 text-gray-300 flex items-center">
+                  <span className="h-2 w-2 bg-indigo-500 rounded-full mr-2"></span>
+                  SELECTED ROUTE
+                </h3>
+                
+                <div className="space-y-2 mb-3">
+                  <div className="flex items-center">
+                    <div className="text-sm mr-2">🏁</div>
+                    <div className="text-sm">Origin: {originLocation ? originLocation.name : 'Not selected'}</div>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="text-sm mr-2">🚩</div>
+                    <div className="text-sm">Destination: {destinationLocation ? destinationLocation.name : 'Not selected'}</div>
+                  </div>
+                </div>
+                
+                <div className="flex space-x-2">
+                  <button 
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white rounded px-2 py-1 text-xs"
+                    onClick={() => {
+                      setOriginLocation(null);
+                      setDestinationLocation(null);
+                    }}
+                  >
+                    Reset Route
+                  </button>
+                  {originLocation && destinationLocation && (
+                    <button 
+                      className="flex-1 bg-green-600 hover:bg-green-700 text-white rounded px-2 py-1 text-xs"
+                      onClick={() => {
+                        // Swap origin and destination
+                        const temp = originLocation;
+                        setOriginLocation(destinationLocation);
+                        setDestinationLocation(temp);
+                      }}
+                    >
+                      Swap Directions
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+            
+            {/* Route Weather Impact */}
+            {originLocation && destinationLocation && (
+              <CommuteRouteWeatherImpact
+                origin={originLocation}
+                destination={destinationLocation}
+                weatherData={weatherData}
+              />
+            )}
+            
             <TireStrategy 
               selectedVehicle={selectedVehicle} 
               weatherData={weatherData} 
             />
+            
             <CommuteTimeEstimator
               weatherData={weatherData}
             />
+            
             <EnginePerformance 
               selectedVehicle={selectedVehicle} 
               weatherData={weatherData} 
