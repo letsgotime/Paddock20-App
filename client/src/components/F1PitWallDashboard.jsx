@@ -336,13 +336,19 @@ const TireStrategy = ({ selectedVehicle, weatherData }) => {
         TIRE STRATEGY
       </h3>
       
+      {!selectedVehicle && (
+        <div className="mb-3 px-3 py-2 bg-gray-700/60 rounded text-xs border-l-2 border-amber-500">
+          <span className="text-amber-400">Note:</span> Tire recommendations are based on vehicle specs. Please select a vehicle for accurate data.
+        </div>
+      )}
+      
       <div className="mb-4">
         <div className="flex justify-between items-center mb-1">
           <span className="text-sm">Recommended Compound</span>
           <span className="font-medium">{tireData.optimal_compound}</span>
         </div>
         <div className="text-xs text-gray-400 mb-3">
-          Based on current track temperature and conditions
+          Based on current surface temperature and conditions
         </div>
         
         <div className="grid grid-cols-2 gap-4 mb-3">
