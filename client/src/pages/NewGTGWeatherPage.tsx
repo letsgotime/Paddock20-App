@@ -650,93 +650,51 @@ const NewGTGWeatherPage: React.FC = () => {
                         <span className="text-white font-medium">{window.day}</span>
                         <span className="text-blue-400">{renderStars(window.rating)}</span>
                       </div>
-                      <p className="text-gray-300 text-sm mt-1">{window.timeRange}</p>
-                      <p className="text-gray-400 text-xs mt-2">{window.description}</p>
+                      <p className="text-gray-300 text-sm">{window.timeRange}</p>
+                      <p className="text-xs text-gray-400 mt-1">{window.description}</p>
+                      <div className="mt-2 text-xs grid grid-cols-2 gap-1">
+                        <span className="text-gray-400">🌡️ {Math.round(window.raw.temp)}°{units === 'imperial' ? 'F' : 'C'}</span>
+                        <span className="text-gray-400">💧 {window.raw.humidity}%</span>
+                        <span className="text-gray-400">💨 {Math.round(window.raw.windSpeed)} {units === 'imperial' ? 'mph' : 'km/h'}</span>
+                        <span className="text-gray-400 capitalize">☁️ {window.raw.weatherDesc}</span>
+                      </div>
                     </div>
                   ))}
                 </div>
               ) : (
-                <div className="p-4 rounded-lg bg-gray-800/20 border border-gray-700 text-center">
-                  <p className="text-gray-300">No optimal driving windows available for the next 48 hours.</p>
-                  <p className="text-gray-400 text-sm mt-2">Check back later for updated recommendations</p>
-                </div>
+                <p className="text-gray-400">Forecast data not available. Cannot generate drive windows.</p>
               )}
             </div>
-          </section>
-          
-          {/* Quick Tips Section */}
-          <section className="mt-6 bg-gradient-to-r from-gray-900 to-black border border-gray-800 rounded-lg p-6" aria-labelledby="quick-tips-heading">
-            <h2 id="quick-tips-heading" className="apex-header text-xl mb-4 flex items-center">
-              <AlertTriangle className="h-5 w-5 mr-2" />
-              <span>Driving Recommendations</span>
-            </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            
+            {/* Driver recommendations section */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+              {/* Driving Tips */}
               <div className="bg-black/40 p-4 rounded-lg border border-gray-800">
-                <h3 className="text-green-500 font-semibold mb-2 flex items-center">
-                  <Thermometer className="w-4 h-4 mr-2" />
-                  Today's Driving Tips
-                </h3>
-                {drivingTips.length > 0 ? (
-                  <ul className="text-gray-300 text-sm space-y-2">
-                    {drivingTips.map((tip, index) => (
-                      <li key={index} className="flex items-start">
-                        <span className="text-blue-400 mr-2">→</span>
-                        <span>{tip.tip}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-gray-400">No driving tips available based on current conditions.</p>
-                )}
+                <h3 className="text-blue-400 font-orbitron mb-3 text-lg">Driving Tips</h3>
+                <ul className="space-y-3">
+                  {drivingTips.map((tip, index) => (
+                    <li key={index} className="border-l-2 border-blue-600 pl-3 text-sm text-gray-300">
+                      {tip.tip}
+                    </li>
+                  ))}
+                </ul>
               </div>
+              
+              {/* Performance Adjustments */}
               <div className="bg-black/40 p-4 rounded-lg border border-gray-800">
-                <h3 className="text-green-500 font-semibold mb-2 flex items-center">
-                  <Wind className="w-4 h-4 mr-2" />
-                  Performance Adjustments
-                </h3>
-                {performanceAdjustments.length > 0 ? (
-                  <ul className="text-gray-300 text-sm space-y-2">
-                    {performanceAdjustments.map((adjustment, index) => (
-                      <li key={index} className="flex items-start">
-                        <span className="text-blue-400 mr-2">→</span>
-                        <span>{adjustment.adjustment}</span>
-                      </li>
-                    ))}
-                  </ul>
-                ) : (
-                  <p className="text-gray-400">No performance adjustments available based on current conditions.</p>
-                )}
+                <h3 className="text-blue-400 font-orbitron mb-3 text-lg">Performance Adjustments</h3>
+                <ul className="space-y-3">
+                  {performanceAdjustments.map((item, index) => (
+                    <li key={index} className="border-l-2 border-green-600 pl-3 text-sm text-gray-300">
+                      {item.adjustment}
+                    </li>
+                  ))}
+                </ul>
               </div>
             </div>
           </section>
           
-          {/* Vehicle-Specific Recommendations */}
-          <section className="mt-6 bg-gradient-to-r from-gray-900 to-black border border-gray-800 rounded-lg p-6" aria-labelledby="vehicle-recommendations-heading">
-            <h2 id="vehicle-recommendations-heading" className="apex-header text-xl mb-4 flex items-center">
-              <Car className="h-5 w-5 mr-2" />
-              <span>Vehicle-Specific Recommendations</span>
-            </h2>
-            <div className="bg-black/40 p-4 rounded-lg border border-gray-800 mb-4">
-              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between mb-3">
-                <h3 className="text-green-500 font-semibold">Select Your Vehicle</h3>
-                <div className="mt-2 sm:mt-0 flex items-center">
-                  <select className="bg-black border border-gray-700 text-white rounded px-3 py-1 text-sm focus:border-blue-500 focus:outline-none">
-                    <option value="">-- Select vehicle --</option>
-                    <option value="911">Porsche 911 Carrera S</option>
-                    <option value="m3">BMW M3 Competition</option>
-                    <option value="gt">Ford Mustang GT</option>
-                    <option value="miata">Mazda MX-5 Miata</option>
-                  </select>
-                  <button className="ml-2 px-3 py-1 bg-blue-900/50 text-blue-400 rounded text-sm hover:bg-blue-800/50">Load</button>
-                </div>
-              </div>
-              <div className="text-center py-6">
-                <p className="text-gray-400 text-sm">Select a vehicle to view tailored performance recommendations based on current weather conditions</p>
-              </div>
-            </div>
-          </section>
-          
-          {/* Weather accessibility information */}
+          {/* Accessibility Section */}
           <section className="mt-10 bg-gradient-to-r from-gray-900 to-black border border-gray-800 rounded-lg p-6" aria-labelledby="accessibility-heading">
             <h2 id="accessibility-heading" className="apex-header-green text-xl mb-4 flex items-center">
               <AlertTriangle className="h-5 w-5 mr-2 text-green-500" />
@@ -752,26 +710,26 @@ const NewGTGWeatherPage: React.FC = () => {
           </section>
         </>
       )}
+      
+      {/* API Key Modal */}
+      <ApiKeyModal
+        isOpen={showApiKeyModal}
+        onClose={() => setShowApiKeyModal(false)}
+        onSubmit={async (apiKey) => {
+          try {
+            await submitApiKey('openweather', apiKey);
+            // Force reload to use the new API key
+            window.location.reload();
+            return true;
+          } catch (error) {
+            console.error("API key validation failed:", error);
+            throw new Error("Invalid API key or validation failed");
+          }
+        }}
+        serviceName="OpenWeather"
+        serviceDescription="Provide your personal OpenWeather API key to bypass rate limits. You can get a free API key by signing up at openweathermap.org."
+      />
     </div>
-    
-    {/* API Key Modal */}
-    <ApiKeyModal
-      isOpen={showApiKeyModal}
-      onClose={() => setShowApiKeyModal(false)}
-      onSubmit={async (apiKey) => {
-        try {
-          await submitApiKey('openweather', apiKey);
-          // Force reload to use the new API key
-          window.location.reload();
-          return true;
-        } catch (error) {
-          console.error("API key validation failed:", error);
-          throw new Error("Invalid API key or validation failed");
-        }
-      }}
-      serviceName="OpenWeather"
-      serviceDescription="Provide your personal OpenWeather API key to bypass rate limits. You can get a free API key by signing up at openweathermap.org."
-    />
   );
 };
 
