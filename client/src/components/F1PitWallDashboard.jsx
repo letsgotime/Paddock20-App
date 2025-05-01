@@ -787,8 +787,26 @@ function F1PitWallDashboard() {
         
         {/* Vehicle selector */}
         <div className="mb-6">
-          <h3 className="text-sm font-semibold mb-2 text-gray-300">SELECT VEHICLE</h3>
+          <div className="flex justify-between items-center mb-2">
+            <h3 className="text-sm font-semibold text-gray-300">SELECT VEHICLE</h3>
+            <div className="text-xs text-blue-400">New vehicles can be added in the Garage</div>
+          </div>
           <div className="flex space-x-4 overflow-x-auto pb-2">
+            {/* No Vehicle Option */}
+            <div 
+              className={`flex items-center p-2 rounded-lg cursor-pointer ${selectedVehicle === null ? 'bg-blue-900/60 border border-blue-400/50' : 'bg-gray-800/60 border border-gray-700 hover:bg-gray-700/40'}`}
+              onClick={() => setSelectedVehicle(null)}
+            >
+              <div className="w-12 h-12 rounded-md overflow-hidden mr-3 flex items-center justify-center bg-gray-700">
+                <div className="text-2xl">❌</div>
+              </div>
+              <div>
+                <div className="font-medium">No Vehicle</div>
+                <div className="text-xs text-gray-400">Default settings</div>
+              </div>
+            </div>
+            
+            {/* Vehicle Options */}
             {vehicles.map(vehicle => (
               <div 
                 key={vehicle.id}
