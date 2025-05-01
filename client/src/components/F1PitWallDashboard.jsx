@@ -1154,13 +1154,13 @@ function F1PitWallDashboard() {
               />
             )}
             
+            <CommuteTimeEstimator
+              weatherData={weatherData}
+            />
+            
             <TireStrategy 
               selectedVehicle={selectedVehicle} 
               weatherData={weatherData} 
-            />
-            
-            <CommuteTimeEstimator
-              weatherData={weatherData}
             />
             
             <EnginePerformance 
