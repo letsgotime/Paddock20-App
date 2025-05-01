@@ -3,9 +3,11 @@ import { MAIN_CONTENT_ID } from '../lib/accessibility';
 import { useWeather } from '../contexts/WeatherContext';
 import WorldClockPanel from '../components/WorldClockPanel';
 import F1TelemetryWeatherStation from '../components/F1TelemetryWeatherStation';
+import ApiKeyModal from '../components/ApiKeyModal';
+import { submitApiKey } from '../services/apiKeyManager';
 import { 
   Cloud, Sun, Wind, CloudRain, Thermometer, 
-  Droplets, AlertTriangle, Gauge, Calendar, Car 
+  Droplets, AlertTriangle, Gauge, Calendar, Car, Key
 } from 'lucide-react';
 
 // Mock drive quality data - would be calculated from real weather in production
@@ -317,6 +319,7 @@ const NewGTGWeatherPage: React.FC = () => {
   const [driveWindows, setDriveWindows] = useState<any[]>([]);
   const [drivingTips, setDrivingTips] = useState<any[]>([]);
   const [performanceAdjustments, setPerformanceAdjustments] = useState<any[]>([]);
+  const [showApiKeyModal, setShowApiKeyModal] = useState(false);
   
   // Add a controlled delay to ensure components load properly
   useEffect(() => {
@@ -434,6 +437,12 @@ const NewGTGWeatherPage: React.FC = () => {
                   className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
                 >
                   ⟳ Refresh Now
+                </button>
+                <button 
+                  onClick={() => setShowApiKeyModal(true)} 
+                  className="px-4 py-2 bg-black border border-blue-700 text-blue-400 rounded-md hover:bg-blue-900/20 transition-colors flex items-center"
+                >
+                  <Key className="h-4 w-4 mr-2" /> Use My API Key
                 </button>
               </div>
             </>
@@ -744,6 +753,25 @@ const NewGTGWeatherPage: React.FC = () => {
         </>
       )}
     </div>
+    
+    {/* API Key Modal */}
+    <ApiKeyModal
+      isOpen={showApiKeyModal}
+      onClose={() => setShowApiKeyModal(false)}
+      onSubmit={async (apiKey) => {
+        try {
+          await submitApiKey('openweather', apiKey);
+          // Force reload to use the new API key
+          window.location.reload();
+          return true;
+        } catch (error) {
+          console.error("API key validation failed:", error);
+          throw new Error("Invalid API key or validation failed");
+        }
+      }}
+      serviceName="OpenWeather"
+      serviceDescription="Provide your personal OpenWeather API key to bypass rate limits. You can get a free API key by signing up at openweathermap.org."
+    />
   );
 };
 
