@@ -93,6 +93,21 @@ function App() {
     };
   }, []);
   
+  // Handle return from external navigation apps
+  useEffect(() => {
+    // Check if we have a saved return point from navigation
+    const returnPoint = sessionStorage.getItem('weatherAppReturnPoint');
+    if (returnPoint) {
+      // Clear the return point from storage
+      sessionStorage.removeItem('weatherAppReturnPoint');
+      
+      // Navigate to the saved path if it's different from current path
+      if (window.location.pathname !== returnPoint) {
+        window.history.pushState(null, '', returnPoint);
+      }
+    }
+  }, []);
+  
   // Initialize Unsplash image cache for marketplace listings
   useEffect(() => {
     // Pre-fetch images for marketplace listings to avoid rate limiting

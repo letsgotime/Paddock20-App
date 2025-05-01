@@ -80,8 +80,11 @@ const NavigationLinkWidget: React.FC<NavigationLinkWidgetProps> = ({
     if (type === 'apple') url = appleMapsUrl;
     if (type === 'waze') url = wazeUrl;
     
-    // Open in a new tab/window
-    window.open(url, '_blank');
+    // Store current app state in sessionStorage
+    sessionStorage.setItem('weatherAppReturnPoint', window.location.pathname);
+    
+    // Open in the same tab (better for mobile return flow)
+    window.location.href = url;
   };
   
   const getPreferredNavigationApp = () => {
