@@ -28,6 +28,9 @@ const OPENWEATHER_API_KEY = OPENWEATHER_API_KEYS.default;
 // Special key for OneCall API 3.0
 const ONECALL_API_KEY = OPENWEATHER_API_KEYS.onecall;
 
+// Variable to store user-provided API keys
+let userProvidedOpenWeatherKey: string | null = null;
+
 // Cache structures for weather data to avoid repetitive API calls
 interface CachedData<T> {
   data: T;
@@ -341,6 +344,65 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // API Key validation endpoints
+  app.post('/api/validate-key/openweather', async (req, res) => {
+    try {
+      const { apiKey } = req.body;
+      
+      if (!apiKey) {
+        return res.status(400).json({ valid: false, message: 'API key is required' });
+      }
+      
+      // Make a test call to the OpenWeather API to validate the key
+      const testUrl = `https://api.openweathermap.org/data/2.5/weather?q=London&appid=${apiKey}`;
+      const response = await fetch(testUrl);
+      
+      if (response.ok) {
+        // Store the key in memory for server-side use
+        console.log(`User-provided OpenWeather API key validated successfully`);
+        
+        return res.json({ valid: true });
+      } else {
+        const errorData = await response.json();
+        return res.status(400).json({ 
+          valid: false, 
+          message: `OpenWeather API key validation failed: ${errorData.message || response.statusText}`
+        });
+      }
+    } catch (error) {
+      console.error('Error validating OpenWeather API key:', error);
+      res.status(500).json({ 
+        valid: false, 
+        message: error instanceof Error ? error.message : 'Unknown error validating API key'
+      });
+    }
+  });
+  
+  // Endpoint to use a user-provided API key for subsequent requests
+  app.post('/api/use-key', (req, res) => {
+    try {
+      const { service, apiKey } = req.body;
+      
+      if (!service || !apiKey) {
+        return res.status(400).json({ success: false, message: 'Service and API key are required' });
+      }
+      
+      // For OpenWeather, store the key in a special variable that will be checked in the openweather routes
+      if (service === 'openweather') {
+        userProvidedOpenWeatherKey = apiKey;
+        console.log(`Using user-provided OpenWeather API key for future requests`);
+      }
+      
+      res.json({ success: true });
+    } catch (error) {
+      console.error('Error storing user-provided API key:', error);
+      res.status(500).json({ 
+        success: false, 
+        message: error instanceof Error ? error.message : 'Unknown error storing API key'
+      });
+    }
+  });
+  
   // Weather API proxy routes
   app.get('/api/weather', async (req, res) => {
     try {
@@ -375,8 +437,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(cachedData.data);
       }
 
-      // Use the OpenWeather API key constant
-      const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=${units || 'metric'}&appid=${OPENWEATHER_API_KEY}`;
+      // Use user-provided key if available, otherwise use the default key
+      const apiKey = userProvidedOpenWeatherKey || OPENWEATHER_API_KEY;
+      const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=${units || 'metric'}&appid=${apiKey}`;
       
       console.log(`Fetching OpenWeather data for: ${lat},${lon}`);
       const response = await fetch(url);
@@ -419,8 +482,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Latitude and longitude are required' });
       }
 
-      // Use the OpenWeather API key constant 
-      const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=${units || 'metric'}&appid=${OPENWEATHER_API_KEY}`;
+      // Use user-provided key if available, otherwise use the default key
+      const apiKey = userProvidedOpenWeatherKey || OPENWEATHER_API_KEY;
+      const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=${units || 'metric'}&appid=${apiKey}`;
       
       const response = await fetch(url);
       if (!response.ok) {
@@ -467,8 +531,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       let data;
       let errorMessages = [];
       
-      // Primary key attempt first
-      const primaryUrl = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&units=${units || 'metric'}${exclude ? `&exclude=${exclude}` : ''}&appid=${ONECALL_API_KEY}`;
+      // Use user-provided key if available, otherwise use the primary key
+      const primaryKey = userProvidedOpenWeatherKey || ONECALL_API_KEY;
+      const primaryUrl = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&units=${units || 'metric'}${exclude ? `&exclude=${exclude}` : ''}&appid=${primaryKey}`;
       
       // Log the endpoint being used (without exposing API key)
       console.log(`Using OneCall API 3.0 endpoint with lat=${lat}, lon=${lon}, units=${units || 'metric'}`);
