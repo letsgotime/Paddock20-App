@@ -2,72 +2,6 @@
 const API_KEY = "2379a18ee0e478c88aa7d4aa1df44410";
 const BASE_URL = "https://api.openweathermap.org/data/2.5";
 
-// Automotive weather data type
-export interface AutomotiveWeatherData {
-  location: {
-    lat: number;
-    lon: number;
-    timezone: string;
-  };
-  current_time: string;
-  sunrise_time: string;
-  sunset_time: string;
-  conditions: {
-    summary: string;
-    icon: string;
-    air_temperature: number;
-    feels_like: number;
-    humidity: number;
-    pressure: number;
-    wind_speed: number;
-    wind_direction: number;
-    cloud_cover: number;
-    precipitation: number;
-    uv_index: number;
-    solar_radiation: number | null;
-  };
-  automotive_metrics: {
-    track_surface: {
-      temperature: number;
-      condition: string;
-      grip_level: string;
-    };
-    tire_temperature_estimates: {
-      soft_compound: number;
-      medium_compound: number;
-      hard_compound: number;
-      street_performance: number;
-      all_season: number;
-    };
-    drive_recommendations: {
-      tire_warmup_minutes: {
-        performance: number;
-        street: number;
-        all_season: number;
-      };
-      torque_management: {
-        recommended_percentage: number;
-        traction_control: string;
-      };
-      tire_pressure_adjustment: number;
-      braking_points: string;
-    };
-    visibility_assessment: string;
-    sunglare_risk: string;
-  };
-  hourly_forecast: Array<{
-    time: string;
-    temperature: number;
-    conditions: string;
-    precipitation_chance: number;
-  }>;
-  alerts: Array<any>;
-  data_sources: {
-    weather: string;
-    solar: string;
-  };
-}
-
 // Get current weather data for a location
 export const getWeatherData = async (location: { lat: number; lon: number }, units: 'metric' | 'imperial' = 'imperial') => {
   const response = await fetch(
@@ -219,25 +153,4 @@ export const getOptimalTorqueSetting = (
   }
   
   return baseTorque;
-};
-
-// Fetch enhanced automotive weather data with F1-style telemetry metrics
-export const fetchAutomotiveWeather = async (
-  location: { lat: number; lon: number }, 
-  units: 'metric' | 'imperial' = 'imperial'
-): Promise<AutomotiveWeatherData> => {
-  try {
-    const response = await fetch(
-      `/api/automotive-weather?lat=${location.lat}&lon=${location.lon}&units=${units}`
-    );
-    
-    if (!response.ok) {
-      throw new Error(`Automotive weather API error: ${response.status}`);
-    }
-    
-    return await response.json();
-  } catch (error) {
-    console.error('Error fetching automotive weather data:', error);
-    throw error;
-  }
 };
