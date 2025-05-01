@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation, Link } from 'react-router-dom';
+import { useLocation, Link } from 'wouter';
 import { ChevronRight } from 'lucide-react';
 
 interface BreadcrumbItem {
@@ -8,88 +8,124 @@ interface BreadcrumbItem {
 }
 
 const ContextualBreadcrumbs: React.FC = () => {
-  const location = useLocation();
+  const [location] = useLocation();
   
-  // Get breadcrumb items based on current path
-  const getBreadcrumbItems = (): BreadcrumbItem[] => {
-    const { pathname } = location;
-    
-    // Don't show breadcrumbs on home page
-    if (pathname === '/') {
-      return [];
+  // Define breadcrumb mappings for all supported routes
+  const routeMappings: Record<string, BreadcrumbItem[]> = {
+    '/': [],
+    '/new-weather-center': [
+      { path: '/', label: 'Home' },
+      { path: '/new-weather-center', label: 'Weather Center' }
+    ],
+    '/weather': [
+      { path: '/', label: 'Home' },
+      { path: '/weather', label: 'Weather' }
+    ],
+    '/garage-vault': [
+      { path: '/', label: 'Home' },
+      { path: '/garage-vault', label: 'Garage Vault' }
+    ],
+    '/manifestation-station': [
+      { path: '/', label: 'Home' },
+      { path: '/manifestation-station', label: 'Manifestation Station' }
+    ],
+    '/drive-journal': [
+      { path: '/', label: 'Home' },
+      { path: '/drive-journal', label: 'Drive Journal' }
+    ],
+    '/route-planner': [
+      { path: '/', label: 'Home' },
+      { path: '/new-weather-center', label: 'Weather Center' },
+      { path: '/route-planner', label: 'Route Planner' }
+    ],
+    '/juicebox': [
+      { path: '/', label: 'Home' },
+      { path: '/juicebox', label: 'Juice Box' }
+    ],
+    '/vehicle-mods': [
+      { path: '/', label: 'Home' },
+      { path: '/garage-vault', label: 'Garage Vault' },
+      { path: '/vehicle-mods', label: 'Vehicle Mods' }
+    ],
+    '/mood-energy-tracker': [
+      { path: '/', label: 'Home' },
+      { path: '/dashboard', label: 'Dashboard' },
+      { path: '/mood-energy-tracker', label: 'Mood & Energy Tracker' }
+    ],
+    '/seasonal-checklist': [
+      { path: '/', label: 'Home' },
+      { path: '/garage-vault', label: 'Garage Vault' },
+      { path: '/seasonal-checklist', label: 'Seasonal Checklist' }
+    ],
+    '/membership': [
+      { path: '/', label: 'Home' },
+      { path: '/membership', label: 'Paddock20 Membership' }
+    ],
+    '/chat-feed': [
+      { path: '/', label: 'Home' },
+      { path: '/chat-feed', label: 'Paddock20 Chat' }
+    ],
+    '/gloss-reset': [
+      { path: '/', label: 'Home' },
+      { path: '/juicebox', label: 'Juice Box' },
+      { path: '/gloss-reset', label: 'Gloss Reset Program' }
+    ],
+    '/juice-loadouts': [
+      { path: '/', label: 'Home' },
+      { path: '/juicebox', label: 'Juice Box' },
+      { path: '/juice-loadouts', label: 'Product Loadouts' }
+    ],
+    '/gloss-growth': [
+      { path: '/', label: 'Home' },
+      { path: '/juicebox', label: 'Juice Box' },
+      { path: '/gloss-growth', label: 'Gloss Growth Tracker' }
+    ],
+    '/juicebox-videos': [
+      { path: '/', label: 'Home' },
+      { path: '/juicebox', label: 'Juice Box' },
+      { path: '/juicebox-videos', label: 'Video Library' }
+    ],
+    '/dashboard': [
+      { path: '/', label: 'Home' },
+      { path: '/dashboard', label: 'Dashboard' }
+    ]
+  };
+  
+  // Get breadcrumbs for the current path
+  const getBreadcrumbs = (): BreadcrumbItem[] => {
+    // First try exact match
+    if (routeMappings[location]) {
+      return routeMappings[location];
     }
     
-    // Define custom breadcrumb hierarchies
-    const customHierarchies: Record<string, BreadcrumbItem[]> = {
-      '/new-weather-center': [
-        { path: '/', label: 'Home' },
-        { path: '/new-weather-center', label: 'Weather Center' }
-      ],
-      '/garage-vault': [
-        { path: '/', label: 'Home' },
-        { path: '/garage-vault', label: 'Garage Vault' }
-      ],
-      '/manifestation-station': [
-        { path: '/', label: 'Home' },
-        { path: '/manifestation-station', label: 'Manifestation Station' }
-      ],
-      '/drive-journal': [
-        { path: '/', label: 'Home' },
-        { path: '/drive-journal', label: 'Drive Journal' }
-      ],
-      '/route-planner': [
-        { path: '/', label: 'Home' },
-        { path: '/new-weather-center', label: 'Weather Center' },
-        { path: '/route-planner', label: 'Route Planner' }
-      ],
-      '/juicebox': [
-        { path: '/', label: 'Home' },
-        { path: '/juicebox', label: 'Juice Box' }
-      ],
-      '/vehicle-mods': [
-        { path: '/', label: 'Home' },
-        { path: '/garage-vault', label: 'Garage Vault' },
-        { path: '/vehicle-mods', label: 'Vehicle Mods' }
-      ],
-      '/mood-energy-tracker': [
-        { path: '/', label: 'Home' },
-        { path: '/dashboard', label: 'Dashboard' },
-        { path: '/mood-energy-tracker', label: 'Mood & Energy Tracker' }
-      ]
-    };
-    
-    // Check if there's a custom hierarchy for this exact path
-    for (const [path, breadcrumbs] of Object.entries(customHierarchies)) {
-      if (pathname === path || (path !== '/' && pathname.startsWith(path))) {
+    // Try to match the start of the path
+    for (const [path, breadcrumbs] of Object.entries(routeMappings)) {
+      if (path !== '/' && location.startsWith(path)) {
         return breadcrumbs;
       }
     }
     
-    // Default: generate breadcrumbs from the path segments
-    const pathSegments = pathname.split('/').filter(segment => segment);
+    // Default: generate breadcrumbs from URL segments
+    const segments = location.split('/').filter(Boolean);
+    const result: BreadcrumbItem[] = [{ path: '/', label: 'Home' }];
     
-    const breadcrumbs: BreadcrumbItem[] = [
-      { path: '/', label: 'Home' }
-    ];
-    
-    let currentPath = '';
-    
-    pathSegments.forEach(segment => {
-      currentPath += `/${segment}`;
+    let pathSoFar = '';
+    segments.forEach((segment) => {
+      pathSoFar += `/${segment}`;
       const label = segment
         .split('-')
-        .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+        .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
       
-      breadcrumbs.push({ path: currentPath, label });
+      result.push({ path: pathSoFar, label });
     });
     
-    return breadcrumbs;
+    return result;
   };
   
-  const breadcrumbs = getBreadcrumbItems();
+  const breadcrumbs = getBreadcrumbs();
   
-  // Don't render if there are no breadcrumbs (home page) or only one item
+  // Don't render if we're on the home page or have only one breadcrumb
   if (breadcrumbs.length <= 1) {
     return null;
   }
