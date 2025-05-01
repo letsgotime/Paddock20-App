@@ -13,6 +13,7 @@ import PersonalizedWeatherClothingRecommendations from '../components/Personaliz
 import EcoDrivingPerformanceTracker from '../components/EcoDrivingPerformanceTracker';
 import PredictiveRouteWeatherWarnings from '../components/PredictiveRouteWeatherWarnings';
 import DetailedCommuteAnalytics from '../components/DetailedCommuteAnalytics';
+import OneTapWeatherSnapshot from '../components/OneTapWeatherSnapshot';
 import { 
   Cloud, Sun, Wind, CloudRain, Thermometer, 
   Droplets, AlertTriangle, Gauge, Calendar, Car, Key,
