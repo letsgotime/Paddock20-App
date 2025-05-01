@@ -787,6 +787,31 @@ const NewGTGWeatherPage: React.FC = () => {
                 {/* Commute Tracker Tab */}
                 {activeTab === 'commute' && (
                   <div className="animate-fadein">
+                    {/* Add the new components in a grid layout */}
+                    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+                      <div className="lg:col-span-2">
+                        <NavigationLinkWidget 
+                          currentLocation={currentWeather ? { 
+                            name: currentWeather.name || "Current Location", 
+                            lat: currentWeather.coord.lat, 
+                            lon: currentWeather.coord.lon 
+                          } : undefined}
+                          favoriteLocations={favoriteLocations.map(loc => ({
+                            id: loc.id,
+                            name: loc.name,
+                            latitude: loc.lat,
+                            longitude: loc.lon,
+                            type: loc.type,
+                            icon: loc.icon
+                          }))}
+                        />
+                      </div>
+                      
+                      <div className="lg:col-span-1">
+                        <PrecipitationWidget />
+                      </div>
+                    </div>
+                    
                     <div className="rounded-lg border border-blue-900/30 overflow-hidden mb-6">
                       <div className="bg-blue-900/20 px-4 py-2 flex justify-between items-center">
                         <h3 className="text-blue-400 font-semibold flex items-center">

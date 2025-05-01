@@ -41,7 +41,7 @@ const NavigationLinkWidget: React.FC<NavigationLinkWidgetProps> = ({
     }
   ] 
 }) => {
-  const { weatherData } = useWeather();
+  const { weatherData, unit } = useWeather();
   const [selectedLocation, setSelectedLocation] = useState<{id: string | number, latitude: number, longitude: number, name: string} | null>(null);
   
   // Create deep links for various navigation apps
@@ -235,7 +235,7 @@ const NavigationLinkWidget: React.FC<NavigationLinkWidgetProps> = ({
     }
     // Drizzle/Rain
     else if ((weatherId >= 300 && weatherId < 400) || (weatherId >= 500 && weatherId < 600)) {
-      return `${weatherCondition} that may affect traction (${temp}°${weatherData.units === 'imperial' ? 'F' : 'C'})`;
+      return `${weatherCondition} that may affect traction (${temp}°${unit === 'imperial' ? 'F' : 'C'})`;
     }
     // Snow
     else if (weatherId >= 600 && weatherId < 700) {
@@ -247,7 +247,7 @@ const NavigationLinkWidget: React.FC<NavigationLinkWidgetProps> = ({
     }
     // Clear/Clouds
     else {
-      return `${weatherCondition} (${temp}°${weatherData.units === 'imperial' ? 'F' : 'C'})`;
+      return `${weatherCondition} (${temp}°${unit === 'imperial' ? 'F' : 'C'})`;
     }
   }
 };
