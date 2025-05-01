@@ -5,6 +5,10 @@ import WeatherImpactIndicator from './WeatherImpactIndicator';
 import CitySearch from './CitySearch';
 import LocationPermissionPrompt from './LocationPermissionPrompt';
 import UnitToggle from './UnitToggle';
+import WeatherAlertsDashboard from './WeatherAlertsDashboard';
+import DriveModeRecommendations from './DriveModeRecommendations';
+import MultiLocationComparison from './MultiLocationComparison';
+import TimedSurfacePredictions from './TimedSurfacePredictions';
 import { useWeather } from '../contexts/WeatherContext';
 import { useUnits } from '../contexts/UnitsContext';
 import { MapPin, Search, Settings } from 'lucide-react';
@@ -1164,6 +1168,33 @@ function F1PitWallDashboard() {
               weatherData={weatherData} 
             />
           </div>
+        </div>
+        
+        {/* Additional weather analysis components */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          {/* Weather Alerts Dashboard */}
+          <div>
+            <WeatherAlertsDashboard />
+          </div>
+          
+          {/* Drive Mode Recommendations */}
+          <div>
+            <DriveModeRecommendations 
+              weatherData={weatherData}
+              selectedVehicle={selectedVehicle}
+            />
+          </div>
+        </div>
+        
+        {/* Time-based predictions and multi-location comparison */}
+        <div className="mb-6">
+          <TimedSurfacePredictions />
+        </div>
+        
+        <div className="mb-6">
+          <MultiLocationComparison 
+            savedLocations={[]}
+          />
         </div>
         
         {/* Bottom status bar */}
