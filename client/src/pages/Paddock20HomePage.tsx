@@ -74,7 +74,7 @@ const Paddock20HomePage: React.FC = () => {
               <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20">
                 <div className="text-blue-400/70 text-xs mb-1">UV Index</div>
                 <div className="text-white text-xl font-mono font-semibold">
-                  {automotiveWeatherData?.uvi?.toFixed(1) || "N/A"}
+                  {automotiveWeatherData?.conditions?.uv_index?.toFixed(1) || "N/A"}
                 </div>
               </div>
               
@@ -86,9 +86,9 @@ const Paddock20HomePage: React.FC = () => {
               </div>
               
               <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20">
-                <div className="text-blue-400/70 text-xs mb-1">Dew Point</div>
+                <div className="text-blue-400/70 text-xs mb-1">Surface Temp</div>
                 <div className="text-white text-xl font-mono font-semibold">
-                  {(automotiveWeatherData?.dew_point || 0).toFixed(1)}°F
+                  {automotiveWeatherData?.automotive_metrics?.track_surface?.temperature?.toFixed(1) || "N/A"}°F
                 </div>
               </div>
               
