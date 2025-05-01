@@ -17,7 +17,7 @@ import {
   CloudFog,
   Navigation,
   Cloud,
-  Snow
+  Snowflake
 } from 'lucide-react';
 
 interface DetailedCommuteAnalyticsProps {
@@ -44,6 +44,11 @@ const DetailedCommuteAnalytics: React.FC<DetailedCommuteAnalyticsProps> = ({ loc
   const [roadSafetyMetrics, setRoadSafetyMetrics] = useState<any>(null);
   const [vehiclePerformanceImpact, setVehiclePerformanceImpact] = useState<any>(null);
   const [weatherTrend, setWeatherTrend] = useState<any>(null);
+  
+  // Format time helper function
+  const formatTime = (date: Date) => {
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
   
   // Fetch detailed weather and projected data
   useEffect(() => {
