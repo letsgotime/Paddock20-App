@@ -209,7 +209,7 @@ const generateDrivingTips = (weather: any, forecast: any, units: string) => {
     });
   } else if (weatherId > 800) {
     tips.push({
-      tip: "Partially cloudy: Good driving conditions; ideal light for photography if documenting your journey."
+      tip: "Partially cloudy: Good driving conditions; ideal light for photography if documenting your route."
     });
   }
   
