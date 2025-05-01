@@ -55,6 +55,7 @@ import ShareDemoPage from "./pages/ShareDemoPage";
 import MoodEnergyTrackerPage from "./pages/MoodEnergyTrackerPage";
 import SupportChatbot from "./components/SupportChatbot";
 import HomePage from "./pages/Home";
+import OneTapWeatherSnapshot from "./components/OneTapWeatherSnapshot";
 import { useAuth } from "./hooks/useAuth";
 import { MAIN_CONTENT_ID, LiveRegion } from './lib/accessibility';
 import './paddock20.css';
