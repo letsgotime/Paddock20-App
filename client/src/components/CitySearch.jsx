@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from '../contexts/LocationContext';
-import { useWeather } from '../contexts/SimpleWeatherContext';
+import { useWeather } from '../contexts/WeatherContext';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -8,13 +8,9 @@ import { Search, MapPin, Loader2 } from 'lucide-react';
 
 const CitySearch = ({ open, onOpenChange }) => {
   const { saveLocation } = useLocation();
-  const { 
-    searchQuery,
-    setSearchQuery,
-    searchResults,
-    setSearchResults,
-    fetchWeatherData
-  } = useWeather();
+  const { fetchWeatherData } = useWeather();
+  const [searchQuery, setSearchQuery] = useState('');
+  const [searchResults, setSearchResults] = useState([]);
   
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState(null);
