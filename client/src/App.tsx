@@ -149,6 +149,15 @@ function App() {
               {/* Toast notifications with ARIA live region built in */}
               <Toaster />
               
+              {/* Global floating weather snapshot - will be available on all pages */}
+              {(effectiveSession || previewMode) && (
+                <OneTapWeatherSnapshot 
+                  floating={true}
+                  // Don't show on weather center page where it would be redundant
+                  className={window.location.pathname === '/new-weather-center' ? 'hidden' : ''}
+                />
+              )}
+              
               <Routes>
                 {/* Public authentication route */}
                 <Route path="/auth" element={!session && !previewMode ? <AuthPage /> : <Navigate to="/dashboard" replace />} />
