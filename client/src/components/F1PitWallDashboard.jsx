@@ -748,32 +748,61 @@ function F1PitWallDashboard() {
   return (
     <div className="flex flex-col items-center min-h-screen bg-gray-900 text-white p-4">
       <div className="w-full max-w-7xl">
-        {/* Header with F1-style telemetry feel */}
-        <div className="flex flex-col md:flex-row justify-between items-center mb-6 bg-black/60 p-4 rounded-lg border-l-4 border-blue-500">
-          <div className="flex flex-col items-center md:items-start text-center md:text-left">
-            <div className="text-2xl md:text-3xl font-bold text-blue-400" style={{ fontFamily: 'Orbitron, sans-serif' }}>WEATHER PADDOCK</div>
-            <div className="text-lg md:text-xl font-semibold">F1-Inspired Weather & Navigation Telemetry</div>
-          </div>
-          <div className="mt-3 md:mt-0 flex flex-col md:flex-row items-center gap-3">
-            <div className="flex items-center space-x-3">
-              <button 
-                onClick={() => setCitySearchOpen(true)}
-                className="flex items-center space-x-1 bg-gray-800 hover:bg-gray-700 p-2 rounded-lg text-sm"
-              >
-                <MapPin className="h-4 w-4 text-green-400" />
-                <span>{weatherData?.location?.name || 'Select Location'}</span>
-              </button>
-              
-              <UnitToggle />
+        {/* Enhanced Header with F1-style telemetry feel */}
+        <div className="mb-6">
+          {/* Main header */}
+          <div className="flex flex-col md:flex-row justify-between items-center bg-gradient-to-r from-black to-gray-900 p-5 rounded-lg border-l-4 border-blue-500 shadow-lg">
+            <div className="flex flex-col items-center md:items-start text-center md:text-left">
+              <div className="text-3xl md:text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-green-400" style={{ fontFamily: 'Orbitron, sans-serif' }}>WEATHER PADDOCK</div>
+              <div className="text-lg md:text-xl font-semibold mt-1">F1-Inspired Weather & Navigation Telemetry</div>
             </div>
-            
-            <div className="flex items-center space-x-3">
-              <div className="flex flex-col text-sm">
-                <div className="text-gray-400">Local Time</div>
-                <div>{formatTime(Date.now())}</div>
+            <div className="mt-3 md:mt-0 flex flex-col md:flex-row items-center gap-3">
+              <div className="flex items-center space-x-3">
+                <button 
+                  onClick={() => setCitySearchOpen(true)}
+                  className="flex items-center space-x-1 bg-gray-800 hover:bg-gray-700 p-2 rounded-lg text-sm"
+                >
+                  <MapPin className="h-4 w-4 text-green-400" />
+                  <span>{weatherData?.location?.name || 'Select Location'}</span>
+                </button>
+                
+                <UnitToggle />
               </div>
-              <div className="px-3 py-1 bg-blue-900/60 rounded text-xs uppercase tracking-wider">
-                Live
+              
+              <div className="flex items-center space-x-3">
+                <div className="flex flex-col text-sm">
+                  <div className="text-gray-400">Local Time</div>
+                  <div>{formatTime(Date.now())}</div>
+                </div>
+                <div className="px-3 py-1 bg-blue-900/60 rounded text-xs uppercase tracking-wider animate-pulse">
+                  Live
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Informational subheader */}
+          <div className="mt-2 p-4 bg-gray-800/60 rounded-lg border border-gray-700">
+            <div className="flex flex-col md:flex-row justify-between">
+              <div className="md:w-2/3">
+                <h3 className="text-sm font-semibold mb-2 flex items-center">
+                  <span className="h-2 w-2 bg-green-500 rounded-full mr-2"></span>
+                  PADDOCK20 WEATHER CENTER
+                </h3>
+                <p className="text-sm text-gray-300">
+                  This advanced F1-inspired weather dashboard provides real-time track conditions and driving telemetry. 
+                  Select a vehicle for specific performance recommendations based on current weather. 
+                  Save multiple locations for route planning and detailed weather impact analysis.
+                </p>
+              </div>
+              <div className="mt-3 md:mt-0 md:w-1/3 md:ml-4 bg-gray-900/50 p-3 rounded-lg border border-gray-700">
+                <h4 className="text-xs font-semibold mb-1 text-blue-400">Quick Guide:</h4>
+                <ul className="text-xs text-gray-400 space-y-1">
+                  <li>• Use "Select Location" to choose a weather location</li>
+                  <li>• Save multiple locations for route analysis</li>
+                  <li>• Select a vehicle for tailored driving recommendations</li>
+                  <li>• Switch between imperial and metric units as needed</li>
+                </ul>
               </div>
             </div>
           </div>
