@@ -30,7 +30,7 @@ import EBooksPage from "./pages/eBooksPage";
 import Paddock20HomePage from "./pages/Paddock20HomePage";
 import DropdownNavbar from "./components/DropdownNavbar";
 import Footer from "./components/Footer";
-// WeatherProvider has been temporarily removed
+import { WeatherProvider } from "./contexts/WeatherContext";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import PersonalizedDashboard from "./pages/PersonalizedDashboard";
@@ -106,31 +106,33 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        {/* Skip link for keyboard navigation */}
-        <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
-          Skip to main content
-        </a>
-        
-        <div className="min-h-screen bg-black font-openSans text-white">
-          {/* Header with navigation */}
-          <header role="banner">
-            {(effectiveSession || previewMode) && (
-              <>
-                <DropdownNavbar />
-              </>
-            )}
-          </header>
+        {/* Centralized Weather Provider - Provides weather data to all components */}
+        <WeatherProvider>
+          {/* Skip link for keyboard navigation */}
+          <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
+            Skip to main content
+          </a>
+          
+          <div className="min-h-screen bg-black font-openSans text-white">
+            {/* Header with navigation */}
+            <header role="banner">
+              {(effectiveSession || previewMode) && (
+                <>
+                  <DropdownNavbar />
+                </>
+              )}
+            </header>
 
-          {/* Main content area */}
-          <main id={MAIN_CONTENT_ID} className="container mx-auto px-4" tabIndex={-1}>
-            {/* Toast notifications with ARIA live region built in */}
-            <Toaster />
-            
-            <Routes>
-              {/* Public authentication route */}
-              <Route path="/auth" element={!session && !previewMode ? <AuthPage /> : <Navigate to="/dashboard" replace />} />
+            {/* Main content area */}
+            <main id={MAIN_CONTENT_ID} className="container mx-auto px-4" tabIndex={-1}>
+              {/* Toast notifications with ARIA live region built in */}
+              <Toaster />
               
-              {/* Protected routes */}
+              <Routes>
+                {/* Public authentication route */}
+                <Route path="/auth" element={!session && !previewMode ? <AuthPage /> : <Navigate to="/dashboard" replace />} />
+                
+                {/* Protected routes */}
               <Route path="/" element={<ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
               <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
               <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
@@ -185,6 +187,7 @@ function App() {
           {/* Footer with links and information */}
           <Footer />
         </div>
+        </WeatherProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
