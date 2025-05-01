@@ -1,133 +1,122 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
+import { useLocation } from 'wouter';
 
 // Create context
-const TileContext = createContext(null);
+const TileContext = createContext();
 
 /**
- * TileProvider - Context provider for managing tile expansion states and navigation
- * This allows components to communicate with each other about their expanded states
- * and helps coordinate fullscreen views so only one component is fullscreen at a time
+ * TileProvider - Context provider for managing all expandable tiles
+ * Handles state management for tile expansion, fullscreen mode, and navigation
  */
 export function TileProvider({ children }) {
-  // Track expanded and fullscreen states for all tiles
-  const [expandedTiles, setExpandedTiles] = useState({});
-  const [fullscreenTile, setFullscreenTile] = useState(null);
+  const [expandedTile, setExpandedTile] = useState(null); // Id of the currently expanded tile
+  const [fullscreenTile, setFullscreenTile] = useState(null); // Id of the currently fullscreen tile
+  const [, navigate] = useLocation();
   
-  // Track navigation history for returning to previous views
-  const [navigationHistory, setNavigationHistory] = useState([]);
+  // Registered tiles for navigation
+  const [registeredTiles, setRegisteredTiles] = useState([]);
   
-  // Function to expand a tile
+  // Register a new tile
+  const registerTile = useCallback((tile) => {
+    setRegisteredTiles(prev => {
+      // Check if tile already exists
+      const exists = prev.some(t => t.id === tile.id);
+      if (exists) {
+        return prev;
+      }
+      return [...prev, tile];
+    });
+    
+    return () => {
+      // Cleanup function to unregister tile
+      setRegisteredTiles(prev => prev.filter(t => t.id !== tile.id));
+    };
+  }, []);
+  
+  // Expand a tile
   const expandTile = useCallback((tileId) => {
-    setExpandedTiles(prev => ({
-      ...prev,
-      [tileId]: true
-    }));
-  }, []);
-  
-  // Function to collapse a tile
-  const collapseTile = useCallback((tileId) => {
-    setExpandedTiles(prev => ({
-      ...prev,
-      [tileId]: false
-    }));
-  }, []);
-  
-  // Function to toggle a tile's expanded state
-  const toggleTileExpanded = useCallback((tileId) => {
-    setExpandedTiles(prev => ({
-      ...prev,
-      [tileId]: !prev[tileId]
-    }));
-  }, []);
-  
-  // Function to make a tile fullscreen (and ensure other tiles are not)
-  const setTileFullscreen = useCallback((tileId) => {
-    // Store current state for returning later
-    if (fullscreenTile !== tileId) {
-      setNavigationHistory(prev => [...prev, fullscreenTile]);
+    // If another tile is already expanded, collapse it first
+    if (expandedTile && expandedTile !== tileId) {
+      setExpandedTile(null);
     }
     
+    setExpandedTile(prev => prev === tileId ? null : tileId);
+  }, [expandedTile]);
+  
+  // Enter fullscreen mode for a tile
+  const enterFullscreen = useCallback((tileId) => {
     setFullscreenTile(tileId);
-  }, [fullscreenTile]);
+    navigate(`/detail/${tileId}`);
+  }, [navigate]);
   
-  // Function to exit fullscreen
+  // Exit fullscreen mode
   const exitFullscreen = useCallback(() => {
-    // Return to previous fullscreen tile if there was one
-    const prevTile = navigationHistory.length > 0 
-      ? navigationHistory[navigationHistory.length - 1] 
-      : null;
-    
-    setFullscreenTile(prevTile);
-    
-    if (navigationHistory.length > 0) {
-      setNavigationHistory(prev => prev.slice(0, -1));
+    setFullscreenTile(null);
+    navigate('/');
+  }, [navigate]);
+  
+  // Handle navigation requests
+  const handleNavigation = useCallback((path) => {
+    if (path === 'dashboard') {
+      exitFullscreen();
+    } else if (path.startsWith('detail/')) {
+      const tileId = path.replace('detail/', '');
+      setFullscreenTile(tileId);
+      navigate(`/${path}`);
+    } else {
+      navigate(`/${path}`);
     }
-  }, [navigationHistory]);
+  }, [exitFullscreen, navigate]);
   
-  // Function to check if a tile is expanded
+  // Check if a specific tile is expanded
   const isTileExpanded = useCallback((tileId) => {
-    return !!expandedTiles[tileId];
-  }, [expandedTiles]);
+    return expandedTile === tileId;
+  }, [expandedTile]);
   
-  // Function to check if a tile is fullscreen
+  // Check if a specific tile is in fullscreen mode
   const isTileFullscreen = useCallback((tileId) => {
     return fullscreenTile === tileId;
   }, [fullscreenTile]);
   
-  // Function to collapse all tiles
-  const collapseAllTiles = useCallback(() => {
-    setExpandedTiles({});
-  }, []);
-  
-  // Track the last viewed detail pages for each section
-  const [lastViewedPages, setLastViewedPages] = useState({});
-  
-  // Function to set the last viewed page for a section
-  const setLastViewedPage = useCallback((section, pageId) => {
-    setLastViewedPages(prev => ({
-      ...prev,
-      [section]: pageId
-    }));
-  }, []);
-  
-  // Function to get the last viewed page for a section
-  const getLastViewedPage = useCallback((section) => {
-    return lastViewedPages[section];
-  }, [lastViewedPages]);
+  // Get information about adjacent tiles for navigation
+  const getAdjacentTiles = useCallback((tileId) => {
+    const currentIndex = registeredTiles.findIndex(t => t.id === tileId);
+    
+    if (currentIndex === -1) {
+      return { prev: null, next: null };
+    }
+    
+    const prev = currentIndex > 0 ? registeredTiles[currentIndex - 1] : null;
+    const next = currentIndex < registeredTiles.length - 1 ? registeredTiles[currentIndex + 1] : null;
+    
+    return { prev, next };
+  }, [registeredTiles]);
   
   // Context value
-  const contextValue = {
-    expandedTiles,
+  const value = {
+    expandedTile,
     fullscreenTile,
-    navigationHistory,
+    registeredTiles,
+    registerTile,
     expandTile,
-    collapseTile,
-    toggleTileExpanded,
-    setTileFullscreen,
+    enterFullscreen,
     exitFullscreen,
+    handleNavigation,
     isTileExpanded,
     isTileFullscreen,
-    collapseAllTiles,
-    setLastViewedPage,
-    getLastViewedPage
+    getAdjacentTiles,
   };
   
-  return (
-    <TileContext.Provider value={contextValue}>
-      {children}
-    </TileContext.Provider>
-  );
+  return <TileContext.Provider value={value}>{children}</TileContext.Provider>;
 }
 
-// Hook for using the tile context
-export function useTile() {
+// Custom hook to use the tile context
+export function useTileSystem() {
   const context = useContext(TileContext);
   
   if (!context) {
-    throw new Error('useTile must be used within a TileProvider');
+    throw new Error('useTileSystem must be used within a TileProvider');
   }
   
   return context;
 }
-
-export default TileContext;
