@@ -29,7 +29,7 @@ export function WeatherProvider({ children }) {
     // Prevent concurrent fetches
     if (fetchInProgress.current) {
       console.log("Fetch already in progress, skipping...");
-      return;
+      return weatherData;
     }
       
     fetchInProgress.current = true;
@@ -69,10 +69,17 @@ export function WeatherProvider({ children }) {
       setRefreshing(false);
       fetchInProgress.current = false;
     }
-  }, [unitsContext.unitSystem, refreshing, weatherData]);
+  // Removed weatherData from dependency array - it causes infinite loops
+  }, [unitsContext.unitSystem, refreshing]);
   
   // Fetch for current location
   const fetchCurrentLocationWeather = useCallback(async () => {
+    // Skip if a fetch is already in progress
+    if (fetchInProgress.current) {
+      console.log("Fetch already in progress, skipping geolocation request...");
+      return weatherData;
+    }
+    
     try {
       if (navigator.geolocation) {
         setLoading(true);
@@ -95,8 +102,11 @@ export function WeatherProvider({ children }) {
     } catch (err) {
       console.error("Error getting location:", err);
       
-      // Fall back to default
-      return await fetchWeatherData();
+      // Fall back to default if we have no data yet
+      if (!weatherData) {
+        return await fetchWeatherData();
+      }
+      return weatherData;
     }
   }, [fetchWeatherData]);
   
@@ -123,13 +133,36 @@ export function WeatherProvider({ children }) {
     }
   }, []); // Empty dependency array = only run on mount
   
-  // Refresh when units change
+  // Refresh when units change - debounced to prevent rapid firing
+  const unitsChangeTimeoutRef = useRef(null);
+  
   useEffect(() => {
-    if (initialFetchDone.current && weatherData?.location?.coordinates && !loading) {
-      setRefreshing(true);
-      const { lat, lon } = weatherData.location.coordinates;
-      fetchWeatherData(lat, lon).catch(console.error);
+    // Make sure we have data and initial fetch is done
+    if (!initialFetchDone.current || !weatherData?.location?.coordinates || loading) {
+      return;
     }
+    
+    // Clear any existing timeout
+    if (unitsChangeTimeoutRef.current) {
+      clearTimeout(unitsChangeTimeoutRef.current);
+    }
+    
+    // Set a new timeout to debounce the fetch
+    unitsChangeTimeoutRef.current = setTimeout(() => {
+      // Only fetch if we're not already fetching
+      if (!fetchInProgress.current) {
+        setRefreshing(true);
+        const { lat, lon } = weatherData.location.coordinates;
+        fetchWeatherData(lat, lon).catch(console.error);
+      }
+    }, 300); // Short debounce
+    
+    // Cleanup
+    return () => {
+      if (unitsChangeTimeoutRef.current) {
+        clearTimeout(unitsChangeTimeoutRef.current);
+      }
+    };
   }, [unitsContext.unitSystem]);
   
   const getFormattedLastUpdated = () => {
@@ -156,7 +189,13 @@ export function WeatherProvider({ children }) {
   
   // Fetch for saved location
   const fetchLocationWeather = useCallback(async (locationId) => {
-    if (!locationContext) return;
+    // Skip if fetch is already in progress
+    if (fetchInProgress.current) {
+      console.log("Fetch already in progress, skipping saved location fetch...");
+      return weatherData;
+    }
+    
+    if (!locationContext) return weatherData;
     
     const location = locationContext.locations.find(
       loc => loc.id.toString() === locationId.toString()
@@ -166,6 +205,8 @@ export function WeatherProvider({ children }) {
       const { lat, lon } = location.coordinates;
       return await fetchWeatherData(lat, lon);
     }
+    
+    return weatherData;
   }, [fetchWeatherData, locationContext]);
   
   // State variables for city search already declared above
