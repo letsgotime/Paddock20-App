@@ -155,6 +155,8 @@ export function WeatherProvider({ children }) {
     }
   }, [fetchWeatherData, locationContext]);
   
+  // State variables for city search already declared above
+  
   // Context value
   const value = {
     weatherData,

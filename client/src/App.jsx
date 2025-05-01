@@ -1,6 +1,6 @@
 import React from 'react';
 import { Route, Switch } from 'wouter';
-import { SimpleWeatherProvider } from './contexts/SimpleWeatherContext';
+import { WeatherProvider } from './contexts/WeatherContext';
 import LocationProvider from './contexts/LocationContext';
 import { UnitsProvider } from './contexts/UnitsContext';
 import WeatherRouteAnalysisPage from './pages/WeatherRouteAnalysisPage';
@@ -11,7 +11,7 @@ function App() {
   return (
     <UnitsProvider>
       <LocationProvider>
-        <SimpleWeatherProvider>
+        <WeatherProvider>
           <div className="min-h-screen bg-gray-900 text-white">
             <Switch>
               <Route path="/" component={F1PitWallDashboard} />
@@ -19,7 +19,7 @@ function App() {
             </Switch>
             <Toaster />
           </div>
-        </SimpleWeatherProvider>
+        </WeatherProvider>
       </LocationProvider>
     </UnitsProvider>
   );

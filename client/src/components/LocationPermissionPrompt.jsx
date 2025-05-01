@@ -1,6 +1,6 @@
 import React from 'react';
 import { useLocation } from '../contexts/LocationContext';
-import { useWeather } from '../contexts/SimpleWeatherContext';
+import { useWeather } from '../contexts/WeatherContext';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
 import { MapPin, Navigation, X } from 'lucide-react';
