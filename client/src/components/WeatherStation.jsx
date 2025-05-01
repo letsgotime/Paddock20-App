@@ -161,6 +161,12 @@ const WeatherStation = () => {
     // Pick a random premium location as fallback
     const fallbackLocation = premiumLocations[Math.floor(Math.random() * premiumLocations.length)];
     
+    // Force loading state to end if it's been too long 
+    const loadingTimeout = setTimeout(() => {
+      setLoading(false);
+      setError("Loading timed out. Please try again.");
+    }, 15000); // 15 second maximum loading time
+    
     try {
       if (navigator.geolocation) {
         // Set a timeout to handle slow geolocation responses
@@ -169,12 +175,13 @@ const WeatherStation = () => {
           setCoordinates({ lat: fallbackLocation.lat, lon: fallbackLocation.lon });
           fetchWeatherByCoordinates(fallbackLocation.lat, fallbackLocation.lon);
           console.log(`Using fallback location: ${fallbackLocation.name}`);
-        }, 5000); // 5 second timeout
+        }, 2000); // Reduced to 2 seconds to respond faster
         
         navigator.geolocation.getCurrentPosition(
           (position) => {
             // Success - clear timeout and use actual position
             clearTimeout(geoTimeout);
+            clearTimeout(loadingTimeout);
             const { latitude, longitude } = position.coords;
             setCoordinates({ lat: latitude, lon: longitude });
             fetchWeatherByCoordinates(latitude, longitude);
@@ -186,19 +193,29 @@ const WeatherStation = () => {
             setCoordinates({ lat: fallbackLocation.lat, lon: fallbackLocation.lon });
             fetchWeatherByCoordinates(fallbackLocation.lat, fallbackLocation.lon);
           },
-          { timeout: 10000, maximumAge: 60000 } // 10s timeout, 1min cache
+          { timeout: 5000, maximumAge: 60000 } // Reduced to 5s timeout, 1min cache
         );
       } else {
         // Geolocation not supported - use fallback
+        clearTimeout(loadingTimeout);
         console.log('Geolocation not available, using fallback location');
         setCoordinates({ lat: fallbackLocation.lat, lon: fallbackLocation.lon });
         fetchWeatherByCoordinates(fallbackLocation.lat, fallbackLocation.lon);
       }
     } catch (error) {
+      clearTimeout(loadingTimeout);
       console.error('Unexpected error getting location:', error);
       // Use fallback in case of unexpected errors
       setCoordinates({ lat: fallbackLocation.lat, lon: fallbackLocation.lon });
       fetchWeatherByCoordinates(fallbackLocation.lat, fallbackLocation.lon);
+      
+      // Ensure loading state ends
+      setTimeout(() => {
+        if (loading) {
+          setLoading(false);
+          setError("An error occurred while loading weather data.");
+        }
+      }, 1000);
     }
   };
 
