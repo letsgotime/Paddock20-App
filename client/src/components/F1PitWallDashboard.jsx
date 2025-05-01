@@ -781,28 +781,85 @@ function F1PitWallDashboard() {
             </div>
           </div>
           
-          {/* Informational subheader */}
-          <div className="mt-2 p-4 bg-gray-800/60 rounded-lg border border-gray-700">
-            <div className="flex flex-col md:flex-row justify-between">
-              <div className="md:w-2/3">
-                <h3 className="text-sm font-semibold mb-2 flex items-center">
-                  <span className="h-2 w-2 bg-green-500 rounded-full mr-2"></span>
-                  PADDOCK20 WEATHER CENTER
-                </h3>
-                <p className="text-sm text-gray-300">
-                  This advanced F1-inspired weather dashboard provides real-time track conditions and driving telemetry. 
-                  Select a vehicle for specific performance recommendations based on current weather. 
-                  Save multiple locations for route planning and detailed weather impact analysis.
-                </p>
+          {/* Informational subheader - Three column layout like Manifestation Station */}
+          <div className="mt-2 bg-gray-900/80 rounded-lg border border-gray-700 overflow-hidden">
+            {/* Header section */}
+            <div className="relative z-10 p-4 border-b border-gray-700 bg-gradient-to-r from-gray-900 via-black to-gray-900">
+              <h2 className="font-bold text-2xl text-center text-white">METHODOLOGY</h2>
+            </div>
+            
+            {/* Three column layout */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-0 relative z-10">
+              {/* WHY YOU'RE HERE */}
+              <div className="p-5 md:border-r border-gray-800 flex flex-col h-full">
+                <div className="mb-3 pb-2 border-b border-gray-700">
+                  <h3 className="font-['Orbitron'] text-lg text-white">WHY YOU'RE HERE</h3>
+                </div>
+                <div className="bg-black bg-opacity-50 p-4 rounded-lg flex-grow border border-gray-800 shadow-inner">
+                  <p className="text-gray-300 text-sm leading-relaxed">
+                    Weather Paddock isn't just about forecasts. <span className="text-blue-400 font-semibold">It's about driving mastery.</span> 
+                    <br /><br />
+                    Every route, vehicle, and track condition is analyzed with F1-grade precision to give you:
+                    <br /><br />
+                    <span className="text-green-400 font-medium">Surface intelligence. Grip assessment. Route optimization.</span> 
+                    <br /><br />
+                    Whether planning a weekend cruise or daily commute, Weather Paddock connects the driver to their environment with technology inspired by motorsport's elite.
+                  </p>
+                </div>
               </div>
-              <div className="mt-3 md:mt-0 md:w-1/3 md:ml-4 bg-gray-900/50 p-3 rounded-lg border border-gray-700">
-                <h4 className="text-xs font-semibold mb-1 text-blue-400">Quick Guide:</h4>
-                <ul className="text-xs text-gray-400 space-y-1">
-                  <li>• Use "Select Location" to choose a weather location</li>
-                  <li>• Save multiple locations for route analysis</li>
-                  <li>• Select a vehicle for tailored driving recommendations</li>
-                  <li>• Switch between imperial and metric units as needed</li>
-                </ul>
+              
+              {/* WHAT YOU GET */}
+              <div className="p-5 md:border-r border-gray-800 flex flex-col h-full">
+                <div className="mb-3 pb-2 border-b border-gray-700">
+                  <h3 className="font-['Orbitron'] text-lg text-white">WHAT YOU GET</h3>
+                </div>
+                <div className="bg-black bg-opacity-50 p-4 rounded-lg flex-grow border border-gray-800 shadow-inner">
+                  <ul className="text-gray-300 text-sm space-y-3">
+                    <li className="flex items-start">
+                      <span className="text-blue-400 mr-2">▹</span>
+                      <span><span className="text-blue-400 font-medium">Real-time surface assessment</span> with grip index and road temperature metrics derived from F1 pit wall technology</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-blue-400 mr-2">▹</span>
+                      <span><span className="text-blue-400 font-medium">Vehicle-specific recommendations</span> that adjust to current conditions, optimizing your driving experience</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-blue-400 mr-2">▹</span>
+                      <span><span className="text-blue-400 font-medium">Multi-location intelligence</span> for route planning, with comparative weather analysis for superior decision-making</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-blue-400 mr-2">▹</span>
+                      <span><span className="text-blue-400 font-medium">Performance telemetry</span> visualized through F1-inspired UI designed for both enthusiasts and everyday drivers</span>
+                    </li>
+                  </ul>
+                </div>
+              </div>
+              
+              {/* HOW TO USE IT */}
+              <div className="p-5 flex flex-col h-full">
+                <div className="mb-3 pb-2 border-b border-gray-700">
+                  <h3 className="font-['Orbitron'] text-lg text-white">HOW TO USE IT</h3>
+                </div>
+                <div className="bg-black bg-opacity-50 p-4 rounded-lg flex-grow border border-gray-800 shadow-inner">
+                  <ol className="text-gray-300 text-sm space-y-3">
+                    <li className="flex items-start">
+                      <span className="text-green-400 font-bold mr-2">1.</span>
+                      <span><span className="text-green-400 font-medium">Select your location</span> using the search feature or current location button. Save multiple locations for route planning.</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-green-400 font-bold mr-2">2.</span>
+                      <span><span className="text-green-400 font-medium">Choose your vehicle</span> to receive tailored performance recommendations based on current weather conditions.</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-green-400 font-bold mr-2">3.</span>
+                      <span><span className="text-green-400 font-medium">Review surface assessment</span> for grip level, road temperature, and other critical driving metrics.</span>
+                    </li>
+                    <li className="flex items-start">
+                      <span className="text-green-400 font-bold mr-2">4.</span>
+                      <span><span className="text-green-400 font-medium">Plan your route</span> by comparing weather conditions across multiple saved locations.</span>
+                    </li>
+                  </ol>
+                </div>
               </div>
             </div>
           </div>
@@ -953,7 +1010,7 @@ function F1PitWallDashboard() {
                   <div className="bg-blue-900/20 border border-blue-800/30 p-4 rounded-lg mb-6">
                     <h3 className="text-sm font-medium mb-2 flex items-center">
                       <span className="h-2 w-2 bg-blue-400 rounded-full mr-2"></span>
-                      Track Assessment
+                      Surface and Route Condition
                     </h3>
                     <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
                       <div className="flex flex-col">
