@@ -4,7 +4,7 @@ import { useWeather } from '../contexts/WeatherContext';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Search, MapPin, Loader2, Navigation } from 'lucide-react';
+import { Search, MapPin, Loader2 } from 'lucide-react';
 
 const CitySearch = ({ open, onOpenChange }) => {
   const { saveLocation } = useLocation();
@@ -14,7 +14,6 @@ const CitySearch = ({ open, onOpenChange }) => {
   
   const [searching, setSearching] = useState(false);
   const [error, setError] = useState(null);
-  const [gettingCurrentLocation, setGettingCurrentLocation] = useState(false);
 
   // Real search functionality using OpenWeather geocoding API
   const searchCities = async (query) => {
@@ -67,71 +66,12 @@ const CitySearch = ({ open, onOpenChange }) => {
       handleSearch();
     }
   };
-  
-  // Get current location using browser geolocation
-  const getCurrentLocation = () => {
-    setGettingCurrentLocation(true);
-    setError(null);
-    
-    if (!navigator.geolocation) {
-      setError("Geolocation is not supported by your browser");
-      setGettingCurrentLocation(false);
-      return;
-    }
-    
-    navigator.geolocation.getCurrentPosition(
-      async (position) => {
-        try {
-          const { latitude, longitude } = position.coords;
-          
-          // Reverse geocode to get location name
-          const response = await fetch(
-            `https://api.openweathermap.org/geo/1.0/reverse?lat=${latitude}&lon=${longitude}&limit=1&appid=2379a18ee0e478c88aa7d4aa1df44410`
-          );
-          
-          if (!response.ok) {
-            throw new Error(`Reverse geocoding failed: ${response.status} ${response.statusText}`);
-          }
-          
-          const data = await response.json();
-          
-          if (data && data.length > 0) {
-            const locationData = {
-              id: Date.now(),
-              name: data[0].name,
-              state: data[0].state || '',
-              country: data[0].country,
-              coordinates: {
-                lat: latitude,
-                lon: longitude
-              }
-            };
-            
-            handleSelectLocation(locationData);
-          } else {
-            throw new Error("No location found for these coordinates");
-          }
-        } catch (err) {
-          console.error("Error getting current location:", err);
-          setError(`Failed to get current location: ${err.message}`);
-        } finally {
-          setGettingCurrentLocation(false);
-        }
-      },
-      (error) => {
-        console.error("Geolocation error:", error);
-        setError(`Geolocation error: ${error.message}`);
-        setGettingCurrentLocation(false);
-      },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-    );
-  };
 
   const handleSelectLocation = (location) => {
     // Save location to the saved locations list
     const locationToSave = {
       id: Date.now(),
-      name: `${location.name}${location.state ? `, ${location.state}` : ''}`,
+      name: `${location.name}, ${location.state}`,
       coordinates: location.coordinates,
       country: location.country
     };
@@ -191,15 +131,6 @@ const CitySearch = ({ open, onOpenChange }) => {
             <Search className="h-4 w-4" />
           </Button>
         </div>
-        
-        <Button 
-          className="w-full mt-2 bg-blue-600 hover:bg-blue-700 text-white flex items-center justify-center"
-          onClick={getCurrentLocation}
-          disabled={gettingCurrentLocation}
-        >
-          <Navigation className="h-4 w-4 mr-2" />
-          {gettingCurrentLocation ? 'Getting Location...' : 'Use Current Location'}
-        </Button>
         
         {error && (
           <div className="text-red-400 text-sm mt-2">{error}</div>
