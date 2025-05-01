@@ -303,9 +303,91 @@ const Paddock20HomePage: React.FC = () => {
             </p>
           </div>
           
-          {/* Embedded Motorsports Gallery with F1 styling */}
+          {/* Award-winning F1-inspired GoTime Events Gallery */}
           <div className="mt-4">
-            <MotorsportsGallery />
+            <div className="motorsports-gallery w-full rounded-xl overflow-hidden bg-gradient-to-br from-black to-gray-900 border border-blue-900/30 shadow-xl">
+              {/* Featured image with F1-style telemetry overlay */}
+              <div className="relative aspect-[16/9] overflow-hidden">
+                <img 
+                  src="/assets/gallery/Ferrari-458-With-HRE-P101-Wheels-By-TAG-Motorsports-2.jpg" 
+                  alt="Ferrari 458 With HRE P101 Wheels"
+                  className="w-full h-full object-cover object-center transition-all duration-700 ease-in-out"
+                />
+                
+                {/* F1-style telemetry overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent">
+                  <div className="absolute bottom-0 left-0 right-0 p-6">
+                    <div className="mb-4">
+                      <h3 className="text-white font-orbitron text-2xl">Ferrari 458</h3>
+                      <p className="text-gray-300 text-sm">Custom HRE P101 wheels by TAG Motorsports</p>
+                    </div>
+                    
+                    {/* F1-style telemetry data bar */}
+                    <div className="bg-black/60 rounded px-4 py-2 backdrop-blur-sm border border-blue-900/30">
+                      <div className="flex justify-between text-xs">
+                        <div>
+                          <span className="text-blue-400">SESSION</span>
+                          <span className="text-white ml-2">LIVE</span>
+                        </div>
+                        <div>
+                          <span className="text-blue-400">SECTOR</span>
+                          <span className="text-white ml-2">S3</span>
+                        </div>
+                        <div>
+                          <span className="text-blue-400">DELTA</span>
+                          <span className="text-green-500 ml-2">-0.153</span>
+                        </div>
+                        <div>
+                          <span className="text-blue-400">ERS</span>
+                          <span className="text-white ml-2">83%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Thumbnail gallery + video navigation */}
+              <div className="px-4 py-3 bg-black/80">
+                <div className="flex justify-between items-center mb-3">
+                  <h4 className="text-blue-400 text-xs uppercase tracking-wider">GoTime Motorsports Gallery</h4>
+                  <div className="flex items-center space-x-3">
+                    <button className="text-white bg-green-600/80 text-xs px-2 py-0.5 rounded">Photos</button>
+                    <button className="text-white bg-blue-600/80 text-xs px-2 py-0.5 rounded">Videos</button>
+                  </div>
+                </div>
+                <div className="flex overflow-x-auto gap-2 pb-1 hide-scrollbar">
+                  <div className="flex-shrink-0 w-16 h-16 rounded overflow-hidden transition-all ring-2 ring-blue-500 scale-105">
+                    <img src="/assets/gallery/Ferrari-458-With-HRE-P101-Wheels-By-TAG-Motorsports-2.jpg" alt="Ferrari 458" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-shrink-0 w-16 h-16 rounded overflow-hidden transition-all opacity-60 hover:opacity-100">
+                    <img src="/assets/gallery/ferrari-mountain-road.png" alt="Ferrari Mountain Road" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-shrink-0 w-16 h-16 rounded overflow-hidden transition-all opacity-60 hover:opacity-100 relative">
+                    <img src="/assets/gallery/ferrari-f1.png" alt="Ferrari F1" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                      </svg>
+                    </div>
+                  </div>
+                  <div className="flex-shrink-0 w-16 h-16 rounded overflow-hidden transition-all opacity-60 hover:opacity-100">
+                    <img src="/assets/gallery/ferrari-desert.png" alt="Ferrari Desert" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-shrink-0 w-16 h-16 rounded overflow-hidden transition-all opacity-60 hover:opacity-100">
+                    <img src="/assets/gallery/mclaren-4184249_1280.jpg" alt="McLaren" className="w-full h-full object-cover" />
+                  </div>
+                  <div className="flex-shrink-0 w-16 h-16 rounded overflow-hidden transition-all opacity-60 hover:opacity-100 relative">
+                    <img src="/assets/gallery/race-car-8338236_1280.jpg" alt="Race Car" className="w-full h-full object-cover" />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/40">
+                      <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <polygon points="5 3 19 12 5 21 5 3"></polygon>
+                      </svg>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           
           <div className="mt-6 pt-4 border-t border-gray-800 flex flex-col sm:flex-row justify-between gap-4 items-center">
@@ -318,10 +400,8 @@ const Paddock20HomePage: React.FC = () => {
                 </p>
               </div>
             </div>
-            <a 
-              href="https://www.instagram.com/gotimemotorsports/" 
-              target="_blank"
-              rel="noopener noreferrer" 
+            <Link 
+              to="/motorsports-gallery" 
               className="bg-gradient-to-r from-blue-600 to-green-600 text-white text-sm px-4 py-2 rounded hover:from-blue-700 hover:to-green-700 transition-all flex items-center gap-2"
             >
               <span>Full Gallery</span>
@@ -329,7 +409,7 @@ const Paddock20HomePage: React.FC = () => {
                 <path d="M5 12h14"></path>
                 <path d="M12 5l7 7-7 7"></path>
               </svg>
-            </a>
+            </Link>
           </div>
         </div>
       </section>

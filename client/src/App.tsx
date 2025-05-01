@@ -34,6 +34,7 @@ import Paddock20HomePage from "./pages/Paddock20HomePage";
 import DropdownNavbar from "./components/DropdownNavbar";
 import Footer from "./components/Footer";
 import { WeatherProvider } from "./contexts/WeatherContext";
+import { GalleryProvider } from "./contexts/GalleryContext";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import PersonalizedDashboard from "./pages/PersonalizedDashboard";
@@ -53,6 +54,7 @@ import ContactPage from "./pages/ContactPage";
 import ChatFeedPage from "./pages/ChatFeedPage";
 import ShareDemoPage from "./pages/ShareDemoPage";
 import MoodEnergyTrackerPage from "./pages/MoodEnergyTrackerPage";
+import MotorsportsGalleryPage from "./pages/MotorsportsGalleryPage";
 import SupportChatbot from "./components/SupportChatbot";
 import HomePage from "./pages/Home";
 import OneTapWeatherSnapshot from "./components/OneTapWeatherSnapshot";
@@ -127,13 +129,14 @@ function App() {
       <TooltipProvider>
         {/* Centralized Weather Provider - Provides weather data to all components */}
         <WeatherProvider>
-          {/* Skip link for keyboard navigation */}
-          <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
-            Skip to main content
-          </a>
-          
-          <div className="min-h-screen bg-black font-openSans text-white">
-            {/* Header with navigation */}
+          <GalleryProvider>
+            {/* Skip link for keyboard navigation */}
+            <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
+              Skip to main content
+            </a>
+            
+            <div className="min-h-screen bg-black font-openSans text-white">
+              {/* Header with navigation */}
             <header role="banner">
               {(effectiveSession || previewMode) && (
                 <>
@@ -208,6 +211,7 @@ function App() {
               <Route path="/chat-feed" element={<ProtectedRoute><ChatFeedPage /></ProtectedRoute>} />
               <Route path="/share" element={<ProtectedRoute><ShareDemoPage /></ProtectedRoute>} />
               <Route path="/mood-energy-tracker" element={<ProtectedRoute><MoodEnergyTrackerPage /></ProtectedRoute>} />
+              <Route path="/motorsports-gallery" element={<ProtectedRoute><MotorsportsGalleryPage /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             
@@ -218,6 +222,7 @@ function App() {
           {/* Footer with links and information */}
           <Footer />
         </div>
+        </GalleryProvider>
         </WeatherProvider>
       </TooltipProvider>
     </QueryClientProvider>
