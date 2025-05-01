@@ -874,17 +874,7 @@ const NewGTGWeatherPage: React.FC = () => {
                           {favoriteLocations.map((location) => (
                             <div 
                               key={location.id}
-                              onClick={() => {
-                                // If this is the selected location, toggle between basic and detailed view
-                                if (location.id === selectedLocation) {
-                                  setSelectedCommuteLocation(location.id);
-                                  setSelectedLocation(null);
-                                } else {
-                                  // Otherwise, just select this location for basic view
-                                  setSelectedLocation(location.id);
-                                  setSelectedCommuteLocation(null);
-                                }
-                              }}
+                              onClick={() => setSelectedLocation(location.id === selectedLocation ? null : location.id)}
                               className={`relative p-4 rounded-lg cursor-pointer transition-all ${
                                 location.id === selectedLocation 
                                   ? 'bg-blue-900/30 border-2 border-blue-500' 
@@ -1071,7 +1061,7 @@ const NewGTGWeatherPage: React.FC = () => {
                           <div className="mt-4 bg-blue-900/10 border border-blue-900/40 rounded-lg animate-fadein overflow-hidden">
                             <div className="bg-black/20 px-4 py-2 flex justify-between items-center">
                               <h3 className="text-blue-400 font-semibold flex items-center">
-                                <BarChart2 className="h-4 w-4 mr-2" />
+                                <BarChart4 className="h-4 w-4 mr-2" />
                                 <span>Advanced Commute Analytics</span>
                               </h3>
                               <button 
