@@ -30,7 +30,7 @@ const DropdownNavbar = () => {
             <Link to="/personalized-dashboard" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>📊 My Dashboard</Link>
             <Link to="/weather" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>☁️ Weather Center</Link>
             <Link to="/new-weather-center" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>☁️ New Weather Center</Link>
-            <Link to="/route-planner" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>🛣️ Route Planner</Link>
+            <Link to="/route-planner" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>🛣️ Fun Drive Planner</Link>
             <Link to="/events" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>📅 Events & Meetups</Link>
             <Link to="/paddock20-vault" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>🏁 Paddock20 Membership</Link>
             <Link to="/garage-vault" className="hover:text-green-400 block" onClick={() => setIsOpen(false)}>🚗 Garage Vault</Link>
