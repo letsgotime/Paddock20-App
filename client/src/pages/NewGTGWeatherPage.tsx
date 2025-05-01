@@ -299,9 +299,17 @@ const NewGTGWeatherPage: React.FC = () => {
     selectedLocation: location, 
     isLoading: isWeatherContextLoading, 
     unit: units,
-    error: weatherError,
-    lastUpdated: timeLastUpdated
+    error: weatherContextError,
+    lastUpdated
   } = useWeather();
+  
+  // Format the error message properly
+  const weatherError = weatherContextError ? 
+    (weatherContextError instanceof Error ? weatherContextError.message : String(weatherContextError)) 
+    : null;
+  
+  // Format the last updated time
+  const timeLastUpdated = lastUpdated;
   
   const [isPageReady, setIsPageReady] = useState(false);
   const [driveWindows, setDriveWindows] = useState<any[]>([]);
@@ -406,7 +414,9 @@ const NewGTGWeatherPage: React.FC = () => {
       ) : weatherError ? (
         <div className="p-6 text-center rounded-lg bg-gradient-to-br from-gray-900 to-black border border-red-900/30">
           <p className="text-blue-400 text-xl font-orbitron mb-2">Weather Station Alert</p>
-          <p className="text-red-400 mb-4">{weatherError}</p>
+          <p className="text-red-400 mb-4">
+            {weatherError === '[object Object]' ? 'Error fetching weather data' : weatherError}
+          </p>
           <button 
             onClick={() => window.location.reload()} 
             className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
