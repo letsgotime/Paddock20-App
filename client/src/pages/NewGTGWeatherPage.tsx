@@ -607,7 +607,7 @@ const NewGTGWeatherPage: React.FC = () => {
           <section className="mb-10" aria-labelledby="weather-tools-heading">
             <h2 id="weather-tools-heading" className="apex-header-green text-xl mb-4 flex items-center">
               <AlertTriangle className="h-5 w-5 mr-2 text-green-500" />
-              <span>Journey Planning & Performance Tools</span>
+              <span>Route Planning & Performance Tools</span>
             </h2>
             
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
