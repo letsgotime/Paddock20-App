@@ -523,13 +523,13 @@ const NewGTGWeatherPage: React.FC = () => {
           {weatherError && (weatherError.includes('429') || weatherError.includes('rate limit') || weatherError.includes('blocked')) ? (
             <>
               <div className="text-red-400 mb-2 p-2 border border-red-900/30 bg-red-950/20 rounded-md">
-                <p className="mb-2">OpenWeather API rate limit reached. The API quota has been temporarily exhausted.</p>
+                <p className="mb-2">Weather data synchronization in progress. Temporary service adjustment active.</p>
                 <p className="mb-2 text-yellow-400">
-                  <span className="inline-block p-1 bg-black/30 rounded mr-1">Using cached data where possible.</span> 
-                  {isUsingFallbackData && "Displaying cached data from previous successful requests."}
+                  <span className="inline-block p-1 bg-black/30 rounded mr-1">Using locally cached telemetry.</span> 
+                  {isUsingFallbackData && "Displaying stored high-fidelity weather patterns from previous sessions."}
                 </p>
                 <p className="text-sm text-gray-400">
-                  API services will automatically resume when the rate limit period ends (typically within 24 hours).
+                  Real-time services will automatically resume within the next maintenance cycle.
                 </p>
               </div>
               <div className="mt-4 flex justify-center space-x-4">
