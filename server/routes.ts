@@ -1,6 +1,6 @@
 import type { Express } from "express";
 import { createServer, type Server } from "http";
-import { getAutomotiveWeather } from "./routes/automotive-weather";
+import { getAutomotiveWeather } from "./routes/automotive-weather-fixed";
 import { getEnhancedF1Weather } from "./routes/enhanced-f1-weather";
 
 export async function registerRoutes(app: Express): Promise<Server> {

@@ -2,7 +2,12 @@ import React, { useState, useEffect } from 'react';
 import CommuteTimeEstimator from './CommuteTimeEstimator';
 import LocationManager from './LocationManager';
 import WeatherImpactIndicator from './WeatherImpactIndicator';
+import CitySearch from './CitySearch';
+import LocationPermissionPrompt from './LocationPermissionPrompt';
+import UnitToggle from './UnitToggle';
 import { useWeather } from '../contexts/SimpleWeatherContext';
+import { useUnits } from '../contexts/UnitsContext';
+import { MapPin, Search, Settings } from 'lucide-react';
 
 // Component for displaying a Formula 1 style gauge
 const F1Gauge = ({ value, min, max, label, units, danger = false, warning = false, optimum = false }) => {
@@ -569,89 +574,95 @@ const EnginePerformance = ({ selectedVehicle, weatherData }) => {
 // Main Component
 function F1PitWallDashboard() {
   // Get weather data from context
-  const { weatherData, loading, error, fetchWeatherData } = useWeather();
-  const [selectedVehicle, setSelectedVehicle] = useState(null);
-  const [vehicles, setVehicles] = useState([]);
+  const { 
+    weatherData, 
+    loading, 
+    error, 
+    fetchWeatherData, 
+    fetchCurrentLocationWeather,
+    citySearchOpen,
+    setCitySearchOpen,
+    showLocationPrompt,
+    setShowLocationPrompt
+  } = useWeather();
+  const { unitSystem, UNIT_SYSTEMS } = useUnits();
   
-  // State for route planning with selected locations
+  // Default vehicle data - must be outside of hooks/effects
+  const defaultVehicles = [
+    {
+      id: 1,
+      name: "Ferrari 488 GTB",
+      year: 2020,
+      image: "https://images.unsplash.com/photo-1583121274602-3e2820c69888?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80",
+      engine: {
+        type: "V8 Twin-Turbo",
+        displacement: "3.9L",
+        power: "661 hp",
+        torque: "561 lb-ft",
+        aspiration: "Twin-Turbocharged",
+        redline: "8,000 RPM",
+        temperature_range: "180-220°F"
+      },
+      tireData: {
+        optimum_pressure_front: 35.0,
+        optimum_pressure_rear: 32.5,
+        wear_factor: 1.25
+      }
+    },
+    {
+      id: 2,
+      name: "Porsche 911 GT3",
+      year: 2021,
+      image: "https://images.unsplash.com/photo-1614200179396-2bdb77ebf81b?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80",
+      engine: {
+        type: "Flat-6",
+        displacement: "4.0L",
+        power: "502 hp",
+        torque: "346 lb-ft",
+        aspiration: "Naturally Aspirated",
+        redline: "9,000 RPM",
+        temperature_range: "185-225°F"
+      },
+      tireData: {
+        optimum_pressure_front: 36.0,
+        optimum_pressure_rear: 33.0,
+        wear_factor: 1.1
+      }
+    },
+    {
+      id: 3,
+      name: "McLaren 720S",
+      year: 2019,
+      image: "https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80",
+      engine: {
+        type: "V8 Twin-Turbo",
+        displacement: "4.0L",
+        power: "710 hp",
+        torque: "568 lb-ft",
+        aspiration: "Twin-Turbocharged",
+        redline: "8,500 RPM",
+        temperature_range: "175-215°F"
+      },
+      tireData: {
+        optimum_pressure_front: 34.5,
+        optimum_pressure_rear: 32.0,
+        wear_factor: 1.3
+      }
+    }
+  ];
+  
+  // State for vehicle data - initialize with default data
+  const [vehicles, setVehicles] = useState(defaultVehicles);
+  const [selectedVehicle, setSelectedVehicle] = useState(defaultVehicles[0]);
+  
+  // State for route planning
   const [originLocation, setOriginLocation] = useState(null);
   const [destinationLocation, setDestinationLocation] = useState(null);
   
-  // Fetch vehicle data when component mounts
+  // Fetch weather data when component mounts
   useEffect(() => {
-    // Fetch vehicle data
-    const fetchVehicleData = () => {
-      // This would typically come from an API or database
-      const dummyVehicles = [
-        {
-          id: 1,
-          name: "Ferrari 488 GTB",
-          year: 2020,
-          image: "https://images.unsplash.com/photo-1583121274602-3e2820c69888?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80",
-          engine: {
-            type: "V8 Twin-Turbo",
-            displacement: "3.9L",
-            power: "661 hp",
-            torque: "561 lb-ft",
-            aspiration: "Twin-Turbocharged",
-            redline: "8,000 RPM",
-            temperature_range: "180-220°F"
-          },
-          tireData: {
-            optimum_pressure_front: 35.0,
-            optimum_pressure_rear: 32.5,
-            wear_factor: 1.25
-          }
-        },
-        {
-          id: 2,
-          name: "Porsche 911 GT3",
-          year: 2021,
-          image: "https://images.unsplash.com/photo-1614200179396-2bdb77ebf81b?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80",
-          engine: {
-            type: "Flat-6",
-            displacement: "4.0L",
-            power: "502 hp",
-            torque: "346 lb-ft",
-            aspiration: "Naturally Aspirated",
-            redline: "9,000 RPM",
-            temperature_range: "185-225°F"
-          },
-          tireData: {
-            optimum_pressure_front: 36.0,
-            optimum_pressure_rear: 33.0,
-            wear_factor: 1.1
-          }
-        },
-        {
-          id: 3,
-          name: "McLaren 720S",
-          year: 2019,
-          image: "https://images.unsplash.com/photo-1503736334956-4c8f8e92946d?ixlib=rb-4.0.3&auto=format&fit=crop&w=200&q=80",
-          engine: {
-            type: "V8 Twin-Turbo",
-            displacement: "4.0L",
-            power: "710 hp",
-            torque: "568 lb-ft",
-            aspiration: "Twin-Turbocharged",
-            redline: "8,500 RPM",
-            temperature_range: "175-215°F"
-          },
-          tireData: {
-            optimum_pressure_front: 34.5,
-            optimum_pressure_rear: 32.0,
-            wear_factor: 1.3
-          }
-        }
-      ];
-      
-      setVehicles(dummyVehicles);
-      setSelectedVehicle(dummyVehicles[0]); // Select first vehicle by default
-    };
-    
-    // Fetch data on mount
+    // Initial fetch
     fetchWeatherData();
-    fetchVehicleData();
     
     // Refresh weather data every 15 minutes
     const refreshInterval = setInterval(() => {
@@ -673,17 +684,56 @@ function F1PitWallDashboard() {
   
   // Error state
   if (error && !weatherData) {
+    const isRateLimit = error.status === 429 || error.isRateLimit;
+    
     return (
       <div className="flex flex-col items-center justify-center min-h-screen bg-gray-900 text-white p-4">
         <div className="text-amber-500 text-5xl mb-4">⚠️</div>
         <h1 className="text-2xl font-bold mb-2">Weather Telemetry Unavailable</h1>
-        <p className="text-gray-400 mb-6">{error}</p>
-        <button 
-          onClick={() => window.location.reload()}
-          className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg"
-        >
-          Retry
-        </button>
+        <p className="text-gray-400 mb-6">
+          {isRateLimit 
+            ? "Weather API rate limit exceeded. Please select a different location or try again later."
+            : error.message || "Could not fetch weather data. Please try again."}
+        </p>
+        
+        <div className="flex flex-col md:flex-row gap-4">
+          {!isRateLimit && (
+            <button 
+              onClick={() => window.location.reload()}
+              className="px-4 py-2 bg-blue-700 hover:bg-blue-800 text-white rounded-lg"
+            >
+              Retry
+            </button>
+          )}
+          
+          <button
+            onClick={() => setCitySearchOpen(true)} 
+            className="px-4 py-2 bg-green-700 hover:bg-green-800 text-white rounded-lg flex items-center justify-center"
+          >
+            <MapPin className="mr-2 h-4 w-4" />
+            Select Location
+          </button>
+          
+          <button
+            onClick={() => setShowLocationPrompt(true)} 
+            className="px-4 py-2 bg-indigo-700 hover:bg-indigo-800 text-white rounded-lg flex items-center justify-center"
+          >
+            <MapPin className="mr-2 h-4 w-4" />
+            Use My Location
+          </button>
+        </div>
+        
+        {/* Location Permission Dialog */}
+        <LocationPermissionPrompt 
+          open={showLocationPrompt} 
+          onOpenChange={setShowLocationPrompt} 
+        />
+        
+        {/* City Search Dialog */}
+        <CitySearch 
+          open={citySearchOpen} 
+          onOpenChange={setCitySearchOpen} 
+        />
       </div>
     );
   }
@@ -704,16 +754,36 @@ function F1PitWallDashboard() {
             <div className="text-2xl md:text-3xl font-bold text-blue-400">PADDOCK20</div>
             <div className="ml-3 text-lg md:text-xl font-semibold">F1 Weather Telemetry</div>
           </div>
-          <div className="mt-2 md:mt-0 flex items-center">
-            <div className="mr-4 flex flex-col text-sm">
-              <div className="text-gray-400">Local Time</div>
-              <div>{formatTime(Date.now())}</div>
+          <div className="mt-3 md:mt-0 flex flex-col md:flex-row items-center gap-3">
+            <div className="flex items-center space-x-3">
+              <button 
+                onClick={() => setCitySearchOpen(true)}
+                className="flex items-center space-x-1 bg-gray-800 hover:bg-gray-700 p-2 rounded-lg text-sm"
+              >
+                <MapPin className="h-4 w-4 text-green-400" />
+                <span>{weatherData?.location?.name || 'Select Location'}</span>
+              </button>
+              
+              <UnitToggle />
             </div>
-            <div className="px-3 py-1 bg-blue-900/60 rounded text-xs uppercase tracking-wider">
-              Live
+            
+            <div className="flex items-center space-x-3">
+              <div className="flex flex-col text-sm">
+                <div className="text-gray-400">Local Time</div>
+                <div>{formatTime(Date.now())}</div>
+              </div>
+              <div className="px-3 py-1 bg-blue-900/60 rounded text-xs uppercase tracking-wider">
+                Live
+              </div>
             </div>
           </div>
         </div>
+        
+        {/* City Search Dialog */}
+        <CitySearch open={citySearchOpen} onOpenChange={setCitySearchOpen} />
+        
+        {/* Location Permission Dialog */}
+        <LocationPermissionPrompt open={showLocationPrompt} onOpenChange={setShowLocationPrompt} />
         
         {/* Vehicle selector */}
         <div className="mb-6">

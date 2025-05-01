@@ -3,6 +3,171 @@ import type { Request, Response } from 'express';
 // OpenWeather API key accessed from environment
 const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY || '2379a18ee0e478c88aa7d4aa1df44410';
 
+// Cache implementation
+interface CacheEntry {
+  data: any;
+  timestamp: number;
+  expiresAt: number;
+}
+
+interface WeatherCache {
+  [key: string]: CacheEntry;
+}
+
+// Weather cache with 15 minute expiration by default
+const weatherCache: WeatherCache = {};
+const CACHE_EXPIRATION = 15 * 60 * 1000; // 15 minutes
+const RATE_LIMIT_CACHE_EXPIRATION = 40 * 60 * 1000; // 40 minutes if rate limited
+let isRateLimited = false;
+let rateLimitResetTime = 0;
+
+// Default Atlanta coordinates for initial cache
+const DEFAULT_LAT = 33.749;
+const DEFAULT_LON = -84.388;
+const DEFAULT_UNITS = 'imperial';
+
+// Initialize cache with default weather data to have fallback
+// Sample data for Atlanta
+const ATLANTA_INITIAL_DATA = {
+  "location": {
+    "name": "Atlanta",
+    "country": "US",
+    "coordinates": {
+      "lat": 33.749,
+      "lon": -84.388
+    }
+  },
+  "currentConditions": {
+    "temp": 72,
+    "feels_like": 73,
+    "pressure": 1015,
+    "humidity": 65,
+    "dew_point": 59,
+    "uvi": 5,
+    "wind_speed": 8,
+    "wind_deg": 240,
+    "wind_direction": "SW",
+    "visibility": 10,
+    "weather": [
+      {
+        "id": 800,
+        "main": "Clear",
+        "description": "clear sky",
+        "icon": "01d"
+      }
+    ],
+    "is_day": true
+  },
+  "drivingConditions": {
+    "track_temp": 85,
+    "track_condition": "Dry",
+    "grip_index": 87,
+    "grip_assessment": "Excellent",
+    "track_evolution": "Steady Improvement",
+    "track_evolution_trend": "Positive",
+    "alert_level": "Low",
+    "precipitation_intensity": "None",
+    "precipitation_probability": 5
+  },
+  "tireData": {
+    "optimal_compound": "Medium",
+    "tire_temperature": {
+      "surface": 85,
+      "core": 80,
+      "optimal_window": "75-90°F"
+    },
+    "pressure": {
+      "recommendation": "Standard pressure recommended",
+      "front_pressure_delta": 0,
+      "rear_pressure_delta": 0,
+      "pressure_buildup_rate": "Normal"
+    },
+    "wear": {
+      "expected_wear_rate": "Normal",
+      "wear_pattern": "Even",
+      "graining_risk": "Low",
+      "blistering_risk": "Low",
+      "management_strategy": "Standard rotation schedule recommended"
+    }
+  },
+  "performanceData": {
+    "power_adjustment": 2,
+    "torque_curve": {
+      "low_end": "+1.5%",
+      "mid_range": "+2%",
+      "high_end": "+2.5%"
+    },
+    "cooling_efficiency": "Excellent",
+    "engine_temperature_delta": "-2°F",
+    "fuel_consumption_delta": "-1.5%",
+    "aerodynamic_efficiency": 98,
+    "downforce_effectiveness": "Optimal",
+    "crosswind_effect": "Minimal",
+    "braking_efficiency": 96
+  },
+  "drivingRecommendation": "Excellent driving conditions. Optimal grip and visibility with good cooling performance. Standard tire pressures recommended.",
+  "forecastTrend": {
+    "temperature": "Stable",
+    "precipitation": "No significant changes expected",
+    "wind": "Light to moderate winds continuing",
+    "summary": "Consistent favorable conditions expected to continue"
+  },
+  "sunData": {
+    "sunrise": 1686907200000,
+    "sunset": 1686958800000,
+    "glareRisk": "Low",
+    "glareDirection": "None"
+  }
+};
+
+/**
+ * Generate cache key for weather requests
+ */
+function generateCacheKey(lat: string | string[], lon: string | string[], units: string): string {
+  return `${lat}-${lon}-${units}`;
+}
+
+// Seed the cache with initial data
+(function initializeCache() {
+  const cacheKey = generateCacheKey(DEFAULT_LAT.toString(), DEFAULT_LON.toString(), DEFAULT_UNITS);
+  const now = Date.now();
+  
+  weatherCache[cacheKey] = {
+    data: ATLANTA_INITIAL_DATA,
+    timestamp: now,
+    expiresAt: now + CACHE_EXPIRATION
+  };
+  
+  console.log('Weather cache initialized with Atlanta data');
+})();
+
+/**
+ * Safely fetch with rate limit and error handling
+ */
+async function safeFetch(url: string, type: string): Promise<any> {
+  try {
+    const response = await fetch(url);
+    
+    // Handle rate limiting (429)
+    if (response.status === 429) {
+      console.warn(`OpenWeather API rate limit hit for ${type} endpoint`);
+      isRateLimited = true;
+      rateLimitResetTime = Date.now() + RATE_LIMIT_CACHE_EXPIRATION;
+      throw new Error(`${type} API rate limit exceeded`);
+    }
+    
+    // Handle other errors
+    if (!response.ok) {
+      throw new Error(`${type} API error: ${response.status}`);
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error(`Error fetching ${type} data:`, error);
+    throw error;
+  }
+}
+
 /**
  * Retrieves enhanced automotive-focused weather data
  * 
@@ -17,6 +182,46 @@ export async function getAutomotiveWeather(req: Request, res: Response) {
       return res.status(400).json({ message: 'Latitude and longitude are required' });
     }
     
+    // Check for rate limiting
+    if (isRateLimited) {
+      const now = Date.now();
+      if (now < rateLimitResetTime) {
+        // Still rate limited, check if we have cached data
+        const cacheKey = generateCacheKey(lat, lon, units as string);
+        const cachedData = weatherCache[cacheKey];
+        
+        if (cachedData) {
+          console.log(`Serving cached weather data for ${lat},${lon} due to rate limit`);
+          // Update the client about rate limiting
+          res.set('X-Rate-Limited', 'true');
+          res.set('X-Rate-Limit-Reset', new Date(rateLimitResetTime).toISOString());
+          return res.json(cachedData.data);
+        } else {
+          // No cached data available
+          return res.status(429).json({
+            message: 'Weather API rate limited. Try again later.',
+            retryAfter: new Date(rateLimitResetTime).toISOString()
+          });
+        }
+      } else {
+        // Rate limit expired, reset the flag
+        console.log('OpenWeather API rate limit reset');
+        isRateLimited = false;
+      }
+    }
+    
+    // Check if data is in cache and not expired
+    const cacheKey = generateCacheKey(lat, lon, units as string);
+    const now = Date.now();
+    
+    if (weatherCache[cacheKey] && weatherCache[cacheKey].expiresAt > now) {
+      console.log(`Serving cached weather data for ${lat},${lon}`);
+      return res.json(weatherCache[cacheKey].data);
+    }
+    
+    // Data not in cache or expired, fetch from API
+    console.log(`Fetching fresh weather data for ${lat},${lon}`);
+    
     // Fetch current weather data
     const currentUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=${units}&appid=${OPENWEATHER_API_KEY}`;
     
@@ -26,39 +231,58 @@ export async function getAutomotiveWeather(req: Request, res: Response) {
     // Fetch 5-day forecast for trends
     const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=${units}&appid=${OPENWEATHER_API_KEY}`;
     
-    // Make parallel requests
-    const [currentRes, oneCallRes, forecastRes] = await Promise.all([
-      fetch(currentUrl),
-      fetch(oneCallUrl),
-      fetch(forecastUrl)
+    // Make parallel requests with safe fetch
+    const [current, oneCall, forecast] = await Promise.all([
+      safeFetch(currentUrl, 'Current weather'),
+      safeFetch(oneCallUrl, 'One-call'),
+      safeFetch(forecastUrl, 'Forecast')
     ]);
-    
-    // Check responses
-    if (!currentRes.ok) {
-      throw new Error(`Current weather API error: ${currentRes.status}`);
-    }
-    
-    if (!oneCallRes.ok) {
-      throw new Error(`One-call API error: ${oneCallRes.status}`);
-    }
-    
-    if (!forecastRes.ok) {
-      throw new Error(`Forecast API error: ${forecastRes.status}`);
-    }
-    
-    // Parse JSON responses
-    const current = await currentRes.json();
-    const oneCall = await oneCallRes.json();
-    const forecast = await forecastRes.json();
     
     // Generate enhanced automotive weather metrics
     const enhancedData = calculateAutomotiveMetrics(current, oneCall, forecast, units as string);
     
+    // Store in cache
+    weatherCache[cacheKey] = {
+      data: enhancedData,
+      timestamp: now,
+      expiresAt: now + CACHE_EXPIRATION
+    };
+    
     // Return enhanced data
-    res.json(enhancedData);
+    return res.json(enhancedData);
   } catch (error) {
     console.error('Automotive weather API error:', error);
-    res.status(500).json({ message: (error as Error).message || 'Failed to fetch automotive weather data' });
+    
+    // Special handling for rate limit errors
+    if ((error as Error).message && (error as Error).message.includes('rate limit')) {
+      isRateLimited = true;
+      rateLimitResetTime = Date.now() + RATE_LIMIT_CACHE_EXPIRATION;
+      
+      // Check if we have cached data
+      const cacheKey = generateCacheKey(
+        req.query.lat as string, 
+        req.query.lon as string, 
+        req.query.units as string || 'imperial'
+      );
+      
+      const cachedData = weatherCache[cacheKey];
+      if (cachedData) {
+        console.log(`Serving cached data for ${req.query.lat},${req.query.lon} after rate limit error`);
+        res.set('X-Rate-Limited', 'true');
+        res.set('X-Rate-Limit-Reset', new Date(rateLimitResetTime).toISOString());
+        return res.json(cachedData.data);
+      }
+      
+      return res.status(429).json({
+        message: 'Weather API rate limited. Try again later.',
+        retryAfter: new Date(rateLimitResetTime).toISOString()
+      });
+    }
+    
+    // Handle other errors
+    res.status(500).json({ 
+      message: (error as Error).message || 'Failed to fetch automotive weather data' 
+    });
   }
 }
 
