@@ -74,7 +74,9 @@ const Paddock20HomePage: React.FC = () => {
               <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20">
                 <div className="text-blue-400/70 text-xs mb-1">UV Index</div>
                 <div className="text-white text-xl font-mono font-semibold">
-                  {automotiveWeatherData?.conditions?.uv_index?.toFixed(1) || "N/A"}
+                  {automotiveWeatherData && automotiveWeatherData.conditions && typeof automotiveWeatherData.conditions.uv_index === 'number' 
+                    ? automotiveWeatherData.conditions.uv_index.toFixed(1) 
+                    : "N/A"}
                 </div>
               </div>
               
@@ -88,7 +90,12 @@ const Paddock20HomePage: React.FC = () => {
               <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20">
                 <div className="text-blue-400/70 text-xs mb-1">Surface Temp</div>
                 <div className="text-white text-xl font-mono font-semibold">
-                  {automotiveWeatherData?.automotive_metrics?.track_surface?.temperature?.toFixed(1) || "N/A"}°F
+                  {automotiveWeatherData && 
+                   automotiveWeatherData.automotive_metrics && 
+                   automotiveWeatherData.automotive_metrics.track_surface && 
+                   typeof automotiveWeatherData.automotive_metrics.track_surface.temperature === 'number'
+                    ? automotiveWeatherData.automotive_metrics.track_surface.temperature.toFixed(1) + "°F"
+                    : "N/A"}
                 </div>
               </div>
               
@@ -238,7 +245,7 @@ const Paddock20HomePage: React.FC = () => {
         <div className="grid md:grid-cols-2 gap-8">
           
           {/* Weather Center */}
-          <Link to="/weather" className="bg-gray-900 p-6 rounded-lg border border-gray-700 shadow-lg hover:border-green-500 transition-colors">
+          <Link to="/new-weather-center" className="bg-gray-900 p-6 rounded-lg border border-gray-700 shadow-lg hover:border-green-500 transition-colors">
             <h3 className="text-blue-400 font-orbitron text-2xl mb-4">☁️ Weather Center</h3>
             <p className="text-white font-openSans text-base leading-relaxed">
               Live conditions. Surface temps. Tire readiness. Torque specs. All in one glance.
