@@ -5,7 +5,7 @@ import {
   AlertTriangle, Cloud, CloudRain, CloudSnow, 
   Droplets, Wind, Thermometer, Sun, 
   ChevronDown, ChevronUp, Navigation, Flag,
-  Check, Clock
+  Clock
 } from 'lucide-react';
 
 interface RoutePoint {
@@ -558,7 +558,7 @@ const PredictiveRouteWeatherWarnings: React.FC = () => {
                               {warning.location}
                             </span>
                             <span className="flex items-center">
-                              <Timer className="h-3 w-3 mr-1" />
+                              <Clock className="h-3 w-3 mr-1" />
                               {warning.time}
                             </span>
                           </div>
