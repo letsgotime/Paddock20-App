@@ -76,13 +76,15 @@ export function SimpleWeatherProvider({ children }) {
     setLoading(true);
     try {
       // Get weather data with default location (Charlotte)
-      const response = await fetch(`/api/automotive-weather?lat=${lat}&lon=${lon}&units=imperial`);
+      console.log(`Fetching weather data for ${lat},${lon}`);
+      const response = await fetch(`/api/automotive-weather?lat=${lat}&lon=${lon}`);
       
       if (!response.ok) {
         throw new Error(`Error fetching weather data: ${response.statusText}`);
       }
       
       const data = await response.json();
+      console.log('Weather data received:', data);
       setWeatherData(data);
       setError(null);
     } catch (err) {
