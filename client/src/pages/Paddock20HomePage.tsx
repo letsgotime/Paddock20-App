@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from "react";
+import React, { useState, useEffect, useMemo, useRef } from "react";
 import { Link } from "wouter";
 import { useWeather } from "../contexts/WeatherContext";
 import { AutomotiveWeatherData } from "../types/automotive-weather";
@@ -11,13 +11,34 @@ import {
 } from "lucide-react";
 
 const Paddock20HomePage: React.FC = () => {
-  const { weatherData, automotiveWeatherData, isLoading, error, isUsingFallbackData } = useWeather();
+  // Use refs to avoid unnecessary re-renders
+  const weatherDataRef = useRef<any>(null);
+  const automotiveWeatherDataRef = useRef<any>(null);
+  
+  const { 
+    weatherData, 
+    automotiveWeatherData, 
+    isLoading, 
+    error, 
+    isUsingFallbackData 
+  } = useWeather();
+  
+  // Update refs when data changes
+  useEffect(() => {
+    if (weatherData) {
+      weatherDataRef.current = weatherData;
+    }
+    
+    if (automotiveWeatherData) {
+      automotiveWeatherDataRef.current = automotiveWeatherData;
+    }
+  }, [weatherData, automotiveWeatherData]);
   
   const [currentTime, setCurrentTime] = useState(new Date());
   const [elapsedTime, setElapsedTime] = useState(0);
   const [activeSection, setActiveSection] = useState('command-center');
   
-  // Update clock every second, but not faster
+  // Update clock every second, with debounce to prevent performance issues
   useEffect(() => {
     const timer = setInterval(() => {
       setCurrentTime(new Date());
@@ -45,6 +66,100 @@ const Paddock20HomePage: React.FC = () => {
     month: 'short', 
     day: 'numeric' 
   });
+  
+  // Helper function to safely get weather data, first from current value, then from ref
+  const safeWeatherValue = (path: string, fallback: string = "N/A") => {
+    try {
+      // First try weatherData
+      if (weatherData) {
+        const keys = path.split('.');
+        let value = weatherData as any;
+        
+        for (const key of keys) {
+          if (!value || value[key] === undefined) {
+            // Try ref as fallback
+            if (weatherDataRef.current) {
+              let refValue = weatherDataRef.current as any;
+              for (const refKey of keys) {
+                if (!refValue || refValue[refKey] === undefined) {
+                  return fallback;
+                }
+                refValue = refValue[refKey];
+              }
+              return typeof refValue === 'number' ? refValue.toFixed(1) : refValue.toString();
+            }
+            return fallback;
+          }
+          value = value[key];
+        }
+        
+        return typeof value === 'number' ? value.toFixed(1) : value.toString();
+      } 
+      
+      // Try ref as fallback
+      if (weatherDataRef.current) {
+        let refValue = weatherDataRef.current as any;
+        for (const refKey of path.split('.')) {
+          if (!refValue || refValue[refKey] === undefined) {
+            return fallback;
+          }
+          refValue = refValue[refKey];
+        }
+        return typeof refValue === 'number' ? refValue.toFixed(1) : refValue.toString();
+      }
+      
+      return fallback;
+    } catch (error) {
+      return fallback;
+    }
+  };
+  
+  // Helper function for automotive weather data
+  const safeAutomotiveValue = (path: string, fallback: string = "N/A", unit: string = "") => {
+    try {
+      // First try current data
+      if (automotiveWeatherData) {
+        const keys = path.split('.');
+        let value = automotiveWeatherData as any;
+        
+        for (const key of keys) {
+          if (!value || value[key] === undefined) {
+            // Try ref as fallback
+            if (automotiveWeatherDataRef.current) {
+              let refValue = automotiveWeatherDataRef.current as any;
+              for (const refKey of keys) {
+                if (!refValue || refValue[refKey] === undefined) {
+                  return fallback;
+                }
+                refValue = refValue[refKey];
+              }
+              return typeof refValue === 'number' ? refValue.toFixed(1) + unit : refValue.toString();
+            }
+            return fallback;
+          }
+          value = value[key];
+        }
+        
+        return typeof value === 'number' ? value.toFixed(1) + unit : value.toString();
+      } 
+      
+      // Try ref as fallback
+      if (automotiveWeatherDataRef.current) {
+        let refValue = automotiveWeatherDataRef.current as any;
+        for (const refKey of path.split('.')) {
+          if (!refValue || refValue[refKey] === undefined) {
+            return fallback;
+          }
+          refValue = refValue[refKey];
+        }
+        return typeof refValue === 'number' ? refValue.toFixed(1) + unit : refValue.toString();
+      }
+      
+      return fallback;
+    } catch (error) {
+      return fallback;
+    }
+  };
 
   return (
     <div className="min-h-screen bg-black text-white">
@@ -261,9 +376,7 @@ const Paddock20HomePage: React.FC = () => {
                       <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
                       <div className="text-blue-400/70 text-xs mb-1 font-medium uppercase tracking-wider">Air Temp</div>
                       <div className="text-white text-xl font-mono font-semibold">
-                        {weatherData && weatherData.main && typeof weatherData.main.temp === 'number' 
-                          ? weatherData.main.temp.toFixed(1) + "°F" 
-                          : "N/A"}
+                        {safeWeatherValue('main.temp', 'N/A') + "°F"}
                       </div>
                     </div>
                     
@@ -271,12 +384,7 @@ const Paddock20HomePage: React.FC = () => {
                       <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
                       <div className="text-blue-400/70 text-xs mb-1 font-medium uppercase tracking-wider">Surface Temp</div>
                       <div className="text-white text-xl font-mono font-semibold">
-                        {automotiveWeatherData && 
-                         automotiveWeatherData.automotive_metrics && 
-                         automotiveWeatherData.automotive_metrics.track_surface && 
-                         typeof automotiveWeatherData.automotive_metrics.track_surface.temperature === 'number'
-                          ? automotiveWeatherData.automotive_metrics.track_surface.temperature.toFixed(1) + "°F"
-                          : "N/A"}
+                        {safeAutomotiveValue('automotive_metrics.track_surface.temperature', 'N/A', '°F')}
                       </div>
                     </div>
                     
@@ -284,9 +392,7 @@ const Paddock20HomePage: React.FC = () => {
                       <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
                       <div className="text-blue-400/70 text-xs mb-1 font-medium uppercase tracking-wider">Humidity</div>
                       <div className="text-white text-xl font-mono font-semibold">
-                        {weatherData && weatherData.main && typeof weatherData.main.humidity === 'number'
-                          ? weatherData.main.humidity + "%" 
-                          : "N/A"}
+                        {safeWeatherValue('main.humidity', 'N/A') + "%"}
                       </div>
                     </div>
                     
