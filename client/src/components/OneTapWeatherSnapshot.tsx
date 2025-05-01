@@ -163,7 +163,7 @@ const OneTapWeatherSnapshot: React.FC<OneTapWeatherSnapshotProps> = ({
   };
 
   // Return null if no weather data available
-  if (!weatherData || !automotiveWeatherData) {
+  if (!weatherData) {
     return null;
   }
 
