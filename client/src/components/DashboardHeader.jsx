@@ -11,16 +11,11 @@ const DashboardHeader = () => {
   const [menuOpen, setMenuOpen] = useState(false);
   const [location, navigate] = useLocation();
 
-  // Menu navigation items
+  // Menu navigation items - only include routes we know exist
   const menuItems = [
     { name: 'Dashboard', icon: <Home size={18} />, route: '/' },
-    { name: 'Weather Center', icon: <Cloud size={18} />, route: '/weather' },
-    { name: 'Route Planner', icon: <Map size={18} />, route: '/route-planner' },
-    { name: 'Vehicle Manager', icon: <Car size={18} />, route: '/vehicles' },
-    { name: 'Drive Time Analysis', icon: <Clock size={18} />, route: '/drive-time' },
-    { name: 'Performance Metrics', icon: <BarChart3 size={18} />, route: '/performance' },
-    { name: 'Tire Strategy', icon: <Gauge size={18} />, route: '/tire-strategy' },
-    { name: 'Settings', icon: <Settings size={18} />, route: '/settings' },
+    { name: 'Route Analysis', icon: <Map size={18} />, route: '/route-analysis' },
+    { name: 'Weather View', icon: <Cloud size={18} />, route: '/' },
   ];
 
   // F1-style telemetry data
@@ -104,16 +99,7 @@ const DashboardHeader = () => {
                     </Link>
                   ))}
                 </div>
-                <div className="border-t border-gray-700 p-3 bg-gray-800/50">
-                  <Link 
-                    to="/profile" 
-                    className="flex items-center justify-between hover:text-blue-400"
-                    onClick={() => setMenuOpen(false)}
-                  >
-                    <span>User Profile</span>
-                    <span className="bg-green-500 text-xs px-2 py-1 rounded-full text-black font-semibold">PRO</span>
-                  </Link>
-                </div>
+                {/* No profile link as we don't have a profile route */}
               </div>
             )}
           </div>
