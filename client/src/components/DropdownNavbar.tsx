@@ -4,8 +4,8 @@ import {
   ChevronRight, Home, LayoutDashboard, Cloud, MapPin, 
   Calendar, Flag, Car, Watch, Compass, Ruler, 
   BookOpen, Brain, ClipboardCheck, SprayCan, Percent, 
-  HelpCircle, Mail, BookMarked, MessageSquare, Settings,
-  Thermometer, HeartHandshake, Contact, Library, MessageCircle
+  Mail, BookMarked, MessageCircle, Settings, HeartHandshake,
+  Shield
 } from "lucide-react";
 
 const DropdownNavbar = () => {
@@ -112,16 +112,16 @@ const DropdownNavbar = () => {
             
             {/* Checklists Dropdown */}
             <div className="relative group" 
-                 onMouseEnter={(e) => e.currentTarget.classList.add('menu-open')}
-                 onMouseLeave={(e) => {
-                    // Add a delay before removing the class
-                    const currentElem = e.currentTarget;
-                    setTimeout(() => {
-                      if (currentElem && !currentElem.classList.contains('hover-active')) {
-                        currentElem.classList.remove('menu-open');
-                      }
-                    }, 500); // 500ms delay
-                 }}>
+                onMouseEnter={(e) => e.currentTarget.classList.add('menu-open')}
+                onMouseLeave={(e) => {
+                  // Add a delay before removing the class
+                  const currentElem = e.currentTarget;
+                  setTimeout(() => {
+                    if (currentElem && !currentElem.classList.contains('hover-active')) {
+                      currentElem.classList.remove('menu-open');
+                    }
+                  }, 500); // 500ms delay
+                }}>
               <button className="flex items-center hover:text-green-400 w-full">
                 <ClipboardCheck className="h-4 w-4 mr-2 text-blue-400" />
                 <span>Checklists</span>
@@ -129,11 +129,11 @@ const DropdownNavbar = () => {
               </button>
               <div className="absolute top-0 right-full mr-2 hidden menu-content bg-gray-900 border border-gray-700 rounded-lg shadow-lg p-4 z-10 w-48">
                 <Link to="/seasonal-checklist" className="flex items-center hover:text-green-400 mb-2 py-1" onClick={() => setIsOpen(false)}>
-                  <Thermometer className="h-4 w-4 mr-2 text-blue-400" />
+                  <Cloud className="h-4 w-4 mr-2 text-blue-400" />
                   <span>Seasonal Checklist</span>
                 </Link>
                 <Link to="/pre-drive-checklist" className="flex items-center hover:text-green-400 mb-2 py-1" onClick={() => setIsOpen(false)}>
-                  <Car className="h-4 w-4 mr-2 text-blue-400" />
+                  <Shield className="h-4 w-4 mr-2 text-blue-400" />
                   <span>Pre-Drive Checklist</span>
                 </Link>
                 <Link to="/juicebox" className="flex items-center hover:text-green-400 mb-2 py-1" onClick={() => setIsOpen(false)}>
