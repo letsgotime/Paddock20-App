@@ -1,31 +1,32 @@
 import React from 'react';
-import { Switch, Route } from "wouter";
-import WeatherPaddockDashboard from './pages/WeatherPaddockDashboard';
-import WeatherProvider from './contexts/WeatherContext';
+import { Route, Switch } from 'wouter';
+import { WeatherProvider } from './contexts/WeatherContext';
 import LocationProvider from './contexts/LocationContext';
 import { UnitsProvider } from './contexts/UnitsContext';
+import { TileProvider } from './contexts/TileContext';
+import WeatherRouteAnalysisPage from './pages/WeatherRouteAnalysisPage';
+import F1PitWallDashboard from './components/F1PitWallDashboard';
+import ExpandedTileView from './pages/ExpandedTileView';
+import { Toaster } from '@/components/ui/toaster';
 
 function App() {
   return (
-    <LocationProvider>
-      <UnitsProvider>
+    <UnitsProvider>
+      <LocationProvider>
         <WeatherProvider>
-          <div className="min-h-screen bg-gray-900 text-white">
-            <Switch>
-              <Route path="/" component={WeatherPaddockDashboard} />
-              <Route>
-                <div className="flex items-center justify-center min-h-screen">
-                  <div className="text-center">
-                    <h1 className="text-3xl font-bold mb-4">Page Not Found</h1>
-                    <p className="text-gray-400">The page you're looking for doesn't exist.</p>
-                  </div>
-                </div>
-              </Route>
-            </Switch>
-          </div>
+          <TileProvider>
+            <div className="min-h-screen bg-gray-900 text-white">
+              <Switch>
+                <Route path="/" component={F1PitWallDashboard} />
+                <Route path="/route-analysis" component={WeatherRouteAnalysisPage} />
+                <Route path="/tile/:id" component={ExpandedTileView} />
+              </Switch>
+              <Toaster />
+            </div>
+          </TileProvider>
         </WeatherProvider>
-      </UnitsProvider>
-    </LocationProvider>
+      </LocationProvider>
+    </UnitsProvider>
   );
 }
 

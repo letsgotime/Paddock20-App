@@ -1,164 +1,332 @@
-import React, { createContext, useState, useEffect, useCallback } from 'react';
-import { v4 as uuidv4 } from 'uuid';
+import React, { createContext, useState, useContext, useEffect } from 'react';
+import { hasDeepLinkParams, parseDeepLink, clearDeepLinkParams } from '../utils/deepLinkUtils';
 
-/**
- * Location Context for managing user locations
- */
+// Create the location context
 export const LocationContext = createContext();
 
-// Default location (Atlanta, GA)
-const DEFAULT_LOCATION = {
-  id: 'default-atlanta',
-  name: 'Atlanta',
-  state: 'Georgia',
-  country: 'US',
-  lat: 33.749,
-  lon: -84.388
+// Custom hook to use the location context
+export const useLocations = () => useContext(LocationContext);
+export const useLocation = () => useContext(LocationContext);
+
+// Location types with icons
+export const locationTypes = [
+  { id: 'home', label: 'Home', icon: '🏠' },
+  { id: 'work', label: 'Work', icon: '💼' },
+  { id: 'school', label: 'School', icon: '🎓' },
+  { id: 'favorite', label: 'Favorite', icon: '⭐' },
+  { id: 'gym', label: 'Gym', icon: '💪' },
+  { id: 'restaurant', label: 'Restaurant', icon: '🍽️' },
+  { id: 'shopping', label: 'Shopping', icon: '🛒' },
+  { id: 'track', label: 'Race Track', icon: '🏁' },
+  { id: 'dealership', label: 'Dealership', icon: '🚗' },
+  { id: 'service', label: 'Service Center', icon: '🔧' },
+  { id: 'other', label: 'Other', icon: '📍' }
+];
+
+// Helper function to get icon for a location type
+export const getLocationIcon = (type) => {
+  const locationType = locationTypes.find(lt => lt.id === type);
+  return locationType ? locationType.icon : '📍';
 };
 
-/**
- * Location Provider component
- */
-const LocationProvider = ({ children }) => {
-  // Saved locations list
-  const [savedLocations, setSavedLocations] = useState([]);
+// Location Provider component
+export const LocationProvider = ({ children }) => {
+  // State for saved locations
+  const [locations, setLocations] = useState(() => {
+    const savedLocations = localStorage.getItem('savedLocations');
+    return savedLocations ? JSON.parse(savedLocations) : [
+      // Default location
+      { 
+        id: 1,
+        name: 'Home', 
+        type: 'home',
+        address: '123 Main St, Charlotte, NC',
+        coordinates: { lat: 35.2271, lon: -80.8431 },
+        favorite: true
+      }
+    ];
+  });
   
-  // ID of the currently active location
-  const [activeLocationId, setActiveLocationId] = useState(null);
+  // State for recently used locations
+  const [recentLocations, setRecentLocations] = useState(() => {
+    const savedRecent = localStorage.getItem('recentLocations');
+    return savedRecent ? JSON.parse(savedRecent) : [];
+  });
   
-  // Current active location data
-  const [activeLocationData, setActiveLocationData] = useState(null);
+  // State for route planning
+  const [activeRoute, setActiveRoute] = useState(() => {
+    const savedRoute = localStorage.getItem('activeRoute');
+    return savedRoute ? JSON.parse(savedRoute) : {
+      origin: null,
+      destination: null
+    };
+  });
   
-  // Load saved locations from localStorage on component mount
+  // Handle deep links on startup
   useEffect(() => {
-    try {
-      // Load saved locations
-      const savedLocationsStr = localStorage.getItem('saved_locations');
-      const locations = savedLocationsStr ? JSON.parse(savedLocationsStr) : [DEFAULT_LOCATION];
+    if (hasDeepLinkParams()) {
+      const deepLinkData = parseDeepLink(window.location.href);
       
-      setSavedLocations(locations);
+      if (deepLinkData) {
+        // Handle location deep links
+        if (deepLinkData.type === 'weather' && deepLinkData.lat && deepLinkData.lon) {
+          const locationName = deepLinkData.locationName || 'Shared Location';
+          
+          // Create a temporary location
+          const sharedLocation = {
+            id: `shared-${Date.now()}`,
+            name: locationName,
+            type: 'other',
+            coordinates: {
+              lat: parseFloat(deepLinkData.lat),
+              lon: parseFloat(deepLinkData.lon)
+            },
+            address: 'Shared via deep link',
+            favorite: false,
+            temporary: true
+          };
+          
+          // Add to recent locations
+          addToRecentLocations(sharedLocation);
+        }
+        
+        // Handle route deep links
+        if (deepLinkData.type === 'route') {
+          let origin = null;
+          let destination = null;
+          
+          // Try to find origin location
+          if (deepLinkData.originId) {
+            origin = locations.find(loc => loc.id.toString() === deepLinkData.originId);
+          } else if (deepLinkData.originLat && deepLinkData.originLon) {
+            const originName = deepLinkData.originName || 'Shared Origin';
+            origin = {
+              id: `shared-origin-${Date.now()}`,
+              name: originName,
+              type: 'other',
+              coordinates: {
+                lat: parseFloat(deepLinkData.originLat),
+                lon: parseFloat(deepLinkData.originLon)
+              },
+              address: 'Shared via deep link',
+              favorite: false,
+              temporary: true
+            };
+            
+            addToRecentLocations(origin);
+          }
+          
+          // Try to find destination location
+          if (deepLinkData.destId) {
+            destination = locations.find(loc => loc.id.toString() === deepLinkData.destId);
+          } else if (deepLinkData.destLat && deepLinkData.destLon) {
+            const destName = deepLinkData.destName || 'Shared Destination';
+            destination = {
+              id: `shared-dest-${Date.now()}`,
+              name: destName,
+              type: 'other',
+              coordinates: {
+                lat: parseFloat(deepLinkData.destLat),
+                lon: parseFloat(deepLinkData.destLon)
+              },
+              address: 'Shared via deep link',
+              favorite: false,
+              temporary: true
+            };
+            
+            addToRecentLocations(destination);
+          }
+          
+          // Set active route if we have both origin and destination
+          if (origin && destination) {
+            setActiveRoute({ origin, destination });
+          }
+        }
+      }
       
-      // Load active location ID
-      const activeId = localStorage.getItem('active_location_id') || locations[0]?.id;
-      setActiveLocationId(activeId);
-      
-      // Set active location data
-      const activeLocation = locations.find(loc => loc.id === activeId) || locations[0];
-      setActiveLocationData(activeLocation);
-    } catch (error) {
-      console.error('Error loading saved locations:', error);
-      // Fallback to default location
-      setSavedLocations([DEFAULT_LOCATION]);
-      setActiveLocationId(DEFAULT_LOCATION.id);
-      setActiveLocationData(DEFAULT_LOCATION);
+      // Clear the deep link params from the URL
+      clearDeepLinkParams();
     }
   }, []);
   
   // Save locations to localStorage when they change
   useEffect(() => {
-    if (savedLocations.length > 0) {
-      localStorage.setItem('saved_locations', JSON.stringify(savedLocations));
-    }
-  }, [savedLocations]);
+    localStorage.setItem('savedLocations', JSON.stringify(locations));
+  }, [locations]);
   
-  // Save active location ID when it changes
+  // Save recent locations to localStorage when they change
   useEffect(() => {
-    if (activeLocationId) {
-      localStorage.setItem('active_location_id', activeLocationId);
-    }
-  }, [activeLocationId]);
+    localStorage.setItem('recentLocations', JSON.stringify(recentLocations));
+  }, [recentLocations]);
   
-  // Update active location data when active ID changes
+  // Save active route to localStorage when it changes
   useEffect(() => {
-    if (activeLocationId && savedLocations.length > 0) {
-      const activeLocation = savedLocations.find(loc => loc.id === activeLocationId);
-      if (activeLocation) {
-        setActiveLocationData(activeLocation);
-      } else {
-        // If active location is not in saved locations, set first location as active
-        setActiveLocationId(savedLocations[0].id);
-        setActiveLocationData(savedLocations[0]);
-      }
-    }
-  }, [activeLocationId, savedLocations]);
+    localStorage.setItem('activeRoute', JSON.stringify(activeRoute));
+  }, [activeRoute]);
   
-  // Add a new location to saved locations
-  const addLocation = useCallback((location) => {
-    // Ensure location has required fields
-    if (!location || !location.lat || !location.lon) {
-      console.error('Invalid location data:', location);
-      return;
-    }
+  // Add a new location
+  const addLocation = (newLocation) => {
+    // Generate a unique ID
+    const id = Date.now();
     
-    // Add ID if not present
-    const newLocation = {
-      ...location,
-      id: location.id || `loc-${uuidv4()}`
-    };
-    
-    // Add to saved locations (limit to 5 locations)
-    setSavedLocations(prev => {
-      const updated = [...prev, newLocation].slice(0, 5);
-      return updated;
-    });
-    
-    // Set as active if it's the first location
-    if (savedLocations.length === 0) {
-      setActiveLocationId(newLocation.id);
-    }
-  }, [savedLocations]);
-  
-  // Remove a location from saved locations
-  const removeLocation = useCallback((locationId) => {
-    setSavedLocations(prev => {
-      const updated = prev.filter(loc => loc.id !== locationId);
+    // Add the location to the saved locations
+    setLocations(prev => {
+      // Check for duplicates based on coordinates
+      const isDuplicate = prev.some(loc => 
+        Math.abs(loc.coordinates.lat - newLocation.coordinates.lat) < 0.0001 &&
+        Math.abs(loc.coordinates.lon - newLocation.coordinates.lon) < 0.0001
+      );
       
-      // If removed location was active, set first remaining location as active
-      if (locationId === activeLocationId && updated.length > 0) {
-        setActiveLocationId(updated[0].id);
-      }
-      
-      // If all locations are removed, add default location
-      if (updated.length === 0) {
-        setActiveLocationId(DEFAULT_LOCATION.id);
-        return [DEFAULT_LOCATION];
-      }
-      
-      return updated;
-    });
-  }, [activeLocationId]);
-  
-  // Set a location as active
-  const setActiveLocation = useCallback((locationId) => {
-    setActiveLocationId(locationId);
-  }, []);
-  
-  // Reorder locations in the list
-  const reorderLocations = useCallback((locationId, direction) => {
-    setSavedLocations(prev => {
-      const index = prev.findIndex(loc => loc.id === locationId);
-      if (index === -1) return prev;
-      
-      // Can't move first location up or last location down
-      if (
-        (direction === 'up' && index === 0) ||
-        (direction === 'down' && index === prev.length - 1)
-      ) {
+      if (isDuplicate) {
         return prev;
       }
       
-      const newIndex = direction === 'up' ? index - 1 : index + 1;
-      const updated = [...prev];
-      
-      // Swap locations
-      [updated[index], updated[newIndex]] = [updated[newIndex], updated[index]];
-      
-      return updated;
+      return [...prev, { ...newLocation, id, favorite: true }];
     });
-  }, []);
+    
+    // Add to recent locations as well
+    addToRecentLocations({ ...newLocation, id, favorite: true });
+    
+    return id;
+  };
   
-  // Get user's current geolocation
-  const getUserGeolocation = useCallback(() => {
+  // Update an existing location
+  const updateLocation = (id, updatedData) => {
+    setLocations(prev => prev.map(loc => 
+      loc.id === id ? { ...loc, ...updatedData } : loc
+    ));
+    
+    // Update in recent locations as well
+    setRecentLocations(prev => prev.map(loc => 
+      loc.id === id ? { ...loc, ...updatedData } : loc
+    ));
+  };
+  
+  // Remove a location
+  const removeLocation = (id) => {
+    setLocations(prev => prev.filter(loc => loc.id !== id));
+    
+    // Remove from recent locations as well
+    setRecentLocations(prev => prev.filter(loc => loc.id !== id));
+    
+    // Clear from active route if it's being used
+    if (activeRoute.origin?.id === id || activeRoute.destination?.id === id) {
+      setActiveRoute({
+        origin: activeRoute.origin?.id === id ? null : activeRoute.origin,
+        destination: activeRoute.destination?.id === id ? null : activeRoute.destination
+      });
+    }
+  };
+  
+  // Add a location to recent locations
+  const addToRecentLocations = (location) => {
+    setRecentLocations(prev => {
+      // Remove if already in the list
+      const filteredList = prev.filter(loc => loc.id !== location.id);
+      
+      // Add to the beginning (most recent)
+      return [location, ...filteredList].slice(0, 10); // Keep only the 10 most recent
+    });
+  };
+  
+  // Set the active route
+  const setRoute = (origin, destination) => {
+    // Add both locations to recent locations
+    if (origin) addToRecentLocations(origin);
+    if (destination) addToRecentLocations(destination);
+    
+    setActiveRoute({ origin, destination });
+  };
+  
+  // Clear the active route
+  const clearRoute = () => {
+    setActiveRoute({ origin: null, destination: null });
+  };
+  
+  // Get favorite locations
+  const getFavoriteLocations = () => {
+    return locations.filter(loc => loc.favorite);
+  };
+  
+  // Toggle favorite status for a location
+  const toggleFavorite = (id) => {
+    setLocations(prev => prev.map(loc => 
+      loc.id === id ? { ...loc, favorite: !loc.favorite } : loc
+    ));
+  };
+  
+  // Get current location using browser geolocation
+  const getCurrentLocation = async () => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocation is not supported by your browser'));
+        return;
+      }
+      
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          const currentLocation = {
+            id: 'current-location',
+            name: 'Current Location',
+            type: 'other',
+            temporary: true,
+            coordinates: {
+              lat: position.coords.latitude,
+              lon: position.coords.longitude
+            }
+          };
+          
+          // Add to recent locations
+          addToRecentLocations(currentLocation);
+          
+          resolve(currentLocation);
+        },
+        (error) => {
+          reject(error);
+        }
+      );
+    });
+  };
+  
+  // Try to get address from coordinates using OpenStreetMap Nominatim API
+  const getAddressFromCoords = async (lat, lon) => {
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lon}&zoom=18&addressdetails=1`,
+        { headers: { 'Accept-Language': 'en-US,en' } }
+      );
+      
+      if (!response.ok) {
+        throw new Error('Geocoding API error');
+      }
+      
+      const data = await response.json();
+      
+      if (data && data.display_name) {
+        return data.display_name;
+      }
+      
+      return null;
+    } catch (error) {
+      console.error('Error fetching address:', error);
+      return null;
+    }
+  };
+  
+  // Get a weather-based severity indicator for a location
+  const getLocationWeatherSeverity = (locationId, weatherData) => {
+    // This would be implemented to check weather data for the location
+    // and return a severity rating
+    
+    // For now, return a placeholder
+    return {
+      severity: 25,
+      description: 'Moderate weather impact'
+    };
+  };
+  
+  // Get current location with user permission
+  const getLocationWithPermission = async () => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
         reject(new Error('Geolocation is not supported by your browser'));
@@ -167,55 +335,119 @@ const LocationProvider = ({ children }) => {
       
       navigator.geolocation.getCurrentPosition(
         async (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          
           try {
-            // Get location name from coordinates
-            const response = await fetch(
-              `/api/reverse-geocode?lat=${position.coords.latitude}&lon=${position.coords.longitude}`
-            );
+            // Try to get a readable address name
+            const address = await getAddressFromCoords(lat, lon);
             
-            if (!response.ok) {
-              throw new Error('Failed to get location name');
-            }
+            // Create the location object
+            const currentLocation = {
+              id: 'current-location',
+              name: address ? address.split(',')[0] : 'Current Location',
+              type: 'other',
+              temporary: true,
+              lat: lat,
+              lon: lon,
+              country: 'US'
+            };
             
-            const data = await response.json();
-            
-            resolve({
-              id: `current-${uuidv4()}`,
-              name: data.name || 'Current Location',
-              state: data.state,
-              country: data.country,
-              lat: position.coords.latitude,
-              lon: position.coords.longitude
-            });
+            resolve(currentLocation);
           } catch (error) {
-            // If geocoding fails, return coords only
+            // Just use coordinates if geocoding fails
             resolve({
-              id: `current-${uuidv4()}`,
+              id: 'current-location',
               name: 'Current Location',
-              state: '',
-              country: '',
-              lat: position.coords.latitude,
-              lon: position.coords.longitude
+              type: 'other',
+              temporary: true,
+              lat: lat,
+              lon: lon,
+              country: 'US'
             });
           }
         },
         (error) => {
           reject(error);
-        }
+        },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
       );
     });
-  }, []);
+  };
+  
+  // Set current location
+  const setCurrentLocation = (location) => {
+    // Create a location object if we just have coordinates
+    const locationObj = typeof location === 'object' && location !== null
+      ? location
+      : { lat: null, lon: null, name: 'Unknown' };
+    
+    // Trigger a weather update with this location
+    if (locationObj && locationObj.lat && locationObj.lon) {
+      // Save to recent locations
+      addToRecentLocations({
+        id: `loc-${Date.now()}`,
+        name: locationObj.name || 'Selected Location',
+        type: 'other',
+        coordinates: {
+          lat: locationObj.lat,
+          lon: locationObj.lon
+        },
+        address: locationObj.address || locationObj.name || 'Selected Location',
+        temporary: true
+      });
+    }
+  };
+  
+  // Set a location directly with coords and name
+  const setLocation = (location) => {
+    setCurrentLocation(location);
+  };
+  
+  // Save a location to the saved locations list
+  const saveLocation = (location) => {
+    // Skip if already in locations list
+    const exists = locations.some(loc => 
+      (loc.id === location.id) || 
+      (loc.lat === location.lat && loc.lon === location.lon)
+    );
+    
+    if (!exists && location.lat && location.lon) {
+      addLocation({
+        name: location.name || 'Saved Location',
+        type: 'other',
+        coordinates: {
+          lat: location.lat,
+          lon: location.lon
+        },
+        address: location.address || location.name || 'Saved Location',
+        favorite: true
+      });
+    }
+  };
   
   // Context value
   const contextValue = {
-    savedLocations,
-    activeLocationId,
-    activeLocationData,
+    locations,
+    recentLocations,
+    activeRoute,
+    locationTypes,
+    getLocationIcon,
     addLocation,
+    updateLocation,
     removeLocation,
-    setActiveLocation,
-    reorderLocations,
-    getUserGeolocation
+    addToRecentLocations,
+    setRoute,
+    clearRoute,
+    getFavoriteLocations,
+    toggleFavorite,
+    getCurrentLocation,
+    getAddressFromCoords,
+    getLocationWeatherSeverity,
+    setCurrentLocation,
+    setLocation,
+    saveLocation,
+    getLocationWithPermission
   };
   
   return (

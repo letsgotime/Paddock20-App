@@ -1,108 +1,176 @@
-import React from 'react';
-import { Wind, MapPin, Car, Settings } from 'lucide-react';
+/**
+ * DashboardConfig - Configuration for dashboard layout and sections
+ * This centralizes the dashboard layout configuration, making it easier to reorder and reorganize components
+ */
 
-// Dashboard configuration for the Weather Paddock
-const WeatherPaddockConfig = {
-  // Dashboard sections
-  sections: [
-    {
-      id: 'location',
-      title: 'My Locations',
-      description: 'Manage and view weather for saved locations',
-      order: 10,
-      icon: <MapPin className="h-6 w-6 text-blue-400" />
-    },
-    {
-      id: 'drive-time',
-      title: 'Drive Time Analysis',
-      description: 'Weather impact on journey times and driving conditions',
-      order: 20,
-      icon: <Car className="h-6 w-6 text-blue-400" />
-    },
-    {
-      id: 'weather-metrics',
-      title: 'Weather Metrics',
-      description: 'Detailed weather data and forecasts',
-      order: 30,
-      icon: <Wind className="h-6 w-6 text-blue-400" />
-    }
-  ],
+import React from 'react';
+import { Clock, MapPin, Car, AlertTriangle, Gauge, Compass } from 'lucide-react';
+import tileRegistry, { TILE_CATEGORIES } from './TileRegistry';
+
+// Dashboard layout sections
+export const DASHBOARD_SECTIONS = {
+  // Main content sections
+  OVERVIEW: 'overview',
+  CURRENT_CONDITIONS: 'current_conditions',
+  FORECASTS: 'forecasts',
+  ALERTS: 'alerts',
+  VEHICLE: 'vehicle',
   
-  // Dashboard components
-  components: {
-    'search': {
-      id: 'search',
-      name: 'Location Search',
-      sectionId: 'location',
-      order: 10,
-      span: 'full'
-    },
-    'location-manager': {
-      id: 'location-manager',
-      name: 'Location Manager',
-      sectionId: 'location',
-      order: 11,
-      span: 'full'
-    },
-    'drive-mode': {
-      id: 'drive-mode',
-      name: 'Drive Mode Recommendations',
-      sectionId: 'drive-time',
-      order: 21
-    },
-    'commute-time': {
-      id: 'commute-time',
-      name: 'Commute Time Estimator',
-      sectionId: 'drive-time',
-      order: 20,
-      span: 'full'
-    },
-    'tire-strategy': {
-      id: 'tire-strategy',
-      name: 'Tire Strategy',
-      sectionId: 'drive-time',
-      order: 32,
-      description: 'Recommended tire setup based on weather conditions'
-    },
-    'weather-alerts': {
-      id: 'weather-alerts',
-      name: 'Weather Alerts',
-      sectionId: 'weather-metrics',
-      order: 30,
-      span: 'full'
-    },
-    'current-conditions': {
-      id: 'current-conditions',
-      name: 'Current Conditions',
-      sectionId: 'weather-metrics',
-      order: 32
-    },
-    'forecast': {
-      id: 'forecast',
-      name: 'Daily Forecast',
-      sectionId: 'weather-metrics',
-      order: 33
-    },
-    'hourly-forecast': {
-      id: 'hourly-forecast',
-      name: 'Hourly Forecast',
-      sectionId: 'weather-metrics',
-      order: 34,
-      span: 'full'
-    },
-    'air-quality': {
-      id: 'air-quality',
-      name: 'Air Quality',
-      sectionId: 'weather-metrics',
-      order: 35
-    },
-    'solar-elevation': {
-      id: 'solar-elevation',
-      name: 'Sunlight Analysis',
-      sectionId: 'weather-metrics',
-      order: 36
+  // Sidebar sections
+  SIDEBAR_TOP: 'sidebar_top',
+  SIDEBAR_MIDDLE: 'sidebar_middle',
+  SIDEBAR_BOTTOM: 'sidebar_bottom',
+  
+  // Mobile-specific sections
+  MOBILE_PRIMARY: 'mobile_primary',
+  MOBILE_SECONDARY: 'mobile_secondary'
+};
+
+// Dashboard component configuration
+export const dashboardComponents = {
+  // Location Management Components
+  'location-search': {
+    id: 'location-search',
+    title: 'Search Locations',
+    component: 'CitySearch',
+    section: DASHBOARD_SECTIONS.SIDEBAR_TOP,
+    order: 10,
+    icon: <Search size={18} />,
+    config: {
+      showIcon: true,
+      collapsed: false
+    }
+  },
+  'location-manager': {
+    id: 'location-manager',
+    title: 'My Locations',
+    component: 'LocationManager',
+    section: DASHBOARD_SECTIONS.SIDEBAR_MIDDLE,
+    order: 20,
+    icon: <MapPin size={18} />,
+    config: {
+      showIcon: true,
+      collapsed: false
+    }
+  },
+  
+  // Time and Drive Components
+  'world-clocks': {
+    id: 'world-clocks',
+    title: 'World Clocks',
+    component: 'WorldClocks',
+    section: DASHBOARD_SECTIONS.SIDEBAR_TOP,
+    order: 10,
+    icon: <Clock size={18} />,
+    config: {
+      showIcon: true,
+      collapsed: false
+    }
+  },
+  'commute-time': {
+    id: 'commute-time',
+    title: 'Drive Time Analysis',
+    component: 'CommuteTimeEstimator',
+    section: DASHBOARD_SECTIONS.SIDEBAR_MIDDLE,
+    order: 30, // Position it right after the location manager
+    icon: <Car size={18} />,
+    config: {
+      showIcon: true,
+      collapsed: false
+    }
+  },
+  
+  // Weather Components
+  'weather-alerts': {
+    id: 'weather-alerts',
+    title: 'Driving Safety Alerts',
+    component: 'WeatherAlertsDashboard',
+    section: DASHBOARD_SECTIONS.ALERTS,
+    order: 10,
+    icon: <AlertTriangle size={18} />,
+    config: {
+      showIcon: true, 
+      collapsed: false,
+      expandable: true,
+      linkedTile: tileRegistry['weather-alerts']
+    }
+  },
+  'drive-mode': {
+    id: 'drive-mode',
+    title: 'Drive Mode Recommendations',
+    component: 'DriveModeRecommendations',
+    section: DASHBOARD_SECTIONS.VEHICLE,
+    order: 10,
+    icon: <Car size={18} />,
+    config: {
+      showIcon: true,
+      collapsed: false,
+      expandable: true,
+      linkedTile: tileRegistry['drive-mode']
+    }
+  },
+  'surface-forecast': {
+    id: 'surface-forecast',
+    title: 'Surface Conditions Forecast',
+    component: 'TimedSurfacePredictions',
+    section: DASHBOARD_SECTIONS.FORECASTS,
+    order: 20,
+    icon: <Gauge size={18} />,
+    config: {
+      showIcon: true,
+      collapsed: false,
+      expandable: true,
+      linkedTile: tileRegistry['surface-forecast']
+    }
+  },
+  'location-comparison': {
+    id: 'location-comparison',
+    title: 'Multi-Location Comparison',
+    component: 'MultiLocationComparison',
+    section: DASHBOARD_SECTIONS.FORECASTS,
+    order: 30,
+    icon: <Compass size={18} />,
+    config: {
+      showIcon: true,
+      collapsed: false,
+      expandable: true,
+      linkedTile: tileRegistry['location-comparison']
     }
   }
 };
 
-export default WeatherPaddockConfig;
+/**
+ * Get components for a specific dashboard section
+ * @param {string} section - Dashboard section ID
+ * @returns {Array} Array of component configurations sorted by order
+ */
+export const getComponentsForSection = (section) => {
+  return Object.values(dashboardComponents)
+    .filter(component => component.section === section)
+    .sort((a, b) => a.order - b.order);
+};
+
+/**
+ * Get all dashboard components
+ * @returns {Object} Object containing all dashboard components
+ */
+export const getAllComponents = () => {
+  return dashboardComponents;
+};
+
+/**
+ * Get a specific dashboard component by ID
+ * @param {string} componentId - ID of the component to retrieve
+ * @returns {Object|null} Component configuration or null if not found
+ */
+export const getComponent = (componentId) => {
+  return dashboardComponents[componentId] || null;
+};
+
+export default {
+  sections: DASHBOARD_SECTIONS,
+  components: dashboardComponents,
+  getComponentsForSection,
+  getAllComponents,
+  getComponent
+};

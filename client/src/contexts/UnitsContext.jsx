@@ -1,171 +1,147 @@
-import React, { createContext, useState, useEffect } from 'react';
+import React, { createContext, useState, useContext, useEffect } from 'react';
 
-// Create Units Context
+// Create the units context
 export const UnitsContext = createContext();
 
-/**
- * Units Provider - manages temperature, speed, and distance units
- */
+// Units constants
+export const UNIT_SYSTEMS = {
+  METRIC: 'metric',
+  IMPERIAL: 'imperial'
+};
+
+// Custom hook to use the units context
+export const useUnits = () => useContext(UnitsContext);
+
+// Units Provider component
 export const UnitsProvider = ({ children }) => {
-  // State for units (imperial or metric)
-  const [units, setUnits] = useState('imperial'); // Default to imperial (°F, mph, etc.)
+  // State for unit system preference (default to imperial for US audience)
+  const [unitSystem, setUnitSystem] = useState(() => {
+    const savedUnitSystem = localStorage.getItem('unitSystem');
+    return savedUnitSystem ? savedUnitSystem : UNIT_SYSTEMS.IMPERIAL;
+  });
   
-  // Load units preference from localStorage on mount
+  // Save unit system preference to localStorage when it changes
   useEffect(() => {
-    const savedUnits = localStorage.getItem('units_preference');
-    if (savedUnits) {
-      setUnits(savedUnits);
-    }
-  }, []);
+    localStorage.setItem('unitSystem', unitSystem);
+  }, [unitSystem]);
   
-  // Save units preference to localStorage when changed
-  useEffect(() => {
-    localStorage.setItem('units_preference', units);
-  }, [units]);
-  
-  // Function to switch units
-  const toggleUnits = (newUnits) => {
-    if (newUnits && (newUnits === 'imperial' || newUnits === 'metric')) {
-      setUnits(newUnits);
+  // Convert temperature functions
+  const convertTemp = (temp, from = UNIT_SYSTEMS.METRIC, to = UNIT_SYSTEMS.IMPERIAL) => {
+    if (from === to) return temp;
+    
+    if (from === UNIT_SYSTEMS.METRIC && to === UNIT_SYSTEMS.IMPERIAL) {
+      // Celsius to Fahrenheit
+      return (temp * 9/5) + 32;
     } else {
-      // Toggle between imperial and metric
-      setUnits(prevUnits => prevUnits === 'imperial' ? 'metric' : 'imperial');
+      // Fahrenheit to Celsius
+      return (temp - 32) * 5/9;
     }
   };
   
-  // Get temperature suffix based on current units
-  const getTemperatureSuffix = () => {
-    return units === 'imperial' ? '°F' : '°C';
-  };
-  
-  // Get speed suffix based on current units
-  const getSpeedSuffix = () => {
-    return units === 'imperial' ? 'mph' : 'km/h';
-  };
-  
-  // Get distance suffix based on current units
-  const getDistanceSuffix = (distance) => {
-    if (units === 'imperial') {
-      return distance === 1 ? 'mile' : 'miles';
+  // Convert speed functions
+  const convertSpeed = (speed, from = UNIT_SYSTEMS.METRIC, to = UNIT_SYSTEMS.IMPERIAL) => {
+    if (from === to) return speed;
+    
+    if (from === UNIT_SYSTEMS.METRIC && to === UNIT_SYSTEMS.IMPERIAL) {
+      // KPH to MPH
+      return speed * 0.621371;
     } else {
-      return distance === 1 ? 'km' : 'km';
+      // MPH to KPH
+      return speed * 1.60934;
     }
   };
   
-  // Convert temperature between units
-  const convertTemperature = (value, targetUnit) => {
-    // If target unit is the same as current units, return the value
-    if (!targetUnit || targetUnit === units) {
-      return value;
-    }
+  // Convert distance functions
+  const convertDistance = (distance, from = UNIT_SYSTEMS.METRIC, to = UNIT_SYSTEMS.IMPERIAL) => {
+    if (from === to) return distance;
     
-    // Convert from imperial to metric (F to C)
-    if (units === 'imperial' && targetUnit === 'metric') {
-      return (value - 32) * 5 / 9;
+    if (from === UNIT_SYSTEMS.METRIC && to === UNIT_SYSTEMS.IMPERIAL) {
+      // Kilometers to Miles
+      return distance * 0.621371;
+    } else {
+      // Miles to Kilometers
+      return distance * 1.60934;
     }
-    
-    // Convert from metric to imperial (C to F)
-    if (units === 'metric' && targetUnit === 'imperial') {
-      return (value * 9 / 5) + 32;
-    }
-    
-    return value;
   };
   
-  // Convert speed between units
-  const convertSpeed = (value, targetUnit) => {
-    // If target unit is the same as current units, return the value
-    if (!targetUnit || targetUnit === units) {
-      return value;
-    }
+  // Convert pressure
+  const convertPressure = (pressure, from = UNIT_SYSTEMS.METRIC, to = UNIT_SYSTEMS.IMPERIAL) => {
+    if (from === to) return pressure;
     
-    // Convert from imperial to metric (mph to km/h)
-    if (units === 'imperial' && targetUnit === 'metric') {
-      return value * 1.60934;
+    if (from === UNIT_SYSTEMS.METRIC && to === UNIT_SYSTEMS.IMPERIAL) {
+      // hPa to inHg
+      return pressure * 0.02953;
+    } else {
+      // inHg to hPa
+      return pressure * 33.8639;
     }
-    
-    // Convert from metric to imperial (km/h to mph)
-    if (units === 'metric' && targetUnit === 'imperial') {
-      return value * 0.621371;
-    }
-    
-    return value;
   };
   
-  // Convert distance between units
-  const convertDistance = (value, targetUnit) => {
-    // If target unit is the same as current units, return the value
-    if (!targetUnit || targetUnit === units) {
-      return value;
-    }
-    
-    // Convert from imperial to metric (miles to km)
-    if (units === 'imperial' && targetUnit === 'metric') {
-      return value * 1.60934;
-    }
-    
-    // Convert from metric to imperial (km to miles)
-    if (units === 'metric' && targetUnit === 'imperial') {
-      return value * 0.621371;
-    }
-    
-    return value;
+  // Format temperature with unit
+  const formatTemp = (temp, includeUnit = true) => {
+    const rounded = Math.round(temp);
+    return includeUnit 
+      ? `${rounded}°${unitSystem === UNIT_SYSTEMS.IMPERIAL ? 'F' : 'C'}`
+      : `${rounded}°`;
   };
   
-  // Format temperature with appropriate units
-  const formatTemperature = (value, options = {}) => {
-    const { decimals = 0, includeUnits = true } = options;
-    const rounded = Number(value).toFixed(decimals);
-    
-    if (includeUnits) {
-      return `${rounded}${getTemperatureSuffix()}`;
-    }
-    
-    return rounded;
+  // Format speed with unit
+  const formatSpeed = (speed, includeUnit = true) => {
+    const rounded = Math.round(speed);
+    return includeUnit 
+      ? `${rounded} ${unitSystem === UNIT_SYSTEMS.IMPERIAL ? 'mph' : 'km/h'}`
+      : `${rounded}`;
   };
   
-  // Format speed with appropriate units
-  const formatSpeed = (value, options = {}) => {
-    const { decimals = 0, includeUnits = true } = options;
-    const rounded = Number(value).toFixed(decimals);
-    
-    if (includeUnits) {
-      return `${rounded} ${getSpeedSuffix()}`;
+  // Format distance with unit
+  const formatDistance = (distance, includeUnit = true) => {
+    // If small distance, show in feet/meters instead
+    if (unitSystem === UNIT_SYSTEMS.IMPERIAL && distance < 0.1) {
+      const feet = Math.round(distance * 5280);
+      return includeUnit ? `${feet} ft` : `${feet}`;
+    } else if (unitSystem === UNIT_SYSTEMS.METRIC && distance < 0.1) {
+      const meters = Math.round(distance * 1000);
+      return includeUnit ? `${meters} m` : `${meters}`;
     }
     
-    return rounded;
+    // Otherwise show in miles/km with one decimal place
+    const rounded = Math.round(distance * 10) / 10;
+    return includeUnit 
+      ? `${rounded} ${unitSystem === UNIT_SYSTEMS.IMPERIAL ? 'mi' : 'km'}`
+      : `${rounded}`;
   };
   
-  // Format distance with appropriate units
-  const formatDistance = (value, options = {}) => {
-    const { decimals = 1, includeUnits = true } = options;
-    const rounded = Number(value).toFixed(decimals);
-    
-    if (includeUnits) {
-      return `${rounded} ${getDistanceSuffix(value)}`;
+  // Format pressure with unit
+  const formatPressure = (pressure, includeUnit = true) => {
+    if (unitSystem === UNIT_SYSTEMS.IMPERIAL) {
+      const inHg = (pressure * 0.02953).toFixed(2);
+      return includeUnit ? `${inHg} inHg` : `${inHg}`;
+    } else {
+      const hPa = Math.round(pressure);
+      return includeUnit ? `${hPa} hPa` : `${hPa}`;
     }
-    
-    return rounded;
   };
   
   // Context value
-  const value = {
-    units,
-    toggleUnits,
-    getTemperatureSuffix,
-    getSpeedSuffix,
-    getDistanceSuffix,
-    convertTemperature,
+  const contextValue = {
+    unitSystem,
+    setUnitSystem,
+    UNIT_SYSTEMS,
+    convertTemp,
     convertSpeed,
     convertDistance,
-    formatTemperature,
+    convertPressure,
+    formatTemp,
     formatSpeed,
-    formatDistance
+    formatDistance,
+    formatPressure
   };
   
   return (
-    <UnitsContext.Provider value={value}>
+    <UnitsContext.Provider value={contextValue}>
       {children}
     </UnitsContext.Provider>
   );
 };
+
+export default UnitsProvider;
