@@ -416,19 +416,42 @@ const NewGTGWeatherPage: React.FC = () => {
       ) : weatherError ? (
         <div className="p-6 text-center rounded-lg bg-gradient-to-br from-gray-900 to-black border border-red-900/30">
           <p className="text-blue-400 text-xl font-orbitron mb-2">Weather Station Alert</p>
-          <p className="text-red-400 mb-4">
-            {weatherError && weatherError.includes('429') 
-              ? 'Weather API rate limit reached. Basic weather data is still available.' 
-              : weatherError === '[object Object]' 
-                ? 'Error fetching weather data' 
-                : weatherError}
-          </p>
-          <button 
-            onClick={() => window.location.reload()} 
-            className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            ⟳ Refresh Data
-          </button>
+          {weatherError && (weatherError.includes('429') || weatherError.includes('rate limit') || weatherError.includes('blocked')) ? (
+            <>
+              <div className="text-red-400 mb-2 p-2 border border-red-900/30 bg-red-950/20 rounded-md">
+                <p className="mb-2">OpenWeather API rate limit reached. The API quota has been temporarily exhausted.</p>
+                <p className="mb-2 text-yellow-400">
+                  <span className="inline-block p-1 bg-black/30 rounded mr-1">Using cached data where possible.</span> 
+                  {isUsingFallbackData && "Displaying cached data from previous successful requests."}
+                </p>
+                <p className="text-sm text-gray-400">
+                  API services will automatically resume when the rate limit period ends (typically within 24 hours).
+                </p>
+              </div>
+              <div className="mt-4 flex justify-center space-x-4">
+                <button 
+                  onClick={() => window.location.reload()} 
+                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                >
+                  ⟳ Refresh Now
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-red-400 mb-4">
+                {weatherError === '[object Object]' 
+                  ? 'Error fetching weather data' 
+                  : weatherError}
+              </p>
+              <button 
+                onClick={() => window.location.reload()} 
+                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+              >
+                ⟳ Refresh Data
+              </button>
+            </>
+          )}
         </div>
       ) : !currentWeather ? (
         <div className="p-6 text-center rounded-lg bg-gradient-to-br from-gray-900 to-black">

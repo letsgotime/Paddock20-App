@@ -1,5 +1,32 @@
 import { AutomotiveWeatherData } from '@/services/openWeatherService';
 
+// Client-side cache for weather data
+interface CachedData<T> {
+  data: T;
+  timestamp: number;
+  location: {
+    lat: number;
+    lon: number;
+  };
+  unit: 'metric' | 'imperial';
+}
+
+// Cache configuration - much longer durations to minimize API calls
+const CACHE_CONFIG = {
+  weather: {
+    key: 'cachedWeatherData',
+    duration: 60 * 60 * 1000, // 1 hour in milliseconds
+  },
+  forecast: {
+    key: 'cachedForecastData',
+    duration: 3 * 60 * 60 * 1000, // 3 hours in milliseconds
+  },
+  onecall: {
+    key: 'cachedOneCallData',
+    duration: 4 * 60 * 60 * 1000, // 4 hours in milliseconds
+  }
+};
+
 // Define interfaces for weather data
 export interface Location {
   lat: number;
@@ -238,15 +265,51 @@ export interface OneCallData {
   
   // Automotive-specific data for F1 and high-performance driving
   automotiveData?: AutomotiveWeatherData;
+  
+  // Metadata for cache and error states
+  rateLimitedResponse?: boolean;
+  cachedResponse?: boolean;
+  cacheTimestamp?: number;
 }
 
 /**
  * Get comprehensive weather data for a specific location using the OneCall API
+ * with enhanced client-side caching to minimize API calls
  */
 export const getOneCallData = async (location: Location, unit: 'metric' | 'imperial'): Promise<OneCallData> => {
   try {
     if (!location || typeof location.lat !== 'number' || typeof location.lon !== 'number') {
       throw new Error('Invalid location data');
+    }
+    
+    // Check if we have valid cached data first
+    try {
+      const cachedDataString = localStorage.getItem(CACHE_CONFIG.onecall.key);
+      if (cachedDataString) {
+        const cachedData: CachedData<OneCallData> = JSON.parse(cachedDataString);
+        
+        // Calculate if cache is still valid (within duration window)
+        const cacheAge = Date.now() - cachedData.timestamp;
+        const isCacheValid = cacheAge < CACHE_CONFIG.onecall.duration;
+        
+        // Check if the location is close enough (within ~1km) and unit matches
+        const isSameLocation = 
+          Math.abs(cachedData.location.lat - location.lat) < 0.01 && 
+          Math.abs(cachedData.location.lon - location.lon) < 0.01;
+        const isSameUnit = cachedData.unit === unit;
+        
+        // If cache is valid, location is close enough, and unit matches, use cached data
+        if (isCacheValid && isSameLocation && isSameUnit) {
+          console.log('Using cached OneCall data', {
+            cacheAge: `${Math.round(cacheAge / 60000)} minutes old`,
+            location: cachedData.location
+          });
+          return cachedData.data;
+        }
+      }
+    } catch (cacheError) {
+      console.warn('Error reading from OneCall cache:', cacheError);
+      // Continue with API request if cache read fails
     }
     
     // Use our server-side proxy endpoint
@@ -264,12 +327,45 @@ export const getOneCallData = async (location: Location, unit: 'metric' | 'imper
         if (retries === 0) throw fetchError;
         retries--;
         // Wait before retrying
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 1000)); // Increased wait time
       }
     }
     
     if (!response) {
       throw new Error('Network error occurred while fetching OneCall data');
+    }
+    
+    // Handle rate limits gracefully
+    if (response.status === 429) {
+      console.warn('OneCall API rate limited - checking for cached data');
+      
+      // Try to use any cached data we have, even if expired
+      const cachedDataString = localStorage.getItem(CACHE_CONFIG.onecall.key);
+      if (cachedDataString) {
+        try {
+          const cachedData: CachedData<OneCallData> = JSON.parse(cachedDataString);
+          const isSameLocation = 
+            Math.abs(cachedData.location.lat - location.lat) < 0.01 && 
+            Math.abs(cachedData.location.lon - location.lon) < 0.01;
+          const isSameUnit = cachedData.unit === unit;
+          
+          if (isSameLocation && isSameUnit) {
+            console.log('Using expired cache due to rate limiting', {
+              cacheAge: `${Math.round((Date.now() - cachedData.timestamp) / 60000)} minutes old`
+            });
+            return {
+              ...cachedData.data,
+              rateLimitedResponse: true // Add flag to indicate this is from expired cache
+            };
+          }
+        } catch (error) {
+          console.error('Error parsing expired cache:', error);
+        }
+      }
+      
+      // If we still don't have data, propagate the rate limit error
+      const errorText = await response.text();
+      throw new Error(`OneCall API rate limited: ${errorText}`);
     }
     
     if (!response.ok) {
@@ -281,6 +377,24 @@ export const getOneCallData = async (location: Location, unit: 'metric' | 'imper
     
     if (!data || !data.current) {
       throw new Error('Received invalid data format from OneCall API');
+    }
+    
+    // Cache successful response
+    try {
+      const cacheData: CachedData<OneCallData> = {
+        data,
+        timestamp: Date.now(),
+        location: {
+          lat: location.lat,
+          lon: location.lon
+        },
+        unit
+      };
+      localStorage.setItem(CACHE_CONFIG.onecall.key, JSON.stringify(cacheData));
+      console.log('OneCall data cached successfully');
+    } catch (cacheError) {
+      console.warn('Error caching OneCall data:', cacheError);
+      // Continue even if caching fails
     }
     
     return data as OneCallData;
