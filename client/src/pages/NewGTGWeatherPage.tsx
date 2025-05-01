@@ -870,7 +870,7 @@ const NewGTGWeatherPage: React.FC = () => {
                           <Navigation className="h-4 w-4 mr-2" />
                           <span>Favorite Destinations & Commute Analytics</span>
                         </h3>
-                        <span className="text-xs text-gray-400">Real-time journey conditions</span>
+                        <span className="text-xs text-gray-400">Real-time route conditions</span>
                       </div>
                       
                       <div className="p-4 bg-black/20">
@@ -956,7 +956,7 @@ const NewGTGWeatherPage: React.FC = () => {
                                 
                                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                                   <div className="bg-black/50 p-3 rounded-lg">
-                                    <p className="text-gray-500 text-xs mb-1">Journey Time</p>
+                                    <p className="text-gray-500 text-xs mb-1">Route Time</p>
                                     <p className="text-white font-bold text-lg">{loc.travelTime} mins</p>
                                     <div className="mt-1 text-xs text-gray-400">
                                       {loc.weatherImpact <= 2 ? 'No current delays' : 
