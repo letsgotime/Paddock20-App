@@ -6,6 +6,7 @@ export const LocationContext = createContext();
 
 // Custom hook to use the location context
 export const useLocations = () => useContext(LocationContext);
+export const useLocation = () => useContext(LocationContext);
 
 // Location types with icons
 export const locationTypes = [
@@ -324,6 +325,107 @@ export const LocationProvider = ({ children }) => {
     };
   };
   
+  // Get current location with user permission
+  const getLocationWithPermission = async () => {
+    return new Promise((resolve, reject) => {
+      if (!navigator.geolocation) {
+        reject(new Error('Geolocation is not supported by your browser'));
+        return;
+      }
+      
+      navigator.geolocation.getCurrentPosition(
+        async (position) => {
+          const lat = position.coords.latitude;
+          const lon = position.coords.longitude;
+          
+          try {
+            // Try to get a readable address name
+            const address = await getAddressFromCoords(lat, lon);
+            
+            // Create the location object
+            const currentLocation = {
+              id: 'current-location',
+              name: address ? address.split(',')[0] : 'Current Location',
+              type: 'other',
+              temporary: true,
+              lat: lat,
+              lon: lon,
+              country: 'US'
+            };
+            
+            resolve(currentLocation);
+          } catch (error) {
+            // Just use coordinates if geocoding fails
+            resolve({
+              id: 'current-location',
+              name: 'Current Location',
+              type: 'other',
+              temporary: true,
+              lat: lat,
+              lon: lon,
+              country: 'US'
+            });
+          }
+        },
+        (error) => {
+          reject(error);
+        },
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+      );
+    });
+  };
+  
+  // Set current location
+  const setCurrentLocation = (location) => {
+    // Create a location object if we just have coordinates
+    const locationObj = typeof location === 'object' && location !== null
+      ? location
+      : { lat: null, lon: null, name: 'Unknown' };
+    
+    // Trigger a weather update with this location
+    if (locationObj && locationObj.lat && locationObj.lon) {
+      // Save to recent locations
+      addToRecentLocations({
+        id: `loc-${Date.now()}`,
+        name: locationObj.name || 'Selected Location',
+        type: 'other',
+        coordinates: {
+          lat: locationObj.lat,
+          lon: locationObj.lon
+        },
+        address: locationObj.address || locationObj.name || 'Selected Location',
+        temporary: true
+      });
+    }
+  };
+  
+  // Set a location directly with coords and name
+  const setLocation = (location) => {
+    setCurrentLocation(location);
+  };
+  
+  // Save a location to the saved locations list
+  const saveLocation = (location) => {
+    // Skip if already in locations list
+    const exists = locations.some(loc => 
+      (loc.id === location.id) || 
+      (loc.lat === location.lat && loc.lon === location.lon)
+    );
+    
+    if (!exists && location.lat && location.lon) {
+      addLocation({
+        name: location.name || 'Saved Location',
+        type: 'other',
+        coordinates: {
+          lat: location.lat,
+          lon: location.lon
+        },
+        address: location.address || location.name || 'Saved Location',
+        favorite: true
+      });
+    }
+  };
+  
   // Context value
   const contextValue = {
     locations,
@@ -341,7 +443,11 @@ export const LocationProvider = ({ children }) => {
     toggleFavorite,
     getCurrentLocation,
     getAddressFromCoords,
-    getLocationWeatherSeverity
+    getLocationWeatherSeverity,
+    setCurrentLocation,
+    setLocation,
+    saveLocation,
+    getLocationWithPermission
   };
   
   return (
