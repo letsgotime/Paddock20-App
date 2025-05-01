@@ -8,7 +8,7 @@ import PrecipitationWidget from '../components/PrecipitationWidget';
 import NavigationLinkWidget from '../components/NavigationLinkWidget';
 import ApiKeyModal from '../components/ApiKeyModal';
 import { submitApiKey } from '../services/apiKeyManager';
-import ContextualWeatherRoutePlanner from '../components/ContextualWeatherJourneyPlanner';
+import ContextualWeatherRoutePlanner from '../components/ContextualWeatherRoutePlanner';
 import PersonalizedWeatherClothingRecommendations from '../components/PersonalizedWeatherClothingRecommendations';
 import EcoDrivingPerformanceTracker from '../components/EcoDrivingPerformanceTracker';
 import DetailedCommuteAnalytics from '../components/DetailedCommuteAnalytics';

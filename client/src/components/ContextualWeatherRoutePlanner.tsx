@@ -253,15 +253,15 @@ const ContextualWeatherRoutePlanner: React.FC<RoutePlannerProps> = ({
     return null;
   };
   
-  // Determine overall risk level for the journey
-  const calculateJourneyRiskLevel = (journeyPoints: any[]): 'low' | 'moderate' | 'high' | 'severe' => {
-    if (!journeyPoints.length) return 'low';
+  // Determine overall risk level for the route
+  const calculateRouteRiskLevel = (routePoints: any[]): 'low' | 'moderate' | 'high' | 'severe' => {
+    if (!routePoints.length) return 'low';
     
     let severeWarnings = 0;
     let highWarnings = 0;
     let moderateWarnings = 0;
     
-    journeyPoints.forEach(point => {
+    routePoints.forEach(point => {
       if (point.warning) {
         if (point.warning.type === 'severe') severeWarnings++;
         else if (point.warning.type === 'high') highWarnings++;
@@ -311,7 +311,7 @@ const ContextualWeatherRoutePlanner: React.FC<RoutePlannerProps> = ({
   // Reset planner
   const resetPlanner = () => {
     setShowPlannerResults(false);
-    setJourneyWeatherConditions([]);
+    setRouteWeatherConditions([]);
   };
   
   return (
@@ -382,7 +382,7 @@ const ContextualWeatherRoutePlanner: React.FC<RoutePlannerProps> = ({
                 </div>
               </div>
               
-              {/* Journey Time */}
+              {/* Route Time */}
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm text-gray-400 mb-1">Departure Time</label>
@@ -405,10 +405,10 @@ const ContextualWeatherRoutePlanner: React.FC<RoutePlannerProps> = ({
                     <input 
                       type="number" 
                       className="w-full bg-black/40 border border-gray-800 rounded-md px-3 py-2 text-white"
-                      value={journeyDuration}
+                      value={routeDuration}
                       min={5}
                       max={180}
-                      onChange={(e) => setJourneyDuration(parseInt(e.target.value))}
+                      onChange={(e) => setRouteDuration(parseInt(e.target.value))}
                     />
                     <div className="absolute right-3 top-1/2 transform -translate-y-1/2 pointer-events-none">
                       <CalendarCheck className="h-4 w-4 text-gray-500" />
@@ -452,36 +452,36 @@ const ContextualWeatherRoutePlanner: React.FC<RoutePlannerProps> = ({
             </div>
             
             {/* Route Overview */}
-            <div className={`p-3 rounded-lg mb-4 border ${getRiskLevelStyle(journeyRiskLevel)}`}>
+            <div className={`p-3 rounded-lg mb-4 border ${getRiskLevelStyle(routeRiskLevel)}`}>
               <div className="flex justify-between items-center">
-                <span className="font-semibold">Route Risk Level: {journeyRiskLevel.charAt(0).toUpperCase() + journeyRiskLevel.slice(1)}</span>
-                {journeyRiskLevel === 'low' && <CheckCircle2 className="h-5 w-5 text-green-400" />}
-                {journeyRiskLevel === 'moderate' && <AlertTriangle className="h-5 w-5 text-yellow-400" />}
-                {journeyRiskLevel === 'high' && <AlertTriangle className="h-5 w-5 text-orange-400" />}
-                {journeyRiskLevel === 'severe' && <XCircle className="h-5 w-5 text-red-400" />}
+                <span className="font-semibold">Route Risk Level: {routeRiskLevel.charAt(0).toUpperCase() + routeRiskLevel.slice(1)}</span>
+                {routeRiskLevel === 'low' && <CheckCircle2 className="h-5 w-5 text-green-400" />}
+                {routeRiskLevel === 'moderate' && <AlertTriangle className="h-5 w-5 text-yellow-400" />}
+                {routeRiskLevel === 'high' && <AlertTriangle className="h-5 w-5 text-orange-400" />}
+                {routeRiskLevel === 'severe' && <XCircle className="h-5 w-5 text-red-400" />}
               </div>
               <p className="text-sm mt-1">
-                {journeyRiskLevel === 'low' && 'Good driving conditions expected for your route.'}
-                {journeyRiskLevel === 'moderate' && 'Some weather challenges expected - proceed with caution.'}
-                {journeyRiskLevel === 'high' && 'Difficult weather conditions predicted - consider adjusting your travel time.'}
-                {journeyRiskLevel === 'severe' && 'Severe weather conditions - consider postponing non-essential travel.'}
+                {routeRiskLevel === 'low' && 'Good driving conditions expected for your route.'}
+                {routeRiskLevel === 'moderate' && 'Some weather challenges expected - proceed with caution.'}
+                {routeRiskLevel === 'high' && 'Difficult weather conditions predicted - consider adjusting your travel time.'}
+                {routeRiskLevel === 'severe' && 'Severe weather conditions - consider postponing non-essential travel.'}
               </p>
             </div>
             
             {/* Route Timeline */}
             <div className="space-y-1">
-              {journeyWeatherConditions.map((point, index) => (
+              {routeWeatherConditions.map((point, index) => (
                 <div key={index} className="relative flex">
                   {/* Timeline connector */}
-                  {index < journeyWeatherConditions.length - 1 && (
+                  {index < routeWeatherConditions.length - 1 && (
                     <div className="absolute left-3 top-6 w-0.5 h-full bg-blue-900/30"></div>
                   )}
                   
                   {/* Timeline point */}
                   <div className="w-6 h-6 mt-1 rounded-full bg-blue-900/40 border border-blue-600 flex-shrink-0 z-10 flex items-center justify-center">
                     {index === 0 && <MapPin className="h-3 w-3 text-blue-400" />}
-                    {index > 0 && index < journeyWeatherConditions.length - 1 && <Car className="h-3 w-3 text-blue-400" />}
-                    {index === journeyWeatherConditions.length - 1 && <MapPin className="h-3 w-3 text-blue-400" />}
+                    {index > 0 && index < routeWeatherConditions.length - 1 && <Car className="h-3 w-3 text-blue-400" />}
+                    {index === routeWeatherConditions.length - 1 && <MapPin className="h-3 w-3 text-blue-400" />}
                   </div>
                   
                   {/* Timeline content */}
@@ -534,18 +534,18 @@ const ContextualWeatherRoutePlanner: React.FC<RoutePlannerProps> = ({
               <ul className="space-y-1 text-xs text-gray-300">
                 <li className="flex items-start">
                   <span className="text-blue-400 mr-2">•</span>
-                  {journeyRiskLevel === 'low' && 'Maintain regular driving habits while staying alert to weather changes.'}
-                  {journeyRiskLevel === 'moderate' && 'Reduce speed slightly and increase following distance during weather events.'}
-                  {journeyRiskLevel === 'high' && 'Significantly reduce speed, use headlights, and avoid sudden maneuvers.'}
-                  {journeyRiskLevel === 'severe' && 'Consider rescheduling travel if possible, or exercise extreme caution.'}
+                  {routeRiskLevel === 'low' && 'Maintain regular driving habits while staying alert to weather changes.'}
+                  {routeRiskLevel === 'moderate' && 'Reduce speed slightly and increase following distance during weather events.'}
+                  {routeRiskLevel === 'high' && 'Significantly reduce speed, use headlights, and avoid sudden maneuvers.'}
+                  {routeRiskLevel === 'severe' && 'Consider rescheduling travel if possible, or exercise extreme caution.'}
                 </li>
                 <li className="flex items-start">
                   <span className="text-blue-400 mr-2">•</span>
-                  Check your tires before departure - proper inflation is crucial for {journeyRiskLevel === 'low' ? 'optimal efficiency' : 'safety in adverse conditions'}.
+                  Check your tires before departure - proper inflation is crucial for {routeRiskLevel === 'low' ? 'optimal efficiency' : 'safety in adverse conditions'}.
                 </li>
                 <li className="flex items-start">
                   <span className="text-blue-400 mr-2">•</span>
-                  {journeyWeatherConditions.some(point => point.pop > 30) 
+                  {routeWeatherConditions.some(point => point.pop > 30) 
                     ? 'Ensure your wipers are in good condition and washer fluid is filled.' 
                     : 'Keep your fuel level above 1/4 tank for unexpected delays.'}
                 </li>
