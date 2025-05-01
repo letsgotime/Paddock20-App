@@ -1,4 +1,4 @@
-import React, { createContext, useState, useContext, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useState, useContext, useEffect, useCallback } from 'react';
 import { useUnits, UNIT_SYSTEMS } from './UnitsContext';
 import { useLocations } from './LocationContext';
 
@@ -16,24 +16,12 @@ export function WeatherProvider({ children }) {
   const [showLocationPrompt, setShowLocationPrompt] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   
-  // Refs to prevent infinite loops
-  const initialFetchDone = useRef(false);
-  const fetchInProgress = useRef(false);
-  
   // Get unit context
   const unitsContext = useUnits();
   const locationContext = useLocations();
   
   // Fetch weather data - memoized to avoid recreation on renders
   const fetchWeatherData = useCallback(async (lat = DEFAULT_LOCATION.lat, lon = DEFAULT_LOCATION.lon) => {
-    // Prevent concurrent fetches
-    if (fetchInProgress.current) {
-      console.log("Fetch already in progress, skipping...");
-      return;
-    }
-      
-    fetchInProgress.current = true;
-    
     try {
       console.log(`Fetching weather data for ${lat},${lon} in ${unitsContext.unitSystem}`);
       
@@ -67,7 +55,6 @@ export function WeatherProvider({ children }) {
     } finally {
       setLoading(false);
       setRefreshing(false);
-      fetchInProgress.current = false;
     }
   }, [unitsContext.unitSystem, refreshing, weatherData]);
   
@@ -102,30 +89,28 @@ export function WeatherProvider({ children }) {
   
   // Initial data fetch - only on mount
   useEffect(() => {
-    if (!initialFetchDone.current) {
-      initialFetchDone.current = true;
-      fetchWeatherData();
+    // On component mount, fetch data once
+    fetchWeatherData();
+    
+    // Setup periodic refresh every 15 minutes
+    const refreshInterval = setInterval(() => {
+      console.log("Performing scheduled refresh");
+      setRefreshing(true);
       
-      // Setup periodic refresh every 15 minutes
-      const refreshInterval = setInterval(() => {
-        console.log("Performing scheduled refresh");
-        setRefreshing(true);
-        
-        if (weatherData?.location?.coordinates) {
-          const { lat, lon } = weatherData.location.coordinates;
-          fetchWeatherData(lat, lon).catch(console.error);
-        } else {
-          fetchWeatherData().catch(console.error);
-        }
-      }, 15 * 60 * 1000); // 15 minutes
-      
-      return () => clearInterval(refreshInterval);
-    }
+      if (weatherData?.location?.coordinates) {
+        const { lat, lon } = weatherData.location.coordinates;
+        fetchWeatherData(lat, lon).catch(console.error);
+      } else {
+        fetchWeatherData().catch(console.error);
+      }
+    }, 15 * 60 * 1000); // 15 minutes
+    
+    return () => clearInterval(refreshInterval);
   }, []); // Empty dependency array = only run on mount
   
   // Refresh when units change
   useEffect(() => {
-    if (initialFetchDone.current && weatherData?.location?.coordinates && !loading) {
+    if (weatherData?.location?.coordinates && !loading) {
       setRefreshing(true);
       const { lat, lon } = weatherData.location.coordinates;
       fetchWeatherData(lat, lon).catch(console.error);
