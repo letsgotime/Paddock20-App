@@ -331,8 +331,9 @@ const NewGTGWeatherPage: React.FC = () => {
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
   
   // Manifestation Station style UI state
-  const [activeTab, setActiveTab] = useState<'telemetry' | 'driveWindows' | 'recommendations' | 'performance' | 'commute'>('telemetry');
+  const [activeTab, setActiveTab] = useState<'telemetry' | 'driveWindows' | 'recommendations' | 'performance' | 'commute'>('commute');
   const [selectedDriveWindow, setSelectedDriveWindow] = useState<any>(null);
+  const [selectedCommuteLocation, setSelectedCommuteLocation] = useState<string | null>(null);
   
   // Favorite locations for Commute Tracker
   const [favoriteLocations, setFavoriteLocations] = useState<{

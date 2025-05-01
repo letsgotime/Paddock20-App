@@ -15,7 +15,9 @@ import {
   CloudSun,
   CloudDrizzle,
   CloudFog,
-  Navigation
+  Navigation,
+  Cloud,
+  Snow
 } from 'lucide-react';
 
 interface DetailedCommuteAnalyticsProps {
