@@ -415,7 +415,11 @@ const NewGTGWeatherPage: React.FC = () => {
         <div className="p-6 text-center rounded-lg bg-gradient-to-br from-gray-900 to-black border border-red-900/30">
           <p className="text-blue-400 text-xl font-orbitron mb-2">Weather Station Alert</p>
           <p className="text-red-400 mb-4">
-            {weatherError === '[object Object]' ? 'Error fetching weather data' : weatherError}
+            {weatherError && weatherError.includes('429') 
+              ? 'Weather API rate limit reached. Basic weather data is still available.' 
+              : weatherError === '[object Object]' 
+                ? 'Error fetching weather data' 
+                : weatherError}
           </p>
           <button 
             onClick={() => window.location.reload()} 
