@@ -6,6 +6,10 @@ import { useWeather } from '../contexts/WeatherContext';
 
 const Paddock20HomePage: React.FC = () => {
   const { weatherData, automotiveWeatherData } = useWeather();
+  
+  // Debug logs to check what data we're getting
+  console.log('Homepage Weather Data:', weatherData);
+  console.log('Homepage Automotive Weather Data:', automotiveWeatherData);
   return (
     <div
       className="min-h-screen bg-black bg-cover bg-center"
@@ -42,53 +46,27 @@ const Paddock20HomePage: React.FC = () => {
             <h3 className="text-blue-400 font-semibold text-sm uppercase tracking-wider mb-3">Driver Conditions</h3>
             
             <div id="weather-snapshot-capture-area" className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {/* These metrics will be captured along with the weather snapshot */}
+              {/* Core Driver Metrics - First Row */}
               <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20">
-                <div className="text-blue-400/70 text-xs mb-1">Surface Temp</div>
+                <div className="text-blue-400/70 text-xs mb-1">Air Temp</div>
                 <div className="text-white text-xl font-mono font-semibold">
-                  {(weatherData?.main?.temp || 0).toFixed(1)}°F
+                  {weatherData && weatherData.main && typeof weatherData.main.temp === 'number' 
+                    ? weatherData.main.temp.toFixed(1) + "°F" 
+                    : "N/A"}
                 </div>
               </div>
               
               <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20">
                 <div className="text-blue-400/70 text-xs mb-1">Humidity</div>
                 <div className="text-white text-xl font-mono font-semibold">
-                  {weatherData?.main?.humidity || 0}%
-                </div>
-              </div>
-              
-              <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20">
-                <div className="text-blue-400/70 text-xs mb-1">Wind Speed</div>
-                <div className="text-white text-xl font-mono font-semibold">
-                  {weatherData?.wind?.speed || 0} mph
-                </div>
-              </div>
-              
-              <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20">
-                <div className="text-blue-400/70 text-xs mb-1">Feels Like</div>
-                <div className="text-white text-xl font-mono font-semibold">
-                  {(weatherData?.main?.feels_like || 0).toFixed(1)}°F
-                </div>
-              </div>
-              
-              <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20">
-                <div className="text-blue-400/70 text-xs mb-1">UV Index</div>
-                <div className="text-white text-xl font-mono font-semibold">
-                  {automotiveWeatherData && automotiveWeatherData.conditions && typeof automotiveWeatherData.conditions.uv_index === 'number' 
-                    ? automotiveWeatherData.conditions.uv_index.toFixed(1) 
+                  {weatherData && weatherData.main && typeof weatherData.main.humidity === 'number'
+                    ? weatherData.main.humidity + "%" 
                     : "N/A"}
                 </div>
               </div>
               
               <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20">
-                <div className="text-blue-400/70 text-xs mb-1">Visibility</div>
-                <div className="text-white text-xl font-mono font-semibold">
-                  {weatherData?.visibility ? (weatherData.visibility / 1609).toFixed(1) : "N/A"} mi
-                </div>
-              </div>
-              
-              <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20">
-                <div className="text-blue-400/70 text-xs mb-1">Surface Temp</div>
+                <div className="text-blue-400/70 text-xs mb-1">Road Surface</div>
                 <div className="text-white text-xl font-mono font-semibold">
                   {automotiveWeatherData && 
                    automotiveWeatherData.automotive_metrics && 
@@ -100,9 +78,60 @@ const Paddock20HomePage: React.FC = () => {
               </div>
               
               <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20">
-                <div className="text-blue-400/70 text-xs mb-1">Pressure</div>
+                <div className="text-blue-400/70 text-xs mb-1">Tire Temp (Est.)</div>
                 <div className="text-white text-xl font-mono font-semibold">
-                  {weatherData?.main?.pressure || 0} hPa
+                  {automotiveWeatherData && 
+                   automotiveWeatherData.automotive_metrics && 
+                   automotiveWeatherData.automotive_metrics.tire_temperature_estimates && 
+                   typeof automotiveWeatherData.automotive_metrics.tire_temperature_estimates.street_performance === 'number'
+                    ? automotiveWeatherData.automotive_metrics.tire_temperature_estimates.street_performance.toFixed(1) + "°F"
+                    : "N/A"}
+                </div>
+              </div>
+              
+              {/* Second Row - Additional Metrics */}
+              <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20">
+                <div className="text-blue-400/70 text-xs mb-1">Wind Speed</div>
+                <div className="text-white text-xl font-mono font-semibold">
+                  {weatherData && weatherData.wind && typeof weatherData.wind.speed === 'number'
+                    ? weatherData.wind.speed + " mph" 
+                    : "N/A"}
+                </div>
+              </div>
+              
+              <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20">
+                <div className="text-blue-400/70 text-xs mb-1">UV Index</div>
+                <div className="text-white text-xl font-mono font-semibold">
+                  {automotiveWeatherData && 
+                   automotiveWeatherData.conditions && 
+                   typeof automotiveWeatherData.conditions.uv_index === 'number'
+                    ? automotiveWeatherData.conditions.uv_index.toFixed(1)
+                    : "N/A"}
+                </div>
+              </div>
+              
+              <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20">
+                <div className="text-blue-400/70 text-xs mb-1">Tire Warmup</div>
+                <div className="text-white text-xl font-mono font-semibold">
+                  {automotiveWeatherData && 
+                   automotiveWeatherData.automotive_metrics && 
+                   automotiveWeatherData.automotive_metrics.drive_recommendations && 
+                   automotiveWeatherData.automotive_metrics.drive_recommendations.tire_warmup_minutes &&
+                   typeof automotiveWeatherData.automotive_metrics.drive_recommendations.tire_warmup_minutes.street === 'number'
+                    ? automotiveWeatherData.automotive_metrics.drive_recommendations.tire_warmup_minutes.street + " min"
+                    : "N/A"}
+                </div>
+              </div>
+              
+              <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20">
+                <div className="text-blue-400/70 text-xs mb-1">Grip Level</div>
+                <div className="text-white text-xl font-mono font-semibold">
+                  {automotiveWeatherData && 
+                   automotiveWeatherData.automotive_metrics && 
+                   automotiveWeatherData.automotive_metrics.track_surface && 
+                   automotiveWeatherData.automotive_metrics.track_surface.grip_level
+                    ? automotiveWeatherData.automotive_metrics.track_surface.grip_level
+                    : "N/A"}
                 </div>
               </div>
             </div>
