@@ -4,7 +4,7 @@
  */
 
 import React from 'react';
-import { Clock, MapPin, Car, AlertTriangle, Gauge, Compass } from 'lucide-react';
+import { Clock, MapPin, Car, AlertTriangle, Gauge, Compass, Search } from 'lucide-react';
 import tileRegistry, { TILE_CATEGORIES } from './TileRegistry';
 
 // Dashboard layout sections
@@ -99,14 +99,30 @@ export const dashboardComponents = {
     id: 'drive-mode',
     title: 'Drive Mode Recommendations',
     component: 'DriveModeRecommendations',
-    section: DASHBOARD_SECTIONS.VEHICLE,
-    order: 10,
+    section: DASHBOARD_SECTIONS.SIDEBAR_MIDDLE, // Changed to match the drive time analysis section
+    order: 31, // Order 31 to place it right after 'commute-time' (order 30)
     icon: <Car size={18} />,
     config: {
       showIcon: true,
       collapsed: false,
       expandable: true,
       linkedTile: tileRegistry['drive-mode']
+    }
+  },
+  
+  // Add Tire Strategy component that appears under Drive Time Analysis
+  'tire-strategy': {
+    id: 'tire-strategy',
+    title: 'Tire Strategy',
+    component: 'TireStrategyComponent',
+    section: DASHBOARD_SECTIONS.SIDEBAR_MIDDLE,
+    order: 32, // Place it after drive-mode
+    icon: <Gauge size={18} />,
+    config: {
+      showIcon: true,
+      collapsed: false,
+      expandable: true,
+      linkedTile: tileRegistry['tire-strategy'] || null
     }
   },
   'surface-forecast': {
