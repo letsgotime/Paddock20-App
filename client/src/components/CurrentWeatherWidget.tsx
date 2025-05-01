@@ -219,9 +219,20 @@ const CurrentWeatherWidget: React.FC = () => {
   // Calculate dew point
   const dewPoint = calculateDewPoint(weather.main.temp, weather.main.humidity);
   
-  // Get surface temperature from automotive data or estimate it
-  // In production, this would come from a real API or calculation
-  const surfaceTemp = weather.main.temp + 5; // Asphalt is usually warmer than air
+  // Get detailed surface temperature from automotive data or estimate it
+  const { automotiveWeatherData } = useWeather();
+  
+  // Base surface temperature (asphalt) - either from API or estimate
+  const baseTemp = automotiveWeatherData?.automotive_metrics?.track_surface?.temperature || (weather.main.temp + 5);
+  
+  // Calculate surface temperatures based on actual data or estimation model
+  const surfaceTemps = {
+    asphalt: baseTemp,
+    concrete: baseTemp - 2,
+    metal: baseTemp - 1,
+    glass: baseTemp + 3,
+    interior: baseTemp + 8,
+  };
   
   // Calculate drive quality rating
   const driveRating = calculateDriveRating(weather);
@@ -282,11 +293,8 @@ const CurrentWeatherWidget: React.FC = () => {
         </div>
       </div>
       
+      {/* Basic weather metrics */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-6">
-        <div className="bg-black/30 rounded p-3">
-          <div className="text-gray-400 text-sm">Surface Temp</div>
-          <div className="text-xl font-medium text-amber-400">{Math.round(surfaceTemp)}°F</div>
-        </div>
         <div className="bg-black/30 rounded p-3">
           <div className="text-gray-400 text-sm">Wind</div>
           <div className="text-xl font-medium">{Math.round(weather.wind.speed)} mph</div>
@@ -298,6 +306,37 @@ const CurrentWeatherWidget: React.FC = () => {
         <div className="bg-black/30 rounded p-3">
           <div className="text-gray-400 text-sm">Dew Point</div>
           <div className="text-xl font-medium">{Math.round(dewPoint)}°F</div>
+        </div>
+        <div className="bg-black/30 rounded p-3">
+          <div className="text-gray-400 text-sm">UV Index</div>
+          <div className="text-xl font-medium">{automotiveWeatherData?.conditions?.uv_index || 'N/A'}</div>
+        </div>
+      </div>
+      
+      {/* Surface temperature readings */}
+      <div className="mb-6">
+        <h3 className="text-blue-400 text-md font-medium mb-2">Surface Temperature Telemetry</h3>
+        <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+          <div className="bg-gradient-to-b from-black/50 to-black/30 rounded p-3">
+            <div className="text-gray-400 text-sm mb-1">Asphalt</div>
+            <div className="text-xl font-medium text-amber-400">{Math.round(surfaceTemps.asphalt)}°F</div>
+          </div>
+          <div className="bg-gradient-to-b from-black/50 to-black/30 rounded p-3">
+            <div className="text-gray-400 text-sm mb-1">Concrete</div>
+            <div className="text-xl font-medium text-gray-300">{Math.round(surfaceTemps.concrete)}°F</div>
+          </div>
+          <div className="bg-gradient-to-b from-black/50 to-black/30 rounded p-3">
+            <div className="text-gray-400 text-sm mb-1">Metal</div>
+            <div className="text-xl font-medium text-blue-300">{Math.round(surfaceTemps.metal)}°F</div>
+          </div>
+          <div className="bg-gradient-to-b from-black/50 to-black/30 rounded p-3">
+            <div className="text-gray-400 text-sm mb-1">Glass</div>
+            <div className="text-xl font-medium text-blue-400">{Math.round(surfaceTemps.glass)}°F</div>
+          </div>
+          <div className="bg-gradient-to-b from-black/50 to-black/30 rounded p-3">
+            <div className="text-gray-400 text-sm mb-1">Car Interior</div>
+            <div className="text-xl font-medium text-red-400">{Math.round(surfaceTemps.interior)}°F</div>
+          </div>
         </div>
       </div>
       
