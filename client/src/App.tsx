@@ -6,6 +6,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { initializeImageCache } from "./services/unsplashService";
+import NavigationControls from './components/NavigationControls';
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import Garage from "@/pages/Garage";
@@ -135,6 +136,7 @@ function App() {
               {(effectiveSession || previewMode) && (
                 <>
                   <DropdownNavbar />
+                  <NavigationControls />
                 </>
               )}
             </header>
