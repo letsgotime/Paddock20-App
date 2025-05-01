@@ -15,8 +15,17 @@ import { checkSlackIntegration, initializeSlackClient, shareVehicleToSlack, shar
 // OpenWeather API key - updated May 1, 2025
 const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY || "2379a18ee0e478c88aa7d4aa1df44410";
 
+// Cache structures for weather data to avoid repetitive API calls
+interface CachedData<T> {
+  data: T;
+  timestamp: number;
+}
+
+// Cache for weather data to reduce API calls
+const weatherDataCache = new Map<string, CachedData<any>>();
+
 // Cache for geocoding results to avoid repetitive API calls
-const geocodeCache = new Map();
+const geocodeCache = new Map<string, CachedData<any>>();
 
 // Legacy API Health Monitoring System
 // This tracks the status of our external weather API - use the new global system instead
@@ -28,6 +37,18 @@ interface WeatherApiStatus {
   checkInterval: number; // in milliseconds
 }
 
+// Rate limiter to prevent exceeding API limits
+interface RateLimiter {
+  oneCallLastCalled: Date | null;
+  oneCallMinInterval: number; // minimum time between calls in milliseconds
+  weatherLastCalled: Date | null;
+  weatherMinInterval: number;
+  forecastLastCalled: Date | null;
+  forecastMinInterval: number;
+  geocodeLastCalled: Date | null;
+  geocodeMinInterval: number;
+}
+
 const apiHealthStatus: WeatherApiStatus = {
   lastChecked: new Date(0), // Set to epoch time to force immediate check
   isOperational: true, // Assume operational until first check
@@ -35,6 +56,85 @@ const apiHealthStatus: WeatherApiStatus = {
   consecutiveFailures: 0,
   checkInterval: CHECK_INTERVAL // 4 hours in milliseconds
 };
+
+// Initialize rate limiter to prevent hitting API rate limits
+const rateLimiter: RateLimiter = {
+  oneCallLastCalled: null,
+  oneCallMinInterval: 10000, // 10 seconds between OneCall API requests
+  weatherLastCalled: null,
+  weatherMinInterval: 5000, // 5 seconds between Weather API requests
+  forecastLastCalled: null,
+  forecastMinInterval: 10000, // 10 seconds between Forecast API requests
+  geocodeLastCalled: null,
+  geocodeMinInterval: 5000 // 5 seconds between Geocode API requests
+};
+
+/**
+ * Check if an API can be called based on rate limiting rules
+ * @param apiType The type of API being called
+ * @returns True if the API can be called, false if it should be rate limited
+ */
+function canCallApi(apiType: 'oneCall' | 'weather' | 'forecast' | 'geocode'): boolean {
+  const now = new Date();
+  
+  switch (apiType) {
+    case 'oneCall':
+      if (!rateLimiter.oneCallLastCalled) {
+        rateLimiter.oneCallLastCalled = now;
+        return true;
+      }
+      
+      const oneCallElapsed = now.getTime() - rateLimiter.oneCallLastCalled.getTime();
+      if (oneCallElapsed < rateLimiter.oneCallMinInterval) {
+        return false;
+      }
+      
+      rateLimiter.oneCallLastCalled = now;
+      return true;
+      
+    case 'weather':
+      if (!rateLimiter.weatherLastCalled) {
+        rateLimiter.weatherLastCalled = now;
+        return true;
+      }
+      
+      const weatherElapsed = now.getTime() - rateLimiter.weatherLastCalled.getTime();
+      if (weatherElapsed < rateLimiter.weatherMinInterval) {
+        return false;
+      }
+      
+      rateLimiter.weatherLastCalled = now;
+      return true;
+      
+    case 'forecast':
+      if (!rateLimiter.forecastLastCalled) {
+        rateLimiter.forecastLastCalled = now;
+        return true;
+      }
+      
+      const forecastElapsed = now.getTime() - rateLimiter.forecastLastCalled.getTime();
+      if (forecastElapsed < rateLimiter.forecastMinInterval) {
+        return false;
+      }
+      
+      rateLimiter.forecastLastCalled = now;
+      return true;
+      
+    case 'geocode':
+      if (!rateLimiter.geocodeLastCalled) {
+        rateLimiter.geocodeLastCalled = now;
+        return true;
+      }
+      
+      const geocodeElapsed = now.getTime() - rateLimiter.geocodeLastCalled.getTime();
+      if (geocodeElapsed < rateLimiter.geocodeMinInterval) {
+        return false;
+      }
+      
+      rateLimiter.geocodeLastCalled = now;
+      return true;
+  }
+}
 
 // Debug value to track server restarts
 const SERVER_START_TIME = new Date();
@@ -243,6 +343,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Latitude and longitude are required' });
       }
 
+      // Check rate limiting
+      if (!canCallApi('weather')) {
+        return res.status(429).json({ 
+          message: 'Rate limit exceeded. Please try again in a few seconds.',
+          rateLimit: true,
+          retryAfter: Math.ceil(rateLimiter.weatherMinInterval / 1000)
+        });
+      }
+      
+      // Generate cache key
+      const cacheKey = `weather:${lat}:${lon}:${units || 'metric'}`;
+      
+      // Check cache - basic weather data expires after 10 minutes
+      const cachedData = weatherDataCache.get(cacheKey);
+      if (cachedData && (new Date().getTime() - cachedData.timestamp < 10 * 60 * 1000)) {
+        console.log(`Using cached weather data for: ${lat},${lon}`);
+        return res.json(cachedData.data);
+      }
+
       // Use the OpenWeather API key constant
       const url = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=${units || 'metric'}&appid=${OPENWEATHER_API_KEY}`;
       
@@ -265,6 +384,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const data = await response.json();
+      
+      // Cache the response
+      weatherDataCache.set(cacheKey, {
+        data,
+        timestamp: new Date().getTime()
+      });
+      
       res.json(data);
     } catch (error) {
       console.error('OpenWeather API error:', error);
@@ -305,6 +431,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.status(400).json({ message: 'Latitude and longitude are required' });
       }
       
+      // Check rate limiting
+      if (!canCallApi('oneCall')) {
+        return res.status(429).json({ 
+          message: 'Rate limit exceeded. Please try again in a few seconds.',
+          rateLimit: true,
+          retryAfter: Math.ceil(rateLimiter.oneCallMinInterval / 1000)
+        });
+      }
+      
+      // Generate cache key
+      const cacheKey = `onecall:${lat}:${lon}:${units || 'metric'}:${exclude || ''}`;
+      
+      // Check cache - OneCall data expires after 30 minutes
+      const cachedData = weatherDataCache.get(cacheKey);
+      if (cachedData && (new Date().getTime() - cachedData.timestamp < 30 * 60 * 1000)) {
+        console.log(`Using cached OneCall data for: ${lat},${lon}`);
+        return res.json(cachedData.data);
+      }
+      
       const url = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&units=${units || 'metric'}${exclude ? `&exclude=${exclude}` : ''}&appid=${OPENWEATHER_API_KEY}`;
       
       console.log(`Fetching OneCall data for: ${lat},${lon}`);
@@ -315,6 +460,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       }
       
       const data = await response.json();
+      
+      // Cache the response
+      weatherDataCache.set(cacheKey, {
+        data,
+        timestamp: new Date().getTime()
+      });
+      
       res.json(data);
     } catch (error) {
       console.error('OpenWeather OneCall API error:', error);
