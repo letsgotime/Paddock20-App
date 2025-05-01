@@ -185,15 +185,72 @@ function LocationManager({ onSelectLocation }) {
       
       {savedLocations.length === 0 ? (
         <div className="text-center py-4 text-gray-400 text-sm">
-          <p>No saved locations yet.</p>
-          <p>Add your favorite places to see detailed weather information.</p>
+          <p className="text-blue-400 font-semibold mb-2">F1 Pit Team Recommendation:</p>
+          <p>Save at least 3 locations to maximize your Weather & Drive Time experience.</p>
+          <p className="mt-2">Add your home, work, and favorite destinations to get detailed weather impact metrics and route analyses.</p>
+          <button 
+            className="mt-3 text-xs bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1 rounded flex items-center mx-auto"
+            onClick={() => setIsAdding(true)}
+          >
+            <span className="mr-1">➕</span> Add Your First Location
+          </button>
+        </div>
+      ) : savedLocations.length < 3 ? (
+        <div>
+          <div className="mb-3 bg-gray-900/60 rounded-md p-3 text-xs text-gray-300">
+            <p className="text-blue-400 font-semibold mb-1">🏎️ Performance Boost Available:</p>
+            <p>Add {3 - savedLocations.length} more location{3 - savedLocations.length > 1 ? 's' : ''} to unlock full weather comparisons and drive time analytics.</p>
+          </div>
+          <div className="space-y-2">
+            {savedLocations.map(location => (
+              <div 
+                key={location.id}
+                className="bg-gray-700/40 rounded p-3 flex justify-between items-center hover:bg-gray-700/60 cursor-pointer"
+                onClick={() => handleSelectLocation(location)}
+              >
+                <div className="flex items-center">
+                  <div className="text-xl mr-2">{getLocationIcon(location.type)}</div>
+                  <div>
+                    <div className="font-medium">{location.name}</div>
+                    <div className="text-xs text-gray-400 line-clamp-1">{location.address}</div>
+                  </div>
+                </div>
+                <div className="flex space-x-2">
+                  <button 
+                    className="text-gray-400 hover:text-white"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      // Open in Google Maps
+                      const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(location.address)}`;
+                      window.open(url, '_blank');
+                    }}
+                  >
+                    🗺️
+                  </button>
+                  <button 
+                    className="text-gray-400 hover:text-red-400"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleRemoveLocation(location.id);
+                    }}
+                  >
+                    ✕
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
         </div>
       ) : (
         <div className="space-y-2">
+          <div className="bg-gradient-to-r from-green-900/30 to-blue-900/30 rounded-md p-2 mb-3 text-xs">
+            <div className="text-green-400 font-semibold mb-1">✅ Location Setup Complete</div>
+            <div className="text-gray-300">Your weather and drive time analysis is fully optimized. Select any location for detailed metrics.</div>
+          </div>
           {savedLocations.map(location => (
             <div 
               key={location.id}
-              className="bg-gray-700/40 rounded p-3 flex justify-between items-center hover:bg-gray-700/60 cursor-pointer"
+              className="bg-gray-700/40 rounded p-3 flex justify-between items-center hover:bg-gray-700/60 cursor-pointer transition-all duration-200 border border-transparent hover:border-blue-500/30"
               onClick={() => handleSelectLocation(location)}
             >
               <div className="flex items-center">
