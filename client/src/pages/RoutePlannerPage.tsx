@@ -2169,7 +2169,7 @@ const RoutePlannerPage = () => {
     <div className="min-h-screen bg-black max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
       <div className="mb-8">
         <div className="flex justify-between items-center mb-4">
-          <h1 className="text-blue-400 font-orbitron text-4xl">🛣️ Route Planner</h1>
+          <h1 className="text-blue-400 font-orbitron text-4xl">🛣️ Fun Drive Planner</h1>
           
           {/* Only show active tracking stats in header when tracking is active */}
           {gpsTrackingEnabled && (
@@ -2444,7 +2444,7 @@ const RoutePlannerPage = () => {
         <div className="space-y-6">
           {/* Route Planning Section */}
           <div className="bg-gray-900/60 rounded-lg p-4 border border-blue-900/30">
-            <h3 className="text-blue-400 font-orbitron text-xl mb-4">🛣️ Route Planner</h3>
+            <h3 className="text-blue-400 font-orbitron text-xl mb-4">🛣️ Fun Drive Planner</h3>
             
             {/* Start Location */}
             <div className="mb-6">

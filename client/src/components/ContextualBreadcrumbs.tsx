@@ -36,7 +36,7 @@ const ContextualBreadcrumbs: React.FC = () => {
     '/route-planner': [
       { path: '/', label: 'Home' },
       { path: '/new-weather-center', label: 'Weather Center' },
-      { path: '/route-planner', label: 'Route Planner' }
+      { path: '/route-planner', label: 'Fun Drive Planner' }
     ],
     '/juicebox': [
       { path: '/', label: 'Home' },
