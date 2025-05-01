@@ -212,6 +212,9 @@ function CommuteTimeEstimator({ weatherData, origin, destination }) {
                   <span className="text-indigo-400 mr-2">🏁</span>
                   <span>To: <span className="font-medium">{destination.name}</span></span>
                 </div>
+                <div className="mt-2 text-xs text-gray-400">
+                  Distance: {commuteDistance} miles
+                </div>
               </div>
             ) : (
               <div className="text-xs text-gray-500">
