@@ -116,7 +116,7 @@ export default function Paddock20HomePageSimple() {
           </div>
           
           <div className="mt-8 text-center">
-            <Link href="/dashboard" className="text-blue-500 hover:text-blue-400">
+            <Link to="/dashboard" className="text-blue-500 hover:text-blue-400">
               Go back to Dashboard
             </Link>
           </div>
