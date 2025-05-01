@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { MAIN_CONTENT_ID } from '../lib/accessibility';
 import { useWeather } from '../contexts/WeatherContext';
 import WorldClockPanel from '../components/WorldClockPanel';
+import CurrentWeatherWidget from '../components/CurrentWeatherWidget';
 import F1TelemetryWeatherStation from '../components/F1TelemetryWeatherStation';
 import ApiKeyModal from '../components/ApiKeyModal';
 import { submitApiKey } from '../services/apiKeyManager';
@@ -487,6 +488,14 @@ const NewGTGWeatherPage: React.FC = () => {
       </header>
       
       {/* Global Time & Conditions - primary status panel */}
+      <section className="mb-6" aria-labelledby="current-weather-heading">
+        <h2 id="current-weather-heading" className="apex-header-green text-xl mb-4 flex items-center">
+          <Cloud className="h-5 w-5 mr-2 text-green-500" />
+          <span>Current Weather Command Center</span>
+        </h2>
+        <CurrentWeatherWidget />
+      </section>
+      
       <section className="mb-6" aria-labelledby="global-circuit-heading">
         <h2 id="global-circuit-heading" className="apex-header-green text-xl mb-4 flex items-center">
           <Calendar className="h-5 w-5 mr-2 text-green-500" />
@@ -553,11 +562,11 @@ const NewGTGWeatherPage: React.FC = () => {
         </div>
       ) : (
         <>
-          {/* Weather Manifestation Command Center */}
-          <section className="mb-10" aria-labelledby="weather-manifestation-heading">
-            <h2 id="weather-manifestation-heading" className="apex-header-green text-xl mb-4 flex items-center">
+          {/* Drive Command Center */}
+          <section className="mb-10" aria-labelledby="drive-command-center-heading">
+            <h2 id="drive-command-center-heading" className="apex-header-green text-xl mb-4 flex items-center">
               <Gauge className="h-5 w-5 mr-2 text-green-500" />
-              <span>Weather Manifestation Command Center</span>
+              <span>Drive Command Center</span>
             </h2>
             <div className="rounded-lg bg-gradient-to-br from-[#111111] to-[#1a1a1a] border border-gray-800">
               {/* Interactive Navigation Tabs */}
@@ -775,7 +784,7 @@ const NewGTGWeatherPage: React.FC = () => {
                 
                 {/* Commute Tracker Tab */}
                 {activeTab === 'commute' && (
-                  <div className="opacity-0 animate-fadeIn">
+                  <div className="animate-fadein">
                     <div className="rounded-lg border border-blue-900/30 overflow-hidden mb-6">
                       <div className="bg-blue-900/20 px-4 py-2 flex justify-between items-center">
                         <h3 className="text-blue-400 font-semibold flex items-center">
@@ -839,7 +848,7 @@ const NewGTGWeatherPage: React.FC = () => {
                         
                         {/* Selected location details */}
                         {selectedLocation && (
-                          <div className="mt-4 p-4 rounded-lg bg-blue-900/10 border border-blue-900/40 animate-fadeIn">
+                          <div className="mt-4 p-4 rounded-lg bg-blue-900/10 border border-blue-900/40 animate-fadein">
                             {favoriteLocations.filter(loc => loc.id === selectedLocation).map((loc) => (
                               <div key={`detail-${loc.id}`}>
                                 <div className="flex items-center justify-between mb-4">
@@ -987,7 +996,7 @@ const NewGTGWeatherPage: React.FC = () => {
                 
                 {/* Performance Settings Tab */}
                 {activeTab === 'performance' && (
-                  <div className="opacity-0 animate-fadeIn">
+                  <div className="animate-fadein">
                     <div className="rounded-lg border border-blue-900/30 overflow-hidden">
                       <div className="bg-blue-900/20 px-4 py-2 flex justify-between items-center">
                         <h3 className="text-blue-400 font-semibold">Weather-Based Performance Settings</h3>
