@@ -7,6 +7,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { initializeImageCache } from "./services/unsplashService";
 import NavigationControls from './components/NavigationControls';
+import ContextualBreadcrumbs from './components/ContextualBreadcrumbs';
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import Garage from "@/pages/Garage";
@@ -137,6 +138,7 @@ function App() {
                 <>
                   <DropdownNavbar />
                   <NavigationControls />
+                  <ContextualBreadcrumbs />
                 </>
               )}
             </header>
