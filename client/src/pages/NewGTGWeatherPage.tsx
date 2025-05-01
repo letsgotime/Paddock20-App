@@ -600,6 +600,39 @@ const NewGTGWeatherPage: React.FC = () => {
               </div>
             </div>
           </section>
+          
+          {/* Additional Weather Tools */}
+          <section className="mb-10" aria-labelledby="weather-tools-heading">
+            <h2 id="weather-tools-heading" className="apex-header-green text-xl mb-4 flex items-center">
+              <AlertTriangle className="h-5 w-5 mr-2 text-green-500" />
+              <span>Journey Planning & Performance Tools</span>
+            </h2>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
+              <div className="lg:col-span-1">
+                <ContextualWeatherJourneyPlanner 
+                  favoriteLocations={favoriteLocations.map(loc => ({
+                    id: loc.id,
+                    name: loc.name,
+                    latitude: loc.lat,
+                    longitude: loc.lon,
+                    type: loc.type,
+                    icon: loc.icon
+                  }))}
+                />
+              </div>
+              
+              <div className="lg:col-span-1">
+                <PersonalizedWeatherClothingRecommendations />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-6">
+              <div className="lg:col-span-1">
+                <EcoDrivingPerformanceTracker />
+              </div>
+            </div>
+          </section>
 
           {/* Drive Command Center */}
           <section className="mb-10" aria-labelledby="drive-command-center-heading">
