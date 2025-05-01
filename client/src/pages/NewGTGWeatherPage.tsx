@@ -17,7 +17,7 @@ import {
   Droplets, AlertTriangle, Gauge, Calendar, Car, Key,
   Crosshair, Building, Clock, MapPin, Navigation, Home,
   CornerDownRight, Timer, Landmark, Flag, ArrowRight, Star,
-  BarChart2
+  BarChart2, XCircle
 } from 'lucide-react';
 
 // Mock drive quality data - would be calculated from real weather in production
@@ -543,7 +543,7 @@ const NewGTGWeatherPage: React.FC = () => {
                   onClick={() => window.location.reload()} 
                   className="px-4 py-2 bg-black border border-blue-700 text-blue-400 rounded-md hover:bg-blue-900/20 transition-colors flex items-center"
                 >
-                  <Signal className="h-4 w-4 mr-2" /> Stop
+                  <XCircle className="h-4 w-4 mr-2" /> Stop
                 </button>
               </div>
             </>
