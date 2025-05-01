@@ -1,10 +1,47 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
-function CommuteTimeEstimator({ weatherData }) {
+function CommuteTimeEstimator({ weatherData, origin, destination }) {
   const [baseCommuteTime, setBaseCommuteTime] = useState(20);  // Base commute time in minutes
   const [commuteDistance, setCommuteDistance] = useState(12);  // Distance in miles
-  const [workAddress, setWorkAddress] = useState('');  // Work address 
   const [showSettings, setShowSettings] = useState(false);
+  
+  // Update base commute time based on origin and destination
+  useEffect(() => {
+    if (origin && destination) {
+      // In a real implementation, we would calculate the distance and time
+      // using a service like Google Maps Distance Matrix API
+      
+      // For now, let's simulate with a simple calculation
+      // We'll use a mock speed of 35 mph for the calculation
+      // Normally we'd calculate this based on actual route data
+      
+      // Rough approximation of distance between locations using Haversine formula
+      const calculateDistance = (lat1, lon1, lat2, lon2) => {
+        const R = 3958.8; // Earth's radius in miles
+        const dLat = (lat2 - lat1) * Math.PI / 180;
+        const dLon = (lon2 - lon1) * Math.PI / 180;
+        const a = 
+          Math.sin(dLat/2) * Math.sin(dLat/2) +
+          Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+          Math.sin(dLon/2) * Math.sin(dLon/2);
+        const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+        return R * c;
+      };
+      
+      const distance = calculateDistance(
+        origin.coords.lat, 
+        origin.coords.lon, 
+        destination.coords.lat, 
+        destination.coords.lon
+      );
+      
+      setCommuteDistance(Math.round(distance));
+      
+      // Estimate time at 35 mph average
+      const timeInHours = distance / 35;
+      setBaseCommuteTime(Math.round(timeInHours * 60));
+    }
+  }, [origin, destination]);
 
   // Calculate adjusted commute time based on weather conditions
   const calculateAdjustedCommuteTime = () => {
@@ -161,15 +198,26 @@ function CommuteTimeEstimator({ weatherData }) {
               onChange={(e) => setCommuteDistance(parseInt(e.target.value) || 0)}
             />
           </div>
-          <div>
-            <label className="block text-xs text-gray-400 mb-1">Work Address</label>
-            <input 
-              type="text" 
-              className="w-full bg-gray-800 border border-gray-700 rounded p-1 text-sm"
-              value={workAddress}
-              onChange={(e) => setWorkAddress(e.target.value)}
-              placeholder="Enter work address"
-            />
+          
+          <div className="mt-3 pt-3 border-t border-gray-700">
+            <div className="text-xs text-gray-400 mb-2">Current Route</div>
+            
+            {origin && destination ? (
+              <div className="bg-gray-800 p-2 rounded text-sm">
+                <div className="flex items-center mb-1">
+                  <span className="text-indigo-400 mr-2">🏁</span>
+                  <span>From: <span className="font-medium">{origin.name}</span></span>
+                </div>
+                <div className="flex items-center">
+                  <span className="text-indigo-400 mr-2">🏁</span>
+                  <span>To: <span className="font-medium">{destination.name}</span></span>
+                </div>
+              </div>
+            ) : (
+              <div className="text-xs text-gray-500">
+                Select an origin and destination from the Location Manager to calculate route details.
+              </div>
+            )}
           </div>
         </div>
       )}
