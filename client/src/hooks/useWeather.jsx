@@ -2,8 +2,7 @@ import { useContext } from 'react';
 import { WeatherContext } from '../contexts/WeatherContext';
 
 /**
- * Custom hook for accessing weather context
- * @returns {Object} Weather context with current weather and associated functionality
+ * Custom hook to access weather data
  */
 export function useWeather() {
   const context = useContext(WeatherContext);
