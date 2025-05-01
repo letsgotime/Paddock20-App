@@ -1,9 +1,11 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import EventsPreview from '../components/EventsPreview';
-import HomeWeatherWidget from '../components/HomeWeatherWidget';
+import OneTapWeatherSnapshot from '../components/OneTapWeatherSnapshot';
+import { useWeather } from '../contexts/WeatherContext';
 
 const Paddock20HomePage: React.FC = () => {
+  const { weatherData, automotiveWeatherData } = useWeather();
   return (
     <div
       className="min-h-screen bg-black bg-cover bg-center"
@@ -26,10 +28,83 @@ const Paddock20HomePage: React.FC = () => {
         </p>
       </section>
 
-      {/* Live Weather Station */}
+      {/* Live Weather Station - Driver-Oriented Weather Dashboard */}
       <section className="mb-8">
-        <h2 className="font-orbitron text-blue-400 text-2xl mb-4">Live Weather Intelligence</h2>
-        <HomeWeatherWidget />
+        <h2 className="font-orbitron text-blue-400 text-2xl mb-4">Live Drive Intelligence</h2>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Weather Snapshot */}
+          <div className="lg:col-span-1">
+            <OneTapWeatherSnapshot className="h-full" />
+          </div>
+          
+          {/* Driver-Oriented Weather Metrics */}
+          <div className="lg:col-span-2 bg-gradient-to-r from-black/90 to-gray-900/80 rounded-xl p-4 border border-blue-900/30 shadow-lg backdrop-blur-sm">
+            <h3 className="text-blue-400 font-semibold text-sm uppercase tracking-wider mb-3">Driver Conditions</h3>
+            
+            <div id="weather-snapshot-capture-area" className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              {/* These metrics will be captured along with the weather snapshot */}
+              <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20">
+                <div className="text-blue-400/70 text-xs mb-1">Surface Temp</div>
+                <div className="text-white text-xl font-mono font-semibold">
+                  {(weatherData?.main?.temp || 0).toFixed(1)}°F
+                </div>
+              </div>
+              
+              <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20">
+                <div className="text-blue-400/70 text-xs mb-1">Humidity</div>
+                <div className="text-white text-xl font-mono font-semibold">
+                  {weatherData?.main?.humidity || 0}%
+                </div>
+              </div>
+              
+              <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20">
+                <div className="text-blue-400/70 text-xs mb-1">Wind Speed</div>
+                <div className="text-white text-xl font-mono font-semibold">
+                  {weatherData?.wind?.speed || 0} mph
+                </div>
+              </div>
+              
+              <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20">
+                <div className="text-blue-400/70 text-xs mb-1">Feels Like</div>
+                <div className="text-white text-xl font-mono font-semibold">
+                  {(weatherData?.main?.feels_like || 0).toFixed(1)}°F
+                </div>
+              </div>
+              
+              <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20">
+                <div className="text-blue-400/70 text-xs mb-1">UV Index</div>
+                <div className="text-white text-xl font-mono font-semibold">
+                  {automotiveWeatherData?.uvi?.toFixed(1) || "N/A"}
+                </div>
+              </div>
+              
+              <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20">
+                <div className="text-blue-400/70 text-xs mb-1">Visibility</div>
+                <div className="text-white text-xl font-mono font-semibold">
+                  {weatherData?.visibility ? (weatherData.visibility / 1609).toFixed(1) : "N/A"} mi
+                </div>
+              </div>
+              
+              <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20">
+                <div className="text-blue-400/70 text-xs mb-1">Dew Point</div>
+                <div className="text-white text-xl font-mono font-semibold">
+                  {(automotiveWeatherData?.dew_point || 0).toFixed(1)}°F
+                </div>
+              </div>
+              
+              <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20">
+                <div className="text-blue-400/70 text-xs mb-1">Pressure</div>
+                <div className="text-white text-xl font-mono font-semibold">
+                  {weatherData?.main?.pressure || 0} hPa
+                </div>
+              </div>
+            </div>
+            
+            <div className="mt-4 p-3 bg-blue-900/10 rounded-lg text-sm text-blue-300">
+              <p>All metrics are real-time and critical for driving decisions. For detailed forecast and track conditions, visit the <Link to="/new-weather-center" className="text-blue-400 hover:underline">Weather Center</Link>.</p>
+            </div>
+          </div>
+        </div>
       </section>
       
       {/* Motorsports Events Preview */}
