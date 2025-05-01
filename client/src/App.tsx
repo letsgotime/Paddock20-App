@@ -158,6 +158,7 @@ function App() {
               <Route path="/juicebox-videos" element={<ProtectedRoute><VideoLibraryPage /></ProtectedRoute>} />
               <Route path="/broker-portal" element={<ProtectedRoute><BrokerPortalPage /></ProtectedRoute>} />
               <Route path="/weather" element={<ProtectedRoute><Weather /></ProtectedRoute>} />
+              <Route path="/new-weather-center" element={<ProtectedRoute><NewGTGWeatherPage /></ProtectedRoute>} />
               <Route path="/redline" element={<ProtectedRoute><RedlineReportPage /></ProtectedRoute>} />
               <Route path="/seasonal-checklist" element={<ProtectedRoute><SeasonalChecklistPage /></ProtectedRoute>} />
               <Route path="/pre-drive-checklist" element={<ProtectedRoute><PreDriveChecklistPage /></ProtectedRoute>} />

@@ -294,13 +294,13 @@ const generatePerformanceAdjustments = (weather: any, forecast: any, units: stri
 
 const NewGTGWeatherPage: React.FC = () => {
   const { 
-    currentWeather, 
-    forecast, 
-    location, 
+    weatherData: currentWeather, 
+    forecastData: forecast, 
+    selectedLocation: location, 
     isLoading: isWeatherContextLoading, 
-    units,
+    unit: units,
     error: weatherError,
-    timeLastUpdated
+    lastUpdated: timeLastUpdated
   } = useWeather();
   
   const [isPageReady, setIsPageReady] = useState(false);
