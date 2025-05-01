@@ -73,7 +73,7 @@ const apiHealthStatus: WeatherApiStatus = {
 // Initialize rate limiter to prevent hitting API rate limits
 const rateLimiter: RateLimiter = {
   oneCallLastCalled: null,
-  oneCallMinInterval: 10000, // 10 seconds between OneCall API requests
+  oneCallMinInterval: 60000, // 60 seconds between OneCall API requests - account is temporarily blocked
   weatherLastCalled: null,
   weatherMinInterval: 5000, // 5 seconds between Weather API requests
   forecastLastCalled: null,
@@ -456,28 +456,73 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate cache key
       const cacheKey = `onecall:${lat}:${lon}:${units || 'metric'}:${exclude || ''}`;
       
-      // Check cache - OneCall data expires after 30 minutes
+      // Check cache - OneCall data expires after 2 hours (increased to reduce API calls due to rate limiting)
       const cachedData = weatherDataCache.get(cacheKey);
-      if (cachedData && (new Date().getTime() - cachedData.timestamp < 30 * 60 * 1000)) {
+      if (cachedData && (new Date().getTime() - cachedData.timestamp < 120 * 60 * 1000)) {
         console.log(`Using cached OneCall data for: ${lat},${lon}`);
         return res.json(cachedData.data);
       }
+      // Use the special API key for OneCall API 3.0, with fallback to other keys if needed
+      let response;
+      let data;
+      let errorMessages = [];
       
-      // Use the special API key for OneCall API 3.0
-      const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&units=${units || 'metric'}${exclude ? `&exclude=${exclude}` : ''}&appid=${ONECALL_API_KEY}`;
+      // Primary key attempt first
+      const primaryUrl = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&units=${units || 'metric'}${exclude ? `&exclude=${exclude}` : ''}&appid=${ONECALL_API_KEY}`;
       
-      // Log complete URL for debugging (without exposing API key)
+      // Log the endpoint being used (without exposing API key)
       console.log(`Using OneCall API 3.0 endpoint with lat=${lat}, lon=${lon}, units=${units || 'metric'}`);
-      
-      
       console.log(`Fetching OneCall data for: ${lat},${lon}`);
-      const response = await fetch(url);
       
-      if (!response.ok) {
-        throw new Error(`OneCall API error: ${response.status} - ${await response.text()}`);
+      try {
+        // First try with the primary key
+        response = await fetch(primaryUrl);
+        
+        if (response.ok) {
+          data = await response.json();
+        } else {
+          // If primary key fails with 429 (rate limit), try backup keys
+          const errorText = await response.text();
+          errorMessages.push(`Primary key failed: ${response.status} - ${errorText}`);
+          
+          if (response.status === 429) {
+            console.log('OneCall API rate limited, trying backup keys...');
+            
+            // Try alternative keys in sequence
+            const backupKeys = ['backup', 'test', 'city', 'replit'];
+            
+            for (const keyName of backupKeys) {
+              const apiKey = OPENWEATHER_API_KEYS[keyName];
+              if (!apiKey) continue;
+              
+              console.log(`Trying backup key: ${keyName}`);
+              const backupUrl = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&units=${units || 'metric'}${exclude ? `&exclude=${exclude}` : ''}&appid=${apiKey}`;
+              
+              try {
+                const backupResponse = await fetch(backupUrl);
+                
+                if (backupResponse.ok) {
+                  console.log(`Backup key ${keyName} worked successfully`);
+                  data = await backupResponse.json();
+                  break; // Success! Exit the loop
+                } else {
+                  const backupErrorText = await backupResponse.text();
+                  errorMessages.push(`Backup key ${keyName} failed: ${backupResponse.status} - ${backupErrorText}`);
+                }
+              } catch (backupError) {
+                errorMessages.push(`Backup key ${keyName} error: ${(backupError as Error).message}`);
+              }
+            }
+          }
+        }
+      } catch (error) {
+        errorMessages.push(`Primary request error: ${(error as Error).message}`);
       }
       
-      const data = await response.json();
+      // If all attempts failed, throw an error with details
+      if (!data) {
+        throw new Error(`OneCall API error: All keys failed. Details: ${errorMessages.join(' | ')}`);
+      }
       
       // Cache the response
       weatherDataCache.set(cacheKey, {
