@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { ArrowLeft, ArrowRight, Home } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
@@ -10,6 +10,9 @@ const NavigationControls: React.FC = () => {
   const location = useLocation();
   const [canGoBack, setCanGoBack] = useState(false);
   const [canGoForward, setCanGoForward] = useState(false);
+  // Flag to track router-triggered navigation vs button navigation
+  const isNavigatingProgrammatically = useRef(false);
+  
   const [navigationHistory, setNavigationHistory] = useState<string[]>(() => {
     // Load history from sessionStorage on initial load
     try {
@@ -32,6 +35,19 @@ const NavigationControls: React.FC = () => {
     }
   });
 
+  // Debug function for development
+  const logNavigationState = () => {
+    if (process.env.NODE_ENV === 'development') {
+      console.log('Navigation State:', {
+        currentPath: location?.pathname,
+        history: navigationHistory,
+        currentIndex,
+        canGoBack,
+        canGoForward,
+      });
+    }
+  };
+  
   // Initialize history with current location if empty
   useEffect(() => {
     // If location is valid and history is empty, initialize it
@@ -39,13 +55,19 @@ const NavigationControls: React.FC = () => {
       setNavigationHistory([location.pathname]);
       setCurrentIndex(0);
     }
-  }, [location]);
+  }, [location, navigationHistory.length]);
 
   // Save navigation state to sessionStorage when it changes
   useEffect(() => {
     if (navigationHistory.length > 0) {
       sessionStorage.setItem(HISTORY_KEY, JSON.stringify(navigationHistory));
       sessionStorage.setItem(CURRENT_INDEX_KEY, currentIndex.toString());
+      
+      // Update navigation control states
+      setCanGoBack(currentIndex > 0);
+      setCanGoForward(currentIndex < navigationHistory.length - 1);
+      
+      logNavigationState();
     }
   }, [navigationHistory, currentIndex]);
 
@@ -54,28 +76,31 @@ const NavigationControls: React.FC = () => {
     // Guard against undefined location
     if (!location || !location.pathname) return;
     
+    // Skip history updates for programmatic back/forward clicks
+    if (isNavigatingProgrammatically.current) {
+      isNavigatingProgrammatically.current = false;
+      return;
+    }
+    
     // Only update if we have a valid history and the path has changed
-    if (navigationHistory.length > 0 && navigationHistory[currentIndex] !== location.pathname) {
-      // If we navigated forward/back and then clicked a link, trim the "future" history
-      const newHistory = currentIndex < navigationHistory.length - 1
-        ? navigationHistory.slice(0, currentIndex + 1)
-        : [...navigationHistory];
-      
-      // Prevent duplicate consecutive entries
-      if (newHistory[newHistory.length - 1] !== location.pathname) {
-        // Add the new path to history
-        newHistory.push(location.pathname);
-        setNavigationHistory(newHistory);
-        setCurrentIndex(newHistory.length - 1);
+    if (navigationHistory.length > 0) {
+      if (navigationHistory[currentIndex] !== location.pathname) {
+        // If we manually clicked a link or otherwise navigated after using back/forward buttons
+        // trim the "future" history
+        const newHistory = currentIndex < navigationHistory.length - 1
+          ? navigationHistory.slice(0, currentIndex + 1)
+          : [...navigationHistory];
+        
+        // Prevent duplicate consecutive entries
+        if (newHistory[newHistory.length - 1] !== location.pathname) {
+          // Add the new path to history
+          newHistory.push(location.pathname);
+          setNavigationHistory(newHistory);
+          setCurrentIndex(newHistory.length - 1);
+        }
       }
     }
   }, [location?.pathname, navigationHistory, currentIndex]);
-
-  // Update back/forward button states
-  useEffect(() => {
-    setCanGoBack(currentIndex > 0);
-    setCanGoForward(currentIndex < navigationHistory.length - 1);
-  }, [currentIndex, navigationHistory]);
 
   // Handle browser forward/back buttons
   useEffect(() => {
@@ -97,7 +122,8 @@ const NavigationControls: React.FC = () => {
   }, [navigationHistory, location?.pathname]);
 
   const goBack = () => {
-    if (canGoBack) {
+    if (canGoBack && currentIndex > 0) {
+      isNavigatingProgrammatically.current = true;
       const prevPath = navigationHistory[currentIndex - 1];
       setCurrentIndex(currentIndex - 1);
       navigate(prevPath);
@@ -105,7 +131,8 @@ const NavigationControls: React.FC = () => {
   };
 
   const goForward = () => {
-    if (canGoForward) {
+    if (canGoForward && currentIndex < navigationHistory.length - 1) {
+      isNavigatingProgrammatically.current = true;
       const nextPath = navigationHistory[currentIndex + 1];
       setCurrentIndex(currentIndex + 1);
       navigate(nextPath);
@@ -115,6 +142,8 @@ const NavigationControls: React.FC = () => {
   const goHome = () => {
     // Add home to history only if we're not already there and location is valid
     if (location?.pathname && location.pathname !== '/') {
+      // Do not set isNavigatingProgrammatically flag here
+      // as we want to add a new history entry for the home path
       navigate('/');
     }
   };
