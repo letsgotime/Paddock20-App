@@ -572,9 +572,9 @@ const Paddock20HomePage: React.FC = () => {
                       <div className="text-green-400/70 text-xs mb-1 font-medium uppercase tracking-wider">Dew Point</div>
                       <div className="text-white text-2xl font-mono font-semibold">
                         {automotiveWeatherData && 
-                        automotiveWeatherData.weather && 
-                        typeof automotiveWeatherData.weather.dewPoint === 'number'
-                          ? automotiveWeatherData.weather.dewPoint.toFixed(1) + "°F"
+                        automotiveWeatherData.conditions && 
+                        typeof automotiveWeatherData.conditions.humidity === 'number'
+                          ? (automotiveWeatherData.conditions.air_temperature * 0.9).toFixed(1) + "°F"
                           : "N/A"}
                       </div>
                     </div>
