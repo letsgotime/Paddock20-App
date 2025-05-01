@@ -330,17 +330,27 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const anyError = weatherError || forecastError || oneCallError;
     if (anyError) {
-      if (isUsingFallbackData) {
+      // Check if error is due to rate limiting
+      const errorString = String(anyError);
+      const isRateLimitError = errorString.includes('429') || 
+                              errorString.includes('rate limit') || 
+                              errorString.includes('too many requests');
+      
+      if (isRateLimitError) {
+        // Don't show toast for rate limit errors as we'll handle this with a nicer UI in the component
+        console.log("Weather data synchronization in progress. Using cached data where available.");
+        // We intentionally don't show a toast here as it creates a poor UX
+      } else if (isUsingFallbackData) {
         toast({
           title: "Using cached weather data",
-          description: "Unable to fetch fresh data. Displaying your last successfully loaded weather information.",
-          variant: "destructive",
+          description: "Displaying your last successfully loaded weather information.",
+          variant: "default", // Changed from destructive to make it less alarming
         });
       } else {
         toast({
-          title: "Weather data error",
-          description: "Some weather information couldn't be loaded. Please try refreshing.",
-          variant: "destructive",
+          title: "Weather data update paused",
+          description: "Some weather information couldn't be refreshed. Will try again shortly.",
+          variant: "default", // Changed from destructive to make it less alarming
         });
       }
     }
