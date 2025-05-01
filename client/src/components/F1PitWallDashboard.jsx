@@ -799,13 +799,13 @@ function F1PitWallDashboard() {
                     />
                     <F1Gauge 
                       label="Braking" 
-                      value={weatherData.performanceData.braking_efficiency} 
+                      value={weatherData?.performanceData?.braking_efficiency || 85} 
                       units="%" 
                       min={30}
                       max={100}
-                      danger={weatherData.performanceData.braking_efficiency < 50}
-                      warning={weatherData.performanceData.braking_efficiency < 80}
-                      optimum={weatherData.performanceData.braking_efficiency >= 90}
+                      danger={(weatherData?.performanceData?.braking_efficiency || 85) < 50}
+                      warning={(weatherData?.performanceData?.braking_efficiency || 85) < 80}
+                      optimum={(weatherData?.performanceData?.braking_efficiency || 85) >= 90}
                     />
                   </div>
                   
