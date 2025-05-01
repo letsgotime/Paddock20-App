@@ -444,10 +444,16 @@ const Paddock20HomePage: React.FC = () => {
                         <div className="text-gray-500 text-xs mb-1">Power Adjustment</div>
                         <div className="text-white text-sm font-medium">
                           {(() => {
-                            const rawValue = safeAutomotiveValue('automotive_metrics.drive_recommendations.torque_management.recommended_percentage', 'N/A');
-                            if (rawValue === 'N/A') return 'N/A';
-                            const numValue = parseFloat(rawValue);
-                            return (numValue > 0 ? "+" : "") + numValue + "%";
+                            try {
+                              const rawValue = safeAutomotiveValue('automotive_metrics.drive_recommendations.torque_management.recommended_percentage', 'N/A');
+                              if (rawValue === 'N/A') return 'N/A';
+                              const numValue = parseFloat(rawValue);
+                              if (isNaN(numValue)) return 'N/A';
+                              return (numValue > 0 ? "+" : "") + numValue + "%";
+                            } catch (error) {
+                              console.error("Power adjustment error:", error);
+                              return 'N/A';
+                            }
                           })()}
                         </div>
                       </div>
