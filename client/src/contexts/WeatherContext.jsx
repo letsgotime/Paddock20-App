@@ -1,290 +1,193 @@
-import React, { createContext, useState, useContext, useEffect, useCallback, useRef } from 'react';
-import { useUnits, UNIT_SYSTEMS } from './UnitsContext';
-import { useLocations } from './LocationContext';
+import React, { createContext, useState, useEffect, useCallback } from 'react';
+import { useLocation } from '../hooks/useLocation';
+import { useUnits } from '../hooks/useUnits';
 
-// Default location - Atlanta
-const DEFAULT_LOCATION = { lat: 33.749, lon: -84.388 };
+// Create the Weather Context
+export const WeatherContext = createContext();
 
-const WeatherContext = createContext(null);
+// Sample cached weather data for Atlanta (the default location)
+const DEFAULT_WEATHER = {
+  coord: { lon: -84.3880, lat: 33.7490 },
+  weather: [{ id: 800, main: 'Clear', description: 'clear sky', icon: '01d' }],
+  main: {
+    temp: 75,
+    feels_like: 74,
+    temp_min: 70,
+    temp_max: 78,
+    pressure: 1015,
+    humidity: 60
+  },
+  visibility: 10000,
+  wind: { speed: 5, deg: 220 },
+  clouds: { all: 0 },
+  dt: 1600000000,
+  sys: {
+    type: 1,
+    id: 4548,
+    country: 'US',
+    sunrise: 1599989621,
+    sunset: 1600034717
+  },
+  timezone: -14400,
+  id: 4180439,
+  name: 'Atlanta',
+  cod: 200
+};
 
-export function WeatherProvider({ children }) {
-  const [weatherData, setWeatherData] = useState(null);
-  const [loading, setLoading] = useState(true);
+// Provider component
+export const WeatherProvider = ({ children }) => {
+  const { activeLocationData, savedLocations } = useLocation();
+  const { units } = useUnits();
+  const [currentWeather, setCurrentWeather] = useState(null);
+  const [forecastData, setForecastData] = useState(null);
+  const [weatherAlerts, setWeatherAlerts] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState(null);
-  const [lastUpdated, setLastUpdated] = useState(null);
-  const [citySearchOpen, setCitySearchOpen] = useState(false);
-  const [showLocationPrompt, setShowLocationPrompt] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
+  const [locationWeatherCache, setLocationWeatherCache] = useState({});
+  const [lastFetchTime, setLastFetchTime] = useState(null);
   
-  // Refs to prevent infinite loops
-  const initialFetchDone = useRef(false);
-  const fetchInProgress = useRef(false);
+  // Use coordsString for cache keys (e.g., "33.749,-84.388")
+  const getCoordsString = useCallback((location) => {
+    if (!location) return null;
+    return `${location.lat},${location.lon}`;
+  }, []);
   
-  // Get unit context
-  const unitsContext = useUnits();
-  const locationContext = useLocations();
-  
-  // Cache the last requested coordinates to prevent redundant fetches
-  const lastRequestRef = useRef({ lat: null, lon: null, timestamp: 0, units: null });
-  
-  // Minimum time between fetches for the same coordinates (5 minutes = 300000ms)
-  const MIN_FETCH_INTERVAL = 300000;
-  
-  // Fetch weather data - memoized to avoid recreation on renders
-  const fetchWeatherData = useCallback(async (lat = DEFAULT_LOCATION.lat, lon = DEFAULT_LOCATION.lon) => {
-    // Prevent concurrent fetches
-    if (fetchInProgress.current) {
-      console.log("Fetch already in progress, skipping...");
-      return weatherData;
+  // Fetch weather data for given coordinates
+  const fetchWeatherData = useCallback(async (location) => {
+    if (!location || !location.lat || !location.lon) {
+      console.error('Invalid location data for weather fetch', location);
+      return null;
     }
     
-    // Check if this is a duplicate request within the throttle window
-    const now = Date.now();
-    const lastRequest = lastRequestRef.current;
-    const isSameCoordinates = 
-      lastRequest.lat === lat && 
-      lastRequest.lon === lon &&
-      lastRequest.units === unitsContext.unitSystem;
-    const isWithinThrottleWindow = (now - lastRequest.timestamp) < MIN_FETCH_INTERVAL;
+    setIsLoading(true);
+    setError(null);
     
-    if (isSameCoordinates && isWithinThrottleWindow && weatherData) {
-      console.log(`Throttling fetch for ${lat},${lon} - last fetched ${Math.round((now - lastRequest.timestamp)/1000)}s ago`);
-      return weatherData;
-    }
-      
-    fetchInProgress.current = true;
+    const coordsString = getCoordsString(location);
     
     try {
-      console.log(`Fetching weather data for ${lat},${lon} in ${unitsContext.unitSystem}`);
+      console.log(`Fetching weather data for ${coordsString} in ${units}`);
       
-      if (!refreshing) {
-        setLoading(true);
+      // Check cache first (and if it's not too old)
+      const cachedData = locationWeatherCache[coordsString];
+      const now = new Date();
+      
+      if (cachedData && (now.getTime() - cachedData.timestamp) < 5 * 60 * 1000) {
+        console.log('Using cached weather data');
+        return cachedData.data;
       }
       
-      // Update the last request details before the fetch
-      lastRequestRef.current = {
-        lat,
-        lon,
-        units: unitsContext.unitSystem,
-        timestamp: now
-      };
-      
-      const response = await fetch(`/api/automotive-weather?lat=${lat}&lon=${lon}&units=${unitsContext.unitSystem}`);
-      
-      if (response.status === 429) {
-        throw new Error("Weather API rate limit exceeded. Using cached data.");
-      }
+      // Fetch from API
+      const response = await fetch(`/api/automotive-weather?lat=${location.lat}&lon=${location.lon}&units=${units}`);
       
       if (!response.ok) {
-        throw new Error(`API error: ${response.status}`);
+        throw new Error(`Error status: ${response.status}`);
       }
       
       const data = await response.json();
-      console.log("Weather data received successfully");
+      console.log('Weather data received successfully');
       
-      setWeatherData(data);
-      setLastUpdated(new Date());
-      setError(null);
+      // Update cache
+      setLocationWeatherCache(prev => ({
+        ...prev,
+        [coordsString]: {
+          data,
+          timestamp: now.getTime()
+        }
+      }));
+      
+      setLastFetchTime(now);
       return data;
     } catch (err) {
-      console.error("Error fetching weather data:", err);
-      setError(err);
-      
-      // Keep existing data if we have it
-      return weatherData;
+      console.error('Error fetching weather data:', err);
+      setError(err.message);
+      return null;
     } finally {
-      setLoading(false);
-      setRefreshing(false);
-      
-      // Add a small delay before allowing new fetches to prevent rapid succession calls
-      setTimeout(() => {
-        fetchInProgress.current = false;
-      }, 500);
+      setIsLoading(false);
     }
-  // Removed weatherData from dependency array - it causes infinite loops
-  }, [unitsContext.unitSystem, refreshing]);
+  }, [units, locationWeatherCache, getCoordsString]);
   
-  // Fetch for current location
-  const fetchCurrentLocationWeather = useCallback(async () => {
-    // Skip if a fetch is already in progress
-    if (fetchInProgress.current) {
-      console.log("Fetch already in progress, skipping geolocation request...");
-      return weatherData;
-    }
-    
-    try {
-      if (navigator.geolocation) {
-        setLoading(true);
-        
-        const position = await new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true,
-            timeout: 5000,
-            maximumAge: 0
-          });
-        });
-        
-        const { latitude, longitude } = position.coords;
-        console.log(`Got location: ${latitude}, ${longitude}`);
-        
-        return await fetchWeatherData(latitude, longitude);
-      } else {
-        throw new Error('Geolocation not supported');
-      }
-    } catch (err) {
-      console.error("Error getting location:", err);
-      
-      // Fall back to default if we have no data yet
-      if (!weatherData) {
-        return await fetchWeatherData();
-      }
-      return weatherData;
-    }
-  }, [fetchWeatherData]);
-  
-  // Initial data fetch - only on mount
+  // Load weather for active location 
   useEffect(() => {
-    if (!initialFetchDone.current) {
-      console.log("Performing initial weather data fetch");
-      initialFetchDone.current = true;
-      
-      // Initial fetch with artificial delay to prevent race conditions
-      setTimeout(() => {
-        if (!fetchInProgress.current) {
-          fetchWeatherData().catch(console.error);
-        }
-      }, 100);
-      
-      // Setup periodic refresh every 15 minutes
-      const refreshInterval = setInterval(() => {
-        console.log("Performing scheduled refresh");
-        
-        // Only refresh if we're not already fetching
-        if (!fetchInProgress.current) {
-          setRefreshing(true);
-          
-          if (weatherData?.location?.coordinates) {
-            const { lat, lon } = weatherData.location.coordinates;
-            fetchWeatherData(lat, lon).catch(console.error);
-          } else {
-            fetchWeatherData().catch(console.error);
-          }
-        } else {
-          console.log("Skipping scheduled refresh - fetch already in progress");
-        }
-      }, 15 * 60 * 1000); // 15 minutes
-      
-      return () => clearInterval(refreshInterval);
-    }
-  }, []); // Empty dependency array = only run on mount
-  
-  // Refresh when units change - debounced to prevent rapid firing
-  const unitsChangeTimeoutRef = useRef(null);
-  
-  useEffect(() => {
-    // Make sure we have data and initial fetch is done
-    if (!initialFetchDone.current || !weatherData?.location?.coordinates || loading) {
-      return;
-    }
+    let isMounted = true;
     
-    // Clear any existing timeout
-    if (unitsChangeTimeoutRef.current) {
-      clearTimeout(unitsChangeTimeoutRef.current);
-    }
-    
-    // Set a new timeout to debounce the fetch
-    unitsChangeTimeoutRef.current = setTimeout(() => {
-      // Only fetch if we're not already fetching
-      if (!fetchInProgress.current) {
-        setRefreshing(true);
-        const { lat, lon } = weatherData.location.coordinates;
-        fetchWeatherData(lat, lon).catch(console.error);
+    const loadWeatherForActiveLocation = async () => {
+      if (!activeLocationData) {
+        console.log('No active location data');
+        setIsLoading(false);
+        return;
       }
-    }, 300); // Short debounce
-    
-    // Cleanup
-    return () => {
-      if (unitsChangeTimeoutRef.current) {
-        clearTimeout(unitsChangeTimeoutRef.current);
+      
+      console.log('Performing initial weather data fetch');
+      // If a fetch is already in progress for this very same location (within 5 seconds),
+      // avoid making multiple requests
+      if (
+        isLoading && 
+        lastFetchTime && 
+        (new Date().getTime() - lastFetchTime.getTime() < 5000)
+      ) {
+        console.log('Fetch already in progress, skipping...');
+        return;
+      }
+      
+      const weatherData = await fetchWeatherData(activeLocationData);
+      
+      if (isMounted && weatherData) {
+        setCurrentWeather(weatherData);
       }
     };
-  }, [unitsContext.unitSystem]);
+    
+    loadWeatherForActiveLocation();
+    
+    // Set up refresh interval (every 5 minutes)
+    const interval = setInterval(() => {
+      if (activeLocationData) {
+        loadWeatherForActiveLocation();
+      }
+    }, 5 * 60 * 1000);
+    
+    return () => {
+      isMounted = false;
+      clearInterval(interval);
+    };
+  }, [activeLocationData, fetchWeatherData, isLoading, lastFetchTime]);
   
-  const getFormattedLastUpdated = () => {
-    if (!lastUpdated) return 'Never';
+  // Get cached weather for a specific location
+  const getLocationWeather = useCallback((locationId) => {
+    const location = savedLocations.find(loc => loc.id === locationId);
+    if (!location) return null;
     
-    return lastUpdated.toLocaleTimeString('en-US', {
-      hour: 'numeric',
-      minute: '2-digit',
-      hour12: true
-    });
-  };
+    const coordsString = getCoordsString(location);
+    const cachedData = locationWeatherCache[coordsString];
+    
+    return cachedData?.data || null;
+  }, [savedLocations, locationWeatherCache, getCoordsString]);
   
-  // Format temperature with units
-  const getFormattedTemperature = (temp) => {
-    if (!temp && temp !== 0) return 'N/A';
+  // Refresh all saved locations' weather data
+  const refreshAllLocations = useCallback(async () => {
+    setIsLoading(true);
     
-    return unitsContext.formatTemperature(
-      temp, 
-      unitsContext.unitSystem === UNIT_SYSTEMS.IMPERIAL 
-        ? unitsContext.TEMPERATURE_UNITS.FAHRENHEIT 
-        : unitsContext.TEMPERATURE_UNITS.CELSIUS
-    );
-  };
+    const promises = savedLocations.map(location => fetchWeatherData(location));
+    await Promise.all(promises);
+    
+    setIsLoading(false);
+  }, [savedLocations, fetchWeatherData]);
   
-  // Fetch for saved location
-  const fetchLocationWeather = useCallback(async (locationId) => {
-    // Skip if fetch is already in progress
-    if (fetchInProgress.current) {
-      console.log("Fetch already in progress, skipping saved location fetch...");
-      return weatherData;
-    }
-    
-    if (!locationContext) return weatherData;
-    
-    const location = locationContext.locations.find(
-      loc => loc.id.toString() === locationId.toString()
-    );
-    
-    if (location?.coordinates) {
-      const { lat, lon } = location.coordinates;
-      return await fetchWeatherData(lat, lon);
-    }
-    
-    return weatherData;
-  }, [fetchWeatherData, locationContext]);
-  
-  // State variables for city search already declared above
-  
-  // Context value
-  const value = {
-    weatherData,
-    loading,
+  // The context value
+  const contextValue = {
+    currentWeather: currentWeather || DEFAULT_WEATHER,
+    forecastData,
+    weatherAlerts,
+    isLoading,
     error,
-    lastUpdated,
-    getFormattedLastUpdated,
-    getFormattedTemperature,
-    fetchWeatherData,
-    fetchCurrentLocationWeather,
-    fetchLocationWeather,
-    showLocationPrompt,
-    setShowLocationPrompt,
-    citySearchOpen, 
-    setCitySearchOpen,
-    refreshing
+    getLocationWeather,
+    refreshAllLocations
   };
   
   return (
-    <WeatherContext.Provider value={value}>
+    <WeatherContext.Provider value={contextValue}>
       {children}
     </WeatherContext.Provider>
   );
-}
+};
 
-export function useWeather() {
-  const context = useContext(WeatherContext);
-  if (!context) {
-    throw new Error('useWeather must be used within a WeatherProvider');
-  }
-  return context;
-}
+export default WeatherProvider;
