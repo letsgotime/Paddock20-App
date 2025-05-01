@@ -751,7 +751,7 @@ function F1PitWallDashboard() {
         {/* Header with F1-style telemetry feel */}
         <div className="flex flex-col md:flex-row justify-between items-center mb-6 bg-black/60 p-4 rounded-lg border-l-4 border-blue-500">
           <div className="flex flex-col items-center md:items-start text-center md:text-left">
-            <div className="text-2xl md:text-3xl font-bold text-blue-400" style={{ fontFamily: 'Orbitron, sans-serif' }}>GOTIME GARAGE</div>
+            <div className="text-2xl md:text-3xl font-bold text-blue-400" style={{ fontFamily: 'Orbitron, sans-serif' }}>WEATHER PADDOCK | GOTIME GARAGE</div>
             <div className="text-lg md:text-xl font-semibold">F1-Inspired Weather & Navigation Telemetry</div>
           </div>
           <div className="mt-3 md:mt-0 flex flex-col md:flex-row items-center gap-3">
