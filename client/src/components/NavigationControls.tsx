@@ -189,7 +189,7 @@ const NavigationControls: React.FC = () => {
     : '';
 
   return (
-    <div className="fixed top-16 left-0 z-40 w-full flex justify-center pb-1 pt-2 bg-gradient-to-b from-black to-transparent">
+    <div className="fixed top-0 left-0 z-40 w-full flex justify-center pb-1 pt-2 bg-gradient-to-b from-black to-transparent">
       <div className="flex items-center space-x-2 px-3 py-1 bg-black/90 backdrop-blur rounded-full border border-blue-900/30 shadow-lg">
         <button
           onClick={goBack}
