@@ -24,6 +24,7 @@ import VideoLibraryPage from "./pages/VideoLibraryPage";
 import BrokerPortalPage from "./pages/BrokerPortalPage";
 import Weather from "./pages/Weather";
 import WeatherPage from "./pages/WeatherPage";
+import NewGTGWeatherPage from "./pages/NewGTGWeatherPage";
 import RedlineReportPage from "./pages/RedlineReportPage";
 import SeasonalChecklistPage from "./pages/SeasonalChecklistPage";
 import EBooksPage from "./pages/eBooksPage";
