@@ -623,14 +623,14 @@ const NewGTGWeatherPage: React.FC = () => {
               <div className="p-6">
                 {/* F1 Telemetry Tab */}
                 {activeTab === 'telemetry' && (
-                  <div className="opacity-0 animate-fadeIn">
+                  <div className="animate-fadein">
                     {isDataReady && <F1TelemetryWeatherStation />}
                   </div>
                 )}
                 
                 {/* Drive Windows Tab */}
                 {activeTab === 'driveWindows' && (
-                  <div className="opacity-0 animate-fadeIn">
+                  <div className="animate-fadein">
                     {selectedDriveWindow ? (
                       <div className="bg-black/30 rounded-lg p-4 border border-blue-900/30 relative">
                         <button 
@@ -727,7 +727,7 @@ const NewGTGWeatherPage: React.FC = () => {
                 
                 {/* Driver Recommendations Tab */}
                 {activeTab === 'recommendations' && (
-                  <div className="opacity-0 animate-fadeIn">
+                  <div className="animate-fadein">
                     <div className="rounded-lg border border-green-900/30 overflow-hidden mb-6">
                       <div className="bg-green-900/20 px-4 py-2 flex justify-between items-center">
                         <h3 className="text-green-400 font-semibold">Current Driving Tips</h3>
