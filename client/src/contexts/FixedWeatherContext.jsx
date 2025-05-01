@@ -1,19 +1,16 @@
-import React, { createContext, useState, useContext, useEffect, useCallback, useRef } from 'react';
+import React, { createContext, useState, useContext, useEffect, useRef } from 'react';
 import { useUnits, UNIT_SYSTEMS } from './UnitsContext';
-import { useLocations } from './LocationContext';
 
 // Default location - Atlanta
 const DEFAULT_LOCATION = { lat: 33.749, lon: -84.388 };
 
-const WeatherContext = createContext(null);
+const FixedWeatherContext = createContext(null);
 
-export function WeatherProvider({ children }) {
+export function FixedWeatherProvider({ children }) {
   const [weatherData, setWeatherData] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [lastUpdated, setLastUpdated] = useState(null);
-  const [citySearchOpen, setCitySearchOpen] = useState(false);
-  const [showLocationPrompt, setShowLocationPrompt] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   
   // Refs to prevent infinite loops
@@ -22,16 +19,15 @@ export function WeatherProvider({ children }) {
   
   // Get unit context
   const unitsContext = useUnits();
-  const locationContext = useLocations();
   
-  // Fetch weather data - memoized to avoid recreation on renders
-  const fetchWeatherData = useCallback(async (lat = DEFAULT_LOCATION.lat, lon = DEFAULT_LOCATION.lon) => {
+  // Function to fetch weather data
+  const fetchWeatherData = async (lat = DEFAULT_LOCATION.lat, lon = DEFAULT_LOCATION.lon) => {
     // Prevent concurrent fetches
     if (fetchInProgress.current) {
       console.log("Fetch already in progress, skipping...");
       return;
     }
-      
+    
     fetchInProgress.current = true;
     
     try {
@@ -57,38 +53,33 @@ export function WeatherProvider({ children }) {
       setWeatherData(data);
       setLastUpdated(new Date());
       setError(null);
-      return data;
     } catch (err) {
       console.error("Error fetching weather data:", err);
       setError(err);
-      
-      // Keep existing data if we have it
-      return weatherData;
     } finally {
       setLoading(false);
       setRefreshing(false);
       fetchInProgress.current = false;
     }
-  }, [unitsContext.unitSystem, refreshing, weatherData]);
+  };
   
-  // Fetch for current location
-  const fetchCurrentLocationWeather = useCallback(async () => {
+  // Function to get current location weather
+  const fetchCurrentLocationWeather = async () => {
     try {
       if (navigator.geolocation) {
-        setLoading(true);
-        
-        const position = await new Promise((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(resolve, reject, {
-            enableHighAccuracy: true,
-            timeout: 5000,
-            maximumAge: 0
-          });
+        return new Promise((resolve, reject) => {
+          navigator.geolocation.getCurrentPosition(
+            async (position) => {
+              const { latitude, longitude } = position.coords;
+              await fetchWeatherData(latitude, longitude);
+              resolve();
+            },
+            (err) => {
+              console.error("Geolocation error:", err);
+              reject(err);
+            }
+          );
         });
-        
-        const { latitude, longitude } = position.coords;
-        console.log(`Got location: ${latitude}, ${longitude}`);
-        
-        return await fetchWeatherData(latitude, longitude);
       } else {
         throw new Error('Geolocation not supported');
       }
@@ -98,15 +89,15 @@ export function WeatherProvider({ children }) {
       // Fall back to default
       return await fetchWeatherData();
     }
-  }, [fetchWeatherData]);
+  };
   
-  // Initial data fetch - only on mount
+  // Initial data fetch - ONLY ONE TIME on component mount
   useEffect(() => {
     if (!initialFetchDone.current) {
       initialFetchDone.current = true;
       fetchWeatherData();
       
-      // Setup periodic refresh every 15 minutes
+      // Setup refresh every 15 minutes
       const refreshInterval = setInterval(() => {
         console.log("Performing scheduled refresh");
         setRefreshing(true);
@@ -121,17 +112,18 @@ export function WeatherProvider({ children }) {
       
       return () => clearInterval(refreshInterval);
     }
-  }, []); // Empty dependency array = only run on mount
+  }, []);
   
-  // Refresh when units change
+  // Refresh when units change - but only if we have data
   useEffect(() => {
-    if (initialFetchDone.current && weatherData?.location?.coordinates && !loading) {
+    if (initialFetchDone.current && weatherData?.location?.coordinates) {
       setRefreshing(true);
       const { lat, lon } = weatherData.location.coordinates;
       fetchWeatherData(lat, lon).catch(console.error);
     }
   }, [unitsContext.unitSystem]);
   
+  // Format time functions
   const getFormattedLastUpdated = () => {
     if (!lastUpdated) return 'Never';
     
@@ -154,22 +146,6 @@ export function WeatherProvider({ children }) {
     );
   };
   
-  // Fetch for saved location
-  const fetchLocationWeather = useCallback(async (locationId) => {
-    if (!locationContext) return;
-    
-    const location = locationContext.locations.find(
-      loc => loc.id.toString() === locationId.toString()
-    );
-    
-    if (location?.coordinates) {
-      const { lat, lon } = location.coordinates;
-      return await fetchWeatherData(lat, lon);
-    }
-  }, [fetchWeatherData, locationContext]);
-  
-  // State variables for city search already declared above
-  
   // Context value
   const value = {
     weatherData,
@@ -180,25 +156,20 @@ export function WeatherProvider({ children }) {
     getFormattedTemperature,
     fetchWeatherData,
     fetchCurrentLocationWeather,
-    fetchLocationWeather,
-    showLocationPrompt,
-    setShowLocationPrompt,
-    citySearchOpen, 
-    setCitySearchOpen,
     refreshing
   };
   
   return (
-    <WeatherContext.Provider value={value}>
+    <FixedWeatherContext.Provider value={value}>
       {children}
-    </WeatherContext.Provider>
+    </FixedWeatherContext.Provider>
   );
 }
 
 export function useWeather() {
-  const context = useContext(WeatherContext);
+  const context = useContext(FixedWeatherContext);
   if (!context) {
-    throw new Error('useWeather must be used within a WeatherProvider');
+    throw new Error('useWeather must be used within a FixedWeatherProvider');
   }
   return context;
 }
