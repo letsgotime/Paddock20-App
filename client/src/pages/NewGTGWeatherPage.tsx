@@ -518,26 +518,26 @@ const NewGTGWeatherPage: React.FC = () => {
           <div className="w-8 h-8 border-4 border-blue-500 border-t-transparent rounded-full animate-spin mx-auto"></div>
         </div>
       ) : weatherError ? (
-        <div className="p-6 text-center rounded-lg bg-gradient-to-br from-gray-900 to-black border border-red-900/30">
-          <p className="text-blue-400 text-xl font-orbitron mb-2">Weather Station Alert</p>
+        <div className="p-6 text-center rounded-lg bg-gradient-to-br from-gray-900 to-black border border-blue-900/30">
+          <p className="text-blue-400 text-xl font-orbitron mb-2">Weather Station Status</p>
           {weatherError && (weatherError.includes('429') || weatherError.includes('rate limit') || weatherError.includes('blocked')) ? (
             <>
-              <div className="text-red-400 mb-2 p-2 border border-red-900/30 bg-red-950/20 rounded-md">
-                <p className="mb-2">Weather data synchronization in progress. Temporary service adjustment active.</p>
-                <p className="mb-2 text-yellow-400">
-                  <span className="inline-block p-1 bg-black/30 rounded mr-1">Using locally cached telemetry.</span> 
-                  {isUsingFallbackData && "Displaying stored high-fidelity weather patterns from previous sessions."}
+              <div className="mb-2 p-4 border border-blue-900/30 bg-blue-950/10 rounded-md">
+                <p className="mb-2 text-blue-300">Weather data synchronization in progress. Telemetry stabilization active.</p>
+                <p className="mb-2 text-gray-300">
+                  <span className="inline-block p-1 bg-black/40 rounded mr-1">Using locally cached telemetry.</span> 
+                  {isUsingFallbackData && "Weather patterns from previous sessions loaded."}
                 </p>
                 <p className="text-sm text-gray-400">
-                  Real-time services will automatically resume within the next maintenance cycle.
+                  Real-time services will resume automatically during the next system refresh.
                 </p>
               </div>
               <div className="mt-4 flex justify-center space-x-4">
                 <button 
                   onClick={() => window.location.reload()} 
-                  className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-md hover:from-blue-700 hover:to-blue-900 transition-all"
                 >
-                  ⟳ Refresh Now
+                  ⟳ Synchronize Now
                 </button>
                 <button 
                   onClick={() => setShowApiKeyModal(true)} 
@@ -549,17 +549,22 @@ const NewGTGWeatherPage: React.FC = () => {
             </>
           ) : (
             <>
-              <p className="text-red-400 mb-4">
-                {weatherError === '[object Object]' 
-                  ? 'Error fetching weather data' 
-                  : weatherError}
-              </p>
-              <button 
-                onClick={() => window.location.reload()} 
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-              >
-                ⟳ Refresh Data
-              </button>
+              <div className="mb-2 p-4 border border-blue-900/30 bg-blue-950/10 rounded-md">
+                <p className="text-gray-300 mb-4">
+                  Temporary service interruption. Weather connectivity is being re-established.
+                </p>
+                <p className="text-xs text-gray-500">
+                  Technical details: {weatherError === '[object Object]' ? 'Error fetching weather data' : weatherError}
+                </p>
+              </div>
+              <div className="mt-4 flex justify-center space-x-4">
+                <button 
+                  onClick={() => window.location.reload()} 
+                  className="px-4 py-2 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-md hover:from-blue-700 hover:to-blue-900 transition-all"
+                >
+                  ⟳ Reconnect Services
+                </button>
+              </div>
             </>
           )}
         </div>

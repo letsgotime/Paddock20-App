@@ -54,8 +54,8 @@ const ContextualWeatherRoutePlanner: React.FC<RoutePlannerProps> = ({
     setDepartureTime(getCurrentTimeFormatted());
   }, []);
   
-  // Calculate journey weather conditions based on selected parameters
-  const calculateJourneyWeather = () => {
+  // Calculate route weather conditions based on selected parameters
+  const calculateRouteWeather = () => {
     if (!startLocation || !endLocation || !departureTime || !forecastData) {
       return;
     }
@@ -69,22 +69,22 @@ const ContextualWeatherRoutePlanner: React.FC<RoutePlannerProps> = ({
         const departureDate = new Date();
         departureDate.setHours(hours, minutes, 0, 0);
         
-        // Calculate journey end time
+        // Calculate route end time
         const arrivalDate = new Date(departureDate.getTime() + journeyDuration * 60 * 1000);
         
-        // Get relevant forecast data for the journey period
-        const journeyForecasts = generateJourneyWeatherPoints(departureDate, arrivalDate);
+        // Get relevant forecast data for the route period
+        const routeForecasts = generateJourneyWeatherPoints(departureDate, arrivalDate);
         
         // Determine risk level based on weather conditions
-        const riskLevel = calculateJourneyRiskLevel(journeyForecasts);
+        const riskLevel = calculateJourneyRiskLevel(routeForecasts);
         
         // Update state
-        setJourneyWeatherConditions(journeyForecasts);
+        setJourneyWeatherConditions(routeForecasts);
         setJourneyRiskLevel(riskLevel);
         setShowPlannerResults(true);
         setLoadingPlan(false);
       } catch (error) {
-        console.error("Error calculating journey weather:", error);
+        console.error("Error calculating route weather:", error);
         setLoadingPlan(false);
       }
     }, 800);
@@ -420,7 +420,7 @@ const ContextualWeatherRoutePlanner: React.FC<RoutePlannerProps> = ({
             
             <button
               className="w-full py-2 bg-gradient-to-r from-blue-600 to-blue-800 text-white rounded-md hover:from-blue-700 hover:to-blue-900 transition-all flex items-center justify-center"
-              onClick={calculateJourneyWeather}
+              onClick={calculateRouteWeather}
               disabled={!startLocation || !endLocation || !departureTime || loadingPlan}
             >
               {loadingPlan ? (
@@ -451,24 +451,24 @@ const ContextualWeatherRoutePlanner: React.FC<RoutePlannerProps> = ({
               </button>
             </div>
             
-            {/* Journey Overview */}
+            {/* Route Overview */}
             <div className={`p-3 rounded-lg mb-4 border ${getRiskLevelStyle(journeyRiskLevel)}`}>
               <div className="flex justify-between items-center">
-                <span className="font-semibold">Journey Risk Level: {journeyRiskLevel.charAt(0).toUpperCase() + journeyRiskLevel.slice(1)}</span>
+                <span className="font-semibold">Route Risk Level: {journeyRiskLevel.charAt(0).toUpperCase() + journeyRiskLevel.slice(1)}</span>
                 {journeyRiskLevel === 'low' && <CheckCircle2 className="h-5 w-5 text-green-400" />}
                 {journeyRiskLevel === 'moderate' && <AlertTriangle className="h-5 w-5 text-yellow-400" />}
                 {journeyRiskLevel === 'high' && <AlertTriangle className="h-5 w-5 text-orange-400" />}
                 {journeyRiskLevel === 'severe' && <XCircle className="h-5 w-5 text-red-400" />}
               </div>
               <p className="text-sm mt-1">
-                {journeyRiskLevel === 'low' && 'Good driving conditions expected for your journey.'}
+                {journeyRiskLevel === 'low' && 'Good driving conditions expected for your route.'}
                 {journeyRiskLevel === 'moderate' && 'Some weather challenges expected - proceed with caution.'}
                 {journeyRiskLevel === 'high' && 'Difficult weather conditions predicted - consider adjusting your travel time.'}
                 {journeyRiskLevel === 'severe' && 'Severe weather conditions - consider postponing non-essential travel.'}
               </p>
             </div>
             
-            {/* Journey Timeline */}
+            {/* Route Timeline */}
             <div className="space-y-1">
               {journeyWeatherConditions.map((point, index) => (
                 <div key={index} className="relative flex">
