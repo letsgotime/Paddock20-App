@@ -723,7 +723,7 @@ const NewGTGWeatherPage: React.FC = () => {
             return true;
           } catch (error) {
             console.error("API key validation failed:", error);
-            throw new Error("Invalid API key or validation failed");
+            throw new Error(error instanceof Error ? error.message : "Invalid API key validation failed");
           }
         }}
         serviceName="OpenWeather"
