@@ -14,7 +14,6 @@ import {
   Sun,
   CloudSun,
   CloudDrizzle,
-  SnowIcon,
   CloudFog,
   Navigation
 } from 'lucide-react';
@@ -735,7 +734,7 @@ const DetailedCommuteAnalytics: React.FC<DetailedCommuteAnalyticsProps> = ({ loc
     if (weatherId >= 200 && weatherId < 300) return <CloudDrizzle className="h-5 w-5 text-blue-400" />;
     if (weatherId >= 300 && weatherId < 500) return <CloudDrizzle className="h-5 w-5 text-blue-400" />;
     if (weatherId >= 500 && weatherId < 600) return <CloudRain className="h-5 w-5 text-blue-400" />;
-    if (weatherId >= 600 && weatherId < 700) return <SnowIcon className="h-5 w-5 text-blue-400" />;
+    if (weatherId >= 600 && weatherId < 700) return <CloudRain className="h-5 w-5 text-blue-200" />;
     if (weatherId >= 700 && weatherId < 800) return <CloudFog className="h-5 w-5 text-blue-400" />;
     if (weatherId === 800) return <Sun className="h-5 w-5 text-yellow-400" />;
     if (weatherId > 800) return <CloudSun className="h-5 w-5 text-blue-400" />;
