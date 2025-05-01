@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import CommuteTimeEstimator from './CommuteTimeEstimator';
 
 // Component for displaying a Formula 1 style gauge
 const F1Gauge = ({ value, min, max, label, units, danger = false, warning = false, optimum = false }) => {
@@ -620,7 +621,7 @@ function F1PitWallDashboard() {
                   
                   <div className="grid grid-cols-3 gap-4 mb-6">
                     <F1Gauge 
-                      label="Track Temp" 
+                      label="Asphalt Temp" 
                       value={Math.round(weatherData.drivingConditions.track_temp)} 
                       units="°F" 
                       min={32}
@@ -653,24 +654,24 @@ function F1PitWallDashboard() {
                   
                   <div className="grid grid-cols-4 gap-3 mb-6">
                     <div className="bg-gray-700/60 p-3 rounded-lg text-center">
-                      <div className="text-xs text-gray-400">Humidity</div>
+                      <div className="text-xs text-gray-400">RH%</div>
                       <div className="text-lg font-semibold">{weatherData.currentConditions.humidity}%</div>
                     </div>
                     <div className="bg-gray-700/60 p-3 rounded-lg text-center">
-                      <div className="text-xs text-gray-400">Wind</div>
+                      <div className="text-xs text-gray-400">Wind Vector</div>
                       <div className="text-lg font-semibold">
                         {Math.round(weatherData.currentConditions.wind_speed)}<span className="text-sm">mph</span>
                       </div>
                       <div className="text-xs text-gray-400">{weatherData.currentConditions.wind_direction}</div>
                     </div>
                     <div className="bg-gray-700/60 p-3 rounded-lg text-center">
-                      <div className="text-xs text-gray-400">Pressure</div>
+                      <div className="text-xs text-gray-400">Baro</div>
                       <div className="text-lg font-semibold">
                         {Math.round(weatherData.currentConditions.pressure)}<span className="text-sm">hPa</span>
                       </div>
                     </div>
                     <div className="bg-gray-700/60 p-3 rounded-lg text-center">
-                      <div className="text-xs text-gray-400">Dew Point</div>
+                      <div className="text-xs text-gray-400">Dewpt</div>
                       <div className="text-lg font-semibold">{Math.round(weatherData.currentConditions.dew_point)}°</div>
                     </div>
                   </div>
@@ -741,6 +742,9 @@ function F1PitWallDashboard() {
             <TireStrategy 
               selectedVehicle={selectedVehicle} 
               weatherData={weatherData} 
+            />
+            <CommuteTimeEstimator
+              weatherData={weatherData}
             />
             <EnginePerformance 
               selectedVehicle={selectedVehicle} 
