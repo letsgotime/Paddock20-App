@@ -8,7 +8,8 @@ import { submitApiKey } from '../services/apiKeyManager';
 import { 
   Cloud, Sun, Wind, CloudRain, Thermometer, 
   Droplets, AlertTriangle, Gauge, Calendar, Car, Key,
-  Crosshair
+  Crosshair, Building, Clock, MapPin, Navigation, Home,
+  CornerDownRight, Timer, Landmark, Flag, ArrowRight, Star
 } from 'lucide-react';
 
 // Mock drive quality data - would be calculated from real weather in production
@@ -323,8 +324,86 @@ const NewGTGWeatherPage: React.FC = () => {
   const [showApiKeyModal, setShowApiKeyModal] = useState(false);
   
   // Manifestation Station style UI state
-  const [activeTab, setActiveTab] = useState<'telemetry' | 'driveWindows' | 'recommendations' | 'performance'>('telemetry');
+  const [activeTab, setActiveTab] = useState<'telemetry' | 'driveWindows' | 'recommendations' | 'performance' | 'commute'>('telemetry');
   const [selectedDriveWindow, setSelectedDriveWindow] = useState<any>(null);
+  
+  // Favorite locations for Commute Tracker
+  const [favoriteLocations, setFavoriteLocations] = useState<{
+    id: string;
+    name: string;
+    type: 'work' | 'school' | 'family' | 'track' | 'favorite' | 'custom';
+    icon: React.ReactNode;
+    distance: number; // Distance in miles
+    travelTime: number; // Average travel time in minutes
+    lat: number;
+    lon: number;
+    weatherImpact: number; // 0-10 scale of weather impact on commute
+    tireRecommendation: string;
+  }[]>([
+    { 
+      id: 'work1', 
+      name: 'Work Office', 
+      type: 'work', 
+      icon: <Building size={18} />, 
+      distance: 12.4, 
+      travelTime: 24, 
+      lat: 35.2271, 
+      lon: -80.4431, 
+      weatherImpact: 2,
+      tireRecommendation: 'All-Season'
+    },
+    { 
+      id: 'home1', 
+      name: 'Parent\'s House', 
+      type: 'family', 
+      icon: <Home size={18} />, 
+      distance: 34.7, 
+      travelTime: 42, 
+      lat: 35.4271, 
+      lon: -80.6431, 
+      weatherImpact: 3,
+      tireRecommendation: 'Summer'
+    },
+    { 
+      id: 'track1', 
+      name: 'Charlotte Motor Speedway', 
+      type: 'track', 
+      icon: <Flag size={18} />, 
+      distance: 22.1, 
+      travelTime: 28, 
+      lat: 35.3527, 
+      lon: -80.6827, 
+      weatherImpact: 1,
+      tireRecommendation: 'Performance'
+    },
+    { 
+      id: 'school1', 
+      name: 'University Campus', 
+      type: 'school', 
+      icon: <Landmark size={18} />, 
+      distance: 8.3, 
+      travelTime: 17, 
+      lat: 35.3071, 
+      lon: -80.7331, 
+      weatherImpact: 2,
+      tireRecommendation: 'All-Season'
+    },
+    { 
+      id: 'fav1', 
+      name: 'Mountain Drive Route', 
+      type: 'favorite', 
+      icon: <Star size={18} />, 
+      distance: 68.2, 
+      travelTime: 105, 
+      lat: 35.5671, 
+      lon: -81.4831, 
+      weatherImpact: 4,
+      tireRecommendation: 'Performance'
+    }
+  ]);
+  
+  // Selected favorite location for detailed view
+  const [selectedLocation, setSelectedLocation] = useState<string | null>(null);
   
   // Add a controlled delay to ensure components load properly
   useEffect(() => {
@@ -527,6 +606,17 @@ const NewGTGWeatherPage: React.FC = () => {
                   <Crosshair className="h-4 w-4 mr-2" />
                   <span>Performance Settings</span>
                 </button>
+                <button
+                  className={`px-4 py-2 mr-2 rounded-t-lg ${
+                    activeTab === 'commute' 
+                      ? 'bg-blue-900/30 text-blue-400 border-b-2 border-blue-500' 
+                      : 'text-gray-400 hover:text-blue-400 hover:bg-blue-900/10'
+                  } transition-all flex items-center`}
+                  onClick={() => setActiveTab('commute')}
+                >
+                  <Navigation className="h-4 w-4 mr-2" />
+                  <span>Commute Tracker</span>
+                </button>
               </div>
               
               {/* Tab content area */}
@@ -678,6 +768,218 @@ const NewGTGWeatherPage: React.FC = () => {
                         <button className="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 transition-colors">
                           Add
                         </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Commute Tracker Tab */}
+                {activeTab === 'commute' && (
+                  <div className="opacity-0 animate-fadeIn">
+                    <div className="rounded-lg border border-blue-900/30 overflow-hidden mb-6">
+                      <div className="bg-blue-900/20 px-4 py-2 flex justify-between items-center">
+                        <h3 className="text-blue-400 font-semibold flex items-center">
+                          <Navigation className="h-4 w-4 mr-2" />
+                          <span>Favorite Destinations & Commute Analytics</span>
+                        </h3>
+                        <span className="text-xs text-gray-400">Real-time journey conditions</span>
+                      </div>
+                      
+                      <div className="p-4 bg-black/20">
+                        {/* Destination cards */}
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-6">
+                          {favoriteLocations.map((location) => (
+                            <div 
+                              key={location.id}
+                              onClick={() => setSelectedLocation(location.id === selectedLocation ? null : location.id)}
+                              className={`relative p-4 rounded-lg cursor-pointer transition-all ${
+                                location.id === selectedLocation 
+                                  ? 'bg-blue-900/30 border-2 border-blue-500' 
+                                  : 'bg-black/40 border border-gray-800 hover:border-blue-800'
+                              }`}
+                            >
+                              <div className="absolute top-2 right-2 flex space-x-1">
+                                <span className={`px-2 py-0.5 text-xs rounded-full ${
+                                  location.weatherImpact <= 2 ? 'bg-green-900/40 text-green-400' :
+                                  location.weatherImpact <= 5 ? 'bg-blue-900/40 text-blue-400' :
+                                  location.weatherImpact <= 7 ? 'bg-yellow-900/40 text-yellow-400' :
+                                  'bg-red-900/40 text-red-400'
+                                }`}>
+                                  Impact: {location.weatherImpact}/10
+                                </span>
+                              </div>
+                              
+                              <div className="flex items-center mb-2">
+                                <span className="mr-2 flex-shrink-0 w-8 h-8 rounded-full bg-blue-900/30 flex items-center justify-center text-blue-400">
+                                  {location.icon}
+                                </span>
+                                <div>
+                                  <h4 className="text-white text-md font-semibold">{location.name}</h4>
+                                  <p className="text-xs text-gray-400 capitalize">{location.type} destination</p>
+                                </div>
+                              </div>
+                              
+                              <div className="grid grid-cols-2 gap-2 mt-3 text-sm">
+                                <div className="flex items-center">
+                                  <Clock className="h-3 w-3 mr-1.5 text-gray-500" />
+                                  <span className="text-gray-300">{location.travelTime} mins</span>
+                                </div>
+                                <div className="flex items-center">
+                                  <ArrowRight className="h-3 w-3 mr-1.5 text-gray-500" />
+                                  <span className="text-gray-300">{location.distance} miles</span>
+                                </div>
+                                <div className="flex items-center col-span-2">
+                                  <Car className="h-3 w-3 mr-1.5 text-gray-500" />
+                                  <span className="text-gray-300">{location.tireRecommendation} tires recommended</span>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        
+                        {/* Selected location details */}
+                        {selectedLocation && (
+                          <div className="mt-4 p-4 rounded-lg bg-blue-900/10 border border-blue-900/40 animate-fadeIn">
+                            {favoriteLocations.filter(loc => loc.id === selectedLocation).map((loc) => (
+                              <div key={`detail-${loc.id}`}>
+                                <div className="flex items-center justify-between mb-4">
+                                  <h4 className="text-xl text-blue-400 font-orbitron flex items-center">
+                                    {loc.icon}
+                                    <span className="ml-2">{loc.name}</span>
+                                  </h4>
+                                  <span className="text-xs px-3 py-1 rounded-full bg-blue-900/40 text-blue-300">
+                                    {loc.type === 'track' ? 'Performance route' : 
+                                     loc.type === 'work' ? 'Daily commute' : 
+                                     loc.type === 'family' ? 'Regular visit' : 
+                                     loc.type === 'school' ? 'Learning route' : 
+                                     'Favorite drive'}
+                                  </span>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                                  <div className="bg-black/50 p-3 rounded-lg">
+                                    <p className="text-gray-500 text-xs mb-1">Journey Time</p>
+                                    <p className="text-white font-bold text-lg">{loc.travelTime} mins</p>
+                                    <div className="mt-1 text-xs text-gray-400">
+                                      {loc.weatherImpact <= 2 ? 'No current delays' : 
+                                       loc.weatherImpact <= 5 ? 'Minor delays possible' : 
+                                       loc.weatherImpact <= 7 ? 'Moderate delays likely' : 
+                                       'Significant delays expected'}
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="bg-black/50 p-3 rounded-lg">
+                                    <p className="text-gray-500 text-xs mb-1">Weather Impact</p>
+                                    <div className="flex items-center">
+                                      <div className="flex-1 h-3 bg-gray-800 rounded-full overflow-hidden">
+                                        <div 
+                                          className={`h-full ${
+                                            loc.weatherImpact <= 2 ? 'bg-green-500' :
+                                            loc.weatherImpact <= 5 ? 'bg-blue-500' :
+                                            loc.weatherImpact <= 7 ? 'bg-yellow-500' :
+                                            'bg-red-500'
+                                          }`} 
+                                          style={{ width: `${loc.weatherImpact * 10}%` }}
+                                        ></div>
+                                      </div>
+                                      <span className="ml-2 text-white font-bold">{loc.weatherImpact}/10</span>
+                                    </div>
+                                    <div className="mt-2 text-xs text-gray-400">
+                                      {loc.weatherImpact <= 2 ? 'Optimal driving conditions' : 
+                                       loc.weatherImpact <= 5 ? 'Good conditions with minor concerns' : 
+                                       loc.weatherImpact <= 7 ? 'Challenging conditions - use caution' : 
+                                       'Severe conditions - consider postponing'}
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="bg-black/50 p-3 rounded-lg">
+                                    <p className="text-gray-500 text-xs mb-1">Tire Recommendation</p>
+                                    <p className="text-white font-bold">{loc.tireRecommendation}</p>
+                                    <div className="mt-1 text-xs text-gray-400">
+                                      {loc.tireRecommendation === 'Performance' ? 'Maximizes grip in current dry conditions' : 
+                                       loc.tireRecommendation === 'All-Season' ? 'Balanced performance for varied conditions' : 
+                                       loc.tireRecommendation === 'Summer' ? 'Optimized for warm, dry conditions' : 
+                                       'Specialized for current weather patterns'}
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                                  <div className="bg-black/50 p-3 rounded-lg border border-blue-900/30">
+                                    <h5 className="text-blue-400 text-sm font-bold mb-2">Weather Telemetry for Route</h5>
+                                    <div className="grid grid-cols-2 gap-y-2 text-xs">
+                                      <div className="flex items-center">
+                                        <Thermometer className="h-3 w-3 mr-2 text-gray-500" />
+                                        <span className="text-gray-400">Surface Temp:</span>
+                                        <span className="ml-1 text-white">68°F</span>
+                                      </div>
+                                      <div className="flex items-center">
+                                        <Wind className="h-3 w-3 mr-2 text-gray-500" />
+                                        <span className="text-gray-400">Crosswind:</span>
+                                        <span className="ml-1 text-white">8 mph</span>
+                                      </div>
+                                      <div className="flex items-center">
+                                        <Droplets className="h-3 w-3 mr-2 text-gray-500" />
+                                        <span className="text-gray-400">Precipitation:</span>
+                                        <span className="ml-1 text-white">0%</span>
+                                      </div>
+                                      <div className="flex items-center">
+                                        <CloudRain className="h-3 w-3 mr-2 text-gray-500" />
+                                        <span className="text-gray-400">Road Condition:</span>
+                                        <span className="ml-1 text-white">Dry</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="bg-black/50 p-3 rounded-lg border border-blue-900/30">
+                                    <h5 className="text-blue-400 text-sm font-bold mb-2">F1-Derived Telemetry Projection</h5>
+                                    <div className="grid grid-cols-2 gap-y-2 text-xs">
+                                      <div className="flex items-center">
+                                        <Gauge className="h-3 w-3 mr-2 text-gray-500" />
+                                        <span className="text-gray-400">Optimal Torque:</span>
+                                        <span className="ml-1 text-white">95%</span>
+                                      </div>
+                                      <div className="flex items-center">
+                                        <Gauge className="h-3 w-3 mr-2 text-gray-500" />
+                                        <span className="text-gray-400">Tire Pressure:</span>
+                                        <span className="ml-1 text-white">34.2 psi</span>
+                                      </div>
+                                      <div className="flex items-center">
+                                        <Gauge className="h-3 w-3 mr-2 text-gray-500" />
+                                        <span className="text-gray-400">Grip Level:</span>
+                                        <span className="ml-1 text-white">High</span>
+                                      </div>
+                                      <div className="flex items-center">
+                                        <Gauge className="h-3 w-3 mr-2 text-gray-500" />
+                                        <span className="text-gray-400">Perfomance Index:</span>
+                                        <span className="ml-1 text-white">8.5/10</span>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                                
+                                <div className="flex justify-between items-center mt-6 px-2">
+                                  <button className="px-3 py-1.5 text-sm bg-gradient-to-r from-blue-700 to-blue-900 text-white rounded flex items-center">
+                                    <Navigation className="h-4 w-4 mr-2" />
+                                    Start Navigation
+                                  </button>
+                                  <button className="px-3 py-1.5 text-sm bg-black border border-blue-900 text-blue-400 rounded flex items-center">
+                                    <Timer className="h-4 w-4 mr-2" />
+                                    Set Departure Alert
+                                  </button>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                        
+                        {/* Add new destination button */}
+                        <div className="mt-4 flex justify-end">
+                          <button className="flex items-center text-sm bg-blue-800/30 hover:bg-blue-800/50 text-blue-300 px-3 py-1.5 rounded transition">
+                            <MapPin className="h-4 w-4 mr-2" />
+                            Add New Destination
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
