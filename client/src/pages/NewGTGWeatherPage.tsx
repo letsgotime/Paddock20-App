@@ -8,6 +8,10 @@ import PrecipitationWidget from '../components/PrecipitationWidget';
 import NavigationLinkWidget from '../components/NavigationLinkWidget';
 import ApiKeyModal from '../components/ApiKeyModal';
 import { submitApiKey } from '../services/apiKeyManager';
+import ContextualWeatherJourneyPlanner from '../components/ContextualWeatherJourneyPlanner';
+import PersonalizedWeatherClothingRecommendations from '../components/PersonalizedWeatherClothingRecommendations';
+import EcoDrivingPerformanceTracker from '../components/EcoDrivingPerformanceTracker';
+import DetailedCommuteAnalytics from '../components/DetailedCommuteAnalytics';
 import { 
   Cloud, Sun, Wind, CloudRain, Thermometer, 
   Droplets, AlertTriangle, Gauge, Calendar, Car, Key,
