@@ -1,7 +1,7 @@
 import React, { createContext, useState, useContext, useEffect, useCallback, useRef } from 'react';
-import { queryClient, apiRequest } from '@/lib/queryClient';
+import { queryClient, apiRequest } from '../lib/queryClient';
 import { useQuery } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
+// import { useToast } from '@/hooks/use-toast';
 import { 
   getWeatherData, 
   getHourlyForecast, 
@@ -10,8 +10,8 @@ import {
   WeatherData,
   ForecastData,
   Location
-} from '@/lib/weather';
-import { fetchAutomotiveWeather } from '@/services/openWeatherService';
+} from '../lib/weather';
+// import { fetchAutomotiveWeather } from '@/services/openWeatherService';
 
 // Define interface for our automotive weather data
 export interface AutomotiveWeatherData {
