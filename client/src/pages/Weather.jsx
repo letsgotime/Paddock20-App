@@ -3,6 +3,7 @@ import { MAIN_CONTENT_ID } from '../lib/accessibility';
 import { useWeather } from '../contexts/WeatherContext';
 import WorldClockPanel from '../components/WorldClockPanel';
 import { getDriveRecommendations } from '../services/driveRecommendations';
+import { fallbackDriveWindows, fallbackDrivingTips, fallbackPerformanceAdjustments } from '../utils/fallbackData';
 import { Wind, Droplets, Thermometer, AlertTriangle } from 'lucide-react';
 
 // Lazy load the automotive weather component to improve initial loading performance
@@ -31,11 +32,23 @@ function Weather() {
       // Add a short delay to allow all API data to propagate
       const timer = setTimeout(() => {
         setIsPageReady(true);
-      }, 100);
+      }, 300);
       
       return () => clearTimeout(timer);
     }
   }, [isWeatherContextLoading]);
+  
+  // Force the component to render even if API encounters errors
+  useEffect(() => {
+    const forceRender = setTimeout(() => {
+      if (!isPageReady) {
+        console.log("Force rendering weather components after timeout");
+        setIsPageReady(true);
+      }
+    }, 2000);
+    
+    return () => clearTimeout(forceRender);
+  }, [isPageReady]);
 
   // Load drive recommendations from API when location is available
   useEffect(() => {
@@ -51,12 +64,27 @@ function Weather() {
           units
         );
         
-        setDriveWindows(data.driveWindows || []);
-        setDrivingTips(data.drivingTips || []);
-        setPerformanceAdjustments(data.performanceAdjustments || []);
+        // If we got data from the API, use it
+        if (data && data.driveWindows && data.driveWindows.length > 0) {
+          setDriveWindows(data.driveWindows);
+          setDrivingTips(data.drivingTips || []);
+          setPerformanceAdjustments(data.performanceAdjustments || []);
+        } else {
+          // If no API data is available, use the fallback data
+          console.log("Using fallback driving recommendations data");
+          setDriveWindows(fallbackDriveWindows);
+          setDrivingTips(fallbackDrivingTips);
+          setPerformanceAdjustments(fallbackPerformanceAdjustments);
+        }
       } catch (error) {
         console.error("Failed to load drive recommendations:", error);
-        setRecommendationsError("Unable to load drive recommendations. Please try again later.");
+        setRecommendationsError("Unable to load real-time drive recommendations.");
+        
+        // Use fallback data on error
+        console.log("Using fallback driving recommendations data due to API error");
+        setDriveWindows(fallbackDriveWindows);
+        setDrivingTips(fallbackDrivingTips);
+        setPerformanceAdjustments(fallbackPerformanceAdjustments);
       } finally {
         setIsRecommendationsLoading(false);
       }
