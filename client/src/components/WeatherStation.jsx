@@ -53,24 +53,57 @@ const WeatherStation = () => {
     };
     
     // Get the user's location when component mounts
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setCoordinates({ lat: latitude, lon: longitude });
-          fetchWeatherData(latitude, longitude);
-        },
-        (err) => {
-          console.error('Geolocation error:', err);
-          // Default to Nashville, TN coordinates if geolocation fails
-          fetchWeatherData(36.1627, -86.7816);
-          setError('Location access denied. Showing default location.');
-        }
-      );
-    } else {
-      // Default to Nashville, TN coordinates if geolocation not supported
-      fetchWeatherData(36.1627, -86.7816);
-      setError('Geolocation not supported by your browser. Showing default location.');
+    // Use premium racing destinations as default locations in case geolocation fails
+    const premiumLocations = [
+      { name: "Monaco", lat: 43.7384, lon: 7.4246 },
+      { name: "Spa-Francorchamps", lat: 50.4373, lon: 5.9699 },
+      { name: "Silverstone", lat: 52.0786, lon: -1.0169 },
+      { name: "Circuit of the Americas", lat: 30.2672, lon: -97.7431 },
+      { name: "Suzuka", lat: 34.8431, lon: 136.5415 },
+      { name: "Nashville", lat: 36.1627, lon: -86.7816 }
+    ];
+
+    // Pick a random premium location
+    const defaultLocation = premiumLocations[Math.floor(Math.random() * premiumLocations.length)];
+    
+    // Try to get user's location, but don't wait indefinitely
+    try {
+      if (navigator.geolocation) {
+        // Set a timeout for geolocation request to prevent long waits
+        const geoTimeout = setTimeout(() => {
+          // Default to premium location after timeout
+          fetchWeatherData(defaultLocation.lat, defaultLocation.lon);
+          setLocationName(defaultLocation.name);
+          console.log(`Using default location: ${defaultLocation.name}`);
+        }, 5000); // 5 seconds timeout
+        
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            // Clear timeout as we got location successfully
+            clearTimeout(geoTimeout);
+            const { latitude, longitude } = position.coords;
+            setCoordinates({ lat: latitude, lon: longitude });
+            fetchWeatherData(latitude, longitude);
+          },
+          (err) => {
+            // Clear timeout as we got an error response
+            clearTimeout(geoTimeout);
+            console.error('Error getting current location:', err);
+            // Default to premium location on error
+            fetchWeatherData(defaultLocation.lat, defaultLocation.lon);
+            setLocationName(defaultLocation.name);
+          },
+          { timeout: 10000, maximumAge: 60000 } // 10s timeout, 1min cache
+        );
+      } else {
+        // Default to premium location if geolocation not supported
+        fetchWeatherData(defaultLocation.lat, defaultLocation.lon);
+        setLocationName(defaultLocation.name);
+      }
+    } catch (err) {
+      console.error('Unexpected geolocation error:', err);
+      fetchWeatherData(defaultLocation.lat, defaultLocation.lon);
+      setLocationName(defaultLocation.name);
     }
   }, []);
 
@@ -113,22 +146,59 @@ const WeatherStation = () => {
   // Get user's current location
   const getCurrentLocation = () => {
     setLoading(true);
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          setCoordinates({ lat: latitude, lon: longitude });
-          fetchWeatherByCoordinates(latitude, longitude);
-        },
-        (err) => {
-          console.error('Error getting location:', err);
-          setError('Unable to get your current location. Please allow location access or search for a location.');
-          setLoading(false);
-        }
-      );
-    } else {
-      setError('Geolocation is not supported by your browser. Please search for a location.');
-      setLoading(false);
+    setError(null);
+    
+    // Use premium racing destinations as fallback locations
+    const premiumLocations = [
+      { name: "Monaco", lat: 43.7384, lon: 7.4246 },
+      { name: "Spa-Francorchamps", lat: 50.4373, lon: 5.9699 },
+      { name: "Silverstone", lat: 52.0786, lon: -1.0169 },
+      { name: "Circuit of the Americas", lat: 30.2672, lon: -97.7431 },
+      { name: "Suzuka", lat: 34.8431, lon: 136.5415 },
+      { name: "Nashville", lat: 36.1627, lon: -86.7816 }
+    ];
+    
+    // Pick a random premium location as fallback
+    const fallbackLocation = premiumLocations[Math.floor(Math.random() * premiumLocations.length)];
+    
+    try {
+      if (navigator.geolocation) {
+        // Set a timeout to handle slow geolocation responses
+        const geoTimeout = setTimeout(() => {
+          // Use fallback location after timeout
+          setCoordinates({ lat: fallbackLocation.lat, lon: fallbackLocation.lon });
+          fetchWeatherByCoordinates(fallbackLocation.lat, fallbackLocation.lon);
+          console.log(`Using fallback location: ${fallbackLocation.name}`);
+        }, 5000); // 5 second timeout
+        
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            // Success - clear timeout and use actual position
+            clearTimeout(geoTimeout);
+            const { latitude, longitude } = position.coords;
+            setCoordinates({ lat: latitude, lon: longitude });
+            fetchWeatherByCoordinates(latitude, longitude);
+          },
+          (err) => {
+            // Error - clear timeout and use fallback
+            clearTimeout(geoTimeout);
+            console.log('Geolocation error, using fallback location:', err);
+            setCoordinates({ lat: fallbackLocation.lat, lon: fallbackLocation.lon });
+            fetchWeatherByCoordinates(fallbackLocation.lat, fallbackLocation.lon);
+          },
+          { timeout: 10000, maximumAge: 60000 } // 10s timeout, 1min cache
+        );
+      } else {
+        // Geolocation not supported - use fallback
+        console.log('Geolocation not available, using fallback location');
+        setCoordinates({ lat: fallbackLocation.lat, lon: fallbackLocation.lon });
+        fetchWeatherByCoordinates(fallbackLocation.lat, fallbackLocation.lon);
+      }
+    } catch (error) {
+      console.error('Unexpected error getting location:', error);
+      // Use fallback in case of unexpected errors
+      setCoordinates({ lat: fallbackLocation.lat, lon: fallbackLocation.lon });
+      fetchWeatherByCoordinates(fallbackLocation.lat, fallbackLocation.lon);
     }
   };
 
