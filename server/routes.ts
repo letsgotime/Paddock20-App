@@ -12,8 +12,21 @@ import {
 import { handleGoogleOAuth2Callback, handleAppleOAuth2Callback } from "./oauth";
 import { checkSlackIntegration, initializeSlackClient, shareVehicleToSlack, shareEventToSlack } from "./slack";
 
-// OpenWeather API key - updated May 1, 2025
-const OPENWEATHER_API_KEY = process.env.OPENWEATHER_API_KEY || "2379a18ee0e478c88aa7d4aa1df44410";
+// OpenWeather API keys - updated May 1, 2025
+const OPENWEATHER_API_KEYS = {
+  default: process.env.OPENWEATHER_API_KEY || "2379a18ee0e478c88aa7d4aa1df44410", // General key
+  onecall: process.env.ONECALL_API_KEY || "653c5104ce3e922c371a315209765d2f",     // Special key for 3.0
+  test: "a92e04c47567a757154c09cffe03c6da",                                      // Test key
+  city: "efb847e5d07e14ba140f7b62b960f46d",                                      // City lookup
+  replit: "2f65956ce6685c39a594c3dd0bff75ea",                                    // Replit key
+  backup: "76de113a4adab13f0e3b6a8b6510c2a9"                                     // Backup key
+};
+
+// Use the default key for general purposes
+const OPENWEATHER_API_KEY = OPENWEATHER_API_KEYS.default;
+
+// Special key for OneCall API 3.0
+const ONECALL_API_KEY = OPENWEATHER_API_KEYS.onecall;
 
 // Cache structures for weather data to avoid repetitive API calls
 interface CachedData<T> {
@@ -450,7 +463,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
         return res.json(cachedData.data);
       }
       
-      const url = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&units=${units || 'metric'}${exclude ? `&exclude=${exclude}` : ''}&appid=${OPENWEATHER_API_KEY}`;
+      // Use the special API key for OneCall API 3.0
+      const url = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&units=${units || 'metric'}${exclude ? `&exclude=${exclude}` : ''}&appid=${ONECALL_API_KEY}`;
+      
+      // Log complete URL for debugging (without exposing API key)
+      console.log(`Using OneCall API 3.0 endpoint with lat=${lat}, lon=${lon}, units=${units || 'metric'}`);
+      
       
       console.log(`Fetching OneCall data for: ${lat},${lon}`);
       const response = await fetch(url);
@@ -534,6 +552,172 @@ export async function registerRoutes(app: Express): Promise<Server> {
     }
   });
   
+  // API Key testing endpoint - tests all keys against all services
+  app.get('/api/test-weather-keys', async (req, res) => {
+    try {
+      // Set cache control headers to prevent caching
+      res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
+      res.setHeader('Pragma', 'no-cache');
+      res.setHeader('Expires', '0');
+      
+      // Test location - Charlotte, NC
+      const lat = 35.2271;
+      const lon = -80.8431;
+      
+      // Results object to store test results for each key
+      const results: Record<string, any> = {};
+      
+      // Test each key against each service
+      for (const [keyName, apiKey] of Object.entries(OPENWEATHER_API_KEYS)) {
+        results[keyName] = {
+          key: apiKey.substring(0, 4) + '...' + apiKey.substring(apiKey.length - 4), // Show only first/last 4 chars
+          weather: { status: 'not_tested' },
+          forecast: { status: 'not_tested' },
+          onecall_v25: { status: 'not_tested' },
+          onecall_v30: { status: 'not_tested' },
+          geocode: { status: 'not_tested' }
+        };
+        
+        // Test Current Weather API
+        try {
+          const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`;
+          const weatherResponse = await fetch(weatherUrl);
+          
+          if (weatherResponse.ok) {
+            results[keyName].weather = { 
+              status: 'success',
+              code: weatherResponse.status
+            };
+          } else {
+            const errorText = await weatherResponse.text();
+            results[keyName].weather = { 
+              status: 'error',
+              code: weatherResponse.status,
+              message: errorText
+            };
+          }
+        } catch (error) {
+          results[keyName].weather = { 
+            status: 'error',
+            message: (error as Error).message
+          };
+        }
+        
+        // Test OneCall API 2.5
+        try {
+          const onecallUrl = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`;
+          const onecallResponse = await fetch(onecallUrl);
+          
+          if (onecallResponse.ok) {
+            results[keyName].onecall_v25 = { 
+              status: 'success',
+              code: onecallResponse.status
+            };
+          } else {
+            const errorText = await onecallResponse.text();
+            results[keyName].onecall_v25 = { 
+              status: 'error',
+              code: onecallResponse.status,
+              message: errorText
+            };
+          }
+        } catch (error) {
+          results[keyName].onecall_v25 = { 
+            status: 'error',
+            message: (error as Error).message
+          };
+        }
+        
+        // Test OneCall API 3.0
+        try {
+          const onecall3Url = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`;
+          const onecall3Response = await fetch(onecall3Url);
+          
+          if (onecall3Response.ok) {
+            results[keyName].onecall_v30 = { 
+              status: 'success',
+              code: onecall3Response.status
+            };
+          } else {
+            const errorText = await onecall3Response.text();
+            results[keyName].onecall_v30 = { 
+              status: 'error',
+              code: onecall3Response.status,
+              message: errorText
+            };
+          }
+        } catch (error) {
+          results[keyName].onecall_v30 = { 
+            status: 'error',
+            message: (error as Error).message
+          };
+        }
+        
+        // Test Geocoding API
+        try {
+          const geocodeUrl = `https://api.openweathermap.org/geo/1.0/direct?q=Charlotte&limit=1&appid=${apiKey}`;
+          const geocodeResponse = await fetch(geocodeUrl);
+          
+          if (geocodeResponse.ok) {
+            results[keyName].geocode = { 
+              status: 'success',
+              code: geocodeResponse.status
+            };
+          } else {
+            const errorText = await geocodeResponse.text();
+            results[keyName].geocode = { 
+              status: 'error',
+              code: geocodeResponse.status,
+              message: errorText
+            };
+          }
+        } catch (error) {
+          results[keyName].geocode = { 
+            status: 'error',
+            message: (error as Error).message
+          };
+        }
+        
+        // Test Forecast API
+        try {
+          const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=metric&appid=${apiKey}`;
+          const forecastResponse = await fetch(forecastUrl);
+          
+          if (forecastResponse.ok) {
+            results[keyName].forecast = { 
+              status: 'success',
+              code: forecastResponse.status
+            };
+          } else {
+            const errorText = await forecastResponse.text();
+            results[keyName].forecast = { 
+              status: 'error',
+              code: forecastResponse.status,
+              message: errorText
+            };
+          }
+        } catch (error) {
+          results[keyName].forecast = { 
+            status: 'error',
+            message: (error as Error).message
+          };
+        }
+      }
+      
+      res.json({
+        message: 'API key testing completed',
+        timestamp: new Date().toISOString(),
+        results
+      });
+    } catch (error) {
+      console.error('API key testing error:', error);
+      res.status(500).json({ 
+        status: 'error',
+        message: (error as Error).message
+      });
+    }
+  });
+
   // API Health check endpoint
   app.get('/api/weather-health', async (req, res) => {
     try {
