@@ -343,9 +343,9 @@ const Paddock20HomePage: React.FC = () => {
                           {automotiveWeatherData && 
                            automotiveWeatherData.automotive_metrics && 
                            automotiveWeatherData.automotive_metrics.drive_recommendations && 
-                           typeof automotiveWeatherData.automotive_metrics.drive_recommendations.power_adjustment === 'number'
-                            ? (automotiveWeatherData.automotive_metrics.drive_recommendations.power_adjustment > 0 ? "+" : "") + 
-                              automotiveWeatherData.automotive_metrics.drive_recommendations.power_adjustment + "%"
+                           typeof automotiveWeatherData.automotive_metrics.drive_recommendations.torque_management?.recommended_percentage === 'number'
+                            ? (automotiveWeatherData.automotive_metrics.drive_recommendations.torque_management.recommended_percentage > 0 ? "+" : "") + 
+                              automotiveWeatherData.automotive_metrics.drive_recommendations.torque_management.recommended_percentage + "%"
                             : "N/A"}
                         </div>
                       </div>
@@ -571,9 +571,9 @@ const Paddock20HomePage: React.FC = () => {
                       <div className="text-green-400/70 text-xs mb-1 font-medium uppercase tracking-wider">Dew Point</div>
                       <div className="text-white text-2xl font-mono font-semibold">
                         {automotiveWeatherData && 
-                        automotiveWeatherData.conditions && 
-                        typeof automotiveWeatherData.conditions.dewPoint === 'number'
-                          ? automotiveWeatherData.conditions.dewPoint.toFixed(1) + "°F"
+                        automotiveWeatherData.weather && 
+                        typeof automotiveWeatherData.weather.dewPoint === 'number'
+                          ? automotiveWeatherData.weather.dewPoint.toFixed(1) + "°F"
                           : "N/A"}
                       </div>
                     </div>
