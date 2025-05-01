@@ -11,6 +11,7 @@ import { submitApiKey } from '../services/apiKeyManager';
 import ContextualWeatherRoutePlanner from '../components/ContextualWeatherRoutePlanner';
 import PersonalizedWeatherClothingRecommendations from '../components/PersonalizedWeatherClothingRecommendations';
 import EcoDrivingPerformanceTracker from '../components/EcoDrivingPerformanceTracker';
+import PredictiveRouteWeatherWarnings from '../components/PredictiveRouteWeatherWarnings';
 import DetailedCommuteAnalytics from '../components/DetailedCommuteAnalytics';
 import { 
   Cloud, Sun, Wind, CloudRain, Thermometer, 
@@ -631,6 +632,12 @@ const NewGTGWeatherPage: React.FC = () => {
               
               <div className="lg:col-span-1">
                 <PersonalizedWeatherClothingRecommendations />
+              </div>
+            </div>
+            
+            <div className="grid grid-cols-1 lg:grid-cols-1 gap-6 mb-6">
+              <div className="lg:col-span-1">
+                <PredictiveRouteWeatherWarnings />
               </div>
             </div>
             
