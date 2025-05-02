@@ -32,6 +32,7 @@ import SeasonalChecklistPage from "./pages/SeasonalChecklistPage";
 import EBooksPage from "./pages/eBooksPage";
 import Paddock20HomePage from "./pages/Paddock20HomePage";
 import Paddock20HomePageSimple from "./pages/Paddock20HomePageSimple";
+import EmergencyDebugPage from "./pages/EmergencyDebugPage";
 import DropdownNavbar from "./components/DropdownNavbar";
 import Footer from "./components/Footer";
 import { WeatherProvider } from "./contexts/WeatherContext";
@@ -170,7 +171,10 @@ function App() {
                 </Route>
                 
                 {/* Protected routes */}
-                <Route path="/"><ProtectedRoute component={Paddock20HomePageSimple} /></Route>
+                <Route path="/">
+                  <EmergencyDebugPage />
+                </Route>
+                <Route path="/simple"><ProtectedRoute component={Paddock20HomePageSimple} /></Route>
                 <Route path="/home"><ProtectedRoute component={Home} /></Route>
                 <Route path="/paddock20-original"><ProtectedRoute component={Paddock20HomePage} /></Route>
                 <Route path="/dashboard"><ProtectedRoute component={DashboardPage} /></Route>
