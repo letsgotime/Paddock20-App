@@ -4,7 +4,7 @@ import {
   Check, X, ChevronRight, AlertTriangle, Shield, Car, Trophy, Clock, 
   User, Settings, Map, Calendar, Gauge, Heart, ThumbsUp, 
   Activity, Zap, Wrench, Smartphone, Palette, UserPlus, Mail, Key,
-  CircleDashed, Upload, Camera, FileText, PaintBucket
+  CircleDashed, Upload, Camera, FileText, PaintBucket, Cloud, PlusCircle
 } from 'lucide-react';
 
 interface UserOnboardingProps {
@@ -53,6 +53,20 @@ interface DashboardPreferences {
   showManifestationStation: boolean;
   primaryFocus: string;
   notificationSettings: boolean;
+  tempDisplay: 'standard' | 'detailed' | 'compact';
+}
+
+// Location settings type definition
+interface LocationSettings {
+  primaryLocation: string;
+  units: 'imperial' | 'metric';
+  autoRefresh: boolean;
+}
+
+// Route type definition
+interface RouteInfo {
+  name: string;
+  points: string;
 }
 
 // Available interests for user selection
@@ -145,8 +159,21 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
     showGarageVault: true,
     showManifestationStation: true,
     primaryFocus: moduleOptions[0],
-    notificationSettings: true
+    notificationSettings: true,
+    tempDisplay: 'standard'
   });
+  
+  // For location settings
+  const [locationSettings, setLocationSettings] = useState<LocationSettings>({
+    primaryLocation: 'Charlotte, NC',
+    units: 'imperial',
+    autoRefresh: true
+  });
+  
+  // For routes/favorite drives
+  const [routes, setRoutes] = useState<RouteInfo[]>([
+    { name: 'Daily Commute', points: 'Home to Office' }
+  ]);
   
   // Error/validation state
   const [error, setError] = useState<string | null>(null);
@@ -434,7 +461,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
               
               <div className="text-center">
                 <img 
-                  src="/assets/Logos/GoTime-Logo-7FC844-White.png" 
+                  src="/assets/Logos/GoTime Logo-7FC844-White (1).png" 
                   alt="GoTime Motorsports Logo" 
                   className="h-8 mb-4 mx-auto opacity-90" 
                 />
