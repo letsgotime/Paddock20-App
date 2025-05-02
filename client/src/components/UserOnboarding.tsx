@@ -1,6 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Check, X, ChevronRight, AlertTriangle, Shield, Car, Trophy, Clock } from 'lucide-react';
+import { 
+  Check, X, ChevronRight, AlertTriangle, Shield, Car, Trophy, Clock, 
+  User, Settings, Map, Calendar, Gauge, Heart, ThumbsUp, 
+  Activity, Zap, Wrench, Smartphone, Palette, UserPlus, Mail, Key,
+  CircleDashed, Upload, Camera, FileText, PaintBucket
+} from 'lucide-react';
 
 interface UserOnboardingProps {
   onComplete: () => void;
@@ -10,29 +15,176 @@ interface UserOnboardingProps {
 const CAROLINA_BLUE = '#1982FC';
 const GOTIME_GREEN = '#7FC844';
 
+// User profile type definition
+interface UserProfile {
+  fullName: string;
+  username: string;
+  email: string;
+  password: string;
+  confirmPassword: string;
+  profileImage: string;
+  drivingExperience: string;
+  interests: string[];
+  bio: string;
+}
+
+// Vehicle profile type definition
+interface VehicleProfile {
+  make: string;
+  model: string;
+  year: string;
+  engineType: string;
+  transmissionType: string;
+  nickname: string;
+  color: string;
+  vehicleImage: string;
+  mileage: string;
+  purchaseDate: string;
+}
+
+// Dashboard preferences type definition
+interface DashboardPreferences {
+  theme: 'dark' | 'darker';
+  showWeather: boolean;
+  showEvents: boolean;
+  showMaintenance: boolean;
+  showJuiceBox: boolean;
+  showGarageVault: boolean;
+  showManifestationStation: boolean;
+  primaryFocus: string;
+  notificationSettings: boolean;
+}
+
+// Available interests for user selection
+const availableInterests = [
+  'Track Driving', 'Auto Detailing', 'Car Shows', 'Motorsport', 'Modifications',
+  'Classic Cars', 'Supercars', 'Off-roading', 'Restoration', 'Performance Tuning',
+  'Automotive Photography', 'Rally Racing', 'F1', 'NASCAR', 'Drift Racing'
+];
+
+// Available car manufacturers
+const carManufacturers = [
+  'Acura', 'Alfa Romeo', 'Aston Martin', 'Audi', 'Bentley', 'BMW', 'Bugatti',
+  'Buick', 'Cadillac', 'Chevrolet', 'Chrysler', 'Dodge', 'Ferrari', 'Fiat',
+  'Ford', 'Genesis', 'GMC', 'Honda', 'Hyundai', 'Infiniti', 'Jaguar', 'Jeep',
+  'Kia', 'Lamborghini', 'Land Rover', 'Lexus', 'Lincoln', 'Lotus', 'Maserati',
+  'Mazda', 'McLaren', 'Mercedes-Benz', 'Mini', 'Mitsubishi', 'Nissan', 'Porsche',
+  'Ram', 'Rolls-Royce', 'Subaru', 'Tesla', 'Toyota', 'Volkswagen', 'Volvo'
+];
+
+// Available engine types
+const engineTypes = [
+  'Gasoline', 'Diesel', 'Hybrid', 'Electric', 'Hydrogen Fuel Cell'
+];
+
+// Available transmission types
+const transmissionTypes = [
+  'Automatic', 'Manual', 'Dual-Clutch', 'CVT', 'Semi-Automatic'
+];
+
+// Module focus options
+const moduleOptions = [
+  'Weather Paddock', 'JuiceBox', 'Garage Vault', 'Manifestation Station',
+  'Drive Journal', 'Motorsports', 'Telemetry'
+];
+
 /**
  * UserOnboarding Component
  * 
- * Forces users to agree to legal terms before gaining access to the application.
- * This component is shown on first login or when terms are updated.
+ * Complete onboarding flow including legal terms, user profile creation, vehicle setup,
+ * and dashboard preferences.
  * 
  * Uses brand-consistent styling with Orbitron for headings and Open Sans for body text.
  * Color scheme follows the dark carbon-fiber theme with Carolina blue accents.
  */
 const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
+  // Track the current step in the onboarding process
   const [step, setStep] = useState(1);
+  
+  // For agreement step
   const [agreements, setAgreements] = useState({
     termsOfService: false,
     privacyPolicy: false,
     betaAgreement: false
   });
+  
+  // For user profile step
+  const [userProfile, setUserProfile] = useState<UserProfile>({
+    fullName: '',
+    username: '',
+    email: '',
+    password: '',
+    confirmPassword: '',
+    profileImage: '',
+    drivingExperience: 'intermediate',
+    interests: [],
+    bio: ''
+  });
+  
+  // For vehicle profile step
+  const [vehicleProfile, setVehicleProfile] = useState<VehicleProfile>({
+    make: '',
+    model: '',
+    year: '',
+    engineType: '',
+    transmissionType: '',
+    nickname: '',
+    color: '#000000',
+    vehicleImage: '',
+    mileage: '',
+    purchaseDate: ''
+  });
+  
+  // For dashboard preferences step
+  const [dashboardPrefs, setDashboardPrefs] = useState<DashboardPreferences>({
+    theme: 'dark',
+    showWeather: true,
+    showEvents: true,
+    showMaintenance: true,
+    showJuiceBox: true,
+    showGarageVault: true,
+    showManifestationStation: true,
+    primaryFocus: moduleOptions[0],
+    notificationSettings: true
+  });
+  
+  // Error/validation state
   const [error, setError] = useState<string | null>(null);
+  
+  // Animation state
   const [animateIn, setAnimateIn] = useState(true);
-
-  // Check if all agreements are accepted
+  
+  // Step visibility state (for transitioning between steps)
+  const [visibleStep, setVisibleStep] = useState(1);
+  
+  // Track if the user has uploaded a profile picture
+  const [hasUploadedProfilePic, setHasUploadedProfilePic] = useState(false);
+  
+  // Track if the user has uploaded a vehicle image
+  const [hasUploadedVehicleImage, setHasUploadedVehicleImage] = useState(false);
+  
+  // Check if legal agreements are complete
   const allAgreed = Object.values(agreements).every(value => value === true);
-
-  // Handle checkbox changes
+  
+  // Check if user profile is complete enough to proceed
+  const isUserProfileComplete = () => {
+    return userProfile.fullName.trim() !== '' && 
+           userProfile.username.trim() !== '' && 
+           userProfile.email.trim() !== '' &&
+           userProfile.password.trim() !== '' &&
+           userProfile.confirmPassword.trim() !== '' &&
+           userProfile.password === userProfile.confirmPassword && 
+           userProfile.interests.length > 0;
+  };
+  
+  // Check if vehicle profile is complete enough to proceed
+  const isVehicleProfileComplete = () => {
+    return vehicleProfile.make.trim() !== '' && 
+           vehicleProfile.model.trim() !== '' && 
+           vehicleProfile.year.trim() !== '';
+  };
+  
+  // Handle checkbox changes for legal agreements
   const handleAgreementChange = (agreement: keyof typeof agreements) => {
     setAgreements(prev => ({
       ...prev,
@@ -40,32 +192,104 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
     }));
     setError(null);
   };
+  
+  // Handle interest selection
+  const toggleInterest = (interest: string) => {
+    setUserProfile(prev => {
+      const interests = prev.interests.includes(interest)
+        ? prev.interests.filter(i => i !== interest)
+        : [...prev.interests, interest];
+      
+      return { ...prev, interests };
+    });
+  };
+  
+  // Handle user profile input changes
+  const handleUserProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setUserProfile(prev => ({ ...prev, [name]: value }));
+    setError(null);
+  };
+  
+  // Handle vehicle profile input changes
+  const handleVehicleProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    setVehicleProfile(prev => ({ ...prev, [name]: value }));
+    setError(null);
+  };
+  
+  // Handle dashboard preferences changes
+  const handleDashboardPrefChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type, checked } = e.target as HTMLInputElement;
+    
+    setDashboardPrefs(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+  
+  // Simulated file upload for profile picture
+  const handleProfileImageUpload = () => {
+    // In a real app, this would handle actual file upload
+    setHasUploadedProfilePic(true);
+    setUserProfile(prev => ({
+      ...prev,
+      profileImage: '/assets/Stock Photos/user-avatar-placeholder.png'
+    }));
+  };
+  
+  // Simulated file upload for vehicle image
+  const handleVehicleImageUpload = () => {
+    // In a real app, this would handle actual file upload
+    setHasUploadedVehicleImage(true);
+    setVehicleProfile(prev => ({
+      ...prev,
+      vehicleImage: '/assets/Stock Photos/vehicle-placeholder.png'
+    }));
+  };
 
   // Handle smooth transitions between steps
   const handleStepTransition = (direction: 'next' | 'prev') => {
+    // Validate current step before proceeding
+    if (direction === 'next') {
+      // Legal agreements validation
+      if (step === 3 && !allAgreed) {
+        setError('You must accept all agreements to continue');
+        return;
+      }
+      
+      // User profile validation
+      if (step === 4) {
+        if (!isUserProfileComplete()) {
+          setError('Please complete all required fields in your profile');
+          return;
+        }
+        
+        if (userProfile.password !== userProfile.confirmPassword) {
+          setError('Passwords do not match');
+          return;
+        }
+      }
+      
+      // Vehicle profile validation
+      if (step === 5 && !isVehicleProfileComplete()) {
+        setError('Please complete the required vehicle information (make, model, year)');
+        return;
+      }
+      
+      // Final step - complete onboarding
+      if (step === 6) {
+        completeOnboarding();
+        return;
+      }
+    }
+    
+    // Animate out
     setAnimateIn(false);
     
     // Short delay for animation
     setTimeout(() => {
       if (direction === 'next') {
-        if (step === 3 && !allAgreed) {
-          setError('You must accept all agreements to continue');
-          setAnimateIn(true);
-          return;
-        }
-        
-        if (step === 3 && allAgreed) {
-          // Save to localStorage that user has completed onboarding
-          localStorage.setItem('userAgreements', JSON.stringify({
-            accepted: true,
-            timestamp: new Date().toISOString(),
-            version: '1.0' // increment this when terms change
-          }));
-          
-          onComplete();
-          return;
-        }
-        
         setStep(prev => prev + 1);
       } else {
         setStep(prev => Math.max(1, prev - 1));
@@ -73,7 +297,33 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
       
       setError(null);
       setAnimateIn(true);
+      setVisibleStep(direction === 'next' ? step + 1 : Math.max(1, step - 1));
     }, 200);
+  };
+  
+  // Final function to save all data and complete onboarding
+  const completeOnboarding = () => {
+    // In a real app, this would save the data to a database
+    // For now, we'll save to localStorage for demo purposes
+    
+    // Save legal agreements
+    localStorage.setItem('userAgreements', JSON.stringify({
+      accepted: true,
+      timestamp: new Date().toISOString(),
+      version: '1.0' // increment this when terms change
+    }));
+    
+    // Save user profile
+    localStorage.setItem('userProfile', JSON.stringify(userProfile));
+    
+    // Save vehicle profile
+    localStorage.setItem('vehicleProfile', JSON.stringify(vehicleProfile));
+    
+    // Save dashboard preferences
+    localStorage.setItem('dashboardPreferences', JSON.stringify(dashboardPrefs));
+    
+    // Complete onboarding
+    onComplete();
   };
 
   // Simplified step navigation functions
@@ -100,10 +350,13 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
             {step === 1 && 'WELCOME TO PADDOCK20 BETA'}
             {step === 2 && 'ABOUT PADDOCK20 BETA'}
             {step === 3 && 'LEGAL AGREEMENTS REQUIRED'}
+            {step === 4 && 'YOUR PADDOCK20 PROFILE'}
+            {step === 5 && 'YOUR VEHICLE DETAILS'}
+            {step === 6 && 'CUSTOMIZE YOUR DASHBOARD'}
           </h2>
           <div className="flex items-center bg-gray-800/70 px-3 py-1 rounded-full">
             <div className="text-sm text-gray-400 tracking-wide font-medium">
-              <span className="text-[#1982FC]">{step}</span> / 3
+              <span className="text-[#1982FC]">{step}</span> / 6
             </div>
           </div>
         </div>
