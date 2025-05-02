@@ -4,7 +4,7 @@ import EventsPreview from '../components/EventsPreview';
 import OneTapWeatherSnapshot from '../components/OneTapWeatherSnapshot';
 import MotorsportsGallery from '../components/MotorsportsGallery';
 import { useWeather } from '../contexts/WeatherContext';
-import { Thermometer, Droplets, Wind, Sun, Leaf, Gauge, Cloud, ArrowUp, Compass, Timer } from 'lucide-react';
+import { Thermometer, Droplets, Wind, Sun, Leaf, Gauge, Cloud, ArrowUp, Compass, Timer, Clock } from 'lucide-react';
 
 const Paddock20HomePage: React.FC = () => {
   const { weatherData, automotiveWeatherData } = useWeather();
@@ -54,26 +54,37 @@ const Paddock20HomePage: React.FC = () => {
       {/* Main content container with grid-based layout */}
       <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
       
-      {/* Command Center Header - F1 Style */}
-      <header className="mb-6 bg-gradient-to-r from-black/90 via-gray-900/90 to-black/90 rounded-lg p-4 border border-blue-900/30 shadow-xl overflow-hidden">
-        <div className="flex flex-col md:flex-row justify-between items-center">
+      {/* F1-Inspired Command Center Header - Enhanced Style */}
+      <header className="mb-6 bg-gradient-to-r from-black/95 via-gray-900/95 to-black/95 rounded-lg p-4 border-l-4 border-t border-r border-b border-blue-900/40 shadow-xl overflow-hidden relative">
+        {/* Carbon fiber pattern overlay */}
+        <div className="absolute inset-0 opacity-10 bg-[url('/assets/images/carbon-fiber-pattern.png')] bg-repeat"></div>
+        
+        {/* Blue accent line - F1-style */}
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-blue-400 to-blue-500"></div>
+        
+        <div className="flex flex-col md:flex-row justify-between items-center relative z-10">
           <div className="flex items-center mb-4 md:mb-0">
             <div className="mr-8">
-              <h1 className="text-blue-400 font-orbitron text-2xl md:text-4xl font-bold tracking-wider">PADDOCK<span className="text-green-500">20</span>™</h1>
+              <h1 className="text-blue-400 font-orbitron text-2xl md:text-4xl font-bold tracking-wider flex items-center">
+                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-500">PADDOCK</span>
+                <span className="text-green-500">20</span>
+                <span className="text-xs ml-1 text-blue-400">™</span>
+              </h1>
               <div className="flex items-center mt-1">
                 <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse mr-2"></div>
-                <span className="text-gray-400 text-xs uppercase tracking-wider">COMMAND CENTER</span>
+                <span className="text-gray-400 text-xs uppercase tracking-wider font-bold">COMMAND CENTER</span>
+                <div className="ml-2 h-0.5 w-10 bg-blue-500/30"></div>
               </div>
             </div>
             
             <div className="flex flex-col">
               <div className="flex items-center">
-                <div className="flex flex-col mr-4">
-                  <span className="text-blue-400/80 text-xs uppercase">PADDOCK TIME</span>
+                <div className="flex flex-col mr-4 bg-black/50 px-3 py-1.5 rounded-sm border border-blue-900/30">
+                  <span className="text-blue-400/80 text-xs uppercase font-semibold">PADDOCK TIME</span>
                   <span className="text-white text-xl font-mono font-bold tracking-wider">{formattedTime}</span>
                 </div>
-                <div className="bg-blue-900/20 px-3 py-2 rounded">
-                  <span className="text-gray-400 text-xs">Date</span>
+                <div className="bg-blue-900/20 px-3 py-1.5 rounded-sm border border-blue-800/20">
+                  <span className="text-gray-400 text-xs font-semibold">DATE</span>
                   <div className="text-white text-sm font-medium">{formattedDate}</div>
                 </div>
               </div>
@@ -81,27 +92,35 @@ const Paddock20HomePage: React.FC = () => {
           </div>
           
           <div className="flex space-x-3">
-            <div className="bg-black/60 flex flex-col items-center justify-center px-3 py-2 rounded border border-blue-900/40">
-              <span className="text-blue-400/70 text-xs mb-1">Session</span>
+            <div className="bg-black/60 flex flex-col items-center justify-center px-3 py-2 rounded-sm border border-blue-900/40">
+              <span className="text-blue-400/70 text-xs mb-1 font-semibold">SESSION TIME</span>
               <div className="flex items-center">
                 <Timer className="h-3 w-3 text-green-500 mr-1" />
                 <span className="text-white text-sm font-mono">{sessionTime}</span>
               </div>
             </div>
-            <div className="bg-gradient-to-r from-green-900/30 to-blue-900/30 px-4 py-2 rounded border border-green-800/40">
-              <span className="text-green-400/70 text-xs">STATUS</span>
+            <div className="bg-gradient-to-r from-green-900/30 to-blue-900/30 px-4 py-2 rounded-sm border border-green-800/40">
+              <span className="text-green-400/70 text-xs font-semibold">TELEMETRY</span>
               <div className="flex items-center">
                 <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse mr-2"></div>
-                <span className="text-white text-sm font-bold">LIVE</span>
+                <span className="text-white text-sm font-bold">ACTIVE</span>
               </div>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Live Weather Station - Driver-Oriented Weather Dashboard */}
-      <section className="mb-8">
-        <h2 className="font-orbitron text-blue-400 text-2xl mb-4">Live Drive Intelligence</h2>
+      {/* Enhanced F1-Inspired Live Weather Station - Driver-Oriented Weather Dashboard */}
+      <section className="mb-8 relative">
+        {/* Section accent line */}
+        <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-blue-500 via-blue-400 to-transparent"></div>
+        
+        <h2 className="font-orbitron text-blue-400 text-2xl mb-4 pl-4 flex items-center">
+          <Gauge className="mr-2 h-5 w-5 text-blue-400" />
+          Live Drive Intelligence
+          <span className="ml-3 text-xs bg-blue-900/30 px-2 py-0.5 rounded-sm text-blue-300 uppercase tracking-wide">Real-time Telemetry</span>
+        </h2>
+        
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Weather Snapshot */}
           <div className="lg:col-span-1">
@@ -109,15 +128,31 @@ const Paddock20HomePage: React.FC = () => {
           </div>
           
           {/* Driver-Oriented Weather Metrics */}
-          <div className="lg:col-span-2 bg-gradient-to-r from-black/90 to-gray-900/80 rounded-xl p-4 border border-blue-900/30 shadow-lg backdrop-blur-sm">
-            <h3 className="text-blue-400 font-semibold text-sm uppercase tracking-wider mb-3">Driver Conditions</h3>
+          <div className="lg:col-span-2 bg-gradient-to-r from-black/95 to-gray-900/90 rounded-xl p-5 border border-blue-900/30 shadow-lg backdrop-blur-sm relative overflow-hidden">
+            {/* Carbon fiber pattern overlay for F1 style */}
+            <div className="absolute inset-0 opacity-5 bg-[url('/assets/images/carbon-fiber-pattern.png')] bg-repeat pointer-events-none"></div>
             
-            <div id="weather-snapshot-capture-area" className="grid grid-cols-1 gap-6">
-              {/* F1-style clock display */}
-              <div className="bg-gradient-to-r from-black/80 to-gray-900/70 p-4 rounded-lg border border-blue-700/30 shadow-lg overflow-hidden">
-                <div className="flex flex-col sm:flex-row items-center justify-between">
-                  <div className="text-center sm:text-left mb-3 sm:mb-0">
-                    <div className="text-blue-400/80 text-xs uppercase tracking-wider font-bold mb-1">PADDOCK TIME</div>
+            {/* Top status bar - F1 pit wall style */}
+            <div className="flex justify-between items-center mb-4 border-b border-blue-900/30 pb-2 relative z-10">
+              <div className="flex items-center">
+                <div className="h-3 w-3 rounded-full bg-green-500 animate-pulse mr-2"></div>
+                <h3 className="text-blue-400 font-bold text-sm uppercase tracking-wider">Driver Conditions</h3>
+              </div>
+              <div className="flex space-x-2 items-center">
+                <span className="text-xs text-gray-400">DATA REFRESH:</span>
+                <span className="text-xs text-green-400 font-mono">LIVE</span>
+              </div>
+            </div>
+            
+            <div id="weather-snapshot-capture-area" className="grid grid-cols-1 gap-6 relative z-10">
+              {/* F1-style telemetry clock display with race-inspired design */}
+              <div className="bg-black/80 p-4 rounded-lg border border-blue-700/30 shadow-lg overflow-hidden">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  <div className="text-center sm:text-left">
+                    <div className="text-blue-400/80 text-xs uppercase tracking-wider font-bold mb-1 flex items-center">
+                      <Clock className="h-3 w-3 mr-1" />
+                      DRIVE TIME
+                    </div>
                     <div className="text-white text-3xl font-mono font-bold tracking-wider" id="live-clock">
                       {new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' })}
                     </div>
@@ -126,45 +161,66 @@ const Paddock20HomePage: React.FC = () => {
                     </div>
                   </div>
                   
-                  <div className="flex items-center space-x-2">
-                    <div className="bg-blue-900/30 px-3 py-2 rounded-md">
-                      <div className="text-blue-400/70 text-xs mb-1">Session</div>
-                      <div className="text-white text-sm font-medium">LIVE</div>
+                  <div className="flex items-center space-x-3">
+                    <div className="bg-blue-900/30 px-3 py-2 rounded-sm border border-blue-800/20">
+                      <div className="text-blue-400/70 text-xs mb-1 uppercase font-semibold">Session</div>
+                      <div className="text-white text-sm font-medium flex items-center">
+                        <span className="h-1.5 w-1.5 rounded-full bg-blue-500 mr-1.5"></span>
+                        ACTIVE
+                      </div>
                     </div>
-                    <div className="bg-green-900/30 px-3 py-2 rounded-md">
-                      <div className="text-green-400/70 text-xs mb-1">Conditions</div>
-                      <div className="text-white text-sm font-medium">OPTIMAL</div>
+                    <div className="bg-green-900/30 px-3 py-2 rounded-sm border border-green-800/20">
+                      <div className="text-green-400/70 text-xs mb-1 uppercase font-semibold">Conditions</div>
+                      <div className="text-white text-sm font-medium flex items-center">
+                        <span className="h-1.5 w-1.5 rounded-full bg-green-500 mr-1.5"></span>
+                        OPTIMAL
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
               
-              {/* Core Driver Metrics - F1 Style Dashboard */}
+              {/* Core Driver Metrics - Enhanced F1 Style Dashboard */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20 relative overflow-hidden">
+                <div className="bg-black/70 p-3 rounded-sm border border-blue-900/30 relative overflow-hidden group hover:border-blue-500 transition-colors">
                   <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-                  <div className="text-blue-400/70 text-xs mb-1 font-medium uppercase tracking-wider">Air Temp</div>
-                  <div className="text-white text-xl font-mono font-semibold">
+                  <div className="text-blue-400/90 text-xs mb-1 font-medium uppercase tracking-wider flex items-center">
+                    <Thermometer className="h-3 w-3 mr-1" />
+                    Air Temp
+                  </div>
+                  <div className="text-white text-xl font-mono font-semibold group-hover:text-blue-300 transition-colors">
                     {weatherData && weatherData.main && typeof weatherData.main.temp === 'number' 
                       ? weatherData.main.temp.toFixed(1) + "°F" 
                       : "N/A"}
                   </div>
+                  <div className="mt-1 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500" style={{ width: weatherData?.main?.temp ? `${Math.min(100, (weatherData.main.temp/100)*100)}%` : '0%' }}></div>
+                  </div>
                 </div>
                 
-                <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20 relative overflow-hidden">
+                <div className="bg-black/70 p-3 rounded-sm border border-blue-900/30 relative overflow-hidden group hover:border-blue-500 transition-colors">
                   <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-                  <div className="text-blue-400/70 text-xs mb-1 font-medium uppercase tracking-wider">Humidity</div>
-                  <div className="text-white text-xl font-mono font-semibold">
+                  <div className="text-blue-400/90 text-xs mb-1 font-medium uppercase tracking-wider flex items-center">
+                    <Droplets className="h-3 w-3 mr-1" />
+                    Humidity
+                  </div>
+                  <div className="text-white text-xl font-mono font-semibold group-hover:text-blue-300 transition-colors">
                     {weatherData && weatherData.main && typeof weatherData.main.humidity === 'number'
                       ? weatherData.main.humidity + "%" 
                       : "N/A"}
                   </div>
+                  <div className="mt-1 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500" style={{ width: weatherData?.main?.humidity ? `${weatherData.main.humidity}%` : '0%' }}></div>
+                  </div>
                 </div>
                 
-                <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20 relative overflow-hidden">
+                <div className="bg-black/70 p-3 rounded-sm border border-blue-900/30 relative overflow-hidden group hover:border-blue-500 transition-colors">
                   <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-                  <div className="text-blue-400/70 text-xs mb-1 font-medium uppercase tracking-wider">Surface Temp</div>
-                  <div className="text-white text-xl font-mono font-semibold">
+                  <div className="text-blue-400/90 text-xs mb-1 font-medium uppercase tracking-wider flex items-center">
+                    <Thermometer className="h-3 w-3 mr-1" />
+                    Surface Temp
+                  </div>
+                  <div className="text-white text-xl font-mono font-semibold group-hover:text-blue-300 transition-colors">
                     {automotiveWeatherData && 
                      automotiveWeatherData.automotive_metrics && 
                      automotiveWeatherData.automotive_metrics.track_surface && 
@@ -172,53 +228,87 @@ const Paddock20HomePage: React.FC = () => {
                       ? automotiveWeatherData.automotive_metrics.track_surface.temperature.toFixed(1) + "°F"
                       : "N/A"}
                   </div>
+                  <div className="mt-1 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500" style={{ width: automotiveWeatherData?.automotive_metrics?.track_surface?.temperature ? `${Math.min(100, (automotiveWeatherData.automotive_metrics.track_surface.temperature/120)*100)}%` : '0%' }}></div>
+                  </div>
                 </div>
                 
-                <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20 relative overflow-hidden">
+                <div className="bg-black/70 p-3 rounded-sm border border-blue-900/30 relative overflow-hidden group hover:border-blue-500 transition-colors">
                   <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-                  <div className="text-blue-400/70 text-xs mb-1 font-medium uppercase tracking-wider">UV Index</div>
-                  <div className="text-white text-xl font-mono font-semibold">
+                  <div className="text-blue-400/90 text-xs mb-1 font-medium uppercase tracking-wider flex items-center">
+                    <Sun className="h-3 w-3 mr-1" />
+                    UV Index
+                  </div>
+                  <div className="text-white text-xl font-mono font-semibold group-hover:text-blue-300 transition-colors">
                     {automotiveWeatherData && 
                      automotiveWeatherData.conditions && 
                      typeof automotiveWeatherData.conditions.uv_index === 'number'
                       ? automotiveWeatherData.conditions.uv_index.toFixed(1)
                       : "N/A"}
                   </div>
-                </div>
-                
-                <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20 relative overflow-hidden">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
-                  <div className="text-blue-400/70 text-xs mb-1 font-medium uppercase tracking-wider">Dew Point</div>
-                  <div className="text-white text-xl font-mono font-semibold">
-                    {automotiveWeatherData && 
-                     automotiveWeatherData.weather && 
-                     typeof automotiveWeatherData.weather.dewPoint === 'number'
-                      ? automotiveWeatherData.weather.dewPoint.toFixed(1) + "°F"
-                      : "N/A"}
+                  <div className="mt-1 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500" style={{ width: automotiveWeatherData?.conditions?.uv_index ? `${Math.min(100, (automotiveWeatherData.conditions.uv_index/11)*100)}%` : '0%' }}></div>
                   </div>
                 </div>
                 
-                <div className="bg-black/40 p-3 rounded-lg border border-blue-900/20 relative overflow-hidden">
+                <div className="bg-black/70 p-3 rounded-sm border border-blue-900/30 relative overflow-hidden group hover:border-blue-500 transition-colors">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                  <div className="text-blue-400/90 text-xs mb-1 font-medium uppercase tracking-wider flex items-center">
+                    <Cloud className="h-3 w-3 mr-1" />
+                    Dew Point
+                  </div>
+                  <div className="text-white text-xl font-mono font-semibold group-hover:text-blue-300 transition-colors">
+                    {automotiveWeatherData && 
+                     automotiveWeatherData.conditions && 
+                     typeof automotiveWeatherData.conditions.humidity === 'number'
+                      ? (automotiveWeatherData.conditions.feels_like - 10).toFixed(1) + "°F"
+                      : "N/A"}
+                  </div>
+                  <div className="mt-1 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
+                    <div className="h-full bg-blue-500" style={{ width: automotiveWeatherData?.conditions?.feels_like ? `${Math.min(100, ((automotiveWeatherData.conditions.feels_like - 10)/80)*100)}%` : '0%' }}></div>
+                  </div>
+                </div>
+                
+                <div className="bg-black/70 p-3 rounded-sm border border-green-900/30 relative overflow-hidden group hover:border-green-500 transition-colors">
                   <div className="absolute top-0 left-0 w-1 h-full bg-green-500"></div>
-                  <div className="text-green-400/70 text-xs mb-1 font-medium uppercase tracking-wider">Wind Speed</div>
-                  <div className="text-white text-xl font-mono font-semibold">
+                  <div className="text-green-400/90 text-xs mb-1 font-medium uppercase tracking-wider flex items-center">
+                    <Wind className="h-3 w-3 mr-1" />
+                    Wind Speed
+                  </div>
+                  <div className="text-white text-xl font-mono font-semibold group-hover:text-green-300 transition-colors">
                     {weatherData && weatherData.wind && typeof weatherData.wind.speed === 'number'
                       ? weatherData.wind.speed + " mph" 
                       : "N/A"}
                   </div>
+                  <div className="mt-1 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
+                    <div className="h-full bg-green-500" style={{ width: weatherData?.wind?.speed ? `${Math.min(100, (weatherData.wind.speed/30)*100)}%` : '0%' }}></div>
+                  </div>
                 </div>
               </div>
               
-              {/* F1-style telemetry bar */}
-              <div className="bg-black/60 rounded-lg border border-gray-800 p-4">
-                <div className="flex justify-between items-center mb-2">
-                  <div className="text-blue-400 text-xs uppercase tracking-wider font-semibold">Drive Telemetry</div>
-                  <div className="text-green-400 text-xs">LIVE</div>
+              {/* Enhanced F1-style telemetry bar */}
+              <div className="bg-black/80 rounded-sm border border-gray-800 p-4 relative overflow-hidden">
+                {/* F1-style diagonal racing stripe */}
+                <div className="absolute top-0 right-0 w-20 h-6 bg-blue-500/20 -skew-x-45 transform origin-top-right"></div>
+                
+                <div className="flex justify-between items-center mb-3 border-b border-gray-800 pb-2">
+                  <div className="text-blue-400 text-xs uppercase tracking-wider font-bold flex items-center">
+                    <Gauge className="h-3.5 w-3.5 mr-1.5" />
+                    Advanced Telemetry
+                  </div>
+                  <div className="text-green-400 text-xs flex items-center">
+                    <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse mr-1.5"></span>
+                    LIVE FEED
+                  </div>
                 </div>
-                <div className="grid grid-cols-4 gap-4">
-                  <div>
-                    <div className="text-gray-500 text-xs mb-1">Surface Condition</div>
-                    <div className="text-white text-sm font-medium">
+                
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
+                  <div className="group">
+                    <div className="text-blue-300/80 text-xs mb-1 font-semibold uppercase flex items-center">
+                      <span className="h-1 w-1 rounded-full bg-blue-500 mr-1"></span>
+                      Surface
+                    </div>
+                    <div className="text-white text-sm font-medium group-hover:text-blue-300 transition-colors">
                       {automotiveWeatherData && 
                        automotiveWeatherData.automotive_metrics && 
                        automotiveWeatherData.automotive_metrics.track_surface && 
@@ -227,9 +317,12 @@ const Paddock20HomePage: React.FC = () => {
                         : "N/A"}
                     </div>
                   </div>
-                  <div>
-                    <div className="text-gray-500 text-xs mb-1">Grip Level</div>
-                    <div className="text-white text-sm font-medium">
+                  <div className="group">
+                    <div className="text-blue-300/80 text-xs mb-1 font-semibold uppercase flex items-center">
+                      <span className="h-1 w-1 rounded-full bg-blue-500 mr-1"></span>
+                      Grip Level
+                    </div>
+                    <div className="text-white text-sm font-medium group-hover:text-blue-300 transition-colors">
                       {automotiveWeatherData && 
                        automotiveWeatherData.automotive_metrics && 
                        automotiveWeatherData.automotive_metrics.track_surface && 
@@ -238,21 +331,26 @@ const Paddock20HomePage: React.FC = () => {
                         : "N/A"}
                     </div>
                   </div>
-                  <div>
-                    <div className="text-gray-500 text-xs mb-1">Power Adjustment</div>
-                    <div className="text-white text-sm font-medium">
+                  <div className="group">
+                    <div className="text-green-300/80 text-xs mb-1 font-semibold uppercase flex items-center">
+                      <span className="h-1 w-1 rounded-full bg-green-500 mr-1"></span>
+                      Power Adjust
+                    </div>
+                    <div className="text-white text-sm font-medium group-hover:text-green-300 transition-colors">
                       {automotiveWeatherData && 
-                       automotiveWeatherData.automotive_metrics && 
-                       automotiveWeatherData.automotive_metrics.engine_performance && 
-                       typeof automotiveWeatherData.automotive_metrics.engine_performance.power_adjustment === 'number'
-                        ? (automotiveWeatherData.automotive_metrics.engine_performance.power_adjustment > 0 ? "+" : "") + 
-                          automotiveWeatherData.automotive_metrics.engine_performance.power_adjustment + "%"
+                       automotiveWeatherData.conditions && 
+                       typeof automotiveWeatherData.conditions.power_efficiency === 'number'
+                        ? (automotiveWeatherData.conditions.power_efficiency > 0 ? "+" : "") + 
+                          automotiveWeatherData.conditions.power_efficiency + "%"
                         : "N/A"}
                     </div>
                   </div>
-                  <div>
-                    <div className="text-gray-500 text-xs mb-1">Visibility</div>
-                    <div className="text-white text-sm font-medium">
+                  <div className="group">
+                    <div className="text-blue-300/80 text-xs mb-1 font-semibold uppercase flex items-center">
+                      <span className="h-1 w-1 rounded-full bg-blue-500 mr-1"></span>
+                      Visibility
+                    </div>
+                    <div className="text-white text-sm font-medium group-hover:text-blue-300 transition-colors">
                       {weatherData && weatherData.visibility
                         ? (weatherData.visibility / 1609).toFixed(1) + " mi"
                         : "N/A"}
@@ -262,8 +360,11 @@ const Paddock20HomePage: React.FC = () => {
               </div>
             </div>
             
-            <div className="mt-4 p-3 bg-blue-900/10 rounded-lg text-sm text-blue-300">
-              <p>All metrics are real-time and critical for driving decisions. For detailed forecast and track conditions, visit the <Link to="/new-weather-center" className="text-blue-400 hover:underline">Weather Center</Link>.</p>
+            <div className="mt-4 p-3 bg-gradient-to-r from-blue-900/20 to-blue-900/5 rounded-sm text-sm text-blue-300 border-l-2 border-blue-500/50">
+              <p className="flex items-center">
+                <ArrowUp className="h-4 w-4 mr-2 text-blue-400" />
+                All metrics are real-time and critical for driving decisions. For detailed forecast and track conditions, visit the <Link to="/new-weather-center" className="text-blue-400 hover:underline font-medium">Weather Center <span className="text-xs">→</span></Link>
+              </p>
             </div>
           </div>
         </div>
