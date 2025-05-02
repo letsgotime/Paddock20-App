@@ -187,15 +187,7 @@ const DropdownNavbar = () => {
                 <Compass className="h-4 w-4 mr-2 text-blue-400" />
                 <span>Manifestation Station™</span>
               </Link>
-              <Link to="/manifestation-station" className="hover:text-green-400 flex items-center py-1" onClick={() => {
-                // Route mod planner to Manifestation Station with hustle planner view
-                window.localStorage.setItem('manifestation_activeView', 'hustle-planner');
-                window.localStorage.setItem('manifestation_context', 'vehicle-mods');
-                setIsOpen(false);
-              }}>
-                <Ruler className="h-4 w-4 mr-2 text-blue-400" />
-                <span>Mod Planner</span>
-              </Link>
+
               <Link to="/drive-journal" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
                 <BookOpen className="h-4 w-4 mr-2 text-blue-400" />
                 <span>Drive Journal</span>
@@ -216,40 +208,6 @@ const DropdownNavbar = () => {
                 <Percent className="h-4 w-4 mr-2 text-blue-400" />
                 <span>Discounts & Promotions</span>
               </Link>
-              
-              {/* Checklists Dropdown */}
-              <div className="relative group" 
-                  onMouseEnter={(e) => e.currentTarget.classList.add('menu-open')}
-                  onMouseLeave={(e) => {
-                    // Add a delay before removing the class
-                    const currentElem = e.currentTarget;
-                    setTimeout(() => {
-                      if (currentElem && !currentElem.classList.contains('hover-active')) {
-                        currentElem.classList.remove('menu-open');
-                      }
-                    }, 500); // 500ms delay
-                  }}>
-                <button className="flex items-center hover:text-green-400 w-full">
-                  <ClipboardCheck className="h-4 w-4 mr-2 text-blue-400" />
-                  <span>Checklists</span>
-                  <ChevronRight className="w-4 h-4 ml-2" />
-                </button>
-                <div className="absolute top-0 right-full mr-2 hidden menu-content bg-gray-900 border border-gray-700 rounded-lg shadow-lg p-4 z-10 w-48">
-                  <Link to="/seasonal-checklist" className="flex items-center hover:text-green-400 mb-2 py-1" onClick={() => setIsOpen(false)}>
-                    <Cloud className="h-4 w-4 mr-2 text-blue-400" />
-                    <span>Seasonal Checklist</span>
-                  </Link>
-                  <Link to="/pre-drive-checklist" className="flex items-center hover:text-green-400 mb-2 py-1" onClick={() => setIsOpen(false)}>
-                    <Shield className="h-4 w-4 mr-2 text-blue-400" />
-                    <span>Pre-Drive Checklist</span>
-                  </Link>
-                  <Link to="/juicebox" className="flex items-center hover:text-green-400 mb-2 py-1" onClick={() => setIsOpen(false)}>
-                    <SprayCan className="h-4 w-4 mr-2 text-blue-400" />
-                    <span>Detailing Checklist</span>
-                  </Link>
-                </div>
-              </div>
-
               <Link to="/concierge" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
                 <HeartHandshake className="h-4 w-4 mr-2 text-blue-400" />
                 <span>Concierge</span>
