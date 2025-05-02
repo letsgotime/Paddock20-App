@@ -4,21 +4,63 @@ import EventsPreview from '../components/EventsPreview';
 import OneTapWeatherSnapshot from '../components/OneTapWeatherSnapshot';
 import MotorsportsGallery from '../components/MotorsportsGallery';
 import { useWeather } from '../contexts/WeatherContext';
-import { Thermometer, Droplets, Wind, Sun, Leaf, Gauge, Cloud, ArrowUp, Compass, Timer, Clock } from 'lucide-react';
+import { Thermometer, Droplets, Wind, Sun, Leaf, Gauge, Cloud, ArrowUp, Compass, Timer, Clock, Zap, Map, Shield, Calendar, Trophy, Flame } from 'lucide-react';
+
+// Array of driving insights to rotate through - based on weather patterns
+const drivingInsights = [
+  { 
+    icon: <Zap className="h-3.5 w-3.5 text-yellow-400 mr-1.5" />, 
+    text: "DRIVING TIP", 
+    value: "Optimal tire pressure for today" 
+  },
+  { 
+    icon: <Shield className="h-3.5 w-3.5 text-blue-400 mr-1.5" />, 
+    text: "SAFETY ALERT", 
+    value: "Low risk conditions" 
+  },
+  { 
+    icon: <Map className="h-3.5 w-3.5 text-green-400 mr-1.5" />, 
+    text: "ROUTE INSIGHT", 
+    value: "Perfect day for mountain roads" 
+  },
+  { 
+    icon: <Flame className="h-3.5 w-3.5 text-orange-400 mr-1.5" />, 
+    text: "TRACK DAY", 
+    value: "3 events this weekend" 
+  },
+  { 
+    icon: <Calendar className="h-3.5 w-3.5 text-purple-400 mr-1.5" />, 
+    text: "COMMUNITY", 
+    value: "Cars & Coffee on Sunday" 
+  },
+  { 
+    icon: <Trophy className="h-3.5 w-3.5 text-amber-400 mr-1.5" />, 
+    text: "ACHIEVEMENT", 
+    value: "92% driver rating" 
+  }
+];
 
 const Paddock20HomePage: React.FC = () => {
   const { weatherData, automotiveWeatherData } = useWeather();
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [elapsedTime, setElapsedTime] = useState(0);
+  const [insightIndex, setInsightIndex] = useState(0);
   
-  // Update clock every second
+  // Update clock and cycle through driving insights
   useEffect(() => {
-    const timer = setInterval(() => {
+    // Update time every second
+    const timeTimer = setInterval(() => {
       setCurrentTime(new Date());
-      setElapsedTime(prev => prev + 1);
     }, 1000);
     
-    return () => clearInterval(timer);
+    // Cycle through driving insights every 8 seconds
+    const insightTimer = setInterval(() => {
+      setInsightIndex(prevIndex => (prevIndex + 1) % drivingInsights.length);
+    }, 8000);
+    
+    return () => {
+      clearInterval(timeTimer);
+      clearInterval(insightTimer);
+    };
   }, []);
   
   const formattedTime = currentTime.toLocaleTimeString('en-US', { 
@@ -34,11 +76,8 @@ const Paddock20HomePage: React.FC = () => {
     day: 'numeric' 
   });
   
-  // Racing-inspired elapsed session time format
-  const sessionHours = Math.floor(elapsedTime / 3600);
-  const sessionMinutes = Math.floor((elapsedTime % 3600) / 60);
-  const sessionSeconds = elapsedTime % 60;
-  const sessionTime = `${sessionHours.toString().padStart(2, '0')}:${sessionMinutes.toString().padStart(2, '0')}:${sessionSeconds.toString().padStart(2, '0')}`;
+  // Get the current driving insight
+  const currentInsight = drivingInsights[insightIndex];
   
   return (
     <div className="min-h-screen bg-black pt-20 sm:pt-24">
@@ -70,8 +109,8 @@ const Paddock20HomePage: React.FC = () => {
             <div className="px-3 py-1 bg-[#111] m-1 inline-block border border-transparent hover:border-[#4B9CD3]/40 transition-all duration-300 hover:bg-black cursor-pointer hover:shadow-[0_0_8px_rgba(75,156,211,0.3)] rounded-sm">
               Date: {formattedDate}
             </div>
-            <div className="px-3 py-1 bg-[#111] m-1 inline-block border border-transparent hover:border-[#4B9CD3]/40 transition-all duration-300 hover:bg-black cursor-pointer hover:shadow-[0_0_8px_rgba(75,156,211,0.3)] rounded-sm">
-              Session: {sessionTime}
+            <div className="px-3 py-1 bg-[#111] m-1 inline-block border border-transparent hover:border-[#4B9CD3]/40 transition-all duration-300 hover:bg-black cursor-pointer hover:shadow-[0_0_8px_rgba(75,156,211,0.3)] rounded-sm min-w-[180px]">
+              {currentInsight.icon} <span className="text-xs font-medium">{currentInsight.text}</span>: {currentInsight.value}
             </div>
           </div>
         </div>
