@@ -76,6 +76,9 @@ interface GalleryContextType {
   addUserMedia: (userId: string, eventId: string, media: MediaItem) => void;
   setUserMediaAsFeatured: (userId: string, mediaId: string, featured: boolean) => void;
   importMediaFromUrl: (userId: string, eventId: string, url: string, type: MediaItem['type']) => Promise<MediaItem | null>;
+  
+  // Permission checks
+  isUserAdmin: (userId: string) => boolean;
 }
 
 // Create the context
