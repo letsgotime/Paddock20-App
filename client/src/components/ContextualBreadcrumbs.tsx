@@ -86,8 +86,12 @@ const ContextualBreadcrumbs: React.FC = () => {
       { path: '/juicebox-videos', label: 'Video Library' }
     ],
     '/dashboard': [
-      { path: '/', label: 'Home' },
+      { path: '/', label: 'Paddock20 Home' },
       { path: '/dashboard', label: 'Dashboard' }
+    ],
+    '/user-dashboard': [
+      { path: '/', label: 'Paddock20 Home' },
+      { path: '/user-dashboard', label: 'User Dashboard' }
     ]
   };
   
@@ -107,7 +111,8 @@ const ContextualBreadcrumbs: React.FC = () => {
     
     // Default: generate breadcrumbs from URL segments
     const segments = location.split('/').filter(Boolean);
-    const result: BreadcrumbItem[] = [{ path: '/', label: 'Home' }];
+    // Always make sure the Home breadcrumb goes to the main homepage
+    const result: BreadcrumbItem[] = [{ path: '/', label: 'Paddock20 Home' }];
     
     let pathSoFar = '';
     segments.forEach((segment) => {

@@ -176,79 +176,110 @@ const Paddock20HomePage: React.FC = () => {
           </div>
           
           <div className="text-center text-white mb-2 flex flex-wrap justify-center">
-            <div className="time-format-dropdown px-3 py-1 bg-[#111] m-1 inline-block border border-transparent hover:border-[#4B9CD3]/40 transition-all duration-300 hover:bg-black cursor-pointer hover:shadow-[0_0_8px_rgba(75,156,211,0.3)] rounded-sm relative group"
+            <div className="time-format-dropdown py-1 px-2 bg-[#0a0a0a] my-1 mx-1 inline-block border-l-2 border-blue-500 border-t border-b border-r border-gray-800 hover:border-blue-500/40 transition-all duration-300 hover:bg-[#0c0c0c] cursor-pointer hover:shadow-[0_0_10px_rgba(75,156,211,0.25)] rounded-sm relative group"
                 onClick={() => setShowTimeOptions(!showTimeOptions)}>
               <div className="flex items-center">
-                <span>Time: {formattedTime}</span>
-                <span className="ml-2 inline-flex items-center text-xs text-blue-400/70 group-hover:text-blue-400 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 5v14M5 12h14"/>
+                <span className="text-white">{formattedTime}</span>
+                <span className="flex items-center ml-2 bg-blue-900/40 text-blue-300 text-[10px] rounded-sm py-0.5 px-1 border border-blue-800/30">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5 mr-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 20v-6M12 8V2M6 12H2M22 12h-4"/>
                   </svg>
-                  <span className="hidden group-hover:inline">Change Format</span>
+                  {timeFormat === '24h' ? '24H' : '12H'}
                 </span>
               </div>
               
-              {/* Format indicator */}
-              <div className="mt-0.5 text-[10px] text-blue-400/60 pl-1">
-                Click to toggle 12/24 hour format
+              {/* Interactive indicator */}
+              <div className="mt-1 flex items-center text-[10px] text-blue-400/60">
+                <div className="h-1 w-1 bg-blue-500 rounded-full animate-pulse mr-1"></div>
+                <span>Click to change time format</span>
               </div>
               
               {/* Time Format Options */}
               {showTimeOptions && (
-                <div className="absolute z-50 left-0 top-full mt-1 bg-[#111] border border-[#4B9CD3]/40 rounded-sm shadow-lg w-full p-2">
-                  <div 
-                    className={`px-2 py-1 text-left cursor-pointer rounded-sm ${timeFormat === '24h' ? 'bg-blue-900/50 text-blue-300' : 'hover:bg-gray-800'}`}
-                    onClick={(e) => { e.stopPropagation(); saveTimeFormat('24h'); }}
-                  >
-                    24-hour
+                <div className="absolute z-50 left-0 top-full mt-1 bg-gradient-to-b from-[#111] to-black border border-blue-900/50 rounded-sm shadow-[0_4px_20px_rgba(0,0,0,0.5)] w-full p-0 overflow-hidden">
+                  <div className="bg-blue-900/20 px-2 py-1 text-[10px] uppercase text-blue-400/80 font-medium tracking-wider">
+                    Select Format
                   </div>
                   <div 
-                    className={`px-2 py-1 text-left cursor-pointer rounded-sm ${timeFormat === '12h' ? 'bg-blue-900/50 text-blue-300' : 'hover:bg-gray-800'}`}
+                    className={`px-3 py-2 text-left cursor-pointer flex items-center justify-between transition-colors
+                    ${timeFormat === '24h' ? 'bg-blue-900/30 text-blue-300' : 'text-gray-300 hover:bg-gray-900'}`}
+                    onClick={(e) => { e.stopPropagation(); saveTimeFormat('24h'); }}
+                  >
+                    <span>24-hour (Military)</span>
+                    {timeFormat === '24h' && (
+                      <span className="h-2 w-2 bg-blue-500 rounded-full"></span>
+                    )}
+                  </div>
+                  <div 
+                    className={`px-3 py-2 text-left cursor-pointer flex items-center justify-between transition-colors
+                    ${timeFormat === '12h' ? 'bg-blue-900/30 text-blue-300' : 'text-gray-300 hover:bg-gray-900'}`}
                     onClick={(e) => { e.stopPropagation(); saveTimeFormat('12h'); }}
                   >
-                    12-hour
+                    <span>12-hour (AM/PM)</span>
+                    {timeFormat === '12h' && (
+                      <span className="h-2 w-2 bg-blue-500 rounded-full"></span>
+                    )}
                   </div>
                 </div>
               )}
             </div>
             
-            <div className="date-format-dropdown px-3 py-1 bg-[#111] m-1 inline-block border border-transparent hover:border-[#4B9CD3]/40 transition-all duration-300 hover:bg-black cursor-pointer hover:shadow-[0_0_8px_rgba(75,156,211,0.3)] rounded-sm relative group"
+            <div className="date-format-dropdown py-1 px-2 bg-[#0a0a0a] my-1 mx-1 inline-block border-l-2 border-blue-500 border-t border-b border-r border-gray-800 hover:border-blue-500/40 transition-all duration-300 hover:bg-[#0c0c0c] cursor-pointer hover:shadow-[0_0_10px_rgba(75,156,211,0.25)] rounded-sm relative group"
                 onClick={() => setShowDateOptions(!showDateOptions)}>
               <div className="flex items-center">
-                <span>Date: {formattedDate}</span>
-                <span className="ml-2 inline-flex items-center text-xs text-blue-400/70 group-hover:text-blue-400 transition-colors">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 5v14M5 12h14"/>
+                <span className="text-white">{formattedDate}</span>
+                <span className="flex items-center ml-2 bg-blue-900/40 text-blue-300 text-[10px] rounded-sm py-0.5 px-1 border border-blue-800/30">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5 mr-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
                   </svg>
-                  <span className="hidden group-hover:inline">Change Format</span>
+                  FORMAT
                 </span>
               </div>
               
-              {/* Format indicator */}
-              <div className="mt-0.5 text-[10px] text-blue-400/60 pl-1">
-                Click to change date format
+              {/* Interactive indicator */}
+              <div className="mt-1 flex items-center text-[10px] text-blue-400/60">
+                <div className="h-1 w-1 bg-blue-500 rounded-full animate-pulse mr-1"></div>
+                <span>Click to change date format</span>
               </div>
               
               {/* Date Format Options */}
               {showDateOptions && (
-                <div className="absolute z-50 left-0 top-full mt-1 bg-[#111] border border-[#4B9CD3]/40 rounded-sm shadow-lg w-full p-2">
+                <div className="absolute z-50 left-0 top-full mt-1 bg-gradient-to-b from-[#111] to-black border border-blue-900/50 rounded-sm shadow-[0_4px_20px_rgba(0,0,0,0.5)] w-full p-0 overflow-hidden">
+                  <div className="bg-blue-900/20 px-2 py-1 text-[10px] uppercase text-blue-400/80 font-medium tracking-wider">
+                    Select Format
+                  </div>
                   <div 
-                    className={`px-2 py-1 text-left cursor-pointer rounded-sm ${dateFormat === 'mdy' ? 'bg-blue-900/50 text-blue-300' : 'hover:bg-gray-800'}`}
+                    className={`px-3 py-2 text-left cursor-pointer flex items-center justify-between transition-colors
+                    ${dateFormat === 'mdy' ? 'bg-blue-900/30 text-blue-300' : 'text-gray-300 hover:bg-gray-900'}`}
                     onClick={(e) => { e.stopPropagation(); saveDateFormat('mdy'); }}
                   >
-                    Month-Day
+                    <span>Month-Day (US Style)</span>
+                    {dateFormat === 'mdy' && (
+                      <span className="h-2 w-2 bg-blue-500 rounded-full"></span>
+                    )}
                   </div>
                   <div 
-                    className={`px-2 py-1 text-left cursor-pointer rounded-sm ${dateFormat === 'dmy' ? 'bg-blue-900/50 text-blue-300' : 'hover:bg-gray-800'}`}
+                    className={`px-3 py-2 text-left cursor-pointer flex items-center justify-between transition-colors
+                    ${dateFormat === 'dmy' ? 'bg-blue-900/30 text-blue-300' : 'text-gray-300 hover:bg-gray-900'}`}
                     onClick={(e) => { e.stopPropagation(); saveDateFormat('dmy'); }}
                   >
-                    Day-Month
+                    <span>Day-Month (European)</span>
+                    {dateFormat === 'dmy' && (
+                      <span className="h-2 w-2 bg-blue-500 rounded-full"></span>
+                    )}
                   </div>
                   <div 
-                    className={`px-2 py-1 text-left cursor-pointer rounded-sm ${dateFormat === 'ymd' ? 'bg-blue-900/50 text-blue-300' : 'hover:bg-gray-800'}`}
+                    className={`px-3 py-2 text-left cursor-pointer flex items-center justify-between transition-colors
+                    ${dateFormat === 'ymd' ? 'bg-blue-900/30 text-blue-300' : 'text-gray-300 hover:bg-gray-900'}`}
                     onClick={(e) => { e.stopPropagation(); saveDateFormat('ymd'); }}
                   >
-                    Year-Month-Day
+                    <span>Year-Month-Day (ISO)</span>
+                    {dateFormat === 'ymd' && (
+                      <span className="h-2 w-2 bg-blue-500 rounded-full"></span>
+                    )}
                   </div>
                 </div>
               )}
