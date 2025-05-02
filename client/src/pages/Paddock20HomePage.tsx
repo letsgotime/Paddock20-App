@@ -204,10 +204,6 @@ const Paddock20HomePage: React.FC = () => {
                   </span>
                 </div>
               </div>
-              
-              <div className="px-3 py-1 bg-[#111] m-1 inline-block border border-transparent hover:border-[#4B9CD3]/40 transition-all duration-300 hover:bg-black cursor-pointer hover:shadow-[0_0_8px_rgba(75,156,211,0.3)] rounded-sm min-w-[180px]">
-                {currentInsight.icon} <span className="text-xs font-medium">{currentInsight.text}</span>: {currentInsight.value}
-              </div>
             </div>
             
             {/* Format options now appear below */}
@@ -325,20 +321,37 @@ const Paddock20HomePage: React.FC = () => {
             <div className="absolute inset-0 opacity-5 bg-[url('/assets/images/carbon-fiber-pattern.png')] bg-repeat pointer-events-none"></div>
             
             {/* Top status bar - F1 pit wall style */}
-            <div className="flex justify-between items-center mb-4 border-b border-blue-900/30 pb-2 relative z-10">
-              <div className="flex items-center">
-                <div className="h-3 w-3 rounded-full bg-green-500 animate-pulse mr-2"></div>
-                <h3 className="text-blue-400 font-bold text-sm uppercase tracking-wider">Driver Conditions</h3>
+            <div className="flex flex-col mb-4 border-b border-blue-900/30 pb-2 relative z-10">
+              <div className="flex justify-between items-center">
+                <div className="flex items-center">
+                  <div className="h-3 w-3 rounded-full bg-green-500 animate-pulse mr-2"></div>
+                  <h3 className="text-blue-400 font-bold text-sm uppercase tracking-wider">Driver Conditions</h3>
+                </div>
+                <div className="flex space-x-2 items-center">
+                  <span className="text-xs text-gray-400">DATA REFRESH:</span>
+                  {lastUpdated ? (
+                    <span className="text-xs text-green-400 font-mono">
+                      {isUsingFallbackData ? "CACHED" : "LIVE"} - {new Date(lastUpdated).toLocaleTimeString()}
+                    </span>
+                  ) : (
+                    <span className="text-xs text-green-400 font-mono">LOADING</span>
+                  )}
+                </div>
               </div>
-              <div className="flex space-x-2 items-center">
-                <span className="text-xs text-gray-400">DATA REFRESH:</span>
-                {lastUpdated ? (
-                  <span className="text-xs text-green-400 font-mono">
-                    {isUsingFallbackData ? "CACHED" : "LIVE"} - {new Date(lastUpdated).toLocaleTimeString()}
-                  </span>
-                ) : (
-                  <span className="text-xs text-green-400 font-mono">LOADING</span>
-                )}
+              
+              {/* Driver Intel Ticker - F1 style alert bar */}
+              <div className="mt-2 bg-blue-900/20 border border-blue-900/30 rounded-sm px-3 py-1.5 flex items-center">
+                <div className="flex-shrink-0 h-5 w-5 bg-black rounded-full flex items-center justify-center mr-2 border border-blue-500/50">
+                  {currentInsight.icon}
+                </div>
+                <div className="flex items-center">
+                  <span className="text-xs font-medium text-blue-300 mr-1.5">{currentInsight.text}:</span>
+                  <span className="text-xs text-white">{currentInsight.value}</span>
+                </div>
+                <div className="ml-auto flex items-center">
+                  <div className="h-1.5 w-1.5 bg-blue-500 rounded-full animate-pulse mr-1"></div>
+                  <span className="text-[10px] text-blue-400/60">LIVE UPDATE</span>
+                </div>
               </div>
             </div>
             
