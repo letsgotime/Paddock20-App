@@ -201,6 +201,7 @@ function JuiceBoxPage() {
               onClick={() => {
                 setActiveTab('gloss-history');
                 setShowDetailingForm(false);
+                window.scrollTo({ top: document.getElementById('juiceBoxSection')?.offsetTop || 0, behavior: 'smooth' });
               }}
               className="apex-button bg-blue-600 hover:bg-blue-700 text-white flex items-center"
             >
@@ -211,6 +212,7 @@ function JuiceBoxPage() {
               onClick={() => {
                 setActiveTab('detailing-activity');
                 setShowDetailingForm(true);
+                window.scrollTo({ top: document.getElementById('juiceBoxSection')?.offsetTop || 0, behavior: 'smooth' });
               }}
               className="apex-button bg-green-600 hover:bg-green-700 text-white flex items-center"
             >
@@ -325,7 +327,10 @@ function JuiceBoxPage() {
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-lg font-orbitron text-blue-400">Activity Feed</h3>
               <button 
-                onClick={() => setActiveTab('gloss-history')}
+                onClick={() => {
+                  setActiveTab('gloss-history');
+                  window.scrollTo({ top: document.getElementById('juiceBoxSection')?.offsetTop || 0, behavior: 'smooth' });
+                }}
                 className="text-blue-400 text-xs hover:text-blue-300"
               >
                 View All
@@ -512,6 +517,7 @@ function JuiceBoxPage() {
           onClick={() => {
             setActiveTab('detailing-activity');
             setShowDetailingForm(true);
+            window.scrollTo({ top: document.getElementById('juiceBoxSection')?.offsetTop || 0, behavior: 'smooth' });
           }}
           className="apex-button bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-orbitron flex flex-col items-center text-lg shadow-lg transform hover:scale-105 transition-transform"
         >
@@ -525,7 +531,10 @@ function JuiceBoxPage() {
       {/* Tab Navigation */}
       <div className="flex flex-wrap gap-4 justify-center mb-8">
         <button 
-          onClick={() => setActiveTab('categories')}
+          onClick={() => {
+            setActiveTab('categories');
+            window.scrollTo({ top: document.getElementById('juiceBoxSection')?.offsetTop || 0, behavior: 'smooth' });
+          }}
           className={`px-5 py-2 rounded-lg font-orbitron text-sm
             ${activeTab === 'categories' 
               ? 'bg-green-500 text-black' 
@@ -534,7 +543,10 @@ function JuiceBoxPage() {
           Product Categories
         </button>
         <button 
-          onClick={() => setActiveTab('codex')}
+          onClick={() => {
+            setActiveTab('codex');
+            window.scrollTo({ top: document.getElementById('juiceBoxSection')?.offsetTop || 0, behavior: 'smooth' });
+          }}
           className={`px-5 py-2 rounded-lg font-orbitron text-sm
             ${activeTab === 'codex' 
               ? 'bg-green-500 text-black' 
@@ -543,7 +555,10 @@ function JuiceBoxPage() {
           Juice Box Products
         </button>
         <button 
-          onClick={() => setActiveTab('my-box')}
+          onClick={() => {
+            setActiveTab('my-box');
+            window.scrollTo({ top: document.getElementById('juiceBoxSection')?.offsetTop || 0, behavior: 'smooth' });
+          }}
           className={`px-5 py-2 rounded-lg font-orbitron text-sm
             ${activeTab === 'my-box' 
               ? 'bg-green-500 text-black' 
@@ -552,7 +567,10 @@ function JuiceBoxPage() {
           My Juice Box
         </button>
         <button 
-          onClick={() => setActiveTab('detailing-activity')}
+          onClick={() => {
+            setActiveTab('detailing-activity');
+            window.scrollTo({ top: document.getElementById('juiceBoxSection')?.offsetTop || 0, behavior: 'smooth' });
+          }}
           className={`px-5 py-2 rounded-lg font-orbitron text-sm
             ${activeTab === 'detailing-activity' 
               ? 'bg-blue-600 text-white' 
@@ -561,7 +579,10 @@ function JuiceBoxPage() {
           New Detailing Activity or Purchase
         </button>
         <button 
-          onClick={() => setActiveTab('day-reset')}
+          onClick={() => {
+            setActiveTab('day-reset');
+            window.scrollTo({ top: document.getElementById('juiceBoxSection')?.offsetTop || 0, behavior: 'smooth' });
+          }}
           className={`px-5 py-2 rounded-lg font-orbitron text-sm
             ${activeTab === 'day-reset' 
               ? 'bg-green-500 text-black' 
@@ -570,7 +591,10 @@ function JuiceBoxPage() {
           7-Day Reset Protocol
         </button>
         <button 
-          onClick={() => setActiveTab('kits')}
+          onClick={() => {
+            setActiveTab('kits');
+            window.scrollTo({ top: document.getElementById('juiceBoxSection')?.offsetTop || 0, behavior: 'smooth' });
+          }}
           className={`px-5 py-2 rounded-lg font-orbitron text-sm
             ${activeTab === 'kits' 
               ? 'bg-green-500 text-black' 
@@ -579,7 +603,10 @@ function JuiceBoxPage() {
           Detailing Kits
         </button>
         <button 
-          onClick={() => setActiveTab('videos')}
+          onClick={() => {
+            setActiveTab('videos');
+            window.scrollTo({ top: document.getElementById('juiceBoxSection')?.offsetTop || 0, behavior: 'smooth' });
+          }}
           className={`px-5 py-2 rounded-lg font-orbitron text-sm
             ${activeTab === 'videos' 
               ? 'bg-green-500 text-black' 
@@ -588,7 +615,10 @@ function JuiceBoxPage() {
           Training Videos
         </button>
         <button 
-          onClick={() => setActiveTab('gloss-history')}
+          onClick={() => {
+            setActiveTab('gloss-history');
+            window.scrollTo({ top: document.getElementById('juiceBoxSection')?.offsetTop || 0, behavior: 'smooth' });
+          }}
           className={`px-5 py-2 rounded-lg font-orbitron text-sm
             ${activeTab === 'gloss-history' 
               ? 'bg-green-500 text-black' 
