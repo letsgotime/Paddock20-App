@@ -173,6 +173,11 @@ function App() {
                 Skip to main content
               </a>
               
+              {/* User Onboarding - Show for first time users or when terms update */}
+              {(effectiveSession || previewMode) && !hasCompletedOnboarding && (
+                <UserOnboarding onComplete={completeOnboarding} />
+              )}
+              
               <div className="min-h-screen bg-black font-openSans text-white">
                 {/* Header with navigation */}
               <header role="banner">
