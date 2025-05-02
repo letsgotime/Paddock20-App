@@ -627,7 +627,7 @@ function JuiceBoxPage() {
         )}
         
         {activeTab === 'gloss-history' && (
-          <GlossHistory events={glossHistory} />
+          <GlossHistory />
         )}
         
         {activeTab === 'codex' && (
