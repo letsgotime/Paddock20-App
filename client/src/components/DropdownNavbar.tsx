@@ -5,7 +5,7 @@ import {
   Calendar, Flag, Car, Watch, Compass, Ruler,
   BookOpen, Brain, ClipboardCheck, SprayCan, Percent,
   Mail, BookMarked, MessageCircle, Settings, HeartHandshake,
-  Shield
+  Shield, Trophy
 } from "lucide-react";
 
 const DropdownNavbar = () => {
@@ -55,6 +55,10 @@ const DropdownNavbar = () => {
             <Link to="/events" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
               <Calendar className="h-4 w-4 mr-2 text-blue-400" />
               <span>Events & Meetups</span>
+            </Link>
+            <Link to="/motorsports-events" className="hover:text-green-400 flex items-center py-1 text-green-400" onClick={() => setIsOpen(false)}>
+              <Trophy className="h-4 w-4 mr-2 text-blue-400" />
+              <span>Motorsports Events</span>
             </Link>
             <Link to="/motorsports-gallery" className="hover:text-green-400 flex items-center py-1 text-green-400 animate-pulse" onClick={() => setIsOpen(false)}>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
