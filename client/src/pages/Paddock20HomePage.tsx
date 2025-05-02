@@ -41,7 +41,7 @@ const Paddock20HomePage: React.FC = () => {
   const sessionTime = `${sessionHours.toString().padStart(2, '0')}:${sessionMinutes.toString().padStart(2, '0')}:${sessionSeconds.toString().padStart(2, '0')}`;
   
   return (
-    <div className="min-h-screen bg-black">
+    <div className="min-h-screen bg-black pt-8">
       {/* Dynamic racing-inspired background with overlay */}
       <div 
         className="absolute inset-0 bg-cover bg-center z-0 opacity-30"
@@ -51,64 +51,48 @@ const Paddock20HomePage: React.FC = () => {
         }}
       ></div>
       
-      {/* Main content container with grid-based layout - Fixed width and spacing */}
-      <div className="relative z-10 w-full max-w-[1400px] mx-auto px-3 sm:px-4 md:px-6 lg:px-8 py-6">
+      {/* Main content container - SIMPLIFIED for reliability */}
+      <div className="relative z-10 w-full max-w-[1200px] mx-auto px-4 pb-6">
       
-      {/* F1-Inspired Command Center Header - Enhanced Style with better spacing */}
-      <header className="mb-6 bg-gradient-to-r from-black/95 via-gray-900/95 to-black/95 rounded-lg p-4 md:p-6 border-l-4 border-t border-r border-b border-blue-900/40 shadow-xl overflow-visible relative">
-        {/* Carbon fiber pattern overlay */}
-        <div className="absolute inset-0 opacity-10 bg-[url('/assets/images/carbon-fiber-pattern.png')] bg-repeat"></div>
-        
-        {/* Blue accent line - F1-style */}
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-blue-400 to-blue-500"></div>
-        
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center relative z-10">
-          <div className="flex items-start lg:items-center py-2 w-full lg:w-auto">
-            <div className="mr-4 md:mr-6 lg:mr-10 flex-shrink-0">
-              <h1 className="text-blue-400 font-orbitron text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold tracking-wider flex items-center">
-                <span className="font-orbitron bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-500">PADDOCK</span>
-                <span className="font-orbitron text-green-500">20</span>
-                <span className="text-xs ml-1 text-blue-400">™</span>
-              </h1>
-              <div className="flex items-center mt-2">
-                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse mr-2"></div>
-                <span className="text-blue-400 text-sm uppercase tracking-wider font-bold font-orbitron">COMMAND CENTER</span>
-                <div className="ml-3 h-0.5 w-16 bg-blue-500/50"></div>
+        {/* Super Simple North Carolina Blue Header */}
+        <header className="mb-8 text-center">
+          <h1 className="font-orbitron text-4xl md:text-5xl lg:text-6xl font-bold">
+            <span className="text-[#4B9CD3]">PADDOCK</span>
+            <span className="text-green-500">20</span>
+          </h1>
+          <div className="mt-2">
+            <span className="text-[#4B9CD3] text-sm md:text-base uppercase font-bold font-orbitron tracking-widest">COMMAND CENTER</span>
+          </div>
+          
+          {/* Simple Stats Bar */}
+          <div className="mt-4 flex flex-wrap justify-center gap-4">
+            <div className="bg-black px-4 py-2 rounded border border-[#4B9CD3]/30">
+              <span className="text-[#4B9CD3] text-xs uppercase font-semibold block mb-1">TIME</span>
+              <span className="text-white text-lg font-mono">{formattedTime}</span>
+            </div>
+            
+            <div className="bg-black px-4 py-2 rounded border border-[#4B9CD3]/30">
+              <span className="text-[#4B9CD3] text-xs uppercase font-semibold block mb-1">DATE</span>
+              <span className="text-white">{formattedDate}</span>
+            </div>
+            
+            <div className="bg-black px-4 py-2 rounded border border-[#4B9CD3]/30">
+              <span className="text-[#4B9CD3] text-xs uppercase font-semibold block mb-1">SESSION</span>
+              <div className="flex items-center">
+                <Timer className="h-3 w-3 text-green-500 mr-1" />
+                <span className="text-white font-mono">{sessionTime}</span>
               </div>
             </div>
             
-            <div className="flex flex-col ml-2">
-              <div className="flex flex-wrap items-center gap-2">
-                <div className="flex flex-col bg-black/50 px-3 py-1.5 rounded-sm border border-blue-900/30">
-                  <span className="text-blue-400/80 text-xs uppercase font-semibold">PADDOCK TIME</span>
-                  <span className="text-white text-lg md:text-xl font-mono font-bold tracking-wider">{formattedTime}</span>
-                </div>
-                <div className="bg-blue-900/20 px-3 py-1.5 rounded-sm border border-blue-800/20">
-                  <span className="text-gray-400 text-xs font-semibold">DATE</span>
-                  <div className="text-white text-sm font-medium">{formattedDate}</div>
-                </div>
-              </div>
-            </div>
-          </div>
-          
-          <div className="flex flex-wrap mt-3 lg:mt-0 gap-2 lg:space-x-3">
-            <div className="bg-black/60 flex flex-col items-center justify-center px-3 py-2 rounded-sm border border-blue-900/40">
-              <span className="text-blue-400/70 text-xs mb-1 font-semibold">SESSION TIME</span>
-              <div className="flex items-center">
-                <Timer className="h-3 w-3 text-green-500 mr-1" />
-                <span className="text-white text-sm font-mono">{sessionTime}</span>
-              </div>
-            </div>
-            <div className="bg-gradient-to-r from-green-900/30 to-blue-900/30 px-4 py-2 rounded-sm border border-green-800/40">
-              <span className="text-green-400/70 text-xs font-semibold">TELEMETRY</span>
+            <div className="bg-black px-4 py-2 rounded border border-[#4B9CD3]/30">
+              <span className="text-[#4B9CD3] text-xs uppercase font-semibold block mb-1">STATUS</span>
               <div className="flex items-center">
                 <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse mr-2"></div>
-                <span className="text-white text-sm font-bold">ACTIVE</span>
+                <span className="text-white">ACTIVE</span>
               </div>
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
       {/* Enhanced F1-Inspired Live Weather Station - Driver-Oriented Weather Dashboard */}
       <section className="mb-8 relative">
