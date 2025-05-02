@@ -136,22 +136,24 @@ function App() {
         {/* Centralized Weather Provider - Provides weather data to all components */}
         <WeatherProvider>
           <GalleryProvider>
-            {/* Skip link for keyboard navigation */}
-            <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
-              Skip to main content
-            </a>
-            
-            <div className="min-h-screen bg-black font-openSans text-white">
-              {/* Header with navigation */}
-            <header role="banner">
-              {(effectiveSession || previewMode) && (
-                <>
-                  <DropdownNavbar />
-                  <NavigationControls />
-                  <ContextualBreadcrumbs />
-                </>
-              )}
-            </header>
+            {/* Rewards Provider - for site-wide gamification */}
+            <RewardsProvider>
+              {/* Skip link for keyboard navigation */}
+              <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
+                Skip to main content
+              </a>
+              
+              <div className="min-h-screen bg-black font-openSans text-white">
+                {/* Header with navigation */}
+              <header role="banner">
+                {(effectiveSession || previewMode) && (
+                  <>
+                    <DropdownNavbar />
+                    <NavigationControls />
+                    <ContextualBreadcrumbs />
+                  </>
+                )}
+              </header>
 
             {/* Main content area */}
             <main id={MAIN_CONTENT_ID} className="container mx-auto px-4" tabIndex={-1}>
@@ -228,7 +230,8 @@ function App() {
           {/* Footer with links and information */}
           <Footer />
         </div>
-        </GalleryProvider>
+            </RewardsProvider>
+          </GalleryProvider>
         </WeatherProvider>
       </TooltipProvider>
     </QueryClientProvider>

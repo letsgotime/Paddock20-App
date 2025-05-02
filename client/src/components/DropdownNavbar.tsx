@@ -1,5 +1,5 @@
-import React, { useState } from "react";
-import { Link } from "react-router-dom";
+import React, { useState, useEffect } from "react";
+import { Link, useLocation } from "react-router-dom";
 import {
   ChevronRight, Home, LayoutDashboard, Cloud, MapPin,
   Calendar, Flag, Car, Watch, Compass, Ruler,
@@ -10,6 +10,12 @@ import {
 
 const DropdownNavbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const location = useLocation();
+  
+  // Close menu on location changes (navigation)
+  useEffect(() => {
+    setIsOpen(false);
+  }, [location.pathname]);
 
   return (
     <nav className="flex items-center justify-between p-4 bg-black border-b border-gray-700 relative z-30">
