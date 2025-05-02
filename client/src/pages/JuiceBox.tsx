@@ -135,14 +135,8 @@ function JuiceBoxPage() {
         backgroundColor: "rgba(0,0,0,0.8)",
       }}
     >
-      {/* Prominent JuiceBox Header Banner */}
-      <div className="bg-blue-600 rounded-lg mb-8 p-6 shadow-lg border border-blue-500">
-        <div className="text-center">
-          <h1 className="text-4xl font-orbitron text-white mb-2 tracking-wide">🧼 GoTime Juice Box™</h1>
-          <p className="text-white text-lg italic mb-2">The curated, real-world-tested, gloss-backed, Gavin-approved detailing arsenal.</p>
-          <p className="text-blue-100">Your complete detailing product guide and management system.</p>
-        </div>
-      </div>
+      {/* Prominent JuiceBox Header Banner - Title Only */}
+      <h1 className="text-5xl font-orbitron text-blue-500 text-center mb-8 tracking-wide">GoTime Juice Box™</h1>
       
       {/* Introduction Section */}
       <div className="bg-gradient-to-r from-[#111111] to-[#1a1a1a] p-6 rounded-lg border border-gray-800 mb-10">
@@ -200,14 +194,20 @@ function JuiceBoxPage() {
           
           <div className="flex flex-wrap items-center mt-4 md:mt-0 space-x-2 md:space-x-4 self-center md:self-auto">
             <button
-              onClick={() => setActiveTab('gloss-history')}
+              onClick={() => {
+                setActiveTab('gloss-history');
+                setShowDetailingForm(false);
+              }}
               className="apex-button bg-blue-600 hover:bg-blue-700 text-white flex items-center"
             >
               <span className="mr-2">📊</span> View Full History
             </button>
             
             <button
-              onClick={() => setActiveTab('detailing-activity')}
+              onClick={() => {
+                setActiveTab('detailing-activity');
+                setShowDetailingForm(true);
+              }}
               className="apex-button bg-green-600 hover:bg-green-700 text-white flex items-center"
             >
               <span className="mr-2">➕</span> Add Activity
@@ -320,7 +320,12 @@ function JuiceBoxPage() {
           <div className="md:col-span-5 bg-black/60 p-4 rounded-lg border border-blue-900">
             <div className="flex justify-between items-center mb-3">
               <h3 className="text-lg font-orbitron text-blue-400">Activity Feed</h3>
-              <button className="text-blue-400 text-xs hover:text-blue-300">View All</button>
+              <button 
+                onClick={() => setActiveTab('gloss-history')}
+                className="text-blue-400 text-xs hover:text-blue-300"
+              >
+                View All
+              </button>
             </div>
             
             <div className="space-y-4 max-h-[280px] overflow-y-auto pr-2 custom-scrollbar">
