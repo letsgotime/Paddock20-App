@@ -206,7 +206,7 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
   } = useQuery<WeatherData | null>({
     queryKey: ['weather', selectedLocation?.lat, selectedLocation?.lon, unit],
     enabled: !!selectedLocation,
-    staleTime: 10 * 60 * 1000, // 10 minutes
+    staleTime: 60 * 60 * 1000, // Increased to 60 minutes to prevent rate limiting
     queryFn: async () => {
       if (!selectedLocation) return null;
       try {

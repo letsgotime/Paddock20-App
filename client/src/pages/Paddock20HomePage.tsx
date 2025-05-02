@@ -40,7 +40,12 @@ const drivingInsights = [
 ];
 
 const Paddock20HomePage: React.FC = () => {
-  const { weatherData, automotiveWeatherData } = useWeather();
+  const { 
+    weatherData, 
+    automotiveWeatherData,
+    lastUpdated,
+    isUsingFallbackData
+  } = useWeather();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [insightIndex, setInsightIndex] = useState(0);
   
@@ -145,7 +150,13 @@ const Paddock20HomePage: React.FC = () => {
               </div>
               <div className="flex space-x-2 items-center">
                 <span className="text-xs text-gray-400">DATA REFRESH:</span>
-                <span className="text-xs text-green-400 font-mono">LIVE</span>
+                {lastUpdated ? (
+                  <span className="text-xs text-green-400 font-mono">
+                    {isUsingFallbackData ? "CACHED" : "LIVE"} - {new Date(lastUpdated).toLocaleTimeString()}
+                  </span>
+                ) : (
+                  <span className="text-xs text-green-400 font-mono">LOADING</span>
+                )}
               </div>
             </div>
             
@@ -199,7 +210,7 @@ const Paddock20HomePage: React.FC = () => {
                   <div className="text-white text-xl font-mono font-semibold group-hover:text-blue-300 transition-colors duration-300">
                     {weatherData && weatherData.main && typeof weatherData.main.temp === 'number' 
                       ? weatherData.main.temp.toFixed(1) + "°F" 
-                      : "N/A"}
+                      : isUsingFallbackData ? "Cached" : "Loading..."}
                   </div>
                   <div className="mt-1 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
                     <div className="h-full bg-blue-500 group-hover:bg-blue-400 transition-colors duration-300" 
@@ -216,7 +227,7 @@ const Paddock20HomePage: React.FC = () => {
                   <div className="text-white text-xl font-mono font-semibold group-hover:text-blue-300 transition-colors duration-300">
                     {weatherData && weatherData.main && typeof weatherData.main.humidity === 'number'
                       ? weatherData.main.humidity + "%" 
-                      : "N/A"}
+                      : isUsingFallbackData ? "Cached" : "Loading..."}
                   </div>
                   <div className="mt-1 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
                     <div className="h-full bg-blue-500 group-hover:bg-blue-400 transition-colors duration-300" 
@@ -236,7 +247,7 @@ const Paddock20HomePage: React.FC = () => {
                      automotiveWeatherData.automotive_metrics.track_surface && 
                      typeof automotiveWeatherData.automotive_metrics.track_surface.temperature === 'number'
                       ? automotiveWeatherData.automotive_metrics.track_surface.temperature.toFixed(1) + "°F"
-                      : "N/A"}
+                      : isUsingFallbackData ? "Cached" : "Loading..."}
                   </div>
                   <div className="mt-1 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
                     <div className="h-full bg-blue-500 group-hover:bg-blue-400 transition-colors duration-300" 
@@ -255,7 +266,7 @@ const Paddock20HomePage: React.FC = () => {
                      automotiveWeatherData.conditions && 
                      typeof automotiveWeatherData.conditions.uv_index === 'number'
                       ? automotiveWeatherData.conditions.uv_index.toFixed(1)
-                      : "N/A"}
+                      : isUsingFallbackData ? "Cached" : "Loading..."}
                   </div>
                   <div className="mt-1 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
                     <div className="h-full bg-blue-500 group-hover:bg-blue-400 transition-colors duration-300" 
@@ -275,7 +286,7 @@ const Paddock20HomePage: React.FC = () => {
                      typeof weatherData.main.temp === 'number' &&
                      typeof weatherData.main.humidity === 'number'
                       ? (weatherData.main.temp - 10).toFixed(1) + "°F"
-                      : "N/A"}
+                      : isUsingFallbackData ? "Cached" : "Loading..."}
                   </div>
                   <div className="mt-1 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
                     <div className="h-full bg-blue-500 group-hover:bg-blue-400 transition-colors duration-300" 
@@ -292,7 +303,7 @@ const Paddock20HomePage: React.FC = () => {
                   <div className="text-white text-xl font-mono font-semibold group-hover:text-green-300 transition-colors duration-300">
                     {weatherData && weatherData.wind && typeof weatherData.wind.speed === 'number'
                       ? weatherData.wind.speed + " mph" 
-                      : "N/A"}
+                      : isUsingFallbackData ? "Cached" : "Loading..."}
                   </div>
                   <div className="mt-1 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
                     <div className="h-full bg-green-500 group-hover:bg-green-400 transition-colors duration-300" 
@@ -327,7 +338,7 @@ const Paddock20HomePage: React.FC = () => {
                       {weatherData?.weather && weatherData.weather[0] ? 
                         weatherData.weather[0].main === "Rain" ? "Wet" : 
                         weatherData.weather[0].main === "Snow" ? "Snow" : "Dry"
-                        : "N/A"}
+                        : isUsingFallbackData ? "Cached" : "Loading..."}
                       <span className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-xs">
                         {weatherData?.weather && weatherData.weather[0] && weatherData.weather[0].main === "Rain" ? 
                           <span className="text-blue-400">●</span> : 
@@ -347,7 +358,7 @@ const Paddock20HomePage: React.FC = () => {
                         // Simple mapping based on temp and humidity
                         (weatherData.main.humidity > 80 ? "Reduced" : 
                          weatherData.main.humidity < 40 ? "Optimal" : "Good")
-                        : "N/A"}
+                        : isUsingFallbackData ? "Cached" : "Loading..."}
                       <span className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-xs">
                         {weatherData?.main && weatherData.main.humidity > 80 ? 
                           <span className="text-yellow-400">▼</span> : 
@@ -367,7 +378,7 @@ const Paddock20HomePage: React.FC = () => {
                         // Simple algorithm - not actual data, but based on available weather metrics
                         ((weatherData.main.temp > 85) ? "-" : "+") + 
                         Math.abs(Math.round((weatherData.main.temp - 70) / 5)) + "%"
-                        : "N/A"}
+                        : isUsingFallbackData ? "Cached" : "Loading..."}
                     </div>
                   </div>
                   <div className="group cursor-pointer px-2 py-1 rounded-sm hover:bg-blue-900/10 transition-all duration-300">
@@ -378,7 +389,7 @@ const Paddock20HomePage: React.FC = () => {
                     <div className="text-white text-sm font-medium group-hover:text-blue-300 transition-colors duration-300">
                       {weatherData && weatherData.visibility
                         ? (weatherData.visibility / 1609).toFixed(1) + " mi"
-                        : "N/A"}
+                        : isUsingFallbackData ? "Cached" : "Loading..."}
                     </div>
                   </div>
                 </div>

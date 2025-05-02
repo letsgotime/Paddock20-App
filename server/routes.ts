@@ -430,9 +430,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate cache key
       const cacheKey = `weather:${lat}:${lon}:${units || 'metric'}`;
       
-      // Check cache - basic weather data expires after 10 minutes
+      // Check cache - extended to 60 minutes to prevent rate limiting
       const cachedData = weatherDataCache.get(cacheKey);
-      if (cachedData && (new Date().getTime() - cachedData.timestamp < 10 * 60 * 1000)) {
+      if (cachedData && (new Date().getTime() - cachedData.timestamp < 60 * 60 * 1000)) {
         console.log(`Using cached weather data for: ${lat},${lon}`);
         return res.json(cachedData.data);
       }
