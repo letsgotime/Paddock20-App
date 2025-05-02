@@ -12,7 +12,7 @@
  * trackMaintenance();
  */
 
-import { useRewards } from '../contexts/RewardsContext';
+import { useRewards, UserStats } from '../contexts/RewardsContext';
 
 // Singleton to store the rewards context functions
 type RewardsTrackerType = {
@@ -20,7 +20,7 @@ type RewardsTrackerType = {
   earnPoints?: (points: number, reason: string) => void;
   trackPageVisit?: (page: string) => void;
   unlockReward?: (rewardId: string) => void;
-  incrementStat?: (stat: string, amount?: number) => void;
+  incrementStat?: (stat: keyof UserStats, amount?: number) => void;
 };
 
 // Global tracker that will be populated by the hook
@@ -129,4 +129,9 @@ export const exploreFeature = (feature: string) => {
   if (rewardsTracker.trackPageVisit) {
     rewardsTracker.trackPageVisit(feature);
   }
+};
+
+// Helper function to safely increment a stat with type checking
+export const safeIncrementStat = (stat: keyof UserStats, amount: number = 1) => {
+  rewardsTracker.incrementStat?.(stat, amount);
 };
