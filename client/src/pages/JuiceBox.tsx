@@ -135,12 +135,21 @@ function JuiceBoxPage() {
         backgroundColor: "rgba(0,0,0,0.8)",
       }}
     >
+      {/* Prominent JuiceBox Header Banner */}
+      <div className="bg-blue-600 rounded-lg mb-8 p-6 shadow-lg border border-blue-500">
+        <div className="text-center">
+          <h1 className="text-4xl font-orbitron text-white mb-2 tracking-wide">🧼 GoTime Juice Box™</h1>
+          <p className="text-white text-lg italic mb-2">The curated, real-world-tested, gloss-backed, Gavin-approved detailing arsenal.</p>
+          <p className="text-blue-100">Your complete detailing product guide and management system.</p>
+        </div>
+      </div>
+      
       {/* Introduction Section */}
       <div className="bg-gradient-to-r from-[#111111] to-[#1a1a1a] p-6 rounded-lg border border-gray-800 mb-10">
         <div className="text-center mb-6">
-          <h1 className="text-3xl font-orbitron text-blue-400 mb-2">🧼 GoTime Juice Box™</h1>
-          <p className="text-white text-lg italic mb-2">The curated, real-world-tested, gloss-backed, Gavin-approved detailing arsenal.</p>
-          <p className="text-gray-300">Your complete detailing product guide and management system.</p>
+          <h2 className="text-3xl font-orbitron text-blue-400 mb-2">Get Started</h2>
+          <p className="text-white text-lg italic mb-2">Everything you need to maximize your vehicle's appearance and protection.</p>
+          <p className="text-gray-300">Comprehensive tools to document, track, and improve your detailing journey.</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -240,9 +249,12 @@ function JuiceBoxPage() {
             setActiveTab('detailing-activity');
             setShowDetailingForm(true);
           }}
-          className="apex-button bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-orbitron flex items-center text-lg shadow-lg transform hover:scale-105 transition-transform"
+          className="apex-button bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-orbitron flex flex-col items-center text-lg shadow-lg transform hover:scale-105 transition-transform"
         >
-          <span className="mr-2">+</span> Add Detailing Activity or Purchase
+          <div className="flex items-center">
+            <span className="mr-2">+</span> Add Detailing Activity
+          </div>
+          <div className="text-sm font-light mt-1">or Purchase</div>
         </button>
       </div>
       
@@ -378,9 +390,12 @@ function JuiceBoxPage() {
               <div className="flex flex-col items-center">
                 <button 
                   onClick={() => setShowDetailingForm(true)}
-                  className="apex-button bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-orbitron flex items-center"
+                  className="apex-button bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-orbitron flex flex-col items-center"
                 >
-                  <span className="mr-2">+</span> New Detailing Activity or Purchase
+                  <div className="flex items-center">
+                    <span className="mr-2">+</span> New Detailing Activity
+                  </div>
+                  <div className="text-sm font-light mt-1">or Purchase</div>
                 </button>
                 <p className="text-gray-400 text-sm mt-4 text-center max-w-2xl">
                   Log washes, polishing sessions, ceramic coatings and more with our comprehensive detailing activity form. 
