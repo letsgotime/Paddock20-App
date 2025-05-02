@@ -176,9 +176,22 @@ function JuiceBoxPage() {
         </div>
       </div>
       
-      <p className="text-white text-center mb-8">
+      <p className="text-white text-center mb-4">
         Your complete detailing product guide and management system.
       </p>
+      
+      {/* Prominent Add Detailing Activity Button */}
+      <div className="flex justify-center mb-8">
+        <button 
+          onClick={() => {
+            setActiveTab('detailing-activity');
+            setShowDetailingForm(true);
+          }}
+          className="apex-button bg-green-500 hover:bg-green-600 text-black px-8 py-4 rounded-lg font-orbitron flex items-center text-lg shadow-lg transform hover:scale-105 transition-transform"
+        >
+          <span className="mr-2">+</span> Add Detailing Activity or Purchase
+        </button>
+      </div>
       
       {/* Tab Navigation */}
       <div className="flex flex-wrap gap-4 justify-center mb-8">
