@@ -216,7 +216,7 @@ function JuiceBoxPage() {
               ? 'bg-green-500 text-black' 
               : 'bg-gray-800 text-white hover:bg-gray-700'}`}
         >
-          Detailing Activity
+          New Detailing Activity
         </button>
         <button 
           onClick={() => setActiveTab('day-reset')}
@@ -297,7 +297,7 @@ function JuiceBoxPage() {
         
         {activeTab === 'detailing-activity' && (
           <div className="bg-black bg-opacity-70 p-6 rounded-lg border border-blue-900">
-            <h2 className="text-blue-400 font-orbitron text-2xl mb-6 text-center">Detailing Activity Log</h2>
+            <h2 className="text-blue-400 font-orbitron text-2xl mb-6 text-center">New Detailing Activity or Purchase</h2>
             <p className="text-white text-center mb-6">
               Document your detailing activities with comprehensive details including products, steps, and media. 
               This helps track your gloss journey and share your expertise with the community.
@@ -314,7 +314,7 @@ function JuiceBoxPage() {
                   onClick={() => setShowDetailingForm(true)}
                   className="apex-button bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-orbitron flex items-center"
                 >
-                  <span className="mr-2">+</span> Create New Detailing Activity
+                  <span className="mr-2">+</span> New Detailing Activity or Purchase
                 </button>
                 <p className="text-gray-400 text-sm mt-4 text-center max-w-2xl">
                   Log washes, polishing sessions, ceramic coatings and more with our comprehensive detailing activity form. 
