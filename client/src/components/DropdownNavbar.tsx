@@ -146,13 +146,9 @@ const DropdownNavbar = () => {
                 <span>Podium Pursuit</span>
               </Link>
 
-              <Link to="/weather" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
-                <Cloud className="h-4 w-4 mr-2 text-blue-400" />
-                <span>Weather Center</span>
-              </Link>
               <Link to="/new-weather-center" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
                 <Cloud className="h-4 w-4 mr-2 text-blue-400" />
-                <span>New Weather Center</span>
+                <span>Weather Paddock</span>
               </Link>
               <Link to="/route-planner" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
                 <MapPin className="h-4 w-4 mr-2 text-blue-400" />
@@ -203,14 +199,6 @@ const DropdownNavbar = () => {
               <Link to="/drive-journal" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
                 <BookOpen className="h-4 w-4 mr-2 text-blue-400" />
                 <span>Drive Journal</span>
-              </Link>
-              <Link to="/manifestation-station" className="hover:text-green-400 flex items-center py-1" onClick={() => {
-                // Directly navigate to the Manifestation Station with the hustle planner view
-                window.localStorage.setItem('manifestation_activeView', 'hustle-planner');
-                setIsOpen(false);
-              }}>
-                <Brain className="h-4 w-4 mr-2 text-blue-400" />
-                <span>Hustle Planner</span>
               </Link>
               <Link to="/manifestation-station" className="hover:text-green-400 flex items-center py-1" onClick={() => {
                 // Directly navigate to the Manifestation Station with the discipline tracker view
