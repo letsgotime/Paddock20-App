@@ -115,10 +115,7 @@ const Paddock20HomePage: React.FC = () => {
           </div>
         </div>
         
-        {/* Inspirational Slogan - Moved from bottom to top */}
-        <div className="mb-6 text-center">
-          <h2 className="text-blue-400 font-orbitron text-3xl mb-2">Drive Like a Champion. <span className="text-green-500">Build Your Legacy.</span></h2>
-        </div>
+        {/* Replaced with Welcome Panel */}
         
         {/* Introduction Panel - Similar to Manifestation Station */}
         <div className="mb-8 bg-gradient-to-r from-gray-900 to-black border border-gray-800 rounded-lg overflow-hidden shadow-xl">
@@ -846,6 +843,11 @@ const Paddock20HomePage: React.FC = () => {
           </div>
         </div>
       </section>
+
+      {/* Inspirational Slogan - Now appears directly above Manifestation Station */}
+      <div className="mb-6 text-center">
+        <h2 className="text-blue-400 font-orbitron text-3xl mb-4">Drive Like a Champion. <span className="text-green-500">Build Your Legacy.</span></h2>
+      </div>
 
       {/* Manifestation Station */}
       <section className="bg-gradient-to-br from-[#0d0d12] to-[#151520] rounded-xl shadow-2xl border border-blue-900/30 overflow-hidden mb-12 relative">
