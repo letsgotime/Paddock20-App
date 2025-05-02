@@ -665,16 +665,16 @@ const availableRewards: Reward[] = [
 // Define the metric thresholds for automatic rewards
 const metricThresholds: Record<RewardTriggerMetric, {rewardId: string, threshold: number}[]> = {
   'weatherChecks': [
-    { rewardId: 'weather-check-10', threshold: 10 },
-    { rewardId: 'weather-check-50', threshold: 50 },
-    { rewardId: 'weather-check-100', threshold: 100 },
-    { rewardId: 'weather-check-500', threshold: 500 }
+    { rewardId: 'weather-check-10', threshold: 25 },
+    { rewardId: 'weather-check-50', threshold: 100 },
+    { rewardId: 'weather-check-100', threshold: 250 },
+    { rewardId: 'weather-check-500', threshold: 1000 }
   ],
   'maintenanceLogged': [
     { rewardId: 'first-maintenance', threshold: 1 },
-    { rewardId: 'maintenance-logged-10', threshold: 10 },
-    { rewardId: 'maintenance-logged-50', threshold: 50 },
-    { rewardId: 'maintenance-logged-100', threshold: 100 }
+    { rewardId: 'maintenance-logged-10', threshold: 25 },
+    { rewardId: 'maintenance-logged-50', threshold: 100 },
+    { rewardId: 'maintenance-logged-100', threshold: 250 }
   ],
   'modificationLogged': [
     { rewardId: 'first-mod', threshold: 1 },

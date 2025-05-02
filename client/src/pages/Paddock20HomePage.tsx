@@ -175,118 +175,128 @@ const Paddock20HomePage: React.FC = () => {
             <p className="text-center text-[#4B9CD3] font-orbitron text-lg sm:text-xl mt-2">COMMAND CENTER</p>
           </div>
           
-          <div className="text-center text-white mb-2 flex flex-wrap justify-center">
-            <div className="time-format-dropdown py-1 px-2 bg-[#0a0a0a] my-1 mx-1 inline-block border-l-2 border-blue-500 border-t border-b border-r border-gray-800 hover:border-blue-500/40 transition-all duration-300 hover:bg-[#0c0c0c] cursor-pointer hover:shadow-[0_0_10px_rgba(75,156,211,0.25)] rounded-sm relative group"
-                onClick={() => setShowTimeOptions(!showTimeOptions)}>
-              <div className="flex items-center">
-                <span className="text-white">{formattedTime}</span>
-                <span className="flex items-center ml-2 bg-blue-900/40 text-blue-300 text-[10px] rounded-sm py-0.5 px-1 border border-blue-800/30">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5 mr-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M12 20v-6M12 8V2M6 12H2M22 12h-4"/>
-                  </svg>
-                  {timeFormat === '24h' ? '24H' : '12H'}
-                </span>
-              </div>
-              
-              {/* Interactive indicator */}
-              <div className="mt-1 flex items-center text-[10px] text-blue-400/60">
-                <div className="h-1 w-1 bg-blue-500 rounded-full animate-pulse mr-1"></div>
-                <span>Click to change time format</span>
-              </div>
-              
-              {/* Time Format Options */}
-              {showTimeOptions && (
-                <div className="absolute z-50 left-0 top-full mt-1 bg-gradient-to-b from-[#111] to-black border border-blue-900/50 rounded-sm shadow-[0_4px_20px_rgba(0,0,0,0.5)] w-full p-0 overflow-hidden">
-                  <div className="bg-blue-900/20 px-2 py-1 text-[10px] uppercase text-blue-400/80 font-medium tracking-wider">
-                    Select Format
-                  </div>
-                  <div 
-                    className={`px-3 py-2 text-left cursor-pointer flex items-center justify-between transition-colors
-                    ${timeFormat === '24h' ? 'bg-blue-900/30 text-blue-300' : 'text-gray-300 hover:bg-gray-900'}`}
-                    onClick={(e) => { e.stopPropagation(); saveTimeFormat('24h'); }}
-                  >
-                    <span>24-hour (Military)</span>
-                    {timeFormat === '24h' && (
-                      <span className="h-2 w-2 bg-blue-500 rounded-full"></span>
-                    )}
-                  </div>
-                  <div 
-                    className={`px-3 py-2 text-left cursor-pointer flex items-center justify-between transition-colors
-                    ${timeFormat === '12h' ? 'bg-blue-900/30 text-blue-300' : 'text-gray-300 hover:bg-gray-900'}`}
-                    onClick={(e) => { e.stopPropagation(); saveTimeFormat('12h'); }}
-                  >
-                    <span>12-hour (AM/PM)</span>
-                    {timeFormat === '12h' && (
-                      <span className="h-2 w-2 bg-blue-500 rounded-full"></span>
-                    )}
-                  </div>
+          <div className="text-center text-white mb-2 flex flex-col items-center">
+            {/* Time and Date Displays in a row */}
+            <div className="flex flex-wrap justify-center mb-3">
+              <div className="time-display py-1 px-2 bg-[#0a0a0a] my-1 mx-1 inline-block border-l-2 border-blue-500 border-t border-b border-r border-gray-800 rounded-sm">
+                <div className="flex items-center">
+                  <span className="text-white">{formattedTime}</span>
+                  <span className="flex items-center ml-2 bg-blue-900/40 text-blue-300 text-[10px] rounded-sm py-0.5 px-1 border border-blue-800/30">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5 mr-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M12 20v-6M12 8V2M6 12H2M22 12h-4"/>
+                    </svg>
+                    {timeFormat === '24h' ? '24H' : '12H'}
+                  </span>
                 </div>
-              )}
+              </div>
+              
+              <div className="date-display py-1 px-2 bg-[#0a0a0a] my-1 mx-1 inline-block border-l-2 border-blue-500 border-t border-b border-r border-gray-800 rounded-sm">
+                <div className="flex items-center">
+                  <span className="text-white">{formattedDate}</span>
+                  <span className="flex items-center ml-2 bg-blue-900/40 text-blue-300 text-[10px] rounded-sm py-0.5 px-1 border border-blue-800/30">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5 mr-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                      <line x1="16" y1="2" x2="16" y2="6"></line>
+                      <line x1="8" y1="2" x2="8" y2="6"></line>
+                      <line x1="3" y1="10" x2="21" y2="10"></line>
+                    </svg>
+                    FORMAT
+                  </span>
+                </div>
+              </div>
+              
+              <div className="px-3 py-1 bg-[#111] m-1 inline-block border border-transparent hover:border-[#4B9CD3]/40 transition-all duration-300 hover:bg-black cursor-pointer hover:shadow-[0_0_8px_rgba(75,156,211,0.3)] rounded-sm min-w-[180px]">
+                {currentInsight.icon} <span className="text-xs font-medium">{currentInsight.text}</span>: {currentInsight.value}
+              </div>
             </div>
             
-            <div className="date-format-dropdown py-1 px-2 bg-[#0a0a0a] my-1 mx-1 inline-block border-l-2 border-blue-500 border-t border-b border-r border-gray-800 hover:border-blue-500/40 transition-all duration-300 hover:bg-[#0c0c0c] cursor-pointer hover:shadow-[0_0_10px_rgba(75,156,211,0.25)] rounded-sm relative group"
-                onClick={() => setShowDateOptions(!showDateOptions)}>
-              <div className="flex items-center">
-                <span className="text-white">{formattedDate}</span>
-                <span className="flex items-center ml-2 bg-blue-900/40 text-blue-300 text-[10px] rounded-sm py-0.5 px-1 border border-blue-800/30">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-2.5 w-2.5 mr-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                  </svg>
-                  FORMAT
-                </span>
-              </div>
-              
-              {/* Interactive indicator */}
-              <div className="mt-1 flex items-center text-[10px] text-blue-400/60">
-                <div className="h-1 w-1 bg-blue-500 rounded-full animate-pulse mr-1"></div>
-                <span>Click to change date format</span>
-              </div>
-              
-              {/* Date Format Options */}
-              {showDateOptions && (
-                <div className="absolute z-50 left-0 top-full mt-1 bg-gradient-to-b from-[#111] to-black border border-blue-900/50 rounded-sm shadow-[0_4px_20px_rgba(0,0,0,0.5)] w-full p-0 overflow-hidden">
-                  <div className="bg-blue-900/20 px-2 py-1 text-[10px] uppercase text-blue-400/80 font-medium tracking-wider">
-                    Select Format
-                  </div>
-                  <div 
-                    className={`px-3 py-2 text-left cursor-pointer flex items-center justify-between transition-colors
-                    ${dateFormat === 'mdy' ? 'bg-blue-900/30 text-blue-300' : 'text-gray-300 hover:bg-gray-900'}`}
-                    onClick={(e) => { e.stopPropagation(); saveDateFormat('mdy'); }}
-                  >
-                    <span>Month-Day (US Style)</span>
-                    {dateFormat === 'mdy' && (
-                      <span className="h-2 w-2 bg-blue-500 rounded-full"></span>
-                    )}
-                  </div>
-                  <div 
-                    className={`px-3 py-2 text-left cursor-pointer flex items-center justify-between transition-colors
-                    ${dateFormat === 'dmy' ? 'bg-blue-900/30 text-blue-300' : 'text-gray-300 hover:bg-gray-900'}`}
-                    onClick={(e) => { e.stopPropagation(); saveDateFormat('dmy'); }}
-                  >
-                    <span>Day-Month (European)</span>
-                    {dateFormat === 'dmy' && (
-                      <span className="h-2 w-2 bg-blue-500 rounded-full"></span>
-                    )}
-                  </div>
-                  <div 
-                    className={`px-3 py-2 text-left cursor-pointer flex items-center justify-between transition-colors
-                    ${dateFormat === 'ymd' ? 'bg-blue-900/30 text-blue-300' : 'text-gray-300 hover:bg-gray-900'}`}
-                    onClick={(e) => { e.stopPropagation(); saveDateFormat('ymd'); }}
-                  >
-                    <span>Year-Month-Day (ISO)</span>
-                    {dateFormat === 'ymd' && (
-                      <span className="h-2 w-2 bg-blue-500 rounded-full"></span>
-                    )}
-                  </div>
+            {/* Format options now appear below */}
+            <div className="flex flex-wrap justify-center space-x-2">
+              {/* Time Format options */}
+              <div className="time-format-dropdown cursor-pointer bg-black/70 border border-blue-900/20 rounded-md hover:border-blue-500/40 transition-all duration-300 hover:bg-black/90 hover:shadow-[0_0_10px_rgba(75,156,211,0.15)]"
+                  onClick={() => setShowTimeOptions(!showTimeOptions)}>
+                <div className="px-3 py-1 text-xs text-blue-400/80 flex items-center">
+                  <div className="h-1.5 w-1.5 bg-blue-500 rounded-full animate-pulse mr-1.5"></div>
+                  <span>Time Format: {timeFormat === '24h' ? '24-hour' : '12-hour'}</span>
                 </div>
-              )}
-            </div>
-            
-            <div className="px-3 py-1 bg-[#111] m-1 inline-block border border-transparent hover:border-[#4B9CD3]/40 transition-all duration-300 hover:bg-black cursor-pointer hover:shadow-[0_0_8px_rgba(75,156,211,0.3)] rounded-sm min-w-[180px]">
-              {currentInsight.icon} <span className="text-xs font-medium">{currentInsight.text}</span>: {currentInsight.value}
+                
+                {/* Time Format Options */}
+                {showTimeOptions && (
+                  <div className="absolute z-50 mt-1 bg-gradient-to-b from-[#111] to-black border border-blue-900/50 rounded-sm shadow-[0_4px_20px_rgba(0,0,0,0.5)] p-0 overflow-hidden w-48">
+                    <div className="bg-blue-900/20 px-2 py-1 text-[10px] uppercase text-blue-400/80 font-medium tracking-wider">
+                      Select Format
+                    </div>
+                    <div 
+                      className={`px-3 py-2 text-left cursor-pointer flex items-center justify-between transition-colors
+                      ${timeFormat === '24h' ? 'bg-blue-900/30 text-blue-300' : 'text-gray-300 hover:bg-gray-900'}`}
+                      onClick={(e) => { e.stopPropagation(); saveTimeFormat('24h'); }}
+                    >
+                      <span>24-hour (Military)</span>
+                      {timeFormat === '24h' && (
+                        <span className="h-2 w-2 bg-blue-500 rounded-full"></span>
+                      )}
+                    </div>
+                    <div 
+                      className={`px-3 py-2 text-left cursor-pointer flex items-center justify-between transition-colors
+                      ${timeFormat === '12h' ? 'bg-blue-900/30 text-blue-300' : 'text-gray-300 hover:bg-gray-900'}`}
+                      onClick={(e) => { e.stopPropagation(); saveTimeFormat('12h'); }}
+                    >
+                      <span>12-hour (AM/PM)</span>
+                      {timeFormat === '12h' && (
+                        <span className="h-2 w-2 bg-blue-500 rounded-full"></span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
+              
+              {/* Date Format options */}
+              <div className="date-format-dropdown cursor-pointer bg-black/70 border border-blue-900/20 rounded-md hover:border-blue-500/40 transition-all duration-300 hover:bg-black/90 hover:shadow-[0_0_10px_rgba(75,156,211,0.15)]"
+                  onClick={() => setShowDateOptions(!showDateOptions)}>
+                <div className="px-3 py-1 text-xs text-blue-400/80 flex items-center">
+                  <div className="h-1.5 w-1.5 bg-blue-500 rounded-full animate-pulse mr-1.5"></div>
+                  <span>Date Format: {dateFormat.toUpperCase()}</span>
+                </div>
+                
+                {/* Date Format Options */}
+                {showDateOptions && (
+                  <div className="absolute z-50 mt-1 bg-gradient-to-b from-[#111] to-black border border-blue-900/50 rounded-sm shadow-[0_4px_20px_rgba(0,0,0,0.5)] p-0 overflow-hidden w-56">
+                    <div className="bg-blue-900/20 px-2 py-1 text-[10px] uppercase text-blue-400/80 font-medium tracking-wider">
+                      Select Format
+                    </div>
+                    <div 
+                      className={`px-3 py-2 text-left cursor-pointer flex items-center justify-between transition-colors
+                      ${dateFormat === 'mdy' ? 'bg-blue-900/30 text-blue-300' : 'text-gray-300 hover:bg-gray-900'}`}
+                      onClick={(e) => { e.stopPropagation(); saveDateFormat('mdy'); }}
+                    >
+                      <span>Month-Day (US Style)</span>
+                      {dateFormat === 'mdy' && (
+                        <span className="h-2 w-2 bg-blue-500 rounded-full"></span>
+                      )}
+                    </div>
+                    <div 
+                      className={`px-3 py-2 text-left cursor-pointer flex items-center justify-between transition-colors
+                      ${dateFormat === 'dmy' ? 'bg-blue-900/30 text-blue-300' : 'text-gray-300 hover:bg-gray-900'}`}
+                      onClick={(e) => { e.stopPropagation(); saveDateFormat('dmy'); }}
+                    >
+                      <span>Day-Month (European)</span>
+                      {dateFormat === 'dmy' && (
+                        <span className="h-2 w-2 bg-blue-500 rounded-full"></span>
+                      )}
+                    </div>
+                    <div 
+                      className={`px-3 py-2 text-left cursor-pointer flex items-center justify-between transition-colors
+                      ${dateFormat === 'ymd' ? 'bg-blue-900/30 text-blue-300' : 'text-gray-300 hover:bg-gray-900'}`}
+                      onClick={(e) => { e.stopPropagation(); saveDateFormat('ymd'); }}
+                    >
+                      <span>Year-Month-Day (ISO)</span>
+                      {dateFormat === 'ymd' && (
+                        <span className="h-2 w-2 bg-blue-500 rounded-full"></span>
+                      )}
+                    </div>
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
