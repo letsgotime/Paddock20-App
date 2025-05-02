@@ -41,7 +41,7 @@ const Paddock20HomePage: React.FC = () => {
   const sessionTime = `${sessionHours.toString().padStart(2, '0')}:${sessionMinutes.toString().padStart(2, '0')}:${sessionSeconds.toString().padStart(2, '0')}`;
   
   return (
-    <div className="min-h-screen bg-black pt-12">
+    <div className="min-h-screen bg-black pt-20 sm:pt-24">
       {/* Background image added first, moved to the back with z-index */}
       <div 
         className="fixed inset-0 bg-cover bg-center z-0 opacity-20"
@@ -51,22 +51,22 @@ const Paddock20HomePage: React.FC = () => {
         }}
       ></div>
       
-      {/* Main content container includes the header now */}
-      <div className="relative z-10 w-full max-w-[1200px] mx-auto px-4 pb-6">
+      {/* Main content container includes the header now - with full width on mobile */}
+      <div className="relative z-10 w-full max-w-[100%] sm:max-w-[1200px] mx-auto px-2 sm:px-4 pb-6">
         {/* ULTRA BASIC HEADER - ALIGNED WITH PAGE MARGINS */}
-        <div className="mb-16">
-          <div className="mb-8">
-            <h1 className="text-center text-6xl font-bold font-orbitron">
+        <div className="mb-10">
+          <div className="mb-4">
+            <h1 className="text-center text-5xl sm:text-6xl font-bold font-orbitron">
               <span className="text-[#4B9CD3]">PADDOCK</span>
               <span className="text-green-500">20</span>
             </h1>
-            <p className="text-center text-[#4B9CD3] font-orbitron text-xl mt-2">COMMAND CENTER</p>
+            <p className="text-center text-[#4B9CD3] font-orbitron text-lg sm:text-xl mt-2">COMMAND CENTER</p>
           </div>
           
-          <div className="text-center text-white mb-8">
-            <span className="px-4 py-2 bg-[#111] mr-6 inline-block">Time: {formattedTime}</span>
-            <span className="px-4 py-2 bg-[#111] mr-6 inline-block">Date: {formattedDate}</span>
-            <span className="px-4 py-2 bg-[#111] inline-block">Session: {sessionTime}</span>
+          <div className="text-center text-white mb-6 flex flex-wrap justify-center">
+            <div className="px-3 py-1 bg-[#111] m-1 inline-block">Time: {formattedTime}</div>
+            <div className="px-3 py-1 bg-[#111] m-1 inline-block">Date: {formattedDate}</div>
+            <div className="px-3 py-1 bg-[#111] m-1 inline-block">Session: {sessionTime}</div>
           </div>
         </div>
 
