@@ -15,7 +15,21 @@ import {
   Sparkles,
   SparkleIcon,
   Calendar,
-  Flame
+  Flame,
+  ChevronDown,
+  ChevronRight,
+  Link,
+  PlusCircle,
+  Search,
+  Filter,
+  Share2,
+  CloudUpload,
+  Tag,
+  ShoppingCart,
+  GalleryHorizontalEnd,
+  CheckSquare,
+  Edit,
+  BookOpen
 } from 'lucide-react';
 import { useRewards } from '../contexts/RewardsContext';
 
