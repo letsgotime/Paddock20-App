@@ -665,10 +665,10 @@ const availableRewards: Reward[] = [
 // Define the metric thresholds for automatic rewards
 const metricThresholds: Record<RewardTriggerMetric, {rewardId: string, threshold: number}[]> = {
   'weatherChecks': [
-    { rewardId: 'weather-check-10', threshold: 25 },
-    { rewardId: 'weather-check-50', threshold: 100 },
-    { rewardId: 'weather-check-100', threshold: 250 },
-    { rewardId: 'weather-check-500', threshold: 1000 }
+    { rewardId: 'weather-check-10', threshold: 50 },
+    { rewardId: 'weather-check-50', threshold: 200 },
+    { rewardId: 'weather-check-100', threshold: 500 },
+    { rewardId: 'weather-check-500', threshold: 2000 }
   ],
   'maintenanceLogged': [
     { rewardId: 'first-maintenance', threshold: 1 },
@@ -678,49 +678,49 @@ const metricThresholds: Record<RewardTriggerMetric, {rewardId: string, threshold
   ],
   'modificationLogged': [
     { rewardId: 'first-mod', threshold: 1 },
-    { rewardId: 'mod-log-10', threshold: 10 },
-    { rewardId: 'mod-log-30', threshold: 30 }
+    { rewardId: 'mod-log-10', threshold: 25 },
+    { rewardId: 'mod-log-30', threshold: 75 }
   ],
   'detailingSessionsLogged': [
     { rewardId: 'first-gloss-log', threshold: 1 },
-    { rewardId: 'gloss-log-10', threshold: 10 },
-    { rewardId: 'gloss-log-50', threshold: 50 }
+    { rewardId: 'gloss-log-10', threshold: 25 },
+    { rewardId: 'gloss-log-50', threshold: 100 }
   ],
   'drivesLogged': [
     { rewardId: 'first-drive-log', threshold: 1 },
-    { rewardId: 'drive-log-10', threshold: 10 },
-    { rewardId: 'drive-log-50', threshold: 50 },
-    { rewardId: 'drive-log-100', threshold: 100 }
+    { rewardId: 'drive-log-10', threshold: 25 },
+    { rewardId: 'drive-log-50', threshold: 100 },
+    { rewardId: 'drive-log-100', threshold: 250 }
   ],
   'photosUploaded': [
     { rewardId: 'first-gallery-upload', threshold: 1 },
-    { rewardId: 'gallery-upload-10', threshold: 10 },
-    { rewardId: 'gallery-upload-50', threshold: 50 },
-    { rewardId: 'gallery-upload-100', threshold: 100 }
+    { rewardId: 'gallery-upload-10', threshold: 25 },
+    { rewardId: 'gallery-upload-50', threshold: 100 },
+    { rewardId: 'gallery-upload-100', threshold: 250 }
   ],
   'streakDays': [
-    { rewardId: 'login-streak-3', threshold: 3 },
-    { rewardId: 'login-streak-7', threshold: 7 },
-    { rewardId: 'login-streak-30', threshold: 30 }
+    { rewardId: 'login-streak-3', threshold: 5 },
+    { rewardId: 'login-streak-7', threshold: 14 },
+    { rewardId: 'login-streak-30', threshold: 60 }
   ],
   'featuresExplored': [
-    { rewardId: 'feature-explorer-5', threshold: 5 },
-    { rewardId: 'feature-explorer-10', threshold: 10 },
-    { rewardId: 'feature-explorer-15', threshold: 15 }
+    { rewardId: 'feature-explorer-5', threshold: 10 },
+    { rewardId: 'feature-explorer-10', threshold: 20 },
+    { rewardId: 'feature-explorer-15', threshold: 30 }
   ],
   'routesPlanned': [
     { rewardId: 'first-route-plan', threshold: 1 },
-    { rewardId: 'route-plan-10', threshold: 10 },
-    { rewardId: 'route-plan-30', threshold: 30 }
+    { rewardId: 'route-plan-10', threshold: 25 },
+    { rewardId: 'route-plan-30', threshold: 75 }
   ],
   'manifestationStationUses': [
     { rewardId: 'first-manifestation', threshold: 1 },
-    { rewardId: 'manifestation-5', threshold: 5 },
-    { rewardId: 'manifestation-20', threshold: 20 }
+    { rewardId: 'manifestation-5', threshold: 15 },
+    { rewardId: 'manifestation-20', threshold: 50 }
   ],
   'totalLoginDays': [
-    { rewardId: 'login-days-100', threshold: 100 },
-    { rewardId: 'login-days-365', threshold: 365 }
+    { rewardId: 'login-days-100', threshold: 150 },
+    { rewardId: 'login-days-365', threshold: 500 }
   ],
   'totalPoints': [
     { rewardId: 'points-milestone-5000', threshold: 5000 },
@@ -757,23 +757,23 @@ const initialUserRewards: UserRewards = {
   pointsHistory: []
 };
 
-// Points required for each level - more challenging progression
+// Points required for each level - significantly more challenging progression
 const levelThresholds = [
   0,       // Level 1
-  500,     // Level 2
-  1500,    // Level 3
-  3000,    // Level 4
-  6000,    // Level 5
-  10000,   // Level 6
-  15000,   // Level 7
-  25000,   // Level 8
-  40000,   // Level 9
-  60000,   // Level 10
-  85000,   // Level 11
-  115000,  // Level 12
-  150000,  // Level 13
-  200000,  // Level 14
-  250000   // Level 15
+  1000,    // Level 2
+  3000,    // Level 3
+  6000,    // Level 4
+  12000,   // Level 5
+  20000,   // Level 6
+  30000,   // Level 7
+  50000,   // Level 8
+  80000,   // Level 9
+  120000,  // Level 10
+  170000,  // Level 11
+  230000,  // Level 12
+  300000,  // Level 13
+  400000,  // Level 14
+  500000   // Level 15
 ];
 
 // Create the rewards context

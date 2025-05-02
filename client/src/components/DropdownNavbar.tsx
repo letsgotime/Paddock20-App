@@ -1,21 +1,63 @@
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import {
-  ChevronRight, Home, LayoutDashboard, Cloud, MapPin,
+  ChevronRight, ChevronDown, Home, LayoutDashboard, Cloud, MapPin,
   Calendar, Flag, Car, Watch, Compass, Ruler,
   BookOpen, Brain, ClipboardCheck, SprayCan, Percent,
   Mail, BookMarked, MessageCircle, Settings, HeartHandshake,
-  Shield, Trophy
+  Shield, Trophy, Award, Star, Medal
 } from "lucide-react";
+import { useRewards } from "../contexts/RewardsContext";
+
+// This structure makes it easy to add new rewards tracks/branches in the future
+const REWARD_TRACKS = {
+  MAIN: 'main',
+  DRIVING: 'driving',
+  DETAILING: 'detailing',
+  TRACK_DAY: 'track_day',
+  MOTORSPORT: 'motorsport',
+  COLLECTOR: 'collector'
+};
+
+// Level thresholds - easy to modify point requirements
+const LEVEL_THRESHOLDS = [
+  { level: 1, points: 0 },
+  { level: 2, points: 100 },
+  { level: 3, points: 250 },
+  { level: 4, points: 500 },
+  { level: 5, points: 1000 },
+  { level: 6, points: 2000 },
+  { level: 7, points: 3500 },
+  { level: 8, points: 5000 },
+  { level: 9, points: 7500 },
+  { level: 10, points: 10000 },
+  { level: 15, points: 25000 },
+  { level: 20, points: 50000 },
+  { level: 25, points: 100000 }
+];
+
+// Driver rank titles based on level - easy to add new ranks
+const DRIVER_RANKS = [
+  { minLevel: 25, title: "Racing Legend" },
+  { minLevel: 20, title: "Grand Champion" },
+  { minLevel: 15, title: "Master Driver" },
+  { minLevel: 10, title: "Elite Driver" },
+  { minLevel: 5, title: "Senior Driver" },
+  { minLevel: 0, title: "Driver" }
+];
 
 const DropdownNavbar = () => {
   const [isOpen, setIsOpen] = useState(false);
+  const [isPodiumOpen, setIsPodiumOpen] = useState(false);
   const location = useLocation();
   const menuRef = React.useRef<HTMLDivElement>(null);
+  const podiumRef = React.useRef<HTMLDivElement>(null);
+  const { userRewards, pointsToNextLevel } = useRewards();
   
   // Close menu on location changes (navigation)
   useEffect(() => {
     setIsOpen(false);
+    setIsPodiumOpen(false);
   }, [location.pathname]);
   
   // Handle clicks outside the menu to close it
@@ -24,10 +66,13 @@ const DropdownNavbar = () => {
       if (menuRef.current && !menuRef.current.contains(event.target as Node) && isOpen) {
         setIsOpen(false);
       }
+      if (podiumRef.current && !podiumRef.current.contains(event.target as Node) && isPodiumOpen) {
+        setIsPodiumOpen(false);
+      }
     }
     
-    // Add event listener when menu is open
-    if (isOpen) {
+    // Add event listener when either menu is open
+    if (isOpen || isPodiumOpen) {
       document.addEventListener('mousedown', handleClickOutside);
     }
     
@@ -35,7 +80,33 @@ const DropdownNavbar = () => {
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, [isOpen]);
+  }, [isOpen, isPodiumOpen]);
+
+  // Get level icon based on driver level - easy to add new icons/levels
+  const getLevelIcon = () => {
+    const driverLevel = userRewards.level;
+    switch (true) {
+      case driverLevel >= 25:
+        return <Trophy className="text-purple-400 h-4 w-4" />;
+      case driverLevel >= 20:
+        return <Trophy className="text-yellow-400 h-4 w-4" />;
+      case driverLevel >= 15:
+        return <Award className="text-blue-400 h-4 w-4" />;
+      case driverLevel >= 10:
+        return <Medal className="text-green-400 h-4 w-4" />;
+      case driverLevel >= 5:
+        return <Star className="text-orange-400 h-4 w-4" />;
+      default:
+        return <Trophy className="text-gray-400 h-4 w-4" />;
+    }
+  };
+
+  // Get appropriate level name from predefined ranks
+  const getLevelName = () => {
+    const driverLevel = userRewards.level;
+    const rank = DRIVER_RANKS.find(rank => driverLevel >= rank.minLevel);
+    return rank ? rank.title : "Driver";
+  };
 
   return (
     <nav className="flex items-center justify-between p-4 bg-black border-b border-gray-700 relative z-30">
@@ -48,162 +119,256 @@ const DropdownNavbar = () => {
         <span className="text-gray-400 font-orbitron">Paddock20™</span>
       </Link>
       
-      <div className="relative" ref={menuRef}>
-        <button 
-          onClick={() => setIsOpen(!isOpen)}
-          className="text-green-500 font-orbitron font-medium px-4 py-2 rounded-md border border-green-500 hover:bg-gray-800"
-        >
-          Menu
-        </button>
-        
-        {isOpen && (
-          <div className="absolute right-0 mt-2 w-60 bg-gradient-to-r from-[#111111] to-[#1a1a1a] rounded-lg shadow-lg p-4 space-y-2 z-50 border border-gray-800">
-            <Link to="/" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
-              <Home className="h-4 w-4 mr-2 text-blue-400" />
-              <span>Home</span>
-            </Link>
-            <Link to="/personalized-dashboard" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
-              <LayoutDashboard className="h-4 w-4 mr-2 text-blue-400" />
-              <span>My Dashboard</span>
-            </Link>
-            <Link to="/weather" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
-              <Cloud className="h-4 w-4 mr-2 text-blue-400" />
-              <span>Weather Center</span>
-            </Link>
-            <Link to="/new-weather-center" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
-              <Cloud className="h-4 w-4 mr-2 text-blue-400" />
-              <span>New Weather Center</span>
-            </Link>
-            <Link to="/route-planner" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
-              <MapPin className="h-4 w-4 mr-2 text-blue-400" />
-              <span>Fun Drive Planner</span>
-            </Link>
-            <Link to="/events" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
-              <Calendar className="h-4 w-4 mr-2 text-blue-400" />
-              <span>Events & Meetups</span>
-            </Link>
-            <Link to="/motorsports-events" className="hover:text-green-400 flex items-center py-1 text-green-400" onClick={() => setIsOpen(false)}>
-              <Trophy className="h-4 w-4 mr-2 text-blue-400" />
-              <span>Motorsports Events</span>
-            </Link>
-            <Link to="/motorsports-gallery" className="hover:text-green-400 flex items-center py-1 text-green-400 animate-pulse" onClick={() => setIsOpen(false)}>
-              <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <circle cx="8.5" cy="8.5" r="1.5"></circle>
-                <polyline points="21 15 16 10 5 21"></polyline>
-              </svg>
-              <span>Motorsports Gallery</span>
-              <span className="ml-2 text-xs text-green-500 font-orbitron">NEW</span>
-            </Link>
-            <Link to="/paddock20-vault" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
-              <Flag className="h-4 w-4 mr-2 text-blue-400" />
-              <span>Paddock20 Membership</span>
-            </Link>
-            <Link to="/garage-vault" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
-              <Car className="h-4 w-4 mr-2 text-blue-400" />
-              <span>Garage Vault</span>
-            </Link>
-            <Link to="/tires-timepieces" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
-              <Watch className="h-4 w-4 mr-2 text-blue-400" />
-              <span>Tires & Timepieces Brokerage</span>
-            </Link>
-            <Link to="/manifestation-station" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
-              <Compass className="h-4 w-4 mr-2 text-blue-400" />
-              <span>Manifestation Station™</span>
-            </Link>
-            <Link to="/manifestation-station" className="hover:text-green-400 flex items-center py-1" onClick={() => {
-              // Route mod planner to Manifestation Station with hustle planner view
-              window.localStorage.setItem('manifestation_activeView', 'hustle-planner');
-              window.localStorage.setItem('manifestation_context', 'vehicle-mods');
-              setIsOpen(false);
-            }}>
-              <Ruler className="h-4 w-4 mr-2 text-blue-400" />
-              <span>Mod Planner</span>
-            </Link>
-            <Link to="/drive-journal" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
-              <BookOpen className="h-4 w-4 mr-2 text-blue-400" />
-              <span>Drive Journal</span>
-            </Link>
-            <Link to="/manifestation-station" className="hover:text-green-400 flex items-center py-1" onClick={() => {
-              // Directly navigate to the Manifestation Station with the hustle planner view
-              window.localStorage.setItem('manifestation_activeView', 'hustle-planner');
-              setIsOpen(false);
-            }}>
-              <Brain className="h-4 w-4 mr-2 text-blue-400" />
-              <span>Hustle Planner</span>
-            </Link>
-            <Link to="/manifestation-station" className="hover:text-green-400 flex items-center py-1" onClick={() => {
-              // Directly navigate to the Manifestation Station with the discipline tracker view
-              window.localStorage.setItem('manifestation_activeView', 'discipline-tracker');
-              setIsOpen(false);
-            }}>
-              <Calendar className="h-4 w-4 mr-2 text-blue-400" />
-              <span>Daily Check-in</span>
-            </Link>
-            <Link to="/juicebox" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
-              <SprayCan className="h-4 w-4 mr-2 text-blue-400" />
-              <span>Juice Box</span>
-            </Link>
-            <Link to="/discounts" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
-              <Percent className="h-4 w-4 mr-2 text-blue-400" />
-              <span>Discounts & Promotions</span>
-            </Link>
-            
-            {/* Checklists Dropdown */}
-            <div className="relative group" 
-                onMouseEnter={(e) => e.currentTarget.classList.add('menu-open')}
-                onMouseLeave={(e) => {
-                  // Add a delay before removing the class
-                  const currentElem = e.currentTarget;
-                  setTimeout(() => {
-                    if (currentElem && !currentElem.classList.contains('hover-active')) {
-                      currentElem.classList.remove('menu-open');
-                    }
-                  }, 500); // 500ms delay
-                }}>
-              <button className="flex items-center hover:text-green-400 w-full">
-                <ClipboardCheck className="h-4 w-4 mr-2 text-blue-400" />
-                <span>Checklists</span>
-                <ChevronRight className="w-4 h-4 ml-2" />
-              </button>
-              <div className="absolute top-0 right-full mr-2 hidden menu-content bg-gray-900 border border-gray-700 rounded-lg shadow-lg p-4 z-10 w-48">
-                <Link to="/seasonal-checklist" className="flex items-center hover:text-green-400 mb-2 py-1" onClick={() => setIsOpen(false)}>
-                  <Cloud className="h-4 w-4 mr-2 text-blue-400" />
-                  <span>Seasonal Checklist</span>
+      <div className="flex items-center space-x-3">
+        {/* Podium Pursuit dropdown */}
+        <div className="relative" ref={podiumRef}>
+          <button 
+            onClick={() => setIsPodiumOpen(!isPodiumOpen)}
+            className="text-blue-400 font-orbitron font-medium px-3 py-1.5 rounded-md border border-blue-500 hover:bg-blue-900/20 flex items-center space-x-1"
+          >
+            {getLevelIcon()}
+            <span className="ml-1.5">Podium Pursuit</span>
+            <ChevronDown className="h-3.5 w-3.5 ml-1" />
+          </button>
+          
+          {isPodiumOpen && (
+            <div className="absolute right-0 mt-2 w-72 bg-gradient-to-b from-gray-900 to-black rounded-lg shadow-lg p-4 space-y-3 z-50 border border-blue-900/50">
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  {getLevelIcon()}
+                  <span className="ml-2 font-orbitron text-blue-400">Level {userRewards.level} {getLevelName()}</span>
+                </div>
+                <div className="flex items-center">
+                  <Star className="text-yellow-400 h-4 w-4 mr-1" />
+                  <span className="text-yellow-400 font-bold">{userRewards.totalPoints} pts</span>
+                </div>
+              </div>
+              
+              <div className="w-full bg-gray-800 rounded-full h-2.5 mb-1 overflow-hidden">
+                <div 
+                  className="h-full bg-gradient-to-r from-blue-500 to-green-500" 
+                  style={{ width: `${Math.min(100, (userRewards.totalPoints / (userRewards.totalPoints + pointsToNextLevel)) * 100)}%` }}
+                ></div>
+              </div>
+              
+              <div className="flex justify-between text-xs text-gray-400">
+                <span>Driver Level {userRewards.level}</span>
+                <span className="flex items-center">
+                  <Trophy className="inline h-3 w-3 mr-1 text-blue-400" />
+                  {pointsToNextLevel} pts to Level {userRewards.level + 1}
+                </span>
+              </div>
+              
+              {/* Achievement tracks section - modular architecture for adding more tracks */}
+              <div className="border-t border-blue-900/30 pt-2 mt-2">
+                <div className="text-xs text-blue-400 mb-2">Achievement Tracks</div>
+                <div className="grid grid-cols-3 gap-1 mb-3">
+                  <div className="bg-blue-900/20 rounded p-1 text-center">
+                    <div className="text-xs text-white">Driving</div>
+                    <div className="text-blue-300 text-xs">Lv.{userRewards.level}</div>
+                  </div>
+                  <div className="bg-blue-900/20 rounded p-1 text-center">
+                    <div className="text-xs text-white">Detailing</div>
+                    <div className="text-blue-300 text-xs">Lv.{Math.max(1, userRewards.level-2)}</div>
+                  </div>
+                  <div className="bg-blue-900/20 rounded p-1 text-center">
+                    <div className="text-xs text-white">Track Days</div>
+                    <div className="text-blue-300 text-xs">Lv.{Math.max(1, userRewards.level-1)}</div>
+                  </div>
+                </div>
+
+                <div className="text-xs text-blue-400 mb-2">Recent Achievements</div>
+                <div className="grid grid-cols-2 gap-2">
+                  {userRewards.rewards.slice(-4).map((reward) => (
+                    <div key={reward.id} className="flex items-center bg-blue-900/20 p-2 rounded-sm">
+                      <div className="mr-2 text-lg">{reward.icon}</div>
+                      <div className="text-xs">
+                        <div className="text-white font-medium">{reward.title}</div>
+                        <div className="text-blue-300">{reward.points} pts</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-2 gap-2">
+                <Link 
+                  to="/settings" 
+                  className="block w-full text-center text-sm text-white bg-blue-900/30 hover:bg-blue-900/50 py-2 rounded-md transition-colors"
+                  onClick={() => setIsPodiumOpen(false)}
+                >
+                  All Achievements
                 </Link>
-                <Link to="/pre-drive-checklist" className="flex items-center hover:text-green-400 mb-2 py-1" onClick={() => setIsOpen(false)}>
-                  <Shield className="h-4 w-4 mr-2 text-blue-400" />
-                  <span>Pre-Drive Checklist</span>
-                </Link>
-                <Link to="/juicebox" className="flex items-center hover:text-green-400 mb-2 py-1" onClick={() => setIsOpen(false)}>
-                  <SprayCan className="h-4 w-4 mr-2 text-blue-400" />
-                  <span>Detailing Checklist</span>
+                <Link 
+                  to="/settings" 
+                  className="block w-full text-center text-sm text-white bg-blue-900/30 hover:bg-blue-900/50 py-2 rounded-md transition-colors"
+                  onClick={() => setIsPodiumOpen(false)}
+                >
+                  Driver Profile
                 </Link>
               </div>
             </div>
+          )}
+        </div>
+        
+        {/* Main menu dropdown */}
+        <div className="relative" ref={menuRef}>
+          <button 
+            onClick={() => setIsOpen(!isOpen)}
+            className="text-green-500 font-orbitron font-medium px-4 py-2 rounded-md border border-green-500 hover:bg-gray-800"
+          >
+            Menu
+          </button>
+        
+          {isOpen && (
+            <div className="absolute right-0 mt-2 w-60 bg-gradient-to-r from-[#111111] to-[#1a1a1a] rounded-lg shadow-lg p-4 space-y-2 z-50 border border-gray-800">
+              <Link to="/" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
+                <Home className="h-4 w-4 mr-2 text-blue-400" />
+                <span>Home</span>
+              </Link>
+              <Link to="/personalized-dashboard" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
+                <LayoutDashboard className="h-4 w-4 mr-2 text-blue-400" />
+                <span>My Dashboard</span>
+              </Link>
+              <Link to="/weather" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
+                <Cloud className="h-4 w-4 mr-2 text-blue-400" />
+                <span>Weather Center</span>
+              </Link>
+              <Link to="/new-weather-center" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
+                <Cloud className="h-4 w-4 mr-2 text-blue-400" />
+                <span>New Weather Center</span>
+              </Link>
+              <Link to="/route-planner" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
+                <MapPin className="h-4 w-4 mr-2 text-blue-400" />
+                <span>Fun Drive Planner</span>
+              </Link>
+              <Link to="/events" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
+                <Calendar className="h-4 w-4 mr-2 text-blue-400" />
+                <span>Events & Meetups</span>
+              </Link>
+              <Link to="/motorsports-events" className="hover:text-green-400 flex items-center py-1 text-green-400" onClick={() => setIsOpen(false)}>
+                <Trophy className="h-4 w-4 mr-2 text-blue-400" />
+                <span>Motorsports Events</span>
+              </Link>
+              <Link to="/motorsports-gallery" className="hover:text-green-400 flex items-center py-1 text-green-400 animate-pulse" onClick={() => setIsOpen(false)}>
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                  <polyline points="21 15 16 10 5 21"></polyline>
+                </svg>
+                <span>Motorsports Gallery</span>
+                <span className="ml-2 text-xs text-green-500 font-orbitron">NEW</span>
+              </Link>
+              <Link to="/paddock20-vault" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
+                <Flag className="h-4 w-4 mr-2 text-blue-400" />
+                <span>Paddock20 Membership</span>
+              </Link>
+              <Link to="/garage-vault" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
+                <Car className="h-4 w-4 mr-2 text-blue-400" />
+                <span>Garage Vault</span>
+              </Link>
+              <Link to="/tires-timepieces" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
+                <Watch className="h-4 w-4 mr-2 text-blue-400" />
+                <span>Tires & Timepieces Brokerage</span>
+              </Link>
+              <Link to="/manifestation-station" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
+                <Compass className="h-4 w-4 mr-2 text-blue-400" />
+                <span>Manifestation Station™</span>
+              </Link>
+              <Link to="/manifestation-station" className="hover:text-green-400 flex items-center py-1" onClick={() => {
+                // Route mod planner to Manifestation Station with hustle planner view
+                window.localStorage.setItem('manifestation_activeView', 'hustle-planner');
+                window.localStorage.setItem('manifestation_context', 'vehicle-mods');
+                setIsOpen(false);
+              }}>
+                <Ruler className="h-4 w-4 mr-2 text-blue-400" />
+                <span>Mod Planner</span>
+              </Link>
+              <Link to="/drive-journal" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
+                <BookOpen className="h-4 w-4 mr-2 text-blue-400" />
+                <span>Drive Journal</span>
+              </Link>
+              <Link to="/manifestation-station" className="hover:text-green-400 flex items-center py-1" onClick={() => {
+                // Directly navigate to the Manifestation Station with the hustle planner view
+                window.localStorage.setItem('manifestation_activeView', 'hustle-planner');
+                setIsOpen(false);
+              }}>
+                <Brain className="h-4 w-4 mr-2 text-blue-400" />
+                <span>Hustle Planner</span>
+              </Link>
+              <Link to="/manifestation-station" className="hover:text-green-400 flex items-center py-1" onClick={() => {
+                // Directly navigate to the Manifestation Station with the discipline tracker view
+                window.localStorage.setItem('manifestation_activeView', 'discipline-tracker');
+                setIsOpen(false);
+              }}>
+                <Calendar className="h-4 w-4 mr-2 text-blue-400" />
+                <span>Daily Check-in</span>
+              </Link>
+              <Link to="/juicebox" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
+                <SprayCan className="h-4 w-4 mr-2 text-blue-400" />
+                <span>Juice Box</span>
+              </Link>
+              <Link to="/discounts" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
+                <Percent className="h-4 w-4 mr-2 text-blue-400" />
+                <span>Discounts & Promotions</span>
+              </Link>
+              
+              {/* Checklists Dropdown */}
+              <div className="relative group" 
+                  onMouseEnter={(e) => e.currentTarget.classList.add('menu-open')}
+                  onMouseLeave={(e) => {
+                    // Add a delay before removing the class
+                    const currentElem = e.currentTarget;
+                    setTimeout(() => {
+                      if (currentElem && !currentElem.classList.contains('hover-active')) {
+                        currentElem.classList.remove('menu-open');
+                      }
+                    }, 500); // 500ms delay
+                  }}>
+                <button className="flex items-center hover:text-green-400 w-full">
+                  <ClipboardCheck className="h-4 w-4 mr-2 text-blue-400" />
+                  <span>Checklists</span>
+                  <ChevronRight className="w-4 h-4 ml-2" />
+                </button>
+                <div className="absolute top-0 right-full mr-2 hidden menu-content bg-gray-900 border border-gray-700 rounded-lg shadow-lg p-4 z-10 w-48">
+                  <Link to="/seasonal-checklist" className="flex items-center hover:text-green-400 mb-2 py-1" onClick={() => setIsOpen(false)}>
+                    <Cloud className="h-4 w-4 mr-2 text-blue-400" />
+                    <span>Seasonal Checklist</span>
+                  </Link>
+                  <Link to="/pre-drive-checklist" className="flex items-center hover:text-green-400 mb-2 py-1" onClick={() => setIsOpen(false)}>
+                    <Shield className="h-4 w-4 mr-2 text-blue-400" />
+                    <span>Pre-Drive Checklist</span>
+                  </Link>
+                  <Link to="/juicebox" className="flex items-center hover:text-green-400 mb-2 py-1" onClick={() => setIsOpen(false)}>
+                    <SprayCan className="h-4 w-4 mr-2 text-blue-400" />
+                    <span>Detailing Checklist</span>
+                  </Link>
+                </div>
+              </div>
 
-            <Link to="/concierge" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
-              <HeartHandshake className="h-4 w-4 mr-2 text-blue-400" />
-              <span>Concierge</span>
-            </Link>
-            <Link to="/contact" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
-              <Mail className="h-4 w-4 mr-2 text-blue-400" />
-              <span>Contact Us</span>
-            </Link>
-            <Link to="/ebooks" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
-              <BookMarked className="h-4 w-4 mr-2 text-blue-400" />
-              <span>GoTime eBooks Vault</span>
-            </Link>
-            <Link to="/chat-feed" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
-              <MessageCircle className="h-4 w-4 mr-2 text-blue-400" />
-              <span>Member Chat Feed</span>
-            </Link>
-            <Link to="/settings" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
-              <Settings className="h-4 w-4 mr-2 text-blue-400" />
-              <span>Settings</span>
-            </Link>
-          </div>
-        )}
+              <Link to="/concierge" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
+                <HeartHandshake className="h-4 w-4 mr-2 text-blue-400" />
+                <span>Concierge</span>
+              </Link>
+              <Link to="/contact" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
+                <Mail className="h-4 w-4 mr-2 text-blue-400" />
+                <span>Contact Us</span>
+              </Link>
+              <Link to="/ebooks" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
+                <BookMarked className="h-4 w-4 mr-2 text-blue-400" />
+                <span>GoTime eBooks Vault</span>
+              </Link>
+              <Link to="/chat-feed" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
+                <MessageCircle className="h-4 w-4 mr-2 text-blue-400" />
+                <span>Member Chat Feed</span>
+              </Link>
+              <Link to="/settings" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
+                <Settings className="h-4 w-4 mr-2 text-blue-400" />
+                <span>Settings</span>
+              </Link>
+            </div>
+          )}
+        </div>
       </div>
     </nav>
   );
