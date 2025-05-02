@@ -176,9 +176,22 @@ const Paddock20HomePage: React.FC = () => {
           </div>
           
           <div className="text-center text-white mb-2 flex flex-wrap justify-center">
-            <div className="time-format-dropdown px-3 py-1 bg-[#111] m-1 inline-block border border-transparent hover:border-[#4B9CD3]/40 transition-all duration-300 hover:bg-black cursor-pointer hover:shadow-[0_0_8px_rgba(75,156,211,0.3)] rounded-sm relative"
+            <div className="time-format-dropdown px-3 py-1 bg-[#111] m-1 inline-block border border-transparent hover:border-[#4B9CD3]/40 transition-all duration-300 hover:bg-black cursor-pointer hover:shadow-[0_0_8px_rgba(75,156,211,0.3)] rounded-sm relative group"
                 onClick={() => setShowTimeOptions(!showTimeOptions)}>
-              Time: {formattedTime}
+              <div className="flex items-center">
+                <span>Time: {formattedTime}</span>
+                <span className="ml-2 inline-flex items-center text-xs text-blue-400/70 group-hover:text-blue-400 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 5v14M5 12h14"/>
+                  </svg>
+                  <span className="hidden group-hover:inline">Change Format</span>
+                </span>
+              </div>
+              
+              {/* Format indicator */}
+              <div className="mt-0.5 text-[10px] text-blue-400/60 pl-1">
+                Click to toggle 12/24 hour format
+              </div>
               
               {/* Time Format Options */}
               {showTimeOptions && (
@@ -199,9 +212,22 @@ const Paddock20HomePage: React.FC = () => {
               )}
             </div>
             
-            <div className="date-format-dropdown px-3 py-1 bg-[#111] m-1 inline-block border border-transparent hover:border-[#4B9CD3]/40 transition-all duration-300 hover:bg-black cursor-pointer hover:shadow-[0_0_8px_rgba(75,156,211,0.3)] rounded-sm relative"
+            <div className="date-format-dropdown px-3 py-1 bg-[#111] m-1 inline-block border border-transparent hover:border-[#4B9CD3]/40 transition-all duration-300 hover:bg-black cursor-pointer hover:shadow-[0_0_8px_rgba(75,156,211,0.3)] rounded-sm relative group"
                 onClick={() => setShowDateOptions(!showDateOptions)}>
-              Date: {formattedDate}
+              <div className="flex items-center">
+                <span>Date: {formattedDate}</span>
+                <span className="ml-2 inline-flex items-center text-xs text-blue-400/70 group-hover:text-blue-400 transition-colors">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-0.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M12 5v14M5 12h14"/>
+                  </svg>
+                  <span className="hidden group-hover:inline">Change Format</span>
+                </span>
+              </div>
+              
+              {/* Format indicator */}
+              <div className="mt-0.5 text-[10px] text-blue-400/60 pl-1">
+                Click to change date format
+              </div>
               
               {/* Date Format Options */}
               {showDateOptions && (
