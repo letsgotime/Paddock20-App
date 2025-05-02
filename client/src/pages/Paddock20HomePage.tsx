@@ -52,10 +52,10 @@ const Paddock20HomePage: React.FC = () => {
       ></div>
       
       {/* Main content container with grid-based layout */}
-      <div className="relative z-10 max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      <div className="relative z-10 w-full max-w-[90rem] mx-auto px-4 sm:px-6 lg:px-8 py-6">
       
       {/* F1-Inspired Command Center Header - Enhanced Style */}
-      <header className="mb-6 bg-gradient-to-r from-black/95 via-gray-900/95 to-black/95 rounded-lg p-4 border-l-4 border-t border-r border-b border-blue-900/40 shadow-xl overflow-hidden relative">
+      <header className="mb-6 bg-gradient-to-r from-black/95 via-gray-900/95 to-black/95 rounded-lg p-6 border-l-4 border-t border-r border-b border-blue-900/40 shadow-xl overflow-hidden relative">
         {/* Carbon fiber pattern overlay */}
         <div className="absolute inset-0 opacity-10 bg-[url('/assets/images/carbon-fiber-pattern.png')] bg-repeat"></div>
         
@@ -63,17 +63,17 @@ const Paddock20HomePage: React.FC = () => {
         <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-blue-500 via-blue-400 to-blue-500"></div>
         
         <div className="flex flex-col md:flex-row justify-between items-center relative z-10">
-          <div className="flex items-center mb-4 md:mb-0">
-            <div className="mr-8">
-              <h1 className="text-blue-400 font-orbitron text-2xl md:text-4xl font-bold tracking-wider flex items-center">
-                <span className="bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-500">PADDOCK</span>
-                <span className="text-green-500">20</span>
+          <div className="flex items-center mb-4 md:mb-0 py-2">
+            <div className="mr-10">
+              <h1 className="text-blue-400 font-orbitron text-3xl md:text-5xl font-bold tracking-wider flex items-center">
+                <span className="font-orbitron bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-blue-500">PADDOCK</span>
+                <span className="font-orbitron text-green-500">20</span>
                 <span className="text-xs ml-1 text-blue-400">™</span>
               </h1>
-              <div className="flex items-center mt-1">
+              <div className="flex items-center mt-2">
                 <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse mr-2"></div>
-                <span className="text-gray-400 text-xs uppercase tracking-wider font-bold">COMMAND CENTER</span>
-                <div className="ml-2 h-0.5 w-10 bg-blue-500/30"></div>
+                <span className="text-blue-400 text-sm uppercase tracking-wider font-bold font-orbitron">COMMAND CENTER</span>
+                <div className="ml-3 h-0.5 w-16 bg-blue-500/50"></div>
               </div>
             </div>
             
