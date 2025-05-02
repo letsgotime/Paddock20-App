@@ -11,11 +11,31 @@ import {
 const DropdownNavbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const location = useLocation();
+  const menuRef = React.useRef<HTMLDivElement>(null);
   
   // Close menu on location changes (navigation)
   useEffect(() => {
     setIsOpen(false);
   }, [location.pathname]);
+  
+  // Handle clicks outside the menu to close it
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (menuRef.current && !menuRef.current.contains(event.target as Node) && isOpen) {
+        setIsOpen(false);
+      }
+    }
+    
+    // Add event listener when menu is open
+    if (isOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+    
+    // Clean up the event listener
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [isOpen]);
 
   return (
     <nav className="flex items-center justify-between p-4 bg-black border-b border-gray-700 relative z-30">
@@ -28,7 +48,7 @@ const DropdownNavbar = () => {
         <span className="text-gray-400 font-orbitron">Paddock20™</span>
       </Link>
       
-      <div className="relative">
+      <div className="relative" ref={menuRef}>
         <button 
           onClick={() => setIsOpen(!isOpen)}
           className="text-green-500 font-orbitron font-medium px-4 py-2 rounded-md border border-green-500 hover:bg-gray-800"

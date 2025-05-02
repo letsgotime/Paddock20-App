@@ -15,8 +15,10 @@ const RewardsLevelIndicator: React.FC<RewardsLevelIndicatorProps> = ({
   minimal = false,
   showNextLevel = true
 }) => {
-  const { state } = useRewards();
-  const { userPoints, driverLevel, nextLevelPoints } = state;
+  const { userRewards, pointsToNextLevel, levelProgress } = useRewards();
+  const userPoints = userRewards.totalPoints;
+  const driverLevel = userRewards.level;
+  const nextLevelPoints = pointsToNextLevel;
   
   // Calculate progress percentage to next level
   const progressPercentage = nextLevelPoints > 0 
