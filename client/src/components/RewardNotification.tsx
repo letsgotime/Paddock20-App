@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { X, Zap, Award, Star, Trophy } from 'lucide-react';
-import { useRewards } from '../contexts/RewardsContext';
+import { X, Zap } from 'lucide-react';
+import { useRewards, Reward } from '../contexts/RewardsContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
 const RewardNotification: React.FC = () => {
@@ -24,32 +24,15 @@ const RewardNotification: React.FC = () => {
     return null;
   }
   
-  // Determine level-appropriate colors and styles
-  const levelColors = {
-    bronze: 'from-amber-700 to-amber-600 border-amber-500',
-    silver: 'from-slate-400 to-slate-300 border-slate-200',
-    gold: 'from-yellow-500 to-amber-400 border-yellow-300',
-    platinum: 'from-indigo-400 to-blue-300 border-indigo-200'
-  };
-  
-  const levelGlow = {
-    bronze: 'shadow-amber-500/40',
-    silver: 'shadow-slate-300/50',
-    gold: 'shadow-yellow-400/50',
-    platinum: 'shadow-indigo-300/60'
-  };
-  
-  // Get the appropriate badge icon based on reward level
-  const getBadgeIcon = () => {
-    switch (recentReward.level) {
-      case 'gold':
-        return <Trophy className="h-6 w-6 text-yellow-300" />;
-      case 'platinum':
-        return <Star className="h-6 w-6 text-indigo-200" />;
-      case 'silver':
-        return <Award className="h-6 w-6 text-slate-200" />;
-      default:
-        return <Award className="h-6 w-6 text-amber-400" />;
+  // Get level-appropriate color
+  const getLevelColor = (level: Reward['level']) => {
+    switch (level) {
+      case 'bronze': return 'from-amber-700 to-amber-600';
+      case 'silver': return 'from-slate-400 to-slate-300';
+      case 'gold': return 'from-yellow-500 to-amber-400';
+      case 'platinum': return 'from-indigo-400 to-blue-300';
+      case 'diamond': return 'from-purple-500 to-pink-400';
+      default: return 'from-blue-600 to-blue-500';
     }
   };
   
@@ -57,23 +40,16 @@ const RewardNotification: React.FC = () => {
     <AnimatePresence>
       {isVisible && (
         <motion.div 
-          className="fixed bottom-6 right-6 z-50 max-w-xs"
+          className="fixed bottom-6 right-6 z-50 max-w-xs pointer-events-auto"
           initial={{ y: 50, opacity: 0 }}
           animate={{ y: 0, opacity: 1 }}
           exit={{ y: 20, opacity: 0 }}
-          transition={{ 
-            type: "spring",
-            damping: 20,
-            stiffness: 300
-          }}
+          transition={{ type: "spring", damping: 20, stiffness: 300 }}
         >
-          <div className={`rounded-lg p-0.5 bg-gradient-to-r ${levelColors[recentReward.level]} shadow-lg ${levelGlow[recentReward.level]} shadow-xl`}>
+          <div className={`rounded-lg p-0.5 bg-gradient-to-r ${getLevelColor(recentReward.level)} shadow-lg`}>
             <div className="bg-black/90 backdrop-blur-sm rounded-md p-4">
               <div className="flex items-start justify-between">
-                <div className="flex items-center gap-2">
-                  <div className="flex-shrink-0 text-3xl">{recentReward.icon}</div>
-                  {getBadgeIcon()}
-                </div>
+                <div className="flex-shrink-0 text-3xl">{recentReward.icon}</div>
                 <button 
                   onClick={() => {
                     setIsVisible(false);

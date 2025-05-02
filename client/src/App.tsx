@@ -36,6 +36,8 @@ import DropdownNavbar from "./components/DropdownNavbar";
 import Footer from "./components/Footer";
 import { WeatherProvider } from "./contexts/WeatherContext";
 import { GalleryProvider } from "./contexts/GalleryContext";
+import { RewardsProvider } from "./contexts/RewardsContext";
+import RewardNotification from "./components/RewardNotification";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import PersonalizedDashboard from "./pages/PersonalizedDashboard";
