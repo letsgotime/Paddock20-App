@@ -14,74 +14,74 @@ const ContextualBreadcrumbs: React.FC = () => {
   const routeMappings: Record<string, BreadcrumbItem[]> = {
     '/': [],
     '/new-weather-center': [
-      { path: '/', label: 'Home' },
+      { path: '/', label: 'Paddock20 Home' },
       { path: '/new-weather-center', label: 'Weather Center' }
     ],
     '/weather': [
-      { path: '/', label: 'Home' },
+      { path: '/', label: 'Paddock20 Home' },
       { path: '/weather', label: 'Weather' }
     ],
     '/garage-vault': [
-      { path: '/', label: 'Home' },
+      { path: '/', label: 'Paddock20 Home' },
       { path: '/garage-vault', label: 'Garage Vault' }
     ],
     '/manifestation-station': [
-      { path: '/', label: 'Home' },
+      { path: '/', label: 'Paddock20 Home' },
       { path: '/manifestation-station', label: 'Manifestation Station' }
     ],
     '/drive-journal': [
-      { path: '/', label: 'Home' },
+      { path: '/', label: 'Paddock20 Home' },
       { path: '/drive-journal', label: 'Drive Journal' }
     ],
     '/route-planner': [
-      { path: '/', label: 'Home' },
+      { path: '/', label: 'Paddock20 Home' },
       { path: '/new-weather-center', label: 'Weather Center' },
       { path: '/route-planner', label: 'Fun Drive Planner' }
     ],
     '/juicebox': [
-      { path: '/', label: 'Home' },
+      { path: '/', label: 'Paddock20 Home' },
       { path: '/juicebox', label: 'Juice Box' }
     ],
     '/vehicle-mods': [
-      { path: '/', label: 'Home' },
+      { path: '/', label: 'Paddock20 Home' },
       { path: '/garage-vault', label: 'Garage Vault' },
       { path: '/vehicle-mods', label: 'Vehicle Mods' }
     ],
     '/mood-energy-tracker': [
-      { path: '/', label: 'Home' },
+      { path: '/', label: 'Paddock20 Home' },
       { path: '/dashboard', label: 'Dashboard' },
       { path: '/mood-energy-tracker', label: 'Mood & Energy Tracker' }
     ],
     '/seasonal-checklist': [
-      { path: '/', label: 'Home' },
+      { path: '/', label: 'Paddock20 Home' },
       { path: '/garage-vault', label: 'Garage Vault' },
       { path: '/seasonal-checklist', label: 'Seasonal Checklist' }
     ],
     '/membership': [
-      { path: '/', label: 'Home' },
+      { path: '/', label: 'Paddock20 Home' },
       { path: '/membership', label: 'Paddock20 Membership' }
     ],
     '/chat-feed': [
-      { path: '/', label: 'Home' },
+      { path: '/', label: 'Paddock20 Home' },
       { path: '/chat-feed', label: 'Paddock20 Chat' }
     ],
     '/gloss-reset': [
-      { path: '/', label: 'Home' },
+      { path: '/', label: 'Paddock20 Home' },
       { path: '/juicebox', label: 'Juice Box' },
       { path: '/gloss-reset', label: 'Gloss Reset Program' }
     ],
     '/juice-loadouts': [
-      { path: '/', label: 'Home' },
+      { path: '/', label: 'Paddock20 Home' },
       { path: '/juicebox', label: 'Juice Box' },
       { path: '/juice-loadouts', label: 'Product Loadouts' }
     ],
     '/gloss-growth': [
-      { path: '/', label: 'Home' },
+      { path: '/', label: 'Paddock20 Home' },
       { path: '/juicebox', label: 'Juice Box' },
       { path: '/gloss-growth', label: 'Gloss Growth Tracker' }
     ],
     '/juicebox-videos': [
-      { path: '/', label: 'Home' },
+      { path: '/', label: 'Paddock20 Home' },
       { path: '/juicebox', label: 'Juice Box' },
       { path: '/juicebox-videos', label: 'Video Library' }
     ],
@@ -111,13 +111,18 @@ const ContextualBreadcrumbs: React.FC = () => {
     
     // Default: generate breadcrumbs from URL segments
     const segments = location.split('/').filter(Boolean);
-    // Always make sure the Home breadcrumb goes to the main homepage
+    
+    // Always make sure the Home breadcrumb goes to the main Paddock20 homepage
+    // Use explicit home label for consistency
     const result: BreadcrumbItem[] = [{ path: '/', label: 'Paddock20 Home' }];
     
     let pathSoFar = '';
     segments.forEach((segment) => {
-      pathSoFar += `/${segment}`;
-      const label = segment
+      // Strip off any query parameters for the breadcrumb display
+      const cleanSegment = segment.split('?')[0]; 
+      pathSoFar += `/${cleanSegment}`;
+      
+      const label = cleanSegment
         .split('-')
         .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
