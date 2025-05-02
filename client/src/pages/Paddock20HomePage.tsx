@@ -535,8 +535,8 @@ const Paddock20HomePage: React.FC = () => {
                 <div className="text-xs text-blue-400">Last updated: 2 days ago</div>
               </div>
               
-              <div className="grid grid-cols-2 gap-2 mt-2">
-                <Link to="/garage-vault" className="text-xs bg-green-600/20 text-green-400 hover:bg-green-600/30 transition-colors px-2 py-1 rounded flex items-center justify-center">
+              <div className="grid grid-cols-3 gap-2 mt-2">
+                <Link to="/garage-vault?action=maintenance" className="text-xs bg-green-600/20 text-green-400 hover:bg-green-600/30 transition-colors px-2 py-1 rounded flex items-center justify-center">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
                     <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
@@ -544,7 +544,7 @@ const Paddock20HomePage: React.FC = () => {
                   <span>Maintenance</span>
                 </Link>
                 
-                <Link to="/garage-vault" className="text-xs bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 transition-colors px-2 py-1 rounded flex items-center justify-center">
+                <Link to="/garage-vault?section=gloss&action=wash" className="text-xs bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 transition-colors px-2 py-1 rounded flex items-center justify-center">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z" />
                     <path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97" />
@@ -552,18 +552,11 @@ const Paddock20HomePage: React.FC = () => {
                   <span>Wash/Detail</span>
                 </Link>
                 
-                <Link to="/garage-vault" className="text-xs bg-purple-600/20 text-purple-400 hover:bg-purple-600/30 transition-colors px-2 py-1 rounded flex items-center justify-center">
+                <Link to="/garage-vault?section=modifications&action=mod" className="text-xs bg-purple-600/20 text-purple-400 hover:bg-purple-600/30 transition-colors px-2 py-1 rounded flex items-center justify-center">
                   <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                     <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
                   </svg>
                   <span>Mod</span>
-                </Link>
-                
-                <Link to="/garage-vault" className="text-xs bg-amber-600/20 text-amber-400 hover:bg-amber-600/30 transition-colors px-2 py-1 rounded flex items-center justify-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z" />
-                  </svg>
-                  <span>Log Drive</span>
                 </Link>
               </div>
             </div>

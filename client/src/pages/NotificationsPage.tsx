@@ -1,12 +1,13 @@
 import React from "react";
-import { Helmet } from "react-helmet";
 
 const NotificationsPage: React.FC = () => {
+  // Set document title
+  React.useEffect(() => {
+    document.title = "Notifications | Paddock20";
+  }, []);
+  
   return (
     <div className="min-h-screen bg-black text-white pt-20 pb-12">
-      <Helmet>
-        <title>Notifications | Paddock20</title>
-      </Helmet>
 
       <div className="container mx-auto px-4">
         <div className="mb-8">
