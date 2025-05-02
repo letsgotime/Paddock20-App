@@ -141,6 +141,10 @@ function JuiceBoxPage() {
       {/* Introduction Section */}
       <div className="bg-gradient-to-r from-[#111111] to-[#1a1a1a] p-6 rounded-lg border border-gray-800 mb-10">
         <div className="text-center mb-6">
+          <p className="text-white text-lg mb-2">The curated, real-world-tested, gloss-backed, Gavin-approved detailing arsenal.</p>
+          <p className="text-gray-300">Your complete detailing product guide and management system.</p>
+        </div>
+        <div className="text-center mb-6">
           <h2 className="text-3xl font-orbitron text-blue-400 mb-2">Get Started</h2>
           <p className="text-white text-lg italic mb-2">Everything you need to maximize your vehicle's appearance and protection.</p>
           <p className="text-gray-300">Comprehensive tools to document, track, and improve your detailing journey.</p>
