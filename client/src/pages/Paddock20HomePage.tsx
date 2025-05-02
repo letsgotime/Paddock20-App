@@ -42,24 +42,7 @@ const Paddock20HomePage: React.FC = () => {
   
   return (
     <div className="min-h-screen bg-black pt-12">
-      {/* ULTRA BASIC HEADER - NO FANCY STYLING AT ALL */}
-      <div className="mb-16">
-        <div className="mb-8">
-          <h1 className="text-center text-6xl font-bold font-orbitron">
-            <span className="text-[#4B9CD3]">PADDOCK</span>
-            <span className="text-green-500">20</span>
-          </h1>
-          <p className="text-center text-[#4B9CD3] font-orbitron text-xl mt-2">COMMAND CENTER</p>
-        </div>
-        
-        <div className="text-center text-white mb-8">
-          <span className="px-4 py-2 bg-[#111] mr-6 inline-block">Time: {formattedTime}</span>
-          <span className="px-4 py-2 bg-[#111] mr-6 inline-block">Date: {formattedDate}</span>
-          <span className="px-4 py-2 bg-[#111] inline-block">Session: {sessionTime}</span>
-        </div>
-      </div>
-      
-      {/* Background image moved after header to prevent any overlap */}
+      {/* Background image added first, moved to the back with z-index */}
       <div 
         className="fixed inset-0 bg-cover bg-center z-0 opacity-20"
         style={{
@@ -68,8 +51,24 @@ const Paddock20HomePage: React.FC = () => {
         }}
       ></div>
       
-      {/* Main content container - SIMPLIFIED for reliability */}
+      {/* Main content container includes the header now */}
       <div className="relative z-10 w-full max-w-[1200px] mx-auto px-4 pb-6">
+        {/* ULTRA BASIC HEADER - ALIGNED WITH PAGE MARGINS */}
+        <div className="mb-16">
+          <div className="mb-8">
+            <h1 className="text-center text-6xl font-bold font-orbitron">
+              <span className="text-[#4B9CD3]">PADDOCK</span>
+              <span className="text-green-500">20</span>
+            </h1>
+            <p className="text-center text-[#4B9CD3] font-orbitron text-xl mt-2">COMMAND CENTER</p>
+          </div>
+          
+          <div className="text-center text-white mb-8">
+            <span className="px-4 py-2 bg-[#111] mr-6 inline-block">Time: {formattedTime}</span>
+            <span className="px-4 py-2 bg-[#111] mr-6 inline-block">Date: {formattedDate}</span>
+            <span className="px-4 py-2 bg-[#111] inline-block">Session: {sessionTime}</span>
+          </div>
+        </div>
 
       {/* Enhanced F1-Inspired Live Weather Station - Driver-Oriented Weather Dashboard */}
       <section className="mb-8 relative">
