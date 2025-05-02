@@ -135,10 +135,57 @@ function JuiceBoxPage() {
         backgroundColor: "rgba(0,0,0,0.8)",
       }}
     >
+      {/* Introduction Section */}
+      <div className="bg-gradient-to-r from-[#111111] to-[#1a1a1a] p-6 rounded-lg border border-gray-800 mb-10">
+        <div className="text-center mb-6">
+          <h1 className="text-3xl font-orbitron text-blue-400 mb-2">🧼 GoTime Juice Box™</h1>
+          <p className="text-white text-lg italic mb-2">The curated, real-world-tested, gloss-backed, Gavin-approved detailing arsenal.</p>
+          <p className="text-gray-300">Your complete detailing product guide and management system.</p>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+          <div className="bg-black/40 p-4 rounded-lg border border-gray-800">
+            <h3 className="text-xl font-orbitron text-blue-400 mb-3">Why You're Here</h3>
+            <p className="text-gray-300 mb-2">Because you care about your ride's appearance as much as its performance.</p>
+            <p className="text-gray-300 mb-2">To learn what products actually work, save time on research, and build a proven detailing arsenal.</p>
+            <p className="text-gray-300">To track your detailing activities and build value into your vehicle.</p>
+          </div>
+          
+          <div className="bg-black/40 p-4 rounded-lg border border-gray-800">
+            <h3 className="text-xl font-orbitron text-blue-400 mb-3">What You Get</h3>
+            <ul className="text-gray-300 space-y-2">
+              <li className="flex items-start">
+                <span className="text-green-400 mr-2">✓</span> 
+                <span>Curated product recommendations tested on supercars and daily drivers</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-green-400 mr-2">✓</span> 
+                <span>Detailing activity tracker with points system</span>
+              </li>
+              <li className="flex items-start">
+                <span className="text-green-400 mr-2">✓</span> 
+                <span>Complete gloss reset system and seasonal maintenance guides</span>
+              </li>
+            </ul>
+          </div>
+          
+          <div className="bg-black/40 p-4 rounded-lg border border-gray-800">
+            <h3 className="text-xl font-orbitron text-blue-400 mb-3">How To Use It</h3>
+            <ol className="text-gray-300 space-y-2 list-decimal pl-5">
+              <li>Record your detailing sessions and product purchases</li>
+              <li>Build your personal detailing inventory</li>
+              <li>Follow the 7-Day Gloss Reset for maximum results</li>
+              <li>Track your detailing history for resale documentation</li>
+              <li>Earn points and track your detailing discipline</li>
+            </ol>
+          </div>
+        </div>
+      </div>
+      
       <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
-        <h1 className="apex-header text-3xl text-center md:text-left">
-          🧼 Juice Box
-        </h1>
+        <h2 className="apex-header text-2xl text-center md:text-left">
+          Juice Box Dashboard
+        </h2>
         
         <div ref={exportMenuRef} className="relative mt-4 md:mt-0 self-center md:self-auto">
           <button 
@@ -186,10 +233,6 @@ function JuiceBoxPage() {
         </div>
       </div>
       
-      <p className="text-white text-center mb-4">
-        Your complete detailing product guide and management system.
-      </p>
-      
       {/* Prominent Add Detailing Activity Button */}
       <div className="flex justify-center mb-8">
         <button 
@@ -197,7 +240,7 @@ function JuiceBoxPage() {
             setActiveTab('detailing-activity');
             setShowDetailingForm(true);
           }}
-          className="apex-button bg-green-500 hover:bg-green-600 text-black px-8 py-4 rounded-lg font-orbitron flex items-center text-lg shadow-lg transform hover:scale-105 transition-transform"
+          className="apex-button bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg font-orbitron flex items-center text-lg shadow-lg transform hover:scale-105 transition-transform"
         >
           <span className="mr-2">+</span> Add Detailing Activity or Purchase
         </button>
@@ -236,10 +279,10 @@ function JuiceBoxPage() {
           onClick={() => setActiveTab('detailing-activity')}
           className={`px-5 py-2 rounded-lg font-orbitron text-sm
             ${activeTab === 'detailing-activity' 
-              ? 'bg-green-500 text-black' 
+              ? 'bg-blue-600 text-white' 
               : 'bg-gray-800 text-white hover:bg-gray-700'}`}
         >
-          New Detailing Activity
+          New Detailing Activity or Purchase
         </button>
         <button 
           onClick={() => setActiveTab('day-reset')}
