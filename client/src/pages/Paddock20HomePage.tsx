@@ -468,7 +468,7 @@ const Paddock20HomePage: React.FC = () => {
             </Link>
             
             <div className="flex gap-2">
-              <Link to="/" className="bg-green-600/10 hover:bg-green-600/20 text-green-400 p-1.5 rounded block">
+              <Link to="/dashboard" className="bg-green-600/10 hover:bg-green-600/20 text-green-400 p-1.5 rounded block">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                   <polyline points="9 22 9 12 15 12 15 22"></polyline>
@@ -529,32 +529,43 @@ const Paddock20HomePage: React.FC = () => {
               </div>
             </div>
             
-            <div className="p-3 border-t border-gray-800 flex justify-between items-center">
-              <div className="flex items-center space-x-3">
-                <div className="flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-500 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path>
-                    <path d="M12 12v9"></path>
-                    <path d="m8 17 4-5 4 5"></path>
-                  </svg>
-                  <span className="text-xs text-gray-300">32 Drives</span>
-                </div>
-                <div className="flex items-center">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-500 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <polyline points="12 6 12 12 16 14"></polyline>
-                  </svg>
-                  <span className="text-xs text-gray-300">48.3 Hours</span>
-                </div>
+            <div className="p-3 border-t border-gray-800">
+              <div className="flex justify-between items-center mb-2">
+                <div className="text-xs text-gray-400 font-medium">Vehicle Actions</div>
+                <div className="text-xs text-blue-400">Last updated: 2 days ago</div>
               </div>
               
-              <Link to="/garage-vault/maintenance/add" className="text-xs bg-green-600/20 text-green-400 hover:bg-green-600/30 transition-colors px-2 py-1 rounded flex items-center">
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                  <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                </svg>
-                <span>Log Maintenance</span>
-              </Link>
+              <div className="grid grid-cols-2 gap-2 mt-2">
+                <Link to="/garage-vault" className="text-xs bg-green-600/20 text-green-400 hover:bg-green-600/30 transition-colors px-2 py-1 rounded flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                  </svg>
+                  <span>Maintenance</span>
+                </Link>
+                
+                <Link to="/garage-vault" className="text-xs bg-blue-600/20 text-blue-400 hover:bg-blue-600/30 transition-colors px-2 py-1 rounded flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M7 16.3c2.2 0 4-1.83 4-4.05 0-1.16-.57-2.26-1.71-3.19S7.29 6.75 7 5.3c-.29 1.45-1.14 2.84-2.29 3.76S3 11.1 3 12.25c0 2.22 1.8 4.05 4 4.05z" />
+                    <path d="M12.56 6.6A10.97 10.97 0 0 0 14 3.02c.5 2.5 2 4.9 4 6.5s3 3.5 3 5.5a6.98 6.98 0 0 1-11.91 4.97" />
+                  </svg>
+                  <span>Wash/Detail</span>
+                </Link>
+                
+                <Link to="/garage-vault" className="text-xs bg-purple-600/20 text-purple-400 hover:bg-purple-600/30 transition-colors px-2 py-1 rounded flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z" />
+                  </svg>
+                  <span>Mod</span>
+                </Link>
+                
+                <Link to="/garage-vault" className="text-xs bg-amber-600/20 text-amber-400 hover:bg-amber-600/30 transition-colors px-2 py-1 rounded flex items-center justify-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M8 1.314C12.438-3.248 23.534 4.735 8 15-7.534 4.736 3.562-3.248 8 1.314z" />
+                  </svg>
+                  <span>Log Drive</span>
+                </Link>
+              </div>
             </div>
           </div>
           
