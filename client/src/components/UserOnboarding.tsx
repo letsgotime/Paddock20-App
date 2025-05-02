@@ -461,9 +461,9 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
               
               <div className="text-center">
                 <img 
-                  src="/assets/Logos/GoTime Logo-7FC844-White (1).png" 
+                  src="/favicon.png" 
                   alt="GoTime Motorsports Logo" 
-                  className="h-8 mb-4 mx-auto opacity-90" 
+                  className="h-12 mb-4 mx-auto opacity-90" 
                 />
                 <p className="text-gray-300">
                   By proceeding, you're joining an exclusive group of automotive enthusiasts shaping the future of Paddock20. 
@@ -492,7 +492,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
               <p className="text-gray-300 leading-relaxed">
                 Paddock20 is an advanced mobility insights platform that transforms automotive telemetry, 
                 detailing management, and personal development into a comprehensive digital experience 
-                for automotive enthusiasts and detailing professionals.
+                for automotive enthusiasts and detailing enthusiasts.
               </p>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
