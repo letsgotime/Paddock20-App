@@ -93,8 +93,8 @@ const Paddock20HomePage: React.FC = () => {
       {/* Main content container includes the header now - with full width on mobile */}
       <div className="relative z-10 w-full max-w-[100%] sm:max-w-[1200px] mx-auto px-2 sm:px-4 pb-6">
         {/* ULTRA BASIC HEADER - ALIGNED WITH PAGE MARGINS */}
-        <div className="mb-10">
-          <div className="mb-4">
+        <div className="mb-4">
+          <div className="mb-2">
             <h1 className="text-center text-5xl sm:text-6xl font-bold font-orbitron">
               <span className="text-[#4B9CD3]">PADDOCK</span>
               <span className="text-green-500">20</span>
@@ -102,7 +102,7 @@ const Paddock20HomePage: React.FC = () => {
             <p className="text-center text-[#4B9CD3] font-orbitron text-lg sm:text-xl mt-2">COMMAND CENTER</p>
           </div>
           
-          <div className="text-center text-white mb-6 flex flex-wrap justify-center">
+          <div className="text-center text-white mb-2 flex flex-wrap justify-center">
             <div className="px-3 py-1 bg-[#111] m-1 inline-block border border-transparent hover:border-[#4B9CD3]/40 transition-all duration-300 hover:bg-black cursor-pointer hover:shadow-[0_0_8px_rgba(75,156,211,0.3)] rounded-sm">
               Time: {formattedTime}
             </div>
@@ -112,6 +112,114 @@ const Paddock20HomePage: React.FC = () => {
             <div className="px-3 py-1 bg-[#111] m-1 inline-block border border-transparent hover:border-[#4B9CD3]/40 transition-all duration-300 hover:bg-black cursor-pointer hover:shadow-[0_0_8px_rgba(75,156,211,0.3)] rounded-sm min-w-[180px]">
               {currentInsight.icon} <span className="text-xs font-medium">{currentInsight.text}</span>: {currentInsight.value}
             </div>
+          </div>
+        </div>
+        
+        {/* Inspirational Slogan - Moved from bottom to top */}
+        <div className="mb-6 text-center">
+          <h2 className="text-blue-400 font-orbitron text-3xl mb-2">Drive Like a Champion. <span className="text-green-500">Build Your Legacy.</span></h2>
+        </div>
+        
+        {/* Introduction Panel - Similar to Manifestation Station */}
+        <div className="mb-8 bg-gradient-to-r from-gray-900 to-black border border-gray-800 rounded-lg overflow-hidden shadow-xl">
+          {/* Header bar */}
+          <div className="bg-gradient-to-r from-blue-900/40 to-green-900/40 p-4 border-b border-gray-800">
+            <h3 className="font-orbitron text-center text-xl text-white">PADDOCK20 WELCOMES YOU</h3>
+          </div>
+          
+          {/* Three column layout */}
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-0 relative z-10">
+            <div className="p-5 border-r border-gray-800 flex flex-col h-full">
+              <div className="mb-3 pb-2 border-b border-gray-700">
+                <h3 className="font-['Orbitron'] text-lg text-white">WHY YOU'RE HERE</h3>
+              </div>
+              <div className="bg-black bg-opacity-50 p-4 rounded-lg flex-grow border border-gray-800 shadow-inner">
+                <p className="text-gray-300 text-sm leading-relaxed">
+                  Paddock20 isn't just an app. <span className="text-blue-400 font-semibold">It's your command center.</span> 
+                  <br /><br />
+                  Every screen is designed with the driver in mind — metrics that matter for your passion, your drive, your journey.
+                  <br /><br />
+                  <span className="text-green-400 font-medium">Weather insights. Route planning. Vehicle telemetry.</span> 
+                  <br /><br />
+                  Because the drive isn't just about the destination—it's about <span className="text-blue-400 font-semibold">the journey</span>.
+                </p>
+              </div>
+            </div>
+            
+            <div className="p-5 border-r border-gray-800 flex flex-col h-full">
+              <div className="mb-3 pb-2 border-b border-gray-700">
+                <h3 className="font-['Orbitron'] text-lg text-white">WHAT YOU GET</h3>
+              </div>
+              <div className="bg-black bg-opacity-50 p-4 rounded-lg flex-grow border border-gray-800 shadow-inner">
+                <div className="mb-3 p-3 bg-blue-600 rounded-md shadow-lg relative overflow-hidden">
+                  <h4 className="text-center font-['Orbitron'] text-white font-bold text-sm mb-1 relative z-10">DRIVER PERFORMANCE HUB</h4>
+                  <p className="text-white text-xs text-center relative z-10">Comprehensive tools for the driver who wants excellence</p>
+                </div>
+                <ul className="text-gray-300 text-sm space-y-2">
+                  <li className="flex items-start">
+                    <span className="text-green-400 mr-2">▪</span> 
+                    <span><span className="text-blue-400 font-medium">Surface Weather:</span> Racing-focused conditions</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-400 mr-2">▪</span> 
+                    <span><span className="text-blue-400 font-medium">Route Planner:</span> Crafted for the perfect drive</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-400 mr-2">▪</span> 
+                    <span><span className="text-blue-400 font-medium">Garage Vault:</span> Manage your treasured vehicles</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-400 mr-2">▪</span> 
+                    <span><span className="text-blue-400 font-medium">Manifestation:</span> Bring your automotive dreams to life</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-400 mr-2">▪</span> 
+                    <span><span className="text-blue-400 font-medium">Track Telemetry:</span> F1-inspired data for your drive</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+            
+            <div className="p-5 flex flex-col h-full">
+              <div className="mb-3 pb-2 border-b border-gray-700">
+                <h3 className="font-['Orbitron'] text-lg text-white">HOW TO USE IT</h3>
+              </div>
+              <div className="bg-black bg-opacity-50 p-4 rounded-lg flex-grow border border-gray-800 shadow-inner">
+                <div className="mb-4 p-3 bg-blue-600 rounded-md shadow-lg relative overflow-hidden">
+                  <h4 className="text-center font-['Orbitron'] text-white font-bold text-sm mb-1 relative z-10">THE PADDOCK20 EXPERIENCE</h4>
+                  <p className="text-white text-xs text-center relative z-10">Designed for drivers who demand excellence from every aspect of their journey</p>
+                </div>
+                <ul className="text-gray-300 text-sm space-y-2">
+                  <li className="flex items-start">
+                    <span className="text-green-400 mr-2">▪</span> 
+                    <span><span className="text-blue-400 font-medium">Start Here:</span> Daily weather and condition checks</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-400 mr-2">▪</span> 
+                    <span><span className="text-blue-400 font-medium">Plan Routes:</span> Create the perfect driving experience</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-400 mr-2">▪</span> 
+                    <span><span className="text-blue-400 font-medium">Journal:</span> Track your drives and experiences</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-400 mr-2">▪</span> 
+                    <span><span className="text-blue-400 font-medium">Dream:</span> Visit the Manifestation Station</span>
+                  </li>
+                  <li className="flex items-start">
+                    <span className="text-green-400 mr-2">▪</span> 
+                    <span><span className="text-blue-400 font-medium">Connect:</span> Join driver events and communities</span>
+                  </li>
+                </ul>
+              </div>
+            </div>
+          </div>
+          
+          {/* Footer quote */}
+          <div className="relative z-10 p-3 border-t border-gray-700 bg-gradient-to-r from-gray-900 via-black to-gray-900">
+            <p className="text-center text-sm text-white font-medium">
+              DRIVE WITH PRECISION • PLAN WITH PURPOSE • LIVE WITH PASSION
+            </p>
           </div>
         </div>
 
