@@ -41,10 +41,27 @@ const Paddock20HomePage: React.FC = () => {
   const sessionTime = `${sessionHours.toString().padStart(2, '0')}:${sessionMinutes.toString().padStart(2, '0')}:${sessionSeconds.toString().padStart(2, '0')}`;
   
   return (
-    <div className="min-h-screen bg-black pt-8">
-      {/* Dynamic racing-inspired background with overlay */}
+    <div className="min-h-screen bg-black pt-12">
+      {/* ULTRA BASIC HEADER - NO FANCY STYLING AT ALL */}
+      <div className="mb-16">
+        <div className="mb-8">
+          <h1 className="text-center text-6xl font-bold font-orbitron">
+            <span className="text-[#4B9CD3]">PADDOCK</span>
+            <span className="text-green-500">20</span>
+          </h1>
+          <p className="text-center text-[#4B9CD3] font-orbitron text-xl mt-2">COMMAND CENTER</p>
+        </div>
+        
+        <div className="text-center text-white mb-8">
+          <span className="px-4 py-2 bg-[#111] mr-6 inline-block">Time: {formattedTime}</span>
+          <span className="px-4 py-2 bg-[#111] mr-6 inline-block">Date: {formattedDate}</span>
+          <span className="px-4 py-2 bg-[#111] inline-block">Session: {sessionTime}</span>
+        </div>
+      </div>
+      
+      {/* Background image moved after header to prevent any overlap */}
       <div 
-        className="absolute inset-0 bg-cover bg-center z-0 opacity-30"
+        className="fixed inset-0 bg-cover bg-center z-0 opacity-20"
         style={{
           backgroundImage: "url('/assets/images/f1-stadium-sunset.png')",
           backgroundAttachment: "fixed",
@@ -53,46 +70,6 @@ const Paddock20HomePage: React.FC = () => {
       
       {/* Main content container - SIMPLIFIED for reliability */}
       <div className="relative z-10 w-full max-w-[1200px] mx-auto px-4 pb-6">
-      
-        {/* Super Simple North Carolina Blue Header */}
-        <header className="mb-8 text-center">
-          <h1 className="font-orbitron text-4xl md:text-5xl lg:text-6xl font-bold">
-            <span className="text-[#4B9CD3]">PADDOCK</span>
-            <span className="text-green-500">20</span>
-          </h1>
-          <div className="mt-2">
-            <span className="text-[#4B9CD3] text-sm md:text-base uppercase font-bold font-orbitron tracking-widest">COMMAND CENTER</span>
-          </div>
-          
-          {/* Simple Stats Bar */}
-          <div className="mt-4 flex flex-wrap justify-center gap-4">
-            <div className="bg-black px-4 py-2 rounded border border-[#4B9CD3]/30">
-              <span className="text-[#4B9CD3] text-xs uppercase font-semibold block mb-1">TIME</span>
-              <span className="text-white text-lg font-mono">{formattedTime}</span>
-            </div>
-            
-            <div className="bg-black px-4 py-2 rounded border border-[#4B9CD3]/30">
-              <span className="text-[#4B9CD3] text-xs uppercase font-semibold block mb-1">DATE</span>
-              <span className="text-white">{formattedDate}</span>
-            </div>
-            
-            <div className="bg-black px-4 py-2 rounded border border-[#4B9CD3]/30">
-              <span className="text-[#4B9CD3] text-xs uppercase font-semibold block mb-1">SESSION</span>
-              <div className="flex items-center">
-                <Timer className="h-3 w-3 text-green-500 mr-1" />
-                <span className="text-white font-mono">{sessionTime}</span>
-              </div>
-            </div>
-            
-            <div className="bg-black px-4 py-2 rounded border border-[#4B9CD3]/30">
-              <span className="text-[#4B9CD3] text-xs uppercase font-semibold block mb-1">STATUS</span>
-              <div className="flex items-center">
-                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse mr-2"></div>
-                <span className="text-white">ACTIVE</span>
-              </div>
-            </div>
-          </div>
-        </header>
 
       {/* Enhanced F1-Inspired Live Weather Station - Driver-Oriented Weather Dashboard */}
       <section className="mb-8 relative">
