@@ -120,97 +120,6 @@ const DropdownNavbar = () => {
       </Link>
       
       <div className="flex items-center space-x-3">
-        {/* Podium Pursuit dropdown */}
-        <div className="relative" ref={podiumRef}>
-          <button 
-            onClick={() => setIsPodiumOpen(!isPodiumOpen)}
-            className="text-blue-400 font-orbitron font-medium px-3 py-1.5 rounded-md border border-blue-500 hover:bg-blue-900/20 flex items-center space-x-1"
-          >
-            {getLevelIcon()}
-            <span className="ml-1.5">Podium Pursuit</span>
-            <ChevronDown className="h-3.5 w-3.5 ml-1" />
-          </button>
-          
-          {isPodiumOpen && (
-            <div className="absolute right-0 mt-2 w-72 bg-gradient-to-b from-gray-900 to-black rounded-lg shadow-lg p-4 space-y-3 z-50 border border-blue-900/50">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  {getLevelIcon()}
-                  <span className="ml-2 font-orbitron text-blue-400">Level {userRewards.level} {getLevelName()}</span>
-                </div>
-                <div className="flex items-center">
-                  <Star className="text-yellow-400 h-4 w-4 mr-1" />
-                  <span className="text-yellow-400 font-bold">{userRewards.totalPoints} pts</span>
-                </div>
-              </div>
-              
-              <div className="w-full bg-gray-800 rounded-full h-2.5 mb-1 overflow-hidden">
-                <div 
-                  className="h-full bg-gradient-to-r from-blue-500 to-green-500" 
-                  style={{ width: `${Math.min(100, (userRewards.totalPoints / (userRewards.totalPoints + pointsToNextLevel)) * 100)}%` }}
-                ></div>
-              </div>
-              
-              <div className="flex justify-between text-xs text-gray-400">
-                <span>Driver Level {userRewards.level}</span>
-                <span className="flex items-center">
-                  <Trophy className="inline h-3 w-3 mr-1 text-blue-400" />
-                  {pointsToNextLevel} pts to Level {userRewards.level + 1}
-                </span>
-              </div>
-              
-              {/* Achievement tracks section - modular architecture for adding more tracks */}
-              <div className="border-t border-blue-900/30 pt-2 mt-2">
-                <div className="text-xs text-blue-400 mb-2">Achievement Tracks</div>
-                <div className="grid grid-cols-3 gap-1 mb-3">
-                  <div className="bg-blue-900/20 rounded p-1 text-center">
-                    <div className="text-xs text-white">Driving</div>
-                    <div className="text-blue-300 text-xs">Lv.{userRewards.level}</div>
-                  </div>
-                  <div className="bg-blue-900/20 rounded p-1 text-center">
-                    <div className="text-xs text-white">Detailing</div>
-                    <div className="text-blue-300 text-xs">Lv.{Math.max(1, userRewards.level-2)}</div>
-                  </div>
-                  <div className="bg-blue-900/20 rounded p-1 text-center">
-                    <div className="text-xs text-white">Track Days</div>
-                    <div className="text-blue-300 text-xs">Lv.{Math.max(1, userRewards.level-1)}</div>
-                  </div>
-                </div>
-
-                <div className="text-xs text-blue-400 mb-2">Recent Achievements</div>
-                <div className="grid grid-cols-2 gap-2">
-                  {userRewards.rewards.slice(-4).map((reward) => (
-                    <div key={reward.id} className="flex items-center bg-blue-900/20 p-2 rounded-sm">
-                      <div className="mr-2 text-lg">{reward.icon}</div>
-                      <div className="text-xs">
-                        <div className="text-white font-medium">{reward.title}</div>
-                        <div className="text-blue-300">{reward.points} pts</div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-              
-              <div className="grid grid-cols-2 gap-2">
-                <Link 
-                  to="/settings" 
-                  className="block w-full text-center text-sm text-white bg-blue-900/30 hover:bg-blue-900/50 py-2 rounded-md transition-colors"
-                  onClick={() => setIsPodiumOpen(false)}
-                >
-                  All Achievements
-                </Link>
-                <Link 
-                  to="/settings" 
-                  className="block w-full text-center text-sm text-white bg-blue-900/30 hover:bg-blue-900/50 py-2 rounded-md transition-colors"
-                  onClick={() => setIsPodiumOpen(false)}
-                >
-                  Driver Profile
-                </Link>
-              </div>
-            </div>
-          )}
-        </div>
-        
         {/* Main menu dropdown */}
         <div className="relative" ref={menuRef}>
           <button 
@@ -230,6 +139,106 @@ const DropdownNavbar = () => {
                 <LayoutDashboard className="h-4 w-4 mr-2 text-blue-400" />
                 <span>My Dashboard</span>
               </Link>
+              
+              {/* Podium Pursuit Link */}
+              <div className="relative group" ref={podiumRef}>
+                <button 
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setIsPodiumOpen(!isPodiumOpen);
+                  }}
+                  className="flex items-center hover:text-green-400 w-full py-1"
+                >
+                  {getLevelIcon()}
+                  <span className="ml-2">Podium Pursuit</span>
+                  <ChevronRight className="w-4 h-4 ml-2" />
+                </button>
+                
+                {isPodiumOpen && (
+                  <div className="absolute top-0 left-full ml-2 mt-0 w-72 bg-gradient-to-b from-gray-900 to-black rounded-lg shadow-lg p-4 space-y-3 z-50 border border-blue-900/50">
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center">
+                        {getLevelIcon()}
+                        <span className="ml-2 font-orbitron text-blue-400">Level {userRewards.level} {getLevelName()}</span>
+                      </div>
+                      <div className="flex items-center">
+                        <Star className="text-yellow-400 h-4 w-4 mr-1" />
+                        <span className="text-yellow-400 font-bold">{userRewards.totalPoints} pts</span>
+                      </div>
+                    </div>
+                    
+                    <div className="w-full bg-gray-800 rounded-full h-2.5 mb-1 overflow-hidden">
+                      <div 
+                        className="h-full bg-gradient-to-r from-blue-500 to-green-500" 
+                        style={{ width: `${Math.min(100, (userRewards.totalPoints / (userRewards.totalPoints + pointsToNextLevel)) * 100)}%` }}
+                      ></div>
+                    </div>
+                    
+                    <div className="flex justify-between text-xs text-gray-400">
+                      <span>Driver Level {userRewards.level}</span>
+                      <span className="flex items-center">
+                        <Trophy className="inline h-3 w-3 mr-1 text-blue-400" />
+                        {pointsToNextLevel} pts to Level {userRewards.level + 1}
+                      </span>
+                    </div>
+                    
+                    {/* Achievement tracks section - modular architecture for adding more tracks */}
+                    <div className="border-t border-blue-900/30 pt-2 mt-2">
+                      <div className="text-xs text-blue-400 mb-2">Achievement Tracks</div>
+                      <div className="grid grid-cols-3 gap-1 mb-3">
+                        <div className="bg-blue-900/20 rounded p-1 text-center">
+                          <div className="text-xs text-white">Driving</div>
+                          <div className="text-blue-300 text-xs">Lv.{userRewards.level}</div>
+                        </div>
+                        <div className="bg-blue-900/20 rounded p-1 text-center">
+                          <div className="text-xs text-white">Detailing</div>
+                          <div className="text-blue-300 text-xs">Lv.{Math.max(1, userRewards.level-2)}</div>
+                        </div>
+                        <div className="bg-blue-900/20 rounded p-1 text-center">
+                          <div className="text-xs text-white">Track Days</div>
+                          <div className="text-blue-300 text-xs">Lv.{Math.max(1, userRewards.level-1)}</div>
+                        </div>
+                      </div>
+                      
+                      <div className="text-xs text-blue-400 mb-2">Recent Achievements</div>
+                      <div className="grid grid-cols-2 gap-2">
+                        {userRewards.rewards.slice(-4).map((reward) => (
+                          <div key={reward.id} className="flex items-center bg-blue-900/20 p-2 rounded-sm">
+                            <div className="mr-2 text-lg">{reward.icon}</div>
+                            <div className="text-xs">
+                              <div className="text-white font-medium">{reward.title}</div>
+                              <div className="text-blue-300">{reward.points} pts</div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 gap-2">
+                      <Link 
+                        to="/settings" 
+                        className="block w-full text-center text-sm text-white bg-blue-900/30 hover:bg-blue-900/50 py-2 rounded-md transition-colors"
+                        onClick={() => {
+                          setIsPodiumOpen(false);
+                          setIsOpen(false);
+                        }}
+                      >
+                        All Achievements
+                      </Link>
+                      <Link 
+                        to="/settings" 
+                        className="block w-full text-center text-sm text-white bg-blue-900/30 hover:bg-blue-900/50 py-2 rounded-md transition-colors"
+                        onClick={() => {
+                          setIsPodiumOpen(false);
+                          setIsOpen(false);
+                        }}
+                      >
+                        Driver Profile
+                      </Link>
+                    </div>
+                  </div>
+                )}
+              </div>
               <Link to="/weather" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
                 <Cloud className="h-4 w-4 mr-2 text-blue-400" />
                 <span>Weather Center</span>
