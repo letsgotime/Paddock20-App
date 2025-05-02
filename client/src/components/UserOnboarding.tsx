@@ -629,6 +629,232 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
               </div>
             </div>
           )}
+          
+          {/* User Profile Form */}
+          {step === 4 && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="flex items-center bg-[#1982FC]/10 p-4 rounded-lg mb-6">
+                <User className="text-[#1982FC] mr-4" size={24} />
+                <p className="text-gray-200">
+                  Create your Paddock20 driver profile. This information helps personalize your experience
+                  and connect you with like-minded automotive enthusiasts.
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Profile Image Upload */}
+                <div className="md:col-span-2 flex flex-col items-center justify-center p-6 border border-gray-700 rounded-lg bg-gray-800/30">
+                  <div 
+                    className="w-32 h-32 mb-4 rounded-full bg-gray-700 flex items-center justify-center border-2 border-[#1982FC]/50 overflow-hidden"
+                  >
+                    {hasUploadedProfilePic ? (
+                      <img 
+                        src={userProfile.profileImage || '/assets/Stock Photos/user-avatar-placeholder.png'} 
+                        alt="Profile" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User size={56} className="text-gray-400" />
+                    )}
+                  </div>
+                  
+                  <button 
+                    onClick={handleProfileImageUpload}
+                    className="px-4 py-2 flex items-center gap-2 bg-gray-700 hover:bg-gray-600 rounded-md text-sm transition-colors"
+                  >
+                    <Camera size={16} />
+                    Upload Profile Picture
+                  </button>
+                  
+                  <p className="text-xs text-gray-400 mt-3 text-center">
+                    Recommended: Square image, minimum 500x500 pixels
+                  </p>
+                </div>
+                
+                {/* Basic Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
+                    Basic Information
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <label htmlFor="fullName" className="block text-sm font-medium text-gray-300 mb-1">
+                        Full Name <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="fullName"
+                        name="fullName"
+                        type="text"
+                        required
+                        value={userProfile.fullName}
+                        onChange={handleUserProfileChange}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
+                        placeholder="Your name"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-1">
+                        Username <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="username"
+                        name="username"
+                        type="text"
+                        required
+                        value={userProfile.username}
+                        onChange={handleUserProfileChange}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
+                        placeholder="Choose a username"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
+                        Email <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="email"
+                        name="email"
+                        type="email"
+                        required
+                        value={userProfile.email}
+                        onChange={handleUserProfileChange}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
+                        placeholder="your-email@example.com"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Account Security */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
+                    Account Security
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
+                        Password <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="password"
+                        name="password"
+                        type="password"
+                        required
+                        value={userProfile.password}
+                        onChange={handleUserProfileChange}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
+                        placeholder="Choose a secure password"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-1">
+                        Confirm Password <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type="password"
+                        required
+                        value={userProfile.confirmPassword}
+                        onChange={handleUserProfileChange}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
+                        placeholder="Re-enter your password"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="drivingExperience" className="block text-sm font-medium text-gray-300 mb-1">
+                        Driving Experience
+                      </label>
+                      <select
+                        id="drivingExperience"
+                        name="drivingExperience"
+                        value={userProfile.drivingExperience}
+                        onChange={handleUserProfileChange}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
+                      >
+                        <option value="beginner">Beginner</option>
+                        <option value="intermediate">Intermediate</option>
+                        <option value="advanced">Advanced</option>
+                        <option value="professional">Professional</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Automotive Interests */}
+                <div className="md:col-span-2 space-y-4">
+                  <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
+                    Automotive Interests <span className="text-red-500">*</span>
+                  </h3>
+                  <p className="text-sm text-gray-400 mb-3">
+                    Select at least one interest to help us personalize your experience.
+                  </p>
+                  
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {availableInterests.map(interest => (
+                      <div 
+                        key={interest}
+                        onClick={() => toggleInterest(interest)}
+                        className={`
+                          px-4 py-3 rounded-lg cursor-pointer flex items-center transition-colors
+                          ${userProfile.interests.includes(interest)
+                            ? 'bg-[#1982FC]/20 border border-[#1982FC]/50'
+                            : 'bg-gray-800/60 border border-gray-700 hover:bg-gray-800'
+                          }
+                        `}
+                      >
+                        <div className={`
+                          w-5 h-5 rounded flex-shrink-0 mr-3 flex items-center justify-center
+                          ${userProfile.interests.includes(interest)
+                            ? 'bg-[#1982FC] text-white'
+                            : 'bg-gray-700'
+                          }
+                        `}>
+                          {userProfile.interests.includes(interest) && (
+                            <Check size={14} className="text-white" />
+                          )}
+                        </div>
+                        <span className="text-sm">{interest}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+                
+                {/* Bio */}
+                <div className="md:col-span-2 space-y-4">
+                  <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
+                    Bio
+                  </h3>
+                  <p className="text-sm text-gray-400 mb-3">
+                    Tell the community a bit about yourself (optional).
+                  </p>
+                  
+                  <textarea
+                    id="bio"
+                    name="bio"
+                    rows={4}
+                    value={userProfile.bio}
+                    onChange={handleUserProfileChange}
+                    className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
+                    placeholder="Share your automotive passion, experience, or goals..."
+                  />
+                </div>
+              </div>
+              
+              {error && (
+                <div className="p-4 bg-red-900/30 border border-red-700 rounded-lg flex items-center">
+                  <X className="text-red-400 mr-2 flex-shrink-0" size={18} />
+                  <span className="text-red-400 text-sm">{error}</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
         
         {/* Footer with navigation buttons */}
