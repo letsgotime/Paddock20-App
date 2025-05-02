@@ -195,15 +195,22 @@ function JuiceBoxPage() {
       <div className="bg-gradient-to-r from-black to-gray-900 p-6 rounded-lg border border-blue-900 mb-8">
         <div className="flex flex-col md:flex-row md:justify-between md:items-center mb-6">
           <h2 className="text-2xl font-orbitron text-blue-400 text-center md:text-left">
-            Juice Box Dashboard
+            Juice Box™ Master Dashboard
           </h2>
           
-          <div className="flex items-center mt-4 md:mt-0 space-x-4 self-center md:self-auto">
+          <div className="flex flex-wrap items-center mt-4 md:mt-0 space-x-2 md:space-x-4 self-center md:self-auto">
             <button
               onClick={() => setActiveTab('gloss-history')}
               className="apex-button bg-blue-600 hover:bg-blue-700 text-white flex items-center"
             >
               <span className="mr-2">📊</span> View Full History
+            </button>
+            
+            <button
+              onClick={() => setActiveTab('detailing-activity')}
+              className="apex-button bg-green-600 hover:bg-green-700 text-white flex items-center"
+            >
+              <span className="mr-2">➕</span> Add Activity
             </button>
             
             <div ref={exportMenuRef} className="relative">
@@ -220,77 +227,238 @@ function JuiceBoxPage() {
           </div>
         </div>
         
+        {/* Overall Stats Banner */}
+        <div className="flex flex-wrap justify-between bg-black/60 p-4 rounded-lg border border-blue-600 mb-6">
+          <div className="flex flex-col items-center px-4 py-2">
+            <div className="text-3xl font-bold text-white">12</div>
+            <div className="text-xs text-blue-300 uppercase tracking-wider font-semibold">Total Activities</div>
+          </div>
+          <div className="flex flex-col items-center px-4 py-2">
+            <div className="text-3xl font-bold text-green-400">325</div>
+            <div className="text-xs text-blue-300 uppercase tracking-wider font-semibold">Gloss Points</div>
+          </div>
+          <div className="flex flex-col items-center px-4 py-2">
+            <div className="text-3xl font-bold text-amber-400">23</div>
+            <div className="text-xs text-blue-300 uppercase tracking-wider font-semibold">Products Added</div>
+          </div>
+          <div className="flex flex-col items-center px-4 py-2">
+            <div className="text-3xl font-bold text-blue-400">4</div>
+            <div className="text-xs text-blue-300 uppercase tracking-wider font-semibold">Resets Done</div>
+          </div>
+          <div className="flex flex-col items-center px-4 py-2">
+            <div className="text-3xl font-bold text-purple-400">17</div>
+            <div className="text-xs text-blue-300 uppercase tracking-wider font-semibold">Hours Saved</div>
+          </div>
+        </div>
+        
         {/* Dashboard Summary Content */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
-          <div className="bg-black/60 p-4 rounded-lg border border-blue-900">
-            <h3 className="text-lg font-orbitron text-blue-400 mb-3">Activity Stats</h3>
+        <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
+          {/* Activity Stats Card - 4 columns */}
+          <div className="md:col-span-4 bg-black/60 p-4 rounded-lg border border-blue-900">
+            <h3 className="text-lg font-orbitron text-blue-400 mb-3">Detailed Statistics</h3>
             <div className="grid grid-cols-2 gap-4">
-              <div className="text-center">
-                <div className="text-2xl font-bold text-white">12</div>
-                <div className="text-sm text-gray-400">Total Activities</div>
+              <div className="bg-gray-900/60 p-3 rounded-lg text-center">
+                <div className="text-xl font-bold text-white">9</div>
+                <div className="text-xs text-gray-400">Washes</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-green-400">325</div>
-                <div className="text-sm text-gray-400">Gloss Points</div>
+              <div className="bg-gray-900/60 p-3 rounded-lg text-center">
+                <div className="text-xl font-bold text-white">3</div>
+                <div className="text-xs text-gray-400">Polishes</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-amber-400">4</div>
-                <div className="text-sm text-gray-400">Resets Completed</div>
+              <div className="bg-gray-900/60 p-3 rounded-lg text-center">
+                <div className="text-xl font-bold text-white">2</div>
+                <div className="text-xs text-gray-400">Coatings</div>
               </div>
-              <div className="text-center">
-                <div className="text-2xl font-bold text-blue-400">24</div>
-                <div className="text-sm text-gray-400">Products Used</div>
+              <div className="bg-gray-900/60 p-3 rounded-lg text-center">
+                <div className="text-xl font-bold text-white">4</div>
+                <div className="text-xs text-gray-400">Interior Cleans</div>
+              </div>
+            </div>
+            
+            <h3 className="text-lg font-orbitron text-blue-400 mt-6 mb-3">Product Breakdown</h3>
+            <div className="space-y-3">
+              <div>
+                <div className="flex justify-between mb-1">
+                  <span className="text-xs text-white">Wash Products</span>
+                  <span className="text-xs text-blue-400">7 items</span>
+                </div>
+                <div className="overflow-hidden h-2 text-xs flex rounded bg-gray-800">
+                  <div style={{ width: "30%" }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-blue-500"></div>
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between mb-1">
+                  <span className="text-xs text-white">Polish & Compounds</span>
+                  <span className="text-xs text-green-400">5 items</span>
+                </div>
+                <div className="overflow-hidden h-2 text-xs flex rounded bg-gray-800">
+                  <div style={{ width: "22%" }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-green-500"></div>
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between mb-1">
+                  <span className="text-xs text-white">Sealants & Waxes</span>
+                  <span className="text-xs text-amber-400">6 items</span>
+                </div>
+                <div className="overflow-hidden h-2 text-xs flex rounded bg-gray-800">
+                  <div style={{ width: "25%" }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-amber-500"></div>
+                </div>
+              </div>
+              <div>
+                <div className="flex justify-between mb-1">
+                  <span className="text-xs text-white">Interior Products</span>
+                  <span className="text-xs text-purple-400">5 items</span>
+                </div>
+                <div className="overflow-hidden h-2 text-xs flex rounded bg-gray-800">
+                  <div style={{ width: "22%" }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-purple-500"></div>
+                </div>
               </div>
             </div>
           </div>
           
-          <div className="bg-black/60 p-4 rounded-lg border border-blue-900">
-            <h3 className="text-lg font-orbitron text-blue-400 mb-3">Recent Activity</h3>
-            <ul className="space-y-2">
-              <li className="flex items-start text-sm">
-                <span className="text-green-400 mr-2">•</span>
-                <div>
-                  <div className="text-white">Full Exterior Detail</div>
-                  <div className="text-gray-400">2 days ago • 35 points</div>
+          {/* Recent Activity Feed - 5 columns */}
+          <div className="md:col-span-5 bg-black/60 p-4 rounded-lg border border-blue-900">
+            <div className="flex justify-between items-center mb-3">
+              <h3 className="text-lg font-orbitron text-blue-400">Activity Feed</h3>
+              <button className="text-blue-400 text-xs hover:text-blue-300">View All</button>
+            </div>
+            
+            <div className="space-y-4 max-h-[280px] overflow-y-auto pr-2 custom-scrollbar">
+              <div className="bg-gray-900/60 p-3 rounded-lg border-l-4 border-green-500">
+                <div className="flex justify-between items-start">
+                  <div className="text-white font-medium">Full Exterior Detail</div>
+                  <div className="bg-green-500/20 text-green-400 text-xs px-2 py-1 rounded">+35 pts</div>
                 </div>
-              </li>
-              <li className="flex items-start text-sm">
-                <span className="text-green-400 mr-2">•</span>
-                <div>
-                  <div className="text-white">Maintenance Wash</div>
-                  <div className="text-gray-400">1 week ago • 15 points</div>
+                <div className="text-gray-400 text-xs mt-1">2 days ago</div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <span className="bg-blue-900/50 text-blue-300 text-xs px-2 py-1 rounded">Wash</span>
+                  <span className="bg-blue-900/50 text-blue-300 text-xs px-2 py-1 rounded">Polish</span>
+                  <span className="bg-blue-900/50 text-blue-300 text-xs px-2 py-1 rounded">Wax</span>
                 </div>
-              </li>
-              <li className="flex items-start text-sm">
-                <span className="text-green-400 mr-2">•</span>
-                <div>
-                  <div className="text-white">Interior Cleaning</div>
-                  <div className="text-gray-400">2 weeks ago • 25 points</div>
+                <div className="flex items-center mt-2 text-xs text-gray-500">
+                  <div className="flex gap-1 mr-3">
+                    <span>📷</span> 3 photos
+                  </div>
+                  <div className="flex gap-1">
+                    <span>📝</span> Notes added
+                  </div>
                 </div>
-              </li>
-            </ul>
+              </div>
+              
+              <div className="bg-gray-900/60 p-3 rounded-lg border-l-4 border-blue-500">
+                <div className="flex justify-between items-start">
+                  <div className="text-white font-medium">Added Ceramic Coating Kit</div>
+                  <div className="bg-blue-500/20 text-blue-400 text-xs px-2 py-1 rounded">New Product</div>
+                </div>
+                <div className="text-gray-400 text-xs mt-1">5 days ago</div>
+                <div className="text-gray-300 text-sm mt-1">Gyeon Q² Pure</div>
+                <div className="flex items-center mt-2 text-xs text-gray-500">
+                  <div className="flex gap-1">
+                    <span>🧪</span> Added to collection
+                  </div>
+                </div>
+              </div>
+              
+              <div className="bg-gray-900/60 p-3 rounded-lg border-l-4 border-amber-500">
+                <div className="flex justify-between items-start">
+                  <div className="text-white font-medium">Maintenance Wash</div>
+                  <div className="bg-amber-500/20 text-amber-400 text-xs px-2 py-1 rounded">+15 pts</div>
+                </div>
+                <div className="text-gray-400 text-xs mt-1">1 week ago</div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <span className="bg-blue-900/50 text-blue-300 text-xs px-2 py-1 rounded">2-Bucket Wash</span>
+                  <span className="bg-blue-900/50 text-blue-300 text-xs px-2 py-1 rounded">Quick Detailer</span>
+                </div>
+              </div>
+              
+              <div className="bg-gray-900/60 p-3 rounded-lg border-l-4 border-purple-500">
+                <div className="flex justify-between items-start">
+                  <div className="text-white font-medium">Interior Cleaning</div>
+                  <div className="bg-purple-500/20 text-purple-400 text-xs px-2 py-1 rounded">+25 pts</div>
+                </div>
+                <div className="text-gray-400 text-xs mt-1">2 weeks ago</div>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <span className="bg-blue-900/50 text-blue-300 text-xs px-2 py-1 rounded">Vacuuming</span>
+                  <span className="bg-blue-900/50 text-blue-300 text-xs px-2 py-1 rounded">Leather Care</span>
+                </div>
+                <div className="flex items-center mt-2 text-xs text-gray-500">
+                  <div className="flex gap-1 mr-3">
+                    <span>📷</span> 5 photos
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
           
-          <div className="bg-black/60 p-4 rounded-lg border border-blue-900">
-            <h3 className="text-lg font-orbitron text-blue-400 mb-3">7-Day Reset Progress</h3>
-            <div className="relative pt-1">
-              <div className="flex mb-2 items-center justify-between">
-                <div className="text-white">
-                  <span className="text-green-400 font-bold">Day 4</span> of 7
+          {/* Reset Progress & Upcoming Card - 3 columns */}
+          <div className="md:col-span-3 space-y-6">
+            <div className="bg-black/60 p-4 rounded-lg border border-green-900">
+              <h3 className="text-lg font-orbitron text-green-400 mb-3">7-Day Reset Progress</h3>
+              <div className="relative pt-1">
+                <div className="flex mb-2 items-center justify-between">
+                  <div className="text-white">
+                    <span className="text-green-400 font-bold">Day 4</span> of 7
+                  </div>
+                  <div className="text-right">
+                    <span className="text-sm text-gray-400">57% Complete</span>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <span className="text-sm text-gray-400">57% Complete</span>
+                <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-800">
+                  <div style={{ width: "57%" }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-green-500"></div>
+                </div>
+                
+                <div className="flex flex-wrap gap-2 mb-4">
+                  {[1, 2, 3, 4, 5, 6, 7].map((day) => (
+                    <div 
+                      key={day} 
+                      className={`w-8 h-8 flex items-center justify-center rounded-full text-xs font-bold
+                        ${day < 5 ? 'bg-green-500 text-black' : 'bg-gray-800 text-white'}`}
+                    >
+                      {day}
+                    </div>
+                  ))}
+                </div>
+                
+                <button
+                  onClick={() => setActiveTab('day-reset')}
+                  className="w-full py-2 bg-green-600 hover:bg-green-700 text-white text-sm rounded font-medium mt-2"
+                >
+                  Continue Reset Protocol
+                </button>
+              </div>
+            </div>
+            
+            <div className="bg-black/60 p-4 rounded-lg border border-blue-900">
+              <h3 className="text-lg font-orbitron text-blue-400 mb-3">Collection Highlights</h3>
+              <div className="space-y-3">
+                <div className="flex items-center">
+                  <div className="bg-blue-900/30 w-10 h-10 rounded-full flex items-center justify-center mr-3">
+                    <span className="text-blue-300">🧴</span>
+                  </div>
+                  <div>
+                    <div className="text-white text-sm">23 total products</div>
+                    <div className="text-xs text-gray-400">$1,245 estimated value</div>
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <div className="bg-amber-900/30 w-10 h-10 rounded-full flex items-center justify-center mr-3">
+                    <span className="text-amber-300">⭐</span>
+                  </div>
+                  <div>
+                    <div className="text-white text-sm">5 favorite products</div>
+                    <div className="text-xs text-gray-400">Most frequently used</div>
+                  </div>
+                </div>
+                <div className="flex items-center">
+                  <div className="bg-green-900/30 w-10 h-10 rounded-full flex items-center justify-center mr-3">
+                    <span className="text-green-300">🚗</span>
+                  </div>
+                  <div>
+                    <div className="text-white text-sm">Detailing Level: Pro</div>
+                    <div className="text-xs text-gray-400">Based on your activities</div>
+                  </div>
                 </div>
               </div>
-              <div className="overflow-hidden h-2 mb-4 text-xs flex rounded bg-gray-800">
-                <div style={{ width: "57%" }} className="shadow-none flex flex-col text-center whitespace-nowrap text-white justify-center bg-green-500"></div>
-              </div>
-              <button
-                onClick={() => setActiveTab('day-reset')}
-                className="w-full py-2 bg-blue-600 hover:bg-blue-700 text-white text-sm rounded font-medium mt-2"
-              >
-                Continue Reset Protocol
-              </button>
             </div>
           </div>
           
