@@ -200,8 +200,8 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
            userProfile.email.trim() !== '' &&
            userProfile.password.trim() !== '' &&
            userProfile.confirmPassword.trim() !== '' &&
-           userProfile.password === userProfile.confirmPassword && 
-           userProfile.interests.length > 0;
+           userProfile.password === userProfile.confirmPassword;
+    // Removed the interests requirement since it's optional
   };
   
   // Check if vehicle profile is complete enough to proceed
@@ -258,21 +258,28 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
   // Simulated file upload for profile picture
   const handleProfileImageUpload = () => {
     // In a real app, this would handle actual file upload
+    // For demo, immediately set profile image
+    const demoProfileImage = '/favicon.png'; // Use GoTime logo as placeholder
     setHasUploadedProfilePic(true);
     setUserProfile(prev => ({
       ...prev,
-      profileImage: '/assets/Stock Photos/user-avatar-placeholder.png'
+      profileImage: demoProfileImage
     }));
+    // Clear any errors that might prevent progression
+    setError(null);
   };
   
   // Simulated file upload for vehicle image
   const handleVehicleImageUpload = () => {
     // In a real app, this would handle actual file upload
+    const demoVehicleImage = '/favicon.png'; // Use GoTime logo as placeholder
     setHasUploadedVehicleImage(true);
     setVehicleProfile(prev => ({
       ...prev,
-      vehicleImage: '/assets/Stock Photos/vehicle-placeholder.png'
+      vehicleImage: demoVehicleImage
     }));
+    // Clear any errors that might prevent progression
+    setError(null);
   };
 
   // Handle smooth transitions between steps
