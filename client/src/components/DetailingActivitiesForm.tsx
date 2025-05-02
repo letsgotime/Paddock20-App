@@ -18,6 +18,7 @@ import {
   Flame,
   ChevronDown,
   ChevronRight,
+  ChevronUp,
   Link,
   PlusCircle,
   Search,
