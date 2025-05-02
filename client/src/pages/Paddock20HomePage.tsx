@@ -258,14 +258,15 @@ const Paddock20HomePage: React.FC = () => {
                     Dew Point
                   </div>
                   <div className="text-white text-xl font-mono font-semibold group-hover:text-blue-300 transition-colors">
-                    {automotiveWeatherData && 
-                     automotiveWeatherData.conditions && 
-                     typeof automotiveWeatherData.conditions.humidity === 'number'
-                      ? (automotiveWeatherData.conditions.feels_like - 10).toFixed(1) + "°F"
+                    {weatherData && 
+                     weatherData.main && 
+                     typeof weatherData.main.temp === 'number' &&
+                     typeof weatherData.main.humidity === 'number'
+                      ? (weatherData.main.temp - 10).toFixed(1) + "°F"
                       : "N/A"}
                   </div>
                   <div className="mt-1 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500" style={{ width: automotiveWeatherData?.conditions?.feels_like ? `${Math.min(100, ((automotiveWeatherData.conditions.feels_like - 10)/80)*100)}%` : '0%' }}></div>
+                    <div className="h-full bg-blue-500" style={{ width: weatherData?.main?.temp ? `${Math.min(100, ((weatherData.main.temp - 10)/80)*100)}%` : '0%' }}></div>
                   </div>
                 </div>
                 
@@ -309,11 +310,9 @@ const Paddock20HomePage: React.FC = () => {
                       Surface
                     </div>
                     <div className="text-white text-sm font-medium group-hover:text-blue-300 transition-colors">
-                      {automotiveWeatherData && 
-                       automotiveWeatherData.automotive_metrics && 
-                       automotiveWeatherData.automotive_metrics.track_surface && 
-                       automotiveWeatherData.automotive_metrics.track_surface.condition
-                        ? automotiveWeatherData.automotive_metrics.track_surface.condition
+                      {weatherData?.weather && weatherData.weather[0] ? 
+                        weatherData.weather[0].main === "Rain" ? "Wet" : 
+                        weatherData.weather[0].main === "Snow" ? "Snow" : "Dry"
                         : "N/A"}
                     </div>
                   </div>
@@ -323,11 +322,10 @@ const Paddock20HomePage: React.FC = () => {
                       Grip Level
                     </div>
                     <div className="text-white text-sm font-medium group-hover:text-blue-300 transition-colors">
-                      {automotiveWeatherData && 
-                       automotiveWeatherData.automotive_metrics && 
-                       automotiveWeatherData.automotive_metrics.track_surface && 
-                       automotiveWeatherData.automotive_metrics.track_surface.grip_level
-                        ? automotiveWeatherData.automotive_metrics.track_surface.grip_level
+                      {weatherData?.main ? 
+                        // Simple mapping based on temp and humidity
+                        (weatherData.main.humidity > 80 ? "Reduced" : 
+                         weatherData.main.humidity < 40 ? "Optimal" : "Good")
                         : "N/A"}
                     </div>
                   </div>
@@ -337,11 +335,10 @@ const Paddock20HomePage: React.FC = () => {
                       Power Adjust
                     </div>
                     <div className="text-white text-sm font-medium group-hover:text-green-300 transition-colors">
-                      {automotiveWeatherData && 
-                       automotiveWeatherData.conditions && 
-                       typeof automotiveWeatherData.conditions.power_efficiency === 'number'
-                        ? (automotiveWeatherData.conditions.power_efficiency > 0 ? "+" : "") + 
-                          automotiveWeatherData.conditions.power_efficiency + "%"
+                      {weatherData?.main?.temp ? 
+                        // Simple algorithm - not actual data, but based on available weather metrics
+                        ((weatherData.main.temp > 85) ? "-" : "+") + 
+                        Math.abs(Math.round((weatherData.main.temp - 70) / 5)) + "%"
                         : "N/A"}
                     </div>
                   </div>
@@ -365,6 +362,202 @@ const Paddock20HomePage: React.FC = () => {
                 <ArrowUp className="h-4 w-4 mr-2 text-blue-400" />
                 All metrics are real-time and critical for driving decisions. For detailed forecast and track conditions, visit the <Link to="/new-weather-center" className="text-blue-400 hover:underline font-medium">Weather Center <span className="text-xs">→</span></Link>
               </p>
+            </div>
+          </div>
+        </div>
+      </section>
+      
+      {/* User Dashboard & Garage Vault Row */}
+      <section className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* User Dashboard Widget */}
+        <div className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg p-6 shadow-xl border border-gray-800">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-orbitron text-blue-400 text-xl flex items-center">
+              <span className="inline-block w-1.5 h-6 bg-blue-500 mr-2"></span>
+              User Dashboard
+            </h2>
+            <div className="bg-green-600/30 px-2 py-1 rounded text-green-400 text-xs font-medium">
+              MEMBER ACCESS
+            </div>
+          </div>
+          
+          <div className="flex items-center mb-6">
+            <div className="h-16 w-16 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+            <div className="ml-4">
+              <h3 className="text-white text-lg font-medium">Alex Garza</h3>
+              <p className="text-gray-400 text-sm flex items-center">
+                <span className="inline-block h-2 w-2 rounded-full bg-green-500 mr-2"></span>
+                Paddock20 Elite Member
+              </p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <div className="bg-black/40 p-3 rounded border border-gray-800">
+              <p className="text-gray-400 text-xs mb-1">MEMBERSHIP</p>
+              <p className="text-white font-medium">Elite Tier</p>
+            </div>
+            <div className="bg-black/40 p-3 rounded border border-gray-800">
+              <p className="text-gray-400 text-xs mb-1">DRIVE LOGS</p>
+              <p className="text-white font-medium">23 Records</p>
+            </div>
+            <div className="bg-black/40 p-3 rounded border border-gray-800">
+              <p className="text-gray-400 text-xs mb-1">STATUS</p>
+              <p className="text-green-400 font-medium">Active</p>
+            </div>
+            <div className="bg-black/40 p-3 rounded border border-gray-800">
+              <p className="text-gray-400 text-xs mb-1">NEXT EVENT</p>
+              <p className="text-white font-medium">May 15</p>
+            </div>
+          </div>
+          
+          <div className="flex justify-between items-center">
+            <Link to="/dashboard" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1">
+              <span>My Dashboard</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14"></path>
+                <path d="M12 5l7 7-7 7"></path>
+              </svg>
+            </Link>
+            
+            <div className="flex gap-2">
+              <button className="bg-green-600/10 hover:bg-green-600/20 text-green-400 p-1.5 rounded">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+              </button>
+              <button className="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 p-1.5 rounded">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+              </button>
+              <button className="bg-purple-600/10 hover:bg-purple-600/20 text-purple-400 p-1.5 rounded">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+              </button>
+            </div>
+          </div>
+        </div>
+        
+        {/* Garage Vault Widget */}
+        <div className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg p-6 shadow-xl border border-gray-800">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-orbitron text-blue-400 text-xl flex items-center">
+              <span className="inline-block w-1.5 h-6 bg-green-500 mr-2"></span>
+              Garage Vault 
+            </h2>
+            <div className="flex items-center">
+              <div className="text-xs text-gray-400 mr-2">3 Vehicles</div>
+              <Link to="/garage-vault" className="text-green-400 hover:text-green-300">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polyline points="9 18 15 12 9 6"></polyline>
+                </svg>
+              </Link>
+            </div>
+          </div>
+          
+          <div className="overflow-hidden rounded-lg border border-gray-800 bg-black/20 mb-4">
+            <div className="relative aspect-[16/9] overflow-hidden">
+              <img 
+                src="/assets/gallery/Ferrari-458-With-HRE-P101-Wheels-By-TAG-Motorsports-2.jpg" 
+                alt="Ferrari 458" 
+                className="w-full h-full object-cover object-center"
+              />
+              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent">
+                <div className="absolute bottom-0 left-0 right-0 p-4">
+                  <div className="flex justify-between items-end">
+                    <div>
+                      <h3 className="text-white font-orbitron text-lg">Ferrari 458</h3>
+                      <p className="text-gray-300 text-xs">2015 • V8 Twin-Turbo • 18,942 mi</p>
+                    </div>
+                    <div className="bg-blue-600/60 text-white text-xs px-2 py-1 rounded font-medium backdrop-blur-sm">
+                      PRIMARY
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            
+            <div className="p-3 border-t border-gray-800 flex justify-between items-center">
+              <div className="flex items-center space-x-3">
+                <div className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-blue-500 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242"></path>
+                    <path d="M12 12v9"></path>
+                    <path d="m8 17 4-5 4 5"></path>
+                  </svg>
+                  <span className="text-xs text-gray-300">32 Drives</span>
+                </div>
+                <div className="flex items-center">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-green-500 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <circle cx="12" cy="12" r="10"></circle>
+                    <polyline points="12 6 12 12 16 14"></polyline>
+                  </svg>
+                  <span className="text-xs text-gray-300">48.3 Hours</span>
+                </div>
+              </div>
+              
+              <button className="text-xs bg-green-600/20 text-green-400 hover:bg-green-600/30 transition-colors px-2 py-1 rounded flex items-center">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <polygon points="14 2 18 6 7 17 3 17 3 13 14 2"></polygon>
+                  <line x1="3" y1="22" x2="21" y2="22"></line>
+                </svg>
+                <span>Log Drive</span>
+              </button>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3">
+            <div className="bg-black/40 rounded overflow-hidden border border-gray-800 group hover:border-green-800 transition-colors">
+              <div className="h-32 overflow-hidden relative">
+                <img 
+                  src="/assets/gallery/ferrari-mountain-road.png" 
+                  alt="McLaren 720S" 
+                  className="w-full h-full object-cover object-center"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                <div className="absolute bottom-0 left-0 right-0 p-2">
+                  <h4 className="text-white text-sm font-medium">McLaren 720S</h4>
+                  <p className="text-gray-300 text-xs flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-yellow-500 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="m18 16 4-4-4-4"></path>
+                      <path d="m6 8-4 4 4 4"></path>
+                      <path d="m14.5 4-5 16"></path>
+                    </svg>
+                    14 Service Records
+                  </p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-black/40 rounded overflow-hidden border border-gray-800 group hover:border-blue-800 transition-colors">
+              <div className="h-32 overflow-hidden relative">
+                <img 
+                  src="/assets/gallery/ferrari-desert.png" 
+                  alt="Porsche 911" 
+                  className="w-full h-full object-cover object-center"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent"></div>
+                <div className="absolute bottom-0 left-0 right-0 p-2">
+                  <h4 className="text-white text-sm font-medium">Porsche 911</h4>
+                  <p className="text-gray-300 text-xs flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 text-purple-500 mr-1" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
+                      <line x1="4" y1="22" x2="4" y2="15"></line>
+                    </svg>
+                    7 Route Plans
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </div>
@@ -515,6 +708,148 @@ const Paddock20HomePage: React.FC = () => {
         </div>
       </section>
 
+      {/* Manifestation Station */}
+      <section className="bg-gradient-to-br from-[#0d0d12] to-[#151520] rounded-xl shadow-2xl border border-blue-900/30 overflow-hidden mb-12 relative">
+        {/* F1-inspired accent strips */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-blue-500 via-green-500 to-blue-600"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-green-500 via-blue-600 to-green-500"></div>
+        
+        <div className="flex flex-col lg:flex-row">
+          {/* Left side - Visualization */}
+          <div className="w-full lg:w-1/2 relative overflow-hidden">
+            <div className="h-full min-h-[300px] lg:min-h-0 relative">
+              <img 
+                src="/assets/gallery/ferrari-mountain-road.png" 
+                alt="Manifestation Visualization" 
+                className="w-full h-full object-cover object-center"
+              />
+              <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/40 to-transparent"></div>
+              
+              <div className="absolute top-0 left-0 right-0 p-6 flex justify-between items-start">
+                <div>
+                  <span className="bg-green-600/50 backdrop-blur-sm text-white text-xs px-3 py-1 rounded">PREMIUM FEATURE</span>
+                </div>
+                <div className="flex space-x-1">
+                  <span className="bg-gray-900/60 backdrop-blur-sm text-gray-200 text-xs px-2 py-1 rounded flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1 text-green-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                    </svg>
+                    28
+                  </span>
+                  <span className="bg-gray-900/60 backdrop-blur-sm text-gray-200 text-xs px-2 py-1 rounded flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-3 w-3 mr-1 text-red-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"></path>
+                    </svg>
+                    142
+                  </span>
+                </div>
+              </div>
+              
+              <div className="absolute bottom-0 left-0 right-0 p-6">
+                <div className="mb-4">
+                  <h3 className="text-white font-orbitron text-2xl">Manifestation Station</h3>
+                  <p className="text-gray-300 text-sm">Visualize your automotive aspirations</p>
+                </div>
+                <div className="bg-blue-600/30 backdrop-blur-sm rounded-lg border border-blue-500/20 p-3 relative">
+                  <div className="absolute -right-2 -top-2 bg-blue-600 text-white h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold">3</div>
+                  <div className="text-blue-200 text-sm mb-2">Active Goals</div>
+                  <div className="space-y-2">
+                    <div className="bg-blue-900/30 rounded px-3 py-2 flex justify-between items-center">
+                      <span className="text-white text-sm">Ferrari 488 GTB</span>
+                      <span className="text-green-400 text-xs">68%</span>
+                    </div>
+                    <div className="bg-blue-900/30 rounded px-3 py-2 flex justify-between items-center">
+                      <span className="text-white text-sm">Monaco Grand Prix</span>
+                      <span className="text-yellow-400 text-xs">42%</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Right side - Goal Setting */}
+          <div className="w-full lg:w-1/2 p-6 lg:p-8 bg-gradient-to-br from-[#0d0d12] to-[#151520]">
+            <div className="mb-4 pb-4 border-b border-gray-800 flex justify-between items-center">
+              <h3 className="text-blue-400 text-xl font-orbitron">Set Your Next Goal</h3>
+              <div className="flex items-center">
+                <div className="h-2 w-2 rounded-full bg-green-500 animate-pulse mr-2"></div>
+                <span className="text-xs text-gray-400">AI Powered</span>
+              </div>
+            </div>
+            
+            <div className="space-y-4 mb-6">
+              <div>
+                <label className="block text-gray-400 text-xs mb-1">GOAL TYPE</label>
+                <div className="flex space-x-2">
+                  <button className="px-3 py-1.5 bg-blue-600/20 border border-blue-500/30 text-blue-400 rounded text-sm hover:bg-blue-600/30 transition-colors">Vehicle</button>
+                  <button className="px-3 py-1.5 bg-gray-800/50 border border-gray-700 text-gray-400 rounded text-sm hover:bg-gray-700/50 transition-colors">Experience</button>
+                  <button className="px-3 py-1.5 bg-gray-800/50 border border-gray-700 text-gray-400 rounded text-sm hover:bg-gray-700/50 transition-colors">Achievement</button>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-gray-400 text-xs mb-1">DESCRIPTION</label>
+                <div className="relative">
+                  <input 
+                    type="text" 
+                    placeholder="My next automotive goal is..." 
+                    className="w-full bg-black/30 border border-gray-800 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  />
+                  <button className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-400">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <circle cx="11" cy="11" r="8"></circle>
+                      <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+              
+              <div>
+                <label className="block text-gray-400 text-xs mb-1">TARGET DATE</label>
+                <div className="flex space-x-2">
+                  <div className="relative flex-1">
+                    <select className="w-full appearance-none bg-black/30 border border-gray-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                      <option>3 months</option>
+                      <option>6 months</option>
+                      <option>1 year</option>
+                      <option>2 years</option>
+                      <option>5 years</option>
+                    </select>
+                    <div className="absolute inset-y-0 right-0 flex items-center px-2 pointer-events-none">
+                      <svg className="w-4 h-4 text-gray-400" viewBox="0 0 20 20" fill="currentColor">
+                        <path fillRule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </div>
+                  </div>
+                  
+                  <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition-colors flex items-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <line x1="12" y1="5" x2="12" y2="19"></line>
+                      <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    Add Goal
+                  </button>
+                </div>
+              </div>
+            </div>
+            
+            <div className="bg-gradient-to-r from-blue-900/20 to-transparent p-3 rounded-lg border-l-2 border-blue-600">
+              <p className="text-gray-300 text-sm flex items-start">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5 mr-2 flex-shrink-0 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <line x1="12" y1="16" x2="12" y2="12"></line>
+                  <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                </svg>
+                <span>
+                  Neuroscience shows visualization increases goal achievement by 1.2-1.4x. Paddock20's Manifestation Station uses this principle to accelerate your automotive ambitions.
+                </span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </section>
+      
       {/* Why Paddock20 */}
       <section className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg shadow-lg border border-gray-700 p-8 mb-12">
         <h2 className="text-blue-400 font-orbitron text-3xl mb-6">Why Paddock20™? Why Now?</h2>
