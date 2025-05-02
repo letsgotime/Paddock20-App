@@ -48,6 +48,24 @@ const Paddock20HomePage: React.FC = () => {
   } = useWeather();
   const [currentTime, setCurrentTime] = useState(new Date());
   const [insightIndex, setInsightIndex] = useState(0);
+  const [timeFormat, setTimeFormat] = useState('24h'); // '12h' or '24h'
+  const [dateFormat, setDateFormat] = useState('mdy'); // 'mdy', 'dmy', or 'ymd'
+  const [showTimeOptions, setShowTimeOptions] = useState(false);
+  const [showDateOptions, setShowDateOptions] = useState(false);
+  
+  // Load time and date format preferences from local storage
+  useEffect(() => {
+    const savedTimeFormat = localStorage.getItem('paddock20_timeFormat');
+    const savedDateFormat = localStorage.getItem('paddock20_dateFormat');
+    
+    if (savedTimeFormat) {
+      setTimeFormat(savedTimeFormat);
+    }
+    
+    if (savedDateFormat) {
+      setDateFormat(savedDateFormat);
+    }
+  }, []);
   
   // Update clock and cycle through driving insights
   useEffect(() => {
@@ -61,24 +79,75 @@ const Paddock20HomePage: React.FC = () => {
       setInsightIndex(prevIndex => (prevIndex + 1) % drivingInsights.length);
     }, 8000);
     
+    // Close format options dropdowns when clicking outside
+    const handleClickOutside = (event: MouseEvent) => {
+      const target = event.target as HTMLElement;
+      if (showTimeOptions && !target.closest('.time-format-dropdown')) {
+        setShowTimeOptions(false);
+      }
+      if (showDateOptions && !target.closest('.date-format-dropdown')) {
+        setShowDateOptions(false);
+      }
+    };
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    
     return () => {
       clearInterval(timeTimer);
       clearInterval(insightTimer);
+      document.removeEventListener('mousedown', handleClickOutside);
     };
-  }, []);
+  }, [showTimeOptions, showDateOptions]);
+  
+  // Save preferences when changed
+  const saveTimeFormat = (format: string) => {
+    setTimeFormat(format);
+    localStorage.setItem('paddock20_timeFormat', format);
+    setShowTimeOptions(false);
+  };
+  
+  const saveDateFormat = (format: string) => {
+    setDateFormat(format);
+    localStorage.setItem('paddock20_dateFormat', format);
+    setShowDateOptions(false);
+  };
   
   const formattedTime = currentTime.toLocaleTimeString('en-US', { 
-    hour12: false, 
+    hour12: timeFormat === '12h', 
     hour: '2-digit', 
     minute: '2-digit',
     second: '2-digit'
   });
   
-  const formattedDate = currentTime.toLocaleDateString('en-US', { 
-    weekday: 'short', 
-    month: 'short', 
-    day: 'numeric' 
-  });
+  // Different date formats
+  let dateOptions: Intl.DateTimeFormatOptions;
+  
+  switch (dateFormat) {
+    case 'dmy':
+      dateOptions = { 
+        weekday: 'short', 
+        day: 'numeric',
+        month: 'short',
+        year: '2-digit'
+      };
+      break;
+    case 'ymd':
+      dateOptions = { 
+        weekday: 'short', 
+        year: 'numeric',
+        month: 'short',
+        day: 'numeric' 
+      };
+      break;
+    default: // 'mdy'
+      dateOptions = { 
+        weekday: 'short', 
+        month: 'short', 
+        day: 'numeric' 
+      };
+  }
+  
+  const formattedDate = currentTime.toLocaleDateString('en-US', dateOptions);
   
   // Get the current driving insight
   const currentInsight = drivingInsights[insightIndex];
@@ -107,12 +176,58 @@ const Paddock20HomePage: React.FC = () => {
           </div>
           
           <div className="text-center text-white mb-2 flex flex-wrap justify-center">
-            <div className="px-3 py-1 bg-[#111] m-1 inline-block border border-transparent hover:border-[#4B9CD3]/40 transition-all duration-300 hover:bg-black cursor-pointer hover:shadow-[0_0_8px_rgba(75,156,211,0.3)] rounded-sm">
+            <div className="px-3 py-1 bg-[#111] m-1 inline-block border border-transparent hover:border-[#4B9CD3]/40 transition-all duration-300 hover:bg-black cursor-pointer hover:shadow-[0_0_8px_rgba(75,156,211,0.3)] rounded-sm relative"
+                onClick={() => setShowTimeOptions(!showTimeOptions)}>
               Time: {formattedTime}
+              
+              {/* Time Format Options */}
+              {showTimeOptions && (
+                <div className="absolute z-50 left-0 top-full mt-1 bg-[#111] border border-[#4B9CD3]/40 rounded-sm shadow-lg w-full p-2">
+                  <div 
+                    className={`px-2 py-1 text-left cursor-pointer rounded-sm ${timeFormat === '24h' ? 'bg-blue-900/50 text-blue-300' : 'hover:bg-gray-800'}`}
+                    onClick={(e) => { e.stopPropagation(); saveTimeFormat('24h'); }}
+                  >
+                    24-hour
+                  </div>
+                  <div 
+                    className={`px-2 py-1 text-left cursor-pointer rounded-sm ${timeFormat === '12h' ? 'bg-blue-900/50 text-blue-300' : 'hover:bg-gray-800'}`}
+                    onClick={(e) => { e.stopPropagation(); saveTimeFormat('12h'); }}
+                  >
+                    12-hour
+                  </div>
+                </div>
+              )}
             </div>
-            <div className="px-3 py-1 bg-[#111] m-1 inline-block border border-transparent hover:border-[#4B9CD3]/40 transition-all duration-300 hover:bg-black cursor-pointer hover:shadow-[0_0_8px_rgba(75,156,211,0.3)] rounded-sm">
+            
+            <div className="px-3 py-1 bg-[#111] m-1 inline-block border border-transparent hover:border-[#4B9CD3]/40 transition-all duration-300 hover:bg-black cursor-pointer hover:shadow-[0_0_8px_rgba(75,156,211,0.3)] rounded-sm relative"
+                onClick={() => setShowDateOptions(!showDateOptions)}>
               Date: {formattedDate}
+              
+              {/* Date Format Options */}
+              {showDateOptions && (
+                <div className="absolute z-50 left-0 top-full mt-1 bg-[#111] border border-[#4B9CD3]/40 rounded-sm shadow-lg w-full p-2">
+                  <div 
+                    className={`px-2 py-1 text-left cursor-pointer rounded-sm ${dateFormat === 'mdy' ? 'bg-blue-900/50 text-blue-300' : 'hover:bg-gray-800'}`}
+                    onClick={(e) => { e.stopPropagation(); saveDateFormat('mdy'); }}
+                  >
+                    Month-Day
+                  </div>
+                  <div 
+                    className={`px-2 py-1 text-left cursor-pointer rounded-sm ${dateFormat === 'dmy' ? 'bg-blue-900/50 text-blue-300' : 'hover:bg-gray-800'}`}
+                    onClick={(e) => { e.stopPropagation(); saveDateFormat('dmy'); }}
+                  >
+                    Day-Month
+                  </div>
+                  <div 
+                    className={`px-2 py-1 text-left cursor-pointer rounded-sm ${dateFormat === 'ymd' ? 'bg-blue-900/50 text-blue-300' : 'hover:bg-gray-800'}`}
+                    onClick={(e) => { e.stopPropagation(); saveDateFormat('ymd'); }}
+                  >
+                    Year-Month-Day
+                  </div>
+                </div>
+              )}
             </div>
+            
             <div className="px-3 py-1 bg-[#111] m-1 inline-block border border-transparent hover:border-[#4B9CD3]/40 transition-all duration-300 hover:bg-black cursor-pointer hover:shadow-[0_0_8px_rgba(75,156,211,0.3)] rounded-sm min-w-[180px]">
               {currentInsight.icon} <span className="text-xs font-medium">{currentInsight.text}</span>: {currentInsight.value}
             </div>
@@ -801,15 +916,15 @@ const Paddock20HomePage: React.FC = () => {
                   <h3 className="text-white font-orbitron text-2xl">Manifestation Station</h3>
                   <p className="text-gray-300 text-sm">Visualize your automotive aspirations</p>
                 </div>
-                <div className="bg-blue-600/30 backdrop-blur-sm rounded-lg border border-blue-500/20 p-3 relative">
+                <div className="bg-blue-600/30 backdrop-blur-sm rounded-lg border border-blue-500/20 p-3 relative cursor-pointer hover:bg-blue-600/40 transition-colors">
                   <div className="absolute -right-2 -top-2 bg-blue-600 text-white h-6 w-6 rounded-full flex items-center justify-center text-xs font-bold">3</div>
                   <div className="text-blue-200 text-sm mb-2">Active Goals</div>
                   <div className="space-y-2">
-                    <div className="bg-blue-900/30 rounded px-3 py-2 flex justify-between items-center">
+                    <div className="bg-blue-900/30 rounded px-3 py-2 flex justify-between items-center hover:bg-blue-900/50 transition-colors">
                       <span className="text-white text-sm">Ferrari 488 GTB</span>
                       <span className="text-green-400 text-xs">68%</span>
                     </div>
-                    <div className="bg-blue-900/30 rounded px-3 py-2 flex justify-between items-center">
+                    <div className="bg-blue-900/30 rounded px-3 py-2 flex justify-between items-center hover:bg-blue-900/50 transition-colors">
                       <span className="text-white text-sm">Monaco Grand Prix</span>
                       <span className="text-yellow-400 text-xs">42%</span>
                     </div>
@@ -833,9 +948,21 @@ const Paddock20HomePage: React.FC = () => {
               <div>
                 <label className="block text-gray-400 text-xs mb-1">GOAL TYPE</label>
                 <div className="flex space-x-2">
-                  <button className="px-3 py-1.5 bg-blue-600/20 border border-blue-500/30 text-blue-400 rounded text-sm hover:bg-blue-600/30 transition-colors">Vehicle</button>
-                  <button className="px-3 py-1.5 bg-gray-800/50 border border-gray-700 text-gray-400 rounded text-sm hover:bg-gray-700/50 transition-colors">Experience</button>
-                  <button className="px-3 py-1.5 bg-gray-800/50 border border-gray-700 text-gray-400 rounded text-sm hover:bg-gray-700/50 transition-colors">Achievement</button>
+                  <button 
+                    onClick={() => alert('Vehicle goal type selected!')}
+                    className="px-3 py-1.5 bg-blue-600/20 border border-blue-500/30 text-blue-400 rounded text-sm hover:bg-blue-600/30 transition-colors">
+                    Vehicle
+                  </button>
+                  <button 
+                    onClick={() => alert('Experience goal type selected!')}
+                    className="px-3 py-1.5 bg-gray-800/50 border border-gray-700 text-gray-400 rounded text-sm hover:bg-gray-700/50 transition-colors">
+                    Experience
+                  </button>
+                  <button 
+                    onClick={() => alert('Achievement goal type selected!')}
+                    className="px-3 py-1.5 bg-gray-800/50 border border-gray-700 text-gray-400 rounded text-sm hover:bg-gray-700/50 transition-colors">
+                    Achievement
+                  </button>
                 </div>
               </div>
               
@@ -847,7 +974,9 @@ const Paddock20HomePage: React.FC = () => {
                     placeholder="My next automotive goal is..." 
                     className="w-full bg-black/30 border border-gray-800 rounded-lg px-4 py-3 text-white placeholder-gray-500 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
                   />
-                  <button className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-400">
+                  <button 
+                    onClick={() => alert('Search for a goal!')}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-blue-400">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <circle cx="11" cy="11" r="8"></circle>
                       <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -860,7 +989,9 @@ const Paddock20HomePage: React.FC = () => {
                 <label className="block text-gray-400 text-xs mb-1">TARGET DATE</label>
                 <div className="flex space-x-2">
                   <div className="relative flex-1">
-                    <select className="w-full appearance-none bg-black/30 border border-gray-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                    <select 
+                      onChange={() => alert('Time frame selected!')}
+                      className="w-full appearance-none bg-black/30 border border-gray-800 rounded-lg px-4 py-2 text-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
                       <option>3 months</option>
                       <option>6 months</option>
                       <option>1 year</option>
@@ -874,7 +1005,9 @@ const Paddock20HomePage: React.FC = () => {
                     </div>
                   </div>
                   
-                  <button className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition-colors flex items-center">
+                  <button 
+                    onClick={() => alert('Goal added successfully!')}
+                    className="bg-blue-600 hover:bg-blue-700 text-white text-sm px-4 py-2 rounded-lg transition-colors flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                       <line x1="12" y1="5" x2="12" y2="19"></line>
                       <line x1="5" y1="12" x2="19" y2="12"></line>
