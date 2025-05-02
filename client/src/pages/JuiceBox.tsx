@@ -9,6 +9,7 @@ import DetailingKits from '../components/DetailingKits';
 import TrainingVideos from '../components/TrainingVideos';
 import GlossHistory from '../components/GlossHistory';
 import JuiceBoxCodexViewer from '../components/JuiceBoxCodexViewer';
+import DetailingActivitiesForm from '../components/DetailingActivitiesForm';
 import { productCategories, sevenDaySchedule, detailingKits, trainingVideos, glossHistory } from '../data/detailingData';
 
 interface Product {
@@ -26,6 +27,7 @@ function JuiceBoxPage() {
   
   const [activeTab, setActiveTab] = useState<string>('categories');
   const [showExportMenu, setShowExportMenu] = useState<boolean>(false);
+  const [showDetailingForm, setShowDetailingForm] = useState<boolean>(false);
   const exportMenuRef = useRef<HTMLDivElement>(null);
   
   // Function to handle clicking outside the dropdown menu
@@ -96,6 +98,22 @@ function JuiceBoxPage() {
     const updated = [product, ...userProducts];
     setUserProducts(updated);
     localStorage.setItem('myJuiceBox', JSON.stringify(updated));
+  };
+  
+  // Handler for DetailingActivitiesForm submission
+  const handleDetailingActivitySubmit = (activity: any) => {
+    console.log('Detailing activity submitted:', activity);
+    
+    // In a real app, you would save this to a database
+    // For now, just show a simple success message and close the form
+    alert(`Detailing activity "${activity.title}" recorded successfully!`);
+    setShowDetailingForm(false);
+    setActiveTab('my-box'); // Return to My Juice Box tab after submission
+  };
+  
+  // Handler for canceling DetailingActivitiesForm
+  const handleDetailingActivityCancel = () => {
+    setShowDetailingForm(false);
   };
 
   return (
@@ -192,6 +210,15 @@ function JuiceBoxPage() {
           My Juice Box
         </button>
         <button 
+          onClick={() => setActiveTab('detailing-activity')}
+          className={`px-5 py-2 rounded-lg font-orbitron text-sm
+            ${activeTab === 'detailing-activity' 
+              ? 'bg-green-500 text-black' 
+              : 'bg-gray-800 text-white hover:bg-gray-700'}`}
+        >
+          Detailing Activity
+        </button>
+        <button 
           onClick={() => setActiveTab('day-reset')}
           className={`px-5 py-2 rounded-lg font-orbitron text-sm
             ${activeTab === 'day-reset' 
@@ -266,6 +293,36 @@ function JuiceBoxPage() {
             <JuiceBoxCodexViewer onAddProduct={addProduct} />
             <AddCustomJuiceProduct onAddProduct={addProduct} />
           </>
+        )}
+        
+        {activeTab === 'detailing-activity' && (
+          <div className="bg-black bg-opacity-70 p-6 rounded-lg border border-blue-900">
+            <h2 className="text-blue-400 font-orbitron text-2xl mb-6 text-center">Detailing Activity Log</h2>
+            <p className="text-white text-center mb-6">
+              Document your detailing activities with comprehensive details including products, steps, and media. 
+              This helps track your gloss journey and share your expertise with the community.
+            </p>
+            
+            {showDetailingForm ? (
+              <DetailingActivitiesForm 
+                onSubmit={handleDetailingActivitySubmit} 
+                onCancel={handleDetailingActivityCancel} 
+              />
+            ) : (
+              <div className="flex flex-col items-center">
+                <button 
+                  onClick={() => setShowDetailingForm(true)}
+                  className="apex-button bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-orbitron flex items-center"
+                >
+                  <span className="mr-2">+</span> Create New Detailing Activity
+                </button>
+                <p className="text-gray-400 text-sm mt-4 text-center max-w-2xl">
+                  Log washes, polishing sessions, ceramic coatings and more with our comprehensive detailing activity form. 
+                  Include photos, videos, product lists and detailed notes for your records.
+                </p>
+              </div>
+            )}
+          </div>
         )}
       </div>
     </div>
