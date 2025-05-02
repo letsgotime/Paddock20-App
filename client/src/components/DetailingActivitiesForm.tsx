@@ -20,6 +20,7 @@ import {
   ChevronRight,
   ChevronUp,
   Link,
+  Link2,
   PlusCircle,
   Search,
   Filter,
@@ -756,19 +757,25 @@ const DetailingActivitiesForm: React.FC<DetailingActivitiesFormProps> = ({ onSub
                   Products Used
                 </h3>
                 
+                <p className="text-gray-400 text-xs mb-3">
+                  Add product names, descriptions, or URLs to product listings you used. 
+                  You can include affiliate links or direct store URLs for future reference.
+                </p>
+                
                 <div className="flex mb-4">
                   <input
                     type="text"
                     value={newProduct}
                     onChange={(e) => setNewProduct(e.target.value)}
-                    placeholder="Enter product name"
-                    className="flex-grow bg-gray-800 border border-gray-700 rounded-l-md py-2 px-3 text-white focus:border-blue-500 focus:outline-none"
+                    placeholder="Product name or URL (e.g., Adams Wheel Cleaner or amazon.com/link)"
+                    className="flex-grow bg-gray-800 border border-gray-700 rounded-l-md py-2 px-3 text-white focus:border-blue-500 focus:outline-none text-sm"
                   />
                   <button
                     type="button"
                     onClick={handleAddProduct}
-                    className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-r-md"
+                    className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-r-md flex items-center"
                   >
+                    <PlusCircle className="h-4 w-4 mr-1" />
                     Add
                   </button>
                 </div>
@@ -777,11 +784,20 @@ const DetailingActivitiesForm: React.FC<DetailingActivitiesFormProps> = ({ onSub
                   <div className="space-y-2">
                     {activity.products.map((product, index) => (
                       <div key={index} className="flex justify-between items-center bg-gray-800/50 p-2 rounded-md">
-                        <span className="text-white">{product}</span>
+                        <span className="text-white break-all">
+                          {product.startsWith('http') ? (
+                            <a href={product} target="_blank" rel="noopener noreferrer" className="text-blue-400 hover:underline flex items-center">
+                              <ExternalLink className="h-3 w-3 mr-1 inline" />
+                              {product}
+                            </a>
+                          ) : (
+                            product
+                          )}
+                        </span>
                         <button
                           type="button"
                           onClick={() => handleRemoveProduct(index)}
-                          className="text-gray-400 hover:text-red-400"
+                          className="text-gray-400 hover:text-red-400 flex-shrink-0 ml-2"
                         >
                           <X size={16} />
                         </button>
