@@ -105,10 +105,20 @@ function JuiceBoxPage() {
     console.log('Detailing activity submitted:', activity);
     
     // In a real app, you would save this to a database
-    // For now, just show a simple success message and close the form
-    alert(`Detailing activity "${activity.title}" recorded successfully!`);
+    // For now, we'll show a success modal with rewards
+    setActivity(activity);
+    setIsSuccessModalOpen(true);
     setShowDetailingForm(false);
-    setActiveTab('my-box'); // Return to My Juice Box tab after submission
+  };
+  
+  // State for success modal
+  const [isSuccessModalOpen, setIsSuccessModalOpen] = useState(false);
+  const [activity, setActivity] = useState<any>(null);
+  
+  // Handler for closing the success modal
+  const handleCloseSuccessModal = () => {
+    setIsSuccessModalOpen(false);
+    setActiveTab('categories'); // Return to the main tab after submission
   };
   
   // Handler for canceling DetailingActivitiesForm
@@ -338,6 +348,54 @@ function JuiceBoxPage() {
           </div>
         )}
       </div>
+      {/* Success Modal */}
+      {isSuccessModalOpen && activity && (
+        <div className="fixed inset-0 bg-black bg-opacity-90 flex items-center justify-center z-50 p-4">
+          <div className="bg-gradient-to-b from-gray-900 to-black border border-green-500 rounded-lg w-full max-w-md p-6 text-center">
+            <div className="mb-6 text-center">
+              <div className="inline-flex h-24 w-24 items-center justify-center rounded-full bg-green-100 text-green-500 mb-4">
+                <svg className="h-16 w-16" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7"></path>
+                </svg>
+              </div>
+              <h2 className="text-2xl font-orbitron text-green-400 mb-2">Success!</h2>
+              <p className="text-gray-300 mb-4">
+                Your detailing activity "{activity.title}" has been recorded successfully.
+              </p>
+              
+              <div className="bg-blue-900/20 border border-blue-800/30 rounded-md p-4 mb-6">
+                <h3 className="text-amber-400 font-orbitron mb-2 text-lg">Rewards Earned</h3>
+                <div className="flex justify-center items-center gap-2 mb-3">
+                  <span className="text-2xl text-amber-300 font-bold">+{activity.pointsEarned}</span>
+                  <span className="text-amber-400">gloss points</span>
+                </div>
+                <p className="text-gray-300 text-sm">
+                  Keep up the great work! You're on your way to reaching the next level.
+                </p>
+              </div>
+              
+              <div className="flex gap-4 justify-center">
+                <button 
+                  onClick={handleCloseSuccessModal}
+                  className="px-6 py-2 bg-green-600 hover:bg-green-700 text-white rounded-md font-medium"
+                >
+                  Done
+                </button>
+                <button 
+                  onClick={() => {
+                    handleCloseSuccessModal();
+                    setActiveTab('detailing-activity');
+                    setShowDetailingForm(true);
+                  }}
+                  className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium"
+                >
+                  Add Another
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
