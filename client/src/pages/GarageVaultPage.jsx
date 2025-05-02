@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import supabase from '../services/supabaseClient';
 import { exportToPdf, exportToCsv, printElement } from '../utils/exportUtils';
 import TireTracker from '../components/TireTracker';
@@ -30,6 +30,17 @@ import {
 import { vehicleProfile, garageVehicles } from '../data/vehicles';
 
 function GarageVaultPage() {
+  const location = useLocation();
+  
+  // Parse URL query parameters
+  const parseQueryParams = () => {
+    const searchParams = new URLSearchParams(location.search);
+    return {
+      section: searchParams.get('section'),
+      action: searchParams.get('action')
+    };
+  };
+  
   // State management
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -98,6 +109,34 @@ function GarageVaultPage() {
   const exportMenuRef = useRef(null);
   const telemetryRef = useRef(null);
   const garageGridRef = useRef(null);
+  
+  // Handle URL parameters for section and action
+  useEffect(() => {
+    const { section, action } = parseQueryParams();
+    
+    // Set the active section based on the URL param
+    if (section) {
+      const validSections = ['dashboard', 'maintenance', 'modifications', 'gloss', 'tires', 'gallery'];
+      if (validSections.includes(section)) {
+        setActiveSection(section);
+      }
+    }
+    
+    // Handle actions based on URL param
+    if (action) {
+      switch (action) {
+        case 'add-mod':
+          setShowAddModForm(true);
+          break;
+        case 'add-maintenance':
+          setShowAddMaintenanceForm(true);
+          break;
+        case 'log-wash':
+          setActiveSection('gloss');
+          break;
+      }
+    }
+  }, [location.search]);
   
   // Fetch vehicles from Supabase
   useEffect(() => {
