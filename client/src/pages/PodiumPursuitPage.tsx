@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import { 
   Trophy, Award, Star, Medal, Check, Car, SprayCan, Calendar, Users, 
   Gauge, BarChart, Flag, Activity, CircleCheck, CircleDashed, 
-  Watch, Briefcase, Compass, Terminal, 
-  Milestone, BarChart2
+  Watch, Briefcase, Compass, Terminal, ChevronRight, X, Clock,
+  Milestone, BarChart2, FileText, AlertCircle
 } from 'lucide-react';
 import { useRewards } from '../contexts/RewardsContext';
 // Use Inline PageTitle to avoid module import issues
@@ -156,6 +156,7 @@ const PodiumPursuitPage: React.FC = () => {
   const { userRewards, pointsToNextLevel } = useRewards();
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [expandedAchievements, setExpandedAchievements] = useState<{[key: string]: boolean}>({});
+  const [selectedAchievement, setSelectedAchievement] = useState<string | null>(null);
 
   // Get level icon based on driver level
   const getLevelIcon = () => {
@@ -357,28 +358,88 @@ const PodiumPursuitPage: React.FC = () => {
                       {category.achievements.map(achievement => (
                         <div 
                           key={achievement.id} 
-                          className={`flex items-start p-3 rounded-lg ${achievement.completed ? 'bg-gray-800/50' : 'bg-gray-800/20'}`}
+                          className={`p-3 rounded-lg ${achievement.completed ? 'bg-gray-800/50' : 'bg-gray-800/20'}`}
                         >
-                          <div className="mr-3 text-xl">{achievement.icon}</div>
-                          <div className="flex-1">
-                            <div className="flex items-center">
-                              <h5 className={`font-medium ${achievement.completed ? 'text-white' : 'text-gray-400'}`}>
-                                {achievement.title}
-                              </h5>
-                              {achievement.completed && (
-                                <CircleCheck className="h-4 w-4 ml-2 text-green-500" />
+                          <div className="flex items-start">
+                            <div className="mr-3 text-xl">{achievement.icon}</div>
+                            <div className="flex-1">
+                              <div className="flex items-center">
+                                <h5 className={`font-medium ${achievement.completed ? 'text-white' : 'text-gray-400'}`}>
+                                  {achievement.title}
+                                </h5>
+                                {achievement.completed && (
+                                  <CircleCheck className="h-4 w-4 ml-2 text-green-500" />
+                                )}
+                              </div>
+                              <p className="text-sm text-gray-400 mt-1">{achievement.description}</p>
+                              <div className="text-sm text-blue-300 mt-1">{achievement.points} pts</div>
+                            </div>
+                            <div className="ml-2">
+                              {achievement.completed ? (
+                                <button 
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    // Open the activity log dialog for this achievement
+                                    setSelectedAchievement(achievement.id);
+                                  }}
+                                  className="bg-green-500/20 text-green-500 text-xs px-2 py-1 rounded hover:bg-green-500/30 transition-colors flex items-center"
+                                >
+                                  <span>Activity Log</span>
+                                  <ChevronRight className="h-3 w-3 ml-1" />
+                                </button>
+                              ) : (
+                                <div className="bg-gray-700/50 text-gray-400 text-xs px-2 py-1 rounded flex items-center">
+                                  <span>Incomplete</span>
+                                  {category.id === 'driving' && !achievement.completed && achievement.id === 'drive-log-10' && (
+                                    <span className="ml-1 text-blue-400">(7/10)</span>
+                                  )}
+                                  {category.id === 'detailing' && !achievement.completed && achievement.id === 'gloss-reset' && (
+                                    <span className="ml-1 text-blue-400">(2/3)</span>
+                                  )}
+                                </div>
                               )}
                             </div>
-                            <p className="text-sm text-gray-400 mt-1">{achievement.description}</p>
-                            <div className="text-sm text-blue-300 mt-1">{achievement.points} pts</div>
                           </div>
-                          <div className="ml-2">
-                            {achievement.completed ? (
-                              <div className="bg-green-500/20 text-green-500 text-xs px-2 py-1 rounded">Completed</div>
-                            ) : (
-                              <div className="bg-gray-700/50 text-gray-400 text-xs px-2 py-1 rounded">Incomplete</div>
-                            )}
-                          </div>
+                          
+                          {/* Progress indicators for incomplete achievements */}
+                          {!achievement.completed && (
+                            <div className="mt-3 pt-2 border-t border-gray-700/50">
+                              <div className="flex justify-between items-center text-xs text-gray-500 mb-1">
+                                <span>Progress</span>
+                                {category.id === 'driving' && achievement.id === 'drive-log-10' && (
+                                  <span>7/10 drives logged</span>
+                                )}
+                                {category.id === 'detailing' && achievement.id === 'gloss-reset' && (
+                                  <span>2/3 steps completed</span>
+                                )}
+                                {category.id === 'track_days' && achievement.id === 'different_tracks' && (
+                                  <span>1/3 tracks visited</span>
+                                )}
+                                {category.id === 'events' && achievement.id === 'charity_event' && (
+                                  <span>0/1 events attended</span>
+                                )}
+                                {category.id === 'community' && achievement.id === 'tech_advice' && (
+                                  <span>2/5 members helped</span>
+                                )}
+                                {category.id === 'collector' && achievement.id === 'multi_vehicle' && (
+                                  <span>1/2 vehicles added</span>
+                                )}
+                              </div>
+                              <div className="w-full bg-gray-700/30 rounded-full h-1.5 overflow-hidden">
+                                <div 
+                                  className={`h-full bg-${category.color}-600/50`}
+                                  style={{ 
+                                    width: category.id === 'driving' && achievement.id === 'drive-log-10' ? '70%' :
+                                           category.id === 'detailing' && achievement.id === 'gloss-reset' ? '66%' :
+                                           category.id === 'track_days' && achievement.id === 'different_tracks' ? '33%' :
+                                           category.id === 'events' && achievement.id === 'charity_event' ? '0%' :
+                                           category.id === 'community' && achievement.id === 'tech_advice' ? '40%' :
+                                           category.id === 'collector' && achievement.id === 'multi_vehicle' ? '50%' : '0%'
+                                  }}
+                                ></div>
+                              </div>
+                            </div>
+                          )}
                         </div>
                       ))}
                     </div>
@@ -484,6 +545,189 @@ const PodiumPursuitPage: React.FC = () => {
           Achievement Settings
         </button>
       </div>
+
+      {/* Activity Log Modal */}
+      {selectedAchievement && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50 p-4">
+          <div className="bg-gray-900 border border-blue-900/30 rounded-lg max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="p-4 border-b border-gray-800 flex items-center justify-between">
+              <h3 className="font-orbitron text-white text-lg flex items-center">
+                <Activity className="h-5 w-5 mr-2 text-blue-400" />
+                Achievement Activity Log
+              </h3>
+              <button 
+                onClick={() => setSelectedAchievement(null)}
+                className="text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+            
+            <div className="p-6 overflow-y-auto">
+              {(() => {
+                // Find the achievement details
+                let achievement;
+                let category;
+                
+                for (const cat of ACHIEVEMENT_CATEGORIES) {
+                  const found = cat.achievements.find(a => a.id === selectedAchievement);
+                  if (found) {
+                    achievement = found;
+                    category = cat;
+                    break;
+                  }
+                }
+                
+                if (!achievement) return <div>Achievement not found</div>;
+                
+                return (
+                  <>
+                    <div className="flex items-start mb-6">
+                      <div className="mr-4 text-3xl">{achievement.icon}</div>
+                      <div>
+                        <h4 className="text-xl font-medium text-white">{achievement.title}</h4>
+                        <p className="text-gray-400 mt-1">{achievement.description}</p>
+                        <div className="flex items-center mt-2">
+                          <div className="mr-3 bg-blue-500/20 text-blue-400 px-2 py-1 rounded text-sm">
+                            {achievement.points} points
+                          </div>
+                          <div className={`bg-${category?.color}-500/20 text-${category?.color}-400 px-2 py-1 rounded text-sm`}>
+                            {category?.name}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <h5 className="text-white font-medium mb-3 flex items-center">
+                      <FileText className="h-4 w-4 mr-2 text-blue-400" />
+                      Detailed Activity Log
+                    </h5>
+                    
+                    <div className="border border-gray-800 rounded-lg overflow-hidden">
+                      {/* Simulated activity log - this would be populated from user actions data */}
+                      <div className="p-4 border-b border-gray-800 bg-gray-800/30">
+                        <div className="flex justify-between items-start">
+                          <div className="flex items-start">
+                            <div className="bg-green-500/20 text-green-500 p-1 rounded mr-3">
+                              <Check className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <div className="text-white font-medium">Achievement Completed</div>
+                              <p className="text-sm text-gray-400 mt-1">
+                                {selectedAchievement === 'first_drive_log' && 'You documented your first drive to Blue Ridge Parkway, earning this achievement'}
+                                {selectedAchievement === 'mountain_drive' && 'You logged a drive on Tail of the Dragon with 1,200+ ft elevation change'}
+                                {selectedAchievement === 'night_drive' && 'You completed a 2-hour night drive on April 28, 2025'}
+                                {selectedAchievement === 'fun_drive_plan' && 'You created a custom route "Weekend Canyon Run" in Fun Drive Planner'}
+                                {selectedAchievement === 'first_wash' && 'You documented your first complete wash and wax session'}
+                                {selectedAchievement === 'juice_box' && 'You accessed all sections of the Juice Box knowledge repository'}
+                                {selectedAchievement === 'product_collection' && 'You added 12 detailing products to your collection inventory'}
+                                {selectedAchievement === 'wheels_deep_clean' && 'You documented a complete wheel cleaning with before/after photos'}
+                                {selectedAchievement === 'first_track_day' && 'You logged your track day at Carolina Motorsports Park'}
+                                {selectedAchievement === 'autocross' && 'You participated in Charlotte Region SCCA Autocross #4'}
+                                {selectedAchievement === 'first_car_meet' && 'You checked in to Cars & Coffee Charlotte event'}
+                                {selectedAchievement === 'car_show_entry' && 'You entered your vehicle in Concours in the Park show'}
+                                {selectedAchievement === 'road_rally' && 'You participated in the Mountain Backroads Rally'}
+                                {selectedAchievement === 'profile_complete' && 'You completed all sections of your driver profile'}
+                                {selectedAchievement === 'forum_posts' && 'You reached 10+ posts in the community forums'}
+                                {selectedAchievement === 'photo_share' && 'You shared 8 photos of your vehicle in the gallery'}
+                                {selectedAchievement === 'first_garage_entry' && 'You added your first vehicle to the Garage Vault'}
+                                {selectedAchievement === 'vehicle_history' && 'You completed documenting your full vehicle history'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-xs text-gray-500 flex items-center">
+                            <Clock className="h-3 w-3 mr-1" />
+                            Today
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="p-4 border-b border-gray-800 bg-gray-800/20">
+                        <div className="flex justify-between items-start">
+                          <div className="flex items-start">
+                            <div className="bg-blue-500/20 text-blue-400 p-1 rounded mr-3">
+                              <Activity className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <div className="text-white font-medium">Progress Update</div>
+                              <p className="text-sm text-gray-400 mt-1">
+                                {selectedAchievement === 'first_drive_log' && 'Created a new drive entry with route details and photos'}
+                                {selectedAchievement === 'mountain_drive' && 'Uploaded GPS data showing elevation changes on mountain route'}
+                                {selectedAchievement === 'night_drive' && 'Completed a drive between 9:45 PM and 11:50 PM'}
+                                {selectedAchievement === 'fun_drive_plan' && 'Route created and saved with 6 waypoints and route metadata'}
+                                {selectedAchievement === 'first_wash' && 'Completed all steps in the wash workflow and logged results'}
+                                {selectedAchievement === 'juice_box' && 'Accessed final section of Juice Box (Paint Correction Guide)'}
+                                {selectedAchievement === 'product_collection' && 'Added three more products to reach the 10+ threshold'}
+                                {selectedAchievement === 'wheels_deep_clean' && 'Logged wheel detailing with tire cleaning and dressing'}
+                                {selectedAchievement === 'first_track_day' && 'Logged track session details, including lap count and conditions'}
+                                {selectedAchievement === 'autocross' && 'Entered autocross results including cone penalties and time'}
+                                {selectedAchievement === 'first_car_meet' && 'Logged event details and uploaded 3 photos'}
+                                {selectedAchievement === 'car_show_entry' && 'Registered vehicle in show database and uploaded entry'}
+                                {selectedAchievement === 'road_rally' && 'Logged rally checkpoint completions and finish time'}
+                                {selectedAchievement === 'profile_complete' && 'Added final missing profile details (driver interests)'}
+                                {selectedAchievement === 'forum_posts' && 'Made 3 more forum posts to reach the 10+ threshold'}
+                                {selectedAchievement === 'photo_share' && 'Uploaded 3 more photos to reach the 5+ threshold'}
+                                {selectedAchievement === 'first_garage_entry' && 'Added vehicle details including VIN and service history'}
+                                {selectedAchievement === 'vehicle_history' && 'Added final maintenance records to complete history'}
+                              </p>
+                            </div>
+                          </div>
+                          <div className="text-xs text-gray-500 flex items-center">
+                            <Clock className="h-3 w-3 mr-1" />
+                            Today
+                          </div>
+                        </div>
+                      </div>
+                      
+                      <div className="p-4 bg-gray-800/10">
+                        <div className="flex justify-between items-start">
+                          <div className="flex items-start">
+                            <div className="bg-yellow-500/20 text-yellow-400 p-1 rounded mr-3">
+                              <AlertCircle className="h-4 w-4" />
+                            </div>
+                            <div>
+                              <div className="text-white font-medium">Achievement Unlocked</div>
+                              <p className="text-sm text-gray-400 mt-1">
+                                Achievement started tracking: {new Date().toLocaleDateString()}
+                              </p>
+                              <div className="mt-2 text-sm text-blue-400">
+                                {achievement.points} points added to your total score
+                              </div>
+                            </div>
+                          </div>
+                          <div className="text-xs text-gray-500 flex items-center">
+                            <Clock className="h-3 w-3 mr-1" />
+                            Today
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-6 flex justify-between items-center">
+                      <div className="text-sm text-gray-400">
+                        Achievement ID: {achievement.id}
+                      </div>
+                      <button className="px-3 py-1.5 bg-blue-600/20 text-blue-400 border border-blue-500/30 rounded font-medium hover:bg-blue-600/30 transition-colors text-sm flex items-center">
+                        <FileText className="h-4 w-4 mr-1.5" />
+                        Export Log
+                      </button>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+            
+            <div className="p-4 border-t border-gray-800 flex justify-end">
+              <button 
+                onClick={() => setSelectedAchievement(null)}
+                className="px-4 py-2 bg-gray-800 text-white rounded font-medium hover:bg-gray-700 transition-colors"
+              >
+                Close
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };
