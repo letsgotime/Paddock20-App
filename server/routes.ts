@@ -1141,74 +1141,81 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Generate driving advisories based on conditions
       const advisories = generateDrivingAdvisories(weatherCondition, riskLevel, surfaceCondition, temp);
       
-      // F1-style automotive weather response
+      // F1-style automotive weather response - restructured to match client expectations
       const automotiveWeatherData = {
-        lat: parseFloat(lat as string),
-        lon: parseFloat(lon as string),
-        timezone: weatherData.timezone,
-        timezone_offset: weatherData.timezone,
+        location: {
+          lat: parseFloat(lat as string),
+          lon: parseFloat(lon as string),
+          timezone: weatherData.timezone || "America/New_York"
+        },
+        current_time: new Date().toISOString(),
+        sunrise_time: new Date(new Date().setHours(6, 30, 0, 0)).toISOString(), // Fallback
+        sunset_time: new Date(new Date().setHours(20, 0, 0, 0)).toISOString(), // Fallback
         
-        // Basic weather data including dew point
-        weather: {
-          temp: temp,
+        // Basic weather conditions
+        conditions: {
+          summary: weatherData.weather[0]?.description || weatherCondition,
+          icon: weatherData.weather[0]?.icon || "01d",
+          air_temperature: temp,
+          feels_like: weatherData.main?.feels_like || temp,
           humidity: humidity,
           pressure: pressure,
-          dewPoint: dewPoint,
-          weatherCondition: weatherCondition,
-          windSpeed: windSpeed,
-          clouds: clouds,
-          visibility: visibility
+          wind_speed: windSpeed,
+          wind_direction: weatherData.wind?.deg || 0,
+          cloud_cover: clouds,
+          precipitation: rain + snow,
+          uv_index: 2, // Default UV value
+          solar_radiation: null
         },
         
-        // Surface data
-        surfaces: {
-          asphalt: {
+        // Automotive metrics - matching the expected client interface
+        automotive_metrics: {
+          track_surface: {
             temperature: asphaltTemp,
             condition: surfaceCondition,
-            gripLevel: asphaltGrip
+            grip_level: asphaltGrip
           },
-          concrete: {
-            temperature: concreteTemp,
-            condition: surfaceCondition,
-            gripLevel: concreteGrip
+          tire_temperature_estimates: {
+            soft_compound: asphaltTemp + 15,
+            medium_compound: asphaltTemp + 10,
+            hard_compound: asphaltTemp + 5,
+            street_performance: asphaltTemp + 7,
+            all_season: asphaltTemp + 2
           },
-          gravel: {
-            temperature: temp * 0.95, // Gravel stays cooler
-            condition: surfaceCondition
-          }
+          drive_recommendations: {
+            tire_warmup_minutes: {
+              performance: tireWarmup.sport,
+              street: tireWarmup.summer,
+              all_season: tireWarmup.allSeason
+            },
+            torque_management: {
+              recommended_percentage: Math.round(100 - (riskLevel === "High" ? 30 : riskLevel === "Moderate" ? 15 : 0)),
+              traction_control: riskLevel === "High" ? "On" : riskLevel === "Moderate" ? "Sport" : "Driver Choice"
+            },
+            tire_pressure_adjustment: surfaceCondition === "Wet" ? -2 : asphaltTemp > 90 ? 1 : 0,
+            braking_points: "Standard"
+          },
+          visibility_assessment: visibilityLevel,
+          sunglare_risk: weatherCondition === "clear" && clouds < 30 ? "Moderate" : "Low"
         },
         
-        // Automotive performance metrics
-        performance: {
-          tireWarmupTime: {
-            sport: tireWarmup.sport,
-            summer: tireWarmup.summer,
-            allSeason: tireWarmup.allSeason,
-            winter: tireWarmup.winter
-          },
-          enginePerformance: {
-            airDensityFactor: airDensityFactor,
-            powerAdjustment: powerAdjustment,
-            torqueAdjustment: torqueAdjustment
-          },
-          aerodynamicPerformance: {
-            efficiency: aeroEfficiency,
-            downforceAdjustment: downforceAdjustment
-          },
-          coolingEfficiency: coolingEfficiency,
-          brakingPerformance: {
-            effectiveCoefficient: brakingEfficiency,
-            distanceAdjustment: brakingDistanceAdjustment,
-            heatDissipation: heatDissipation
+        // Hourly forecast stub
+        hourly_forecast: [
+          {
+            time: new Date().toISOString(),
+            temperature: temp,
+            conditions: weatherData.weather[0]?.main || weatherCondition,
+            precipitation_chance: 0
           }
-        },
+        ],
         
-        // Overall driving conditions summary
-        drivingConditions: {
-          riskLevel: riskLevel,
-          traction: tractionLevel,
-          visibility: visibilityLevel,
-          advisories: advisories
+        // Alerts
+        alerts: [],
+        
+        // Data sources
+        data_sources: {
+          weather: "OpenWeatherMap",
+          solar: "Estimated"
         }
       };
       
@@ -1218,49 +1225,76 @@ export async function registerRoutes(app: Express): Promise<Server> {
       console.error("Error generating automotive weather data:", error);
       // Send a default response instead of an error
       console.log('Sending fallback response due to error');
+      // Using consistent structure with the primary response
       return res.json({
-        lat: parseFloat(req.query.lat as string),
-        lon: parseFloat(req.query.lon as string),
-        surfaces: {
-          asphalt: { 
-            temperature: 70,
-            condition: "Dry",
-            gripLevel: "Moderate"
-          },
-          concrete: {
-            temperature: 68,
-            condition: "Dry",
-            gripLevel: "Moderate"
-          }
+        location: {
+          lat: parseFloat(req.query.lat as string),
+          lon: parseFloat(req.query.lon as string),
+          timezone: "America/New_York"
         },
-        performance: {
-          tireWarmupTime: {
-            sport: 2,
-            summer: 5,
-            allSeason: 8,
-            winter: 12
-          },
-          enginePerformance: {
-            airDensityFactor: 0.95,
-            powerAdjustment: 0,
-            torqueAdjustment: 0
-          },
-          aerodynamicPerformance: {
-            efficiency: 0.85,
-            downforceAdjustment: 0
-          },
-          coolingEfficiency: 0.85,
-          brakingPerformance: {
-            effectiveCoefficient: 0.85,
-            distanceAdjustment: 0,
-            heatDissipation: "Normal"
-          }
+        current_time: new Date().toISOString(),
+        sunrise_time: new Date(new Date().setHours(6, 30, 0, 0)).toISOString(),
+        sunset_time: new Date(new Date().setHours(20, 0, 0, 0)).toISOString(),
+        
+        conditions: {
+          summary: "Clear sky",
+          icon: "01d",
+          air_temperature: 72,
+          feels_like: 72,
+          humidity: 50,
+          pressure: 1013,
+          wind_speed: 5,
+          wind_direction: 180,
+          cloud_cover: 10,
+          precipitation: 0,
+          uv_index: 2,
+          solar_radiation: null
         },
-        drivingConditions: {
-          riskLevel: "Low",
-          traction: "Good",
-          visibility: "Excellent",
-          advisories: ["Normal driving conditions", "No special precautions needed"]
+        
+        automotive_metrics: {
+          track_surface: {
+            temperature: 78,
+            condition: "Dry",
+            grip_level: "Optimal"
+          },
+          tire_temperature_estimates: {
+            soft_compound: 93,
+            medium_compound: 88,
+            hard_compound: 83,
+            street_performance: 85,
+            all_season: 80
+          },
+          drive_recommendations: {
+            tire_warmup_minutes: {
+              performance: 2,
+              street: 5,
+              all_season: 8
+            },
+            torque_management: {
+              recommended_percentage: 100,
+              traction_control: "Driver Choice"
+            },
+            tire_pressure_adjustment: 0,
+            braking_points: "Standard"
+          },
+          visibility_assessment: "Excellent",
+          sunglare_risk: "Low"
+        },
+        
+        hourly_forecast: [
+          {
+            time: new Date().toISOString(),
+            temperature: 72,
+            conditions: "Clear",
+            precipitation_chance: 0
+          }
+        ],
+        
+        alerts: [],
+        
+        data_sources: {
+          weather: "Fallback Data",
+          solar: "Estimated"
         }
       });
     }
