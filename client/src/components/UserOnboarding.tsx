@@ -1105,6 +1105,392 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
               )}
             </div>
           )}
+          
+          {/* Dashboard Customization with Location Settings */}
+          {step === 6 && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="flex items-center bg-[#1982FC]/10 p-4 rounded-lg mb-6">
+                <Settings className="text-[#1982FC] mr-4" size={24} />
+                <p className="text-gray-200">
+                  Customize your Paddock20 dashboard experience and set up your default preferences
+                  for weather and routes.
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Weather Location Settings */}
+                <div className="md:col-span-2 space-y-4">
+                  <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
+                    Weather Location Settings
+                  </h3>
+                  
+                  <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="space-y-3">
+                        <label className="block text-sm font-medium text-gray-300">
+                          Primary Location
+                        </label>
+                        
+                        <div className="flex items-center space-x-2">
+                          <input
+                            type="text"
+                            name="primaryLocation"
+                            value={locationSettings.primaryLocation}
+                            onChange={handleLocationChange}
+                            className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
+                            placeholder="City, State or ZIP Code"
+                          />
+                          <button 
+                            onClick={handleDetectLocation}
+                            className="flex-shrink-0 p-2 bg-[#1982FC]/20 hover:bg-[#1982FC]/30 rounded-md text-[#1982FC] transition-colors"
+                            title="Use current location"
+                          >
+                            <Map size={18} />
+                          </button>
+                        </div>
+                        
+                        <p className="text-sm text-gray-400">
+                          This will be your default location for weather forecasts and driving conditions.
+                        </p>
+                      </div>
+                      
+                      <div className="space-y-3">
+                        <label className="block text-sm font-medium text-gray-300">
+                          Units Preference
+                        </label>
+                        
+                        <div className="flex items-center space-x-4">
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              id="units-imperial"
+                              name="units"
+                              value="imperial"
+                              checked={locationSettings.units === 'imperial'}
+                              onChange={handleLocationChange}
+                              className="h-4 w-4 text-[#1982FC] focus:ring-[#1982FC] focus:ring-offset-gray-900"
+                            />
+                            <label htmlFor="units-imperial" className="text-sm text-gray-300">
+                              Imperial (°F, mph)
+                            </label>
+                          </div>
+                          
+                          <div className="flex items-center space-x-2">
+                            <input
+                              type="radio"
+                              id="units-metric"
+                              name="units"
+                              value="metric"
+                              checked={locationSettings.units === 'metric'}
+                              onChange={handleLocationChange}
+                              className="h-4 w-4 text-[#1982FC] focus:ring-[#1982FC] focus:ring-offset-gray-900"
+                            />
+                            <label htmlFor="units-metric" className="text-sm text-gray-300">
+                              Metric (°C, km/h)
+                            </label>
+                          </div>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2 mt-2">
+                          <input
+                            type="checkbox"
+                            id="autoRefresh"
+                            name="autoRefresh"
+                            checked={locationSettings.autoRefresh}
+                            onChange={handleLocationCheckboxChange}
+                            className="h-4 w-4 rounded text-[#1982FC] focus:ring-[#1982FC] focus:ring-offset-gray-900"
+                          />
+                          <label htmlFor="autoRefresh" className="text-sm text-gray-300">
+                            Auto-refresh weather data when opening the app
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Favorite Routes & Commutes */}
+                <div className="md:col-span-2 space-y-4">
+                  <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
+                    Favorite Routes & Commutes
+                  </h3>
+                  
+                  <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
+                    <div className="space-y-4">
+                      {routes.map((route, index) => (
+                        <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-3 pb-3 border-b border-gray-700">
+                          <div className="md:col-span-2">
+                            <label className="block text-xs font-medium text-gray-400 mb-1">
+                              Route Name
+                            </label>
+                            <input
+                              type="text"
+                              value={route.name}
+                              onChange={(e) => handleRouteChange(index, 'name', e.target.value)}
+                              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
+                              placeholder="e.g. Mountain Drive, Commute to Work"
+                            />
+                          </div>
+                          
+                          <div className="md:col-span-2">
+                            <label className="block text-xs font-medium text-gray-400 mb-1">
+                              Start & End Points
+                            </label>
+                            <input
+                              type="text"
+                              value={route.points}
+                              onChange={(e) => handleRouteChange(index, 'points', e.target.value)}
+                              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
+                              placeholder="e.g. Home to Mountain Pass"
+                            />
+                          </div>
+                          
+                          <div className="flex items-end">
+                            <button
+                              onClick={() => removeRoute(index)}
+                              className="px-3 py-2 bg-red-900/30 hover:bg-red-900/50 rounded-md text-red-400 transition-colors flex items-center"
+                            >
+                              <X size={16} className="mr-1" />
+                              <span className="text-sm">Remove</span>
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                      
+                      <button
+                        onClick={addNewRoute}
+                        className="px-4 py-2 bg-[#1982FC]/20 hover:bg-[#1982FC]/30 rounded-md text-[#1982FC] transition-colors flex items-center"
+                      >
+                        <PlusCircle size={16} className="mr-2" />
+                        <span>Add Another Route</span>
+                      </button>
+                      
+                      <p className="text-sm text-gray-400 mt-2">
+                        Add your favorite routes for quick access to weather conditions and navigation.
+                        You can add more or edit these later.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Theme & Display Preferences */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
+                    Theme & Display
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Dashboard Theme
+                      </label>
+                      <div className="grid grid-cols-2 gap-3">
+                        <div 
+                          className={`cursor-pointer rounded-lg p-3 border ${
+                            dashboardPrefs.theme === 'dark'
+                              ? 'border-[#1982FC] bg-[#1982FC]/10'
+                              : 'border-gray-700 bg-gray-800/50 hover:bg-gray-800'
+                          }`}
+                          onClick={() => handleDashboardThemeChange('dark')}
+                        >
+                          <div className="h-16 rounded bg-gray-800 border border-gray-700 mb-2 flex items-center justify-center">
+                            <span className="text-xs text-gray-400">Dark Carbon</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-300">Dark</span>
+                            {dashboardPrefs.theme === 'dark' && (
+                              <Check size={16} className="text-[#1982FC]" />
+                            )}
+                          </div>
+                        </div>
+                        
+                        <div 
+                          className={`cursor-pointer rounded-lg p-3 border ${
+                            dashboardPrefs.theme === 'darker'
+                              ? 'border-[#1982FC] bg-[#1982FC]/10'
+                              : 'border-gray-700 bg-gray-800/50 hover:bg-gray-800'
+                          }`}
+                          onClick={() => handleDashboardThemeChange('darker')}
+                        >
+                          <div className="h-16 rounded bg-black border border-gray-800 mb-2 flex items-center justify-center">
+                            <span className="text-xs text-gray-500">Deep Black</span>
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span className="text-sm text-gray-300">Darker</span>
+                            {dashboardPrefs.theme === 'darker' && (
+                              <Check size={16} className="text-[#1982FC]" />
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-2">
+                        Temperature Display
+                      </label>
+                      <select
+                        name="tempDisplay"
+                        value={dashboardPrefs.tempDisplay}
+                        onChange={handleDashboardPrefChange}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
+                      >
+                        <option value="standard">Standard (Just Numbers)</option>
+                        <option value="detailed">Detailed (With Description)</option>
+                        <option value="compact">Compact (Minimal)</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Module Visibility */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
+                    Dashboard Modules
+                  </h3>
+                  
+                  <div className="space-y-2">
+                    <p className="text-sm text-gray-400 mb-2">
+                      Select which modules to display on your dashboard:
+                    </p>
+                    
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between p-2 rounded-md hover:bg-gray-800/70">
+                        <div className="flex items-center">
+                          <div className="bg-[#1982FC]/20 p-1 rounded mr-2">
+                            <Cloud size={16} className="text-[#1982FC]" />
+                          </div>
+                          <label htmlFor="showWeather" className="text-sm text-gray-300 cursor-pointer">
+                            Weather Paddock
+                          </label>
+                        </div>
+                        <div className="relative inline-flex items-center">
+                          <input
+                            type="checkbox"
+                            id="showWeather"
+                            name="showWeather"
+                            checked={dashboardPrefs.showWeather}
+                            onChange={handleDashboardPrefChange}
+                            className="sr-only"
+                          />
+                          <div 
+                            className={`w-10 h-5 rounded-full transition-colors ${
+                              dashboardPrefs.showWeather ? 'bg-[#1982FC]' : 'bg-gray-600'
+                            }`}
+                          ></div>
+                          <div 
+                            className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform ${
+                              dashboardPrefs.showWeather ? 'transform translate-x-5' : ''
+                            }`}
+                          ></div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between p-2 rounded-md hover:bg-gray-800/70">
+                        <div className="flex items-center">
+                          <div className="bg-[#1982FC]/20 p-1 rounded mr-2">
+                            <Calendar size={16} className="text-[#1982FC]" />
+                          </div>
+                          <label htmlFor="showEvents" className="text-sm text-gray-300 cursor-pointer">
+                            Events
+                          </label>
+                        </div>
+                        <div className="relative inline-flex items-center">
+                          <input
+                            type="checkbox"
+                            id="showEvents"
+                            name="showEvents"
+                            checked={dashboardPrefs.showEvents}
+                            onChange={handleDashboardPrefChange}
+                            className="sr-only"
+                          />
+                          <div 
+                            className={`w-10 h-5 rounded-full transition-colors ${
+                              dashboardPrefs.showEvents ? 'bg-[#1982FC]' : 'bg-gray-600'
+                            }`}
+                          ></div>
+                          <div 
+                            className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform ${
+                              dashboardPrefs.showEvents ? 'transform translate-x-5' : ''
+                            }`}
+                          ></div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between p-2 rounded-md hover:bg-gray-800/70">
+                        <div className="flex items-center">
+                          <div className="bg-[#1982FC]/20 p-1 rounded mr-2">
+                            <Wrench size={16} className="text-[#1982FC]" />
+                          </div>
+                          <label htmlFor="showMaintenance" className="text-sm text-gray-300 cursor-pointer">
+                            Maintenance Alerts
+                          </label>
+                        </div>
+                        <div className="relative inline-flex items-center">
+                          <input
+                            type="checkbox"
+                            id="showMaintenance"
+                            name="showMaintenance"
+                            checked={dashboardPrefs.showMaintenance}
+                            onChange={handleDashboardPrefChange}
+                            className="sr-only"
+                          />
+                          <div 
+                            className={`w-10 h-5 rounded-full transition-colors ${
+                              dashboardPrefs.showMaintenance ? 'bg-[#1982FC]' : 'bg-gray-600'
+                            }`}
+                          ></div>
+                          <div 
+                            className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform ${
+                              dashboardPrefs.showMaintenance ? 'transform translate-x-5' : ''
+                            }`}
+                          ></div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between p-2 rounded-md hover:bg-gray-800/70">
+                        <div className="flex items-center">
+                          <div className="bg-[#1982FC]/20 p-1 rounded mr-2">
+                            <PaintBucket size={16} className="text-[#1982FC]" />
+                          </div>
+                          <label htmlFor="showJuiceBox" className="text-sm text-gray-300 cursor-pointer">
+                            JuiceBox
+                          </label>
+                        </div>
+                        <div className="relative inline-flex items-center">
+                          <input
+                            type="checkbox"
+                            id="showJuiceBox"
+                            name="showJuiceBox"
+                            checked={dashboardPrefs.showJuiceBox}
+                            onChange={handleDashboardPrefChange}
+                            className="sr-only"
+                          />
+                          <div 
+                            className={`w-10 h-5 rounded-full transition-colors ${
+                              dashboardPrefs.showJuiceBox ? 'bg-[#1982FC]' : 'bg-gray-600'
+                            }`}
+                          ></div>
+                          <div 
+                            className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform ${
+                              dashboardPrefs.showJuiceBox ? 'transform translate-x-5' : ''
+                            }`}
+                          ></div>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {error && (
+                <div className="p-4 bg-red-900/30 border border-red-700 rounded-lg flex items-center">
+                  <X className="text-red-400 mr-2 flex-shrink-0" size={18} />
+                  <span className="text-red-400 text-sm">{error}</span>
+                </div>
+              )}
+            </div>
+          )}
         </div>
         
         {/* Footer with navigation buttons */}
