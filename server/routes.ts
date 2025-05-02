@@ -11,6 +11,7 @@ import {
 } from "@shared/schema";
 import { handleGoogleOAuth2Callback, handleAppleOAuth2Callback } from "./oauth";
 import { checkSlackIntegration, initializeSlackClient, shareVehicleToSlack, shareEventToSlack } from "./slack";
+import { setupAuth } from "./auth";
 
 // OpenWeather API keys - updated May 1, 2025
 const OPENWEATHER_API_KEYS = {
@@ -230,6 +231,9 @@ async function checkWeatherApiHealth(): Promise<boolean> {
 }
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Setup user authentication system
+  setupAuth(app);
+  
   // Using only OpenWeather API for all weather services
   
   // Immediately check API health on startup
