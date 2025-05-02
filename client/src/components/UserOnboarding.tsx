@@ -98,8 +98,7 @@ const transmissionTypes = [
 
 // Module focus options
 const moduleOptions = [
-  'Weather Paddock', 'JuiceBox', 'Garage Vault', 'Manifestation Station',
-  'Drive Journal', 'Motorsports', 'Telemetry'
+  'Weather & Drive', 'Detailing & Maintenance', 'Automotive Community', 'Vehicle Performance'
 ];
 
 /**
@@ -112,17 +111,24 @@ const moduleOptions = [
  * Color scheme follows the dark carbon-fiber theme with Carolina blue accents.
  */
 const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
-  // Track the current step in the onboarding process
+  // Current step state (1-6)
   const [step, setStep] = useState(1);
+  const [visibleStep, setVisibleStep] = useState(1);
+  const [animateIn, setAnimateIn] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   
-  // For agreement step
+  // Track if profile and vehicle images have been uploaded
+  const [hasUploadedProfilePic, setHasUploadedProfilePic] = useState(false);
+  const [hasUploadedVehicleImage, setHasUploadedVehicleImage] = useState(false);
+  
+  // Legal agreement tracking
   const [agreements, setAgreements] = useState({
     termsOfService: false,
     privacyPolicy: false,
     betaAgreement: false
   });
   
-  // For user profile step
+  // User profile form state
   const [userProfile, setUserProfile] = useState<UserProfile>({
     fullName: '',
     username: '',
@@ -130,26 +136,26 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
     password: '',
     confirmPassword: '',
     profileImage: '',
-    drivingExperience: 'intermediate',
+    drivingExperience: 'Intermediate',
     interests: [],
     bio: ''
   });
   
-  // For vehicle profile step
+  // Vehicle profile form state
   const [vehicleProfile, setVehicleProfile] = useState<VehicleProfile>({
     make: '',
     model: '',
     year: '',
-    engineType: '',
-    transmissionType: '',
+    engineType: 'Gasoline',
+    transmissionType: 'Automatic',
     nickname: '',
-    color: '#000000',
+    color: '',
     vehicleImage: '',
     mileage: '',
     purchaseDate: ''
   });
   
-  // For dashboard preferences step
+  // Dashboard preferences state
   const [dashboardPrefs, setDashboardPrefs] = useState<DashboardPreferences>({
     theme: 'dark',
     showWeather: true,
@@ -158,37 +164,22 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
     showJuiceBox: true,
     showGarageVault: true,
     showManifestationStation: true,
-    primaryFocus: moduleOptions[0],
+    primaryFocus: 'Weather & Drive',
     notificationSettings: true,
-    tempDisplay: 'standard'
+    tempDisplay: 'detailed'
   });
   
-  // For location settings
+  // Location and route settings
   const [locationSettings, setLocationSettings] = useState<LocationSettings>({
-    primaryLocation: 'Charlotte, NC',
+    primaryLocation: '',
     units: 'imperial',
     autoRefresh: true
   });
   
-  // For routes/favorite drives
+  // Saved routes/commutes
   const [routes, setRoutes] = useState<RouteInfo[]>([
-    { name: 'Daily Commute', points: 'Home to Office' }
+    { name: '', points: '' }
   ]);
-  
-  // Error/validation state
-  const [error, setError] = useState<string | null>(null);
-  
-  // Animation state
-  const [animateIn, setAnimateIn] = useState(true);
-  
-  // Step visibility state (for transitioning between steps)
-  const [visibleStep, setVisibleStep] = useState(1);
-  
-  // Track if the user has uploaded a profile picture
-  const [hasUploadedProfilePic, setHasUploadedProfilePic] = useState(false);
-  
-  // Track if the user has uploaded a vehicle image
-  const [hasUploadedVehicleImage, setHasUploadedVehicleImage] = useState(false);
   
   // Check if legal agreements are complete
   const allAgreed = Object.values(agreements).every(value => value === true);
@@ -755,30 +746,27 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <User size={56} className="text-gray-400" />
+                      <User size={50} className="text-gray-500" />
                     )}
                   </div>
                   
-                  <button 
+                  <button
+                    type="button"
                     onClick={handleProfileImageUpload}
-                    className="px-4 py-2 flex items-center gap-2 bg-gray-700 hover:bg-gray-600 rounded-md text-sm transition-colors"
+                    className="px-4 py-2 bg-[#1982FC]/20 hover:bg-[#1982FC]/30 rounded-md text-[#1982FC] transition-colors flex items-center"
                   >
-                    <Camera size={16} />
-                    Upload Profile Picture
+                    <Camera size={18} className="mr-2" />
+                    <span>{hasUploadedProfilePic ? 'Change Photo' : 'Upload Photo'}</span>
                   </button>
-                  
-                  <p className="text-xs text-gray-400 mt-3 text-center">
-                    Recommended: Square image, minimum 500x500 pixels
-                  </p>
                 </div>
                 
-                {/* Basic Information */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
+                {/* Basic Info */}
+                <div className="md:col-span-2">
+                  <h3 className="text-lg font-semibold text-[#1982FC] mb-4 font-orbitron">
                     Basic Information
                   </h3>
                   
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="fullName" className="block text-sm font-medium text-gray-300 mb-1">
                         Full Name <span className="text-red-500">*</span>
@@ -787,11 +775,10 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                         id="fullName"
                         name="fullName"
                         type="text"
-                        required
                         value={userProfile.fullName}
                         onChange={handleUserProfileChange}
                         className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                        placeholder="Your name"
+                        placeholder="Your full name"
                       />
                     </div>
                     
@@ -803,14 +790,22 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                         id="username"
                         name="username"
                         type="text"
-                        required
                         value={userProfile.username}
                         onChange={handleUserProfileChange}
                         className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                        placeholder="Choose a username"
+                        placeholder="Choose a unique username"
                       />
                     </div>
-                    
+                  </div>
+                </div>
+                
+                {/* Account Info */}
+                <div className="md:col-span-2">
+                  <h3 className="text-lg font-semibold text-[#1982FC] mb-4 font-orbitron">
+                    Account Information
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
                         Email <span className="text-red-500">*</span>
@@ -819,55 +814,54 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                         id="email"
                         name="email"
                         type="email"
-                        required
                         value={userProfile.email}
                         onChange={handleUserProfileChange}
                         className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                        placeholder="your-email@example.com"
+                        placeholder="Your email address"
                       />
+                    </div>
+                    
+                    <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
+                          Password <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          id="password"
+                          name="password"
+                          type="password"
+                          value={userProfile.password}
+                          onChange={handleUserProfileChange}
+                          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
+                          placeholder="Create a secure password"
+                        />
+                      </div>
+                      
+                      <div>
+                        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-1">
+                          Confirm Password <span className="text-red-500">*</span>
+                        </label>
+                        <input
+                          id="confirmPassword"
+                          name="confirmPassword"
+                          type="password"
+                          value={userProfile.confirmPassword}
+                          onChange={handleUserProfileChange}
+                          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
+                          placeholder="Confirm your password"
+                        />
+                      </div>
                     </div>
                   </div>
                 </div>
                 
-                {/* Account Security */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
-                    Account Security
+                {/* Enthusiast Profile */}
+                <div className="md:col-span-2">
+                  <h3 className="text-lg font-semibold text-[#1982FC] mb-4 font-orbitron">
+                    Enthusiast Profile
                   </h3>
                   
-                  <div className="space-y-3">
-                    <div>
-                      <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
-                        Password <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        id="password"
-                        name="password"
-                        type="password"
-                        required
-                        value={userProfile.password}
-                        onChange={handleUserProfileChange}
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                        placeholder="Choose a secure password"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-1">
-                        Confirm Password <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        id="confirmPassword"
-                        name="confirmPassword"
-                        type="password"
-                        required
-                        value={userProfile.confirmPassword}
-                        onChange={handleUserProfileChange}
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                        placeholder="Re-enter your password"
-                      />
-                    </div>
-                    
+                  <div className="grid grid-cols-1 gap-4">
                     <div>
                       <label htmlFor="drivingExperience" className="block text-sm font-medium text-gray-300 mb-1">
                         Driving Experience
@@ -879,72 +873,53 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                         onChange={handleUserProfileChange}
                         className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
                       >
-                        <option value="beginner">Beginner</option>
-                        <option value="intermediate">Intermediate</option>
-                        <option value="advanced">Advanced</option>
-                        <option value="professional">Professional</option>
+                        <option value="Beginner">Beginner (0-2 years)</option>
+                        <option value="Intermediate">Intermediate (3-5 years)</option>
+                        <option value="Experienced">Experienced (6-10 years)</option>
+                        <option value="Advanced">Advanced (11-20 years)</option>
+                        <option value="Expert">Expert (20+ years)</option>
                       </select>
                     </div>
-                  </div>
-                </div>
-                
-                {/* Automotive Interests */}
-                <div className="md:col-span-2 space-y-4">
-                  <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
-                    Automotive Interests <span className="text-red-500">*</span>
-                  </h3>
-                  <p className="text-sm text-gray-400 mb-3">
-                    Select at least one interest to help us personalize your experience.
-                  </p>
-                  
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                    {availableInterests.map(interest => (
-                      <div 
-                        key={interest}
-                        onClick={() => toggleInterest(interest)}
-                        className={`
-                          px-4 py-3 rounded-lg cursor-pointer flex items-center transition-colors
-                          ${userProfile.interests.includes(interest)
-                            ? 'bg-[#1982FC]/20 border border-[#1982FC]/50'
-                            : 'bg-gray-800/60 border border-gray-700 hover:bg-gray-800'
-                          }
-                        `}
-                      >
-                        <div className={`
-                          w-5 h-5 rounded flex-shrink-0 mr-3 flex items-center justify-center
-                          ${userProfile.interests.includes(interest)
-                            ? 'bg-[#1982FC] text-white'
-                            : 'bg-gray-700'
-                          }
-                        `}>
-                          {userProfile.interests.includes(interest) && (
-                            <Check size={14} className="text-white" />
-                          )}
-                        </div>
-                        <span className="text-sm">{interest}</span>
+                    
+                    <div>
+                      <label className="block text-sm font-medium text-gray-300 mb-3">
+                        Automotive Interests (Optional)
+                      </label>
+                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                        {availableInterests.map((interest) => (
+                          <div 
+                            key={interest} 
+                            className={`px-3 py-2 rounded-md cursor-pointer text-sm flex items-center transition-colors ${
+                              userProfile.interests.includes(interest)
+                                ? 'bg-[#1982FC]/20 text-[#1982FC] border border-[#1982FC]/40'
+                                : 'bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-800/80'
+                            }`}
+                            onClick={() => toggleInterest(interest)}
+                          >
+                            {userProfile.interests.includes(interest) && (
+                              <Check size={14} className="mr-1 flex-shrink-0" />
+                            )}
+                            <span className="truncate">{interest}</span>
+                          </div>
+                        ))}
                       </div>
-                    ))}
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="bio" className="block text-sm font-medium text-gray-300 mb-1">
+                        Bio (Optional)
+                      </label>
+                      <textarea
+                        id="bio"
+                        name="bio"
+                        rows={3}
+                        value={userProfile.bio}
+                        onChange={handleUserProfileChange}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
+                        placeholder="Tell us about yourself and your automotive journey..."
+                      ></textarea>
+                    </div>
                   </div>
-                </div>
-                
-                {/* Bio */}
-                <div className="md:col-span-2 space-y-4">
-                  <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
-                    Bio
-                  </h3>
-                  <p className="text-sm text-gray-400 mb-3">
-                    Tell the community a bit about yourself (optional).
-                  </p>
-                  
-                  <textarea
-                    id="bio"
-                    name="bio"
-                    rows={4}
-                    value={userProfile.bio}
-                    onChange={handleUserProfileChange}
-                    className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                    placeholder="Share your automotive passion, experience, or goals..."
-                  />
                 </div>
               </div>
               
@@ -957,14 +932,14 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
             </div>
           )}
           
-          {/* Vehicle Details Form */}
+          {/* Vehicle Profile Form */}
           {step === 5 && (
             <div className="space-y-6 animate-fadeIn">
               <div className="flex items-center bg-[#1982FC]/10 p-4 rounded-lg mb-6">
                 <Car className="text-[#1982FC] mr-4" size={24} />
                 <p className="text-gray-200">
-                  Add your first vehicle to your Garage Vault. This will be your primary vehicle
-                  in Paddock20, but you can add more vehicles later.
+                  Set up your first vehicle in your Garage Vault. This information will help personalize your 
+                  maintenance schedules, detailing protocols, and weather recommendations.
                 </p>
               </div>
               
@@ -972,38 +947,36 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                 {/* Vehicle Image Upload */}
                 <div className="md:col-span-2 flex flex-col items-center justify-center p-6 border border-gray-700 rounded-lg bg-gray-800/30">
                   <div 
-                    className="w-64 h-40 mb-4 rounded-lg bg-gray-700 flex items-center justify-center border-2 border-[#1982FC]/50 overflow-hidden"
-                    style={{ 
-                      backgroundSize: 'cover',
-                      backgroundPosition: 'center',
-                      backgroundImage: hasUploadedVehicleImage ? `url(${vehicleProfile.vehicleImage || '/assets/Stock Photos/vehicle-placeholder.png'})` : 'none'
-                    }}
+                    className="w-full h-48 mb-4 rounded-lg bg-gray-700 flex items-center justify-center border-2 border-[#1982FC]/50 overflow-hidden"
                   >
-                    {!hasUploadedVehicleImage && (
-                      <Car size={64} className="text-gray-400" />
+                    {hasUploadedVehicleImage ? (
+                      <img 
+                        src={vehicleProfile.vehicleImage || '/assets/Stock Photos/vehicle-placeholder.png'} 
+                        alt="Vehicle" 
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <Car size={60} className="text-gray-500" />
                     )}
                   </div>
                   
-                  <button 
+                  <button
+                    type="button"
                     onClick={handleVehicleImageUpload}
-                    className="px-4 py-2 flex items-center gap-2 bg-gray-700 hover:bg-gray-600 rounded-md text-sm transition-colors"
+                    className="px-4 py-2 bg-[#1982FC]/20 hover:bg-[#1982FC]/30 rounded-md text-[#1982FC] transition-colors flex items-center"
                   >
-                    <Camera size={16} />
-                    Upload Vehicle Photo
+                    <Camera size={18} className="mr-2" />
+                    <span>{hasUploadedVehicleImage ? 'Change Photo' : 'Upload Photo'}</span>
                   </button>
-                  
-                  <p className="text-xs text-gray-400 mt-3 text-center">
-                    Show off your pride and joy! Best angle, good lighting.
-                  </p>
                 </div>
                 
-                {/* Basic Vehicle Information */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
+                {/* Vehicle Basics */}
+                <div className="md:col-span-2">
+                  <h3 className="text-lg font-semibold text-[#1982FC] mb-4 font-orbitron">
                     Vehicle Information
                   </h3>
                   
-                  <div className="space-y-3">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <label htmlFor="make" className="block text-sm font-medium text-gray-300 mb-1">
                         Make <span className="text-red-500">*</span>
@@ -1011,16 +984,13 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                       <select
                         id="make"
                         name="make"
-                        required
                         value={vehicleProfile.make}
                         onChange={handleVehicleProfileChange}
                         className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
                       >
-                        <option value="">Select Manufacturer</option>
-                        {carManufacturers.map(manufacturer => (
-                          <option key={manufacturer} value={manufacturer}>
-                            {manufacturer}
-                          </option>
+                        <option value="">Select Make</option>
+                        {carManufacturers.map((make) => (
+                          <option key={make} value={make}>{make}</option>
                         ))}
                       </select>
                     </div>
@@ -1033,11 +1003,10 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                         id="model"
                         name="model"
                         type="text"
-                        required
                         value={vehicleProfile.model}
                         onChange={handleVehicleProfileChange}
                         className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                        placeholder="e.g. 911, M3, GT-R"
+                        placeholder="e.g. Mustang GT, 911 Turbo"
                       />
                     </div>
                     
@@ -1049,38 +1018,22 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                         id="year"
                         name="year"
                         type="text"
-                        required
                         value={vehicleProfile.year}
                         onChange={handleVehicleProfileChange}
                         className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
                         placeholder="e.g. 2023"
                       />
                     </div>
-                    
-                    <div>
-                      <label htmlFor="nickname" className="block text-sm font-medium text-gray-300 mb-1">
-                        Nickname
-                      </label>
-                      <input
-                        id="nickname"
-                        name="nickname"
-                        type="text"
-                        value={vehicleProfile.nickname}
-                        onChange={handleVehicleProfileChange}
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                        placeholder="Your car's nickname (optional)"
-                      />
-                    </div>
                   </div>
                 </div>
                 
-                {/* Additional Vehicle Details */}
+                {/* Technical Details */}
                 <div className="space-y-4">
                   <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
                     Technical Details
                   </h3>
                   
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     <div>
                       <label htmlFor="engineType" className="block text-sm font-medium text-gray-300 mb-1">
                         Engine Type
@@ -1092,11 +1045,8 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                         onChange={handleVehicleProfileChange}
                         className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
                       >
-                        <option value="">Select Engine Type</option>
-                        {engineTypes.map(type => (
-                          <option key={type} value={type}>
-                            {type}
-                          </option>
+                        {engineTypes.map((type) => (
+                          <option key={type} value={type}>{type}</option>
                         ))}
                       </select>
                     </div>
@@ -1112,11 +1062,8 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                         onChange={handleVehicleProfileChange}
                         className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
                       >
-                        <option value="">Select Transmission</option>
-                        {transmissionTypes.map(type => (
-                          <option key={type} value={type}>
-                            {type}
-                          </option>
+                        {transmissionTypes.map((type) => (
+                          <option key={type} value={type}>{type}</option>
                         ))}
                       </select>
                     </div>
@@ -1132,7 +1079,31 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                         value={vehicleProfile.mileage}
                         onChange={handleVehicleProfileChange}
                         className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                        placeholder="Current odometer reading"
+                        placeholder="e.g. 15000"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Personalization */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
+                    Personalization
+                  </h3>
+                  
+                  <div className="space-y-4">
+                    <div>
+                      <label htmlFor="nickname" className="block text-sm font-medium text-gray-300 mb-1">
+                        Vehicle Nickname
+                      </label>
+                      <input
+                        id="nickname"
+                        name="nickname"
+                        type="text"
+                        value={vehicleProfile.nickname}
+                        onChange={handleVehicleProfileChange}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
+                        placeholder="e.g. Black Beauty, The Beast"
                       />
                     </div>
                     
@@ -1141,12 +1112,9 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                         Exterior Color
                       </label>
                       <div className="flex items-center space-x-2">
-                        <input
-                          id="color"
-                          name="color"
-                          type="color"
-                          value={vehicleProfile.color}
-                          onChange={handleVehicleProfileChange}
+                        <input 
+                          type="color" 
+                          id="colorPicker" 
                           className="h-8 w-8 rounded-full overflow-hidden border-0 cursor-pointer"
                         />
                         <input
@@ -1571,17 +1539,72 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                           ></div>
                         </div>
                       </div>
+                      
+                      <div className="flex items-center justify-between p-2 rounded-md hover:bg-gray-800/70">
+                        <div className="flex items-center">
+                          <div className="bg-[#1982FC]/20 p-1 rounded mr-2">
+                            <Shield size={16} className="text-[#1982FC]" />
+                          </div>
+                          <label htmlFor="showGarageVault" className="text-sm text-gray-300 cursor-pointer">
+                            Garage Vault
+                          </label>
+                        </div>
+                        <div className="relative inline-flex items-center">
+                          <input
+                            type="checkbox"
+                            id="showGarageVault"
+                            name="showGarageVault"
+                            checked={dashboardPrefs.showGarageVault}
+                            onChange={handleDashboardPrefChange}
+                            className="sr-only"
+                          />
+                          <div 
+                            className={`w-10 h-5 rounded-full transition-colors ${
+                              dashboardPrefs.showGarageVault ? 'bg-[#1982FC]' : 'bg-gray-600'
+                            }`}
+                          ></div>
+                          <div 
+                            className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform ${
+                              dashboardPrefs.showGarageVault ? 'transform translate-x-5' : ''
+                            }`}
+                          ></div>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-center justify-between p-2 rounded-md hover:bg-gray-800/70">
+                        <div className="flex items-center">
+                          <div className="bg-[#1982FC]/20 p-1 rounded mr-2">
+                            <Trophy size={16} className="text-[#1982FC]" />
+                          </div>
+                          <label htmlFor="showManifestationStation" className="text-sm text-gray-300 cursor-pointer">
+                            Manifestation Station
+                          </label>
+                        </div>
+                        <div className="relative inline-flex items-center">
+                          <input
+                            type="checkbox"
+                            id="showManifestationStation"
+                            name="showManifestationStation"
+                            checked={dashboardPrefs.showManifestationStation}
+                            onChange={handleDashboardPrefChange}
+                            className="sr-only"
+                          />
+                          <div 
+                            className={`w-10 h-5 rounded-full transition-colors ${
+                              dashboardPrefs.showManifestationStation ? 'bg-[#1982FC]' : 'bg-gray-600'
+                            }`}
+                          ></div>
+                          <div 
+                            className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform ${
+                              dashboardPrefs.showManifestationStation ? 'transform translate-x-5' : ''
+                            }`}
+                          ></div>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-              
-              {error && (
-                <div className="p-4 bg-red-900/30 border border-red-700 rounded-lg flex items-center">
-                  <X className="text-red-400 mr-2 flex-shrink-0" size={18} />
-                  <span className="text-red-400 text-sm">{error}</span>
-                </div>
-              )}
             </div>
           )}
         </div>
@@ -1589,33 +1612,25 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
         {/* Footer with navigation buttons */}
         <div className="border-t border-gray-800 p-6 flex justify-between bg-gray-900/50">
           {step > 1 ? (
-            <button 
+            <button
+              type="button"
               onClick={prevStep}
-              className="px-5 py-2.5 text-gray-300 hover:text-white transition-colors flex items-center"
+              className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-md text-gray-200 transition-colors flex items-center"
             >
-              <svg className="w-4 h-4 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
-              </svg>
-              Back
+              <X className="mr-2" size={18} />
+              <span>Back</span>
             </button>
           ) : (
-            <div></div> // Empty div to maintain layout
+            <div></div> // Empty div to maintain flex spacing
           )}
           
-          <button 
+          <button
+            type="button"
             onClick={nextStep}
-            disabled={step === 3 && !allAgreed}
-            className={`px-7 py-2.5 rounded-full flex items-center font-medium ${
-              step === 3 && !allAgreed 
-                ? 'bg-gray-700 text-gray-400 cursor-not-allowed'
-                : 'bg-gradient-to-r from-[#1982FC] to-[#7FC844] text-white hover:opacity-90 transition-opacity'
-            }`}
-            style={{
-              boxShadow: step === 3 && !allAgreed ? 'none' : '0 0 15px rgba(25, 130, 252, 0.3)'
-            }}
+            className="px-6 py-2 bg-[#1982FC] hover:bg-[#1982FC]/90 rounded-md text-white transition-colors flex items-center"
           >
-            {step === 3 ? 'Accept & Continue' : 'Continue'} 
-            <ChevronRight size={18} className="ml-1" />
+            <span>{step === 6 ? 'Complete Setup' : 'Continue'}</span>
+            <ChevronRight className="ml-2" size={18} />
           </button>
         </div>
       </div>
