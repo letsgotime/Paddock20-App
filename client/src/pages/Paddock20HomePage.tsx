@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import EventsPreview from '../components/EventsPreview';
-import OneTapWeatherSnapshot from '../components/OneTapWeatherSnapshot';
 import MotorsportsGallery from '../components/MotorsportsGallery';
 import { useWeather } from '../contexts/WeatherContext';
 import { Thermometer, Droplets, Wind, Sun, Leaf, Gauge, Cloud, ArrowUp, Compass, Timer, Clock, Zap, Map, Shield, Calendar, Trophy, Flame } from 'lucide-react';
@@ -132,14 +131,9 @@ const Paddock20HomePage: React.FC = () => {
           <span className="ml-3 text-xs bg-blue-900/30 px-2 py-0.5 rounded-sm text-blue-300 uppercase tracking-wide">Real-time Telemetry</span>
         </h2>
         
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Weather Snapshot */}
-          <div className="lg:col-span-1">
-            <OneTapWeatherSnapshot className="h-full" />
-          </div>
-          
+        <div className="grid grid-cols-1 gap-6">
           {/* Driver-Oriented Weather Metrics */}
-          <div className="lg:col-span-2 bg-gradient-to-r from-black/95 to-gray-900/90 rounded-xl p-5 border border-blue-900/30 shadow-lg backdrop-blur-sm relative overflow-hidden">
+          <div className="bg-gradient-to-r from-black/95 to-gray-900/90 rounded-xl p-5 border border-blue-900/30 shadow-lg backdrop-blur-sm relative overflow-hidden">
             {/* Carbon fiber pattern overlay for F1 style */}
             <div className="absolute inset-0 opacity-5 bg-[url('/assets/images/carbon-fiber-pattern.png')] bg-repeat pointer-events-none"></div>
             
