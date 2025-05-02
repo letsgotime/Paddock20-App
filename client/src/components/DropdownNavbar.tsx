@@ -150,10 +150,6 @@ const DropdownNavbar = () => {
                 <Cloud className="h-4 w-4 mr-2 text-blue-400" />
                 <span>Weather Paddock</span>
               </Link>
-              <Link to="/weather" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
-                <Cloud className="h-4 w-4 mr-2 text-blue-400" />
-                <span>Weather Center</span>
-              </Link>
               <Link to="/route-planner" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
                 <MapPin className="h-4 w-4 mr-2 text-blue-400" />
                 <span>Fun Drive Planner</span>
