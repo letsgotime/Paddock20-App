@@ -8,6 +8,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { initializeImageCache } from "./services/unsplashService";
 import NavigationControls from './components/NavigationControls';
 import ContextualBreadcrumbs from './components/ContextualBreadcrumbs';
+import useScrollToTop from './hooks/useScrollToTop';
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import Garage from "@/pages/Garage";
@@ -66,6 +67,9 @@ function App() {
   // TEMPORARY: Force preview mode to bypass auth
   const previewMode = true;
   const { session, loading } = useAuth();
+  
+  // Use the scroll-to-top hook to ensure pages always start at the top
+  useScrollToTop();
   
   // For preview purposes, we'll create a mock session
   const effectiveSession = previewMode ? { user: { id: 'preview-user' } } : session;
