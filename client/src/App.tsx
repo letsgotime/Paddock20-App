@@ -38,6 +38,7 @@ import { WeatherProvider } from "./contexts/WeatherContext";
 import { GalleryProvider } from "./contexts/GalleryContext";
 import { RewardsProvider } from "./contexts/RewardsContext";
 import RewardNotification from "./components/RewardNotification";
+import RewardsTracker from "./components/RewardsTracker";
 import AuthPage from "./pages/AuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import PersonalizedDashboard from "./pages/PersonalizedDashboard";
@@ -225,6 +226,12 @@ function App() {
             
             {/* AI Support Chatbot - Available globally */}
             {(effectiveSession || previewMode) && <SupportChatbot />}
+            
+            {/* Rewards notification - will show when rewards are earned */}
+            {(effectiveSession || previewMode) && <RewardNotification />}
+            
+            {/* Invisible rewards tracker component that monitors user activity */}
+            {(effectiveSession || previewMode) && <RewardsTracker />}
           </main>
 
           {/* Footer with links and information */}
