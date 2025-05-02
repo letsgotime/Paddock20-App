@@ -1,5 +1,5 @@
 import PreDriveChecklistPage from './pages/PreDriveChecklistPage';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -63,20 +63,48 @@ import PodiumPursuitPage from "./pages/PodiumPursuitPage";
 import SupportChatbot from "./components/SupportChatbot";
 import HomePage from "./pages/Home";
 import OneTapWeatherSnapshot from "./components/OneTapWeatherSnapshot";
+import UserOnboarding from "./components/UserOnboarding";
 import { useAuth } from "./hooks/useAuth";
 import { MAIN_CONTENT_ID, LiveRegion } from './lib/accessibility';
 import './paddock20.css';
+
+// Import legal pages
+import PrivacyPolicy from './pages/PrivacyPolicy';
+import TermsOfService from './pages/TermsOfService';
+import BetaAgreement from './pages/BetaAgreement';
 
 function App() {
   // TEMPORARY: Force preview mode to bypass auth
   const previewMode = true;
   const { session, loading } = useAuth();
   
+  // State to track if the user has completed onboarding
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(() => {
+    // Check if user has completed the legal agreement flow
+    // In a real app, this would be stored in a database after user authentication
+    const userAgreements = localStorage.getItem('userAgreements');
+    if (userAgreements) {
+      try {
+        const agreements = JSON.parse(userAgreements);
+        // Check version to ensure users re-agree when terms change
+        return agreements.accepted && agreements.version === '1.0';
+      } catch (e) {
+        return false;
+      }
+    }
+    return false;
+  });
+  
   // Use the scroll-to-top hook to ensure pages always start at the top
   useScrollToTop();
   
   // For preview purposes, we'll create a mock session
   const effectiveSession = previewMode ? { user: { id: 'preview-user' } } : session;
+  
+  // Function to mark onboarding as complete
+  const completeOnboarding = () => {
+    setHasCompletedOnboarding(true);
+  };
 
   // Protected route component
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
@@ -174,6 +202,11 @@ function App() {
               <Routes>
                 {/* Public authentication route */}
                 <Route path="/auth" element={!session && !previewMode ? <AuthPage /> : <Navigate to="/dashboard" replace />} />
+                
+                {/* Legal Document Pages - Publicly accessible */}
+                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                <Route path="/terms-of-service" element={<TermsOfService />} />
+                <Route path="/beta-agreement" element={<BetaAgreement />} />
                 
                 {/* Protected routes */}
               <Route path="/" element={<ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
