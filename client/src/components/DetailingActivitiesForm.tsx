@@ -29,7 +29,16 @@ import {
   GalleryHorizontalEnd,
   CheckSquare,
   Edit,
-  BookOpen
+  BookOpen,
+  Info,
+  ExternalLink,
+  Heart,
+  MessageSquare,
+  ImagePlus,
+  FilePlus,
+  MoveRight,
+  Check,
+  MinusCircle
 } from 'lucide-react';
 import { useRewards } from '../contexts/RewardsContext';
 
@@ -96,7 +105,7 @@ const DETAILING_TYPES = [
 ];
 
 // Pre-defined steps for common detailing activities
-const DETAILING_STEPS = {
+const DETAILING_STEPS: Record<string, Array<{id: string, name: string}>> = {
   'Wash': [
     { id: 'rinse1', name: 'Pre-rinse vehicle' },
     { id: 'soap', name: 'Apply soap with foam cannon/mitt' },
@@ -120,15 +129,51 @@ const DETAILING_STEPS = {
     { id: 'apply', name: 'Apply ceramic coating' },
     { id: 'level', name: 'Level coating and remove excess' },
     { id: 'cure', name: 'Allow proper curing time' }
+  ],
+  'Polish': [
+    { id: 'wash', name: 'Wash and decontaminate' },
+    { id: 'clay', name: 'Clay bar treatment (if needed)' },
+    { id: 'tape', name: 'Tape off trim and sensitive areas' },
+    { id: 'compound', name: 'Apply compound with polisher' },
+    { id: 'polish', name: 'Apply polish with finishing pad' },
+    { id: 'wipe', name: 'Wipe down and inspect results' },
+    { id: 'protect', name: 'Apply protection (wax/sealant)' }
+  ],
+  'Wax': [
+    { id: 'wash', name: 'Wash vehicle thoroughly' },
+    { id: 'dry', name: 'Dry completely' },
+    { id: 'apply', name: 'Apply wax in small sections' },
+    { id: 'buff', name: 'Buff with microfiber towel' },
+    { id: 'inspect', name: 'Inspect for missed spots' }
+  ],
+  'Interior Cleaning': [
+    { id: 'vacuum', name: 'Vacuum all surfaces' },
+    { id: 'dust', name: 'Dust dashboard and surfaces' },
+    { id: 'clean', name: 'Clean vinyl/leather surfaces' },
+    { id: 'glass', name: 'Clean glass surfaces' },
+    { id: 'protect', name: 'Apply protectant' },
+    { id: 'carpet', name: 'Clean carpets and floor mats' }
+  ],
+  'Headlight Restoration': [
+    { id: 'clean', name: 'Clean headlights' },
+    { id: 'tape', name: 'Tape surrounding areas' },
+    { id: 'sand1', name: 'Wet sand with 1000 grit' },
+    { id: 'sand2', name: 'Wet sand with 2000 grit' },
+    { id: 'sand3', name: 'Wet sand with 3000 grit' },
+    { id: 'polish', name: 'Polish headlights' },
+    { id: 'seal', name: 'Apply UV sealant' }
   ]
 };
 
 // Product examples for each detailing type
-const PRODUCT_SUGGESTIONS = {
+const PRODUCT_SUGGESTIONS: Record<string, string[]> = {
   'Wash': ['Foam Cannon', 'Car Shampoo', 'Microfiber Wash Mitt', 'Drying Towel'],
   'Clay Bar Treatment': ['Clay Bar', 'Clay Lubricant', 'Microfiber Towel'],
   'Ceramic Coating': ['Ceramic Coating', 'Applicator', 'Microfiber Suede Cloth', 'IPA Solution'],
-  'Polish': ['Dual Action Polisher', 'Polish Compound', 'Polishing Pads', 'Microfiber Towels']
+  'Polish': ['Dual Action Polisher', 'Polish Compound', 'Polishing Pads', 'Microfiber Towels'],
+  'Wax': ['Carnauba Wax', 'Foam Applicator', 'Microfiber Towel', 'Detailing Spray'],
+  'Interior Cleaning': ['Interior Detailer', 'Carpet Cleaner', 'Leather Cleaner', 'Microfiber Cloths', 'Detailing Brushes'],
+  'Headlight Restoration': ['Sandpaper Set', 'Polishing Compound', 'UV Sealant', 'Microfiber Towels', 'Masking Tape']
 };
 
 const DetailingActivitiesForm: React.FC<DetailingActivitiesFormProps> = ({ onSubmit, onCancel }) => {
@@ -152,6 +197,8 @@ const DetailingActivitiesForm: React.FC<DetailingActivitiesFormProps> = ({ onSub
   const [newProduct, setNewProduct] = useState('');
   const [currentStreak, setCurrentStreak] = useState(7); // Mock streak for UI
   const [isRecordingVoice, setIsRecordingVoice] = useState(false);
+  const [isQuickMode, setIsQuickMode] = useState(true);
+  const [showExpandedMedia, setShowExpandedMedia] = useState(false);
 
   // File input references
   const photoInputRef = useRef<HTMLInputElement>(null);
@@ -159,7 +206,7 @@ const DetailingActivitiesForm: React.FC<DetailingActivitiesFormProps> = ({ onSub
   const documentInputRef = useRef<HTMLInputElement>(null);
 
   // Rewards context for points
-  const { addPoints } = useRewards();
+  const { earnPoints } = useRewards();
 
   // Update steps when detailing type changes
   useEffect(() => {
@@ -392,8 +439,8 @@ const DetailingActivitiesForm: React.FC<DetailingActivitiesFormProps> = ({ onSub
     };
     
     // Add points to user's rewards
-    if (addPoints) {
-      addPoints(activity.pointsEarned, `Completed ${activity.type} detailing activity`);
+    if (earnPoints) {
+      earnPoints(activity.pointsEarned, `Completed ${activity.type} detailing activity`);
     }
     
     onSubmit(finalActivity);
@@ -435,6 +482,41 @@ const DetailingActivitiesForm: React.FC<DetailingActivitiesFormProps> = ({ onSub
                   Complete all steps and add documentation to earn maximum points!
                 </p>
               </div>
+            </div>
+          </div>
+          
+          {/* Quick Mode Toggle */}
+          <div className="flex justify-between items-center mb-6 p-3 bg-gray-800/50 rounded-lg border border-gray-700/50">
+            <div className="flex items-center">
+              <SparkleIcon className="h-5 w-5 mr-2 text-yellow-500" />
+              <div>
+                <h3 className="text-white text-sm font-medium">Entry Mode</h3>
+                <p className="text-xs text-gray-400">Choose your preferred documentation level</p>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <button
+                type="button"
+                onClick={() => setIsQuickMode(true)}
+                className={`px-3 py-1.5 rounded text-sm ${
+                  isQuickMode 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                Quick Entry
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsQuickMode(false)}
+                className={`px-3 py-1.5 rounded text-sm ${
+                  !isQuickMode 
+                    ? 'bg-blue-600 text-white' 
+                    : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                }`}
+              >
+                Detailed
+              </button>
             </div>
           </div>
           
@@ -493,100 +575,224 @@ const DetailingActivitiesForm: React.FC<DetailingActivitiesFormProps> = ({ onSub
             />
           </div>
           
-          {/* Steps Checklist - Only shown if steps are available */}
-          {activity.steps.length > 0 && (
-            <div className="border border-gray-800 rounded-md p-4">
-              <h3 className="text-amber-400 text-sm mb-3 flex items-center">
-                <CheckCircle className="h-4 w-4 mr-2" />
-                Process Steps
-              </h3>
-              <div className="space-y-2">
-                {activity.steps.map(step => (
-                  <div key={step.id} className="flex items-center">
-                    <button
-                      type="button"
-                      onClick={() => handleStepToggle(step.id)}
-                      className="mr-3"
-                    >
-                      {step.completed ? (
-                        <CheckCircle className="h-5 w-5 text-green-500" />
-                      ) : (
-                        <div className="w-5 h-5 rounded-full border border-gray-600 hover:border-green-400" />
-                      )}
-                    </button>
-                    <span className={step.completed ? 'text-white' : 'text-gray-400'}>
-                      {step.name}
-                    </span>
-                  </div>
-                ))}
-              </div>
-              
-              <div className="mt-4 pt-4 border-t border-gray-700">
-                <div className="flex justify-between items-center">
-                  <div>
-                    <h5 className="text-white font-medium mb-1">Completion Status</h5>
-                    {activity.steps.every(step => step.completed) ? (
-                      <div className="flex items-center text-green-400">
-                        <CheckCircle className="h-4 w-4 mr-1.5" />
-                        <span>All steps completed! Great work!</span>
-                      </div>
-                    ) : (
-                      <div className="flex items-center text-amber-400">
-                        <Clock className="h-4 w-4 mr-1.5" />
-                        <span>
-                          {activity.steps.filter(step => step.completed).length} of {activity.steps.length} steps completed
-                        </span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-          
-          {/* Products Used */}
-          <div className="border border-gray-800 rounded-md p-4">
-            <h3 className="text-amber-400 text-sm mb-3 flex items-center">
-              <Paintbrush className="h-4 w-4 mr-2" />
-              Products Used
+          {/* MEDIA SECTION - Always visible, prominently featured for easy upload */}
+          <div className="border border-blue-800/50 bg-blue-900/10 rounded-md p-5">
+            <h3 className="text-blue-400 text-base mb-3 font-medium flex items-center">
+              <Camera className="h-5 w-5 mr-2" />
+              Document Your Work
             </h3>
             
-            <div className="flex mb-4">
-              <input
-                type="text"
-                value={newProduct}
-                onChange={(e) => setNewProduct(e.target.value)}
-                placeholder="Enter product name"
-                className="flex-grow bg-gray-800 border border-gray-700 rounded-l-md py-2 px-3 text-white focus:border-blue-500 focus:outline-none"
-              />
+            <p className="text-gray-300 text-sm mb-4">
+              Add media to showcase your detailing work and earn extra points!
+            </p>
+            
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
               <button
                 type="button"
-                onClick={handleAddProduct}
-                className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-r-md"
+                onClick={() => photoInputRef.current?.click()}
+                className="bg-gray-800 hover:bg-gray-700 border border-blue-700/30 text-white py-3 px-4 rounded-md flex flex-col items-center justify-center h-28"
               >
-                Add
+                <Camera className="h-7 w-7 mb-2 text-blue-400" />
+                <span className="text-sm font-medium">Photos</span>
+                <span className="text-xs text-gray-400 mt-1">{activity.photos.length} added</span>
+                <input
+                  type="file"
+                  ref={photoInputRef}
+                  onChange={handlePhotoUpload}
+                  className="hidden"
+                  accept="image/*"
+                  multiple
+                />
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => videoInputRef.current?.click()}
+                className="bg-gray-800 hover:bg-gray-700 border border-green-700/30 text-white py-3 px-4 rounded-md flex flex-col items-center justify-center h-28"
+              >
+                <Video className="h-7 w-7 mb-2 text-green-400" />
+                <span className="text-sm font-medium">Videos</span>
+                <span className="text-xs text-gray-400 mt-1">{activity.videos.length} added</span>
+                <input
+                  type="file"
+                  ref={videoInputRef}
+                  onChange={handleVideoUpload}
+                  className="hidden"
+                  accept="video/*"
+                  multiple
+                />
+              </button>
+              
+              <button
+                type="button"
+                onClick={() => documentInputRef.current?.click()}
+                className="bg-gray-800 hover:bg-gray-700 border border-purple-700/30 text-white py-3 px-4 rounded-md flex flex-col items-center justify-center h-28"
+              >
+                <File className="h-7 w-7 mb-2 text-purple-400" />
+                <span className="text-sm font-medium">Documents</span>
+                <span className="text-xs text-gray-400 mt-1">{activity.documents.length} added</span>
+                <input
+                  type="file"
+                  ref={documentInputRef}
+                  onChange={handleDocumentUpload}
+                  className="hidden"
+                  multiple
+                />
+              </button>
+              
+              <button
+                type="button"
+                onClick={simulateVoiceRecording}
+                disabled={isRecordingVoice}
+                className={`bg-gray-800 hover:bg-gray-700 border border-orange-700/30 text-white py-3 px-4 rounded-md flex flex-col items-center justify-center h-28 ${isRecordingVoice ? 'bg-red-900/30 animate-pulse' : ''}`}
+              >
+                <Mic className={`h-7 w-7 mb-2 ${isRecordingVoice ? 'text-red-400' : 'text-orange-400'}`} />
+                <span className="text-sm font-medium">{isRecordingVoice ? 'Recording...' : 'Voice Note'}</span>
+                <span className="text-xs text-gray-400 mt-1">{activity.voiceNotes.length} added</span>
               </button>
             </div>
             
-            {activity.products.length > 0 ? (
-              <div className="space-y-2">
-                {activity.products.map((product, index) => (
-                  <div key={index} className="flex justify-between items-center bg-gray-800/50 p-2 rounded-md">
-                    <span className="text-white">{product}</span>
-                    <button
-                      type="button"
-                      onClick={() => handleRemoveProduct(index)}
-                      className="text-gray-400 hover:text-red-400"
-                    >
-                      <X size={16} />
-                    </button>
-                  </div>
-                ))}
+            {/* Show media count summary if any media has been added */}
+            {(activity.photos.length > 0 || activity.videos.length > 0 || 
+              activity.documents.length > 0 || activity.voiceNotes.length > 0) && (
+              <div className="flex justify-between items-center bg-blue-900/20 p-2 rounded-md">
+                <div className="flex gap-4">
+                  {activity.photos.length > 0 && (
+                    <div className="flex items-center text-blue-400">
+                      <Camera className="h-4 w-4 mr-1" />
+                      <span className="text-sm">{activity.photos.length}</span>
+                    </div>
+                  )}
+                  {activity.videos.length > 0 && (
+                    <div className="flex items-center text-green-400">
+                      <Video className="h-4 w-4 mr-1" />
+                      <span className="text-sm">{activity.videos.length}</span>
+                    </div>
+                  )}
+                  {activity.documents.length > 0 && (
+                    <div className="flex items-center text-purple-400">
+                      <File className="h-4 w-4 mr-1" />
+                      <span className="text-sm">{activity.documents.length}</span>
+                    </div>
+                  )}
+                  {activity.voiceNotes.length > 0 && (
+                    <div className="flex items-center text-orange-400">
+                      <Mic className="h-4 w-4 mr-1" />
+                      <span className="text-sm">{activity.voiceNotes.length}</span>
+                    </div>
+                  )}
+                </div>
+                
+                <button 
+                  className="text-sm text-blue-400 hover:text-blue-300 flex items-center"
+                  onClick={() => setShowExpandedMedia(!showExpandedMedia)}
+                >
+                  {showExpandedMedia ? 'Hide Previews' : 'Show Previews'} 
+                  {showExpandedMedia ? <ChevronUp className="h-4 w-4 ml-1" /> : <ChevronDown className="h-4 w-4 ml-1" />}
+                </button>
               </div>
-            ) : (
-              <p className="text-gray-500 text-sm">No products added yet</p>
             )}
           </div>
+
+          {/* DETAILED MODE CONTENT */}
+          {!isQuickMode && (
+            <>
+              {/* Steps Checklist - Only shown if steps are available and in detailed mode */}
+              {activity.steps.length > 0 && (
+                <div className="border border-gray-800 rounded-md p-4 mt-6">
+                  <h3 className="text-amber-400 text-sm mb-3 flex items-center">
+                    <CheckCircle className="h-4 w-4 mr-2" />
+                    Process Steps
+                  </h3>
+                  <div className="space-y-2">
+                    {activity.steps.map(step => (
+                      <div key={step.id} className="flex items-center">
+                        <button
+                          type="button"
+                          onClick={() => handleStepToggle(step.id)}
+                          className="mr-3"
+                        >
+                          {step.completed ? (
+                            <CheckCircle className="h-5 w-5 text-green-500" />
+                          ) : (
+                            <div className="w-5 h-5 rounded-full border border-gray-600 hover:border-green-400" />
+                          )}
+                        </button>
+                        <span className={step.completed ? 'text-white' : 'text-gray-400'}>
+                          {step.name}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                  
+                  <div className="mt-4 pt-4 border-t border-gray-700">
+                    <div className="flex justify-between items-center">
+                      <div>
+                        <h5 className="text-white font-medium mb-1">Completion Status</h5>
+                        {activity.steps.every(step => step.completed) ? (
+                          <div className="flex items-center text-green-400">
+                            <CheckCircle className="h-4 w-4 mr-1.5" />
+                            <span>All steps completed! Great work!</span>
+                          </div>
+                        ) : (
+                          <div className="flex items-center text-amber-400">
+                            <Clock className="h-4 w-4 mr-1.5" />
+                            <span>
+                              {activity.steps.filter(step => step.completed).length} of {activity.steps.length} steps completed
+                            </span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              )}
+              
+              {/* Products Used - Only shown in detailed mode */}
+              <div className="border border-gray-800 rounded-md p-4 mt-6">
+                <h3 className="text-amber-400 text-sm mb-3 flex items-center">
+                  <Paintbrush className="h-4 w-4 mr-2" />
+                  Products Used
+                </h3>
+                
+                <div className="flex mb-4">
+                  <input
+                    type="text"
+                    value={newProduct}
+                    onChange={(e) => setNewProduct(e.target.value)}
+                    placeholder="Enter product name"
+                    className="flex-grow bg-gray-800 border border-gray-700 rounded-l-md py-2 px-3 text-white focus:border-blue-500 focus:outline-none"
+                  />
+                  <button
+                    type="button"
+                    onClick={handleAddProduct}
+                    className="bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-r-md"
+                  >
+                    Add
+                  </button>
+                </div>
+                
+                {activity.products.length > 0 ? (
+                  <div className="space-y-2">
+                    {activity.products.map((product, index) => (
+                      <div key={index} className="flex justify-between items-center bg-gray-800/50 p-2 rounded-md">
+                        <span className="text-white">{product}</span>
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveProduct(index)}
+                          className="text-gray-400 hover:text-red-400"
+                        >
+                          <X size={16} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-gray-500 text-sm">No products added yet</p>
+                )}
+              </div>
+            </>
+          )}
           
           {/* Media & Documentation */}
           <div className="border border-gray-800 rounded-md p-4">
