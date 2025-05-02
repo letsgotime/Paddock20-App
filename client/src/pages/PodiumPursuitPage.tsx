@@ -6,7 +6,18 @@ import {
   Milestone, BarChart2
 } from 'lucide-react';
 import { useRewards } from '../contexts/RewardsContext';
-import PageTitle from '../components/PageTitle';
+// Use Inline PageTitle to avoid module import issues
+const PageTitle: React.FC<{title: string, subtitle?: string, icon?: React.ReactNode}> = ({ 
+  title, subtitle, icon 
+}) => (
+  <div className="mb-8">
+    <div className="flex items-center">
+      {icon && <div className="mr-3">{icon}</div>}
+      <h1 className="text-2xl md:text-3xl font-orbitron text-white">{title}</h1>
+    </div>
+    {subtitle && <p className="text-gray-400 mt-2 max-w-3xl">{subtitle}</p>}
+  </div>
+);
 
 // Level thresholds - easy to modify point requirements
 const LEVEL_THRESHOLDS = [
@@ -202,7 +213,7 @@ const PodiumPursuitPage: React.FC = () => {
       <PageTitle 
         title="Podium Pursuit™" 
         subtitle="Your performance journey through achievements, rewards, and milestones"
-        icon={<Trophy className="text-yellow-400 h-7 w-7" />}
+        icon={<Medal className="text-blue-400 h-7 w-7" />}
       />
 
       {/* Main driver stats panel */}

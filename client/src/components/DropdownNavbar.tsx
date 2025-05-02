@@ -142,8 +142,8 @@ const DropdownNavbar = () => {
                 className="hover:text-green-400 flex items-center py-1" 
                 onClick={() => setIsOpen(false)}
               >
-                {getLevelIcon()}
-                <span className="ml-2">Podium Pursuit</span>
+                <Medal className="h-4 w-4 mr-2 text-blue-400" />
+                <span>Podium Pursuit</span>
               </Link>
 
               <Link to="/weather" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
