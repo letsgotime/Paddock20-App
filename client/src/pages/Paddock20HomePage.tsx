@@ -176,7 +176,7 @@ const Paddock20HomePage: React.FC = () => {
           </div>
           
           <div className="text-center text-white mb-2 flex flex-wrap justify-center">
-            <div className="px-3 py-1 bg-[#111] m-1 inline-block border border-transparent hover:border-[#4B9CD3]/40 transition-all duration-300 hover:bg-black cursor-pointer hover:shadow-[0_0_8px_rgba(75,156,211,0.3)] rounded-sm relative"
+            <div className="time-format-dropdown px-3 py-1 bg-[#111] m-1 inline-block border border-transparent hover:border-[#4B9CD3]/40 transition-all duration-300 hover:bg-black cursor-pointer hover:shadow-[0_0_8px_rgba(75,156,211,0.3)] rounded-sm relative"
                 onClick={() => setShowTimeOptions(!showTimeOptions)}>
               Time: {formattedTime}
               
@@ -199,7 +199,7 @@ const Paddock20HomePage: React.FC = () => {
               )}
             </div>
             
-            <div className="px-3 py-1 bg-[#111] m-1 inline-block border border-transparent hover:border-[#4B9CD3]/40 transition-all duration-300 hover:bg-black cursor-pointer hover:shadow-[0_0_8px_rgba(75,156,211,0.3)] rounded-sm relative"
+            <div className="date-format-dropdown px-3 py-1 bg-[#111] m-1 inline-block border border-transparent hover:border-[#4B9CD3]/40 transition-all duration-300 hover:bg-black cursor-pointer hover:shadow-[0_0_8px_rgba(75,156,211,0.3)] rounded-sm relative"
                 onClick={() => setShowDateOptions(!showDateOptions)}>
               Date: {formattedDate}
               
