@@ -64,9 +64,15 @@ const Paddock20HomePage: React.FC = () => {
           </div>
           
           <div className="text-center text-white mb-6 flex flex-wrap justify-center">
-            <div className="px-3 py-1 bg-[#111] m-1 inline-block">Time: {formattedTime}</div>
-            <div className="px-3 py-1 bg-[#111] m-1 inline-block">Date: {formattedDate}</div>
-            <div className="px-3 py-1 bg-[#111] m-1 inline-block">Session: {sessionTime}</div>
+            <div className="px-3 py-1 bg-[#111] m-1 inline-block border border-transparent hover:border-[#4B9CD3]/40 transition-all duration-300 hover:bg-black cursor-pointer hover:shadow-[0_0_8px_rgba(75,156,211,0.3)] rounded-sm">
+              Time: {formattedTime}
+            </div>
+            <div className="px-3 py-1 bg-[#111] m-1 inline-block border border-transparent hover:border-[#4B9CD3]/40 transition-all duration-300 hover:bg-black cursor-pointer hover:shadow-[0_0_8px_rgba(75,156,211,0.3)] rounded-sm">
+              Date: {formattedDate}
+            </div>
+            <div className="px-3 py-1 bg-[#111] m-1 inline-block border border-transparent hover:border-[#4B9CD3]/40 transition-all duration-300 hover:bg-black cursor-pointer hover:shadow-[0_0_8px_rgba(75,156,211,0.3)] rounded-sm">
+              Session: {sessionTime}
+            </div>
           </div>
         </div>
 
@@ -106,14 +112,14 @@ const Paddock20HomePage: React.FC = () => {
             
             <div id="weather-snapshot-capture-area" className="grid grid-cols-1 gap-6 relative z-10">
               {/* F1-style telemetry clock display with race-inspired design */}
-              <div className="bg-black/80 p-4 rounded-lg border border-blue-700/30 shadow-lg overflow-hidden">
+              <div className="bg-black/80 p-4 rounded-lg border border-blue-700/30 shadow-lg overflow-hidden hover:shadow-[0_0_15px_rgba(75,156,211,0.2)] transition-all duration-300 group/clock">
                 <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
                   <div className="text-center sm:text-left">
                     <div className="text-blue-400/80 text-xs uppercase tracking-wider font-bold mb-1 flex items-center">
-                      <Clock className="h-3 w-3 mr-1" />
-                      DRIVE TIME
+                      <Clock className="h-3 w-3 mr-1 group-hover/clock:text-blue-300 transition-colors duration-300" />
+                      <span className="group-hover/clock:text-blue-300 transition-colors duration-300">DRIVE TIME</span>
                     </div>
-                    <div className="text-white text-3xl font-mono font-bold tracking-wider" id="live-clock">
+                    <div className="text-white text-3xl font-mono font-bold tracking-wider group-hover/clock:text-blue-100 transition-colors duration-300" id="live-clock">
                       {new Date().toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit' })}
                     </div>
                     <div className="text-gray-400 text-xs mt-1">
@@ -122,14 +128,14 @@ const Paddock20HomePage: React.FC = () => {
                   </div>
                   
                   <div className="flex items-center space-x-3">
-                    <div className="bg-blue-900/30 px-3 py-2 rounded-sm border border-blue-800/20">
+                    <div className="bg-blue-900/30 px-3 py-2 rounded-sm border border-blue-800/20 transition-all duration-300 hover:border-blue-600/50 hover:bg-blue-900/40 cursor-pointer">
                       <div className="text-blue-400/70 text-xs mb-1 uppercase font-semibold">Session</div>
                       <div className="text-white text-sm font-medium flex items-center">
-                        <span className="h-1.5 w-1.5 rounded-full bg-blue-500 mr-1.5"></span>
+                        <span className="h-1.5 w-1.5 rounded-full bg-blue-500 mr-1.5 animate-pulse"></span>
                         ACTIVE
                       </div>
                     </div>
-                    <div className="bg-green-900/30 px-3 py-2 rounded-sm border border-green-800/20">
+                    <div className="bg-green-900/30 px-3 py-2 rounded-sm border border-green-800/20 transition-all duration-300 hover:border-green-600/50 hover:bg-green-900/40 cursor-pointer">
                       <div className="text-green-400/70 text-xs mb-1 uppercase font-semibold">Conditions</div>
                       <div className="text-white text-sm font-medium flex items-center">
                         <span className="h-1.5 w-1.5 rounded-full bg-green-500 mr-1.5"></span>
@@ -138,49 +144,54 @@ const Paddock20HomePage: React.FC = () => {
                     </div>
                   </div>
                 </div>
+                
+                {/* Subtle animated accent line */}
+                <div className="h-0.5 w-full bg-gradient-to-r from-blue-600/0 via-blue-600/50 to-blue-600/0 mt-3 opacity-50 group-hover/clock:opacity-80 transition-opacity duration-500"></div>
               </div>
               
               {/* Core Driver Metrics - Enhanced F1 Style Dashboard */}
               <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                <div className="bg-black/70 p-3 rounded-sm border border-blue-900/30 relative overflow-hidden group hover:border-blue-500 transition-colors">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                <div className="bg-black/70 p-3 rounded-sm border border-blue-900/30 relative overflow-hidden group hover:border-blue-500 hover:bg-black/90 hover:shadow-[0_0_10px_rgba(59,130,246,0.15)] transition-all duration-300 cursor-pointer">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-blue-500 group-hover:h-[105%] transition-all duration-500"></div>
                   <div className="text-blue-400/90 text-xs mb-1 font-medium uppercase tracking-wider flex items-center">
-                    <Thermometer className="h-3 w-3 mr-1" />
-                    Air Temp
+                    <Thermometer className="h-3 w-3 mr-1 group-hover:text-blue-300 transition-colors duration-300" />
+                    <span className="group-hover:text-blue-300 transition-colors duration-300">Air Temp</span>
                   </div>
-                  <div className="text-white text-xl font-mono font-semibold group-hover:text-blue-300 transition-colors">
+                  <div className="text-white text-xl font-mono font-semibold group-hover:text-blue-300 transition-colors duration-300">
                     {weatherData && weatherData.main && typeof weatherData.main.temp === 'number' 
                       ? weatherData.main.temp.toFixed(1) + "°F" 
                       : "N/A"}
                   </div>
                   <div className="mt-1 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500" style={{ width: weatherData?.main?.temp ? `${Math.min(100, (weatherData.main.temp/100)*100)}%` : '0%' }}></div>
+                    <div className="h-full bg-blue-500 group-hover:bg-blue-400 transition-colors duration-300" 
+                         style={{ width: weatherData?.main?.temp ? `${Math.min(100, (weatherData.main.temp/100)*100)}%` : '0%' }}></div>
                   </div>
                 </div>
                 
-                <div className="bg-black/70 p-3 rounded-sm border border-blue-900/30 relative overflow-hidden group hover:border-blue-500 transition-colors">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                <div className="bg-black/70 p-3 rounded-sm border border-blue-900/30 relative overflow-hidden group hover:border-blue-500 hover:bg-black/90 hover:shadow-[0_0_10px_rgba(59,130,246,0.15)] transition-all duration-300 cursor-pointer">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-blue-500 group-hover:h-[105%] transition-all duration-500"></div>
                   <div className="text-blue-400/90 text-xs mb-1 font-medium uppercase tracking-wider flex items-center">
-                    <Droplets className="h-3 w-3 mr-1" />
-                    Humidity
+                    <Droplets className="h-3 w-3 mr-1 group-hover:text-blue-300 transition-colors duration-300" />
+                    <span className="group-hover:text-blue-300 transition-colors duration-300">Humidity</span>
                   </div>
-                  <div className="text-white text-xl font-mono font-semibold group-hover:text-blue-300 transition-colors">
+                  <div className="text-white text-xl font-mono font-semibold group-hover:text-blue-300 transition-colors duration-300">
                     {weatherData && weatherData.main && typeof weatherData.main.humidity === 'number'
                       ? weatherData.main.humidity + "%" 
                       : "N/A"}
                   </div>
                   <div className="mt-1 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500" style={{ width: weatherData?.main?.humidity ? `${weatherData.main.humidity}%` : '0%' }}></div>
+                    <div className="h-full bg-blue-500 group-hover:bg-blue-400 transition-colors duration-300" 
+                         style={{ width: weatherData?.main?.humidity ? `${weatherData.main.humidity}%` : '0%' }}></div>
                   </div>
                 </div>
                 
-                <div className="bg-black/70 p-3 rounded-sm border border-blue-900/30 relative overflow-hidden group hover:border-blue-500 transition-colors">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                <div className="bg-black/70 p-3 rounded-sm border border-blue-900/30 relative overflow-hidden group hover:border-blue-500 hover:bg-black/90 hover:shadow-[0_0_10px_rgba(59,130,246,0.15)] transition-all duration-300 cursor-pointer">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-blue-500 group-hover:h-[105%] transition-all duration-500"></div>
                   <div className="text-blue-400/90 text-xs mb-1 font-medium uppercase tracking-wider flex items-center">
-                    <Thermometer className="h-3 w-3 mr-1" />
-                    Surface Temp
+                    <Thermometer className="h-3 w-3 mr-1 group-hover:text-blue-300 transition-colors duration-300" />
+                    <span className="group-hover:text-blue-300 transition-colors duration-300">Surface Temp</span>
                   </div>
-                  <div className="text-white text-xl font-mono font-semibold group-hover:text-blue-300 transition-colors">
+                  <div className="text-white text-xl font-mono font-semibold group-hover:text-blue-300 transition-colors duration-300">
                     {automotiveWeatherData && 
                      automotiveWeatherData.automotive_metrics && 
                      automotiveWeatherData.automotive_metrics.track_surface && 
@@ -189,17 +200,18 @@ const Paddock20HomePage: React.FC = () => {
                       : "N/A"}
                   </div>
                   <div className="mt-1 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500" style={{ width: automotiveWeatherData?.automotive_metrics?.track_surface?.temperature ? `${Math.min(100, (automotiveWeatherData.automotive_metrics.track_surface.temperature/120)*100)}%` : '0%' }}></div>
+                    <div className="h-full bg-blue-500 group-hover:bg-blue-400 transition-colors duration-300" 
+                         style={{ width: automotiveWeatherData?.automotive_metrics?.track_surface?.temperature ? `${Math.min(100, (automotiveWeatherData.automotive_metrics.track_surface.temperature/120)*100)}%` : '0%' }}></div>
                   </div>
                 </div>
                 
-                <div className="bg-black/70 p-3 rounded-sm border border-blue-900/30 relative overflow-hidden group hover:border-blue-500 transition-colors">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                <div className="bg-black/70 p-3 rounded-sm border border-blue-900/30 relative overflow-hidden group hover:border-blue-500 hover:bg-black/90 hover:shadow-[0_0_10px_rgba(59,130,246,0.15)] transition-all duration-300 cursor-pointer">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-blue-500 group-hover:h-[105%] transition-all duration-500"></div>
                   <div className="text-blue-400/90 text-xs mb-1 font-medium uppercase tracking-wider flex items-center">
-                    <Sun className="h-3 w-3 mr-1" />
-                    UV Index
+                    <Sun className="h-3 w-3 mr-1 group-hover:text-blue-300 transition-colors duration-300" />
+                    <span className="group-hover:text-blue-300 transition-colors duration-300">UV Index</span>
                   </div>
-                  <div className="text-white text-xl font-mono font-semibold group-hover:text-blue-300 transition-colors">
+                  <div className="text-white text-xl font-mono font-semibold group-hover:text-blue-300 transition-colors duration-300">
                     {automotiveWeatherData && 
                      automotiveWeatherData.conditions && 
                      typeof automotiveWeatherData.conditions.uv_index === 'number'
@@ -207,17 +219,18 @@ const Paddock20HomePage: React.FC = () => {
                       : "N/A"}
                   </div>
                   <div className="mt-1 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500" style={{ width: automotiveWeatherData?.conditions?.uv_index ? `${Math.min(100, (automotiveWeatherData.conditions.uv_index/11)*100)}%` : '0%' }}></div>
+                    <div className="h-full bg-blue-500 group-hover:bg-blue-400 transition-colors duration-300" 
+                         style={{ width: automotiveWeatherData?.conditions?.uv_index ? `${Math.min(100, (automotiveWeatherData.conditions.uv_index/11)*100)}%` : '0%' }}></div>
                   </div>
                 </div>
                 
-                <div className="bg-black/70 p-3 rounded-sm border border-blue-900/30 relative overflow-hidden group hover:border-blue-500 transition-colors">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                <div className="bg-black/70 p-3 rounded-sm border border-blue-900/30 relative overflow-hidden group hover:border-blue-500 hover:bg-black/90 hover:shadow-[0_0_10px_rgba(59,130,246,0.15)] transition-all duration-300 cursor-pointer">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-blue-500 group-hover:h-[105%] transition-all duration-500"></div>
                   <div className="text-blue-400/90 text-xs mb-1 font-medium uppercase tracking-wider flex items-center">
-                    <Cloud className="h-3 w-3 mr-1" />
-                    Dew Point
+                    <Cloud className="h-3 w-3 mr-1 group-hover:text-blue-300 transition-colors duration-300" />
+                    <span className="group-hover:text-blue-300 transition-colors duration-300">Dew Point</span>
                   </div>
-                  <div className="text-white text-xl font-mono font-semibold group-hover:text-blue-300 transition-colors">
+                  <div className="text-white text-xl font-mono font-semibold group-hover:text-blue-300 transition-colors duration-300">
                     {weatherData && 
                      weatherData.main && 
                      typeof weatherData.main.temp === 'number' &&
@@ -226,36 +239,38 @@ const Paddock20HomePage: React.FC = () => {
                       : "N/A"}
                   </div>
                   <div className="mt-1 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500" style={{ width: weatherData?.main?.temp ? `${Math.min(100, ((weatherData.main.temp - 10)/80)*100)}%` : '0%' }}></div>
+                    <div className="h-full bg-blue-500 group-hover:bg-blue-400 transition-colors duration-300" 
+                         style={{ width: weatherData?.main?.temp ? `${Math.min(100, ((weatherData.main.temp - 10)/80)*100)}%` : '0%' }}></div>
                   </div>
                 </div>
                 
-                <div className="bg-black/70 p-3 rounded-sm border border-green-900/30 relative overflow-hidden group hover:border-green-500 transition-colors">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-green-500"></div>
+                <div className="bg-black/70 p-3 rounded-sm border border-green-900/30 relative overflow-hidden group hover:border-green-500 hover:bg-black/90 hover:shadow-[0_0_10px_rgba(72,187,120,0.15)] transition-all duration-300 cursor-pointer">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-green-500 group-hover:h-[105%] transition-all duration-500"></div>
                   <div className="text-green-400/90 text-xs mb-1 font-medium uppercase tracking-wider flex items-center">
-                    <Wind className="h-3 w-3 mr-1" />
-                    Wind Speed
+                    <Wind className="h-3 w-3 mr-1 group-hover:text-green-300 transition-colors duration-300" />
+                    <span className="group-hover:text-green-300 transition-colors duration-300">Wind Speed</span>
                   </div>
-                  <div className="text-white text-xl font-mono font-semibold group-hover:text-green-300 transition-colors">
+                  <div className="text-white text-xl font-mono font-semibold group-hover:text-green-300 transition-colors duration-300">
                     {weatherData && weatherData.wind && typeof weatherData.wind.speed === 'number'
                       ? weatherData.wind.speed + " mph" 
                       : "N/A"}
                   </div>
                   <div className="mt-1 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-green-500" style={{ width: weatherData?.wind?.speed ? `${Math.min(100, (weatherData.wind.speed/30)*100)}%` : '0%' }}></div>
+                    <div className="h-full bg-green-500 group-hover:bg-green-400 transition-colors duration-300" 
+                         style={{ width: weatherData?.wind?.speed ? `${Math.min(100, (weatherData.wind.speed/30)*100)}%` : '0%' }}></div>
                   </div>
                 </div>
               </div>
               
               {/* Enhanced F1-style telemetry bar */}
-              <div className="bg-black/80 rounded-sm border border-gray-800 p-4 relative overflow-hidden">
+              <div className="bg-black/80 rounded-sm border border-gray-800 p-4 relative overflow-hidden hover:border-blue-800/50 hover:shadow-[0_0_15px_rgba(59,130,246,0.1)] transition-all duration-300 group/telemetry">
                 {/* F1-style diagonal racing stripe */}
-                <div className="absolute top-0 right-0 w-20 h-6 bg-blue-500/20 -skew-x-45 transform origin-top-right"></div>
+                <div className="absolute top-0 right-0 w-20 h-6 bg-blue-500/20 -skew-x-45 transform origin-top-right group-hover/telemetry:bg-blue-500/30 transition-all duration-500"></div>
                 
-                <div className="flex justify-between items-center mb-3 border-b border-gray-800 pb-2">
+                <div className="flex justify-between items-center mb-3 border-b border-gray-800 pb-2 group-hover/telemetry:border-blue-900/40 transition-colors duration-300">
                   <div className="text-blue-400 text-xs uppercase tracking-wider font-bold flex items-center">
-                    <Gauge className="h-3.5 w-3.5 mr-1.5" />
-                    Advanced Telemetry
+                    <Gauge className="h-3.5 w-3.5 mr-1.5 group-hover/telemetry:text-blue-300 transition-colors duration-300" />
+                    <span className="group-hover/telemetry:text-blue-300 transition-colors duration-300">Advanced Telemetry</span>
                   </div>
                   <div className="text-green-400 text-xs flex items-center">
                     <span className="h-1.5 w-1.5 rounded-full bg-green-500 animate-pulse mr-1.5"></span>
@@ -264,37 +279,51 @@ const Paddock20HomePage: React.FC = () => {
                 </div>
                 
                 <div className="grid grid-cols-2 md:grid-cols-4 gap-5">
-                  <div className="group">
+                  <div className="group cursor-pointer px-2 py-1 rounded-sm hover:bg-blue-900/10 transition-all duration-300">
                     <div className="text-blue-300/80 text-xs mb-1 font-semibold uppercase flex items-center">
-                      <span className="h-1 w-1 rounded-full bg-blue-500 mr-1"></span>
+                      <span className="h-1 w-1 rounded-full bg-blue-500 mr-1 group-hover:scale-125 transition-transform duration-300"></span>
                       Surface
                     </div>
-                    <div className="text-white text-sm font-medium group-hover:text-blue-300 transition-colors">
+                    <div className="text-white text-sm font-medium group-hover:text-blue-300 transition-colors duration-300 flex items-center">
                       {weatherData?.weather && weatherData.weather[0] ? 
                         weatherData.weather[0].main === "Rain" ? "Wet" : 
                         weatherData.weather[0].main === "Snow" ? "Snow" : "Dry"
                         : "N/A"}
+                      <span className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-xs">
+                        {weatherData?.weather && weatherData.weather[0] && weatherData.weather[0].main === "Rain" ? 
+                          <span className="text-blue-400">●</span> : 
+                          weatherData?.weather && weatherData.weather[0] && weatherData.weather[0].main === "Snow" ? 
+                          <span className="text-white">●</span> : 
+                          <span className="text-green-400">●</span>}
+                      </span>
                     </div>
                   </div>
-                  <div className="group">
+                  <div className="group cursor-pointer px-2 py-1 rounded-sm hover:bg-blue-900/10 transition-all duration-300">
                     <div className="text-blue-300/80 text-xs mb-1 font-semibold uppercase flex items-center">
-                      <span className="h-1 w-1 rounded-full bg-blue-500 mr-1"></span>
+                      <span className="h-1 w-1 rounded-full bg-blue-500 mr-1 group-hover:scale-125 transition-transform duration-300"></span>
                       Grip Level
                     </div>
-                    <div className="text-white text-sm font-medium group-hover:text-blue-300 transition-colors">
+                    <div className="text-white text-sm font-medium group-hover:text-blue-300 transition-colors duration-300 flex items-center">
                       {weatherData?.main ? 
                         // Simple mapping based on temp and humidity
                         (weatherData.main.humidity > 80 ? "Reduced" : 
                          weatherData.main.humidity < 40 ? "Optimal" : "Good")
                         : "N/A"}
+                      <span className="ml-1 opacity-0 group-hover:opacity-100 transition-opacity duration-300 text-xs">
+                        {weatherData?.main && weatherData.main.humidity > 80 ? 
+                          <span className="text-yellow-400">▼</span> : 
+                          weatherData?.main && weatherData.main.humidity < 40 ? 
+                          <span className="text-green-400">▲</span> : 
+                          <span className="text-blue-400">■</span>}
+                      </span>
                     </div>
                   </div>
-                  <div className="group">
+                  <div className="group cursor-pointer px-2 py-1 rounded-sm hover:bg-green-900/10 transition-all duration-300">
                     <div className="text-green-300/80 text-xs mb-1 font-semibold uppercase flex items-center">
-                      <span className="h-1 w-1 rounded-full bg-green-500 mr-1"></span>
+                      <span className="h-1 w-1 rounded-full bg-green-500 mr-1 group-hover:scale-125 transition-transform duration-300"></span>
                       Power Adjust
                     </div>
-                    <div className="text-white text-sm font-medium group-hover:text-green-300 transition-colors">
+                    <div className="text-white text-sm font-medium group-hover:text-green-300 transition-colors duration-300">
                       {weatherData?.main?.temp ? 
                         // Simple algorithm - not actual data, but based on available weather metrics
                         ((weatherData.main.temp > 85) ? "-" : "+") + 
@@ -302,18 +331,21 @@ const Paddock20HomePage: React.FC = () => {
                         : "N/A"}
                     </div>
                   </div>
-                  <div className="group">
+                  <div className="group cursor-pointer px-2 py-1 rounded-sm hover:bg-blue-900/10 transition-all duration-300">
                     <div className="text-blue-300/80 text-xs mb-1 font-semibold uppercase flex items-center">
-                      <span className="h-1 w-1 rounded-full bg-blue-500 mr-1"></span>
+                      <span className="h-1 w-1 rounded-full bg-blue-500 mr-1 group-hover:scale-125 transition-transform duration-300"></span>
                       Visibility
                     </div>
-                    <div className="text-white text-sm font-medium group-hover:text-blue-300 transition-colors">
+                    <div className="text-white text-sm font-medium group-hover:text-blue-300 transition-colors duration-300">
                       {weatherData && weatherData.visibility
                         ? (weatherData.visibility / 1609).toFixed(1) + " mi"
                         : "N/A"}
                     </div>
                   </div>
                 </div>
+                
+                {/* Subtle pulsing data transmission effect */}
+                <div className="absolute bottom-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-blue-500/40 to-transparent opacity-0 group-hover/telemetry:opacity-100 transition-opacity duration-700" style={{animation: 'pulse 3s infinite'}}></div>
               </div>
             </div>
             
