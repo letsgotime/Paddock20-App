@@ -51,7 +51,6 @@ const DropdownNavbar = () => {
   const [isPodiumOpen, setIsPodiumOpen] = useState(false);
   const location = useLocation();
   const menuRef = React.useRef<HTMLDivElement>(null);
-  const podiumRef = React.useRef<HTMLDivElement>(null);
   const { userRewards, pointsToNextLevel } = useRewards();
   
   // Close menu on location changes (navigation)
@@ -65,9 +64,6 @@ const DropdownNavbar = () => {
     function handleClickOutside(event: MouseEvent) {
       if (menuRef.current && !menuRef.current.contains(event.target as Node) && isOpen) {
         setIsOpen(false);
-      }
-      if (podiumRef.current && !podiumRef.current.contains(event.target as Node) && isPodiumOpen) {
-        setIsPodiumOpen(false);
       }
     }
     
@@ -149,7 +145,6 @@ const DropdownNavbar = () => {
                 {getLevelIcon()}
                 <span className="ml-2">Podium Pursuit</span>
               </Link>
-                
 
               <Link to="/weather" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
                 <Cloud className="h-4 w-4 mr-2 text-blue-400" />

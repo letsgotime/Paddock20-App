@@ -59,6 +59,7 @@ import ChatFeedPage from "./pages/ChatFeedPage";
 import ShareDemoPage from "./pages/ShareDemoPage";
 import MoodEnergyTrackerPage from "./pages/MoodEnergyTrackerPage";
 import MotorsportsGalleryPage from "./pages/MotorsportsGalleryPage";
+import PodiumPursuitPage from "./pages/PodiumPursuitPage";
 import SupportChatbot from "./components/SupportChatbot";
 import HomePage from "./pages/Home";
 import OneTapWeatherSnapshot from "./components/OneTapWeatherSnapshot";
@@ -221,6 +222,7 @@ function App() {
               <Route path="/share" element={<ProtectedRoute><ShareDemoPage /></ProtectedRoute>} />
               <Route path="/mood-energy-tracker" element={<ProtectedRoute><MoodEnergyTrackerPage /></ProtectedRoute>} />
               <Route path="/motorsports-gallery" element={<ProtectedRoute><MotorsportsGalleryPage /></ProtectedRoute>} />
+              <Route path="/podium-pursuit" element={<ProtectedRoute><PodiumPursuitPage /></ProtectedRoute>} />
               <Route path="*" element={<NotFound />} />
             </Routes>
             
