@@ -1,5 +1,5 @@
 // OpenWeather API service
-const API_KEY = import.meta.env.VITE_ACCUWEATHER_API_KEY || "2379a18ee0e478c88aa7d4aa1df44410";
+const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY || import.meta.env.OPENWEATHER_API_KEY || "2379a18ee0e478c88aa7d4aa1df44410";
 const BASE_URL = "https://api.openweathermap.org/data/2.5";
 
 // Automotive weather data type
