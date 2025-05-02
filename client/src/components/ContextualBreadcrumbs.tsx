@@ -157,12 +157,26 @@ const ContextualBreadcrumbs: React.FC = () => {
                   {breadcrumb.label}
                 </span>
               ) : (
-                <Link 
-                  to={breadcrumb.path}
-                  className="hover:text-blue-200 transition-colors"
-                >
-                  {breadcrumb.label}
-                </Link>
+                breadcrumb.path === '/' ? (
+                  // Special handling for Home link to ensure it always goes to main homepage
+                  <a 
+                    href="/"
+                    className="hover:text-blue-200 transition-colors"
+                    onClick={(e) => {
+                      e.preventDefault();
+                      window.location.href = '/';
+                    }}
+                  >
+                    {breadcrumb.label}
+                  </a>
+                ) : (
+                  <Link 
+                    to={breadcrumb.path}
+                    className="hover:text-blue-200 transition-colors"
+                  >
+                    {breadcrumb.label}
+                  </Link>
+                )
               )}
             </li>
           );
