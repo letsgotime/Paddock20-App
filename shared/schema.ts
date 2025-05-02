@@ -2,16 +2,35 @@ import { pgTable, serial, text, timestamp, varchar, integer, boolean, pgEnum, re
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
 
+// Authentication roles enum
+export const userRoleEnum = pgEnum('user_role', ['user', 'admin', 'premium']);
+
 // Users table
 export const users = pgTable('users', {
   id: serial('id').primaryKey(),
   username: varchar('username', { length: 50 }).notNull().unique(),
   password: varchar('password', { length: 255 }).notNull(),
-  email: varchar('email', { length: 100 }),
+  email: varchar('email', { length: 100 }).notNull().unique(),
   firstName: varchar('first_name', { length: 50 }),
   lastName: varchar('last_name', { length: 50 }),
-  preferredUnit: varchar('preferred_unit', { length: 10 }).default('metric'), // metric or imperial
+  fullName: varchar('full_name', { length: 100 }),
+  preferredUnit: varchar('preferred_unit', { length: 10 }).default('imperial'), // metric or imperial
+  profileImage: varchar('profile_image', { length: 255 }),
+  drivingExperience: varchar('driving_experience', { length: 50 }),
+  interests: jsonb('interests').default([]),
+  bio: text('bio'),
+  role: userRoleEnum('role').default('user'),
+  isActive: boolean('is_active').default(true),
+  lastLogin: timestamp('last_login'),
+  resetToken: varchar('reset_token', { length: 255 }),
+  resetTokenExpires: timestamp('reset_token_expires'),
+  verificationToken: varchar('verification_token', { length: 255 }),
+  isEmailVerified: boolean('is_email_verified').default(false),
+  stripeCustomerId: varchar('stripe_customer_id', { length: 255 }),
+  stripeSubscriptionId: varchar('stripe_subscription_id', { length: 255 }),
+  onboardingCompleted: boolean('onboarding_completed').default(false),
   createdAt: timestamp('created_at').defaultNow(),
+  updatedAt: timestamp('updated_at').defaultNow(),
 });
 
 // Saved Locations table
@@ -156,7 +175,33 @@ export const modifications = pgTable('modifications', {
 });
 
 // Insert Types
-export const insertUserSchema = createInsertSchema(users).omit({ id: true, createdAt: true });
+export const insertUserSchema = createInsertSchema(users)
+  .omit({ 
+    id: true, 
+    createdAt: true, 
+    updatedAt: true, 
+    lastLogin: true,
+    resetToken: true, 
+    resetTokenExpires: true,
+    verificationToken: true,
+    role: true,
+    stripeCustomerId: true,
+    stripeSubscriptionId: true
+  })
+  .extend({
+    email: z.string().email("Please enter a valid email address"),
+    password: z.string()
+      .min(8, "Password must be at least 8 characters")
+      .regex(/[A-Z]/, "Password must contain at least one uppercase letter")
+      .regex(/[a-z]/, "Password must contain at least one lowercase letter")
+      .regex(/[0-9]/, "Password must contain at least one number"),
+    confirmPassword: z.string(),
+    interests: z.array(z.string()).optional(),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Passwords don't match",
+    path: ["confirmPassword"],
+  });
 export const insertSavedLocationSchema = createInsertSchema(savedLocations).omit({ id: true, createdAt: true, lastAccessed: true });
 export const insertVehicleSchema = createInsertSchema(vehicles).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertTireSchema = createInsertSchema(tires).omit({ id: true, updatedAt: true });
