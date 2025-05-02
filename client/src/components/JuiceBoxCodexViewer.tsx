@@ -34,7 +34,7 @@ function JuiceBoxCodexViewer({ onAddProduct }: JuiceBoxCodexViewerProps) {
               ? 'bg-green-500 text-black' 
               : 'bg-gray-800 text-white hover:bg-gray-700'}`}
         >
-          Product Codex
+          Detailing Arsenal
         </button>
         <button
           onClick={() => setActiveSection('loadouts')}
@@ -108,7 +108,7 @@ function JuiceBoxCodexViewer({ onAddProduct }: JuiceBoxCodexViewerProps) {
                 onClick={() => setActiveSection('products')}
                 className="bg-green-500 hover:bg-green-400 text-black px-4 py-2 rounded-md font-orbitron"
               >
-                Product Codex
+                Detailing Arsenal
               </button>
               <button
                 onClick={() => setActiveSection('reset')}
@@ -125,7 +125,7 @@ function JuiceBoxCodexViewer({ onAddProduct }: JuiceBoxCodexViewerProps) {
       {activeSection === 'products' && (
         <div className="bg-gradient-to-r from-[#111111] to-[#1a1a1a] p-6 rounded-lg border border-gray-800 mb-8">
           <div className="text-center mb-6">
-            <h2 className="text-3xl font-orbitron text-blue-400 mb-2">The Product Codex</h2>
+            <h2 className="text-3xl font-orbitron text-blue-400 mb-2">Detailing Arsenal</h2>
             <p className="text-white italic">What We Use. Why We Use It. How It Got In the Juice Box™.</p>
           </div>
 
