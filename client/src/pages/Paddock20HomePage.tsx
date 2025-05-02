@@ -600,7 +600,7 @@ const Paddock20HomePage: React.FC = () => {
                       <path d="M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"></path>
                       <line x1="4" y1="22" x2="4" y2="15"></line>
                     </svg>
-                    7 Route Plans
+                    7 Fun Drive Plans
                   </p>
                 </div>
               </div>
@@ -950,9 +950,9 @@ const Paddock20HomePage: React.FC = () => {
             </p>
           </Link>
 
-          {/* Route Planner */}
-          <Link to="/route-planner" className="bg-gray-900 p-6 rounded-lg border border-gray-700 shadow-lg hover:border-green-500 transition-colors">
-            <h3 className="text-blue-400 font-orbitron text-2xl mb-4">🛣️ Route Planner</h3>
+          {/* Fun Drive Planner */}
+          <Link to="/fun-drive-planner" className="bg-gray-900 p-6 rounded-lg border border-gray-700 shadow-lg hover:border-green-500 transition-colors">
+            <h3 className="text-blue-400 font-orbitron text-2xl mb-4">🛣️ Fun Drive Planner</h3>
             <p className="text-white font-openSans text-base leading-relaxed">
               Find your next run. Map your line. Plan like a pro. Perfect drives aren't accidents.
               They're calculated moves.
@@ -1011,7 +1011,7 @@ const Paddock20HomePage: React.FC = () => {
           <div className="md:w-2/3">
             <h2 className="text-blue-400 font-orbitron text-3xl mb-4">Drive Like a Champion. <span className="text-green-500">Build Your Legacy.</span></h2>
             <p className="text-white font-openSans text-lg mb-4">
-              Beyond weather tracking and route planning, Paddock20™ offers something truly unique: <span className="text-green-400 font-semibold">The Manifestation Station</span>.
+              Beyond weather tracking and fun drive planning, Paddock20™ offers something truly unique: <span className="text-green-400 font-semibold">The Manifestation Station</span>.
             </p>
             <p className="text-gray-300 font-openSans mb-6">
               Our seven powerful elements help you transform automotive dreams into reality — whether it's exotic cars, luxury timepieces, or dream properties. We don't just track conditions; we help create them.
