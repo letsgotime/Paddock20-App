@@ -13,7 +13,7 @@ interface UserOnboardingProps {
 
 // Carolina blue color code for consistent branding
 const CAROLINA_BLUE = '#1982FC';
-const GOTIME_GREEN = '#7FC844';
+const GOTIME_GREEN = '#08c519';
 
 // User profile type definition
 interface UserProfile {
@@ -340,19 +340,27 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
         }}
       >
         {/* Decorative elements */}
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#1982FC] to-[#7FC844]"></div>
-        <div className="absolute top-1 right-0 w-4 h-20 bg-gradient-to-b from-[#7FC844] opacity-40"></div>
+        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#1982FC] to-[#08c519]"></div>
+        <div className="absolute top-1 right-0 w-4 h-20 bg-gradient-to-b from-[#08c519] opacity-40"></div>
         <div className="absolute bottom-20 left-0 w-4 h-20 bg-gradient-to-t from-[#1982FC] opacity-40"></div>
         
         {/* Header */}
         <div className="border-b border-gray-800 p-6 flex justify-between items-center bg-gray-900/50">
-          <h2 className="text-2xl font-bold" style={{ color: CAROLINA_BLUE, fontFamily: 'Orbitron, sans-serif' }}>
-            {step === 1 && 'WELCOME TO PADDOCK20 BETA'}
-            {step === 2 && 'ABOUT PADDOCK20 BETA'}
-            {step === 3 && 'LEGAL AGREEMENTS REQUIRED'}
-            {step === 4 && 'YOUR PADDOCK20 PROFILE'}
-            {step === 5 && 'YOUR VEHICLE DETAILS'}
-            {step === 6 && 'CUSTOMIZE YOUR DASHBOARD'}
+          <h2 className="text-2xl font-bold" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+            {step === 1 && (
+              <span style={{ color: CAROLINA_BLUE }}>
+                WELCOME TO PADDOCK20 <span style={{ color: GOTIME_GREEN }}>BETA</span>
+              </span>
+            )}
+            {step === 2 && (
+              <span style={{ color: CAROLINA_BLUE }}>
+                ABOUT PADDOCK20 <span style={{ color: GOTIME_GREEN }}>BETA</span>
+              </span>
+            )}
+            {step === 3 && <span style={{ color: CAROLINA_BLUE }}>LEGAL AGREEMENTS REQUIRED</span>}
+            {step === 4 && <span style={{ color: CAROLINA_BLUE }}>YOUR PADDOCK20 PROFILE</span>}
+            {step === 5 && <span style={{ color: CAROLINA_BLUE }}>YOUR VEHICLE DETAILS</span>}
+            {step === 6 && <span style={{ color: CAROLINA_BLUE }}>CUSTOMIZE YOUR DASHBOARD</span>}
           </h2>
           <div className="flex items-center bg-gray-800/70 px-3 py-1 rounded-full">
             <div className="text-sm text-gray-400 tracking-wide font-medium">
@@ -370,7 +378,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                   <AlertTriangle style={{ color: CAROLINA_BLUE }} size={24} />
                 </div>
                 <p className="text-gray-200">
-                  Paddock20 is currently in <span style={{ color: CAROLINA_BLUE }} className="font-bold">Beta</span>. 
+                  Paddock20 is currently in <span style={{ color: GOTIME_GREEN }} className="font-bold">Beta</span>. 
                   You've been granted early access to explore and test the application.
                 </p>
               </div>
@@ -844,6 +852,248 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                     className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
                     placeholder="Share your automotive passion, experience, or goals..."
                   />
+                </div>
+              </div>
+              
+              {error && (
+                <div className="p-4 bg-red-900/30 border border-red-700 rounded-lg flex items-center">
+                  <X className="text-red-400 mr-2 flex-shrink-0" size={18} />
+                  <span className="text-red-400 text-sm">{error}</span>
+                </div>
+              )}
+            </div>
+          )}
+          
+          {/* Vehicle Details Form */}
+          {step === 5 && (
+            <div className="space-y-6 animate-fadeIn">
+              <div className="flex items-center bg-[#1982FC]/10 p-4 rounded-lg mb-6">
+                <Car className="text-[#1982FC] mr-4" size={24} />
+                <p className="text-gray-200">
+                  Add your first vehicle to your Garage Vault. This will be your primary vehicle
+                  in Paddock20, but you can add more vehicles later.
+                </p>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                {/* Vehicle Image Upload */}
+                <div className="md:col-span-2 flex flex-col items-center justify-center p-6 border border-gray-700 rounded-lg bg-gray-800/30">
+                  <div 
+                    className="w-64 h-40 mb-4 rounded-lg bg-gray-700 flex items-center justify-center border-2 border-[#1982FC]/50 overflow-hidden"
+                    style={{ 
+                      backgroundSize: 'cover',
+                      backgroundPosition: 'center',
+                      backgroundImage: hasUploadedVehicleImage ? `url(${vehicleProfile.vehicleImage || '/assets/Stock Photos/vehicle-placeholder.png'})` : 'none'
+                    }}
+                  >
+                    {!hasUploadedVehicleImage && (
+                      <Car size={64} className="text-gray-400" />
+                    )}
+                  </div>
+                  
+                  <button 
+                    onClick={handleVehicleImageUpload}
+                    className="px-4 py-2 flex items-center gap-2 bg-gray-700 hover:bg-gray-600 rounded-md text-sm transition-colors"
+                  >
+                    <Camera size={16} />
+                    Upload Vehicle Photo
+                  </button>
+                  
+                  <p className="text-xs text-gray-400 mt-3 text-center">
+                    Show off your pride and joy! Best angle, good lighting.
+                  </p>
+                </div>
+                
+                {/* Basic Vehicle Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
+                    Vehicle Information
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <label htmlFor="make" className="block text-sm font-medium text-gray-300 mb-1">
+                        Make <span className="text-red-500">*</span>
+                      </label>
+                      <select
+                        id="make"
+                        name="make"
+                        required
+                        value={vehicleProfile.make}
+                        onChange={handleVehicleProfileChange}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
+                      >
+                        <option value="">Select Manufacturer</option>
+                        {carManufacturers.map(manufacturer => (
+                          <option key={manufacturer} value={manufacturer}>
+                            {manufacturer}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="model" className="block text-sm font-medium text-gray-300 mb-1">
+                        Model <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="model"
+                        name="model"
+                        type="text"
+                        required
+                        value={vehicleProfile.model}
+                        onChange={handleVehicleProfileChange}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
+                        placeholder="e.g. 911, M3, GT-R"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="year" className="block text-sm font-medium text-gray-300 mb-1">
+                        Year <span className="text-red-500">*</span>
+                      </label>
+                      <input
+                        id="year"
+                        name="year"
+                        type="text"
+                        required
+                        value={vehicleProfile.year}
+                        onChange={handleVehicleProfileChange}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
+                        placeholder="e.g. 2023"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="nickname" className="block text-sm font-medium text-gray-300 mb-1">
+                        Nickname
+                      </label>
+                      <input
+                        id="nickname"
+                        name="nickname"
+                        type="text"
+                        value={vehicleProfile.nickname}
+                        onChange={handleVehicleProfileChange}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
+                        placeholder="Your car's nickname (optional)"
+                      />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Additional Vehicle Details */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
+                    Technical Details
+                  </h3>
+                  
+                  <div className="space-y-3">
+                    <div>
+                      <label htmlFor="engineType" className="block text-sm font-medium text-gray-300 mb-1">
+                        Engine Type
+                      </label>
+                      <select
+                        id="engineType"
+                        name="engineType"
+                        value={vehicleProfile.engineType}
+                        onChange={handleVehicleProfileChange}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
+                      >
+                        <option value="">Select Engine Type</option>
+                        {engineTypes.map(type => (
+                          <option key={type} value={type}>
+                            {type}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="transmissionType" className="block text-sm font-medium text-gray-300 mb-1">
+                        Transmission
+                      </label>
+                      <select
+                        id="transmissionType"
+                        name="transmissionType"
+                        value={vehicleProfile.transmissionType}
+                        onChange={handleVehicleProfileChange}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
+                      >
+                        <option value="">Select Transmission</option>
+                        {transmissionTypes.map(type => (
+                          <option key={type} value={type}>
+                            {type}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="mileage" className="block text-sm font-medium text-gray-300 mb-1">
+                        Current Mileage
+                      </label>
+                      <input
+                        id="mileage"
+                        name="mileage"
+                        type="text"
+                        value={vehicleProfile.mileage}
+                        onChange={handleVehicleProfileChange}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
+                        placeholder="Current odometer reading"
+                      />
+                    </div>
+                    
+                    <div>
+                      <label htmlFor="color" className="block text-sm font-medium text-gray-300 mb-1">
+                        Exterior Color
+                      </label>
+                      <div className="flex items-center space-x-2">
+                        <input
+                          id="color"
+                          name="color"
+                          type="color"
+                          value={vehicleProfile.color}
+                          onChange={handleVehicleProfileChange}
+                          className="h-8 w-8 rounded-full overflow-hidden border-0 cursor-pointer"
+                        />
+                        <input
+                          type="text"
+                          value={vehicleProfile.color}
+                          onChange={handleVehicleProfileChange}
+                          name="color"
+                          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
+                          placeholder="e.g. Frozen Blue Metallic"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Purchase Info */}
+                <div className="md:col-span-2 space-y-4">
+                  <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
+                    Purchase Information
+                  </h3>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label htmlFor="purchaseDate" className="block text-sm font-medium text-gray-300 mb-1">
+                        Purchase Date
+                      </label>
+                      <input
+                        id="purchaseDate"
+                        name="purchaseDate"
+                        type="date"
+                        value={vehicleProfile.purchaseDate}
+                        onChange={handleVehicleProfileChange}
+                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
+                      />
+                    </div>
+                  </div>
+                  
+                  <p className="text-sm text-gray-400 mt-2">
+                    This information helps with maintenance scheduling and building your vehicle's history.
+                  </p>
                 </div>
               </div>
               
