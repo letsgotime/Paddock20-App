@@ -406,6 +406,15 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
     // Save dashboard preferences
     localStorage.setItem('dashboardPreferences', JSON.stringify(dashboardPrefs));
     
+    // Save location settings
+    localStorage.setItem('locationSettings', JSON.stringify(locationSettings));
+    
+    // Save routes
+    localStorage.setItem('userRoutes', JSON.stringify(routes));
+    
+    // Navigate to the homepage
+    window.location.href = '/';
+    
     // Complete onboarding
     onComplete();
   };
