@@ -46,7 +46,7 @@ export const useRewardsTracker = () => {
 export const trackWeatherCheck = () => {
   if (rewardsTracker.trackFeatureUsage) {
     rewardsTracker.trackFeatureUsage('weather');
-    rewardsTracker.earnPoints?.(25, 'Checked weather conditions');
+    rewardsTracker.earnPoints?.(10, 'Checked weather conditions');
   }
 };
 
@@ -54,7 +54,7 @@ export const trackWeatherCheck = () => {
 export const trackMaintenance = () => {
   if (rewardsTracker.trackFeatureUsage) {
     rewardsTracker.trackFeatureUsage('maintenance');
-    rewardsTracker.earnPoints?.(50, 'Logged vehicle maintenance');
+    rewardsTracker.earnPoints?.(25, 'Logged vehicle maintenance');
   }
 };
 
@@ -62,7 +62,7 @@ export const trackMaintenance = () => {
 export const trackModification = () => {
   if (rewardsTracker.trackFeatureUsage) {
     rewardsTracker.trackFeatureUsage('modification');
-    rewardsTracker.earnPoints?.(75, 'Logged vehicle modification');
+    rewardsTracker.earnPoints?.(30, 'Logged vehicle modification');
   }
 };
 
@@ -70,7 +70,7 @@ export const trackModification = () => {
 export const trackDetailingSession = () => {
   if (rewardsTracker.trackFeatureUsage) {
     rewardsTracker.trackFeatureUsage('detailing');
-    rewardsTracker.earnPoints?.(50, 'Logged detailing session');
+    rewardsTracker.earnPoints?.(20, 'Logged detailing session');
   }
 };
 
@@ -78,7 +78,7 @@ export const trackDetailingSession = () => {
 export const trackDriveLog = () => {
   if (rewardsTracker.trackFeatureUsage) {
     rewardsTracker.trackFeatureUsage('drive');
-    rewardsTracker.earnPoints?.(50, 'Logged a drive');
+    rewardsTracker.earnPoints?.(25, 'Logged a drive');
   }
 };
 
@@ -86,7 +86,7 @@ export const trackDriveLog = () => {
 export const trackPhotoUpload = (count: number = 1) => {
   if (rewardsTracker.trackFeatureUsage) {
     rewardsTracker.trackFeatureUsage('photo', count);
-    rewardsTracker.earnPoints?.(25 * count, 'Uploaded photos to gallery');
+    rewardsTracker.earnPoints?.(15 * count, 'Uploaded photos to gallery');
   }
 };
 
@@ -94,7 +94,7 @@ export const trackPhotoUpload = (count: number = 1) => {
 export const trackRoutePlanning = () => {
   if (rewardsTracker.trackFeatureUsage) {
     rewardsTracker.trackFeatureUsage('route');
-    rewardsTracker.earnPoints?.(75, 'Planned a drive route');
+    rewardsTracker.earnPoints?.(35, 'Planned a drive route');
   }
 };
 
@@ -102,12 +102,12 @@ export const trackRoutePlanning = () => {
 export const trackManifestationGoal = () => {
   if (rewardsTracker.trackFeatureUsage) {
     rewardsTracker.trackFeatureUsage('manifestation');
-    rewardsTracker.earnPoints?.(100, 'Set a goal in Manifestation Station');
+    rewardsTracker.earnPoints?.(40, 'Set a goal in Manifestation Station');
   }
 };
 
 // Track page visit with reward points
-export const trackPageVisitWithPoints = (page: string, points: number = 10, reason?: string) => {
+export const trackPageVisitWithPoints = (page: string, points: number = 5, reason?: string) => {
   if (rewardsTracker.trackPageVisit) {
     rewardsTracker.trackPageVisit(page);
     rewardsTracker.earnPoints?.(points, reason || `Visited ${page}`);

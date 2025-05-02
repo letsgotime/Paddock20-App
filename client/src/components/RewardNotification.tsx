@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { X, Zap } from 'lucide-react';
+import { X, Zap, Trophy, Flag } from 'lucide-react';
 import { useRewards, Reward } from '../contexts/RewardsContext';
 import { motion, AnimatePresence } from 'framer-motion';
 
@@ -36,6 +36,18 @@ const RewardNotification: React.FC = () => {
     }
   };
   
+  // Get rarity label
+  const getRarityLabel = (rarity: Reward['rarity']) => {
+    switch (rarity) {
+      case 'common': return 'Standard';
+      case 'uncommon': return 'Uncommon';
+      case 'rare': return 'Rare';
+      case 'epic': return 'Epic';
+      case 'legendary': return 'Legendary';
+      default: return 'Standard';
+    }
+  };
+  
   return (
     <AnimatePresence>
       {isVisible && (
@@ -62,9 +74,16 @@ const RewardNotification: React.FC = () => {
               </div>
               
               <div className="mt-2">
-                <h3 className="text-lg font-orbitron text-blue-400">Reward Unlocked!</h3>
+                <div className="flex items-center">
+                  <Trophy className="h-4 w-4 mr-2 text-blue-400" />
+                  <h3 className="text-lg font-orbitron text-blue-400">Podium Pursuit</h3>
+                </div>
                 <p className="font-medium text-white mt-1">{recentReward.title}</p>
                 <p className="text-sm text-gray-300 mt-1">{recentReward.description}</p>
+                <div className="mt-1 flex items-center">
+                  <Flag className="h-3 w-3 mr-1 text-blue-400" />
+                  <span className="text-xs text-blue-300">{getRarityLabel(recentReward.rarity)} achievement</span>
+                </div>
               </div>
               
               {recentReward.points > 0 && (
