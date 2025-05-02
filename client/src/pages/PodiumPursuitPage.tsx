@@ -370,6 +370,76 @@ const PodiumPursuitPage: React.FC = () => {
                                 {achievement.completed && (
                                   <CircleCheck className="h-4 w-4 ml-2 text-green-500" />
                                 )}
+                                <div className="group relative ml-2">
+                                  <AlertCircle className="h-4 w-4 text-blue-400 cursor-help" />
+                                  <div className="absolute z-50 invisible group-hover:visible bg-gray-900 border border-blue-900/50 p-3 rounded-md 
+                                    shadow-xl w-64 left-0 md:left-auto md:right-0 mt-2 text-sm">
+                                    <span className="font-medium text-white block mb-1">How to earn points:</span>
+                                    <ul className="text-gray-300 text-xs space-y-1.5">
+                                      {category.id === 'driving' && achievement.id === 'first_drive_log' && (
+                                        <>
+                                          <li>• Log your first drive in the Drive Journal (+25 pts)</li>
+                                          <li>• Include route details and at least one photo (+5 bonus pts)</li>
+                                          <li>• Add mood and weather conditions (+5 bonus pts)</li>
+                                        </>
+                                      )}
+                                      {category.id === 'driving' && achievement.id === 'mountain_drive' && (
+                                        <>
+                                          <li>• Log a drive with elevation change exceeding 1,000 ft (+50 pts)</li>
+                                          <li>• Upload GPS data verifying elevation change (+10 bonus pts)</li>
+                                          <li>• Include 3+ photos from different elevations (+10 bonus pts)</li>
+                                        </>
+                                      )}
+                                      {category.id === 'detailing' && achievement.id === 'first_wash' && (
+                                        <>
+                                          <li>• Complete and document your first wash (+20 pts)</li>
+                                          <li>• Log all products used in the process (+5 bonus pts)</li>
+                                          <li>• Include before/after photos (+5 bonus pts)</li>
+                                        </>
+                                      )}
+                                      {category.id === 'detailing' && achievement.id === 'gloss_reset' && (
+                                        <>
+                                          <li>• Complete all steps in the Gloss Reset procedure (+75 pts)</li>
+                                          <li>• Document each step with photos (+15 bonus pts)</li>
+                                          <li>• Log time spent on each phase (+10 bonus pts)</li>
+                                        </>
+                                      )}
+                                      {category.id === 'track_days' && achievement.id === 'first_track_day' && (
+                                        <>
+                                          <li>• Log your first track day event (+75 pts)</li>
+                                          <li>• Record lap times for at least 3 laps (+15 bonus pts)</li>
+                                          <li>• Include video of your best lap (+25 bonus pts)</li>
+                                        </>
+                                      )}
+                                      {category.id === 'community' && achievement.id === 'profile_complete' && (
+                                        <>
+                                          <li>• Complete all required profile fields (+25 pts)</li>
+                                          <li>• Add a profile photo (+5 bonus pts)</li>
+                                          <li>• Link your social accounts (+5 bonus pts)</li>
+                                        </>
+                                      )}
+                                      {category.id === 'collector' && achievement.id === 'first_garage_entry' && (
+                                        <>
+                                          <li>• Add your first vehicle to the Garage Vault (+20 pts)</li>
+                                          <li>• Include comprehensive vehicle details (+5 bonus pts)</li>
+                                          <li>• Add at least 3 photos of your vehicle (+5 bonus pts)</li>
+                                        </>
+                                      )}
+                                      {/* Default explanation for achievements without specific tooltips */}
+                                      {!((category.id === 'driving' && (achievement.id === 'first_drive_log' || achievement.id === 'mountain_drive')) ||
+                                         (category.id === 'detailing' && (achievement.id === 'first_wash' || achievement.id === 'gloss_reset')) ||
+                                         (category.id === 'track_days' && achievement.id === 'first_track_day') ||
+                                         (category.id === 'community' && achievement.id === 'profile_complete') ||
+                                         (category.id === 'collector' && achievement.id === 'first_garage_entry')) && (
+                                        <>
+                                          <li>• Complete the specified achievement (+{achievement.points} pts)</li>
+                                          <li>• Add supporting documentation (+bonus pts)</li>
+                                          <li>• Share your achievement in the community (+bonus pts)</li>
+                                        </>
+                                      )}
+                                    </ul>
+                                  </div>
+                                </div>
                               </div>
                               <p className="text-sm text-gray-400 mt-1">{achievement.description}</p>
                               <div className="text-sm text-blue-300 mt-1">{achievement.points} pts</div>
