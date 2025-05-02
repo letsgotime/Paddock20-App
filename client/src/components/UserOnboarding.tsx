@@ -255,6 +255,65 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
     }));
   };
   
+  // Handle location settings changes
+  const handleLocationChange = (e: React.ChangeEvent<HTMLInputElement | HTMLSelectElement>) => {
+    const { name, value, type, checked } = e.target as HTMLInputElement;
+    
+    setLocationSettings(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
+  
+  // Handle location checkbox changes specifically
+  const handleLocationCheckboxChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, checked } = e.target;
+    
+    setLocationSettings(prev => ({
+      ...prev,
+      [name]: checked
+    }));
+  };
+  
+  // Simulate geolocation detection
+  const handleDetectLocation = () => {
+    // In a real app, this would use the browser's geolocation API
+    setLocationSettings(prev => ({
+      ...prev,
+      primaryLocation: 'Charlotte, NC'
+    }));
+  };
+  
+  // Handle route changes
+  const handleRouteChange = (index: number, field: string, value: string) => {
+    setRoutes(prevRoutes => {
+      const updatedRoutes = [...prevRoutes];
+      updatedRoutes[index] = {
+        ...updatedRoutes[index],
+        [field]: value
+      };
+      return updatedRoutes;
+    });
+  };
+  
+  // Remove a route
+  const removeRoute = (index: number) => {
+    setRoutes(prevRoutes => prevRoutes.filter((_, i) => i !== index));
+  };
+  
+  // Add a new route
+  const addNewRoute = () => {
+    setRoutes(prevRoutes => [...prevRoutes, { name: '', points: '' }]);
+  };
+  
+  // Handle dashboard theme change
+  const handleDashboardThemeChange = (theme: 'dark' | 'darker') => {
+    setDashboardPrefs(prev => ({
+      ...prev,
+      theme
+    }));
+  };
+  
   // Simulated file upload for profile picture
   const handleProfileImageUpload = () => {
     // In a real app, this would handle actual file upload
