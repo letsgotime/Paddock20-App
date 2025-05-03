@@ -1,5 +1,7 @@
 import { 
   users, type User, type InsertUser, 
+  sessions, type Session, type InsertSession,
+  authLogs, type AuthLog, type InsertAuthLog,
   savedLocations, type SavedLocation, type InsertSavedLocation,
   vehicles, type Vehicle, type InsertVehicle,
   tires, type Tire, type InsertTire,
@@ -10,14 +12,49 @@ import {
 } from "@shared/schema";
 
 import { db } from "./db";
-import { eq, and, sql } from "drizzle-orm";
+import { eq, and, sql, desc, lt, gt } from "drizzle-orm";
+import session from "express-session";
+import connectPg from "connect-pg-simple";
+import { pool } from "./db";
+
+// Create PostgreSQL session store for Express sessions
+const PostgresSessionStore = connectPg(session);
+const sessionStore = new PostgresSessionStore({
+  pool,
+  tableName: 'session', // Connect-pg-simple uses lowercase 'session' by default
+  createTableIfMissing: true
+});
 
 // IStorage interface with all CRUD methods
 export interface IStorage {
+  // Session store for Express integration
+  sessionStore: session.Store;
+
   // User methods
   getUser(id: number): Promise<User | undefined>;
   getUserByUsername(username: string): Promise<User | undefined>;
+  getUserByEmail(email: string): Promise<User | undefined>;
   createUser(user: InsertUser): Promise<User>;
+  updateUser(id: number, userData: Partial<User>): Promise<User | undefined>;
+  updateUserPassword(id: number, hashedPassword: string): Promise<boolean>;
+  updateUserVerification(id: number, isVerified: boolean): Promise<boolean>;
+  updatePasswordResetToken(id: number, token: string | null, expires: Date | null): Promise<boolean>;
+  checkPasswordResetToken(token: string): Promise<User | undefined>;
+  updateUserLastLogin(id: number): Promise<boolean>;
+  
+  // Authentication methods
+  createSession(sessionData: InsertSession): Promise<Session>;
+  getSession(id: string): Promise<Session | undefined>;
+  deleteSession(id: string): Promise<void>;
+  getUserSessions(userId: number): Promise<Session[]>;
+  deleteUserSessions(userId: number, currentSessionId?: string): Promise<void>;
+  updateSessionActivity(id: string): Promise<void>;
+  cleanupExpiredSessions(): Promise<void>;
+  
+  // Auth logs methods
+  createAuthLog(log: InsertAuthLog): Promise<AuthLog>;
+  getAuthLogsByUserId(userId: number, limit?: number): Promise<AuthLog[]>;
+  getRecentFailedLoginAttempts(userId: number, minutes: number): Promise<number>;
   
   // Saved Locations methods
   getSavedLocation(id: number): Promise<SavedLocation | undefined>;
@@ -65,6 +102,13 @@ export interface IStorage {
 
 // Database Storage Implementation
 export class DatabaseStorage implements IStorage {
+  // Make sessionStore available
+  sessionStore: session.Store;
+  
+  constructor() {
+    this.sessionStore = sessionStore;
+  }
+  
   // User methods
   async getUser(id: number): Promise<User | undefined> {
     const [user] = await db.select().from(users).where(eq(users.id, id));
@@ -75,10 +119,184 @@ export class DatabaseStorage implements IStorage {
     const [user] = await db.select().from(users).where(eq(users.username, username));
     return user;
   }
+  
+  async getUserByEmail(email: string): Promise<User | undefined> {
+    const [user] = await db.select().from(users).where(eq(users.email, email));
+    return user;
+  }
 
   async createUser(insertUser: InsertUser): Promise<User> {
     const [user] = await db.insert(users).values(insertUser).returning();
     return user;
+  }
+  
+  async updateUser(id: number, userData: Partial<User>): Promise<User | undefined> {
+    const [updatedUser] = await db
+      .update(users)
+      .set({
+        ...userData,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, id))
+      .returning();
+    return updatedUser;
+  }
+  
+  async updateUserPassword(id: number, hashedPassword: string): Promise<boolean> {
+    const result = await db
+      .update(users)
+      .set({
+        password: hashedPassword,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, id));
+    return result.rowCount > 0;
+  }
+  
+  async updateUserVerification(id: number, isVerified: boolean): Promise<boolean> {
+    const result = await db
+      .update(users)
+      .set({
+        isEmailVerified: isVerified,
+        verificationToken: null,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, id));
+    return result.rowCount > 0;
+  }
+  
+  async updatePasswordResetToken(id: number, token: string | null, expires: Date | null): Promise<boolean> {
+    const result = await db
+      .update(users)
+      .set({
+        resetToken: token,
+        resetTokenExpires: expires,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, id));
+    return result.rowCount > 0;
+  }
+  
+  async checkPasswordResetToken(token: string): Promise<User | undefined> {
+    const [user] = await db
+      .select()
+      .from(users)
+      .where(eq(users.resetToken, token));
+    
+    // Check if token exists and hasn't expired
+    if (user && user.resetTokenExpires && user.resetTokenExpires > new Date()) {
+      return user;
+    }
+    
+    return undefined;
+  }
+  
+  async updateUserLastLogin(id: number): Promise<boolean> {
+    const result = await db
+      .update(users)
+      .set({
+        lastLogin: new Date(),
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, id));
+    return result.rowCount > 0;
+  }
+  
+  // Session methods
+  async createSession(sessionData: InsertSession): Promise<Session> {
+    const [session] = await db
+      .insert(sessions)
+      .values(sessionData)
+      .returning();
+    return session;
+  }
+  
+  async getSession(id: string): Promise<Session | undefined> {
+    const [session] = await db
+      .select()
+      .from(sessions)
+      .where(eq(sessions.id, id));
+    return session;
+  }
+  
+  async deleteSession(id: string): Promise<void> {
+    await db
+      .delete(sessions)
+      .where(eq(sessions.id, id));
+  }
+  
+  async getUserSessions(userId: number): Promise<Session[]> {
+    return await db
+      .select()
+      .from(sessions)
+      .where(eq(sessions.userId, userId))
+      .orderBy(desc(sessions.lastActive));
+  }
+  
+  async deleteUserSessions(userId: number, currentSessionId?: string): Promise<void> {
+    if (currentSessionId) {
+      // Delete all sessions except the current one
+      await db
+        .delete(sessions)
+        .where(and(
+          eq(sessions.userId, userId),
+          sql`${sessions.id} != ${currentSessionId}`
+        ));
+    } else {
+      // Delete all sessions for this user
+      await db
+        .delete(sessions)
+        .where(eq(sessions.userId, userId));
+    }
+  }
+  
+  async updateSessionActivity(id: string): Promise<void> {
+    await db
+      .update(sessions)
+      .set({
+        lastActive: new Date()
+      })
+      .where(eq(sessions.id, id));
+  }
+  
+  async cleanupExpiredSessions(): Promise<void> {
+    await db
+      .delete(sessions)
+      .where(lt(sessions.expiresAt, new Date()));
+  }
+  
+  // Auth logs methods
+  async createAuthLog(log: InsertAuthLog): Promise<AuthLog> {
+    const [authLog] = await db
+      .insert(authLogs)
+      .values(log)
+      .returning();
+    return authLog;
+  }
+  
+  async getAuthLogsByUserId(userId: number, limit: number = 50): Promise<AuthLog[]> {
+    return await db
+      .select()
+      .from(authLogs)
+      .where(eq(authLogs.userId, userId))
+      .orderBy(desc(authLogs.createdAt))
+      .limit(limit);
+  }
+  
+  async getRecentFailedLoginAttempts(userId: number, minutes: number = 30): Promise<number> {
+    const cutoffTime = new Date(Date.now() - (minutes * 60 * 1000));
+    
+    const result = await db
+      .select({ count: sql`count(*)` })
+      .from(authLogs)
+      .where(and(
+        eq(authLogs.userId, userId),
+        eq(authLogs.action, 'login'),
+        eq(authLogs.status, 'failed'),
+        gt(authLogs.createdAt, cutoffTime)
+      ));
+      
+    return Number(result[0].count);
   }
   
   // Saved Location methods
