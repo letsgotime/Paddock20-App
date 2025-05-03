@@ -230,22 +230,49 @@ export function setupAuth(app: Express) {
   
   // Login route
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", (err: any, user: any, info: any) => {
+    passport.authenticate("local", async (err: any, user: any, info: any) => {
       if (err) {
         return next(err);
       }
       
+      // Handle failed login
       if (!user) {
+        // Log failed login attempt
+        await storage.createAuthLog({
+          userId: null,
+          action: 'login',
+          status: 'failed',
+          ipAddress: req.ip || null, 
+          userAgent: req.get('User-Agent') || null,
+          details: { 
+            reason: 'invalid_credentials',
+            username: req.body.username 
+          }
+        });
+        
         return res.status(401).json({ 
           success: false, 
           error: info?.message || "Invalid username or password" 
         });
       }
       
-      req.login(user, (err) => {
+      req.login(user, async (err) => {
         if (err) {
           return next(err);
         }
+        
+        // Update last login time
+        await storage.updateUserLastLogin(user.id);
+        
+        // Log successful login attempt
+        await storage.createAuthLog({
+          userId: user.id,
+          action: 'login',
+          status: 'success',
+          ipAddress: req.ip || null,
+          userAgent: req.get('User-Agent') || null,
+          details: {}
+        });
         
         // Return user data (exclude sensitive information)
         const { password, resetToken, verificationToken, ...safeUserData } = user;
@@ -258,14 +285,35 @@ export function setupAuth(app: Express) {
   });
   
   // Logout route
-  app.post("/api/logout", (req, res) => {
-    req.logout((err) => {
+  app.post("/api/logout", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(200).json({ 
+        success: true, 
+        message: "Already logged out" 
+      });
+    }
+    
+    // Capture user ID before logout
+    const userId = req.user.id;
+    
+    req.logout(async (err) => {
       if (err) {
         return res.status(500).json({ 
           success: false, 
           error: "Error logging out" 
         });
       }
+      
+      // Log successful logout
+      await storage.createAuthLog({
+        userId,
+        action: 'logout',
+        status: 'success',
+        ipAddress: req.ip || null,
+        userAgent: req.get('User-Agent') || null,
+        details: {}
+      });
+      
       res.json({ 
         success: true, 
         message: "Logged out successfully" 
@@ -274,7 +322,7 @@ export function setupAuth(app: Express) {
   });
   
   // Get authenticated user
-  app.get("/api/user", (req, res) => {
+  app.get("/api/user", async (req, res) => {
     if (!req.isAuthenticated()) {
       return res.status(401).json({ 
         success: false, 
@@ -282,12 +330,37 @@ export function setupAuth(app: Express) {
       });
     }
     
-    // Return user data (exclude sensitive information)
-    const { password, resetToken, verificationToken, ...safeUserData } = req.user;
-    res.json({ 
-      success: true, 
-      user: safeUserData 
-    });
+    try {
+      // Get fresh user data from database
+      const user = await storage.getUser(req.user.id);
+      
+      if (!user) {
+        // This should never happen, but just in case
+        req.logout((err) => {
+          if (err) {
+            console.error("Logout error:", err);
+          }
+        });
+        
+        return res.status(404).json({ 
+          success: false, 
+          error: "User not found" 
+        });
+      }
+      
+      // Return user data (exclude sensitive information)
+      const { password, resetToken, verificationToken, ...safeUserData } = user;
+      res.json({ 
+        success: true, 
+        user: safeUserData 
+      });
+    } catch (error) {
+      console.error("Get user error:", error);
+      res.status(500).json({ 
+        success: false, 
+        error: "Failed to retrieve user data" 
+      });
+    }
   });
   
   // Update user profile
