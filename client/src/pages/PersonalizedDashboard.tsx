@@ -79,12 +79,23 @@ const mockUserData = {
 };
 
 const PersonalizedDashboard: React.FC = () => {
-  // Get auth context to access user data
-  const authContext = useAuthContext();
-  const { user } = authContext;
+  // Try to get auth context, but gracefully handle when it's not available
+  let user = null;
+  let displayName = 'Driver';
   
-  // Determine user's display name based on authentication - using fullName if available, or username as fallback 
-  const displayName = user?.fullName || user?.username || 'Driver';
+  try {
+    // Attempt to get auth context
+    const authContext = useAuthContext();
+    user = authContext?.user;
+    
+    // Use authentication data if available
+    if (user) {
+      displayName = user.fullName || user.username || 'Driver';
+    }
+  } catch (error) {
+    // Fallback when auth context isn't available
+    console.log('Auth context not available, using default values');
+  }
   
   const [userData, setUserData] = useState(mockUserData);
   const [currentTime, setCurrentTime] = useState(new Date());
@@ -94,13 +105,16 @@ const PersonalizedDashboard: React.FC = () => {
     name: displayName // Use authenticated user's name
   });
 
-  // Update user data when authentication changes
+  // Only update user data if we have a valid user object
   useEffect(() => {
-    // When authentication status changes, update the user's display name
-    setMergedUserData(prevData => ({
-      ...prevData,
-      name: user?.fullName || user?.username || 'Driver'
-    }));
+    // Only attempt to use user data if we have it
+    if (user) {
+      // When authentication status changes, update the user's display name
+      setMergedUserData(prevData => ({
+        ...prevData,
+        name: user.fullName || user.username || 'Driver'
+      }));
+    }
   }, [user]);
 
   useEffect(() => {
