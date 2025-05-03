@@ -82,64 +82,58 @@ const FixedSoundBar: React.FC = () => {
   }, []);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 flex items-center justify-between px-4 py-3 bg-black border-t border-blue-500/50 shadow-[0_-5px_15px_rgba(0,0,0,0.8)] z-[9999]">
+    <nav className="fixed bottom-0 left-0 right-0 flex items-center justify-between px-4 py-3 bg-black/95 border-t border-blue-900/50 shadow-[0_-5px_15px_rgba(0,0,0,0.3)] z-50">
       {/* GoTime Logo */}
       <div className="flex items-center font-orbitron text-2xl no-underline">
         <img 
           src="/assets/GoTime Logo-7FC844-White (1).png" 
           alt="GoTime Motorsports" 
           className="h-8 w-auto"
-          onError={(e) => {
-            (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIxMDAiIGhlaWdodD0iMzAiIHZpZXdCb3g9IjAgMCAxMDAgMzAiPjxyZWN0IHdpZHRoPSIxMDAiIGhlaWdodD0iMzAiIGZpbGw9IiMwOGM1MTkiLz48dGV4dCB4PSI1MCIgeT0iMTUiIGZvbnQtZmFtaWx5PSJBcmlhbCIgZm9udC1zaXplPSIxMiIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiIGFsaWdubWVudC1iYXNlbGluZT0ibWlkZGxlIj5Hb1RpbWU8L3RleHQ+PC9zdmc+';
-          }}
         />
-        <span className="ml-2 text-[#08c519] text-sm hidden sm:inline">TELEMETRY</span>
       </div>
       
-      {/* Navigation Controls - Center Element */}
-      <div className="absolute left-1/2 transform -translate-x-1/2 flex items-center space-x-2">
-        <div className="flex items-center px-4 py-2 bg-blue-900/30 rounded-full border-2 border-blue-500 shadow-[0_0_10px_rgba(59,130,246,0.5)]">
-          <button
-            onClick={goBack}
-            disabled={!canGoBack}
-            className={`w-12 h-12 flex items-center justify-center rounded-full mx-1 ${
-              canGoBack 
-                ? 'text-[#08c519] hover:bg-green-900/40 hover:text-green-300 active:bg-green-900/60 active:scale-95 border border-green-700' 
-                : 'text-gray-600 opacity-50 cursor-not-allowed'
-            }`}
-            aria-label="Go back"
-            title="Back"
-          >
-            <ArrowLeft size={24} />
-          </button>
-          
-          <div className="mx-2 h-8 w-px bg-blue-500/50"></div>
-          
-          <button
-            onClick={goHome}
-            className="w-12 h-12 flex items-center justify-center rounded-full mx-1 text-blue-400 hover:bg-blue-900/40 hover:text-blue-300 active:bg-blue-900/60 active:scale-95 border border-blue-700"
-            aria-label="Go to home page"
-            title="Home"
-          >
-            <Home size={24} />
-          </button>
-          
-          <div className="mx-2 h-8 w-px bg-blue-500/50"></div>
-          
-          <button
-            onClick={goForward}
-            disabled={!canGoForward}
-            className={`w-12 h-12 flex items-center justify-center rounded-full mx-1 ${
-              canGoForward
-                ? 'text-[#08c519] hover:bg-green-900/40 hover:text-green-300 active:bg-green-900/60 active:scale-95 border border-green-700' 
-                : 'text-gray-600 opacity-50 cursor-not-allowed'
-            }`}
-            aria-label="Go forward"
-            title="Forward"
-          >
-            <ArrowRight size={24} />
-          </button>
-        </div>
+      {/* Navigation Controls */}
+      <div className="flex items-center space-x-2 px-3 py-1">
+        <button
+          onClick={goBack}
+          disabled={!canGoBack}
+          className={`w-7 h-7 flex items-center justify-center ${
+            canGoBack 
+              ? 'text-[#08c519] hover:text-green-300' 
+              : 'text-gray-600 opacity-50 cursor-not-allowed'
+          }`}
+          aria-label="Go back"
+          title="Back"
+        >
+          <ArrowLeft size={18} />
+        </button>
+        
+        <div className="mx-1 h-4 w-px bg-blue-900/50"></div>
+        
+        <button
+          onClick={goHome}
+          className="w-7 h-7 flex items-center justify-center text-blue-400 hover:text-blue-300"
+          aria-label="Go to home page"
+          title="Home"
+        >
+          <Home size={18} />
+        </button>
+        
+        <div className="mx-1 h-4 w-px bg-blue-900/50"></div>
+        
+        <button
+          onClick={goForward}
+          disabled={!canGoForward}
+          className={`w-7 h-7 flex items-center justify-center ${
+            canGoForward
+              ? 'text-[#08c519] hover:text-green-300' 
+              : 'text-gray-600 opacity-50 cursor-not-allowed'
+          }`}
+          aria-label="Go forward"
+          title="Forward"
+        >
+          <ArrowRight size={18} />
+        </button>
       </div>
       
       {/* Sound Controls */}
