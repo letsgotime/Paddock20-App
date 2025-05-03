@@ -144,9 +144,10 @@ function App() {
       );
     }
     
-    if (!effectiveSession && !previewMode) {
-      return <Navigate to="/auth" replace />;
-    }
+    // TEMPORARY: Disable authentication checking for debugging
+    // if (!effectiveSession && !previewMode) {
+    //   return <Navigate to="/auth" replace />;
+    // }
     
     return <>{children}</>;
   };
