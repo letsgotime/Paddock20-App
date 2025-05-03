@@ -22,10 +22,13 @@ export default function AuthPage() {
   const infoMessage = searchParams.get('message');
 
   // Form state
-  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
+  const [authMode, setAuthMode] = useState<'login' | 'register' | 'forgot-password'>('login');
   const [formError, setFormError] = useState<string | null>(null);
   const [formSuccess, setFormSuccess] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Forgot password form state
+  const [forgotPasswordEmail, setForgotPasswordEmail] = useState('');
 
   // Login form state
   const [loginForm, setLoginForm] = useState({
@@ -84,6 +87,51 @@ export default function AuthPage() {
     } catch (err) {
       // Display error message
       setFormError(err instanceof Error ? err.message : 'Login failed. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  // Handle forgot password submission
+  const handleForgotPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setFormError(null);
+    setFormSuccess(null);
+    setIsSubmitting(true);
+
+    try {
+      // Basic validation
+      if (!forgotPasswordEmail.trim() || !forgotPasswordEmail.includes('@')) {
+        throw new Error('Please enter a valid email address');
+      }
+
+      // Call forgot password API
+      const response = await fetch('/api/reset-password-request', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email: forgotPasswordEmail }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to request password reset');
+      }
+
+      // Show success message
+      setFormSuccess(data.message || 'Password reset link sent. Please check your email.');
+      
+      // Clear email field
+      setForgotPasswordEmail('');
+      
+      // After 3 seconds, go back to login
+      setTimeout(() => {
+        setAuthMode('login');
+      }, 3000);
+    } catch (err) {
+      setFormError(err instanceof Error ? err.message : 'Failed to request password reset');
     } finally {
       setIsSubmitting(false);
     }
@@ -151,7 +199,7 @@ export default function AuthPage() {
               </CardDescription>
             </CardHeader>
 
-            <Tabs defaultValue="login" value={authMode} onValueChange={(value) => setAuthMode(value as 'login' | 'register')}>
+            <Tabs defaultValue="login" value={authMode} onValueChange={(value) => setAuthMode(value as 'login' | 'register' | 'forgot-password')}>
               <TabsList className="grid grid-cols-2 w-full mb-4">
                 <TabsTrigger value="login">Login</TabsTrigger>
                 <TabsTrigger value="register">Register</TabsTrigger>
@@ -173,9 +221,13 @@ export default function AuthPage() {
                     <div className="space-y-2">
                       <div className="flex items-center justify-between">
                         <Label htmlFor="password">Password</Label>
-                        <a href="#" className="text-xs text-blue-500 hover:text-blue-400">
+                        <button 
+                          type="button"
+                          onClick={() => setAuthMode('forgot-password')} 
+                          className="text-xs text-blue-500 hover:text-blue-400"
+                        >
                           Forgot Password?
-                        </a>
+                        </button>
                       </div>
                       <Input
                         id="password"
@@ -285,6 +337,50 @@ export default function AuthPage() {
                       ) : (
                         'Create Account'
                       )}
+                    </Button>
+                  </CardFooter>
+                </form>
+              </TabsContent>
+              
+              <TabsContent value="forgot-password">
+                <form onSubmit={handleForgotPassword}>
+                  <CardContent className="space-y-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="forgotPasswordEmail">Email Address</Label>
+                      <Input
+                        id="forgotPasswordEmail"
+                        type="email"
+                        placeholder="Enter your email address"
+                        value={forgotPasswordEmail}
+                        onChange={(e) => setForgotPasswordEmail(e.target.value)}
+                        required
+                      />
+                    </div>
+                    <div className="text-sm text-gray-500">
+                      Enter the email address associated with your account, and we'll send you a link to reset your password.
+                    </div>
+                  </CardContent>
+                  <CardFooter className="flex flex-col space-y-2">
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-blue-600 hover:bg-blue-700"
+                      disabled={isSubmitting}
+                    >
+                      {isSubmitting ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Sending Reset Link...
+                        </>
+                      ) : (
+                        'Send Reset Link'
+                      )}
+                    </Button>
+                    <Button 
+                      type="button"
+                      variant="link" 
+                      className="w-full"
+                      onClick={() => setAuthMode('login')}
+                    >
+                      Back to Login
                     </Button>
                   </CardFooter>
                 </form>
