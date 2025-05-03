@@ -7,11 +7,11 @@ import { useToast } from '@/hooks/use-toast';
 // Mock user for preview mode (same as in App.tsx)
 const mockUser = { 
   id: 99999, 
-  username: 'Gavin Brooks', 
-  email: 'gavin@gotime.com', 
-  firstName: 'Gavin', 
-  lastName: 'Brooks', 
-  fullName: 'Gavin Brooks', 
+  username: 'Alex Garza', 
+  email: 'alex@gotime.com', 
+  firstName: 'Alex', 
+  lastName: 'Garza', 
+  fullName: 'Alex Garza', 
   profileImage: null, 
   role: 'admin' as const 
 };
