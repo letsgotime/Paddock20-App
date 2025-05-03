@@ -97,8 +97,11 @@ interface WeatherContextType {
   automotiveWeatherData: AutomotiveWeatherData | null;
   refreshWeather: () => void;
   lastUpdated: Date | null;
+  nextRefreshTime: Date | null;
   failureCount: number;
   isUsingFallbackData: boolean;
+  cacheAge: string | null;
+  cacheExpiryTime: Date | null;
 }
 
 const WeatherContext = createContext<WeatherContextType | undefined>(undefined);
@@ -145,6 +148,9 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
   const [failureCount, setFailureCount] = useState<number>(0);
   const [isUsingFallbackData, setIsUsingFallbackData] = useState<boolean>(false);
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [nextRefreshTime, setNextRefreshTime] = useState<Date | null>(null);
+  const [cacheAge, setCacheAge] = useState<string | null>(null);
+  const [cacheExpiryTime, setCacheExpiryTime] = useState<Date | null>(null);
   
   // Cache last successful data to use as fallback
   const weatherDataCache = useRef<{
@@ -188,18 +194,62 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
     }
   }, [selectedLocation, savedLocations]);
 
+  // Initialize cache-related information when consolidatedData changes
+  useEffect(() => {
+    if (consolidatedData) {
+      const now = new Date();
+      // When we receive cache data, calculate and update all the cache-related state
+      if (consolidatedData.cacheTimestamp) {
+        // Calculate cache age
+        const cacheAgeMinutes = Math.round((now.getTime() - consolidatedData.cacheTimestamp) / 60000);
+        if (cacheAgeMinutes < 1) {
+          setCacheAge("Just updated");
+        } else if (cacheAgeMinutes < 60) {
+          setCacheAge(`${cacheAgeMinutes} minutes old`);
+        } else {
+          const cacheAgeHours = Math.round(cacheAgeMinutes / 60);
+          setCacheAge(`${cacheAgeHours} hour${cacheAgeHours > 1 ? 's' : ''} old`);
+        }
+        
+        // Set next refresh and expiry times
+        setNextRefreshTime(new Date(now.getTime() + 60 * 60 * 1000)); // 60 minutes from now
+        setCacheExpiryTime(new Date(now.getTime() + 8 * 60 * 60 * 1000)); // 8 hours from now
+      }
+    }
+  }, [consolidatedData]);
+
   // Setup auto-refresh of weather data every 60 minutes instead of 15
   // to reduce API calls and avoid rate limiting
   useEffect(() => {
+    if (!selectedLocation) return;
+    
     const refreshInterval = setInterval(() => {
+      console.log('Auto-refreshing weather data (hourly)...');
+      // Use refetchConsolidatedWeather directly instead of refreshWeather to avoid dependency cycle
       if (selectedLocation) {
-        console.log('Auto-refreshing weather data (hourly)...');
-        refreshWeather();
+        refetchConsolidatedWeather()
+          .then(() => {
+            const now = new Date();
+            setFailureCount(0);
+            setLastUpdated(now);
+            setIsUsingFallbackData(false);
+            
+            // Update cache tracking
+            setNextRefreshTime(new Date(now.getTime() + 60 * 60 * 1000));
+            setCacheExpiryTime(new Date(now.getTime() + 8 * 60 * 60 * 1000));
+            setCacheAge("Just updated");
+            
+            console.log('Weather data refreshed successfully (auto)');
+          })
+          .catch(error => {
+            console.error('Error in auto-refresh of weather data:', error);
+            setFailureCount(prev => prev + 1);
+          });
       }
     }, 60 * 60 * 1000); // 60 minutes (was 15 minutes)
     
     return () => clearInterval(refreshInterval);
-  }, [selectedLocation]);
+  }, [selectedLocation, refetchConsolidatedWeather]);
 
   // Get ALL weather data in a single consolidated API call
   // This drastically reduces API usage and helps avoid rate limiting
@@ -212,6 +262,7 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
     queryKey: ['consolidated-weather', selectedLocation?.lat, selectedLocation?.lon, unit],
     enabled: !!selectedLocation,
     staleTime: 60 * 60 * 1000, // 1 hour cache to reduce API calls
+    retry: 2, // Retry failed requests twice
     queryFn: async () => {
       if (!selectedLocation) return null;
       
@@ -331,10 +382,23 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
     
     // We now only need to refetch the consolidated data
     refetchConsolidatedWeather()
-      .then(() => {
+      .then((data) => {
+        const now = new Date();
         setFailureCount(0);
-        setLastUpdated(new Date());
+        setLastUpdated(now);
         setIsUsingFallbackData(false);
+        
+        // Set next auto-refresh time (60 minutes from now)
+        const nextRefresh = new Date(now.getTime() + 60 * 60 * 1000);
+        setNextRefreshTime(nextRefresh);
+        
+        // Set cache expiry time (8 hours from now)
+        const cacheExpiry = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+        setCacheExpiryTime(cacheExpiry);
+        
+        // Set cache age
+        setCacheAge("Just updated");
+        
         console.log('Weather data refreshed successfully');
       })
       .catch(error => {
@@ -360,8 +424,11 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
     automotiveWeatherData: automotiveWeatherData || null,
     refreshWeather,
     lastUpdated,
+    nextRefreshTime,
     failureCount,
-    isUsingFallbackData
+    isUsingFallbackData,
+    cacheAge,
+    cacheExpiryTime
   };
 
   return (

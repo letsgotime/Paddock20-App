@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import EventsPreview from '../components/EventsPreview';
 import MotorsportsGallery from '../components/MotorsportsGallery';
-import { useWeather } from '../contexts/WeatherContext';
+import { useWeather } from '../contexts/FixedWeatherContext';
 import { Thermometer, Droplets, Wind, Sun, Leaf, Gauge, Cloud, ArrowUp, Compass, Timer, Clock, Zap, Map, Shield, Calendar, Trophy, Flame } from 'lucide-react';
 
 // Array of driving insights to rotate through - based on weather patterns

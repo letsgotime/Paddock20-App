@@ -37,7 +37,7 @@ import Paddock20HomePage from "./pages/Paddock20HomePage";
 import ProductOrganizerPage from "./pages/ProductOrganizerPage"; // Import the new page
 import DropdownNavbar from "./components/DropdownNavbar";
 import Footer from "./components/Footer";
-import { WeatherProvider } from "./contexts/WeatherContext";
+import { WeatherProvider } from "./contexts/FixedWeatherContext";
 import { GalleryProvider } from "./contexts/GalleryContext";
 import { RewardsProvider } from "./contexts/RewardsContext";
 import { VehicleProvider } from "./contexts/VehicleContext";
