@@ -37,9 +37,6 @@ import EBooksPage from "./pages/eBooksPage";
 import Paddock20HomePage from "./pages/Paddock20HomePage";
 import ProductOrganizerPage from "./pages/ProductOrganizerPage"; // Import the new page
 import UserProfileHubPage from "./pages/UserProfileHubPage"; // Import our new User Profile Hub
-import NewDashboardPage from "./pages/NewDashboardPage"; // Import the new dashboard page
-import NewProfilePage from "./pages/NewProfilePage"; // Import the new profile page
-import UnifiedDashboardProfilePage from "./pages/UnifiedDashboardProfilePage"; // Import the unified dashboard and profile page
 import FixedSoundBar from "./components/FixedSoundBar";
 import Footer from "./components/Footer";
 import { WeatherProvider } from "./contexts/ConsolidatedWeatherContext";
@@ -108,17 +105,8 @@ function App() {
   // Use the scroll-to-top hook to ensure pages always start at the top
   useScrollToTop();
   
-  // Mock user data for preview mode - using correct Gavin's details
-  const mockUser = { 
-    id: 99999, 
-    username: 'Gavin GoTime', 
-    email: 'gavin@gotime.com', 
-    firstName: 'Gavin', 
-    lastName: 'Brooks', 
-    fullName: 'Gavin Brooks', 
-    profileImage: null, 
-    role: 'admin' as const 
-  };
+  // Mock user data for preview mode
+  const mockUser = { id: 99999, username: 'Gavin Brooks', email: 'gavin@gotime.com', firstName: 'Gavin', lastName: 'Brooks', fullName: 'Gavin Brooks', profileImage: null, role: 'admin' as const };
   const mockSession = { user: mockUser };
   
   // Initialize session state (will be overridden by auth hook if authenticated)
@@ -144,10 +132,9 @@ function App() {
       );
     }
     
-    // TEMPORARY: Disable authentication checking for debugging
-    // if (!effectiveSession && !previewMode) {
-    //   return <Navigate to="/auth" replace />;
-    // }
+    if (!effectiveSession && !previewMode) {
+      return <Navigate to="/auth" replace />;
+    }
     
     return <>{children}</>;
   };
@@ -301,13 +288,10 @@ function App() {
                           <Route path="/beta-agreement" element={<BetaAgreement />} />
                         
                           {/* Protected routes */}
-                          <Route path="/" element={<ProtectedRoute><UnifiedDashboardProfilePage /></ProtectedRoute>} />
+                          <Route path="/" element={<ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
                           <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
                           <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
                           <Route path="/personalized-dashboard" element={<ProtectedRoute><PersonalizedDashboard /></ProtectedRoute>} />
-                          <Route path="/new-dashboard" element={<ProtectedRoute><NewDashboardPage /></ProtectedRoute>} />
-                          <Route path="/new-profile" element={<ProtectedRoute><NewProfilePage /></ProtectedRoute>} />
-                          <Route path="/driver-hub" element={<ProtectedRoute><UnifiedDashboardProfilePage /></ProtectedRoute>} />
                           {/* Main Garage Vault Hub - Central repository for all vehicle data */}
                           <Route path="/garage-vault" element={<ProtectedRoute><GarageVaultPage /></ProtectedRoute>} />
                           {/* New GoTime Garage Vault - Enhanced F1-style vehicle management */}
