@@ -2,6 +2,9 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Import Orbitron font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap');
+
 /* Custom animations for onboarding */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }
