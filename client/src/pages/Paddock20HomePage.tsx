@@ -5,6 +5,8 @@ import MotorsportsGallery from '../components/MotorsportsGallery';
 import F1GoalSettingPanel from '../components/F1GoalSettingPanel';
 import { useWeather } from '../contexts/FixedWeatherContext';
 import ProfileDataCollector from '../services/ProfileDataCollector';
+import SmartOnboardingJourneyVisualizer from '../components/SmartOnboardingJourneyVisualizer';
+import EngagementRewardsPanel from '../components/EngagementRewardsPanel';
 import { Thermometer, Droplets, Wind, Sun, Leaf, Gauge, Cloud, ArrowUp, Compass, Timer, Clock, Zap, Map, Shield, Calendar, Trophy, Flame, Sunrise, Sunset, Moon, User } from 'lucide-react';
 
 // Array of driving insights to rotate through - based on weather patterns
@@ -392,6 +394,16 @@ const Paddock20HomePage: React.FC = () => {
         {/* F1-Inspired Goal Setting Panel */}
         <div className="mb-10">
           <F1GoalSettingPanel />
+        </div>
+        
+        {/* Smart Onboarding Journey Visualizer - Added 2025-05-03 */}
+        <div className="mb-8">
+          <SmartOnboardingJourneyVisualizer compact={true} />
+        </div>
+        
+        {/* Engagement Rewards Panel - Added 2025-05-03 */}
+        <div className="mb-8">
+          <EngagementRewardsPanel compact={true} limit={3} />
         </div>
 
       {/* Quick Access Card Grid - Direct access to key app features */}
