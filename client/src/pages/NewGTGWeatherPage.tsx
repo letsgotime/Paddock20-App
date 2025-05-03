@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { MAIN_CONTENT_ID } from '../lib/accessibility';
-import { useWeather } from '../contexts/WeatherContext';
+import { useWeather } from '../contexts/FixedWeatherContext';
 import WorldClockPanel from '../components/WorldClockPanel';
 import CurrentWeatherWidget from '../components/CurrentWeatherWidget';
 import F1TelemetryWeatherStation from '../components/F1TelemetryWeatherStation';
