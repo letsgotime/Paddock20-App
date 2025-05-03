@@ -85,8 +85,8 @@ import TermsOfService from './pages/TermsOfService';
 import BetaAgreement from './pages/BetaAgreement';
 
 function App() {
-  // TEMPORARY: Force preview mode to bypass auth
-  const previewMode = true;
+  // Auth configuration: When previewMode is false, real authentication will be required
+  const previewMode = false;
   
   // State to track if the user has completed onboarding
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(() => {
@@ -238,19 +238,17 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        {/* Authentication Provider for login/logout functionality */}
-        <AuthProvider>
-          {/* Page Title Manager - Updates browser tab title based on current route */}
-          <PageTitleManager />
-          {/* Vehicle Provider - Provides vehicle data to all components */}
-          <VehicleProvider>
-            {/* Vehicle Data Provider - Provides comprehensive vehicle activity, media, and document data */}
-            <VehicleDataProvider>
-              {/* Centralized Weather Provider - Provides weather data to all components */}
-              <WeatherProvider>
-                <GalleryProvider>
-                  {/* Rewards Provider - for site-wide gamification */}
-                  <RewardsProvider>
+        {/* Page Title Manager - Updates browser tab title based on current route */}
+        <PageTitleManager />
+        {/* Vehicle Provider - Provides vehicle data to all components */}
+        <VehicleProvider>
+          {/* Vehicle Data Provider - Provides comprehensive vehicle activity, media, and document data */}
+          <VehicleDataProvider>
+            {/* Centralized Weather Provider - Provides weather data to all components */}
+            <WeatherProvider>
+              <GalleryProvider>
+                {/* Rewards Provider - for site-wide gamification */}
+                <RewardsProvider>
                     {/* Skip link for keyboard navigation */}
                     <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
                       Skip to main content
@@ -377,9 +375,8 @@ function App() {
                 </RewardsProvider>
               </GalleryProvider>
             </WeatherProvider>
-            </VehicleDataProvider>
-          </VehicleProvider>
-        </AuthProvider>
+          </VehicleDataProvider>
+        </VehicleProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
