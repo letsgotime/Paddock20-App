@@ -490,7 +490,7 @@ const NewGTGWeatherPage: React.FC = () => {
     <div className="py-6" id={MAIN_CONTENT_ID}>
       {/* Page header with proper heading hierarchy */}
       <header className="mb-8 text-center">
-        <h1 className="apex-header text-3xl mb-2">Weather Command Center</h1>
+        <h1 className="apex-header text-3xl mb-2">Weather Paddock</h1>
         <p className="text-gray-400">
           Real-time automotive weather intelligence with F1-inspired telemetry
         </p>
@@ -501,7 +501,7 @@ const NewGTGWeatherPage: React.FC = () => {
       <section className="mb-6" aria-labelledby="current-weather-heading">
         <h2 id="current-weather-heading" className="apex-header-green text-xl mb-4 flex items-center">
           <Cloud className="h-5 w-5 mr-2 text-green-500" />
-          <span>Current Weather Command Center</span>
+          <span>Current Weather Paddock</span>
         </h2>
         <CurrentWeatherWidget />
       </section>
