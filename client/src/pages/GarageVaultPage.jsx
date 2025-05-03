@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
 import supabase from '../services/supabaseClient';
 import { exportToPdf, exportToCsv, printElement } from '../utils/exportUtils';
 import TireTracker from '../components/TireTracker';
@@ -15,6 +15,7 @@ import AddVehicleForm from '../components/AddVehicleForm';
 import AddModificationForm from '../components/AddModificationForm';
 import AddMaintenanceForm from '../components/AddMaintenanceForm';
 import EnhancedVehicleDetail from '../components/EnhancedVehicleDetail';
+import VehicleOnboardingWizard from '../components/VehicleOnboardingWizard';
 
 // Enhanced telemetry and data services
 import vehicleDataService from '../services/vehicleDataService';
@@ -27,7 +28,6 @@ import {
   Wrench, Shield, Camera, Clipboard, MoreHorizontal, Eye, Trash2, Download, X, Plus,
   CloudSnow, Sun, Leaf, Settings, Printer, ExternalLink, Pencil
 } from 'lucide-react';
-import { vehicleProfile, garageVehicles } from '../data/vehicles';
 
 function GarageVaultPage() {
   const location = useLocation();
@@ -42,6 +42,7 @@ function GarageVaultPage() {
   };
   
   // State management
+  const navigate = useNavigate();
   const [vehicles, setVehicles] = useState([]);
   const [loading, setLoading] = useState(true);
   const [activeVehicle, setActiveVehicle] = useState(null);
@@ -49,12 +50,13 @@ function GarageVaultPage() {
   const [activeView, setActiveView] = useState('grid');
   const [activeMod, setActiveMod] = useState(null);
   const [expandedTelemetry, setExpandedTelemetry] = useState(false);
-  const [vehicleData, setVehicleData] = useState(vehicleProfile);
+  const [vehicleData, setVehicleData] = useState(null);
   const [weatherData, setWeatherData] = useState(null);
   const [showExportMenu, setShowExportMenu] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
   const [showOBDPanel, setShowOBDPanel] = useState(false);
   const [obdScanActive, setObdScanActive] = useState(false);
+  const [showVehicleOnboarding, setShowVehicleOnboarding] = useState(false);
   const [filters, setFilters] = useState({
     make: 'all',
     type: 'all',
@@ -188,10 +190,6 @@ function GarageVaultPage() {
         
         if (data && data.length > 0) {
           vehicleList = data;
-        } else {
-          // Use garageVehicles if no database data available
-          console.log("Using mock vehicle data");
-          vehicleList = garageVehicles;
         }
         
         // Add onboarded vehicle if it exists (at the beginning of the list)
@@ -200,12 +198,16 @@ function GarageVaultPage() {
         }
         
         setVehicles(vehicleList);
-        setActiveVehicle(vehicleList[0]);
+        
+        // If we have vehicles, set the active one, otherwise prepare for onboarding
+        if (vehicleList.length > 0) {
+          setActiveVehicle(vehicleList[0]);
+        } else {
+          // No vehicles yet, suggest onboarding
+          setActiveVehicle(null);
+        }
       } catch (error) {
         console.error('Error fetching vehicles:', error.message);
-        
-        // Get mock data ready
-        let vehicleList = garageVehicles;
         
         // Still check for onboarded vehicle even on error
         const savedVehicleProfileString = localStorage.getItem('vehicleProfile');
@@ -232,24 +234,32 @@ function GarageVaultPage() {
                 purchase_date: savedVehicleProfile.purchaseDate || new Date().toISOString().split('T')[0],
                 vehicle_type: 'Car'
               };
-              vehicleList = [onboardedVehicle, ...vehicleList];
+              setVehicles([onboardedVehicle]);
+              setActiveVehicle(onboardedVehicle);
+            } else {
+              setVehicles([]);
+              setActiveVehicle(null);
             }
           } catch (error) {
             console.error('Error parsing saved vehicle on fallback:', error);
+            setVehicles([]);
+            setActiveVehicle(null);
           }
+        } else {
+          setVehicles([]);
+          setActiveVehicle(null);
         }
-        
-        setVehicles(vehicleList);
-        setActiveVehicle(vehicleList[0]);
       }
       setLoading(false);
     }
     
     fetchVehicles();
     
-    // Simulate real-time metrics updates
+    // Update car metrics at regular intervals when a vehicle is selected
     const metricsInterval = setInterval(() => {
-      updateCarMetrics();
+      if (activeVehicle) {
+        updateCarMetrics();
+      }
     }, 5000);
     
     return () => clearInterval(metricsInterval);
@@ -499,6 +509,82 @@ function GarageVaultPage() {
     }, 1500);
   };
   
+  // Handler for opening the vehicle onboarding wizard
+  const handleOpenVehicleOnboarding = () => {
+    setShowVehicleOnboarding(true);
+  };
+
+  // Handler for completing vehicle onboarding
+  const handleVehicleOnboardingComplete = () => {
+    // Vehicle data is saved directly to localStorage by the VehicleOnboardingWizard
+    // Refresh the page to get the updated vehicle data
+    window.location.reload();
+  };
+
+  // Conditional rendering - if no vehicles and onboarding wizard is not shown
+  if (vehicles.length === 0 && !loading && !showVehicleOnboarding) {
+    return (
+      <div className="min-h-screen pb-20 bg-black text-white flex flex-col items-center justify-center p-6">
+        <div className="max-w-2xl w-full">
+          <div className="text-center mb-8">
+            <Car size={64} className="mx-auto text-blue-400 mb-4" />
+            <h1 className="text-3xl font-bold text-blue-400">Welcome to Garage Vault</h1>
+            <p className="text-gray-400 mt-4">
+              It looks like you haven't added any vehicles yet. Let's get started by setting up your first vehicle.
+            </p>
+          </div>
+          
+          <div className="bg-gray-900 border border-gray-800 rounded-lg p-6 mb-8">
+            <h2 className="text-xl font-semibold text-white mb-4">Why Add Your Vehicle?</h2>
+            <ul className="space-y-2 text-gray-300">
+              <li className="flex items-start">
+                <Gauge className="h-5 w-5 text-blue-400 mr-2 mt-1" />
+                <span>Track performance metrics and maintenance history</span>
+              </li>
+              <li className="flex items-start">
+                <Shield className="h-5 w-5 text-blue-400 mr-2 mt-1" />
+                <span>Get personalized maintenance recommendations</span>
+              </li>
+              <li className="flex items-start">
+                <RefreshCw className="h-5 w-5 text-blue-400 mr-2 mt-1" />
+                <span>Monitor vehicle health in real-time</span>
+              </li>
+              <li className="flex items-start">
+                <Wrench className="h-5 w-5 text-blue-400 mr-2 mt-1" />
+                <span>Log modifications and upgrades</span>
+              </li>
+            </ul>
+          </div>
+          
+          <div className="flex justify-center">
+            <button 
+              onClick={handleOpenVehicleOnboarding}
+              className="flex items-center px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium transition-colors"
+            >
+              <Plus size={18} className="mr-2" />
+              Add Your First Vehicle
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Show vehicle onboarding wizard when triggered
+  if (showVehicleOnboarding) {
+    return (
+      <div className="min-h-screen pb-20 bg-black text-white p-6">
+        <div className="max-w-3xl mx-auto">
+          <h1 className="text-2xl font-bold text-blue-400 mb-6 flex items-center">
+            <Car size={28} className="mr-2" />
+            Add Vehicle to Garage Vault
+          </h1>
+          <VehicleOnboardingWizard />
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div id="garageVaultSection" className="bg-black min-h-screen" aria-labelledby="garageVaultHeading">
       {/* Form Modals */}
@@ -669,7 +755,7 @@ function GarageVaultPage() {
             </div>
             
             <button 
-              onClick={() => setShowAddVehicleForm(true)}
+              onClick={handleOpenVehicleOnboarding}
               className="apex-button-sm flex items-center bg-green-600 hover:bg-green-700"
             >
               <Plus size={16} className="mr-2" />
