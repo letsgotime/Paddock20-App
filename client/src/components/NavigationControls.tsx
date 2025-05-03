@@ -1,99 +1,109 @@
-import React, { useEffect, useState, useRef } from 'react';
+import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { ArrowLeft, ArrowRight, Home } from 'lucide-react';
 import { useNavigate, useLocation } from 'react-router-dom';
 
+// Constants for localStorage keys
 const HISTORY_KEY = 'paddock20_navigation_history';
 const CURRENT_INDEX_KEY = 'paddock20_navigation_index';
 
+/**
+ * NavigationControls - A persistent navigation bar for Paddock Dashboard
+ * 
+ * This component provides consistent back/forward/home navigation
+ * that stays anchored to the bottom of the screen at all times.
+ */
 const NavigationControls: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Navigation state
   const [canGoBack, setCanGoBack] = useState(false);
   const [canGoForward, setCanGoForward] = useState(false);
-  // Flag to track router-triggered navigation vs button navigation
-  const isNavigatingProgrammatically = useRef(false);
+  const isNavigatingRef = useRef(false);
   
+  // Load history from localStorage on initial load with a fallback
   const [navigationHistory, setNavigationHistory] = useState<string[]>(() => {
-    // Load history from sessionStorage on initial load
     try {
-      const savedHistory = sessionStorage.getItem(HISTORY_KEY);
-      return savedHistory ? JSON.parse(savedHistory) : [];
+      const savedHistory = localStorage.getItem(HISTORY_KEY);
+      const parsedHistory = savedHistory ? JSON.parse(savedHistory) : ['/'];
+      return Array.isArray(parsedHistory) && parsedHistory.length > 0 
+        ? parsedHistory 
+        : ['/'];
     } catch (e) {
       console.error('Error loading navigation history:', e);
-      return [];
+      return ['/'];
     }
   });
   
+  // Load current index with safety checks
   const [currentIndex, setCurrentIndex] = useState<number>(() => {
-    // Load current index from sessionStorage on initial load
     try {
-      const savedIndex = sessionStorage.getItem(CURRENT_INDEX_KEY);
-      return savedIndex ? parseInt(savedIndex, 10) : -1;
+      const savedIndex = localStorage.getItem(CURRENT_INDEX_KEY);
+      const parsedIndex = savedIndex ? parseInt(savedIndex, 10) : 0;
+      return !isNaN(parsedIndex) && parsedIndex >= 0 ? parsedIndex : 0;
     } catch (e) {
       console.error('Error loading navigation index:', e);
-      return -1;
+      return 0;
     }
   });
 
   // Debug function for development
-  const logNavigationState = () => {
-    if (process.env.NODE_ENV === 'development') {
-      console.log('Navigation State:', {
-        currentPath: location?.pathname,
-        history: navigationHistory,
-        currentIndex,
-        canGoBack,
-        canGoForward,
-      });
-    }
-  };
+  const logNavigationState = useCallback(() => {
+    console.log('Navigation State:', {
+      currentPath: location?.pathname,
+      history: navigationHistory,
+      currentIndex,
+      canGoBack,
+      canGoForward,
+    });
+  }, [location?.pathname, navigationHistory, currentIndex, canGoBack, canGoForward]);
   
   // Initialize history with current location if empty
   useEffect(() => {
-    // If location is valid and history is empty, initialize it
-    if (location && location.pathname && navigationHistory.length === 0) {
+    if (!location?.pathname) return;
+    
+    if (navigationHistory.length === 0) {
       setNavigationHistory([location.pathname]);
       setCurrentIndex(0);
     }
-  }, [location, navigationHistory.length]);
+  }, [location?.pathname, navigationHistory.length]);
 
-  // Save navigation state to sessionStorage when it changes
+  // Persist navigation state whenever it changes
   useEffect(() => {
     if (navigationHistory.length > 0) {
-      sessionStorage.setItem(HISTORY_KEY, JSON.stringify(navigationHistory));
-      sessionStorage.setItem(CURRENT_INDEX_KEY, currentIndex.toString());
+      localStorage.setItem(HISTORY_KEY, JSON.stringify(navigationHistory));
+      localStorage.setItem(CURRENT_INDEX_KEY, currentIndex.toString());
       
-      // Update navigation control states
+      // Update navigation button states
       setCanGoBack(currentIndex > 0);
       setCanGoForward(currentIndex < navigationHistory.length - 1);
       
+      // Log for debugging
       logNavigationState();
     }
-  }, [navigationHistory, currentIndex]);
+  }, [navigationHistory, currentIndex, logNavigationState]);
 
-  // Track navigation history
+  // Track location changes to update history
   useEffect(() => {
-    // Guard against undefined location
-    if (!location || !location.pathname) return;
+    if (!location?.pathname) return;
     
-    // Skip history updates for programmatic back/forward clicks
-    if (isNavigatingProgrammatically.current) {
-      isNavigatingProgrammatically.current = false;
+    // Skip if this navigation was triggered by our back/forward buttons
+    if (isNavigatingRef.current) {
+      isNavigatingRef.current = false;
       return;
     }
-    
-    // Only update if we have a valid history and the path has changed
+
+    // Handle normal navigation (links, direct URL entry)
     if (navigationHistory.length > 0) {
+      // Only process if path actually changed
       if (navigationHistory[currentIndex] !== location.pathname) {
-        // If we manually clicked a link or otherwise navigated after using back/forward buttons
-        // trim the "future" history
+        // If we navigated after using back button, trim the "future" history
         const newHistory = currentIndex < navigationHistory.length - 1
           ? navigationHistory.slice(0, currentIndex + 1)
           : [...navigationHistory];
         
-        // Prevent duplicate consecutive entries
+        // Prevent adding duplicate consecutive entries
         if (newHistory[newHistory.length - 1] !== location.pathname) {
-          // Add the new path to history
           newHistory.push(location.pathname);
           setNavigationHistory(newHistory);
           setCurrentIndex(newHistory.length - 1);
@@ -102,16 +112,14 @@ const NavigationControls: React.FC = () => {
     }
   }, [location?.pathname, navigationHistory, currentIndex]);
 
-  // Handle browser forward/back buttons
+  // Handle browser's native back/forward buttons
   useEffect(() => {
-    // Skip if location isn't available yet
-    if (!location || !location.pathname) return;
+    if (!location?.pathname) return;
     
     const handlePopState = () => {
-      // Safely check if pathname exists and is in history
       if (location?.pathname) {
         const pathIndex = navigationHistory.indexOf(location.pathname);
-        if (pathIndex >= 0) {
+        if (pathIndex >= 0 && pathIndex !== currentIndex) {
           setCurrentIndex(pathIndex);
         }
       }
@@ -119,136 +127,112 @@ const NavigationControls: React.FC = () => {
 
     window.addEventListener('popstate', handlePopState);
     return () => window.removeEventListener('popstate', handlePopState);
-  }, [navigationHistory, location?.pathname]);
+  }, [navigationHistory, location?.pathname, currentIndex]);
 
-  const goBack = () => {
-    // Always go back in browser history
-    window.history.back();
-    
-    // Let browser handle it
-    setTimeout(() => {
-      // Fallback for safety - if window.history.back() doesn't trigger
-      if (currentIndex > 0) {
-        isNavigatingProgrammatically.current = true;
-        const prevPath = navigationHistory[currentIndex - 1];
-        setCurrentIndex(currentIndex - 1);
-        navigate(prevPath);
-      } else {
-        navigate(-1);
-      }
-    }, 50);
-  };
+  // Navigation functions
+  const goBack = useCallback(() => {
+    if (currentIndex > 0) {
+      isNavigatingRef.current = true;
+      const prevPath = navigationHistory[currentIndex - 1];
+      setCurrentIndex(currentIndex - 1);
+      navigate(prevPath);
+    }
+  }, [navigate, navigationHistory, currentIndex]);
 
-  const goForward = () => {
-    // Always go forward in browser history
-    window.history.forward();
-    
-    // Let browser handle it
-    setTimeout(() => {
-      // Fallback for safety - if window.history.forward() doesn't trigger
-      if (currentIndex < navigationHistory.length - 1) {
-        isNavigatingProgrammatically.current = true;
-        const nextPath = navigationHistory[currentIndex + 1];
-        setCurrentIndex(currentIndex + 1);
-        navigate(nextPath);
-      } else {
-        navigate(1);
-      }
-    }, 50);
-  };
+  const goForward = useCallback(() => {
+    if (currentIndex < navigationHistory.length - 1) {
+      isNavigatingRef.current = true;
+      const nextPath = navigationHistory[currentIndex + 1];
+      setCurrentIndex(currentIndex + 1);
+      navigate(nextPath);
+    }
+  }, [navigate, navigationHistory, currentIndex]);
 
-  const goHome = () => {
-    // Add home to history only if we're not already there and location is valid
-    if (location?.pathname && location.pathname !== '/') {
-      // Do not set isNavigatingProgrammatically flag here
-      // as we want to add a new history entry for the home path
+  const goHome = useCallback(() => {
+    if (location?.pathname !== '/') {
       navigate('/');
     }
-  };
+  }, [navigate, location?.pathname]);
 
-  // Get a friendly name for the current path
-  const getPathDisplayName = (path: string | undefined): string => {
-    // Handle undefined or null path
+  // Get a friendly display name for the path
+  const getPathDisplayName = useCallback((path: string | undefined): string => {
     if (!path) return 'Home';
-    
-    // Handle root path
     if (path === '/') return 'Home';
     
-    // Handle special cases - check these first
+    // Handle special cases first
     if (path.startsWith('/new-weather-center')) return 'Weather Center';
     if (path.startsWith('/garage-vault')) return 'Garage Vault';
     if (path.startsWith('/manifestation-station')) return 'Manifestation Station';
+    if (path.startsWith('/paddock-dashboard')) return 'Paddock Dashboard';
+    if (path.startsWith('/dashboard')) return 'Dashboard';
+    if (path.startsWith('/my-juice-box')) return 'Juice Box';
     
     try {
-      // Remove leading slash and convert hyphens to spaces
+      // Format other paths
       const baseName = path.substring(1).replace(/-/g, ' ');
-      
-      // Capitalize each word
       return baseName
         .split(' ')
         .map(word => word.charAt(0).toUpperCase() + word.slice(1))
         .join(' ');
     } catch (error) {
-      console.error('Error formatting path name:', error);
       return 'Unknown Page';
     }
-  };
+  }, []);
 
-  // Safely get the current page name
-  const currentPageName = location?.pathname ? getPathDisplayName(location.pathname) : 'Home';
-  
-  // Previous and next page names
-  const prevPageName = canGoBack && navigationHistory[currentIndex - 1] 
-    ? getPathDisplayName(navigationHistory[currentIndex - 1]) 
-    : '';
-    
-  const nextPageName = canGoForward && navigationHistory[currentIndex + 1] 
-    ? getPathDisplayName(navigationHistory[currentIndex + 1]) 
-    : '';
+  // Current page name for display
+  const currentPageName = getPathDisplayName(location?.pathname);
 
   return (
-    <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 flex justify-center">
-      <div className="flex items-center space-x-2 px-3 py-1 bg-black/95 backdrop-blur rounded-full border border-blue-900/30 shadow-lg shadow-blue-900/10">
+    <div 
+      className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-[9999] flex justify-center pointer-events-auto"
+      style={{ 
+        filter: 'drop-shadow(0 4px 6px rgba(0, 0, 0, 0.5))',
+        willChange: 'transform'
+      }}
+    >
+      <div className="flex items-center space-x-2 px-4 py-2 bg-black/95 backdrop-blur-lg rounded-full border border-blue-900/50 shadow-xl">
         <button
           onClick={goBack}
-          className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${
-            true 
-              ? 'text-blue-400 hover:bg-blue-900/30 hover:text-blue-300 active:bg-blue-900/50' 
-              : 'text-gray-600 cursor-not-allowed'
+          disabled={!canGoBack}
+          className={`w-10 h-10 flex items-center justify-center rounded-full transition-all duration-200 ${
+            canGoBack 
+              ? 'text-blue-400 hover:bg-blue-900/30 hover:text-blue-300 active:bg-blue-900/50 active:scale-95' 
+              : 'text-gray-600 opacity-50 cursor-not-allowed'
           }`}
-          aria-label={`Go back`}
-          title={`Back`}
+          aria-label="Go back"
+          title="Back"
         >
           <ArrowLeft size={20} />
         </button>
         
-        <div className="mx-0.5 h-5 w-px bg-blue-900/40"></div>
+        <div className="mx-1 h-5 w-px bg-blue-900/50"></div>
         
         <button
           onClick={goHome}
-          className="w-10 h-10 flex items-center justify-center rounded-full text-blue-400 hover:bg-blue-900/30 hover:text-blue-300 active:bg-blue-900/50 transition-all"
+          className="w-10 h-10 flex items-center justify-center rounded-full text-blue-400 hover:bg-blue-900/30 hover:text-blue-300 active:bg-blue-900/50 active:scale-95 transition-all duration-200"
           aria-label="Go to home page"
-          title="Go to home page"
+          title="Home"
         >
           <Home size={20} />
         </button>
         
-        <div className="mx-0.5 h-5 w-px bg-blue-900/40"></div>
+        <div className="mx-1 h-5 w-px bg-blue-900/50"></div>
         
         <button
           onClick={goForward}
-          className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${
-            true 
-              ? 'text-blue-400 hover:bg-blue-900/30 hover:text-blue-300 active:bg-blue-900/50' 
-              : 'text-gray-600 cursor-not-allowed'
+          disabled={!canGoForward}
+          className={`w-10 h-10 flex items-center justify-center rounded-full transition-all duration-200 ${
+            canGoForward
+              ? 'text-blue-400 hover:bg-blue-900/30 hover:text-blue-300 active:bg-blue-900/50 active:scale-95' 
+              : 'text-gray-600 opacity-50 cursor-not-allowed'
           }`}
-          aria-label={`Go forward`}
-          title={`Forward`}
+          aria-label="Go forward"
+          title="Forward"
         >
           <ArrowRight size={20} />
         </button>
         
-        <div className="hidden md:block mx-2 text-xs text-blue-400 opacity-60 font-semibold">
+        <div className="ml-1 text-xs text-blue-400 font-medium hidden sm:block">
           {currentPageName}
         </div>
       </div>
