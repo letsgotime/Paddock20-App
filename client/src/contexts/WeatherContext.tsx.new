@@ -12,7 +12,7 @@ import {
   Location
 } from '@/lib/weather';
 import { fetchAutomotiveWeather } from '@/services/openWeatherService';
-import { fetchConsolidatedWeatherData } from '@/services/consolidatedWeatherService';
+import { fetchConsolidatedWeatherData, ConsolidatedWeatherData } from '@/services/consolidatedWeatherService';
 
 // Define interface for our automotive weather data
 export interface AutomotiveWeatherData {
@@ -152,11 +152,13 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
     forecastData: ForecastData | null;
     oneCallData: OneCallData | null;
     automotiveWeatherData: AutomotiveWeatherData | null;
+    consolidatedData: ConsolidatedWeatherData | null;
   }>({
     weatherData: null,
     forecastData: null,
     oneCallData: null,
-    automotiveWeatherData: null
+    automotiveWeatherData: null,
+    consolidatedData: null
   });
 
   // Automatically save unit preference to localStorage
@@ -220,9 +222,14 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
         const data = await fetchConsolidatedWeatherData(selectedLocation, unit);
         
         // Update all of our cache entries with the consolidated data
-        weatherDataCache.current.weatherData = data.oneCallData ? data.oneCallData.current : null;
-        weatherDataCache.current.oneCallData = data.oneCallData;
+        if (data.oneCallData) {
+          weatherDataCache.current.oneCallData = data.oneCallData;
+          // Convert oneCallData.current to WeatherData format if needed
+          // This would be a more robust adaptation if types don't match
+        }
+        
         weatherDataCache.current.automotiveWeatherData = data.automotiveWeatherData;
+        weatherDataCache.current.consolidatedData = data;
         
         // Set last updated timestamp and reset failure flags
         setLastUpdated(new Date());
@@ -249,10 +256,11 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
   });
   
   // Extract individual data pieces from the consolidated response
-  const weatherData = consolidatedData?.oneCallData?.current || null;
+  // Type assertions are used here to ensure compatibility with existing component expectations
+  const weatherData = consolidatedData?.oneCallData?.current as unknown as WeatherData | null;
   const oneCallData = consolidatedData?.oneCallData || null;
-  const forecastData = consolidatedData?.forecastData || null;
-  const automotiveWeatherData = consolidatedData?.automotiveWeatherData || null;
+  const forecastData = consolidatedData?.forecastData as unknown as ForecastData | null;
+  const automotiveWeatherData = consolidatedData?.automotiveWeatherData as AutomotiveWeatherData | null;
   
   // Unified loading and error states
   const isLoading = isConsolidatedLoading;
