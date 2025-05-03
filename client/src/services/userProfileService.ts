@@ -1,293 +1,607 @@
-interface User {
-  id: number;
-  username: string;
-  email: string;
-  firstName: string | null;
-  lastName: string | null;
-  fullName: string | null;
-  profileImage: string | null;
-  role: 'user' | 'admin' | 'premium' | null;
-}
-import { Vehicle } from '../contexts/VehicleContext';
-import { AutomotiveWeatherData } from '../contexts/FixedWeatherContext';
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 
-// Define the comprehensive user profile data structure
-export interface UserProfileData {
-  // User identity
-  userInfo: {
-    id: number;
-    username: string;
-    email: string;
-    firstName: string | null;
-    lastName: string | null;
-    fullName: string | null;
-    profileImage: string | null;
-    role: 'user' | 'admin' | 'premium' | null;
-    memberSince: string;
-    lastLogin: string;
-  };
-  
-  // Vehicle data
-  vehicleData: {
-    activeVehicle: Vehicle | null;
-    totalVehicles: number;
-    lastModified: string;
-    vehicleHealth: {
-      status: string;
-      alerts: Array<{
-        type: string;
-        message: string;
-        severity: 'low' | 'moderate' | 'high' | 'critical';
-      }>;
-    };
-  };
-  
-  // Driving data (real-time and historical)
-  drivingData: {
-    totalMiles: number;
-    yearToDateMiles: number;
-    lastDrive: {
-      date: string;
-      distanceMiles: number;
-      durationMinutes: number;
-      avgSpeed: number;
-    } | null;
-    drivingStyle: string;
-  };
-  
-  // Weather data (most recent)
-  weatherData: {
-    currentConditions: AutomotiveWeatherData | null;
-    lastChecked: string;
-    savedLocations: string[];
-  };
-  
-  // Module usage stats
-  moduleUsage: {
-    mostUsed: string[];
-    recentlyViewed: string[];
-    recommendations: string[];
-  };
-  
-  // Additional telemetry (OBD data if available)
-  telemetry: {
-    connected: boolean;
-    lastReadingTime: string | null;
-    engineHealth: number;
-    fuelEfficiency: number;
-    batteryHealth: number;
-    diagnosticCodes: string[];
-  };
-  
-  // User preferences
-  preferences: {
-    units: 'imperial' | 'metric';
-    theme: 'dark' | 'light' | 'auto';
-    notificationsEnabled: boolean;
-    soundEnabled: boolean;
-    privacySettings: {
-      shareLocation: boolean;
-      shareDrivingData: boolean;
-      shareVehicleData: boolean;
-    };
-  };
-
-  // Activity timeline
-  activityTimeline: Array<{
+// Types for different data components that will feed into the user profile
+export interface VehicleData {
+  id: string;
+  make: string;
+  model: string;
+  year: number;
+  color?: string;
+  vin?: string;
+  nickname?: string;
+  image?: string;
+  mods?: {
     id: string;
-    timestamp: string;
-    type: 'drive' | 'maintenance' | 'weather' | 'modification' | 'login' | 'other';
-    description: string;
-  }>;
-
-  // Achievements and stats
-  achievements: {
-    badges: string[];
-    points: number;
-    level: number;
-    nextMilestone: string;
-    progress: number;
-  };
+    name: string;
+    category: string;
+    installDate: string;
+  }[];
+  maintenanceRecords?: {
+    id: string;
+    type: string;
+    date: string;
+    mileage: number;
+    notes?: string;
+  }[];
 }
 
-/**
- * Aggregates user profile data from multiple context sources
- */
-export const aggregateUserProfileData = (
-  user: User | null,
-  activeVehicle: Vehicle | null,
-  vehicles: Vehicle[],
-  weatherData: AutomotiveWeatherData | null,
-  lastWeatherUpdate: Date | null
-): UserProfileData => {
-  // Get current date for calculations
-  const now = new Date();
-  const currentYear = now.getFullYear();
+export interface DriveData {
+  id: string;
+  date: string;
+  route?: string;
+  distance?: number;
+  duration?: number;
+  avgSpeed?: number;
+  maxSpeed?: number;
+  weather?: string;
+  notes?: string;
+  images?: string[];
+}
+
+export interface GoalData {
+  id: string;
+  type: 'vehicle' | 'experience' | 'achievement';
+  description: string;
+  targetDate: string;
+  createdAt: string;
+  completedAt?: string;
+  status: 'pending' | 'in-progress' | 'completed' | 'failed';
+}
+
+export interface EventData {
+  id: string;
+  name: string;
+  date: string;
+  location: string;
+  type: string;
+  registered: boolean;
+  images?: string[];
+}
+
+export interface GalleryImage {
+  id: string;
+  url: string;
+  caption?: string;
+  date: string;
+  tags?: string[];
+  vehicle?: string;
+}
+
+export interface WeatherPreference {
+  defaultLocation: {
+    lat: number;
+    lon: number;
+    name: string;
+  };
+  units: 'imperial' | 'metric';
+  savedLocations?: Array<{
+    lat: number;
+    lon: number;
+    name: string;
+  }>;
+}
+
+export interface UserPreference {
+  theme: 'dark' | 'light' | 'auto';
+  notifications: boolean;
+  timeFormat: '12h' | '24h';
+  dateFormat: 'mdy' | 'dmy' | 'ymd';
+  soundEnabled: boolean;
+}
+
+// Main user profile interface that aggregates all data
+export interface UserProfile {
+  id: string;
+  email?: string;
+  username: string;
+  displayName?: string;
+  avatar?: string;
+  memberSince: string;
+  membershipLevel: 'free' | 'premium' | 'elite';
+  bio?: string;
+  location?: string;
   
-  // Extract stored preferences
-  const storedUnits = localStorage.getItem('paddock20_units') || 'imperial';
-  const storedTheme = localStorage.getItem('paddock20_theme') || 'dark';
-  const storedNotifications = localStorage.getItem('paddock20_notifications') === 'true';
-  const storedSound = localStorage.getItem('paddock20_sound') === 'true';
-  
-  // Calculate year-to-date mileage from vehicle data
-  const calculateYTDMileage = (): number => {
-    if (!vehicles || vehicles.length === 0) return 0;
-    
-    // This is a placeholder calculation - in a real app this would come from actual drive records
-    // Here we're simulating it based on the current mileage and assuming a portion is from this year
-    return vehicles.reduce((total, vehicle) => {
-      // Assume 30% of current mileage was driven this year (just for demo purposes)
-      const estimatedYTDMiles = Math.round(vehicle.mileage * 0.3);
-      return total + estimatedYTDMiles;
-    }, 0);
+  // Statistics and activity data
+  statistics: {
+    totalDrives: number;
+    totalMiles: number;
+    avgDriveTime: number;
+    favoriteRoads: string[];
+    achievements: number;
+    goalsCompleted: number;
+    eventsAttended: number;
   };
   
-  // Generate the default user info structure
-  const defaultUserInfo = {
-    id: user?.id || 0,
-    username: user?.username || 'Guest User',
-    email: user?.email || '',
-    firstName: user?.firstName || null,
-    lastName: user?.lastName || null,
-    fullName: user?.fullName || user?.username || 'Guest User',
-    profileImage: user?.profileImage || null,
-    role: user?.role || null,
-    memberSince: user ? new Date(Date.now() - 7776000000).toISOString() : '-', // Mock 90 days ago if no date
-    lastLogin: new Date().toISOString(),
-  };
+  // User collections from different parts of the app
+  vehicles: VehicleData[];
+  drives: DriveData[];
+  goals: GoalData[];
+  events: EventData[];
+  gallery: GalleryImage[];
   
-  // Aggregate data from all sources
-  return {
-    userInfo: defaultUserInfo,
-    
-    vehicleData: {
-      activeVehicle,
-      totalVehicles: vehicles?.length || 0,
-      lastModified: activeVehicle?.created_at || new Date().toISOString(),
-      vehicleHealth: {
-        status: activeVehicle?.status || 'Unknown',
-        alerts: activeVehicle ? [
-          // Example alerts based on vehicle data
-          ...(parseInt(activeVehicle.year) < (currentYear - 10) ? [{
-            type: 'maintenance',
-            message: 'Vehicle age exceeds 10 years, consider comprehensive inspection',
-            severity: 'moderate' as 'low' | 'moderate' | 'high' | 'critical'
-          }] : []),
-          ...(activeVehicle.mileage > 50000 ? [{
-            type: 'service',
-            message: 'Mileage exceeds 50,000, check transmission fluid',
-            severity: 'low' as 'low' | 'moderate' | 'high' | 'critical'
-          }] : []),
-        ] : [],
-      },
+  // User settings
+  preferences: UserPreference;
+  weatherPreferences: WeatherPreference;
+  
+  // Last activity timestamp
+  lastActive: string;
+}
+
+// Initial demo data for development
+const demoUserProfile: UserProfile = {
+  id: '1',
+  username: 'driver1',
+  displayName: 'Alex Motorsport',
+  avatar: '/assets/images/default-avatar.png',
+  memberSince: '2023-04-15',
+  membershipLevel: 'premium',
+  bio: 'Passionate driver with a love for mountain roads and track days. Always looking for the perfect line.',
+  location: 'Atlanta, GA',
+  
+  statistics: {
+    totalDrives: 47,
+    totalMiles: 2876,
+    avgDriveTime: 68, // minutes
+    favoriteRoads: ['Blue Ridge Parkway', 'Tail of the Dragon', 'PCH'],
+    achievements: 12,
+    goalsCompleted: 8,
+    eventsAttended: 5
+  },
+  
+  vehicles: [
+    {
+      id: 'v1',
+      make: 'Porsche',
+      model: '911 GT3',
+      year: 2021,
+      color: 'Racing Yellow',
+      nickname: 'Sunshine',
+      image: '/assets/gallery/porsche-911.png',
+      mods: [
+        { id: 'm1', name: 'Sport Exhaust System', category: 'Performance', installDate: '2023-05-12' },
+        { id: 'm2', name: 'Carbon Fiber Spoiler', category: 'Exterior', installDate: '2023-06-28' }
+      ],
+      maintenanceRecords: [
+        { id: 'mr1', type: 'Oil Change', date: '2023-07-15', mileage: 12500, notes: 'Used Mobil 1 0W-40' },
+        { id: 'mr2', type: 'Brake Pads', date: '2023-08-22', mileage: 15000, notes: 'Replaced with racing compound' }
+      ]
+    }
+  ],
+  
+  drives: [
+    {
+      id: 'd1',
+      date: '2023-09-05',
+      route: 'Mountain Pass',
+      distance: 127,
+      duration: 120,
+      avgSpeed: 63,
+      maxSpeed: 85,
+      weather: 'Sunny',
+      notes: 'Perfect day for driving, road was clear',
+      images: ['/assets/gallery/mountain-drive.png']
     },
-    
-    drivingData: {
-      totalMiles: vehicles?.reduce((total, v) => total + v.mileage, 0) || 0,
-      yearToDateMiles: calculateYTDMileage(),
-      lastDrive: {
-        date: new Date(Date.now() - 259200000).toISOString(), // Mock 3 days ago
-        distanceMiles: 28.5,
-        durationMinutes: 45,
-        avgSpeed: 38,
-      },
-      drivingStyle: 'Balanced',
+    {
+      id: 'd2',
+      date: '2023-08-28',
+      route: 'Coastal Highway',
+      distance: 98,
+      duration: 95,
+      avgSpeed: 62,
+      maxSpeed: 78,
+      weather: 'Partly Cloudy',
+      notes: 'Beautiful sunset drive along the coast',
+      images: ['/assets/gallery/coastal-drive.png']
+    }
+  ],
+  
+  goals: [
+    {
+      id: 'g1',
+      type: 'achievement',
+      description: 'Complete advanced driving course',
+      targetDate: '2023-12-15',
+      createdAt: '2023-07-20',
+      status: 'in-progress'
     },
-    
-    weatherData: {
-      currentConditions: weatherData,
-      lastChecked: lastWeatherUpdate ? lastWeatherUpdate.toISOString() : new Date().toISOString(),
-      savedLocations: ['Charlotte, NC', 'Miami, FL'],
+    {
+      id: 'g2',
+      type: 'vehicle',
+      description: 'Install upgraded suspension package',
+      targetDate: '2023-10-30',
+      createdAt: '2023-06-15',
+      completedAt: '2023-09-20',
+      status: 'completed'
+    }
+  ],
+  
+  events: [
+    {
+      id: 'e1',
+      name: 'Cars & Coffee',
+      date: '2023-09-10',
+      location: 'Atlanta Motorsports Park',
+      type: 'meetup',
+      registered: true,
+      images: ['/assets/gallery/cars-coffee.png']
+    }
+  ],
+  
+  gallery: [
+    {
+      id: 'img1',
+      url: '/assets/gallery/car-sunset.png',
+      caption: 'Sunset drive through the mountains',
+      date: '2023-08-15',
+      tags: ['sunset', 'mountains'],
+      vehicle: 'v1'
     },
-    
-    moduleUsage: {
-      mostUsed: ['Weather Paddock', 'Garage Vault', 'Drive Journal'],
-      recentlyViewed: ['Route Planner', 'Weather Paddock', 'Vehicle Mods'],
-      recommendations: ['Seasonal Checklist', 'Tire Monitor', 'Maintenance Schedule'],
+    {
+      id: 'img2',
+      url: '/assets/gallery/car-track.png',
+      caption: 'First track day with the new setup',
+      date: '2023-07-25',
+      tags: ['track', 'racing'],
+      vehicle: 'v1'
+    }
+  ],
+  
+  preferences: {
+    theme: 'dark',
+    notifications: true,
+    timeFormat: '24h',
+    dateFormat: 'mdy',
+    soundEnabled: true
+  },
+  
+  weatherPreferences: {
+    defaultLocation: {
+      lat: 33.7490,
+      lon: -84.3880,
+      name: 'Atlanta, GA'
     },
-    
-    telemetry: {
-      connected: false,
-      lastReadingTime: null,
-      engineHealth: 92,
-      fuelEfficiency: 87,
-      batteryHealth: 95,
-      diagnosticCodes: [],
-    },
-    
-    preferences: {
-      units: storedUnits as 'imperial' | 'metric',
-      theme: storedTheme as 'dark' | 'light' | 'auto',
-      notificationsEnabled: storedNotifications,
-      soundEnabled: storedSound,
-      privacySettings: {
-        shareLocation: true,
-        shareDrivingData: false,
-        shareVehicleData: false,
-      },
-    },
-    
-    activityTimeline: [
+    units: 'imperial',
+    savedLocations: [
       {
-        id: `activity-${Date.now()}-1`,
-        timestamp: new Date(Date.now() - 259200000).toISOString(),
-        type: 'drive',
-        description: 'Completed drive to Blue Ridge Mountains',
-      },
-      {
-        id: `activity-${Date.now()}-2`,
-        timestamp: new Date(Date.now() - 432000000).toISOString(),
-        type: 'maintenance',
-        description: 'Changed oil and filter',
-      },
-      {
-        id: `activity-${Date.now()}-3`,
-        timestamp: new Date(Date.now() - 604800000).toISOString(),
-        type: 'modification',
-        description: 'Added new exhaust system',
-      },
-      {
-        id: `activity-${Date.now()}-4`,
-        timestamp: new Date(Date.now() - 1209600000).toISOString(),
-        type: 'weather',
-        description: 'Checked weather for mountain drive route',
-      },
-    ],
-    
-    achievements: {
-      badges: ['Road Warrior', 'Weather Watcher', 'Maintenance Maven'],
-      points: 1250,
-      level: 4,
-      nextMilestone: 'Curve Commander',
-      progress: 65,
-    },
-  };
+        lat: 34.8970,
+        lon: -85.4808,
+        name: 'Tail of the Dragon'
+      }
+    ]
+  },
+  
+  lastActive: new Date().toISOString()
 };
 
-/**
- * Updates user preferences in local storage
- */
-export const updateUserPreferences = (
-  preferences: Partial<UserProfileData['preferences']>
-): void => {
-  if (preferences.units) {
-    localStorage.setItem('paddock20_units', preferences.units);
+// Create a store with persistence
+export const useUserProfileStore = create(
+  persist<{
+    profile: UserProfile | null;
+    isLoading: boolean;
+    error: string | null;
+    
+    // Actions
+    setProfile: (profile: UserProfile) => void;
+    updateProfile: (updates: Partial<UserProfile>) => void;
+    addVehicle: (vehicle: VehicleData) => void;
+    updateVehicle: (id: string, updates: Partial<VehicleData>) => void;
+    removeVehicle: (id: string) => void;
+    addDrive: (drive: DriveData) => void;
+    updateDrive: (id: string, updates: Partial<DriveData>) => void;
+    removeDrive: (id: string) => void;
+    addGoal: (goal: GoalData) => void;
+    updateGoal: (id: string, updates: Partial<GoalData>) => void;
+    removeGoal: (id: string) => void;
+    addEvent: (event: EventData) => void;
+    updateEvent: (id: string, updates: Partial<EventData>) => void;
+    removeEvent: (id: string) => void;
+    addGalleryImage: (image: GalleryImage) => void;
+    updateGalleryImage: (id: string, updates: Partial<GalleryImage>) => void;
+    removeGalleryImage: (id: string) => void;
+    updateUserPreferences: (preferences: Partial<UserPreference>) => void;
+    updateWeatherPreferences: (preferences: Partial<WeatherPreference>) => void;
+    
+    // For dev purposes - load demo data
+    loadDemoProfile: () => void;
+    resetProfile: () => void;
+  }>(
+    {
+      profile: null,
+      isLoading: false,
+      error: null,
+      
+      setProfile: (profile) => set({ profile }),
+      
+      updateProfile: (updates) => set((state) => ({
+        profile: state.profile ? { ...state.profile, ...updates } : null
+      })),
+      
+      addVehicle: (vehicle) => set((state) => ({
+        profile: state.profile ? {
+          ...state.profile,
+          vehicles: [...state.profile.vehicles, vehicle]
+        } : null
+      })),
+      
+      updateVehicle: (id, updates) => set((state) => ({
+        profile: state.profile ? {
+          ...state.profile,
+          vehicles: state.profile.vehicles.map(v => 
+            v.id === id ? { ...v, ...updates } : v
+          )
+        } : null
+      })),
+      
+      removeVehicle: (id) => set((state) => ({
+        profile: state.profile ? {
+          ...state.profile,
+          vehicles: state.profile.vehicles.filter(v => v.id !== id)
+        } : null
+      })),
+      
+      addDrive: (drive) => set((state) => ({
+        profile: state.profile ? {
+          ...state.profile,
+          drives: [...state.profile.drives, drive],
+          statistics: {
+            ...state.profile.statistics,
+            totalDrives: state.profile.statistics.totalDrives + 1,
+            totalMiles: state.profile.statistics.totalMiles + (drive.distance || 0)
+          }
+        } : null
+      })),
+      
+      updateDrive: (id, updates) => set((state) => ({
+        profile: state.profile ? {
+          ...state.profile,
+          drives: state.profile.drives.map(d => 
+            d.id === id ? { ...d, ...updates } : d
+          )
+        } : null
+      })),
+      
+      removeDrive: (id) => set((state) => {
+        if (!state.profile) return { profile: null };
+        
+        const driveToRemove = state.profile.drives.find(d => d.id === id);
+        const distanceToRemove = driveToRemove?.distance || 0;
+        
+        return {
+          profile: {
+            ...state.profile,
+            drives: state.profile.drives.filter(d => d.id !== id),
+            statistics: {
+              ...state.profile.statistics,
+              totalDrives: state.profile.statistics.totalDrives - 1,
+              totalMiles: state.profile.statistics.totalMiles - distanceToRemove
+            }
+          }
+        };
+      }),
+      
+      addGoal: (goal) => set((state) => ({
+        profile: state.profile ? {
+          ...state.profile,
+          goals: [...state.profile.goals, goal]
+        } : null
+      })),
+      
+      updateGoal: (id, updates) => set((state) => {
+        if (!state.profile) return { profile: null };
+        
+        // Count completed goals if the status changed to completed
+        let goalsCompleted = state.profile.statistics.goalsCompleted;
+        const existingGoal = state.profile.goals.find(g => g.id === id);
+        
+        if (existingGoal && 
+            existingGoal.status !== 'completed' && 
+            updates.status === 'completed') {
+          goalsCompleted += 1;
+        } else if (existingGoal && 
+                  existingGoal.status === 'completed' && 
+                  updates.status && 
+                  updates.status !== 'completed') {
+          goalsCompleted -= 1;
+        }
+        
+        return {
+          profile: {
+            ...state.profile,
+            goals: state.profile.goals.map(g => 
+              g.id === id ? { ...g, ...updates } : g
+            ),
+            statistics: {
+              ...state.profile.statistics,
+              goalsCompleted
+            }
+          }
+        };
+      }),
+      
+      removeGoal: (id) => set((state) => {
+        if (!state.profile) return { profile: null };
+        
+        // Check if the goal to remove was completed
+        const goalToRemove = state.profile.goals.find(g => g.id === id);
+        const wasCompleted = goalToRemove?.status === 'completed';
+        
+        return {
+          profile: {
+            ...state.profile,
+            goals: state.profile.goals.filter(g => g.id !== id),
+            statistics: {
+              ...state.profile.statistics,
+              goalsCompleted: wasCompleted 
+                ? state.profile.statistics.goalsCompleted - 1 
+                : state.profile.statistics.goalsCompleted
+            }
+          }
+        };
+      }),
+      
+      addEvent: (event) => set((state) => ({
+        profile: state.profile ? {
+          ...state.profile,
+          events: [...state.profile.events, event]
+        } : null
+      })),
+      
+      updateEvent: (id, updates) => set((state) => ({
+        profile: state.profile ? {
+          ...state.profile,
+          events: state.profile.events.map(e => 
+            e.id === id ? { ...e, ...updates } : e
+          )
+        } : null
+      })),
+      
+      removeEvent: (id) => set((state) => ({
+        profile: state.profile ? {
+          ...state.profile,
+          events: state.profile.events.filter(e => e.id !== id)
+        } : null
+      })),
+      
+      addGalleryImage: (image) => set((state) => ({
+        profile: state.profile ? {
+          ...state.profile,
+          gallery: [...state.profile.gallery, image]
+        } : null
+      })),
+      
+      updateGalleryImage: (id, updates) => set((state) => ({
+        profile: state.profile ? {
+          ...state.profile,
+          gallery: state.profile.gallery.map(img => 
+            img.id === id ? { ...img, ...updates } : img
+          )
+        } : null
+      })),
+      
+      removeGalleryImage: (id) => set((state) => ({
+        profile: state.profile ? {
+          ...state.profile,
+          gallery: state.profile.gallery.filter(img => img.id !== id)
+        } : null
+      })),
+      
+      updateUserPreferences: (preferences) => set((state) => ({
+        profile: state.profile ? {
+          ...state.profile,
+          preferences: {
+            ...state.profile.preferences,
+            ...preferences
+          }
+        } : null
+      })),
+      
+      updateWeatherPreferences: (preferences) => set((state) => ({
+        profile: state.profile ? {
+          ...state.profile,
+          weatherPreferences: {
+            ...state.profile.weatherPreferences,
+            ...preferences
+          }
+        } : null
+      })),
+      
+      loadDemoProfile: () => set({ profile: demoUserProfile }),
+      
+      resetProfile: () => set({ profile: null, error: null })
+    },
+    {
+      name: 'user-profile-storage',
+      partialize: (state) => ({ profile: state.profile }),
+    }
+  )
+);
+
+// Profile data collector that will get called from different parts of the app
+class UserProfileCollector {
+  // Update last active timestamp
+  static updateLastActive() {
+    const { profile, updateProfile } = useUserProfileStore.getState();
+    if (profile) {
+      updateProfile({ lastActive: new Date().toISOString() });
+    }
   }
   
-  if (preferences.theme) {
-    localStorage.setItem('paddock20_theme', preferences.theme);
+  // Log a page view to track user activity
+  static logPageView(page: string) {
+    this.updateLastActive();
+    // Here you would potentially send analytics data to a server
+    console.log(`User viewed page: ${page}`);
   }
   
-  if (preferences.notificationsEnabled !== undefined) {
-    localStorage.setItem('paddock20_notifications', preferences.notificationsEnabled.toString());
+  // Register data from the Weather component
+  static collectWeatherData(weatherData: any) {
+    // In a real implementation, you might want to store or process this data
+    // For now, we'll just update the last active timestamp
+    this.updateLastActive();
   }
   
-  if (preferences.soundEnabled !== undefined) {
-    localStorage.setItem('paddock20_sound', preferences.soundEnabled.toString());
+  // Register data from the DriveLogger component
+  static collectDriveData(driveData: DriveData) {
+    const { addDrive } = useUserProfileStore.getState();
+    addDrive({
+      ...driveData,
+      id: driveData.id || `drive-${Date.now()}`,
+      date: driveData.date || new Date().toISOString().split('T')[0]
+    });
+    this.updateLastActive();
   }
   
-  if (preferences.privacySettings) {
-    localStorage.setItem('paddock20_privacy', JSON.stringify(preferences.privacySettings));
+  // Register goal data from the GoalSetting component
+  static collectGoalData(goalData: Omit<GoalData, 'id' | 'createdAt' | 'status'>) {
+    const { addGoal } = useUserProfileStore.getState();
+    addGoal({
+      ...goalData,
+      id: `goal-${Date.now()}`,
+      createdAt: new Date().toISOString(),
+      status: 'pending'
+    });
+    this.updateLastActive();
   }
-};
+  
+  // Register image data from the Gallery component
+  static collectGalleryImage(imageData: Omit<GalleryImage, 'id'>) {
+    const { addGalleryImage } = useUserProfileStore.getState();
+    addGalleryImage({
+      ...imageData,
+      id: `img-${Date.now()}`
+    });
+    this.updateLastActive();
+  }
+  
+  // Collect vehicle data from the Vehicle component
+  static collectVehicleData(vehicleData: Omit<VehicleData, 'id'>) {
+    const { addVehicle } = useUserProfileStore.getState();
+    addVehicle({
+      ...vehicleData,
+      id: `vehicle-${Date.now()}`
+    });
+    this.updateLastActive();
+  }
+  
+  // Update stats when a user attends an event
+  static recordEventAttendance(eventId: string) {
+    const { profile, updateEvent, updateProfile } = useUserProfileStore.getState();
+    if (profile) {
+      // Mark the event as attended
+      updateEvent(eventId, { registered: true });
+      
+      // Update statistics
+      updateProfile({
+        statistics: {
+          ...profile.statistics,
+          eventsAttended: profile.statistics.eventsAttended + 1
+        }
+      });
+      
+      this.updateLastActive();
+    }
+  }
+}
+
+export default UserProfileCollector;
