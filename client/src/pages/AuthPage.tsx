@@ -1,5 +1,4 @@
-import React, { useState } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, LogIn, UserPlus } from 'lucide-react';
@@ -19,13 +18,30 @@ import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const AuthPage: React.FC = () => {
-  const { login, register, loading, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+  const [authenticated, setAuthenticated] = useState(false);
   
-  // Redirect if already logged in
-  if (user) {
-    navigate('/dashboard', { replace: true });
+  // Check if user is already authenticated
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      try {
+        const response = await fetch('/api/user');
+        if (response.ok) {
+          setAuthenticated(true);
+          navigate('/dashboard', { replace: true });
+        }
+      } catch (error) {
+        console.error('Error checking auth status:', error);
+      }
+    };
+    
+    checkAuthStatus();
+  }, [navigate]);
+  
+  // Redirect if authenticated
+  if (authenticated) {
     return null;
   }
 
@@ -51,13 +67,46 @@ const AuthPage: React.FC = () => {
   // Handle Login
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setLoading(true);
     
     try {
-      await login(loginData.username, loginData.password);
-      // No need to show toast or navigate - handled in AuthContext
+      const response = await fetch('/api/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: loginData.username,
+          password: loginData.password
+        }),
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Login failed');
+      }
+      
+      const userData = await response.json();
+      
+      toast({
+        title: 'Login Successful',
+        description: `Welcome back, ${userData.username}!`,
+        variant: 'default',
+      });
+      
+      navigate('/dashboard', { replace: true });
     } catch (error) {
-      // Error toast is handled in AuthContext
-      console.error('Login failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Login failed';
+      console.error('Login error:', errorMessage);
+      
+      toast({
+        title: 'Login Failed',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -75,19 +124,50 @@ const AuthPage: React.FC = () => {
       return;
     }
     
+    setLoading(true);
+    
     try {
-      await register({
-        username: registerData.username,
-        email: registerData.email,
-        password: registerData.password,
-        confirmPassword: registerData.confirmPassword,
-        firstName: registerData.firstName || undefined,
-        lastName: registerData.lastName || undefined
+      const response = await fetch('/api/register', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          username: registerData.username,
+          email: registerData.email,
+          password: registerData.password,
+          confirmPassword: registerData.confirmPassword,
+          firstName: registerData.firstName || undefined,
+          lastName: registerData.lastName || undefined
+        }),
+        credentials: 'include',
       });
-      // No need to show toast or navigate - handled in AuthContext
+      
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Registration failed');
+      }
+      
+      const userData = await response.json();
+      
+      toast({
+        title: 'Registration Successful',
+        description: 'Your account has been created successfully!',
+        variant: 'default',
+      });
+      
+      navigate('/dashboard', { replace: true });
     } catch (error) {
-      // Error toast is handled in AuthContext
-      console.error('Registration failed:', error);
+      const errorMessage = error instanceof Error ? error.message : 'Registration failed';
+      console.error('Registration error:', errorMessage);
+      
+      toast({
+        title: 'Registration Failed',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
