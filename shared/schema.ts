@@ -1,6 +1,7 @@
-import { pgTable, serial, text, timestamp, varchar, integer, boolean, pgEnum, real, jsonb } from 'drizzle-orm/pg-core';
+import { pgTable, serial, text, timestamp, varchar, integer, boolean, pgEnum, real, jsonb, index } from 'drizzle-orm/pg-core';
 import { createInsertSchema } from 'drizzle-zod';
 import { z } from 'zod';
+import { relations } from 'drizzle-orm';
 
 // Authentication roles enum
 export const userRoleEnum = pgEnum('user_role', ['user', 'admin', 'premium']);
@@ -31,6 +32,55 @@ export const users = pgTable('users', {
   onboardingCompleted: boolean('onboarding_completed').default(false),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
+});
+
+// Define user relations for better type safety and querying
+export const usersRelations = relations(users, ({ many }) => ({
+  sessions: many(sessions),
+  savedLocations: many(savedLocations),
+  vehicles: many(vehicles),
+}));
+
+// Sessions table for persistent authentication
+export const sessions = pgTable('sessions', {
+  id: varchar('id', { length: 255 }).primaryKey(), // Session ID will be a UUID
+  userId: integer('user_id').notNull().references(() => users.id),
+  expiresAt: timestamp('expires_at').notNull(),
+  userAgent: varchar('user_agent', { length: 255 }),
+  ipAddress: varchar('ip_address', { length: 45 }),
+  lastActive: timestamp('last_active').defaultNow(),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => {
+  return {
+    userIdIdx: index('session_user_id_idx').on(table.userId),
+    expiresAtIdx: index('session_expires_at_idx').on(table.expiresAt),
+  };
+});
+
+// Define session relations
+export const sessionsRelations = relations(sessions, ({ one }) => ({
+  user: one(users, {
+    fields: [sessions.userId],
+    references: [users.id],
+  }),
+}));
+
+// Audit logs for authentication events
+export const authLogs = pgTable('auth_logs', {
+  id: serial('id').primaryKey(),
+  userId: integer('user_id').references(() => users.id),
+  action: varchar('action', { length: 50 }).notNull(), // 'login', 'logout', 'register', 'password_reset', etc.
+  ipAddress: varchar('ip_address', { length: 45 }),
+  userAgent: varchar('user_agent', { length: 255 }),
+  status: varchar('status', { length: 50 }).notNull(), // 'success', 'failed', etc.
+  details: jsonb('details').default({}),
+  createdAt: timestamp('created_at').defaultNow(),
+}, (table) => {
+  return {
+    userIdIdx: index('auth_logs_user_id_idx').on(table.userId),
+    actionIdx: index('auth_logs_action_idx').on(table.action),
+    createdAtIdx: index('auth_logs_created_at_idx').on(table.createdAt),
+  };
 });
 
 // Saved Locations table
@@ -202,6 +252,19 @@ export const insertUserSchema = createInsertSchema(users)
     message: "Passwords don't match",
     path: ["confirmPassword"],
   });
+
+export const insertSessionSchema = createInsertSchema(sessions)
+  .omit({ 
+    createdAt: true, 
+    lastActive: true 
+  });
+
+export const insertAuthLogSchema = createInsertSchema(authLogs)
+  .omit({ 
+    id: true, 
+    createdAt: true 
+  });
+
 export const insertSavedLocationSchema = createInsertSchema(savedLocations).omit({ id: true, createdAt: true, lastAccessed: true });
 export const insertVehicleSchema = createInsertSchema(vehicles).omit({ id: true, createdAt: true, updatedAt: true });
 export const insertTireSchema = createInsertSchema(tires).omit({ id: true, updatedAt: true });
@@ -214,6 +277,12 @@ export const insertModificationSchema = createInsertSchema(modifications).omit({
 // Types
 export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
+
+export type Session = typeof sessions.$inferSelect;
+export type InsertSession = z.infer<typeof insertSessionSchema>;
+
+export type AuthLog = typeof authLogs.$inferSelect;
+export type InsertAuthLog = z.infer<typeof insertAuthLogSchema>;
 
 export type SavedLocation = typeof savedLocations.$inferSelect;
 export type InsertSavedLocation = z.infer<typeof insertSavedLocationSchema>;
