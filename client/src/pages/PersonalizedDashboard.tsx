@@ -100,7 +100,8 @@ const PersonalizedDashboard: React.FC = () => {
       toast({
         title: "Authentication Required",
         description: "Please sign in to access your dashboard",
-        variant: "destructive",
+        variant: "default",
+        className: "bg-blue-700 border-blue-500",
       });
       
       // Return redirect component for unauthenticated users
@@ -113,7 +114,8 @@ const PersonalizedDashboard: React.FC = () => {
     toast({
       title: "Authentication Error",
       description: "Please sign in to access your dashboard",
-      variant: "destructive",
+      variant: "default",
+      className: "bg-blue-700 border-blue-500",
     });
     
     // Return redirect component for context errors
