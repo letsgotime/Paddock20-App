@@ -12,7 +12,7 @@ import {
   Location
 } from '@/lib/weather';
 import { fetchAutomotiveWeather } from '@/services/openWeatherService';
-import { fetchConsolidatedWeatherData } from '@/services/consolidatedWeatherService';
+import { fetchConsolidatedWeatherData, ConsolidatedWeatherData } from '@/services/consolidatedWeatherService';
 
 // Define interface for our automotive weather data
 export interface AutomotiveWeatherData {
@@ -152,11 +152,13 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
     forecastData: ForecastData | null;
     oneCallData: OneCallData | null;
     automotiveWeatherData: AutomotiveWeatherData | null;
+    consolidatedData: ConsolidatedWeatherData | null;
   }>({
     weatherData: null,
     forecastData: null,
     oneCallData: null,
-    automotiveWeatherData: null
+    automotiveWeatherData: null,
+    consolidatedData: null
   });
 
   // Automatically save unit preference to localStorage
@@ -249,7 +251,8 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
   });
   
   // Extract individual data pieces from the consolidated response
-  const weatherData = consolidatedData?.oneCallData?.current || null;
+  // Handle type conversions for component compatibility
+  const weatherData = consolidatedData?.oneCallData?.current as unknown as WeatherData | null;
   const oneCallData = consolidatedData?.oneCallData || null;
   const forecastData = consolidatedData?.forecastData || null;
   const automotiveWeatherData = consolidatedData?.automotiveWeatherData || null;
@@ -317,9 +320,28 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
 
   // Refresh weather data manually with our new consolidated approach
   const refreshWeather = useCallback(() => {
+    // Only proceed if we have a selected location
+    if (!selectedLocation) {
+      console.warn('Cannot refresh weather: No location selected');
+      return;
+    }
+    
+    console.log('Manually refreshing weather data for:', 
+                selectedLocation.name || `${selectedLocation.lat},${selectedLocation.lon}`);
+    
     // We now only need to refetch the consolidated data
-    refetchConsolidatedWeather();
-  }, [refetchConsolidatedWeather]);
+    refetchConsolidatedWeather()
+      .then(() => {
+        setFailureCount(0);
+        setLastUpdated(new Date());
+        setIsUsingFallbackData(false);
+        console.log('Weather data refreshed successfully');
+      })
+      .catch(error => {
+        console.error('Error refreshing consolidated weather data:', error);
+        setFailureCount(prev => prev + 1);
+      });
+  }, [selectedLocation, refetchConsolidatedWeather]);
 
   const value: WeatherContextType = {
     unit,

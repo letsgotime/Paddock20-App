@@ -1,11 +1,165 @@
+/**
+ * Consolidated Weather API Routes
+ * 
+ * This module provides a single endpoint that combines multiple weather API calls
+ * into one response, reducing the number of calls made to the OpenWeather API
+ * and helping to avoid rate limiting issues.
+ */
+
 import { Router } from 'express';
+import axios from 'axios';
 
 const router = Router();
 
-// Route to get the OpenWeather API key
-router.get('/api/weather-key', (req, res) => {
-  // Send the API key from server environment
-  res.json({ apiKey: process.env.OPENWEATHER_API_KEY });
+// Cache for weather data to minimize API calls
+const weatherCache: {
+  data: Record<string, { data: any; timestamp: number }>;
+  maxAge: number;
+} = {
+  data: {},
+  // Cache duration: 2 hours (in milliseconds)
+  maxAge: 2 * 60 * 60 * 1000
+};
+
+/**
+ * GET /consolidated-weather
+ * 
+ * Returns combined weather data from multiple endpoints in a single response.
+ * This drastically reduces the number of API calls made by the client.
+ */
+router.get('/consolidated-weather', async (req, res) => {
+  try {
+    const { lat, lon, units = 'imperial' } = req.query;
+    
+    if (!lat || !lon) {
+      return res.status(400).json({ 
+        error: 'Missing required parameters: lat and lon are required' 
+      });
+    }
+    
+    // Generate a cache key based on coordinates and units
+    const cacheKey = `${lat},${lon},${units}`;
+    
+    // Check if we have valid cached data
+    const now = Date.now();
+    const cachedEntry = weatherCache.data[cacheKey];
+    
+    if (cachedEntry && (now - cachedEntry.timestamp) < weatherCache.maxAge) {
+      console.log(`Using cached consolidated weather data for ${lat},${lon}`);
+      return res.json(cachedEntry.data);
+    }
+    
+    // Make all API calls in parallel for efficiency
+    const [weatherResponse, forecastResponse, oneCallResponse, automotiveResponse] = await Promise.all([
+      fetchWeatherData(lat as string, lon as string, units as string),
+      fetchForecastData(lat as string, lon as string, units as string),
+      fetchOneCallData(lat as string, lon as string, units as string),
+      fetchAutomotiveWeatherData(lat as string, lon as string, units as string)
+    ]);
+    
+    // Combine all data into a single response
+    const consolidatedData = {
+      weatherData: weatherResponse.data,
+      forecastData: forecastResponse.data,
+      oneCallData: oneCallResponse.data,
+      automotiveWeatherData: automotiveResponse.data,
+      timestamp: now
+    };
+    
+    // Cache the response
+    weatherCache.data[cacheKey] = {
+      data: consolidatedData,
+      timestamp: now
+    };
+    
+    // Send the consolidated response
+    return res.json(consolidatedData);
+  } catch (error: any) {
+    console.error('Error in consolidated weather endpoint:', error.message);
+    
+    // Check if error is due to rate limiting
+    if (error.response && error.response.status === 429) {
+      return res.status(429).json({
+        error: 'Rate limit exceeded. Please try again later.',
+        message: error.message
+      });
+    }
+    
+    return res.status(500).json({
+      error: 'Failed to fetch weather data',
+      message: error.message
+    });
+  }
 });
+
+/**
+ * Helper function to fetch basic weather data
+ */
+async function fetchWeatherData(lat: string, lon: string, units: string) {
+  const url = `${process.env.OPENWEATHER_API_URL || 'https://api.openweathermap.org/data/2.5'}/weather`;
+  return await axios.get(url, {
+    params: {
+      lat,
+      lon,
+      units,
+      appid: process.env.OPENWEATHER_API_KEY
+    }
+  });
+}
+
+/**
+ * Helper function to fetch forecast data
+ */
+async function fetchForecastData(lat: string, lon: string, units: string) {
+  const url = `${process.env.OPENWEATHER_API_URL || 'https://api.openweathermap.org/data/2.5'}/forecast`;
+  return await axios.get(url, {
+    params: {
+      lat,
+      lon,
+      units,
+      appid: process.env.OPENWEATHER_API_KEY
+    }
+  });
+}
+
+/**
+ * Helper function to fetch one-call data
+ */
+async function fetchOneCallData(lat: string, lon: string, units: string) {
+  const url = `${process.env.OPENWEATHER_API_URL || 'https://api.openweathermap.org/data/2.5'}/onecall`;
+  return await axios.get(url, {
+    params: {
+      lat,
+      lon,
+      units,
+      exclude: 'minutely', // Exclude minutely data to reduce response size
+      appid: process.env.OPENWEATHER_API_KEY
+    }
+  });
+}
+
+/**
+ * Helper function to fetch automotive weather data
+ */
+async function fetchAutomotiveWeatherData(lat: string, lon: string, units: string) {
+  // This endpoint is assumed to be implemented on your server
+  try {
+    // If you have an internal API, call it directly
+    const url = `/api/automotive-weather`;
+    return await axios.get(url, {
+      params: { lat, lon, units }
+    });
+  } catch (error) {
+    // If automotive data fails, return a basic response
+    // This is non-critical data, so we don't want to fail the entire request
+    console.error('Error fetching automotive weather data:', error);
+    return { 
+      data: { 
+        error: 'Automotive weather data unavailable',
+        location: { lat, lon }
+      } 
+    };
+  }
+}
 
 export default router;
