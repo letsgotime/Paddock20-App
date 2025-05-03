@@ -589,9 +589,15 @@ class UserProfileCollector {
   // Collect vehicle data from the Vehicle component
   static collectVehicleData(vehicleData: Omit<VehicleData, 'id'>) {
     const { addVehicle } = useUserProfileStore.getState();
+    
+    // Create a user-friendly ID that includes vehicle make and model
+    const vehicleMake = vehicleData.make || '';
+    const vehicleModel = vehicleData.model || '';
+    const formattedVehicleId = `${vehicleMake.toLowerCase()}-${vehicleModel.toLowerCase()}-${Date.now()}`.replace(/\s+/g, '-');
+    
     addVehicle({
       ...vehicleData,
-      id: `vehicle-${Date.now()}`
+      id: formattedVehicleId
     });
     this.updateLastActive();
   }
