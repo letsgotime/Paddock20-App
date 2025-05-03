@@ -236,6 +236,244 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Using only OpenWeather API for all weather services
   
+  // Consolidated weather API endpoint
+  app.get('/api/consolidated-weather', async (req, res) => {
+    try {
+      const { lat, lon, units = 'imperial' } = req.query;
+      
+      if (!lat || !lon) {
+        return res.status(400).json({ 
+          error: 'Missing required parameters: lat and lon are required' 
+        });
+      }
+      
+      // Generate a cache key based on coordinates and units
+      const cacheKey = `consolidated:${lat}:${lon}:${units}`;
+      
+      // Check if we have valid cached data
+      const now = Date.now();
+      const cachedData = weatherDataCache.get(cacheKey);
+      
+      if (cachedData && (now - cachedData.timestamp < 2 * 60 * 60 * 1000)) {
+        console.log(`Using cached consolidated weather data for ${lat},${lon}`);
+        return res.json(cachedData.data);
+      }
+      
+      // Initialize the API key to use - either user provided or default
+      const apiKey = userProvidedOpenWeatherKey || OPENWEATHER_API_KEY;
+      
+      // Make weather API request
+      const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=${units}&appid=${apiKey}`;
+      const weatherResponse = await fetch(weatherUrl);
+      if (!weatherResponse.ok) {
+        throw new Error(`Weather API error: ${weatherResponse.status}`);
+      }
+      const weatherData = await weatherResponse.json();
+      
+      // Make forecast API request
+      const forecastUrl = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&units=${units}&appid=${apiKey}`;
+      const forecastResponse = await fetch(forecastUrl);
+      if (!forecastResponse.ok) {
+        throw new Error(`Forecast API error: ${forecastResponse.status}`);
+      }
+      const forecastData = await forecastResponse.json();
+      
+      // Make onecall API request - try/catch so we can still return weather data without OneCall
+      let oneCallData;
+      try {
+        // Try the OneCall API key first
+        const onecallUrl = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&units=${units}&exclude=minutely&appid=${ONECALL_API_KEY || apiKey}`;
+        const onecallResponse = await fetch(onecallUrl);
+        if (!onecallResponse.ok) {
+          console.warn(`OneCall API error: ${onecallResponse.status} - falling back to basic weather data`);
+          // Generate basic equivalent to oneCallData from the weather and forecast data
+          oneCallData = {
+            lat: Number(lat),
+            lon: Number(lon),
+            timezone: "UTC", // Default since we don't have this data
+            current: {
+              dt: weatherData.dt,
+              sunrise: weatherData.sys.sunrise,
+              sunset: weatherData.sys.sunset,
+              temp: weatherData.main.temp,
+              feels_like: weatherData.main.feels_like,
+              pressure: weatherData.main.pressure,
+              humidity: weatherData.main.humidity,
+              dew_point: 0, // Not available in basic API
+              uvi: 0, // Not available in basic API
+              clouds: weatherData.clouds.all,
+              visibility: weatherData.visibility,
+              wind_speed: weatherData.wind.speed,
+              wind_deg: weatherData.wind.deg,
+              weather: weatherData.weather,
+              rain: weatherData.rain || {}
+            },
+            hourly: forecastData.list.slice(0, 24).map(item => ({
+              dt: item.dt,
+              temp: item.main.temp,
+              feels_like: item.main.feels_like,
+              pressure: item.main.pressure,
+              humidity: item.main.humidity,
+              dew_point: 0,
+              uvi: 0,
+              clouds: item.clouds.all,
+              visibility: item.visibility || 10000,
+              wind_speed: item.wind.speed,
+              wind_deg: item.wind.deg,
+              weather: item.weather,
+              pop: item.pop || 0
+            })),
+            daily: [] // Not available from basic forecast, would require additional logic to generate
+          };
+        } else {
+          oneCallData = await onecallResponse.json();
+        }
+      } catch (error) {
+        console.error("Error fetching OneCall data, falling back to basic weather:", error);
+        // Generate basic equivalent to oneCallData from the weather and forecast data
+        oneCallData = {
+          lat: Number(lat),
+          lon: Number(lon),
+          timezone: "UTC", // Default since we don't have this data
+          current: {
+            dt: weatherData.dt,
+            sunrise: weatherData.sys.sunrise,
+            sunset: weatherData.sys.sunset,
+            temp: weatherData.main.temp,
+            feels_like: weatherData.main.feels_like,
+            pressure: weatherData.main.pressure,
+            humidity: weatherData.main.humidity,
+            dew_point: 0, // Not available in basic API
+            uvi: 0, // Not available in basic API
+            clouds: weatherData.clouds.all,
+            visibility: weatherData.visibility,
+            wind_speed: weatherData.wind.speed,
+            wind_deg: weatherData.wind.deg,
+            weather: weatherData.weather,
+            rain: weatherData.rain || {}
+          },
+          hourly: forecastData.list.slice(0, 24).map(item => ({
+            dt: item.dt,
+            temp: item.main.temp,
+            feels_like: item.main.feels_like,
+            pressure: item.main.pressure,
+            humidity: item.main.humidity,
+            dew_point: 0,
+            uvi: 0,
+            clouds: item.clouds.all,
+            visibility: item.visibility || 10000,
+            wind_speed: item.wind.speed,
+            wind_deg: item.wind.deg,
+            weather: item.weather,
+            pop: item.pop || 0
+          })),
+          daily: [] // Not available from basic forecast, would require additional logic to generate
+        };
+      }
+      
+      // Create basic automotive weather data from OneCall data
+      const automotiveWeatherData = {
+        location: {
+          lat: Number(lat),
+          lon: Number(lon),
+          timezone: oneCallData.timezone
+        },
+        current_time: new Date(oneCallData.current.dt * 1000).toISOString(),
+        sunrise_time: new Date(oneCallData.current.sunrise * 1000).toISOString(),
+        sunset_time: new Date(oneCallData.current.sunset * 1000).toISOString(),
+        conditions: {
+          summary: oneCallData.current.weather[0].description,
+          icon: oneCallData.current.weather[0].icon,
+          air_temperature: oneCallData.current.temp,
+          feels_like: oneCallData.current.feels_like,
+          humidity: oneCallData.current.humidity,
+          pressure: oneCallData.current.pressure,
+          wind_speed: oneCallData.current.wind_speed,
+          wind_direction: oneCallData.current.wind_deg,
+          cloud_cover: oneCallData.current.clouds,
+          precipitation: oneCallData.current.rain ? oneCallData.current.rain['1h'] : 0,
+          uv_index: oneCallData.current.uvi,
+          solar_radiation: null
+        },
+        automotive_metrics: {
+          track_surface: {
+            temperature: Math.round(oneCallData.current.temp * 1.2), // Simplified estimate
+            condition: oneCallData.current.rain ? 'Wet' : 'Dry',
+            grip_level: oneCallData.current.rain ? 'Low' : 'High'
+          },
+          tire_temperature_estimates: {
+            soft_compound: Math.round(oneCallData.current.temp * 1.5),
+            medium_compound: Math.round(oneCallData.current.temp * 1.3),
+            hard_compound: Math.round(oneCallData.current.temp * 1.1),
+            street_performance: Math.round(oneCallData.current.temp * 1.2),
+            all_season: Math.round(oneCallData.current.temp * 1.0)
+          },
+          drive_recommendations: {
+            tire_warmup_minutes: {
+              performance: oneCallData.current.temp < 60 ? 10 : 5,
+              street: oneCallData.current.temp < 60 ? 7 : 3,
+              all_season: oneCallData.current.temp < 60 ? 5 : 2
+            },
+            torque_management: {
+              recommended_percentage: oneCallData.current.rain ? 70 : 100,
+              traction_control: oneCallData.current.rain ? 'Recommended' : 'Optional'
+            },
+            tire_pressure_adjustment: oneCallData.current.temp < 50 ? 2 : 0,
+            braking_points: oneCallData.current.rain ? 'Early' : 'Standard'
+          },
+          visibility_assessment: oneCallData.current.visibility > 9000 ? 'Excellent' : 'Reduced',
+          sunglare_risk: (oneCallData.current.weather[0].id === 800 && 
+                          oneCallData.current.dt > oneCallData.current.sunrise &&
+                          oneCallData.current.dt < oneCallData.current.sunset) ? 'High' : 'Low'
+        },
+        hourly_forecast: oneCallData.hourly.slice(0, 12).map((hour: any) => ({
+          time: new Date(hour.dt * 1000).toISOString(),
+          temperature: hour.temp,
+          conditions: hour.weather[0].description,
+          precipitation_chance: hour.pop * 100
+        })),
+        alerts: oneCallData.alerts || [],
+        data_sources: {
+          weather: 'OpenWeather API',
+          solar: 'Estimated'
+        }
+      };
+      
+      // Combine all data into a single response
+      const consolidatedData = {
+        weatherData,
+        forecastData,
+        oneCallData,
+        automotiveWeatherData,
+        timestamp: now
+      };
+      
+      // Cache the response
+      weatherDataCache.set(cacheKey, {
+        data: consolidatedData,
+        timestamp: now
+      });
+      
+      // Send the consolidated response
+      return res.json(consolidatedData);
+    } catch (error: any) {
+      console.error('Error in consolidated weather endpoint:', error.message);
+      
+      // Check if error is due to rate limiting
+      if (error.response && error.response.status === 429) {
+        return res.status(429).json({
+          error: 'Rate limit exceeded. Please try again later.',
+          message: error.message
+        });
+      }
+      
+      return res.status(500).json({
+        error: 'Failed to fetch weather data',
+        message: error.message
+      });
+    }
+  });
+  
   // Immediately check API health on startup
   await checkWeatherApiHealth();
   

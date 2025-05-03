@@ -5,11 +5,12 @@
  * to reduce API rate limiting issues and optimize data fetching.
  */
 
-import { OneCallData, Location } from '@/lib/weather';
+import { OneCallData, ForecastData, Location } from '@/lib/weather';
 
 // Define the structure of consolidated weather response
 export interface ConsolidatedWeatherData {
   oneCallData: OneCallData;
+  forecastData: ForecastData;
   automotiveWeatherData: any; // Using any since the structure can vary
   lastUpdated: string;
   cacheTimestamp: number;
@@ -70,6 +71,7 @@ export async function fetchConsolidatedWeatherData(
     // Cache the successful response
     const consolidatedData: ConsolidatedWeatherData = {
       oneCallData: data.oneCallData,
+      forecastData: data.forecastData,
       automotiveWeatherData: data.automotiveWeatherData,
       lastUpdated: new Date().toISOString(),
       cacheTimestamp: Date.now()
