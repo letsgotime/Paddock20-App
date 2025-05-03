@@ -26,24 +26,57 @@ const FixedSoundBar: React.FC = () => {
   const [showSoundMenu, setShowSoundMenu] = useState(false);
   const soundMenuRef = useRef<HTMLDivElement>(null);
   
-  // Check browser history state on mount and whenever it might change
+  // Track navigation history to enable forward/back functionality
+  const [navigationHistory, setNavigationHistory] = useState<string[]>([]);
+  const [currentHistoryIndex, setCurrentHistoryIndex] = useState<number>(0);
+  
+  // Update history when location changes
   useEffect(() => {
-    // Update navigation button states based on window.history
-    const updateNavButtons = () => {
-      setCanGoBack(window.history.length > 1);
-      setCanGoForward(false); // We can't reliably detect forward capability
+    // Check if we're navigating with the back/forward buttons
+    const isPopstate = navigationHistory[currentHistoryIndex] === location.pathname;
+    
+    if (!isPopstate) {
+      // Normal navigation (not back/forward)
+      // Remove any "future" history if we navigated to a new path
+      const newHistory = [...navigationHistory.slice(0, currentHistoryIndex + 1), location.pathname];
+      setNavigationHistory(newHistory);
+      setCurrentHistoryIndex(newHistory.length - 1);
+    }
+    
+    // Update back/forward button states
+    setCanGoBack(currentHistoryIndex > 0);
+    setCanGoForward(currentHistoryIndex < navigationHistory.length - 1);
+  }, [location.pathname]);
+  
+  // Initialize history on first render
+  useEffect(() => {
+    if (navigationHistory.length === 0) {
+      setNavigationHistory([location.pathname]);
+      setCurrentHistoryIndex(0);
+    }
+  }, []);
+  
+  // Listen to browser popstate events (back/forward browser buttons)
+  useEffect(() => {
+    const handlePopstate = () => {
+      // Find the pathname in our history
+      const index = navigationHistory.findIndex(path => path === location.pathname);
+      
+      if (index !== -1) {
+        // Update our current index
+        setCurrentHistoryIndex(index);
+      }
+      
+      // Update button states
+      setCanGoBack(currentHistoryIndex > 0);
+      setCanGoForward(currentHistoryIndex < navigationHistory.length - 1);
     };
     
-    // Initial check
-    updateNavButtons();
-    
-    // Listen for history changes
-    window.addEventListener('popstate', updateNavButtons);
-    
+    window.addEventListener('popstate', handlePopstate);
     return () => {
-      window.removeEventListener('popstate', updateNavButtons);
+      window.removeEventListener('popstate', handlePopstate);
     };
-  }, [location.pathname]); // Re-check when location changes
+  }, [navigationHistory, currentHistoryIndex, location.pathname]);
   
   // Initialize sound settings from sound service
   useEffect(() => {
@@ -70,11 +103,18 @@ const FixedSoundBar: React.FC = () => {
     };
   }, []);
 
-  // Navigation handlers using React Router
+  // Navigation handlers using React Router and our custom history tracking
   const handleBackClick = (e: React.MouseEvent) => {
     if (canGoBack) {
       if (soundEnabled) playMotorsportSound('ui_navigate');
-      navigate(-1); // Go back one step in history
+      
+      // Go to previous path in our history
+      const prevIndex = currentHistoryIndex - 1;
+      if (prevIndex >= 0) {
+        const prevPath = navigationHistory[prevIndex];
+        navigate(prevPath);
+        setCurrentHistoryIndex(prevIndex);
+      }
     } else {
       e.preventDefault();
     }
@@ -83,7 +123,14 @@ const FixedSoundBar: React.FC = () => {
   const handleForwardClick = (e: React.MouseEvent) => {
     if (canGoForward) {
       if (soundEnabled) playMotorsportSound('ui_navigate');
-      navigate(1); // Go forward one step in history
+      
+      // Go to next path in our history
+      const nextIndex = currentHistoryIndex + 1;
+      if (nextIndex < navigationHistory.length) {
+        const nextPath = navigationHistory[nextIndex];
+        navigate(nextPath);
+        setCurrentHistoryIndex(nextIndex);
+      }
     } else {
       e.preventDefault();
     }
