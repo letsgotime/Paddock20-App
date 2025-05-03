@@ -142,12 +142,26 @@ class ProfileDataCollector {
    * Also broadcasts the vehicle data to all site components
    * @param vehicleData Vehicle data (without ID)
    */
-  static collectVehicleData(vehicleData: Omit<VehicleData, 'id'>) {
+  static collectVehicleData(vehicleData: any) {
+    // Check if we should skip broadcasting to prevent circular updates
+    const skipBroadcast = vehicleData?._skipBroadcast || false;
+    const source = vehicleData?._source;
+    
+    if (source === 'ProfileDataCollector') {
+      console.log('Skipping vehicle collection from ProfileDataCollector to avoid loop');
+      return vehicleData;
+    }
+    
     const { addVehicle } = this.store;
     
+    // Create a clean copy without internal flags
+    const cleanData = { ...vehicleData };
+    delete cleanData._skipBroadcast;
+    delete cleanData._source;
+    
     // Create a full vehicle object with generated ID
-    const fullVehicleData: VehicleData = {
-      ...vehicleData as any,
+    const fullVehicleData = {
+      ...cleanData,
       id: `vehicle-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
     };
     
@@ -155,8 +169,15 @@ class ProfileDataCollector {
     addVehicle(fullVehicleData);
     this.updateLastActive();
     
-    // Broadcast to all dashboard components
-    this.broadcastVehicleDataToAllComponents(fullVehicleData);
+    // Broadcast to all dashboard components (if not skipped)
+    if (!skipBroadcast) {
+      // Add source to prevent loops
+      const broadcastData = {
+        ...fullVehicleData,
+        _source: 'ProfileDataCollector'
+      };
+      this.broadcastVehicleDataToAllComponents(broadcastData);
+    }
     
     return fullVehicleData;
   }
@@ -258,6 +279,13 @@ class ProfileDataCollector {
     
     if (!profile) return;
     
+    // Prevent infinite loops by checking if we should process this sync
+    const eventSource = vehicleContextData?.source;
+    if (eventSource === 'ProfileDataCollector') {
+      console.log('Skipping sync from ProfileDataCollector to avoid infinite loop');
+      return;
+    }
+    
     // Log the syncing process
     console.log('Syncing vehicle with profile system:', vehicleContextData.make, vehicleContextData.model);
     
@@ -285,14 +313,19 @@ class ProfileDataCollector {
         purchaseDate: vehicleContextData.purchase_date || vehicleContextData.purchaseDate
       };
       
-      // Update the existing vehicle with any new data
-      updateVehicle(existingVehicle.id, updateData);
-      
-      // Create a full updated vehicle object for broadcasting
+      // Create a modified copy of the object instead of updating state directly
+      // This prevents the infinite update loop
       updatedVehicle = {
         ...existingVehicle,
         ...updateData
       };
+      
+      // Now perform the actual update using the store's method
+      // but block broadcasting this update to prevent further loops
+      updateVehicle(existingVehicle.id, {
+        ...updateData,
+        _skipBroadcast: true
+      });
     } else {
       console.log('Adding new vehicle to profile system');
       // Prepare vehicle data for adding
@@ -317,8 +350,16 @@ class ProfileDataCollector {
       updatedVehicle = this.collectVehicleData(newVehicleData);
     }
     
-    // Now broadcast this vehicle data to all site components
-    this.broadcastVehicleDataToAllComponents(updatedVehicle);
+    // We already broadcast in collectVehicleData for new vehicles
+    // For existing vehicles that were updated with _skipBroadcast
+    // only broadcast if the vehicle wasn't created by collectVehicleData
+    if (existingVehicle && !updatedVehicle._skipBroadcast) {
+      const broadcastData = {
+        ...updatedVehicle,
+        _source: 'ProfileDataCollector'
+      };
+      this.broadcastVehicleDataToAllComponents(broadcastData);
+    }
     
     return updatedVehicle;
   }
