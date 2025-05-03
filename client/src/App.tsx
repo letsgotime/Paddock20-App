@@ -39,6 +39,7 @@ import ProductOrganizerPage from "./pages/ProductOrganizerPage"; // Import the n
 import UserProfileHubPage from "./pages/UserProfileHubPage"; // Import our new User Profile Hub
 import NewDashboardPage from "./pages/NewDashboardPage"; // Import the new dashboard page
 import NewProfilePage from "./pages/NewProfilePage"; // Import the new profile page
+import UnifiedDashboardProfilePage from "./pages/UnifiedDashboardProfilePage"; // Import the unified dashboard and profile page
 import FixedSoundBar from "./components/FixedSoundBar";
 import Footer from "./components/Footer";
 import { WeatherProvider } from "./contexts/ConsolidatedWeatherContext";
@@ -305,6 +306,7 @@ function App() {
                           <Route path="/personalized-dashboard" element={<ProtectedRoute><PersonalizedDashboard /></ProtectedRoute>} />
                           <Route path="/new-dashboard" element={<ProtectedRoute><NewDashboardPage /></ProtectedRoute>} />
                           <Route path="/new-profile" element={<ProtectedRoute><NewProfilePage /></ProtectedRoute>} />
+                          <Route path="/driver-hub" element={<ProtectedRoute><UnifiedDashboardProfilePage /></ProtectedRoute>} />
                           {/* Main Garage Vault Hub - Central repository for all vehicle data */}
                           <Route path="/garage-vault" element={<ProtectedRoute><GarageVaultPage /></ProtectedRoute>} />
                           {/* New GoTime Garage Vault - Enhanced F1-style vehicle management */}
