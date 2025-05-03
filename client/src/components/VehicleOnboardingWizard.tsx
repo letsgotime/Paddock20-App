@@ -6,6 +6,7 @@ import {
 import { useVehicle, VehicleProfile } from '../contexts/VehicleContext';
 import { decodeVIN, DecodedVehicleInfo, validateVIN } from '../services/vinDecoderService';
 import { toast } from '../hooks/use-toast';
+import ProfileDataCollector from '../services/ProfileDataCollector';
 
 // Define the onboarding step interface
 interface OnboardingStep {
@@ -370,12 +371,23 @@ const VehicleOnboardingWizard: React.FC = () => {
       localStorage.setItem('vehicleProfile', JSON.stringify(vehicleData));
       
       // Add the vehicle using the context
-      await addVehicle(vehicleData);
+      const newVehicle = await addVehicle(vehicleData);
+      
+      // Sync vehicle with the user profile system
+      // This ensures the vehicle data is available across the entire app
+      ProfileDataCollector.syncVehicleFromContext({
+        ...vehicleData,
+        vehicle_image: vehicleData.vehicleImage,
+        car_name: vehicleData.nickname,
+        // These are needed to match the expected structure in ProfileDataCollector
+      });
+      
+      console.log('Vehicle added and synced with driver profile:', vehicleData.make, vehicleData.model);
       
       // Show success message
       toast({
         title: 'Vehicle Added Successfully',
-        description: 'Your vehicle has been added to the Garage Vault',
+        description: 'Your vehicle has been added to the Garage Vault and Driver Profile',
         variant: 'default'
       });
       
