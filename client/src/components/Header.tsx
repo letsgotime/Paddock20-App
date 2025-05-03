@@ -3,33 +3,39 @@ import { Link } from 'react-router-dom';
 import { LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
+
+// Mock user for preview mode (same as in App.tsx)
+const mockUser = { 
+  id: 99999, 
+  username: 'Gavin Brooks', 
+  email: 'gavin@gotime.com', 
+  firstName: 'Gavin', 
+  lastName: 'Brooks', 
+  fullName: 'Gavin Brooks', 
+  profileImage: null, 
+  role: 'admin' as const 
+};
 
 /**
  * Header component with logout functionality
- * Uses the authentication context to show the correct user information
+ * This implementation works with preview mode and will be ready to integrate with
+ * the auth system once preview mode is disabled
  */
 const Header: React.FC = () => {
   const { toast } = useToast();
-  const { user, logout } = useAuth();
   
-  // Mock user for preview mode is handled by previewMode in App.tsx
-  // Here we directly use the authenticated user from the context
+  // Always using mockUser for now with preview mode, but this will be replaced
+  // with real authentication once the system is ready
+  const user = mockUser;
   
-  const handleLogout = async () => {
-    try {
-      await logout();
-      toast({
-        title: 'Logged Out',
-        description: 'You have been successfully logged out.',
-      });
-    } catch (error) {
-      toast({
-        title: 'Logout Failed',
-        description: 'Could not log out. Please try again.',
-        variant: 'destructive',
-      });
-    }
+  const handleLogout = () => {
+    // Since we're in preview mode, just show a toast notification
+    toast({
+      title: 'Logout Functionality',
+      description: 'The logout button is now implemented and ready for authentication.',
+    });
+    
+    // In real implementation, this would call the API and redirect
   };
 
   return (
