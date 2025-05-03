@@ -433,7 +433,7 @@ function JuiceBoxCodexViewer({ onAddProduct }: JuiceBoxCodexViewerProps) {
             <div>
               <h3 className="text-xl font-orbitron text-blue-400 mb-4">Swirl Removal & Correction</h3>
               <div className="space-y-4">
-                {trainingVideos.correction.map((video, index) => (
+                {videoCategories.find(cat => cat.category === "Swirl Removal & Correction")?.videos?.map((video, index) => (
                   <div key={index} className="bg-black p-4 rounded-lg">
                     <h4 className="text-blue-400 font-orbitron text-md mb-2">{video.title}</h4>
                     <div className="relative aspect-video bg-gray-900 mb-3 flex items-center justify-center">
