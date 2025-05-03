@@ -238,10 +238,37 @@ export const WeatherProvider: React.FC<{ children: React.ReactNode }> = ({ child
       saveToWeatherCaches(selectedLocation, unit, data);
       
       // Update state with new data
-      setWeatherData(data.weatherData);
-      setOneCallData(data.oneCallData);
-      setForecastData(data.forecastData);
-      setAutomotiveWeatherData(data.automotiveWeatherData);
+      setWeatherData(data.weatherData || null);
+      setOneCallData(data.oneCallData || null);
+      setForecastData(data.forecastData || null);
+      
+      // Make sure automotive data meets the interface requirements
+      if (data.automotiveWeatherData) {
+        setAutomotiveWeatherData({
+          ...data.automotiveWeatherData,
+          // Ensure required properties exist
+          forecast: data.automotiveWeatherData.forecast || {
+            today: { description: '', high: 0, low: 0, precipitation: 0 },
+            tomorrow: { description: '', high: 0, low: 0, precipitation: 0 }
+          },
+          alerts: data.automotiveWeatherData.alerts || [],
+          driving: data.automotiveWeatherData.driving || {
+            quality: 1,
+            recommendation: '',
+            risks: [],
+            idealTimes: []
+          },
+          astronomy: data.automotiveWeatherData.astronomy || {
+            sunrise: '',
+            sunset: '',
+            moonPhase: '',
+            dayLength: ''
+          }
+        });
+      } else {
+        setAutomotiveWeatherData(null);
+      }
+      
       setLastUpdated(new Date());
       setFailureCount(0);
       setIsUsingFallbackData(false);
@@ -254,21 +281,53 @@ export const WeatherProvider: React.FC<{ children: React.ReactNode }> = ({ child
       const fallbackData = getFromWeatherCaches(
         selectedLocation, 
         unit,
-        10000, // Very high TTL to get any cached data
-        1000   // Very high TTL to get any cached data
+        false, // Don't force refresh
+        setCacheAge
       );
       
       // Increment failure count
       const newFailureCount = failureCount + 1;
       setFailureCount(newFailureCount);
       
-      if (fallbackData) {
+      if (fallbackData.data) {
         // We have fallback data, use it but mark it as stale
-        setWeatherData(fallbackData.weatherData);
-        setOneCallData(fallbackData.oneCallData);
-        setForecastData(fallbackData.forecastData);
-        setAutomotiveWeatherData(fallbackData.automotiveWeatherData);
-        setLastUpdated(new Date(fallbackData.cacheTimestamp));
+        const { data } = fallbackData;
+        
+        setWeatherData(data.weatherData || null);
+        setOneCallData(data.oneCallData || null);
+        setForecastData(data.forecastData || null);
+        
+        // Safe extraction with defaults for automotive data
+        const automotiveData = data.automotiveWeatherData || null;
+        if (automotiveData) {
+          setAutomotiveWeatherData({
+            ...automotiveData,
+            // Ensure required properties exist
+            forecast: automotiveData.forecast || {
+              today: { description: '', high: 0, low: 0, precipitation: 0 },
+              tomorrow: { description: '', high: 0, low: 0, precipitation: 0 }
+            },
+            alerts: automotiveData.alerts || [],
+            driving: automotiveData.driving || {
+              quality: 1,
+              recommendation: '',
+              risks: [],
+              idealTimes: []
+            },
+            astronomy: automotiveData.astronomy || {
+              sunrise: '',
+              sunset: '',
+              moonPhase: '',
+              dayLength: ''
+            }
+          });
+        } else {
+          setAutomotiveWeatherData(null);
+        }
+        
+        // Use timestamp from cache or fallback to now
+        const timestamp = data.timestamp || Date.now();
+        setLastUpdated(new Date(timestamp));
         setIsUsingFallbackData(true);
         
         // Only show error toast if we've failed multiple times
@@ -394,5 +453,7 @@ export const useWeather = () => {
   return context;
 };
 
-// Export a wrapper function to make migration easier
-export const useFixedWeather = useWeather;
+// Export a named function to make migration easier (not a reference)
+export function useFixedWeather() {
+  return useWeather();
+}
