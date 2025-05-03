@@ -5,9 +5,10 @@ import {
   Calendar, Flag, Car, Watch, Compass, Ruler,
   BookOpen, Brain, ClipboardCheck, SprayCan, Percent,
   Mail, BookMarked, MessageCircle, Settings, HeartHandshake,
-  Shield, Trophy, Award, Star, Medal
+  Shield, Trophy, Award, Star, Medal, VolumeX, Volume2
 } from "lucide-react";
 import { useRewards } from "../contexts/RewardsContext";
+import { playMotorsportSound, getSoundSettings, setSoundEnabled } from "../services/soundService";
 
 // This structure makes it easy to add new rewards tracks/branches in the future
 const REWARD_TRACKS = {
@@ -49,9 +50,16 @@ const DRIVER_RANKS = [
 const DropdownNavbar = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [isPodiumOpen, setIsPodiumOpen] = useState(false);
+  const [soundEnabled, setSoundEnabledState] = useState(true);
   const location = useLocation();
   const menuRef = React.useRef<HTMLDivElement>(null);
   const { userRewards, pointsToNextLevel } = useRewards();
+  
+  // Initialize sound settings from sound service
+  useEffect(() => {
+    const soundSettings = getSoundSettings();
+    setSoundEnabledState(soundSettings.enabled);
+  }, []);
   
   // Close menu on location changes (navigation)
   useEffect(() => {
@@ -115,10 +123,51 @@ const DropdownNavbar = () => {
       </Link>
       
       <div className="flex items-center space-x-3">
+        {/* Sound toggle button */}
+        <button
+          onClick={() => {
+            // Toggle sound setting
+            const newState = !soundEnabled;
+            setSoundEnabledState(newState);
+            setSoundEnabled(newState);
+            // Play sound effect for toggle
+            if (newState) {
+              playMotorsportSound('radio_beep');
+            }
+          }}
+          className="text-gray-400 hover:text-blue-400 p-2 rounded-full transition-colors duration-200"
+          aria-label={soundEnabled ? "Mute sounds" : "Enable sounds"}
+          title={soundEnabled ? "Mute sounds" : "Enable sounds"}
+        >
+          {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
+        </button>
+        
+        {/* Sound Library link */}
+        <Link 
+          to="/sound-library" 
+          className="text-gray-400 hover:text-blue-400 p-2 transition-colors duration-200"
+          aria-label="Sound Library"
+          title="Sound Library"
+          onClick={() => soundEnabled && playMotorsportSound('button_press')}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M2 9.5a6 2.5 0 0 1 6 -2.5"></path>
+            <path d="M8 17a6 2.5 0 0 0 6 -2.5"></path>
+            <path d="M14 7a6 2.5 0 0 1 6 -2.5"></path>
+            <path d="M20 14.5a6 2.5 0 0 1 -6 2.5"></path>
+          </svg>
+        </Link>
+        
         {/* Main menu dropdown */}
         <div className="relative" ref={menuRef}>
           <button 
-            onClick={() => setIsOpen(!isOpen)}
+            onClick={() => {
+              setIsOpen(!isOpen);
+              if (soundEnabled) {
+                // Play menu open/close sound
+                playMotorsportSound(isOpen ? 'menu_select' : 'toggle_switch');
+              }
+            }}
             className="text-green-500 font-orbitron font-medium px-4 py-2 rounded-md border border-green-500 hover:bg-gray-800"
           >
             Menu
@@ -126,11 +175,17 @@ const DropdownNavbar = () => {
         
           {isOpen && (
             <div className="absolute right-0 mt-2 w-60 bg-gradient-to-r from-[#111111] to-[#1a1a1a] rounded-lg shadow-lg p-4 space-y-2 z-50 border border-gray-800">
-              <Link to="/" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
+              <Link to="/" className="hover:text-green-400 flex items-center py-1" onClick={() => {
+                setIsOpen(false);
+                if (soundEnabled) playMotorsportSound('button_press');
+              }}>
                 <Home className="h-4 w-4 mr-2 text-blue-400" />
                 <span>Home</span>
               </Link>
-              <Link to="/personalized-dashboard" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
+              <Link to="/personalized-dashboard" className="hover:text-green-400 flex items-center py-1" onClick={() => {
+                setIsOpen(false);
+                if (soundEnabled) playMotorsportSound('button_press');
+              }}>
                 <LayoutDashboard className="h-4 w-4 mr-2 text-blue-400" />
                 <span>My Dashboard</span>
               </Link>
@@ -139,7 +194,10 @@ const DropdownNavbar = () => {
               <Link 
                 to="/podium-pursuit" 
                 className="hover:text-green-400 flex items-center py-1" 
-                onClick={() => setIsOpen(false)}
+                onClick={() => {
+                  setIsOpen(false);
+                  if (soundEnabled) playMotorsportSound('button_press');
+                }}
               >
                 <Medal className="h-4 w-4 mr-2 text-blue-400" />
                 <span>Podium Pursuit</span>

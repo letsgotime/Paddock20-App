@@ -3,6 +3,8 @@
  * Provides ambient sound design for user interactions
  */
 
+import { motorsportSounds, soundMappings } from '../data/soundData';
+
 // Sound categories with their respective URLs
 const sounds = {
   // Navigation sounds
@@ -38,6 +40,12 @@ const sounds = {
     shifter: '/assets/sounds/shifter.mp3',
     horn: '/assets/sounds/horn.mp3',
   },
+
+  // Motorsport sound library
+  motorsport: motorsportSounds.reduce((acc, sound) => ({
+    ...acc,
+    [sound.id]: sound.url
+  }), {}),
 };
 
 // Cache audio objects for better performance
@@ -63,7 +71,18 @@ export function initSoundService(): void {
     // Pre-load common sound effects
     preloadSounds(['ui.buttonClick', 'ui.success', 'ui.error', 'navigation.select']);
     
-    console.log('Sound service initialized');
+    // Preload motorsport sounds for commonly used UI interactions
+    const commonMotorsportSounds = ['radio_beep', 'button_press', 'toggle_switch', 'success_tone'];
+    commonMotorsportSounds.forEach(soundId => {
+      const sound = motorsportSounds.find(s => s.id === soundId);
+      if (sound) {
+        const audio = new Audio(sound.url);
+        audio.load();
+        audioCache[`motorsport.${soundId}`] = audio;
+      }
+    });
+    
+    console.log('Sound service initialized with motorsport sounds');
   } catch (error) {
     console.error('Error initializing sound service:', error);
   }
@@ -132,6 +151,48 @@ export function playSound(soundKey: string): void {
     });
   } catch (error) {
     console.error('Error playing sound:', error);
+  }
+}
+
+/**
+ * Play a motorsport sound by its ID
+ * @param soundId The ID of the motorsport sound to play (from motorsportSounds)
+ */
+export function playMotorsportSound(soundId: string): void {
+  if (!soundEnabled) return;
+  
+  try {
+    // Find the sound in the motorsport category
+    const sound = motorsportSounds.find(s => s.id === soundId);
+    if (!sound) {
+      console.warn(`Motorsport sound not found: ${soundId}`);
+      return;
+    }
+    
+    const soundKey = `motorsport.${soundId}`;
+    let audio: HTMLAudioElement;
+    
+    // Use cached audio if available
+    if (audioCache[soundKey]) {
+      audio = audioCache[soundKey];
+      // Reset audio to beginning if it's already playing
+      audio.currentTime = 0;
+    } else {
+      // Create and cache new audio
+      audio = new Audio(sound.url);
+      audioCache[soundKey] = audio;
+    }
+    
+    // Apply volume setting
+    audio.volume = volume;
+    
+    // Play the sound
+    audio.play().catch(err => {
+      // Handle common errors like autoplay restrictions
+      console.warn(`Failed to play motorsport sound ${soundId}:`, err);
+    });
+  } catch (error) {
+    console.error('Error playing motorsport sound:', error);
   }
 }
 
