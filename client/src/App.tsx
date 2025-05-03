@@ -1,6 +1,7 @@
 import PreDriveChecklistPage from './pages/PreDriveChecklistPage';
 import React, { useEffect, useState } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
+import Header from './components/Header';
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
@@ -65,8 +66,7 @@ import HomePage from "./pages/Home";
 import OneTapWeatherSnapshot from "./components/OneTapWeatherSnapshot";
 import UserOnboarding from "./components/UserOnboarding";
 import { useAuth } from "./hooks/useAuth";
-// We'll add the AuthProvider back once we've fully migrated to the new auth system
-// import { AuthProvider } from "./context/AuthContext";
+import { AuthProvider } from "./context/AuthContext";
 import { MAIN_CONTENT_ID, LiveRegion } from './lib/accessibility';
 import './paddock20.css';
 
@@ -205,11 +205,13 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-          {/* Centralized Weather Provider - Provides weather data to all components */}
-          <WeatherProvider>
-            <GalleryProvider>
-              {/* Rewards Provider - for site-wide gamification */}
-              <RewardsProvider>
+          {/* Authentication Provider for login/logout functionality */}
+          <AuthProvider>
+            {/* Centralized Weather Provider - Provides weather data to all components */}
+            <WeatherProvider>
+              <GalleryProvider>
+                {/* Rewards Provider - for site-wide gamification */}
+                <RewardsProvider>
               {/* Skip link for keyboard navigation */}
               <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
                 Skip to main content
@@ -221,16 +223,19 @@ function App() {
               )}
               
               <div className="min-h-screen bg-black font-openSans text-white">
-                {/* Header with navigation */}
-              <header role="banner">
-                {(effectiveSession || previewMode) && (
-                  <>
-                    <DropdownNavbar />
-                    <NavigationControls />
-                    <ContextualBreadcrumbs />
-                  </>
-                )}
-              </header>
+                {/* Authentication Header - always visible */}
+                <Header />
+                
+                {/* Main navigation header - only visible when logged in */}
+                <header role="banner">
+                  {(effectiveSession || previewMode) && (
+                    <>
+                      <DropdownNavbar />
+                      <NavigationControls />
+                      <ContextualBreadcrumbs />
+                    </>
+                  )}
+                </header>
 
             {/* Main content area */}
             <main id={MAIN_CONTENT_ID} className="container mx-auto px-4" tabIndex={-1}>
@@ -319,9 +324,10 @@ function App() {
           {/* Footer with links and information */}
           <Footer />
         </div>
-            </RewardsProvider>
-          </GalleryProvider>
-        </WeatherProvider>
+                </RewardsProvider>
+              </GalleryProvider>
+            </WeatherProvider>
+          </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
