@@ -1,5 +1,5 @@
 import React from 'react';
-import { useWeather } from '@/contexts/WeatherContext';
+import { useWeather } from '@/contexts/ConsolidatedWeatherContext';
 import { Thermometer, Droplets, Wind, Sunrise, Sunset, Waves } from 'lucide-react';
 
 const WeatherCards: React.FC = () => {

@@ -1,5 +1,5 @@
 import React from 'react';
-import { useWeather } from '../contexts/WeatherContext';
+import { useWeather } from '../contexts/ConsolidatedWeatherContext';
 import { Star } from 'lucide-react';
 
 // Helper function to convert temperature to dew point
@@ -223,7 +223,7 @@ const CurrentWeatherWidget: React.FC = () => {
   const { automotiveWeatherData } = useWeather();
   
   // Base surface temperature (asphalt) - either from API or estimate
-  const baseTemp = automotiveWeatherData?.automotive_metrics?.track_surface?.temperature || (weather.main.temp + 5);
+  const baseTemp = automotiveWeatherData?.conditions?.temp || (weather.main.temp + 5);
   
   // Calculate surface temperatures based on actual data or estimation model
   const surfaceTemps = {
@@ -309,7 +309,7 @@ const CurrentWeatherWidget: React.FC = () => {
         </div>
         <div className="bg-black/30 rounded p-3">
           <div className="text-gray-400 text-sm">UV Index</div>
-          <div className="text-xl font-medium">{automotiveWeatherData?.conditions?.uv_index || 'N/A'}</div>
+          <div className="text-xl font-medium">{automotiveWeatherData?.conditions?.uvIndex || 'N/A'}</div>
         </div>
       </div>
       
