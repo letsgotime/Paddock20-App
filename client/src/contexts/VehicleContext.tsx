@@ -55,6 +55,24 @@ export function VehicleProvider({ children }: { children: ReactNode }) {
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [activeVehicle, setActiveVehicle] = useState<Vehicle | null>(null);
   const [loading, setLoading] = useState(true);
+  
+  // Subscribe to events from other components
+  useEffect(() => {
+    // Set up event listener for vehicle updates from other components
+    const handleExternalVehicleUpdate = (event: CustomEvent) => {
+      if (event.detail && event.detail.source === 'ProfileDataCollector') {
+        console.log("VehicleContext received update from ProfileDataCollector:", event.detail);
+        refreshVehicles();
+      }
+    };
+    
+    // Add global event listener for vehicle updates
+    window.addEventListener('vehicle-updated' as any, handleExternalVehicleUpdate);
+    
+    return () => {
+      window.removeEventListener('vehicle-updated' as any, handleExternalVehicleUpdate);
+    };
+  }, []);
 
   // Load vehicles from localStorage on initial mount
   useEffect(() => {
@@ -95,6 +113,14 @@ export function VehicleProvider({ children }: { children: ReactNode }) {
             };
             vehicleList.push(onboardedVehicle);
             console.log("VehicleContext loaded onboarded vehicle:", onboardedVehicle);
+            
+            // Broadcast this vehicle data to all dashboard components
+            window.dispatchEvent(new CustomEvent('vehicle-data-available', { 
+              detail: {
+                vehicle: onboardedVehicle,
+                source: 'VehicleContext'
+              }
+            }));
           }
         } catch (error) {
           console.error('Error parsing saved vehicle profile:', error);
