@@ -440,8 +440,12 @@ const VehicleOnboardingWizard: React.FC = () => {
       // Reset the profile to load the new user data
       try {
         // Force the profile system to rebuild itself from the updated onboarding data
-        const { resetProfile } = useUserProfileStore.getState();
-        resetProfile();
+        // Using direct import to avoid dependency errors
+        const userProfileStore = await import('@/services/userProfileService');
+        const store = userProfileStore.useUserProfileStore.getState();
+        if (store && store.resetProfile) {
+          store.resetProfile();
+        }
         
         // Reload the page to ensure all systems pick up the new data
         setTimeout(() => {

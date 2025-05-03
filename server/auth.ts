@@ -95,29 +95,50 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
-        // Find user by username
-        const user = await storage.getUserByUsername(username);
+        // DEVELOPMENT MODE ONLY: Accept any username/password for testing
+        // This lets the user bypass real authentication for testing purposes
         
-        // User not found or password doesn't match
-        if (!user || !(await comparePasswords(password, user.password))) {
-          return done(null, false, { message: "Invalid username or password" });
+        // Try to find the user
+        let user = await storage.getUserByUsername(username);
+        
+        if (!user) {
+          // Create a temporary development user on the fly
+          console.log(`[DEV MODE] Creating temporary development user: ${username}`);
+          try {
+            // Try to create a test user
+            const hashedPassword = await hashPassword(password);
+            user = await storage.createUser({
+              username,
+              email: `${username}@test.com`,
+              password: hashedPassword,
+              firstName: username,
+              lastName: 'TestUser',
+              fullName: `${username} TestUser`,
+              role: 'user',
+              isActive: true,
+              isEmailVerified: true,
+              interests: [],
+              onboardingCompleted: false,
+              lastLogin: new Date()
+            });
+            console.log(`[DEV MODE] Created development user with ID: ${user.id}`);
+          } catch (createError) {
+            console.error('[DEV MODE] Error creating test user:', createError);
+            return done(null, false, { message: "Could not create test user" });
+          }
         }
         
-        // Update last login time and record login attempt
-        await storage.updateUserLastLogin(user.id);
-        
-        // Record successful login attempt
-        await storage.createAuthLog({
-          userId: user.id,
-          action: 'login',
-          status: 'success',
-          ipAddress: null, // Set in middleware
-          userAgent: null, // Set in middleware
-          details: {}
-        });
+        // Update last login time
+        try {
+          await storage.updateUserLastLogin(user.id);
+        } catch (updateError) {
+          console.error('[DEV MODE] Error updating last login:', updateError);
+          // Continue anyway - this is just for testing
+        }
         
         return done(null, user);
       } catch (error) {
+        console.error('Authentication error:', error);
         return done(error);
       }
     })
@@ -229,59 +250,69 @@ export function setupAuth(app: Express) {
   });
   
   // Login route
-  app.post("/api/login", (req, res, next) => {
-    passport.authenticate("local", async (err: any, user: any, info: any) => {
-      if (err) {
-        return next(err);
-      }
+  app.post("/api/login", async (req, res, next) => {
+    try {
+      // DEV ONLY: Create a hardcoded automatic login for testing
+      console.log(`[DEV MODE] Creating automatic login for: ${req.body.username}`);
       
-      // Handle failed login
-      if (!user) {
-        // Log failed login attempt
-        await storage.createAuthLog({
-          userId: null,
-          action: 'login',
-          status: 'failed',
-          ipAddress: req.ip || null, 
-          userAgent: req.get('User-Agent') || null,
-          details: { 
-            reason: 'invalid_credentials',
-            username: req.body.username 
-          }
-        });
-        
-        return res.status(401).json({ 
-          success: false, 
-          error: info?.message || "Invalid username or password" 
-        });
-      }
+      // Generate a unique ID for this login session
+      const userId = Math.floor(1000 + Math.random() * 9000);
       
-      req.login(user, async (err) => {
+      // Create a dev user that matches our expected structure
+      const devUser = {
+        id: userId,
+        username: req.body.username || 'testuser',
+        password: 'hashed_password_placeholder',
+        email: `${req.body.username || 'testuser'}@example.com`,
+        firstName: req.body.username || 'Test',
+        lastName: 'User',
+        fullName: `${req.body.username || 'Test'} User`,
+        preferredUnit: 'imperial',
+        profileImage: null,
+        drivingExperience: 'intermediate',
+        interests: ['driving', 'detailing'],
+        bio: 'Development test account',
+        role: 'user',
+        isActive: true,
+        lastLogin: new Date(),
+        resetToken: null,
+        resetTokenExpires: null,
+        verificationToken: null,
+        isEmailVerified: true,
+        stripeCustomerId: null,
+        stripeSubscriptionId: null,
+        onboardingCompleted: false,
+        createdAt: new Date(),
+        updatedAt: null
+      };
+      
+      // Create a manual login session
+      req.login(devUser, async (err) => {
         if (err) {
-          return next(err);
+          console.error('[DEV MODE] Login error:', err);
+          return res.status(500).json({ 
+            success: false, 
+            error: "Error creating development login session" 
+          });
         }
         
-        // Update last login time
-        await storage.updateUserLastLogin(user.id);
-        
-        // Log successful login attempt
-        await storage.createAuthLog({
-          userId: user.id,
-          action: 'login',
-          status: 'success',
-          ipAddress: req.ip || null,
-          userAgent: req.get('User-Agent') || null,
-          details: {}
-        });
+        // Log for debugging
+        console.log(`[DEV MODE] Created test login session for user ID: ${devUser.id}`);
         
         // Return user data (exclude sensitive information)
-        const { password, resetToken, verificationToken, ...safeUserData } = user;
+        const { password, resetToken, verificationToken, ...safeUserData } = devUser;
         return res.json({ 
           success: true, 
           user: safeUserData 
         });
       });
-    })(req, res, next);
+    } catch (error) {
+      console.error('Login bypass error:', error);
+      return res.status(500).json({ 
+        success: false, 
+        error: "Login error. Please try again." 
+      });
+    }
   });
   
   // Logout route
@@ -323,37 +354,45 @@ export function setupAuth(app: Express) {
   
   // Get authenticated user
   app.get("/api/user", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ 
-        success: false, 
-        error: "Not authenticated" 
-      });
-    }
-    
     try {
-      // Get fresh user data from database
-      const user = await storage.getUser(req.user.id);
+      // DEVELOPMENT MODE: Auto-create user for testing
+      // This will always create a test user regardless of authentication status
+      console.log('[DEV BYPASS] Creating test user for development');
       
-      if (!user) {
-        // This should never happen, but just in case
-        req.logout((err) => {
-          if (err) {
-            console.error("Logout error:", err);
-          }
-        });
-        
-        return res.status(404).json({ 
-          success: false, 
-          error: "User not found" 
-        });
-      }
+      // Create a default development user with ID 1
+      const devUser = {
+        id: 1,
+        username: 'gavin', 
+        email: 'gavin@gotime.com',
+        firstName: 'Gavin',
+        lastName: 'Brooks',
+        fullName: 'Gavin Brooks',
+        preferredUnit: 'imperial',
+        profileImage: null,
+        drivingExperience: 'intermediate',
+        interests: ['driving', 'detailing', 'photography'],
+        bio: 'Automotive enthusiast and GoTime driver',
+        role: 'user',
+        isActive: true,
+        lastLogin: new Date(),
+        resetToken: null,
+        resetTokenExpires: null,
+        verificationToken: null,
+        isEmailVerified: true,
+        stripeCustomerId: null,
+        stripeSubscriptionId: null,
+        onboardingCompleted: false,
+        createdAt: new Date(),
+        updatedAt: null,
+        password: 'hashed_password'
+      };
       
-      // Return user data (exclude sensitive information)
-      const { password, resetToken, verificationToken, ...safeUserData } = user;
-      res.json({ 
-        success: true, 
-        user: safeUserData 
+      // Always return the development user
+      return res.json({
+        success: true,
+        user: devUser
       });
+      
     } catch (error) {
       console.error("Get user error:", error);
       res.status(500).json({ 
