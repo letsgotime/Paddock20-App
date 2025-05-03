@@ -192,7 +192,20 @@ const PersonalizedDashboard: React.FC = () => {
           {/* Mood & Energy Tracker - Full Width */}
           <div className="lg:col-span-3 bts-card">
             <h2 className="bts-header-green mb-4">Mood & Energy Tracker</h2>
-            <MoodEnergyTracker />
+            <MoodEnergyTracker 
+              moodEnergyData={{
+                mood: 4,
+                energy: 3,
+                focus: 4,
+                confidence: 3,
+                comfort: 5,
+                trackFamiliarity: 3,
+                excitementFactor: 4,
+                stressLevel: 2
+              }}
+              onChange={(data) => console.log('Mood/Energy updated:', data)}
+              isEditing={false}
+            />
           </div>
 
           {/* Quick Actions Widget */}
