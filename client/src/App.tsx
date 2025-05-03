@@ -12,6 +12,7 @@ import PageTitleManager from './components/PageTitleManager';
 import NavigationControls from './components/NavigationControls';
 import ContextualBreadcrumbs from './components/ContextualBreadcrumbs';
 import useScrollToTop from './hooks/useScrollToTop';
+import ProtectedRoute from './components/ProtectedRoute';
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
 import Garage from "@/pages/Garage";
@@ -122,22 +123,7 @@ function App() {
     setHasCompletedOnboarding(true);
   };
 
-  // Protected route component
-  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-    if (authLoading && !previewMode) {
-      return (
-        <div className="min-h-screen bg-black flex items-center justify-center">
-          <p className="text-white">Loading...</p>
-        </div>
-      );
-    }
-    
-    if (!effectiveSession && !previewMode) {
-      return <Navigate to="/auth" replace />;
-    }
-    
-    return <>{children}</>;
-  };
+  // Using the imported ProtectedRoute component instead of this inline implementation
 
   // Create a global screen reader notification system
   useEffect(() => {
