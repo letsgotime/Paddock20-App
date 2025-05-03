@@ -247,8 +247,8 @@ function App() {
               {(effectiveSession || previewMode) && (
                 <OneTapWeatherSnapshot 
                   floating={true}
-                  // Don't show on weather center page where it would be redundant
-                  className={window.location.pathname === '/new-weather-center' ? 'hidden' : ''}
+                  // Don't show on weather paddock page where it would be redundant
+                  className={window.location.pathname === '/weather-paddock' ? 'hidden' : ''}
                 />
               )}
               
@@ -286,7 +286,9 @@ function App() {
               <Route path="/juicebox-videos" element={<ProtectedRoute><VideoLibraryPage /></ProtectedRoute>} />
               <Route path="/broker-portal" element={<ProtectedRoute><BrokerPortalPage /></ProtectedRoute>} />
               <Route path="/weather" element={<ProtectedRoute><Weather /></ProtectedRoute>} />
-              <Route path="/new-weather-center" element={<ProtectedRoute><NewGTGWeatherPage /></ProtectedRoute>} />
+              <Route path="/weather-paddock" element={<ProtectedRoute><NewGTGWeatherPage /></ProtectedRoute>} />
+              {/* Keep old route for backward compatibility, but redirect to new name */}
+              <Route path="/new-weather-center" element={<Navigate to="/weather-paddock" replace />} />
               <Route path="/redline" element={<ProtectedRoute><RedlineReportPage /></ProtectedRoute>} />
               <Route path="/seasonal-checklist" element={<ProtectedRoute><SeasonalChecklistPage /></ProtectedRoute>} />
               <Route path="/pre-drive-checklist" element={<ProtectedRoute><PreDriveChecklistPage /></ProtectedRoute>} />
