@@ -5,6 +5,7 @@ import MoodEnergyTracker from '../components/MoodEnergyTracker.jsx';
 import WorldClockPanel from '../components/WorldClockPanel';
 import { Progress } from "@/components/ui/progress";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { useAuthContext } from '../hooks/useAuthContext';
 
 // Mock user data for demo purposes - this will be merged with actual user data when available
 const mockUserData = {
@@ -78,27 +79,29 @@ const mockUserData = {
 };
 
 const PersonalizedDashboard: React.FC = () => {
-  // Default to mock user data in preview mode
-  const mockUser = { 
-    id: 99999, 
-    username: 'Gavin Brooks', 
-    email: 'gavin@gotime.com', 
-    firstName: 'Gavin', 
-    lastName: 'Brooks', 
-    fullName: 'Gavin Brooks', 
-    profileImage: null, 
-    role: 'admin' as const 
-  };
-
+  // Get auth context to access user data
+  const authContext = useAuthContext();
+  const { user } = authContext;
+  
+  // Determine user's display name based on authentication - using fullName if available, or username as fallback 
+  const displayName = user?.fullName || user?.username || 'Driver';
+  
   const [userData, setUserData] = useState(mockUserData);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [greeting, setGreeting] = useState('');
   const [mergedUserData, setMergedUserData] = useState<any>({
     ...mockUserData, 
-    name: 'Gavin Brooks' // Set default name immediately
+    name: displayName // Use authenticated user's name
   });
 
-  // No need for useEffect dependency on userData as we're setting it directly at initialization
+  // Update user data when authentication changes
+  useEffect(() => {
+    // When authentication status changes, update the user's display name
+    setMergedUserData(prevData => ({
+      ...prevData,
+      name: user?.fullName || user?.username || 'Driver'
+    }));
+  }, [user]);
 
   useEffect(() => {
     // Update greeting based on time of day
