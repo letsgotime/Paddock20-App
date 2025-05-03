@@ -131,6 +131,50 @@ const PersonalizedDashboard: React.FC = () => {
     ...mockUserData, 
     name: displayName // Use authenticated user's name
   });
+  
+  // Load saved vehicle from onboarding
+  useEffect(() => {
+    const savedVehicleProfileString = localStorage.getItem('vehicleProfile');
+    if (savedVehicleProfileString) {
+      try {
+        const savedVehicleProfile = JSON.parse(savedVehicleProfileString);
+        if (savedVehicleProfile) {
+          // Create a vehicle object from the saved profile
+          const onboardedVehicle = {
+            id: userData.vehicles.length + 1, // Generate a new ID
+            make: savedVehicleProfile.make || '',
+            model: savedVehicleProfile.model || '',
+            year: parseInt(savedVehicleProfile.year) || new Date().getFullYear(),
+            nickname: savedVehicleProfile.nickname || '',
+            imageUrl: savedVehicleProfile.vehicleImage || '/favicon.png', // Fallback to app icon
+            mileage: parseInt(savedVehicleProfile.mileage) || 0,
+            lastServiceDate: new Date().toISOString().split('T')[0], // Today's date
+            healthScore: 95 // Default good health
+          };
+          
+          // Update userData with the onboarded vehicle
+          setUserData(prevData => ({
+            ...prevData,
+            vehicles: [onboardedVehicle, ...prevData.vehicles]
+          }));
+          
+          // Also update merged user data
+          setMergedUserData(prevData => ({
+            ...prevData,
+            vehicles: [onboardedVehicle, ...prevData.vehicles]
+          }));
+          
+          toast({
+            title: "Vehicle Loaded",
+            description: `Your ${onboardedVehicle.year} ${onboardedVehicle.make} ${onboardedVehicle.model} has been added to your garage`,
+            variant: "default",
+          });
+        }
+      } catch (error) {
+        console.error('Error parsing saved vehicle:', error);
+      }
+    }
+  }, []);
 
   // Update user data when authentication changes
   useEffect(() => {
