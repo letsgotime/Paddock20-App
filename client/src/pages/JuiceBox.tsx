@@ -41,22 +41,88 @@ function JuiceBoxPage() {
     const handleVehicleUpdate = (event: CustomEvent) => {
       console.log('JuiceBox received vehicle update:', event.detail);
       
-      // Refresh vehicle data
-      refreshVehicles();
+      // If this event doesn't have valid data, just refresh vehicles
+      if (!event.detail || !event.detail.action) {
+        refreshVehicles();
+        return;
+      }
       
-      // If this is for a specific vehicle, make it active
-      if (event.detail && event.detail.vehicle) {
-        // Find the vehicle in the refreshed list
-        setTimeout(() => {
-          const updatedVehicle = vehicles.find(v => 
-            v.make === event.detail.vehicle.make && 
-            v.model === event.detail.vehicle.model
-          );
+      const { action, vehicle, vehicleId } = event.detail;
+      
+      // Handle different action types
+      switch (action) {
+        case 'add':
+          // Refresh the entire list to get the new vehicle
+          refreshVehicles();
           
-          if (updatedVehicle) {
-            setActiveVehicle(updatedVehicle);
+          // After a short delay, try to set the newly added vehicle as active
+          setTimeout(() => {
+            if (vehicle && vehicle.id) {
+              const newVehicle = vehicles.find(v => v.id === vehicle.id);
+              if (newVehicle) {
+                setActiveVehicle(newVehicle);
+                
+                // Log this interaction with the ProfileDataCollector
+                ProfileDataCollector.collectVehicleData({
+                  make: newVehicle.make,
+                  model: newVehicle.model,
+                  year: newVehicle.year,
+                  mileage: newVehicle.mileage,
+                  color: newVehicle.color,
+                  engineType: newVehicle.engine_type,
+                  transmissionType: newVehicle.transmission
+                });
+              }
+            }
+          }, 100);
+          break;
+          
+        case 'update':
+          // If the active vehicle is the one being updated, update it
+          if (activeVehicle && vehicle && activeVehicle.id === vehicle.id) {
+            // Refresh to get latest data
+            refreshVehicles();
+            
+            // After a short delay, try to set the updated vehicle as active
+            setTimeout(() => {
+              const updatedVehicle = vehicles.find(v => v.id === vehicle.id);
+              if (updatedVehicle) {
+                setActiveVehicle(updatedVehicle);
+                
+                // Sync this change with the ProfileDataCollector
+                ProfileDataCollector.syncVehicleFromContext(updatedVehicle);
+              }
+            }, 100);
+          } else if (vehicle) {
+            // Otherwise just refresh the vehicles list
+            refreshVehicles();
           }
-        }, 100); // Small delay to allow refreshVehicles to complete
+          break;
+          
+        case 'delete':
+          // If the active vehicle is the one being deleted, select a different one
+          if (activeVehicle && vehicleId && activeVehicle.id === vehicleId) {
+            // Refresh to get updated list
+            refreshVehicles();
+            
+            // After a short delay, select the first available vehicle
+            setTimeout(() => {
+              if (vehicles.length > 0) {
+                const firstVehicle = vehicles[0];
+                setActiveVehicle(firstVehicle);
+              } else {
+                setActiveVehicle(null);
+              }
+            }, 100);
+          } else {
+            // Otherwise just refresh the list
+            refreshVehicles();
+          }
+          break;
+          
+        default:
+          // For any other action, just refresh
+          refreshVehicles();
       }
     };
     
@@ -71,7 +137,7 @@ function JuiceBoxPage() {
       window.removeEventListener('vehicle-data-update' as any, handleVehicleUpdate);
       window.removeEventListener('juice-box-vehicle-update' as any, handleVehicleUpdate);
     };
-  }, [vehicles, refreshVehicles, setActiveVehicle]);
+  }, [vehicles, activeVehicle, refreshVehicles, setActiveVehicle]);
   
   // Function to handle clicking outside the dropdown menu
   useEffect(() => {
@@ -141,17 +207,119 @@ function JuiceBoxPage() {
     const updated = [product, ...userProducts];
     setUserProducts(updated);
     localStorage.setItem('myJuiceBox', JSON.stringify(updated));
+    
+    // Sync with ProfileDataCollector to ensure true two-way integration
+    try {
+      // Log this interaction with the user's profile
+      ProfileDataCollector.importDataFromComponent('JuiceBox', {
+        type: 'product_add',
+        product: product,
+        timestamp: new Date().toISOString(),
+        vehicle: activeVehicle ? {
+          id: activeVehicle.id,
+          make: activeVehicle.make,
+          model: activeVehicle.model,
+          year: activeVehicle.year
+        } : null
+      });
+      
+      // Update last active timestamp
+      ProfileDataCollector.updateLastActive();
+      
+      console.log('Product added and synced with ProfileDataCollector:', product.name);
+    } catch (error) {
+      console.error('Error syncing product with ProfileDataCollector:', error);
+    }
   };
   
   // Handler for DetailingActivitiesForm submission
   const handleDetailingActivitySubmit = (activity: any) => {
     console.log('Detailing activity submitted:', activity);
     
+    // Sync with ProfileDataCollector for two-way integration
+    try {
+      // Format the activity data for the profile system
+      const driveData = {
+        type: 'detailing_activity',
+        activityType: activity.activityType,
+        vehicle: activeVehicle ? {
+          id: activeVehicle.id,
+          make: activeVehicle.make,
+          model: activeVehicle.model,
+          year: activeVehicle.year
+        } : null,
+        date: activity.date || new Date().toISOString(),
+        duration: activity.duration || 0,
+        products: activity.products || [],
+        notes: activity.notes || '',
+        pointsEarned: calculateDetailingPoints(activity),
+        beforeAfterImages: activity.images || []
+      };
+      
+      // Send to ProfileDataCollector
+      ProfileDataCollector.collectDriveData(driveData);
+      
+      // Log the activity in the user's profile
+      ProfileDataCollector.importDataFromComponent('JuiceBox', {
+        type: 'detailing_session_complete',
+        activity: activity,
+        timestamp: new Date().toISOString(),
+        vehicle: activeVehicle ? {
+          id: activeVehicle.id,
+          make: activeVehicle.make,
+          model: activeVehicle.model,
+          year: activeVehicle.year
+        } : null
+      });
+      
+      // Update page view data
+      ProfileDataCollector.logPageView('JuiceBox - DetailingActivity');
+      
+      console.log('Activity synced with ProfileDataCollector');
+    } catch (error) {
+      console.error('Error syncing activity with ProfileDataCollector:', error);
+    }
+    
     // In a real app, you would save this to a database
     // For now, we'll show a success modal with rewards
     setActivity(activity);
     setIsSuccessModalOpen(true);
     setShowDetailingForm(false);
+  };
+  
+  // Helper function to calculate points based on activity type
+  const calculateDetailingPoints = (activity: any): number => {
+    const pointMap: {[key: string]: number} = {
+      'wash': 10,
+      'wax': 15,
+      'polish': 25,
+      'paint_correction': 40,
+      'ceramic_coating': 50,
+      'interior_detail': 20,
+      'wheel_detail': 15,
+      'engine_bay': 20,
+      'other': 10
+    };
+    
+    // Get base points for the activity type
+    let points = pointMap[activity.activityType] || 10;
+    
+    // Bonus points for time spent
+    if (activity.duration) {
+      points += Math.floor(activity.duration / 30) * 5; // 5 points per 30 minutes
+    }
+    
+    // Bonus for using multiple products
+    if (activity.products && activity.products.length > 0) {
+      points += activity.products.length * 2;
+    }
+    
+    // Bonus for images
+    if (activity.images && activity.images.length > 0) {
+      points += activity.images.length * 5;
+    }
+    
+    return points;
   };
   
   // State for success modal
