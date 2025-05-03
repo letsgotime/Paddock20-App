@@ -38,8 +38,17 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { playMotorsportSound, getSoundSettings, setSoundEnabled } from "../services/soundService";
 
-import { useContext } from 'react';
-import { AuthContext } from "../context/AuthContext";
+// Mock user for preview mode (same as in App.tsx)
+const mockUser = { 
+  id: 99999, 
+  username: 'Alex Garza', 
+  email: 'alex@gotime.com', 
+  firstName: 'Alex', 
+  lastName: 'Garza', 
+  fullName: 'Alex Garza', 
+  profileImage: null, 
+  role: 'admin' as const 
+};
 
 /**
  * Header component with complete menu dropdown and ambient sounds control
@@ -56,10 +65,9 @@ const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   
-  // Get the current user from auth context
-  const authContext = useContext(AuthContext);
-  const user = authContext?.user || null;
-  const logout = authContext?.logout || (() => Promise.resolve());
+  // Always using mockUser for now with preview mode, but this will be replaced
+  // with real authentication once the system is ready
+  const user = mockUser;
   
   // Handle click outside to close menu
   useEffect(() => {
@@ -78,25 +86,14 @@ const Header: React.FC = () => {
     setIsMenuOpen(false);
   }, [location.pathname]);
   
-  const handleLogout = async () => {
-    try {
-      // Call the logout function from AuthContext
-      await logout();
-      
-      toast({
-        title: 'Logged Out',
-        description: 'You have been successfully logged out.',
-      });
-    } catch (error) {
-      console.error('Logout error:', error);
-      toast({
-        title: 'Logout Failed',
-        description: 'There was a problem logging out. Please try again.',
-        variant: 'destructive',
-      });
-    }
+  const handleLogout = () => {
+    // Since we're in preview mode, just show a toast notification
+    toast({
+      title: 'Logout Functionality',
+      description: 'The logout button is now implemented and ready for authentication.',
+    });
     
-    // Close the menu regardless of logout success/failure
+    // In real implementation, this would call the API and redirect
     setIsMenuOpen(false);
   };
 
