@@ -226,11 +226,14 @@ function App() {
                       {/* Authentication Header - always visible */}
                       <Header />
                     
-                      {/* Main navigation header - only visible when logged in */}
+                      {/* Main navigation header - always visible */}
                       <header role="banner">
+                        {/* GoTime Motorsports logo with ambient sound controls - always visible */}
+                        <DropdownNavbar />
+                        
+                        {/* Navigation controls and breadcrumbs - only visible when logged in */}
                         {(effectiveSession || previewMode) && (
                           <>
-                            <DropdownNavbar />
                             <NavigationControls />
                             <ContextualBreadcrumbs />
                           </>
