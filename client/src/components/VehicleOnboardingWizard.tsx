@@ -727,7 +727,7 @@ const VehicleOnboardingWizard: React.FC = () => {
   };
   
   return (
-    <div className="bg-black text-white">
+    <div className="bg-black text-white pb-24 mb-24"> {/* Added extra padding at bottom to prevent ribbon overlap */}
       {/* Progress indicator */}
       <div className="mb-8">
         <div className="flex justify-between items-center">
@@ -773,21 +773,21 @@ const VehicleOnboardingWizard: React.FC = () => {
       </div>
       
       {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-8">
+      <form onSubmit={handleSubmit} className="space-y-8 mb-20"> {/* Added margin to keep form away from bottom */}
         {/* Step content */}
-        <div className="bg-gray-900 rounded-lg p-6 border border-gray-800">
+        <div className="bg-gray-900 rounded-lg p-8 border border-gray-800"> {/* Increased padding from p-6 to p-8 */}
           {isEntryMethodStep && renderEntryMethodStep()}
           {!isEntryMethodStep && !isReviewStep && renderFormStep(onboardingSteps[currentStep])}
           {isReviewStep && renderReviewStep()}
         </div>
         
         {/* Navigation buttons */}
-        <div className="flex justify-between pt-4">
+        <div className="flex justify-between pt-6 pb-10"> {/* Added substantial bottom padding */}
           {currentStep > 0 ? (
             <button
               type="button"
               onClick={handleBack}
-              className="px-4 py-2 flex items-center text-gray-300 hover:text-white"
+              className="px-6 py-3 flex items-center text-gray-300 hover:text-white bg-gray-800 rounded-md"
             >
               <ChevronLeft size={20} className="mr-1" /> Back
             </button>
@@ -799,7 +799,7 @@ const VehicleOnboardingWizard: React.FC = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {isSubmitting ? (
                 <>
@@ -816,9 +816,9 @@ const VehicleOnboardingWizard: React.FC = () => {
               type="button"
               onClick={handleNext}
               disabled={!canProceed()}
-              className="px-6 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
+              className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              Next <ChevronRight size={20} className="ml-1" />
+              Continue <ChevronRight size={20} className="ml-1" />
             </button>
           )}
         </div>

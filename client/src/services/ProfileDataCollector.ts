@@ -250,6 +250,7 @@ class ProfileDataCollector {
   /**
    * Syncs a user's vehicle data from the VehicleContext into the profile system
    * This ensures consistency between the main vehicle system and the profile
+   * Also broadcasts vehicle data to all site components for two-way integration
    * @param vehicleContextData Vehicle data from the VehicleContext
    */
   static syncVehicleFromContext(vehicleContextData: any) {
@@ -267,10 +268,12 @@ class ProfileDataCollector {
       (v.year === parseInt(vehicleContextData.year) || v.year.toString() === vehicleContextData.year)
     );
     
+    let updatedVehicle;
+    
     if (existingVehicle) {
       console.log('Updating existing profile vehicle:', existingVehicle.id);
-      // Update the existing vehicle with any new data
-      updateVehicle(existingVehicle.id, {
+      // Create update data
+      const updateData = {
         color: vehicleContextData.color,
         nickname: vehicleContextData.nickname || vehicleContextData.car_name,
         image: vehicleContextData.vehicle_image || vehicleContextData.vehicleImage,
@@ -280,11 +283,20 @@ class ProfileDataCollector {
         engineType: vehicleContextData.engine_type || vehicleContextData.engineType,
         transmissionType: vehicleContextData.transmission || vehicleContextData.transmissionType,
         purchaseDate: vehicleContextData.purchase_date || vehicleContextData.purchaseDate
-      });
+      };
+      
+      // Update the existing vehicle with any new data
+      updateVehicle(existingVehicle.id, updateData);
+      
+      // Create a full updated vehicle object for broadcasting
+      updatedVehicle = {
+        ...existingVehicle,
+        ...updateData
+      };
     } else {
       console.log('Adding new vehicle to profile system');
-      // Add as a new vehicle to the profile
-      this.collectVehicleData({
+      // Prepare vehicle data for adding
+      const newVehicleData = {
         make: vehicleContextData.make,
         model: vehicleContextData.model,
         year: parseInt(vehicleContextData.year) || vehicleContextData.year,
@@ -299,8 +311,16 @@ class ProfileDataCollector {
         purchaseDate: vehicleContextData.purchase_date || vehicleContextData.purchaseDate,
         mods: [],
         maintenanceRecords: []
-      });
+      };
+      
+      // Add as a new vehicle to the profile and get the result
+      updatedVehicle = this.collectVehicleData(newVehicleData);
     }
+    
+    // Now broadcast this vehicle data to all site components
+    this.broadcastVehicleDataToAllComponents(updatedVehicle);
+    
+    return updatedVehicle;
   }
   
   /**

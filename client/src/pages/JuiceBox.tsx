@@ -12,6 +12,7 @@ import JuiceBoxCodexViewer from '../components/JuiceBoxCodexViewer';
 import DetailingActivitiesForm from '../components/DetailingActivitiesForm';
 import { productCategories, sevenDaySchedule, detailingKits, trainingVideos, glossHistory } from '../data/detailingData';
 import { useVehicle } from '../contexts/VehicleContext';
+import ProfileDataCollector from '../services/ProfileDataCollector';
 
 interface Product {
   name: string;
@@ -22,7 +23,7 @@ interface Product {
 
 function JuiceBoxPage() {
   // Get vehicle data from the VehicleContext
-  const { activeVehicle, vehicles, loading } = useVehicle();
+  const { activeVehicle, vehicles, loading, refreshVehicles, setActiveVehicle } = useVehicle();
   
   const [userProducts, setUserProducts] = useState<Product[]>(() => {
     const saved = localStorage.getItem('myJuiceBox');
@@ -33,6 +34,44 @@ function JuiceBoxPage() {
   const [showExportMenu, setShowExportMenu] = useState<boolean>(false);
   const [showDetailingForm, setShowDetailingForm] = useState<boolean>(false);
   const exportMenuRef = useRef<HTMLDivElement>(null);
+  
+  // Add event listener for vehicle updates
+  useEffect(() => {
+    // Handler for receiving vehicle updates from other components
+    const handleVehicleUpdate = (event: CustomEvent) => {
+      console.log('JuiceBox received vehicle update:', event.detail);
+      
+      // Refresh vehicle data
+      refreshVehicles();
+      
+      // If this is for a specific vehicle, make it active
+      if (event.detail && event.detail.vehicle) {
+        // Find the vehicle in the refreshed list
+        setTimeout(() => {
+          const updatedVehicle = vehicles.find(v => 
+            v.make === event.detail.vehicle.make && 
+            v.model === event.detail.vehicle.model
+          );
+          
+          if (updatedVehicle) {
+            setActiveVehicle(updatedVehicle);
+          }
+        }, 100); // Small delay to allow refreshVehicles to complete
+      }
+    };
+    
+    // Listen for the general vehicle update event
+    window.addEventListener('vehicle-data-update' as any, handleVehicleUpdate);
+    
+    // Listen for the JuiceBox-specific event
+    window.addEventListener('juice-box-vehicle-update' as any, handleVehicleUpdate);
+    
+    // Cleanup listener on component unmount
+    return () => {
+      window.removeEventListener('vehicle-data-update' as any, handleVehicleUpdate);
+      window.removeEventListener('juice-box-vehicle-update' as any, handleVehicleUpdate);
+    };
+  }, [vehicles, refreshVehicles, setActiveVehicle]);
   
   // Function to handle clicking outside the dropdown menu
   useEffect(() => {

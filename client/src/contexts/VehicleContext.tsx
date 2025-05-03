@@ -185,6 +185,56 @@ export function VehicleProvider({ children }: { children: ReactNode }) {
       // Save to localStorage
       localStorage.setItem('vehicles', JSON.stringify(updatedVehicles));
       
+      // Broadcast this vehicle data to all components
+      console.log('Broadcasting new vehicle to all components:', newVehicle.make, newVehicle.model);
+      
+      // General broadcast
+      window.dispatchEvent(new CustomEvent('vehicle-data-update', { 
+        detail: {
+          vehicle: newVehicle,
+          action: 'add',
+          source: 'VehicleContext'
+        }
+      }));
+      
+      // Component-specific broadcasts for two-way integration
+      window.dispatchEvent(new CustomEvent('juice-box-vehicle-update', { 
+        detail: {
+          vehicle: newVehicle,
+          action: 'add',
+          source: 'VehicleContext'
+        }
+      }));
+      
+      window.dispatchEvent(new CustomEvent('garage-vault-vehicle-update', { 
+        detail: {
+          vehicle: newVehicle,
+          action: 'add',
+          source: 'VehicleContext'
+        }
+      }));
+      
+      window.dispatchEvent(new CustomEvent('gallery-vehicle-update', { 
+        detail: {
+          vehicle: newVehicle,
+          action: 'add',
+          source: 'VehicleContext'
+        }
+      }));
+      
+      // Sync with the ProfileDataCollector for comprehensive integration
+      try {
+        // Use import to access ProfileDataCollector directly
+        import('../services/ProfileDataCollector').then(module => {
+          const ProfileDataCollector = module.default;
+          ProfileDataCollector.syncVehicleFromContext(newVehicle);
+        }).catch(err => {
+          console.error('Error importing ProfileDataCollector:', err);
+        });
+      } catch (error) {
+        console.error('Error syncing with ProfileDataCollector:', error);
+      }
+      
       return newVehicle;
     } catch (error) {
       console.error('Error adding vehicle:', error);
@@ -195,9 +245,11 @@ export function VehicleProvider({ children }: { children: ReactNode }) {
   // Function to update a vehicle
   const updateVehicle = (id: string, updatedData: Partial<Vehicle>) => {
     try {
+      let updatedVehicle: Vehicle | null = null;
+      
       const updatedVehicles = vehicles.map(vehicle => {
         if (vehicle.id === id) {
-          const updatedVehicle = { ...vehicle, ...updatedData };
+          updatedVehicle = { ...vehicle, ...updatedData };
           
           // If this is the active vehicle, update it as well
           if (activeVehicle && activeVehicle.id === id) {
@@ -239,6 +291,68 @@ export function VehicleProvider({ children }: { children: ReactNode }) {
           }
         }
       }
+      
+      // Broadcast the update to all components if we have an updated vehicle
+      if (updatedVehicle) {
+        console.log('Broadcasting vehicle update to all components:', updatedVehicle.make, updatedVehicle.model);
+        
+        // General broadcast
+        window.dispatchEvent(new CustomEvent('vehicle-data-update', { 
+          detail: {
+            vehicle: updatedVehicle,
+            action: 'update',
+            source: 'VehicleContext'
+          }
+        }));
+        
+        // Component-specific broadcasts for two-way integration
+        window.dispatchEvent(new CustomEvent('juice-box-vehicle-update', { 
+          detail: {
+            vehicle: updatedVehicle,
+            action: 'update',
+            source: 'VehicleContext'
+          }
+        }));
+        
+        window.dispatchEvent(new CustomEvent('garage-vault-vehicle-update', { 
+          detail: {
+            vehicle: updatedVehicle,
+            action: 'update',
+            source: 'VehicleContext'
+          }
+        }));
+        
+        window.dispatchEvent(new CustomEvent('gallery-vehicle-update', { 
+          detail: {
+            vehicle: updatedVehicle,
+            action: 'update',
+            source: 'VehicleContext'
+          }
+        }));
+        
+        window.dispatchEvent(new CustomEvent('drive-journal-vehicle-update', { 
+          detail: {
+            vehicle: updatedVehicle,
+            action: 'update',
+            source: 'VehicleContext'
+          }
+        }));
+        
+        // Sync with the ProfileDataCollector for comprehensive integration
+        try {
+          // Use import to access ProfileDataCollector directly
+          import('../services/ProfileDataCollector').then(module => {
+            const ProfileDataCollector = module.default;
+            ProfileDataCollector.syncVehicleFromContext(updatedVehicle);
+          }).catch(err => {
+            console.error('Error importing ProfileDataCollector:', err);
+          });
+        } catch (error) {
+          console.error('Error syncing with ProfileDataCollector:', error);
+        }
+      }
+      
+      return updatedVehicle;
     } catch (error) {
       console.error('Error updating vehicle:', error);
       throw error;
@@ -248,6 +362,9 @@ export function VehicleProvider({ children }: { children: ReactNode }) {
   // Function to delete a vehicle
   const deleteVehicle = (id: string) => {
     try {
+      // Get the vehicle being deleted before removing it
+      const vehicleToDelete = vehicles.find(vehicle => vehicle.id === id);
+      
       // Remove the vehicle from the list
       const updatedVehicles = vehicles.filter(vehicle => vehicle.id !== id);
       setVehicles(updatedVehicles);
@@ -263,6 +380,81 @@ export function VehicleProvider({ children }: { children: ReactNode }) {
       // If this is the onboarded vehicle, remove the vehicleProfile as well
       if (id === 'onboarded-1') {
         localStorage.removeItem('vehicleProfile');
+      }
+      
+      // Broadcast the deletion to all components if we have the deleted vehicle
+      if (vehicleToDelete) {
+        console.log('Broadcasting vehicle deletion to all components:', vehicleToDelete.make, vehicleToDelete.model);
+        
+        // General broadcast
+        window.dispatchEvent(new CustomEvent('vehicle-data-update', { 
+          detail: {
+            vehicle: vehicleToDelete,
+            action: 'delete',
+            vehicleId: id,
+            source: 'VehicleContext'
+          }
+        }));
+        
+        // Component-specific broadcasts for two-way integration
+        window.dispatchEvent(new CustomEvent('juice-box-vehicle-update', { 
+          detail: {
+            vehicle: vehicleToDelete,
+            action: 'delete',
+            vehicleId: id,
+            source: 'VehicleContext'
+          }
+        }));
+        
+        window.dispatchEvent(new CustomEvent('garage-vault-vehicle-update', { 
+          detail: {
+            vehicle: vehicleToDelete,
+            action: 'delete',
+            vehicleId: id,
+            source: 'VehicleContext'
+          }
+        }));
+        
+        window.dispatchEvent(new CustomEvent('gallery-vehicle-update', { 
+          detail: {
+            vehicle: vehicleToDelete,
+            action: 'delete',
+            vehicleId: id,
+            source: 'VehicleContext'
+          }
+        }));
+        
+        window.dispatchEvent(new CustomEvent('drive-journal-vehicle-update', { 
+          detail: {
+            vehicle: vehicleToDelete,
+            action: 'delete',
+            vehicleId: id,
+            source: 'VehicleContext'
+          }
+        }));
+        
+        // Notify ProfileDataCollector of the deletion
+        try {
+          // Send a custom event for ProfileDataCollector to listen to
+          window.dispatchEvent(new CustomEvent('profile-vehicle-delete', { 
+            detail: {
+              vehicleId: id
+            }
+          }));
+          
+          // Dynamic import of ProfileDataCollector as a backup method
+          import('../services/ProfileDataCollector').then(module => {
+            // If the module has a deleteVehicle method, use it
+            const ProfileDataCollector = module.default;
+            if (typeof ProfileDataCollector.deleteVehicle === 'function') {
+              ProfileDataCollector.deleteVehicle(id);
+            }
+          }).catch(err => {
+            console.error('Error importing ProfileDataCollector:', err);
+          });
+        } catch (error) {
+          console.error('Error notifying ProfileDataCollector of vehicle deletion:', error);
+        }
       }
     } catch (error) {
       console.error('Error deleting vehicle:', error);
