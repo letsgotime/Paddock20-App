@@ -294,7 +294,7 @@ export function setupAuth(app: Express) {
   
   // Login route
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate('local', (err, user, info) => {
+    passport.authenticate('local', (err: Error | null, user: User | false, info: { message?: string } | undefined) => {
       if (err) {
         console.error('Login error:', err);
         return res.status(500).json({ 
@@ -322,13 +322,14 @@ export function setupAuth(app: Express) {
         // Create session record for tracking
         try {
           const sessionId = req.sessionID;
+          const cookieMaxAge = sessionConfig.cookie?.maxAge || 1000 * 60 * 60 * 24 * 7; // Default to 1 week
           await storage.createSession({
             id: sessionId,
             userId: user.id,
-            expiresAt: new Date(Date.now() + sessionConfig.cookie.maxAge),
+            expiresAt: new Date(Date.now() + cookieMaxAge),
             ipAddress: req.ip || null,
-            userAgent: req.get('User-Agent') || null,
-            lastActive: new Date()
+            userAgent: req.get('User-Agent') || null
+            // Removed lastActive as it's not in the schema
           });
         } catch (sessionError) {
           // Non-blocking - continue even if session tracking fails
