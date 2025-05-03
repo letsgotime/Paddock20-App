@@ -643,28 +643,28 @@ const F1TelemetryWeatherStation: React.FC = () => {
                 <div className="bg-black/30 p-3 rounded-lg">
                   <div className="flex justify-between items-center mb-2">
                     <span className="text-gray-400">Asphalt Temp</span>
-                    <span className="font-mono font-bold text-amber-400">{Math.round(automotiveData.surfaces.asphalt.temperature)}°F</span>
+                    <span className="font-mono font-bold text-amber-400">{Math.round(automotiveData?.surfaces?.asphalt?.temperature || 0)}°F</span>
                   </div>
                   <div className="flex justify-between items-center">
                     <span className="text-gray-400 text-sm">Grip Level</span>
-                    <span className="font-mono text-sm">{automotiveData.surfaces.asphalt.gripLevel}</span>
+                    <span className="font-mono text-sm">{automotiveData?.surfaces?.asphalt?.gripLevel || 'N/A'}</span>
                   </div>
                 </div>
                 
                 <div className="bg-black/30 p-3 rounded-lg">
                   <div className="flex justify-between items-center mb-1">
                     <span className="text-gray-400">Condition</span>
-                    <span className="font-mono">{automotiveData.surfaces.asphalt.condition}</span>
+                    <span className="font-mono">{automotiveData?.surfaces?.asphalt?.condition || 'N/A'}</span>
                   </div>
                   
                   <div className="grid grid-cols-2 gap-2 mt-2 text-xs">
                     <div className="bg-black/20 p-2 rounded flex flex-col">
                       <span className="text-gray-500">Sport Tires</span>
-                      <span className="text-blue-400 font-mono">{automotiveData.performance.tireWarmupTime.sport} min warmup</span>
+                      <span className="text-blue-400 font-mono">{automotiveData?.performance?.tireWarmupTime?.sport || 'N/A'} min warmup</span>
                     </div>
                     <div className="bg-black/20 p-2 rounded flex flex-col">
                       <span className="text-gray-500">Summer Tires</span>
-                      <span className="text-blue-400 font-mono">{automotiveData.performance.tireWarmupTime.summer} min warmup</span>
+                      <span className="text-blue-400 font-mono">{automotiveData?.performance?.tireWarmupTime?.summer || 'N/A'} min warmup</span>
                     </div>
                   </div>
                 </div>
@@ -672,8 +672,8 @@ const F1TelemetryWeatherStation: React.FC = () => {
                 <div className="bg-black/30 p-3 rounded-lg">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-400">Engine Power</span>
-                    <span className={`font-mono ${automotiveData.performance.enginePerformance.powerAdjustment > 0 ? 'text-green-400' : 'text-red-400'}`}>
-                      {automotiveData.performance.enginePerformance.powerAdjustment > 0 ? '+' : ''}{Math.round(automotiveData.performance.enginePerformance.powerAdjustment * 100)}%
+                    <span className={`font-mono ${automotiveData?.performance?.enginePerformance?.powerAdjustment > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                      {automotiveData?.performance?.enginePerformance?.powerAdjustment > 0 ? '+' : ''}{Math.round((automotiveData?.performance?.enginePerformance?.powerAdjustment || 0) * 100)}%
                     </span>
                   </div>
                 </div>
@@ -690,18 +690,22 @@ const F1TelemetryWeatherStation: React.FC = () => {
               <div className="space-y-2">
                 <div className="flex items-center justify-between px-3 py-2 bg-black/30 rounded-lg mb-2">
                   <span className="text-gray-200">Risk Level</span>
-                  <span className={`font-medium ${automotiveData.drivingConditions.riskLevel === 'Low' || automotiveData.drivingConditions.riskLevel === 'Minimal' ? 'text-green-400' : automotiveData.drivingConditions.riskLevel === 'Moderate' ? 'text-amber-400' : 'text-red-400'}`}>
-                    {automotiveData.drivingConditions.riskLevel}
+                  <span className={`font-medium ${automotiveData?.drivingConditions?.riskLevel === 'Low' || automotiveData?.drivingConditions?.riskLevel === 'Minimal' ? 'text-green-400' : automotiveData?.drivingConditions?.riskLevel === 'Moderate' ? 'text-amber-400' : 'text-red-400'}`}>
+                    {automotiveData?.drivingConditions?.riskLevel || 'Unknown'}
                   </span>
                 </div>
                 
                 <ul className="space-y-2">
-                  {automotiveData.drivingConditions.advisories.map((advisory: string, index: number) => (
+                  {automotiveData?.drivingConditions?.advisories?.map((advisory: string, index: number) => (
                     <li key={index} className="text-sm bg-black/20 px-3 py-2 rounded-lg flex items-start">
                       <span className="text-amber-400 mr-2">•</span>
                       <span className="text-gray-300">{advisory}</span>
                     </li>
-                  ))}
+                  )) || (
+                    <li className="text-sm bg-black/20 px-3 py-2 rounded-lg">
+                      <span className="text-gray-300">No advisories available</span>
+                    </li>
+                  )}
                 </ul>
               </div>
             )}
