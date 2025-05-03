@@ -240,8 +240,8 @@ function App() {
                         )}
                       </header>
 
-                      {/* Main content area */}
-                      <main id={MAIN_CONTENT_ID} className="container mx-auto px-4" tabIndex={-1}>
+                      {/* Main content area - adjusted for fixed headers */}
+                      <main id={MAIN_CONTENT_ID} className="container mx-auto px-4 mt-[120px]" tabIndex={-1}>
                         {/* Toast notifications with ARIA live region built in */}
                         <Toaster />
                         
