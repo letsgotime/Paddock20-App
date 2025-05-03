@@ -727,7 +727,7 @@ const VehicleOnboardingWizard: React.FC = () => {
   };
   
   return (
-    <div className="bg-black text-white pb-24 mb-24"> {/* Added extra padding at bottom to prevent ribbon overlap */}
+    <div className="bg-black text-white pb-32 mb-40"> {/* Increased padding to ensure no overlap with ribbon */}
       {/* Progress indicator */}
       <div className="mb-8">
         <div className="flex justify-between items-center">
@@ -736,7 +736,7 @@ const VehicleOnboardingWizard: React.FC = () => {
               <div 
                 className={`flex items-center justify-center w-10 h-10 rounded-full ${
                   index < currentStep || (index === currentStep && isReviewStep)
-                    ? 'bg-blue-600'
+                    ? 'bg-[#08c519]'
                     : index === currentStep
                     ? 'bg-blue-500 ring-4 ring-blue-500/20'
                     : 'bg-gray-700'
@@ -766,61 +766,63 @@ const VehicleOnboardingWizard: React.FC = () => {
         {/* Progress bar */}
         <div className="mt-4 h-2 bg-gray-700 rounded-full">
           <div 
-            className="h-2 bg-blue-600 rounded-full transition-all duration-300"
+            className="h-2 bg-gradient-to-r from-blue-600 to-[#08c519] rounded-full transition-all duration-300"
             style={{ width: `${(currentStep / (onboardingSteps.length + 1)) * 100}%` }}
           ></div>
         </div>
       </div>
       
       {/* Form */}
-      <form onSubmit={handleSubmit} className="space-y-8 mb-20"> {/* Added margin to keep form away from bottom */}
+      <form onSubmit={handleSubmit} className="space-y-8 mb-28"> {/* Increased margin to ensure form elements are not hidden */}
         {/* Step content */}
-        <div className="bg-gray-900 rounded-lg p-8 border border-gray-800"> {/* Increased padding from p-6 to p-8 */}
+        <div className="bg-gray-900 rounded-lg p-8 border border-gray-800"> {/* Increased padding for more space */}
           {isEntryMethodStep && renderEntryMethodStep()}
           {!isEntryMethodStep && !isReviewStep && renderFormStep(onboardingSteps[currentStep])}
           {isReviewStep && renderReviewStep()}
         </div>
         
-        {/* Navigation buttons */}
-        <div className="flex justify-between pt-6 pb-10"> {/* Added substantial bottom padding */}
-          {currentStep > 0 ? (
-            <button
-              type="button"
-              onClick={handleBack}
-              className="px-6 py-3 flex items-center text-gray-300 hover:text-white bg-gray-800 rounded-md"
-            >
-              <ChevronLeft size={20} className="mr-1" /> Back
-            </button>
-          ) : (
-            <div>{/* Empty div for spacing */}</div>
-          )}
-          
-          {isReviewStep ? (
-            <button
-              type="submit"
-              disabled={isSubmitting}
-              className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              {isSubmitting ? (
-                <>
-                  <RefreshCw size={20} className="mr-2 animate-spin" /> Saving...
-                </>
-              ) : (
-                <>
-                  <Check size={20} className="mr-2" /> Add Vehicle
-                </>
-              )}
-            </button>
-          ) : (
-            <button
-              type="button"
-              onClick={handleNext}
-              disabled={!canProceed()}
-              className="px-8 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md flex items-center disabled:opacity-50 disabled:cursor-not-allowed"
-            >
-              Continue <ChevronRight size={20} className="ml-1" />
-            </button>
-          )}
+        {/* Fixed navigation buttons - positioned to stay above the bottom ribbon */}
+        <div className="sticky bottom-24 z-10 bg-gradient-to-t from-black via-black to-transparent pt-6 pb-10 px-4"> 
+          <div className="flex justify-between max-w-full">
+            {currentStep > 0 ? (
+              <button
+                type="button"
+                onClick={handleBack}
+                className="px-6 py-3 flex items-center text-gray-300 hover:text-white bg-gray-800 rounded-md shadow-lg"
+              >
+                <ChevronLeft size={20} className="mr-1" /> Back
+              </button>
+            ) : (
+              <div>{/* Empty div for spacing */}</div>
+            )}
+            
+            {isReviewStep ? (
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="px-8 py-3 bg-[#08c519] hover:bg-[#07b016] text-white rounded-md flex items-center disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-lg"
+              >
+                {isSubmitting ? (
+                  <>
+                    <RefreshCw size={20} className="mr-2 animate-spin" /> Saving...
+                  </>
+                ) : (
+                  <>
+                    <Check size={20} className="mr-2" /> Add Vehicle
+                  </>
+                )}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={handleNext}
+                disabled={!canProceed()}
+                className="px-8 py-3 bg-[#08c519] hover:bg-[#07b016] text-white rounded-md flex items-center disabled:opacity-50 disabled:cursor-not-allowed font-medium shadow-lg"
+              >
+                Continue <ChevronRight size={20} className="ml-1" />
+              </button>
+            )}
+          </div>
         </div>
       </form>
     </div>
