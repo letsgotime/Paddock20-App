@@ -70,12 +70,12 @@ function GarageVaultPage() {
   const [modifications, setModifications] = useState([]);
   const [maintenanceRecords, setMaintenanceRecords] = useState([]);
   
-  // Metrics and dynamic data
+  // Default metrics that will be updated with actual vehicle data
   const [carMetrics, setCarMetrics] = useState({
     lastService: '2023-10-15',
     nextServiceDue: '2024-04-15',
     daysSinceLastDrive: 5,
-    mileage: 12_589,
+    mileage: 0, // Will be updated with actual vehicle mileage
     fuelLevel: 76,
     batteryHealth: 92,
     tirePressure: {
@@ -299,7 +299,16 @@ function GarageVaultPage() {
   
   // Update car metrics for current vehicle (simulated real-time data)
   const updateCarMetrics = () => {
-    // Only make small fluctuations to simulate live data
+    // First, update carMetrics with the actual vehicle mileage from activeVehicle
+    if (activeVehicle && activeVehicle.mileage) {
+      setCarMetrics(prev => ({
+        ...prev,
+        mileage: activeVehicle.mileage,
+        lastService: activeVehicle.last_service || prev.lastService
+      }));
+    }
+    
+    // Then make small fluctuations to simulate live data
     setCarMetrics(prev => ({
       ...prev,
       batteryHealth: Math.max(80, Math.min(100, prev.batteryHealth + (Math.random() > 0.7 ? Math.random() * 0.2 - 0.1 : 0))),
@@ -368,6 +377,16 @@ function GarageVaultPage() {
   // Function to change active vehicle
   const handleVehicleChange = (vehicle) => {
     setActiveVehicle(vehicle);
+    
+    // Immediately update metrics for the selected vehicle
+    if (vehicle && vehicle.mileage) {
+      setCarMetrics(prev => ({
+        ...prev,
+        mileage: vehicle.mileage,
+        lastService: vehicle.last_service || prev.lastService
+      }));
+    }
+    
     setActiveSection('dashboard');
   };
   
