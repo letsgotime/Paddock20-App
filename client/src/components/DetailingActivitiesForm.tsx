@@ -82,9 +82,13 @@ interface DetailingActivity {
   pointsEarned: number;
 }
 
+// Import Vehicle type
+import { Vehicle } from '../contexts/VehicleContext';
+
 interface DetailingActivitiesFormProps {
   onSubmit: (activity: DetailingActivity) => void;
   onCancel: () => void;
+  vehicle?: Vehicle;
 }
 
 const DETAILING_TYPES = [
@@ -178,7 +182,7 @@ const PRODUCT_SUGGESTIONS: Record<string, string[]> = {
   'Headlight Restoration': ['Sandpaper Set', 'Polishing Compound', 'UV Sealant', 'Microfiber Towels', 'Masking Tape']
 };
 
-const DetailingActivitiesForm: React.FC<DetailingActivitiesFormProps> = ({ onSubmit, onCancel }) => {
+const DetailingActivitiesForm: React.FC<DetailingActivitiesFormProps> = ({ onSubmit, onCancel, vehicle }) => {
   const [activity, setActivity] = useState<DetailingActivity>({
     id: `detail_${Date.now()}`,
     type: '',

@@ -16,6 +16,7 @@ import AddModificationForm from '../components/AddModificationForm';
 import AddMaintenanceForm from '../components/AddMaintenanceForm';
 import EnhancedVehicleDetail from '../components/EnhancedVehicleDetail';
 import VehicleOnboardingWizard from '../components/VehicleOnboardingWizard';
+import { useVehicle } from '../contexts/VehicleContext';
 
 // Enhanced telemetry and data services
 import vehicleDataService from '../services/vehicleDataService';
@@ -32,6 +33,9 @@ import {
 function GarageVaultPage() {
   const location = useLocation();
   
+  // Get vehicle data from context
+  const { vehicles, activeVehicle, setActiveVehicle, loading } = useVehicle();
+  
   // Parse URL query parameters
   const parseQueryParams = () => {
     const searchParams = new URLSearchParams(location.search);
@@ -43,9 +47,6 @@ function GarageVaultPage() {
   
   // State management
   const navigate = useNavigate();
-  const [vehicles, setVehicles] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [activeVehicle, setActiveVehicle] = useState(null);
   const [activeSection, setActiveSection] = useState('dashboard');
   const [activeView, setActiveView] = useState('grid');
   const [activeMod, setActiveMod] = useState(null);
@@ -140,120 +141,11 @@ function GarageVaultPage() {
     }
   }, [location.search]);
   
-  // Fetch vehicles from Supabase and check localStorage for onboarded vehicles
+  // Update car metrics when active vehicle changes
   useEffect(() => {
-    async function fetchVehicles() {
-      try {
-        // Check for onboarded vehicle from localStorage first
-        const savedVehicleProfileString = localStorage.getItem('vehicleProfile');
-        let onboardedVehicle = null;
-        
-        if (savedVehicleProfileString) {
-          try {
-            const savedVehicleProfile = JSON.parse(savedVehicleProfileString);
-            if (savedVehicleProfile) {
-              // Create a formatted vehicle object from the saved profile
-              onboardedVehicle = {
-                id: 'onboarded-1', // Special ID for onboarded vehicle
-                car_id: 'OB-1',
-                make: savedVehicleProfile.make || '',
-                model: savedVehicleProfile.model || '',
-                year: savedVehicleProfile.year || new Date().getFullYear().toString(),
-                nickname: savedVehicleProfile.nickname || `My ${savedVehicleProfile.make}`,
-                car_name: savedVehicleProfile.nickname || `${savedVehicleProfile.year} ${savedVehicleProfile.make} ${savedVehicleProfile.model}`,
-                vehicle_image: savedVehicleProfile.vehicleImage || '/favicon.png',
-                mileage: parseInt(savedVehicleProfile.mileage) || 0,
-                status: 'Ready',
-                last_service: new Date().toISOString().split('T')[0],
-                created_at: new Date().toISOString(),
-                engine_type: savedVehicleProfile.engineType || 'Gasoline',
-                transmission: savedVehicleProfile.transmissionType || 'Automatic',
-                color: savedVehicleProfile.color || 'Black',
-                purchase_date: savedVehicleProfile.purchaseDate || new Date().toISOString().split('T')[0],
-                vehicle_type: 'Car'
-              };
-              console.log("Found onboarded vehicle:", onboardedVehicle);
-            }
-          } catch (error) {
-            console.error('Error parsing saved vehicle profile:', error);
-          }
-        }
-
-        // Then fetch from Supabase
-        const { data, error } = await supabase
-          .from('Vehicles')
-          .select('*');
-        
-        if (error) throw error;
-        
-        let vehicleList = [];
-        
-        if (data && data.length > 0) {
-          vehicleList = data;
-        }
-        
-        // Add onboarded vehicle if it exists (at the beginning of the list)
-        if (onboardedVehicle) {
-          vehicleList = [onboardedVehicle, ...vehicleList];
-        }
-        
-        setVehicles(vehicleList);
-        
-        // If we have vehicles, set the active one, otherwise prepare for onboarding
-        if (vehicleList.length > 0) {
-          setActiveVehicle(vehicleList[0]);
-        } else {
-          // No vehicles yet, suggest onboarding
-          setActiveVehicle(null);
-        }
-      } catch (error) {
-        console.error('Error fetching vehicles:', error.message);
-        
-        // Still check for onboarded vehicle even on error
-        const savedVehicleProfileString = localStorage.getItem('vehicleProfile');
-        if (savedVehicleProfileString) {
-          try {
-            const savedVehicleProfile = JSON.parse(savedVehicleProfileString);
-            if (savedVehicleProfile) {
-              const onboardedVehicle = {
-                id: 'onboarded-1',
-                car_id: 'OB-1',
-                make: savedVehicleProfile.make || '',
-                model: savedVehicleProfile.model || '',
-                year: savedVehicleProfile.year || new Date().getFullYear().toString(),
-                nickname: savedVehicleProfile.nickname || `My ${savedVehicleProfile.make}`,
-                car_name: savedVehicleProfile.nickname || `${savedVehicleProfile.year} ${savedVehicleProfile.make} ${savedVehicleProfile.model}`,
-                vehicle_image: savedVehicleProfile.vehicleImage || '/favicon.png',
-                mileage: parseInt(savedVehicleProfile.mileage) || 0,
-                status: 'Ready',
-                last_service: new Date().toISOString().split('T')[0],
-                created_at: new Date().toISOString(),
-                engine_type: savedVehicleProfile.engineType || 'Gasoline',
-                transmission: savedVehicleProfile.transmissionType || 'Automatic',
-                color: savedVehicleProfile.color || 'Black',
-                purchase_date: savedVehicleProfile.purchaseDate || new Date().toISOString().split('T')[0],
-                vehicle_type: 'Car'
-              };
-              setVehicles([onboardedVehicle]);
-              setActiveVehicle(onboardedVehicle);
-            } else {
-              setVehicles([]);
-              setActiveVehicle(null);
-            }
-          } catch (error) {
-            console.error('Error parsing saved vehicle on fallback:', error);
-            setVehicles([]);
-            setActiveVehicle(null);
-          }
-        } else {
-          setVehicles([]);
-          setActiveVehicle(null);
-        }
-      }
-      setLoading(false);
+    if (activeVehicle) {
+      updateCarMetrics();
     }
-    
-    fetchVehicles();
     
     // Update car metrics at regular intervals when a vehicle is selected
     const metricsInterval = setInterval(() => {
@@ -263,7 +155,7 @@ function GarageVaultPage() {
     }, 5000);
     
     return () => clearInterval(metricsInterval);
-  }, []);
+  }, [activeVehicle]);
   
   // Auto-close dropdowns when clicking outside
   useEffect(() => {
@@ -416,19 +308,31 @@ function GarageVaultPage() {
   
   // Form handlers
   const handleAddVehicle = (newVehicle) => {
-    // In a real app, this would send data to the database
-    const vehicleWithId = {
-      ...newVehicle,
-      id: vehicles.length + 1,
-      car_id: `V${vehicles.length + 1}`,
-      created_at: new Date().toISOString()
-    };
-    
-    setVehicles([...vehicles, vehicleWithId]);
-    setShowAddVehicleForm(false);
-    
-    // Optionally select the new vehicle
-    setActiveVehicle(vehicleWithId);
+    try {
+      // Convert to VehicleProfile format
+      const vehicleProfile = {
+        make: newVehicle.make,
+        model: newVehicle.model,
+        year: newVehicle.year,
+        nickname: newVehicle.nickname || `${newVehicle.year} ${newVehicle.make} ${newVehicle.model}`,
+        mileage: newVehicle.mileage.toString(),
+        engineType: newVehicle.engine_type || 'Gasoline',
+        transmissionType: newVehicle.transmission || 'Automatic',
+        color: newVehicle.color || 'Black',
+        purchaseDate: newVehicle.purchase_date || new Date().toISOString().split('T')[0],
+        vehicleImage: newVehicle.vehicle_image || '',
+        vin: newVehicle.vin || ''
+      };
+      
+      // Add the vehicle using the context method
+      // Using the useVehicle hook to get the addVehicle method
+      useVehicle().addVehicle(vehicleProfile);
+      setShowAddVehicleForm(false);
+      // Call the refresh vehicles method from the context
+      useVehicle().refreshVehicles();
+    } catch (error) {
+      console.error('Error adding vehicle:', error);
+    }
   };
   
   const handleAddModification = (newMod) => {

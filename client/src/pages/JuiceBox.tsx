@@ -11,6 +11,7 @@ import GlossHistory from '../components/GlossHistory';
 import JuiceBoxCodexViewer from '../components/JuiceBoxCodexViewer';
 import DetailingActivitiesForm from '../components/DetailingActivitiesForm';
 import { productCategories, sevenDaySchedule, detailingKits, trainingVideos, glossHistory } from '../data/detailingData';
+import { useVehicle } from '../contexts/VehicleContext';
 
 interface Product {
   name: string;
@@ -20,6 +21,9 @@ interface Product {
 }
 
 function JuiceBoxPage() {
+  // Get vehicle data from the VehicleContext
+  const { activeVehicle, vehicles, loading } = useVehicle();
+  
   const [userProducts, setUserProducts] = useState<Product[]>(() => {
     const saved = localStorage.getItem('myJuiceBox');
     return saved ? JSON.parse(saved) : [];
@@ -232,6 +236,42 @@ function JuiceBoxPage() {
             </div>
           </div>
         </div>
+        
+        {/* Vehicle Information Section */}
+        {activeVehicle ? (
+          <div className="bg-black/70 p-4 rounded-lg border border-green-600 mb-6">
+            <div className="flex items-center">
+              <div className="bg-green-500 text-black rounded-full p-2 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-orbitron text-green-400">Active Vehicle</h3>
+                <p className="text-white text-lg">{activeVehicle.nickname || `${activeVehicle.year} ${activeVehicle.make} ${activeVehicle.model}`}</p>
+                <div className="flex gap-4 mt-2 text-gray-300">
+                  <span>Mileage: {activeVehicle.mileage} miles</span>
+                  <span>Color: {activeVehicle.color}</span>
+                  {activeVehicle.vin && <span>VIN: {activeVehicle.vin.slice(-4)}</span>}
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          <div className="bg-black/70 p-4 rounded-lg border border-orange-600 mb-6">
+            <div className="flex items-center">
+              <div className="bg-orange-500 text-black rounded-full p-2 mr-4">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <div>
+                <h3 className="text-xl font-orbitron text-orange-400">No Vehicle Selected</h3>
+                <p className="text-white">Please select or add a vehicle in the Garage Vault to track your detailing activities.</p>
+              </div>
+            </div>
+          </div>
+        )}
         
         {/* Overall Stats Banner */}
         <div className="flex flex-wrap justify-between bg-black/60 p-4 rounded-lg border border-blue-600 mb-6">
@@ -678,7 +718,8 @@ function JuiceBoxPage() {
             {showDetailingForm ? (
               <DetailingActivitiesForm 
                 onSubmit={handleDetailingActivitySubmit} 
-                onCancel={handleDetailingActivityCancel} 
+                onCancel={handleDetailingActivityCancel}
+                vehicle={activeVehicle}
               />
             ) : (
               <div className="flex flex-col items-center">
