@@ -21,12 +21,43 @@ const SoundLibraryPreview: React.FC = () => {
 
   // Play a sound
   const playSound = (sound: SoundEffect) => {
-    if (audioRef.current) {
-      audioRef.current.src = sound.url;
-      audioRef.current.volume = isMuted ? 0 : volume;
-      audioRef.current.play();
-      setCurrentSound(sound.id);
+    try {
+      // Import the sound service function dynamically to avoid circular dependencies
+      import('../services/soundService').then(soundService => {
+        // Try to use the sound service's playMotorsportSound function
+        soundService.playMotorsportSound(sound.id);
+        setCurrentSound(sound.id);
+        
+        // Use a timer to automatically clear the current sound status after the duration
+        const durationInMs = parseDuration(sound.duration) * 1000;
+        setTimeout(() => {
+          if (currentSound === sound.id) {
+            setCurrentSound(null);
+          }
+        }, durationInMs);
+      });
+    } catch (error) {
+      console.error('Failed to play sound:', error);
+      
+      // Fallback to the basic audio element if the sound service fails
+      if (audioRef.current) {
+        audioRef.current.src = sound.url;
+        audioRef.current.volume = isMuted ? 0 : volume;
+        audioRef.current.play();
+        setCurrentSound(sound.id);
+      }
     }
+  };
+  
+  // Helper function to parse duration string (e.g. "0:03") into seconds
+  const parseDuration = (durationStr: string): number => {
+    const parts = durationStr.split(':');
+    if (parts.length === 2) {
+      const minutes = parseInt(parts[0], 10);
+      const seconds = parseInt(parts[1], 10);
+      return minutes * 60 + seconds;
+    }
+    return 3; // Default fallback duration if parsing fails
   };
 
   // Toggle sound selection for use in the app
