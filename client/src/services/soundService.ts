@@ -1,6 +1,8 @@
 /**
  * Sound Service for Paddock20
  * Provides ambient sound design for user interactions
+ * 
+ * Enhanced version with F1-style telemetry and motorsport sound design
  */
 
 import { motorsportSounds, soundMappings } from '../data/soundData';
@@ -51,9 +53,96 @@ const sounds = {
 // Cache audio objects for better performance
 const audioCache: Record<string, HTMLAudioElement> = {};
 
+// Background ambient sounds for pages
+const backgroundAmbients: Record<string, { soundId: string, volume: number, loop: boolean }> = {
+  '/': { soundId: 'paddock_ambient', volume: 0.2, loop: true },
+  '/garage-vault': { soundId: 'pit_stop', volume: 0.15, loop: true },
+  '/manifestation-station': { soundId: 'start_chime', volume: 0.3, loop: false },
+  '/new-weather-center': { soundId: 'radio_beep', volume: 0.25, loop: false },
+};
+
+// Keep track of any currently playing ambient sound
+let currentAmbientAudio: HTMLAudioElement | null = null;
+let currentAmbientSoundId: string | null = null;
+
 // User preferences for sound (defaulting to disabled for ambient sounds)
 let soundEnabled = false; // Default to off as requested
 let volume = 0.5; // 50% volume by default
+let ambientSoundsEnabled = false; // Separate setting for ambient background sounds
+
+// Interaction mappings to sounds - for automatic playback on specific actions
+export const interactionSoundMap = {
+  // Navigation interactions
+  pageTransition: 'button_press',
+  back: 'menu_select',
+  forward: 'toggle_switch',
+  menu: {
+    open: 'radio_beep',
+    close: 'menu_select',
+    select: 'button_press',
+    hover: 'radio_beep' // Softer version
+  },
+  
+  // UI element interactions
+  button: {
+    click: 'button_press',
+    hover: 'radio_beep'
+  },
+  toggle: 'toggle_switch',
+  checkbox: 'button_press',
+  slider: 'gear_shift',
+  dropdown: {
+    open: 'menu_select',
+    close: 'menu_select',
+    select: 'button_press'
+  },
+  
+  // Weather and telemetry
+  weather: {
+    dataUpdate: 'radio_beep',
+    refresh: 'alert_tone',
+    warning: 'warning_beep'
+  },
+  telemetry: {
+    update: 'radio_beep',
+    alert: 'warning_beep',
+    optimal: 'success_tone'
+  },
+  
+  // Vehicle interactions
+  vehicle: {
+    select: 'car_door',
+    details: 'engine_revving',
+    stats: 'gear_shift',
+    error: 'warning_beep'
+  },
+  
+  // Feedback and notifications
+  notification: {
+    success: 'success_tone',
+    error: 'warning_beep',
+    info: 'radio_beep',
+    warning: 'alert_tone'
+  },
+  
+  // Special page interactions
+  manifestationStation: {
+    goalComplete: 'success_tone',
+    milestoneReached: 'start_chime',
+    newGoalSet: 'gear_shift'
+  },
+  weatherCenter: {
+    locationChange: 'radio_beep',
+    refresh: 'button_press',
+    alert: 'warning_beep',
+    optimal: 'success_tone'
+  },
+  garageVault: {
+    addVehicle: 'car_door',
+    removeVehicle: 'tire_screech',
+    updateVehicle: 'engine_revving' 
+  }
+};
 
 /**
  * Initialize the sound service and load user preferences
@@ -66,6 +155,7 @@ export function initSoundService(): void {
       const prefs = JSON.parse(soundPrefs);
       soundEnabled = prefs.enabled !== undefined ? prefs.enabled : false; // Default to off if not specified
       volume = prefs.volume !== undefined ? prefs.volume : 0.5;
+      ambientSoundsEnabled = prefs.ambientEnabled !== undefined ? prefs.ambientEnabled : false;
     } else {
       // If no preferences are stored, initialize with sounds disabled
       saveSoundPreferences();
@@ -75,7 +165,16 @@ export function initSoundService(): void {
     preloadSounds(['ui.buttonClick', 'ui.success', 'ui.error', 'navigation.select']);
     
     // Preload motorsport sounds for commonly used UI interactions
-    const commonMotorsportSounds = ['radio_beep', 'button_press', 'toggle_switch', 'success_tone'];
+    const commonMotorsportSounds = [
+      'radio_beep', 
+      'button_press', 
+      'toggle_switch', 
+      'success_tone',
+      'car_door',
+      'alert_tone',
+      'warning_beep'
+    ];
+    
     commonMotorsportSounds.forEach(soundId => {
       const sound = motorsportSounds.find(s => s.id === soundId);
       if (sound) {
@@ -85,9 +184,97 @@ export function initSoundService(): void {
       }
     });
     
-    console.log('Sound service initialized with motorsport sounds');
+    // Listen for page transitions to play ambient sounds
+    if (typeof window !== 'undefined') {
+      window.addEventListener('popstate', handleRouteChange);
+    }
+    
+    console.log('Enhanced Sound service initialized with F1-style telemetry and motorsport sounds');
   } catch (error) {
     console.error('Error initializing sound service:', error);
+  }
+}
+
+/**
+ * Handle route changes for ambient sounds
+ */
+function handleRouteChange() {
+  if (!soundEnabled || !ambientSoundsEnabled) return;
+  
+  const currentPath = window.location.pathname;
+  
+  // Check if current path has ambient sound
+  const ambientSoundData = backgroundAmbients[currentPath];
+  if (ambientSoundData) {
+    // Stop any currently playing ambient
+    stopCurrentAmbient();
+    
+    // Play the new ambient sound for this path
+    playAmbientSound(ambientSoundData.soundId, ambientSoundData.volume, ambientSoundData.loop);
+  } else {
+    // If no ambient assigned to this path, stop any current ambient
+    stopCurrentAmbient();
+  }
+}
+
+/**
+ * Stop any currently playing ambient sound
+ */
+function stopCurrentAmbient() {
+  if (currentAmbientAudio) {
+    currentAmbientAudio.pause();
+    currentAmbientAudio = null;
+    currentAmbientSoundId = null;
+  }
+}
+
+/**
+ * Play an ambient sound (typically for page background)
+ */
+export function playAmbientSound(soundId: string, ambientVolume: number = 0.2, loop: boolean = true): void {
+  if (!soundEnabled || !ambientSoundsEnabled) return;
+  
+  try {
+    // Stop any currently playing ambient
+    stopCurrentAmbient();
+    
+    // Find the sound in the motorsport category
+    const sound = motorsportSounds.find(s => s.id === soundId);
+    if (!sound) {
+      console.warn(`Ambient sound not found: ${soundId}`);
+      return;
+    }
+    
+    const soundKey = `ambient.${soundId}`;
+    let audio: HTMLAudioElement;
+    
+    // Use cached audio if available
+    if (audioCache[soundKey]) {
+      audio = audioCache[soundKey];
+      audio.currentTime = 0;
+    } else {
+      // Create and cache new audio
+      audio = new Audio(sound.url);
+      audioCache[soundKey] = audio;
+    }
+    
+    // Configure ambient sound
+    audio.loop = loop;
+    audio.volume = ambientVolume * volume; // Apply both ambient volume and user volume
+    
+    // Play the sound
+    const playPromise = audio.play();
+    if (playPromise) {
+      playPromise.catch(err => {
+        console.warn(`Failed to play ambient sound ${soundId}:`, err);
+      });
+    }
+    
+    // Track the current ambient
+    currentAmbientAudio = audio;
+    currentAmbientSoundId = soundId;
+  } catch (error) {
+    console.error('Error playing ambient sound:', error);
   }
 }
 
@@ -95,14 +282,26 @@ export function initSoundService(): void {
  * Preload sound files into cache for instant playback
  */
 export function preloadSounds(soundKeys: string[]): void {
-  if (!soundEnabled) return;
-  
   soundKeys.forEach(key => {
     const soundPath = getSoundPathFromKey(key);
     if (soundPath && !audioCache[key]) {
       const audio = new Audio(soundPath);
       audio.load();
       audioCache[key] = audio;
+    }
+  });
+}
+
+/**
+ * Preload ambient sounds for faster playback
+ */
+export function preloadAmbientSounds(): void {
+  Object.values(backgroundAmbients).forEach(({ soundId }) => {
+    const sound = motorsportSounds.find(s => s.id === soundId);
+    if (sound && !audioCache[`ambient.${soundId}`]) {
+      const audio = new Audio(sound.url);
+      audio.load();
+      audioCache[`ambient.${soundId}`] = audio;
     }
   });
 }
@@ -166,8 +365,9 @@ export function playSound(soundKey: string): void {
 /**
  * Play a motorsport sound by its ID
  * @param soundId The ID of the motorsport sound to play (from motorsportSounds)
+ * @param volumeScale Optional volume scaling factor (0.0-1.0)
  */
-export function playMotorsportSound(soundId: string): void {
+export function playMotorsportSound(soundId: string, volumeScale: number = 1.0): void {
   if (!soundEnabled) return;
   
   try {
@@ -192,8 +392,8 @@ export function playMotorsportSound(soundId: string): void {
       audioCache[soundKey] = audio;
     }
     
-    // Apply volume setting
-    audio.volume = volume;
+    // Apply volume setting with optional scaling
+    audio.volume = Math.min(1.0, volume * volumeScale);
     
     // Play the sound
     audio.play().catch(err => {
@@ -206,10 +406,53 @@ export function playMotorsportSound(soundId: string): void {
 }
 
 /**
+ * Play a sound for a specific interaction type
+ * Uses the interaction sound map to determine which sound to play
+ * 
+ * @param interactionType The type of interaction (e.g., "button.click")
+ * @param volumeScale Optional volume scaling factor (0.0-1.0)
+ */
+export function playInteractionSound(interactionType: string, volumeScale: number = 1.0): void {
+  if (!soundEnabled) return;
+  
+  try {
+    const parts = interactionType.split('.');
+    let soundId: string | null = null;
+    
+    // Navigate the interaction sound map
+    let currentMap: any = interactionSoundMap;
+    for (const part of parts) {
+      if (!currentMap[part]) {
+        console.warn(`Unknown interaction type: ${interactionType}`);
+        return;
+      }
+      currentMap = currentMap[part];
+      if (typeof currentMap === 'string') {
+        soundId = currentMap;
+        break;
+      }
+    }
+    
+    // If we found a sound ID, play it
+    if (soundId) {
+      playMotorsportSound(soundId, volumeScale);
+    }
+  } catch (error) {
+    console.error('Error playing interaction sound:', error);
+  }
+}
+
+/**
  * Enable or disable all sounds
  */
 export function setSoundEnabled(enabled: boolean): void {
   soundEnabled = enabled;
+  
+  // If disabling, stop any background ambient
+  if (!enabled && currentAmbientAudio) {
+    stopCurrentAmbient();
+  }
+  
   saveSoundPreferences();
 }
 
@@ -218,6 +461,39 @@ export function setSoundEnabled(enabled: boolean): void {
  */
 export function setVolume(level: number): void {
   volume = Math.max(0, Math.min(1, level));
+  
+  // Update volume of any playing ambient
+  if (currentAmbientAudio && soundEnabled && ambientSoundsEnabled) {
+    const ambientId = currentAmbientSoundId || '';
+    const ambientData = Object.values(backgroundAmbients).find(data => data.soundId === ambientId);
+    if (ambientData) {
+      currentAmbientAudio.volume = ambientData.volume * volume;
+    }
+  }
+  
+  saveSoundPreferences();
+}
+
+/**
+ * Enable or disable ambient background sounds
+ */
+export function setAmbientSoundsEnabled(enabled: boolean): void {
+  ambientSoundsEnabled = enabled;
+  
+  // If enabling, check if we should play a sound for the current page
+  if (enabled && soundEnabled && typeof window !== 'undefined') {
+    const currentPath = window.location.pathname;
+    const ambientData = backgroundAmbients[currentPath];
+    if (ambientData) {
+      playAmbientSound(ambientData.soundId, ambientData.volume, ambientData.loop);
+    }
+  }
+  
+  // If disabling, stop any playing ambient
+  if (!enabled && currentAmbientAudio) {
+    stopCurrentAmbient();
+  }
+  
   saveSoundPreferences();
 }
 
@@ -228,7 +504,8 @@ function saveSoundPreferences(): void {
   try {
     localStorage.setItem('paddock20_sound_preferences', JSON.stringify({
       enabled: soundEnabled,
-      volume: volume
+      volume: volume,
+      ambientEnabled: ambientSoundsEnabled
     }));
   } catch (error) {
     console.warn('Could not save sound preferences:', error);
@@ -238,10 +515,15 @@ function saveSoundPreferences(): void {
 /**
  * Get current sound settings
  */
-export function getSoundSettings(): { enabled: boolean, volume: number } {
+export function getSoundSettings(): { 
+  enabled: boolean, 
+  volume: number,
+  ambientEnabled: boolean
+} {
   return {
     enabled: soundEnabled,
-    volume: volume
+    volume: volume,
+    ambientEnabled: ambientSoundsEnabled
   };
 }
 
@@ -249,9 +531,23 @@ export function getSoundSettings(): { enabled: boolean, volume: number } {
  * Clean up audio resources
  */
 export function cleanupSoundService(): void {
+  // Stop any playing ambient sound
+  stopCurrentAmbient();
+  
+  // Clear all cached audio
   Object.keys(audioCache).forEach(key => {
     const audio = audioCache[key];
     audio.pause();
     audio.src = '';
   });
+  
+  // Remove route change listener
+  if (typeof window !== 'undefined') {
+    window.removeEventListener('popstate', handleRouteChange);
+  }
+}
+
+// Initialize on module load
+if (typeof window !== 'undefined') {
+  initSoundService();
 }
