@@ -2,28 +2,44 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   User, Shield, Award, Car, Calendar, Droplets, Map, Camera, Sliders, 
-  ChevronDown, ChevronUp, ChevronRight, ExternalLink, Clock, Gauge, Zap
+  ChevronDown, ChevronUp, ChevronRight, ExternalLink, Clock, Gauge, Zap,
+  RefreshCw
 } from 'lucide-react';
+import { toast } from '../hooks/use-toast';
 import { useUserProfileStore } from '../services/userProfileService';
+import { useVehicle } from '../contexts/VehicleContext';
+import ProfileDataCollector from '../services/ProfileDataCollector';
 
 const UserProfileHub: React.FC = () => {
   // Get profile data from the store
-  const { profile, loadDemoProfile } = useUserProfileStore();
+  const { profile, loadDemoProfile, resetProfile } = useUserProfileStore();
+  const { activeVehicle } = useVehicle();
   
   // UI state for expandable sections
   const [activeSection, setActiveSection] = useState<string | null>('summary');
   const [showMembershipInfo, setShowMembershipInfo] = useState(false);
+  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
   
-  // Load profile from local storage or create a new one
+  // Logic to handle profile initialization or reset
   useEffect(() => {
-    if (!profile) {
-      // We'll use a customized demo profile that will be updated with real vehicle data
-      loadDemoProfile();
+    // If we don't have a profile yet, load the base profile
+    if (!profile && !initialLoadComplete) {
+      console.log("No profile found, loading initial profile");
+      loadDemoProfile(); // Load base profile structure
+      setInitialLoadComplete(true);
     }
     
     // Log page view via console
     console.log('User visited: UserProfileHub');
-  }, [profile, loadDemoProfile]);
+  }, [profile, loadDemoProfile, initialLoadComplete]);
+  
+  // Sync active vehicle with profile when it changes
+  useEffect(() => {
+    if (activeVehicle && profile) {
+      console.log("Syncing active vehicle with profile:", activeVehicle.make, activeVehicle.model);
+      ProfileDataCollector.syncVehicleFromContext(activeVehicle);
+    }
+  }, [activeVehicle, profile]);
   
   // Toggle section visibility
   const toggleSection = (section: string) => {
@@ -81,6 +97,29 @@ const UserProfileHub: React.FC = () => {
         </div>
         
         <div className="flex items-center space-x-2">
+          <button 
+            onClick={() => {
+              // Reset the profile then reload with current vehicle data
+              resetProfile();
+              setTimeout(() => {
+                loadDemoProfile();
+                if (activeVehicle) {
+                  ProfileDataCollector.syncVehicleFromContext(activeVehicle);
+                }
+              }, 100);
+              
+              toast({
+                title: "Profile Reset",
+                description: "Your profile has been reset with current vehicle data",
+                variant: "default"
+              });
+            }}
+            className="bg-green-700 hover:bg-green-600 px-2 py-0.5 rounded-sm text-xs border border-green-600 text-white flex items-center mr-2"
+          >
+            <RefreshCw className="h-3 w-3 mr-1" />
+            Sync Data
+          </button>
+          
           <span className="text-xs text-gray-400 font-mono uppercase">APEX VAULT</span>
           {profile.membershipLevel !== 'free' && (
             <div className="relative">
