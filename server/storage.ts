@@ -98,6 +98,17 @@ export interface IStorage {
   // Gloss Log methods
   getGlossLogs(glossTrackingId: number): Promise<GlossLog[]>;
   createGlossLog(log: InsertGlossLog): Promise<GlossLog>;
+  
+  // Two-Factor Authentication methods
+  updateTwoFactorSecret(userId: number, secret: string): Promise<boolean>;
+  enableTwoFactor(userId: number, secret: string, backupCodes: string[]): Promise<boolean>;
+  disableTwoFactor(userId: number): Promise<boolean>;
+  updateTwoFactorBackupCodes(userId: number, backupCodes: string[]): Promise<boolean>;
+  
+  // Security methods
+  lockAccount(userId: number, durationMinutes: number): Promise<boolean>;
+  unlockAccount(userId: number): Promise<boolean>;
+  updateFailedLoginAttempts(userId: number, count: number): Promise<boolean>;
 }
 
 // Database Storage Implementation
@@ -521,6 +532,93 @@ export class DatabaseStorage implements IStorage {
   async createGlossLog(log: InsertGlossLog): Promise<GlossLog> {
     const [newLog] = await db.insert(glossLogs).values(log).returning();
     return newLog;
+  }
+
+  // Two-Factor Authentication methods
+  async updateTwoFactorSecret(userId: number, secret: string): Promise<boolean> {
+    const result = await db
+      .update(users)
+      .set({
+        twoFactorSecret: secret,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
+    return result.rowCount > 0;
+  }
+
+  async enableTwoFactor(userId: number, secret: string, backupCodes: string[]): Promise<boolean> {
+    const result = await db
+      .update(users)
+      .set({
+        twoFactorSecret: secret,
+        twoFactorEnabled: true,
+        twoFactorBackupCodes: backupCodes,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
+    return result.rowCount > 0;
+  }
+
+  async disableTwoFactor(userId: number): Promise<boolean> {
+    const result = await db
+      .update(users)
+      .set({
+        twoFactorSecret: null,
+        twoFactorEnabled: false,
+        twoFactorBackupCodes: [],
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
+    return result.rowCount > 0;
+  }
+
+  async updateTwoFactorBackupCodes(userId: number, backupCodes: string[]): Promise<boolean> {
+    const result = await db
+      .update(users)
+      .set({
+        twoFactorBackupCodes: backupCodes,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
+    return result.rowCount > 0;
+  }
+
+  // Security methods
+  async lockAccount(userId: number, durationMinutes: number): Promise<boolean> {
+    const lockUntil = new Date(Date.now() + durationMinutes * 60 * 1000);
+    const result = await db
+      .update(users)
+      .set({
+        accountLocked: true,
+        lockedUntil: lockUntil,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
+    return result.rowCount > 0;
+  }
+
+  async unlockAccount(userId: number): Promise<boolean> {
+    const result = await db
+      .update(users)
+      .set({
+        accountLocked: false,
+        lockedUntil: null,
+        failedLoginAttempts: 0,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
+    return result.rowCount > 0;
+  }
+
+  async updateFailedLoginAttempts(userId: number, count: number): Promise<boolean> {
+    const result = await db
+      .update(users)
+      .set({
+        failedLoginAttempts: count,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
+    return result.rowCount > 0;
   }
 }
 
