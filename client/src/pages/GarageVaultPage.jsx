@@ -138,30 +138,109 @@ function GarageVaultPage() {
     }
   }, [location.search]);
   
-  // Fetch vehicles from Supabase
+  // Fetch vehicles from Supabase and check localStorage for onboarded vehicles
   useEffect(() => {
     async function fetchVehicles() {
       try {
+        // Check for onboarded vehicle from localStorage first
+        const savedVehicleProfileString = localStorage.getItem('vehicleProfile');
+        let onboardedVehicle = null;
+        
+        if (savedVehicleProfileString) {
+          try {
+            const savedVehicleProfile = JSON.parse(savedVehicleProfileString);
+            if (savedVehicleProfile) {
+              // Create a formatted vehicle object from the saved profile
+              onboardedVehicle = {
+                id: 'onboarded-1', // Special ID for onboarded vehicle
+                car_id: 'OB-1',
+                make: savedVehicleProfile.make || '',
+                model: savedVehicleProfile.model || '',
+                year: savedVehicleProfile.year || new Date().getFullYear().toString(),
+                nickname: savedVehicleProfile.nickname || `My ${savedVehicleProfile.make}`,
+                car_name: savedVehicleProfile.nickname || `${savedVehicleProfile.year} ${savedVehicleProfile.make} ${savedVehicleProfile.model}`,
+                vehicle_image: savedVehicleProfile.vehicleImage || '/favicon.png',
+                mileage: parseInt(savedVehicleProfile.mileage) || 0,
+                status: 'Ready',
+                last_service: new Date().toISOString().split('T')[0],
+                created_at: new Date().toISOString(),
+                engine_type: savedVehicleProfile.engineType || 'Gasoline',
+                transmission: savedVehicleProfile.transmissionType || 'Automatic',
+                color: savedVehicleProfile.color || 'Black',
+                purchase_date: savedVehicleProfile.purchaseDate || new Date().toISOString().split('T')[0],
+                vehicle_type: 'Car'
+              };
+              console.log("Found onboarded vehicle:", onboardedVehicle);
+            }
+          } catch (error) {
+            console.error('Error parsing saved vehicle profile:', error);
+          }
+        }
+
+        // Then fetch from Supabase
         const { data, error } = await supabase
           .from('Vehicles')
           .select('*');
         
         if (error) throw error;
         
+        let vehicleList = [];
+        
         if (data && data.length > 0) {
-          setVehicles(data);
-          setActiveVehicle(data[0]);
+          vehicleList = data;
         } else {
           // Use garageVehicles if no database data available
           console.log("Using mock vehicle data");
-          setVehicles(garageVehicles);
-          setActiveVehicle(garageVehicles[0]);
+          vehicleList = garageVehicles;
         }
+        
+        // Add onboarded vehicle if it exists (at the beginning of the list)
+        if (onboardedVehicle) {
+          vehicleList = [onboardedVehicle, ...vehicleList];
+        }
+        
+        setVehicles(vehicleList);
+        setActiveVehicle(vehicleList[0]);
       } catch (error) {
         console.error('Error fetching vehicles:', error.message);
-        // Fallback to garageVehicles array on error
-        setVehicles(garageVehicles);
-        setActiveVehicle(garageVehicles[0]);
+        
+        // Get mock data ready
+        let vehicleList = garageVehicles;
+        
+        // Still check for onboarded vehicle even on error
+        const savedVehicleProfileString = localStorage.getItem('vehicleProfile');
+        if (savedVehicleProfileString) {
+          try {
+            const savedVehicleProfile = JSON.parse(savedVehicleProfileString);
+            if (savedVehicleProfile) {
+              const onboardedVehicle = {
+                id: 'onboarded-1',
+                car_id: 'OB-1',
+                make: savedVehicleProfile.make || '',
+                model: savedVehicleProfile.model || '',
+                year: savedVehicleProfile.year || new Date().getFullYear().toString(),
+                nickname: savedVehicleProfile.nickname || `My ${savedVehicleProfile.make}`,
+                car_name: savedVehicleProfile.nickname || `${savedVehicleProfile.year} ${savedVehicleProfile.make} ${savedVehicleProfile.model}`,
+                vehicle_image: savedVehicleProfile.vehicleImage || '/favicon.png',
+                mileage: parseInt(savedVehicleProfile.mileage) || 0,
+                status: 'Ready',
+                last_service: new Date().toISOString().split('T')[0],
+                created_at: new Date().toISOString(),
+                engine_type: savedVehicleProfile.engineType || 'Gasoline',
+                transmission: savedVehicleProfile.transmissionType || 'Automatic',
+                color: savedVehicleProfile.color || 'Black',
+                purchase_date: savedVehicleProfile.purchaseDate || new Date().toISOString().split('T')[0],
+                vehicle_type: 'Car'
+              };
+              vehicleList = [onboardedVehicle, ...vehicleList];
+            }
+          } catch (error) {
+            console.error('Error parsing saved vehicle on fallback:', error);
+          }
+        }
+        
+        setVehicles(vehicleList);
+        setActiveVehicle(vehicleList[0]);
       }
       setLoading(false);
     }
