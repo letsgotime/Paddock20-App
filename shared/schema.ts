@@ -27,6 +27,15 @@ export const users = pgTable('users', {
   resetTokenExpires: timestamp('reset_token_expires'),
   verificationToken: varchar('verification_token', { length: 255 }),
   isEmailVerified: boolean('is_email_verified').default(false),
+  twoFactorSecret: varchar('two_factor_secret', { length: 255 }),
+  twoFactorEnabled: boolean('two_factor_enabled').default(false),
+  twoFactorBackupCodes: jsonb('two_factor_backup_codes').default([]),
+  securityQuestions: jsonb('security_questions').default([]),
+  securityAnswers: jsonb('security_answers').default([]),
+  lastPasswordChange: timestamp('last_password_change'),
+  accountLocked: boolean('account_locked').default(false),
+  lockedUntil: timestamp('locked_until'),
+  failedLoginAttempts: integer('failed_login_attempts').default(0),
   stripeCustomerId: varchar('stripe_customer_id', { length: 255 }),
   stripeSubscriptionId: varchar('stripe_subscription_id', { length: 255 }),
   onboardingCompleted: boolean('onboarding_completed').default(false),
@@ -236,7 +245,16 @@ export const insertUserSchema = createInsertSchema(users)
     verificationToken: true,
     role: true,
     stripeCustomerId: true,
-    stripeSubscriptionId: true
+    stripeSubscriptionId: true,
+    twoFactorSecret: true,
+    twoFactorEnabled: true,
+    twoFactorBackupCodes: true,
+    securityQuestions: true,
+    securityAnswers: true,
+    lastPasswordChange: true,
+    accountLocked: true,
+    lockedUntil: true,
+    failedLoginAttempts: true
   })
   .extend({
     email: z.string().email("Please enter a valid email address"),
