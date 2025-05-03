@@ -14,6 +14,12 @@ export default function AuthPage() {
   const { user, login, register, loading, error } = useAuth();
   const navigate = useNavigate();
   const location = useLocation();
+  
+  // Extract redirect location and error messages from URL query params
+  const [searchParams] = useState(new URLSearchParams(window.location.search));
+  const redirectPath = searchParams.get('redirect') || '/dashboard';
+  const errorMessage = searchParams.get('error');
+  const infoMessage = searchParams.get('message');
 
   // Form state
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
@@ -39,9 +45,19 @@ export default function AuthPage() {
 
   // Redirect if already authenticated
   if (user) {
-    navigate('/dashboard');
+    navigate(redirectPath);
     return null;
   }
+  
+  // Set any URL query errors/messages to form state
+  useEffect(() => {
+    if (errorMessage) {
+      setFormError(errorMessage);
+    }
+    if (infoMessage) {
+      setFormSuccess(infoMessage);
+    }
+  }, [errorMessage, infoMessage]);
 
   // Handle login form submission
   const handleLogin = async (e: React.FormEvent) => {
