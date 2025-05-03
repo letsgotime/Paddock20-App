@@ -7,6 +7,8 @@ import { playMotorsportSound, getSoundSettings, setSoundEnabled } from "../servi
  * 
  * This component is designed to be always visible regardless of authentication state
  * and is positioned at the bottom of the screen using fixed positioning.
+ * 
+ * It uses direct anchor tags for navigation to ensure maximum compatibility.
  */
 const FixedSoundBar: React.FC = () => {
   const [soundEnabled, setSoundEnabledState] = useState(true);
@@ -18,9 +20,7 @@ const FixedSoundBar: React.FC = () => {
     // Update navigation button states based on window.history
     const updateNavButtons = () => {
       setCanGoBack(window.history.length > 1);
-      // We don't have a reliable way to check if forward is available
-      // So we disable forward button when using direct navigation
-      setCanGoForward(false);
+      setCanGoForward(false); // We can't reliably detect forward capability
     };
     
     // Initial check
@@ -34,69 +34,6 @@ const FixedSoundBar: React.FC = () => {
     };
   }, []);
   
-  // Navigation functions
-  const goBack = () => {
-    try {
-      // Use browser history API
-      window.history.back();
-      
-      // Play sound effect if enabled
-      if (soundEnabled) playMotorsportSound('ui_navigate');
-      
-      console.log("Navigating back");
-    } catch (error) {
-      console.error("Error navigating back:", error);
-    }
-  };
-  
-  const goForward = () => {
-    try {
-      // Use browser history API
-      window.history.forward();
-      
-      // Play sound effect if enabled
-      if (soundEnabled) playMotorsportSound('ui_navigate');
-      
-      console.log("Navigating forward");
-    } catch (error) {
-      console.error("Error navigating forward:", error);
-    }
-  };
-  
-  const goHome = () => {
-    try {
-      // Use React Router to navigate programmatically
-      const event = new CustomEvent('routeChange', { 
-        detail: { path: '/' }
-      });
-      window.dispatchEvent(event);
-      
-      // Play sound effect if enabled
-      if (soundEnabled) playMotorsportSound('ui_select');
-      
-      console.log("Navigating to homepage");
-    } catch (error) {
-      console.error("Error navigating home:", error);
-    }
-  };
-  
-  const goToSoundLibrary = () => {
-    try {
-      // Use React Router to navigate programmatically
-      const event = new CustomEvent('routeChange', { 
-        detail: { path: '/sound-library' }
-      });
-      window.dispatchEvent(event);
-      
-      // Play sound effect if enabled
-      if (soundEnabled) playMotorsportSound('button_press');
-      
-      console.log("Navigating to sound library");
-    } catch (error) {
-      console.error("Error navigating to sound library:", error);
-    }
-  };
-  
   // Initialize sound settings from sound service
   useEffect(() => {
     try {
@@ -106,6 +43,48 @@ const FixedSoundBar: React.FC = () => {
       console.error("Error loading sound settings:", error);
     }
   }, []);
+
+  // Simple navigation handlers
+  const handleBackClick = (e: React.MouseEvent) => {
+    if (canGoBack) {
+      if (soundEnabled) playMotorsportSound('ui_navigate');
+      window.history.back();
+    } else {
+      e.preventDefault();
+    }
+  };
+
+  const handleForwardClick = (e: React.MouseEvent) => {
+    if (canGoForward) {
+      if (soundEnabled) playMotorsportSound('ui_navigate');
+      window.history.forward();
+    } else {
+      e.preventDefault();
+    }
+  };
+
+  const handleHomeClick = (e: React.MouseEvent) => {
+    if (soundEnabled) playMotorsportSound('ui_select');
+  };
+
+  const handleSoundLibraryClick = (e: React.MouseEvent) => {
+    if (soundEnabled) playMotorsportSound('button_press');
+  };
+
+  const toggleSound = () => {
+    try {
+      // Toggle sound setting
+      const newState = !soundEnabled;
+      setSoundEnabledState(newState);
+      setSoundEnabled(newState);
+      // Play sound effect for toggle
+      if (newState) {
+        playMotorsportSound('radio_beep');
+      }
+    } catch (error) {
+      console.error("Error toggling sound:", error);
+    }
+  };
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 flex items-center justify-between px-4 py-3 bg-black/95 border-t border-blue-900/50 shadow-[0_-5px_15px_rgba(0,0,0,0.3)] z-[9999]">
@@ -120,8 +99,9 @@ const FixedSoundBar: React.FC = () => {
       
       {/* Navigation Controls */}
       <div className="flex items-center space-x-2 px-3 py-1">
+        {/* Back Button */}
         <button
-          onClick={goBack}
+          onClick={handleBackClick}
           disabled={!canGoBack}
           className={`w-7 h-7 flex items-center justify-center ${
             canGoBack 
@@ -136,19 +116,22 @@ const FixedSoundBar: React.FC = () => {
         
         <div className="mx-1 h-4 w-px bg-blue-900/50"></div>
         
-        <button
-          onClick={goHome}
+        {/* Home Button - Using anchor tag for maximum compatibility */}
+        <a
+          href="/"
+          onClick={handleHomeClick}
           className="w-7 h-7 flex items-center justify-center text-blue-400 hover:text-blue-300"
           aria-label="Go to home page"
           title="Home"
         >
           <Home size={18} />
-        </button>
+        </a>
         
         <div className="mx-1 h-4 w-px bg-blue-900/50"></div>
         
+        {/* Forward Button */}
         <button
-          onClick={goForward}
+          onClick={handleForwardClick}
           disabled={!canGoForward}
           className={`w-7 h-7 flex items-center justify-center ${
             canGoForward
@@ -166,20 +149,7 @@ const FixedSoundBar: React.FC = () => {
       <div className="flex items-center space-x-2">
         {/* Sound toggle button */}
         <button
-          onClick={() => {
-            try {
-              // Toggle sound setting
-              const newState = !soundEnabled;
-              setSoundEnabledState(newState);
-              setSoundEnabled(newState);
-              // Play sound effect for toggle
-              if (newState) {
-                playMotorsportSound('radio_beep');
-              }
-            } catch (error) {
-              console.error("Error toggling sound:", error);
-            }
-          }}
+          onClick={toggleSound}
           className="text-gray-400 hover:text-blue-400 p-2 rounded-full transition-colors duration-200"
           aria-label={soundEnabled ? "Mute sounds" : "Enable sounds"}
           title={soundEnabled ? "Mute sounds" : "Enable sounds"}
@@ -187,9 +157,10 @@ const FixedSoundBar: React.FC = () => {
           {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
         </button>
         
-        {/* Sound Library link - using router events for consistent navigation */}
-        <button 
-          onClick={goToSoundLibrary}
+        {/* Sound Library link - Using standard anchor tag */}
+        <a 
+          href="/sound-library"
+          onClick={handleSoundLibraryClick}
           className="text-gray-400 hover:text-blue-400 p-2 transition-colors duration-200"
           aria-label="Sound Library"
           title="Sound Library"
@@ -200,7 +171,7 @@ const FixedSoundBar: React.FC = () => {
             <path d="M14 7a6 2.5 0 0 1 6 -2.5"></path>
             <path d="M20 14.5a6 2.5 0 0 1 -6 2.5"></path>
           </svg>
-        </button>
+        </a>
       </div>
     </nav>
   );
