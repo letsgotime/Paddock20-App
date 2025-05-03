@@ -501,7 +501,7 @@ const NewGTGWeatherPage: React.FC = () => {
       <section className="mb-6" aria-labelledby="current-weather-heading">
         <h2 id="current-weather-heading" className="apex-header-green text-xl mb-4 flex items-center">
           <Cloud className="h-5 w-5 mr-2 text-green-500" />
-          <span>Current Weather Paddock</span>
+          <span>Current Conditions & Telemetry</span>
         </h2>
         <CurrentWeatherWidget />
       </section>
