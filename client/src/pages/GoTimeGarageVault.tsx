@@ -144,6 +144,107 @@ const GoTimeGarageVault: React.FC = () => {
 
     fetchData();
   }, []);
+  
+  // Add event listeners for vehicle data updates for two-way integration
+  useEffect(() => {
+    // Handler for receiving vehicle updates from other components
+    const handleVehicleUpdate = (event: any) => {
+      console.log('GarageVault received vehicle update:', event.detail);
+      
+      if (!event.detail || !event.detail.vehicle) return;
+      
+      const { vehicle, action } = event.detail;
+      
+      // Handle different action types
+      switch (action) {
+        case 'add':
+          // Add new vehicle
+          const newVehicle: Vehicle = {
+            id: vehicle.id || `v${vehicles.length + 1}`,
+            make: vehicle.make,
+            model: vehicle.model,
+            year: typeof vehicle.year === 'string' ? parseInt(vehicle.year) : vehicle.year,
+            color: vehicle.color,
+            status: 'Active',
+            type: 'Car',
+            last_update: new Date().toISOString().split('T')[0],
+            image_url: vehicle.vehicle_image || vehicle.image,
+            statistics: {
+              maintenance_count: 0,
+              modification_count: 0,
+              total_investments: 0,
+              drive_count: 0,
+              avg_drive_duration: 0,
+              mileage: vehicle.mileage ? parseInt(vehicle.mileage) : 0
+            }
+          };
+          setVehicles(prev => [...prev, newVehicle]);
+          break;
+          
+        case 'update':
+          // Update existing vehicle
+          setVehicles(prev => prev.map(v => {
+            if (v.id === vehicle.id) {
+              return {
+                ...v,
+                make: vehicle.make || v.make,
+                model: vehicle.model || v.model,
+                year: vehicle.year ? (typeof vehicle.year === 'string' ? parseInt(vehicle.year) : vehicle.year) : v.year,
+                color: vehicle.color || v.color,
+                image_url: vehicle.vehicle_image || vehicle.image || v.image_url,
+                last_update: new Date().toISOString().split('T')[0],
+                statistics: {
+                  ...v.statistics,
+                  mileage: vehicle.mileage ? parseInt(vehicle.mileage) : v.statistics?.mileage
+                }
+              };
+            }
+            return v;
+          }));
+          
+          // If this is the selected vehicle, update it too
+          if (selectedVehicle && selectedVehicle.id === vehicle.id) {
+            setSelectedVehicle(prev => {
+              if (!prev) return null;
+              return {
+                ...prev,
+                make: vehicle.make || prev.make,
+                model: vehicle.model || prev.model,
+                year: vehicle.year ? (typeof vehicle.year === 'string' ? parseInt(vehicle.year) : vehicle.year) : prev.year,
+                color: vehicle.color || prev.color,
+                image_url: vehicle.vehicle_image || vehicle.image || prev.image_url,
+                last_update: new Date().toISOString().split('T')[0],
+                statistics: {
+                  ...prev.statistics,
+                  mileage: vehicle.mileage ? parseInt(vehicle.mileage) : prev.statistics?.mileage
+                }
+              };
+            });
+          }
+          break;
+          
+        case 'delete':
+          // Delete vehicle
+          setVehicles(prev => prev.filter(v => v.id !== event.detail.vehicleId));
+          
+          // If this was the selected vehicle, select the first vehicle or null
+          if (selectedVehicle && selectedVehicle.id === event.detail.vehicleId) {
+            setSelectedVehicle(vehicles.length > 1 ? vehicles[0] : null);
+          }
+          break;
+      }
+    };
+    
+    // Listen for vehicle update events
+    window.addEventListener('vehicle-data-update', handleVehicleUpdate);
+    window.addEventListener('garage-vault-vehicle-update', handleVehicleUpdate);
+    
+    // Cleanup listener on component unmount
+    return () => {
+      window.removeEventListener('vehicle-data-update', handleVehicleUpdate);
+      window.removeEventListener('garage-vault-vehicle-update', handleVehicleUpdate);
+    };
+  }, [vehicles, selectedVehicle]);
 
   // Filter and sort vehicles
   const filteredVehicles = vehicles
