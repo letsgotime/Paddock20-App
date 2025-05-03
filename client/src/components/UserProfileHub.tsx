@@ -5,7 +5,6 @@ import {
   ChevronDown, ChevronUp, ChevronRight, ExternalLink, Clock, Gauge, Zap
 } from 'lucide-react';
 import { useUserProfileStore } from '../services/userProfileService';
-import UserProfileCollector from '../services/userProfileService';
 
 const UserProfileHub: React.FC = () => {
   // Get profile data from the store
@@ -21,8 +20,8 @@ const UserProfileHub: React.FC = () => {
       loadDemoProfile();
     }
     
-    // Log page view through the collector
-    UserProfileCollector.logPageView('UserProfileHub');
+    // Log page view via console
+    console.log('User visited: UserProfileHub');
   }, [profile, loadDemoProfile]);
   
   // Toggle section visibility

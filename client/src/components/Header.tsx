@@ -158,6 +158,12 @@ const Header: React.FC = () => {
                     <span>My Dashboard</span>
                   </Link>
                   
+                  <Link to="/profile" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                    <User className="h-4 w-4 mr-2 text-blue-400" />
+                    <span>Driver Profile</span>
+                    <span className="ml-2 text-xs text-green-500 font-orbitron">NEW</span>
+                  </Link>
+                  
                   <Link to="/podium-pursuit" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <Medal className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Podium Pursuit</span>
