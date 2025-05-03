@@ -26,10 +26,20 @@ const UserProfileHubPage: React.FC = () => {
       console.log('Active vehicle synced with profile:', activeVehicle.make, activeVehicle.model);
     }
     
+    // Also sync any other vehicles in the garage
+    if (vehicles && vehicles.length > 0) {
+      vehicles.forEach(vehicle => {
+        if (vehicle !== activeVehicle) {
+          ProfileDataCollector.syncVehicleFromContext(vehicle);
+        }
+      });
+      console.log('All vehicles synced with profile. Total vehicles:', vehicles.length);
+    }
+    
     // We could collect data from other parts of the app here
     // For example, from the drive journal, goals, events, etc.
     
-  }, [weatherData, activeVehicle]);
+  }, [weatherData, activeVehicle, vehicles]);
   
   return (
     <div className="min-h-screen bg-black pt-20 sm:pt-24">
