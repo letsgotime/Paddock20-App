@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import EventsPreview from '../components/EventsPreview';
 import MotorsportsGallery from '../components/MotorsportsGallery';
+import F1GoalSettingPanel from '../components/F1GoalSettingPanel';
 import { useWeather } from '../contexts/FixedWeatherContext';
 import { Thermometer, Droplets, Wind, Sun, Leaf, Gauge, Cloud, ArrowUp, Compass, Timer, Clock, Zap, Map, Shield, Calendar, Trophy, Flame, Sunrise, Sunset, Moon } from 'lucide-react';
 
@@ -361,6 +362,11 @@ const Paddock20HomePage: React.FC = () => {
               </div>
             </div>
           </div>
+        </div>
+        
+        {/* F1-Inspired Goal Setting Panel */}
+        <div className="mb-10">
+          <F1GoalSettingPanel />
         </div>
 
       {/* Enhanced F1-Inspired Live Weather Station - Driver-Oriented Weather Dashboard */}
