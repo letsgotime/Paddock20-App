@@ -93,16 +93,12 @@ const PersonalizedDashboard: React.FC = () => {
   const [userData, setUserData] = useState(mockUserData);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [greeting, setGreeting] = useState('');
-  const [mergedUserData, setMergedUserData] = useState<any>({...mockUserData, name: 'Gavin Brooks'});
+  const [mergedUserData, setMergedUserData] = useState<any>({
+    ...mockUserData, 
+    name: 'Gavin Brooks' // Set default name immediately
+  });
 
-  useEffect(() => {
-    // Always use mockUser in preview mode
-    const displayName = mockUser.fullName || mockUser.username;
-    setMergedUserData({
-      ...userData,
-      name: displayName
-    });
-  }, [userData]);
+  // No need for useEffect dependency on userData as we're setting it directly at initialization
 
   useEffect(() => {
     // Update greeting based on time of day
