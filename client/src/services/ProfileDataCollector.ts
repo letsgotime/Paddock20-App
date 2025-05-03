@@ -337,10 +337,10 @@ class ProfileDataCollector {
         setTimeout(() => {
           // Check if we're still in a good application state before updating
           if (storeRef.profile && storeRef.profile.vehicles) {
-            // Now use the store method with the skipBroadcast flag
-            storeRef.updateVehicle(existingVehicle.id, {
-              ...updateData,
-              _skipBroadcast: true
+            // Now use the store method with a metadata flag to skip broadcast
+            // This is a special internal flag, not part of the vehicle data
+            storeRef.updateVehicle(existingVehicle.id, updateData, {
+              skipBroadcast: true
             });
           }
         }, 0);
@@ -446,10 +446,10 @@ class ProfileDataCollector {
     
     // Update in profile store
     updateVehicle(vehicleId, {
-      status: 'archived',
       archivedAt: new Date().toISOString(),
-      saleData: saleData || null,
-      _skipBroadcast: true
+      saleData: saleData || null
+    }, {
+      skipBroadcast: true
     });
     
     // Broadcast the archival to all components
@@ -539,10 +539,10 @@ class ProfileDataCollector {
     
     // Update in profile store
     updateVehicle(vehicleId, {
-      status: 'active',
       archivedAt: undefined,
-      saleData: undefined,
-      _skipBroadcast: true
+      saleData: undefined
+    }, {
+      skipBroadcast: true
     });
     
     // Broadcast the restoration to all components
