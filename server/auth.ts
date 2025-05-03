@@ -1,45 +1,20 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { Express } from "express";
+import { Express, Request, Response, NextFunction } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
-import connectPg from "connect-pg-simple";
-import { pool } from "./db";
+import { v4 as uuidv4 } from "uuid";
 import { db } from "./db";
 import { eq } from "drizzle-orm";
-import { users, User, InsertUser } from "@shared/schema";
+import { users, type User, type InsertUser, type InsertAuthLog, type InsertSession } from "@shared/schema";
+import { storage } from "./storage";
 
 // Extend Express.User with our User type
 declare global {
   namespace Express {
     // Define our User interface for Express
-    interface User {
-      id: number;
-      username: string;
-      password: string;
-      email: string;
-      firstName: string | null;
-      lastName: string | null;
-      fullName: string | null;
-      preferredUnit: string;
-      profileImage: string | null;
-      drivingExperience: string | null;
-      interests: string[];
-      bio: string | null;
-      role: string;
-      isActive: boolean;
-      lastLogin: Date | null;
-      resetToken: string | null;
-      resetTokenExpires: Date | null;
-      verificationToken: string | null;
-      isEmailVerified: boolean;
-      stripeCustomerId: string | null;
-      stripeSubscriptionId: string | null;
-      onboardingCompleted: boolean;
-      createdAt: Date;
-      updatedAt: Date;
-    }
+    interface User extends User {}
   }
 }
 
@@ -60,12 +35,7 @@ async function comparePasswords(supplied: string, stored: string): Promise<boole
   return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
-// Initialize PostgreSQL session store
-const PgSessionStore = connectPg(session);
-const sessionStore = new PgSessionStore({
-  pool,
-  createTableIfMissing: true,
-});
+// Using storage.sessionStore now instead of creating a new instance here
 
 // Authentication setup function
 export function setupAuth(app: Express) {
