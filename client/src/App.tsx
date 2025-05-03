@@ -35,7 +35,7 @@ import SeasonalChecklistPage from "./pages/SeasonalChecklistPage";
 import EBooksPage from "./pages/eBooksPage";
 import Paddock20HomePage from "./pages/Paddock20HomePage";
 import ProductOrganizerPage from "./pages/ProductOrganizerPage"; // Import the new page
-import DropdownNavbar from "./components/DropdownNavbar";
+import FixedSoundBar from "./components/FixedSoundBar";
 import Footer from "./components/Footer";
 import { WeatherProvider } from "./contexts/FixedWeatherContext";
 import { GalleryProvider } from "./contexts/GalleryContext";
@@ -226,11 +226,11 @@ function App() {
                       {/* Authentication Header - always visible */}
                       <Header />
                     
-                      {/* Main navigation header - always visible */}
+                      {/* GoTime Motorsports logo with ambient sound control - always fixed to top */}
+                      <FixedSoundBar />
+                      
+                      {/* Main navigation header - only visible when logged in */}
                       <header role="banner">
-                        {/* GoTime Motorsports logo with ambient sound controls - always visible */}
-                        <DropdownNavbar />
-                        
                         {/* Navigation controls and breadcrumbs - only visible when logged in */}
                         {(effectiveSession || previewMode) && (
                           <>
