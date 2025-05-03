@@ -4,7 +4,17 @@ import {
   getForecastSummary, 
   getDrivingConditions 
 } from '@/services/consolidatedWeatherService';
+import { 
+  saveToWeatherCaches, 
+  getFromWeatherCaches,
+  formatCacheAge 
+} from '@/services/weatherStateManager';
 import { OneCallData, WeatherData, ForecastData } from '@/lib/weather';
+
+// Cache configuration
+const REFRESH_INTERVAL_MINUTES = 60;  // How often we auto-refresh
+const PRIMARY_CACHE_TTL_MINUTES = 60; // 1 hour primary cache
+const SECONDARY_CACHE_TTL_HOURS = 8;  // 8 hour secondary cache
 
 // Local type definition to avoid import conflict
 interface GeoLocation {
@@ -263,45 +273,18 @@ export const WeatherProvider: React.FC<{children: React.ReactNode}> = ({ childre
     setIsLoading(true);
     
     try {
-      // Check if we have cached data and it's still fresh
-      const cacheKey = `weather_cache_${location.lat}_${location.lon}_${unit}`;
-      let cachedData = null;
+      // Try to get data from caches first (primary then secondary)
+      const { data: cachedData, source: cacheSource } = getFromWeatherCaches(
+        location, 
+        unit, 
+        forceRefresh,
+        setCacheAge
+      );
       
-      try {
-        const cacheString = localStorage.getItem(cacheKey);
-        if (cacheString) {
-          const cache = JSON.parse(cacheString);
-          const cacheTime = new Date(cache.timestamp);
-          const now = new Date();
-          const cacheAgeMins = (now.getTime() - cacheTime.getTime()) / (1000 * 60);
-          
-          // Calculate metrics for display
-          const formattedAge = formatCacheAge(cacheAgeMins);
-          setCacheAge(formattedAge);
-          
-          const expiryTime = new Date(cacheTime.getTime() + CACHE_TTL_MINUTES * 60 * 1000);
-          setCacheExpiryTime(expiryTime);
-          
-          // Use cache if it's fresh and we're not forcing refresh
-          if (cacheAgeMins < CACHE_TTL_MINUTES && !forceRefresh) {
-            console.log(`Using cached weather data (${formattedAge} old)`);
-            cachedData = cache.data;
-            setIsUsingFallbackData(true);
-          } else {
-            console.log("Cache expired or refresh forced, fetching fresh data");
-            setIsUsingFallbackData(false);
-          }
-        } else {
-          console.log("No weather cache found");
-          setIsUsingFallbackData(false);
-        }
-      } catch (cacheError) {
-        console.warn("Error reading from cache:", cacheError);
-        setIsUsingFallbackData(false);
-      }
-      
-      // If we have valid cached data, use it
+      // If we have valid cached data from either cache, use it
       if (cachedData) {
+        console.log(`Using ${cacheSource} cache data`);
+        
         setWeatherData(cachedData.weatherData);
         setOneCallData(cachedData.oneCallData);
         setForecastData(cachedData.forecastData);
@@ -317,17 +300,32 @@ export const WeatherProvider: React.FC<{children: React.ReactNode}> = ({ childre
         setError(null);
         setLastUpdated(new Date(cachedData.timestamp));
         setIsLoading(false);
+        setIsUsingFallbackData(true);
         
-        // Still schedule a refresh to happen soon
-        setTimeout(() => {
-          console.log("Performing background refresh after using cache");
-          fetchWeather(true).catch(console.error);
-        }, 5000);
+        // If we're using the primary cache, set the expiry time
+        if (cacheSource === 'primary') {
+          const cacheTime = new Date(cachedData.timestamp);
+          const expiryTime = new Date(cacheTime.getTime() + PRIMARY_CACHE_TTL_MINUTES * 60 * 1000);
+          setCacheExpiryTime(expiryTime);
+        } 
+        // If we're using the secondary cache, schedule a refresh immediately
+        else if (cacheSource === 'secondary') {
+          const cacheTime = new Date(cachedData.timestamp);
+          const expiryTime = new Date(cacheTime.getTime() + SECONDARY_CACHE_TTL_HOURS * 60 * 60 * 1000);
+          setCacheExpiryTime(expiryTime);
+          
+          // Secondary cache indicates we had trouble with the primary cache,
+          // so schedule a refresh to happen soon
+          setTimeout(() => {
+            console.log("Performing background refresh after using secondary cache");
+            fetchWeather(true).catch(console.error);
+          }, 5000);
+        }
         
         return;
       }
       
-      // Fetch fresh data
+      // Fetch fresh data if no cache available or refresh forced
       console.log("Fetching fresh weather data...");
       const data = await fetchConsolidatedWeatherData(location, unit);
       console.log("Weather data received:", data);
@@ -360,32 +358,56 @@ export const WeatherProvider: React.FC<{children: React.ReactNode}> = ({ childre
       // Reset cache metrics
       setCacheAge("Just updated");
       
-      // Save to cache
-      try {
-        localStorage.setItem(cacheKey, JSON.stringify({
-          timestamp: now.toISOString(),
-          data: {
-            weatherData: newWeatherData,
-            oneCallData: newOneCallData,
-            forecastData: newForecastData
-          }
-        }));
-        console.log("Weather data saved to cache");
-      } catch (cacheError) {
-        console.warn("Failed to save to cache:", cacheError);
-      }
+      // Set cache expiry time
+      const primaryExpiryTime = new Date(now.getTime() + PRIMARY_CACHE_TTL_MINUTES * 60 * 1000);
+      setCacheExpiryTime(primaryExpiryTime);
+      
+      // Save to both caches
+      saveToWeatherCaches(location, unit, {
+        weatherData: newWeatherData,
+        oneCallData: newOneCallData,
+        forecastData: newForecastData,
+        timestamp: now.toISOString()
+      });
       
     } catch (err) {
       console.error("Error fetching weather:", err);
       
-      // If we have existing data, keep using it and just report the refresh failed
-      if (weatherData || oneCallData || forecastData) {
+      // Try to get data from secondary cache as a last resort
+      const { data: emergencyCachedData, source: emergencyCacheSource } = getFromWeatherCaches(
+        location, 
+        unit, 
+        false, // Don't force refresh in emergency mode
+        setCacheAge
+      );
+      
+      // If we found emergency data in the secondary cache, use it
+      if (emergencyCachedData) {
+        console.log(`Using emergency ${emergencyCacheSource} cache data after fetch failure`);
+        
+        setWeatherData(emergencyCachedData.weatherData);
+        setOneCallData(emergencyCachedData.oneCallData);
+        setForecastData(emergencyCachedData.forecastData);
+        
+        const autoData = processAutomotiveData(
+          emergencyCachedData.weatherData, 
+          emergencyCachedData.oneCallData, 
+          emergencyCachedData.forecastData
+        );
+        setAutomotiveWeatherData(autoData);
+        
+        setError(err as Error);
+        setFailureCount(prevCount => prevCount + 1);
+        setIsUsingFallbackData(true);
+        setLastUpdated(new Date(emergencyCachedData.timestamp));
+      }
+      // Only fully fail if we have no data at all
+      else if (weatherData || oneCallData || forecastData) {
         console.log("Using existing data despite fetch error");
         setError(err as Error);
         setFailureCount(prevCount => prevCount + 1);
         setIsUsingFallbackData(true);
       } else {
-        // Only fully fail if we have no data at all
         setError(err as Error);
         setFailureCount(prevCount => prevCount + 1);
       }

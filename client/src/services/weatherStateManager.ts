@@ -8,6 +8,109 @@
 import { type Location } from '@/lib/weather';
 import { fetchConsolidatedWeatherData } from './consolidatedWeatherService';
 
+// Cache TTL constants
+const PRIMARY_CACHE_TTL_MINUTES = 60; // 1 hour for primary cache
+const SECONDARY_CACHE_TTL_HOURS = 8;  // 8 hours for secondary cache
+
+/**
+ * Save weather data to both primary and secondary caches
+ */
+export function saveToWeatherCaches(location: Location, unit: string, data: any) {
+  const now = new Date();
+  
+  try {
+    // Generate cache keys
+    const primaryCacheKey = `weather_primary_cache_${location.lat}_${location.lon}_${unit}`;
+    const secondaryCacheKey = `weather_secondary_cache_${location.lat}_${location.lon}_${unit}`;
+    
+    // Create cache object with timestamp
+    const cacheObject = {
+      timestamp: now.toISOString(),
+      data: data
+    };
+    
+    // Save to primary cache
+    localStorage.setItem(primaryCacheKey, JSON.stringify(cacheObject));
+    
+    // Also save to secondary (long-term) cache
+    localStorage.setItem(secondaryCacheKey, JSON.stringify(cacheObject));
+    
+    console.log('Weather data saved to both primary and secondary caches');
+    return true;
+  } catch (error) {
+    console.error('Failed to save weather data to caches:', error);
+    return false;
+  }
+}
+
+/**
+ * Try to retrieve data from weather caches, checking primary first, then secondary
+ * Returns null if no valid cache data is available
+ */
+export function getFromWeatherCaches(
+  location: Location, 
+  unit: string, 
+  forceRefresh: boolean = false,
+  setCacheAge: (value: string) => void
+): { data: any, source: 'primary' | 'secondary' | null } {
+  if (forceRefresh) {
+    return { data: null, source: null };
+  }
+  
+  try {
+    const now = new Date();
+    const primaryCacheKey = `weather_primary_cache_${location.lat}_${location.lon}_${unit}`;
+    const secondaryCacheKey = `weather_secondary_cache_${location.lat}_${location.lon}_${unit}`;
+    
+    // Try primary cache first
+    const primaryCacheStr = localStorage.getItem(primaryCacheKey);
+    if (primaryCacheStr) {
+      const primaryCache = JSON.parse(primaryCacheStr);
+      const primaryCacheTime = new Date(primaryCache.timestamp);
+      const primaryCacheAgeMins = (now.getTime() - primaryCacheTime.getTime()) / (1000 * 60);
+      
+      if (primaryCacheAgeMins < PRIMARY_CACHE_TTL_MINUTES) {
+        // Primary cache is still valid
+        const formattedAge = formatCacheAge(primaryCacheAgeMins);
+        setCacheAge(formattedAge);
+        console.log(`Using primary cache data (${formattedAge} old)`);
+        return { data: primaryCache.data, source: 'primary' };
+      }
+    }
+    
+    // Try secondary cache next
+    const secondaryCacheStr = localStorage.getItem(secondaryCacheKey);
+    if (secondaryCacheStr) {
+      const secondaryCache = JSON.parse(secondaryCacheStr);
+      const secondaryCacheTime = new Date(secondaryCache.timestamp);
+      const secondaryCacheAgeHours = (now.getTime() - secondaryCacheTime.getTime()) / (1000 * 60 * 60);
+      
+      if (secondaryCacheAgeHours < SECONDARY_CACHE_TTL_HOURS) {
+        // Secondary cache is still valid
+        const formattedAge = formatCacheAge(secondaryCacheAgeHours * 60);
+        setCacheAge(`${formattedAge} (backup cache)`);
+        console.log(`Using secondary backup cache data (${formattedAge} old)`);
+        return { data: secondaryCache.data, source: 'secondary' };
+      }
+    }
+    
+    // No valid cache data found
+    return { data: null, source: null };
+  } catch (error) {
+    console.error('Error reading from weather caches:', error);
+    return { data: null, source: null };
+  }
+}
+
+/**
+ * Format cache age for display
+ */
+export function formatCacheAge(ageInMinutes: number): string {
+  if (ageInMinutes < 1) return "Just now";
+  if (ageInMinutes < 60) return `${Math.round(ageInMinutes)} minutes old`;
+  return `${Math.round(ageInMinutes / 60)} hours old`;
+}
+
 /**
  * Initialize or update all the weather-related state with a successful fetch
  */
@@ -30,11 +133,11 @@ export function updateWeatherStateFromFetch(
   setters.setIsUsingFallbackData(false);
   
   // Set next auto-refresh time (60 minutes from now)
-  const nextRefresh = new Date(now.getTime() + 60 * 60 * 1000);
+  const nextRefresh = new Date(now.getTime() + PRIMARY_CACHE_TTL_MINUTES * 60 * 1000);
   setters.setNextRefreshTime(nextRefresh);
   
   // Set cache expiry time (8 hours from now)
-  const cacheExpiry = new Date(now.getTime() + 8 * 60 * 60 * 1000);
+  const cacheExpiry = new Date(now.getTime() + SECONDARY_CACHE_TTL_HOURS * 60 * 60 * 1000);
   setters.setCacheExpiryTime(cacheExpiry);
   
   // Set cache age
