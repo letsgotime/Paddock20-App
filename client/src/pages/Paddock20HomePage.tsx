@@ -5,7 +5,7 @@ import MotorsportsGallery from '../components/MotorsportsGallery';
 import F1GoalSettingPanel from '../components/F1GoalSettingPanel';
 import { useWeather } from '../contexts/FixedWeatherContext';
 import ProfileDataCollector from '../services/ProfileDataCollector';
-import { Thermometer, Droplets, Wind, Sun, Leaf, Gauge, Cloud, ArrowUp, Compass, Timer, Clock, Zap, Map, Shield, Calendar, Trophy, Flame, Sunrise, Sunset, Moon } from 'lucide-react';
+import { Thermometer, Droplets, Wind, Sun, Leaf, Gauge, Cloud, ArrowUp, Compass, Timer, Clock, Zap, Map, Shield, Calendar, Trophy, Flame, Sunrise, Sunset, Moon, User } from 'lucide-react';
 
 // Array of driving insights to rotate through - based on weather patterns
 const drivingInsights = [
@@ -394,6 +394,60 @@ const Paddock20HomePage: React.FC = () => {
           <F1GoalSettingPanel />
         </div>
 
+      {/* Quick Access Card Grid - Direct access to key app features */}
+      <section className="mb-8 relative">
+        {/* Section accent line */}
+        <div className="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-blue-500 via-blue-400 to-transparent"></div>
+        
+        {/* Cards Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pl-4 mb-8">
+          {/* Weather Paddock Card */}
+          <div className="bg-black/60 border border-blue-900/30 rounded-md p-3 hover:border-blue-500/40 hover:bg-black/80 transition-all duration-300">
+            <Link to="/weather-paddock" className="block">
+              <h3 className="text-blue-400 text-sm font-semibold flex items-center">
+                <Thermometer className="w-4 h-4 mr-2" />
+                Weather Paddock
+              </h3>
+              <p className="text-gray-400 text-xs mt-1">Real-time weather for optimal driving</p>
+            </Link>
+          </div>
+          
+          {/* Route Planner Card */}
+          <div className="bg-black/60 border border-blue-900/30 rounded-md p-3 hover:border-blue-500/40 hover:bg-black/80 transition-all duration-300">
+            <Link to="/route-planner" className="block">
+              <h3 className="text-blue-400 text-sm font-semibold flex items-center">
+                <Map className="w-4 h-4 mr-2" />
+                Route Planner
+              </h3>
+              <p className="text-gray-400 text-xs mt-1">Plan the perfect drive</p>
+            </Link>
+          </div>
+          
+          {/* Drive Journal Card */}
+          <div className="bg-black/60 border border-blue-900/30 rounded-md p-3 hover:border-blue-500/40 hover:bg-black/80 transition-all duration-300">
+            <Link to="/drive-journal" className="block">
+              <h3 className="text-blue-400 text-sm font-semibold flex items-center">
+                <Clock className="w-4 h-4 mr-2" />
+                Drive Journal
+              </h3>
+              <p className="text-gray-400 text-xs mt-1">Log your memorable drives</p>
+            </Link>
+          </div>
+          
+          {/* NEW: Driver Profile Card */}
+          <div className="bg-gradient-to-br from-black/80 to-blue-900/20 border border-blue-500/30 rounded-md p-3 hover:border-blue-500/60 hover:shadow-[0_0_15px_rgba(75,156,211,0.25)] transition-all duration-300">
+            <Link to="/profile" className="block">
+              <h3 className="text-blue-400 text-sm font-semibold flex items-center">
+                <User className="w-4 h-4 mr-2" />
+                Driver Profile
+                <span className="ml-2 text-[10px] bg-green-600/70 text-white px-1 rounded">NEW</span>
+              </h3>
+              <p className="text-gray-400 text-xs mt-1">Your automotive identity dashboard</p>
+            </Link>
+          </div>
+        </div>
+      </section>
+      
       {/* Enhanced F1-Inspired Live Weather Station - Driver-Oriented Weather Dashboard */}
       <section className="mb-8 relative">
         {/* Section accent line */}
