@@ -203,7 +203,7 @@ const DropdownNavbar = () => {
                 <span>Podium Pursuit</span>
               </Link>
 
-              <Link to="/new-weather-center" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
+              <Link to="/weather-paddock" className="hover:text-green-400 flex items-center py-1" onClick={() => setIsOpen(false)}>
                 <Cloud className="h-4 w-4 mr-2 text-blue-400" />
                 <span>Weather Paddock</span>
               </Link>
