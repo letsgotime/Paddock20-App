@@ -595,15 +595,15 @@ const Paddock20HomePage: React.FC = () => {
                   </div>
                   <div className="text-white text-xl font-mono font-semibold group-hover:text-blue-300 transition-colors duration-300">
                     {automotiveWeatherData && 
-                     automotiveWeatherData.automotive_metrics && 
-                     automotiveWeatherData.automotive_metrics.track_surface &&
-                     typeof automotiveWeatherData.automotive_metrics.track_surface.temperature === 'number'
-                      ? automotiveWeatherData.automotive_metrics.track_surface.temperature.toFixed(1) + "°F"
+                     automotiveWeatherData.carMetrics && 
+                     automotiveWeatherData.carMetrics.trackSurface &&
+                     typeof automotiveWeatherData.carMetrics.trackSurface.temperature === 'number'
+                      ? automotiveWeatherData.carMetrics.trackSurface.temperature.toFixed(1) + "°F"
                       : "78.2°F"}
                   </div>
                   <div className="mt-1 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
                     <div className="h-full bg-blue-500 group-hover:bg-blue-400 transition-colors duration-300" 
-                         style={{ width: automotiveWeatherData?.automotive_metrics?.track_surface?.temperature ? `${Math.min(100, (automotiveWeatherData.automotive_metrics.track_surface.temperature/120)*100)}%` : '0%' }}></div>
+                         style={{ width: automotiveWeatherData?.carMetrics?.trackSurface?.temperature ? `${Math.min(100, (automotiveWeatherData.carMetrics.trackSurface.temperature/120)*100)}%` : '0%' }}></div>
                   </div>
                 </div>
                 

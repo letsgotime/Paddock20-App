@@ -131,8 +131,8 @@ export interface UserProfile {
 // Initial demo data for development
 const demoUserProfile: UserProfile = {
   id: '1',
-  username: 'driver1',
-  displayName: 'Alex Motorsport',
+  username: 'gavinbrooks',
+  displayName: 'Gavin Brooks',
   avatar: '/assets/images/default-avatar.png',
   memberSince: '2023-04-15',
   membershipLevel: 'premium',
