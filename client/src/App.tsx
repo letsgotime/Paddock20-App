@@ -311,6 +311,7 @@ function App() {
                         <Route path="/motorsports-gallery" element={<ProtectedRoute><MotorsportsGalleryPage /></ProtectedRoute>} />
                         <Route path="/podium-pursuit" element={<ProtectedRoute><PodiumPursuitPage /></ProtectedRoute>} />
                         <Route path="/sound-library" element={<ProtectedRoute><SoundLibraryPage /></ProtectedRoute>} />
+                        <Route path="/product-organizer" element={<ProtectedRoute><ProductOrganizerPage /></ProtectedRoute>} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                       

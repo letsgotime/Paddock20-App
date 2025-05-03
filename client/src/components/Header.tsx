@@ -32,7 +32,8 @@ import {
   Trophy,
   Award,
   Star,
-  Medal
+  Medal,
+  ShoppingBag
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { playMotorsportSound, getSoundSettings, setSoundEnabled } from "../services/soundService";
@@ -142,7 +143,7 @@ const Header: React.FC = () => {
             {isMenuOpen && (
               <div className="absolute right-0 mt-1 w-64 bg-black border border-blue-900 rounded-md shadow-lg overflow-auto max-h-[90vh] z-50">
                 <div className="bg-blue-900/20 px-3 py-2 text-sm text-blue-300 font-semibold border-b border-blue-900/40 sticky top-0">
-                  Navigation
+                  Paddock Menu
                 </div>
                 
                 <div className="py-1">
@@ -233,6 +234,12 @@ const Header: React.FC = () => {
                   <Link to="/juicebox" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <SprayCan className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Juice Box</span>
+                  </Link>
+                  
+                  <Link to="/product-organizer" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                    <ShoppingBag className="h-4 w-4 mr-2 text-blue-400" />
+                    <span>Product Organizer</span>
+                    <span className="ml-2 text-xs text-green-500 font-orbitron">NEW</span>
                   </Link>
                   
                   <Link to="/discounts" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
