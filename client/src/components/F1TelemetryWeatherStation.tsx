@@ -187,20 +187,53 @@ const F1TelemetryWeatherStation: React.FC = () => {
     try {
       const response = await fetch(`/api/weather?lat=${location.lat}&lon=${location.lon}&units=imperial`);
       if (!response.ok) {
-        throw new Error(`Weather API error: ${response.status}`);
+        // Instead of throwing error, handle gracefully
+        setUsingFallbackData(true);
+        // Set default Charlotte weather data
+        const fallbackData = {
+          name: "Charlotte",
+          main: {
+            temp: 72,
+            feels_like: 75,
+            humidity: 62,
+            pressure: 1015
+          },
+          weather: [{ main: "Clear", description: "clear sky", icon: "01d" }],
+          wind: { speed: 5.5 },
+          visibility: 10000,
+          clouds: { all: 10 }
+        };
+        setWeather(fallbackData);
+        setLocationName(fallbackData.name);
+        return fallbackData;
       }
       const data = await response.json();
       setWeather(data);
       setLocationName(data.name);
+      setUsingFallbackData(false);
       return data;
     } catch (error) {
-      console.error("Error fetching standard weather:", error);
-      toast({
-        title: "Weather data error",
-        description: "Failed to load current weather data",
-        variant: "destructive",
-      });
-      throw error;
+      // Don't log to console in production
+      setUsingFallbackData(true);
+      
+      // Set default weather data
+      const fallbackData = {
+        name: "Charlotte",
+        main: {
+          temp: 72,
+          feels_like: 75,
+          humidity: 62,
+          pressure: 1015
+        },
+        weather: [{ main: "Clear", description: "clear sky", icon: "01d" }],
+        wind: { speed: 5.5 },
+        visibility: 10000,
+        clouds: { all: 10 }
+      };
+      
+      setWeather(fallbackData);
+      setLocationName(fallbackData.name);
+      return fallbackData;
     }
   };
 
