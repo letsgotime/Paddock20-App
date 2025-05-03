@@ -47,16 +47,6 @@ const Paddock20HomePage: React.FC = () => {
     isUsingFallbackData
   } = useWeather();
   const [currentTime, setCurrentTime] = useState(new Date());
-  const [weatherError, setWeatherError] = useState(false);
-  
-  // Check if weather data is available
-  useEffect(() => {
-    if (!weatherData || (weatherData && Object.keys(weatherData).length === 0)) {
-      setWeatherError(true);
-    } else {
-      setWeatherError(false);
-    }
-  }, [weatherData]);
   const [insightIndex, setInsightIndex] = useState(0);
   const [timeFormat, setTimeFormat] = useState('24h'); // '12h' or '24h'
   const [dateFormat, setDateFormat] = useState('mdy'); // 'mdy', 'dmy', or 'ymd'
@@ -356,16 +346,12 @@ const Paddock20HomePage: React.FC = () => {
             <div className="flex flex-col mb-4 border-b border-blue-900/30 pb-2 relative z-10">
               <div className="flex justify-between items-center">
                 <div className="flex items-center">
-                  <div className={`h-3 w-3 rounded-full ${weatherError ? 'bg-amber-500' : 'bg-green-500'} animate-pulse mr-2`}></div>
+                  <div className="h-3 w-3 rounded-full bg-green-500 animate-pulse mr-2"></div>
                   <h3 className="text-blue-400 font-bold text-sm uppercase tracking-wider">Driver Conditions</h3>
                 </div>
                 <div className="flex space-x-2 items-center">
                   <span className="text-xs text-gray-400">DATA REFRESH:</span>
-                  {weatherError ? (
-                    <span className="text-xs text-amber-400 font-mono">
-                      SIMULATION MODE - {new Date().toLocaleTimeString()}
-                    </span>
-                  ) : lastUpdated ? (
+                  {lastUpdated ? (
                     <span className="text-xs text-green-400 font-mono">
                       {isUsingFallbackData ? "CACHED" : "LIVE"} - {new Date(lastUpdated).toLocaleTimeString()}
                     </span>
