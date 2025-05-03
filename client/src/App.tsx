@@ -66,7 +66,6 @@ import SupportChatbot from "./components/SupportChatbot";
 import HomePage from "./pages/Home";
 import OneTapWeatherSnapshot from "./components/OneTapWeatherSnapshot";
 import UserOnboarding from "./components/UserOnboarding";
-import { useAuth } from "./hooks/useAuth";
 import { AuthProvider } from "./context/AuthContext";
 import { MAIN_CONTENT_ID, LiveRegion } from './lib/accessibility';
 import './paddock20.css';
