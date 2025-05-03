@@ -112,7 +112,6 @@ const DropdownNavbar = () => {
           alt="GoTime Motorsports" 
           className="h-10 w-auto mr-2"
         />
-        <span className="text-gray-400 font-orbitron">Paddock20™</span>
       </Link>
       
       <div className="flex items-center space-x-3">
