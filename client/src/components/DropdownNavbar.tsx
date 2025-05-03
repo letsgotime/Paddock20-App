@@ -14,7 +14,7 @@ const DropdownNavbar = () => {
   }, []);
 
   return (
-    <nav className="flex items-center justify-between p-4 bg-black border-b border-gray-700 relative z-30">
+    <nav className="flex items-center justify-between p-4 bg-black border-b border-gray-700 fixed top-0 left-0 right-0 z-40">
       <Link to="/dashboard" className="flex items-center font-orbitron text-2xl no-underline">
         <img 
           src="/assets/GTM Logo - Green-White.png" 
