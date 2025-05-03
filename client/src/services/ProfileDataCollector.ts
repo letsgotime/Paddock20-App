@@ -340,6 +340,114 @@ class ProfileDataCollector {
   }
   
   /**
+   * Deletes a vehicle from the user's profile
+   * Also broadcasts the deletion to all components for two-way integration
+   * @param vehicleId ID of the vehicle to delete
+   * @returns Boolean indicating success or failure
+   */
+  static deleteVehicle(vehicleId: string): boolean {
+    console.log(`Deleting vehicle with ID: ${vehicleId}`);
+    const { profile, updateProfile } = this.store;
+    
+    if (!profile) {
+      console.warn('Cannot delete vehicle: No profile found');
+      return false;
+    }
+    
+    // Find the vehicle to delete
+    const vehicleToDelete = profile.vehicles.find((v: VehicleData) => v.id === vehicleId);
+    if (!vehicleToDelete) {
+      console.warn(`Cannot delete vehicle: Vehicle with ID ${vehicleId} not found`);
+      return false;
+    }
+    
+    // Remove the vehicle from the profile
+    const updatedVehicles = profile.vehicles.filter((v: VehicleData) => v.id !== vehicleId);
+    
+    // Update the profile
+    updateProfile({
+      vehicles: updatedVehicles,
+      lastActive: new Date().toISOString()
+    });
+    
+    // Broadcast the deletion to all components
+    console.log(`Broadcasting vehicle deletion: ${vehicleToDelete.make} ${vehicleToDelete.model}`);
+    
+    // Create a custom event for the deletion
+    const event = new CustomEvent('vehicle-data-update', {
+      detail: {
+        action: 'delete',
+        vehicleId: vehicleId,
+        source: 'ProfileDataCollector',
+        timestamp: new Date().toISOString()
+      }
+    });
+    
+    // Dispatch to all listening components
+    window.dispatchEvent(event);
+    
+    // Target specific components with specialized events
+    
+    // Garage Vault
+    window.dispatchEvent(new CustomEvent('garage-vault-vehicle-update', {
+      detail: { 
+        action: 'delete',
+        vehicleId: vehicleId
+      }
+    }));
+    
+    // JuiceBox component
+    window.dispatchEvent(new CustomEvent('juice-box-vehicle-update', {
+      detail: { 
+        action: 'delete',
+        vehicleId: vehicleId
+      }
+    }));
+    
+    // Gallery component
+    window.dispatchEvent(new CustomEvent('gallery-vehicle-update', {
+      detail: { 
+        action: 'delete',
+        vehicleId: vehicleId
+      }
+    }));
+    
+    // Homepage dashboard
+    window.dispatchEvent(new CustomEvent('homepage-vehicle-update', {
+      detail: { 
+        action: 'delete',
+        vehicleId: vehicleId
+      }
+    }));
+    
+    // Weather dashboard
+    window.dispatchEvent(new CustomEvent('weather-vehicle-update', {
+      detail: { 
+        action: 'delete',
+        vehicleId: vehicleId
+      }
+    }));
+    
+    // User settings
+    window.dispatchEvent(new CustomEvent('settings-vehicle-update', {
+      detail: { 
+        action: 'delete',
+        vehicleId: vehicleId
+      }
+    }));
+    
+    // Also notify the VehicleContext
+    window.dispatchEvent(new CustomEvent('vehicle-deleted', {
+      detail: {
+        vehicleId: vehicleId,
+        source: 'ProfileDataCollector'
+      }
+    }));
+    
+    return true;
+  }
+
+  /**
    * Imports data from another component or system into the profile
    * This is a generic method for any data source that doesn't have a specific collector
    * @param source Name of the source component or system
