@@ -162,14 +162,14 @@ const UnifiedDashboardProfilePage = () => {
                 </div>
                 
                 <div className="pt-16 pb-5 px-8">
-                  <h2 className="text-2xl font-bold">{profile?.displayName || "Gavin Brooks"}</h2>
+                  <h2 className="text-2xl font-bold">{profile?.displayName || ""}</h2>
                   <p className="text-gray-400 flex items-center mt-1">
                     <MapPin className="h-4 w-4 inline mr-1.5" />
-                    {profile?.location || "Atlanta, GA"}
+                    {profile?.location || ""}
                   </p>
                   <p className="text-gray-400 flex items-center mt-1">
                     <Calendar className="h-4 w-4 inline mr-1.5" />
-                    Member since {formatDate(profile?.memberSince || "2023-01-01")}
+                    Member since {profile?.memberSince ? formatDate(profile.memberSince) : ""}
                   </p>
                   
                   <div className="mt-5 flex flex-wrap gap-3">
@@ -381,7 +381,7 @@ const UnifiedDashboardProfilePage = () => {
                 Current Weather
               </h2>
               <div className="flex items-center space-x-2">
-                <span className="text-gray-400 text-xs">{locationName || "Current Location"}</span>
+                <span className="text-gray-400 text-xs">{location?.name || "Current Location"}</span>
                 <button 
                   onClick={() => toggleSection('weather')} 
                   className="text-gray-400 hover:text-white p-1"
@@ -395,11 +395,11 @@ const UnifiedDashboardProfilePage = () => {
               </div>
             </div>
             
-            {expandedSections.weather && weatherData && (
+            {expandedSections.weather && weatherData && weatherData.weatherData && (
               <div className="p-4">
                 <div className="flex items-center justify-between">
                   <div className="flex items-center">
-                    {weatherData.weatherData.weather[0].icon && (
+                    {weatherData.weatherData.weather && weatherData.weatherData.weather[0] && weatherData.weatherData.weather[0].icon && (
                       <img 
                         src={`https://openweathermap.org/img/wn/${weatherData.weatherData.weather[0].icon}@2x.png`} 
                         alt={weatherData.weatherData.weather[0].description}
@@ -407,14 +407,14 @@ const UnifiedDashboardProfilePage = () => {
                       />
                     )}
                     <div>
-                      <h3 className="text-2xl font-bold">{renderTemperature(weatherData.weatherData.main.temp)}</h3>
-                      <p className="text-gray-400 capitalize">{weatherData.weatherData.weather[0].description}</p>
+                      <h3 className="text-2xl font-bold">{weatherData.weatherData.main ? renderTemperature(weatherData.weatherData.main.temp) : "N/A"}</h3>
+                      <p className="text-gray-400 capitalize">{weatherData.weatherData.weather && weatherData.weatherData.weather[0] ? weatherData.weatherData.weather[0].description : "Weather data unavailable"}</p>
                     </div>
                   </div>
                   
                   <div className="text-right">
-                    <p className="text-gray-400">Feels like: {renderTemperature(weatherData.weatherData.main.feels_like)}</p>
-                    <p className="text-gray-400">High: {renderTemperature(weatherData.weatherData.main.temp_max)} • Low: {renderTemperature(weatherData.weatherData.main.temp_min)}</p>
+                    <p className="text-gray-400">Feels like: {weatherData.weatherData.main ? renderTemperature(weatherData.weatherData.main.feels_like) : "N/A"}</p>
+                    <p className="text-gray-400">High: {weatherData.weatherData.main ? renderTemperature(weatherData.weatherData.main.temp_max) : "N/A"} • Low: {weatherData.weatherData.main ? renderTemperature(weatherData.weatherData.main.temp_min) : "N/A"}</p>
                   </div>
                 </div>
                 
@@ -423,7 +423,7 @@ const UnifiedDashboardProfilePage = () => {
                     <Wind className="h-5 w-5 text-blue-400 mr-2" />
                     <div>
                       <p className="text-xs text-gray-400">Wind</p>
-                      <p className="font-medium">{Math.round(weatherData.weatherData.wind.speed)} mph</p>
+                      <p className="font-medium">{weatherData.weatherData.wind ? Math.round(weatherData.weatherData.wind.speed) : "N/A"} mph</p>
                     </div>
                   </div>
                   
@@ -431,7 +431,7 @@ const UnifiedDashboardProfilePage = () => {
                     <Droplets className="h-5 w-5 text-blue-400 mr-2" />
                     <div>
                       <p className="text-xs text-gray-400">Humidity</p>
-                      <p className="font-medium">{weatherData.weatherData.main.humidity}%</p>
+                      <p className="font-medium">{weatherData.weatherData.main ? weatherData.weatherData.main.humidity : "N/A"}%</p>
                     </div>
                   </div>
                   
@@ -439,7 +439,7 @@ const UnifiedDashboardProfilePage = () => {
                     <GaugeCircle className="h-5 w-5 text-blue-400 mr-2" />
                     <div>
                       <p className="text-xs text-gray-400">Pressure</p>
-                      <p className="font-medium">{weatherData.weatherData.main.pressure} hPa</p>
+                      <p className="font-medium">{weatherData.weatherData.main ? weatherData.weatherData.main.pressure : "N/A"} hPa</p>
                     </div>
                   </div>
                   
@@ -548,7 +548,7 @@ const UnifiedDashboardProfilePage = () => {
               </div>
               
               {/* F1-Style Telemetry Panels - Using OpenWeather API Data */}
-              {weatherData && (
+              {weatherData && weatherData.weatherData && weatherData.weatherData.main && (
                 <div className="p-3 bg-[#080808] bg-opacity-80 border-b border-blue-900/20">
                   <div className="grid grid-cols-4 gap-2 text-xs">
                     <div className="bg-black/50 p-2 rounded border border-blue-900/40">
@@ -557,7 +557,7 @@ const UnifiedDashboardProfilePage = () => {
                     </div>
                     <div className="bg-black/50 p-2 rounded border border-blue-900/40">
                       <div className="text-gray-500 mb-1">WIND SPEED</div>
-                      <div className="text-blue-400 font-bold">{Math.round(weatherData.weatherData.wind.speed)} MPH</div>
+                      <div className="text-blue-400 font-bold">{weatherData.weatherData.wind ? Math.round(weatherData.weatherData.wind.speed) : "N/A"} MPH</div>
                     </div>
                     <div className="bg-black/50 p-2 rounded border border-blue-900/40">
                       <div className="text-gray-500 mb-1">HUMIDITY</div>
