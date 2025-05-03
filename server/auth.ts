@@ -195,8 +195,8 @@ export function setupAuth(app: Express) {
         userId: newUser.id,
         action: 'register',
         status: 'success',
-        ip_address: null, // Set in middleware
-        user_agent: null, // Set in middleware
+        ipAddress: null, // Set in middleware
+        userAgent: null, // Set in middleware
         details: {}
       });
       
@@ -300,18 +300,37 @@ export function setupAuth(app: Express) {
     }
     
     try {
-      // Update user in database
-      const [updatedUser] = await db
-        .update(users)
-        .set({
-          ...req.body,
-          updatedAt: new Date()
-        })
-        .where(eq(users.id, req.user.id))
-        .returning();
+      // Don't allow updating sensitive fields directly
+      const { 
+        password, resetToken, resetTokenExpires, verificationToken, 
+        isEmailVerified, role, isActive, lastLogin, ...updatableFields 
+      } = req.body;
+      
+      // Update user in database with storage method
+      const updatedUser = await storage.updateUser(req.user.id, {
+        ...updatableFields,
+        updatedAt: new Date()
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({
+          success: false,
+          error: "User not found"
+        });
+      }
+      
+      // Log profile update in auth logs
+      await storage.createAuthLog({
+        userId: req.user.id,
+        action: 'profile_update',
+        status: 'success',
+        ipAddress: null, // Set in middleware
+        userAgent: null, // Set in middleware
+        details: {}
+      });
       
       // Return updated user data (exclude sensitive information)
-      const { password, resetToken, verificationToken, ...safeUserData } = updatedUser;
+      const { password: pwd, resetToken: rt, verificationToken: vt, ...safeUserData } = updatedUser;
       res.json({ 
         success: true, 
         user: safeUserData 
@@ -343,15 +362,29 @@ export function setupAuth(app: Express) {
         });
       }
       
-      // Update user as verified
-      await db
-        .update(users)
-        .set({
-          isEmailVerified: true,
-          verificationToken: null,
-          updatedAt: new Date()
-        })
-        .where(eq(users.id, user.id));
+      // Update user as verified using storage method
+      const updatedUser = await storage.updateUser(user.id, {
+        isEmailVerified: true,
+        verificationToken: null,
+        updatedAt: new Date()
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({
+          success: false,
+          error: "User not found"
+        });
+      }
+      
+      // Log verification in auth logs
+      await storage.createAuthLog({
+        userId: user.id,
+        action: 'email_verification',
+        status: 'success',
+        ipAddress: null, // Set in middleware
+        userAgent: null, // Set in middleware
+        details: {}
+      });
       
       // Redirect to frontend verification success page
       res.redirect("/email-verified");
@@ -369,14 +402,21 @@ export function setupAuth(app: Express) {
     try {
       const { email } = req.body;
       
-      // Find user by email
-      const [user] = await db
-        .select()
-        .from(users)
-        .where(eq(users.email, email));
+      // Find user by email with storage method
+      const user = await storage.getUserByEmail(email);
       
       // Don't reveal if user exists or not
       if (!user) {
+        // Log password reset request for non-existent email
+        await storage.createAuthLog({
+          userId: null,
+          action: 'password_reset_request',
+          status: 'failed',
+          ipAddress: null, // Set in middleware
+          userAgent: null, // Set in middleware
+          details: { reason: 'email_not_found', email }
+        });
+        
         return res.json({ 
           success: true, 
           message: "If your email is registered, you will receive a password reset link." 
@@ -387,15 +427,29 @@ export function setupAuth(app: Express) {
       const resetToken = randomBytes(32).toString("hex");
       const resetTokenExpires = new Date(Date.now() + 3600000); // 1 hour
       
-      // Update user with reset token
-      await db
-        .update(users)
-        .set({
-          resetToken,
-          resetTokenExpires,
-          updatedAt: new Date()
-        })
-        .where(eq(users.id, user.id));
+      // Update user with reset token using storage method
+      const updatedUser = await storage.updateUser(user.id, {
+        resetToken,
+        resetTokenExpires,
+        updatedAt: new Date()
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({
+          success: false,
+          error: "User not found"
+        });
+      }
+      
+      // Log password reset request
+      await storage.createAuthLog({
+        userId: user.id,
+        action: 'password_reset_request',
+        status: 'success',
+        ipAddress: null, // Set in middleware
+        userAgent: null, // Set in middleware
+        details: {}
+      });
       
       // Send password reset email (to be implemented)
       // sendPasswordResetEmail(user.email, resetToken);
@@ -420,12 +474,23 @@ export function setupAuth(app: Express) {
       const { password } = req.body;
       
       // Find user with matching reset token that hasn't expired
+      // Note: We'll have to implement getUserByResetToken in the storage interface later
       const [user] = await db
         .select()
         .from(users)
         .where(eq(users.resetToken, token));
       
       if (!user || !user.resetTokenExpires || user.resetTokenExpires < new Date()) {
+        // Log failed password reset attempt
+        await storage.createAuthLog({
+          userId: user?.id || null,
+          action: 'password_reset',
+          status: 'failed',
+          ipAddress: null, // Set in middleware
+          userAgent: null, // Set in middleware
+          details: { reason: user ? 'token_expired' : 'invalid_token' }
+        });
+        
         return res.status(400).json({ 
           success: false, 
           error: "Invalid or expired reset token" 
@@ -435,16 +500,30 @@ export function setupAuth(app: Express) {
       // Hash new password
       const hashedPassword = await hashPassword(password);
       
-      // Update user with new password
-      await db
-        .update(users)
-        .set({
-          password: hashedPassword,
-          resetToken: null,
-          resetTokenExpires: null,
-          updatedAt: new Date()
-        })
-        .where(eq(users.id, user.id));
+      // Update user with new password using storage method
+      const updatedUser = await storage.updateUser(user.id, {
+        password: hashedPassword,
+        resetToken: null,
+        resetTokenExpires: null,
+        updatedAt: new Date()
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({
+          success: false,
+          error: "User not found"
+        });
+      }
+      
+      // Log successful password reset
+      await storage.createAuthLog({
+        userId: user.id,
+        action: 'password_reset',
+        status: 'success',
+        ipAddress: null, // Set in middleware
+        userAgent: null, // Set in middleware
+        details: {}
+      });
       
       res.json({ 
         success: true, 
@@ -473,6 +552,16 @@ export function setupAuth(app: Express) {
       
       // Check if current password is correct
       if (!(await comparePasswords(currentPassword, req.user.password))) {
+        // Log failed password change attempt
+        await storage.createAuthLog({
+          userId: req.user.id,
+          action: 'password_change',
+          status: 'failed',
+          ipAddress: null, // Set in middleware
+          userAgent: null, // Set in middleware
+          details: { reason: 'incorrect_current_password' }
+        });
+        
         return res.status(400).json({ 
           success: false, 
           error: "Current password is incorrect" 
@@ -482,14 +571,28 @@ export function setupAuth(app: Express) {
       // Hash new password
       const hashedPassword = await hashPassword(newPassword);
       
-      // Update user with new password
-      await db
-        .update(users)
-        .set({
-          password: hashedPassword,
-          updatedAt: new Date()
-        })
-        .where(eq(users.id, req.user.id));
+      // Update user with new password using storage method
+      const updatedUser = await storage.updateUser(req.user.id, {
+        password: hashedPassword,
+        updatedAt: new Date()
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({
+          success: false,
+          error: "User not found"
+        });
+      }
+      
+      // Log successful password change
+      await storage.createAuthLog({
+        userId: req.user.id,
+        action: 'password_change',
+        status: 'success',
+        ipAddress: null, // Set in middleware
+        userAgent: null, // Set in middleware
+        details: {}
+      });
       
       res.json({ 
         success: true, 
@@ -514,15 +617,28 @@ export function setupAuth(app: Express) {
     }
     
     try {
-      // Update user as onboarded
-      const [updatedUser] = await db
-        .update(users)
-        .set({
-          onboardingCompleted: true,
-          updatedAt: new Date()
-        })
-        .where(eq(users.id, req.user.id))
-        .returning();
+      // Update user as onboarded using storage method
+      const updatedUser = await storage.updateUser(req.user.id, {
+        onboardingCompleted: true,
+        updatedAt: new Date()
+      });
+      
+      if (!updatedUser) {
+        return res.status(404).json({
+          success: false,
+          error: "User not found"
+        });
+      }
+      
+      // Log onboarding completion in auth logs
+      await storage.createAuthLog({
+        userId: req.user.id,
+        action: 'onboarding_completed',
+        status: 'success',
+        ipAddress: null, // Set in middleware
+        userAgent: null, // Set in middleware
+        details: {}
+      });
       
       // Return updated user data (exclude sensitive information)
       const { password, resetToken, verificationToken, ...safeUserData } = updatedUser;
