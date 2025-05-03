@@ -36,6 +36,7 @@ import SeasonalChecklistPage from "./pages/SeasonalChecklistPage";
 import EBooksPage from "./pages/eBooksPage";
 import Paddock20HomePage from "./pages/Paddock20HomePage";
 import ProductOrganizerPage from "./pages/ProductOrganizerPage"; // Import the new page
+import UserProfileHubPage from "./pages/UserProfileHubPage"; // Import our new User Profile Hub
 import FixedSoundBar from "./components/FixedSoundBar";
 import Footer from "./components/Footer";
 import { WeatherProvider } from "./contexts/ConsolidatedWeatherContext";
@@ -318,6 +319,7 @@ function App() {
                         <Route path="/seasonal-checklist" element={<ProtectedRoute><SeasonalChecklistPage /></ProtectedRoute>} />
                         <Route path="/pre-drive-checklist" element={<ProtectedRoute><PreDriveChecklistPage /></ProtectedRoute>} />
                         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                        <Route path="/apexvault" element={<ProtectedRoute><UserProfileHubPage /></ProtectedRoute>} />
                         <Route path="/vehicle-mods/:id" element={<ProtectedRoute><VehicleModsPage /></ProtectedRoute>} />
                         <Route path="/membership" element={<ProtectedRoute><MembershipPage /></ProtectedRoute>} />
                         <Route path="/paddock20-vault" element={<Navigate to="/membership" replace />} />

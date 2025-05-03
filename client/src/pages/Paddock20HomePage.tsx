@@ -297,10 +297,15 @@ const Paddock20HomePage: React.FC = () => {
           </div>
         </div>
         
-        {/* Inspirational Message */}
+        {/* Paddock20 Vision Statement */}
         <div className="mb-6 text-center">
           <h2 className="text-blue-400 font-orbitron text-3xl mb-2">Welcome to Your Paddock</h2>
-          <p className="text-gray-400">Daily weather checks, route planning, and vehicle monitoring in one place</p>
+          <p className="text-gray-400 max-w-3xl mx-auto">
+            In motorsports, the paddock is where strategy becomes reality. Having "paddock access" means you're part of the team, not just spectating.
+          </p>
+          <p className="text-[#08c519] max-w-3xl mx-auto mt-2 font-medium">
+            Because real enthusiasts deserve real systems. No noise. No fake flex. Just pure data, pure drive, pure community.
+          </p>
         </div>
 
       {/* Enhanced F1-Inspired Live Weather Station - Driver-Oriented Weather Dashboard */}
