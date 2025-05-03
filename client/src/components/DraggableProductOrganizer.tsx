@@ -1,6 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
 import { useToast } from '@/hooks/use-toast';
 import { 
   GripVertical, 
@@ -10,7 +12,15 @@ import {
   Plus, 
   MoreHorizontal, 
   ChevronUp, 
-  ChevronDown 
+  ChevronDown,
+  Save,
+  X,
+  Check,
+  Search,
+  Tag,
+  DollarSign,
+  AlertTriangle,
+  Info
 } from 'lucide-react';
 
 // Define interfaces for our data structures
@@ -117,6 +127,21 @@ const DraggableProductOrganizer: React.FC = () => {
   const [categories, setCategories] = useState<ProductCategory[]>(initialCategories);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isSaving, setIsSaving] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [isAddCategoryDialogOpen, setIsAddCategoryDialogOpen] = useState(false);
+  const [newCategoryName, setNewCategoryName] = useState('');
+  const [newCategoryDescription, setNewCategoryDescription] = useState('');
+  const [isAddProductDialogOpen, setIsAddProductDialogOpen] = useState(false);
+  const [selectedCategoryId, setSelectedCategoryId] = useState<string | null>(null);
+  const [newProduct, setNewProduct] = useState<Partial<Product>>({
+    name: '',
+    description: '',
+    price: undefined,
+    inStock: true
+  });
+  const [editingProduct, setEditingProduct] = useState<{product: Product, categoryId: string} | null>(null);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<{id: string, type: 'category' | 'product', categoryId?: string} | null>(null);
   const { toast } = useToast();
 
   // Mock API call to load products - would be replaced with actual API
@@ -217,6 +242,180 @@ const DraggableProductOrganizer: React.FC = () => {
         : category
     ));
   };
+
+  // Function to handle adding a new category
+  const handleAddCategory = () => {
+    if (!newCategoryName.trim()) {
+      toast({
+        title: "Error",
+        description: "Category name cannot be empty.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const newCategory: ProductCategory = {
+      id: `cat-${Date.now()}`, // Generate a unique ID
+      name: newCategoryName.trim(),
+      description: newCategoryDescription.trim() || undefined,
+      isExpanded: true,
+      products: []
+    };
+
+    setCategories([...categories, newCategory]);
+    setNewCategoryName('');
+    setNewCategoryDescription('');
+    setIsAddCategoryDialogOpen(false);
+
+    toast({
+      title: "Category Added",
+      description: `${newCategoryName} has been added successfully.`,
+      variant: "default",
+      className: "bg-green-700 border-green-600",
+    });
+  };
+
+  // Function to handle adding a new product
+  const handleAddProduct = () => {
+    if (!selectedCategoryId) return;
+    
+    if (!newProduct.name?.trim()) {
+      toast({
+        title: "Error",
+        description: "Product name cannot be empty.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const product: Product = {
+      id: `prod-${Date.now()}`, // Generate a unique ID
+      name: newProduct.name.trim(),
+      description: newProduct.description?.trim() || undefined,
+      price: newProduct.price,
+      imageUrl: newProduct.imageUrl,
+      inStock: newProduct.inStock || false
+    };
+
+    const updatedCategories = categories.map(category => {
+      if (category.id === selectedCategoryId) {
+        return {
+          ...category,
+          products: [...category.products, product]
+        };
+      }
+      return category;
+    });
+
+    setCategories(updatedCategories);
+    
+    // Reset form
+    setNewProduct({
+      name: '',
+      description: '',
+      price: undefined,
+      inStock: true
+    });
+    setIsAddProductDialogOpen(false);
+
+    toast({
+      title: "Product Added",
+      description: `${product.name} has been added successfully.`,
+      variant: "default",
+      className: "bg-green-700 border-green-600",
+    });
+  };
+
+  // Function to handle editing a product
+  const handleEditProduct = () => {
+    if (!editingProduct) return;
+    
+    const { product, categoryId } = editingProduct;
+    
+    if (!product.name.trim()) {
+      toast({
+        title: "Error",
+        description: "Product name cannot be empty.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    const updatedCategories = categories.map(category => {
+      if (category.id === categoryId) {
+        return {
+          ...category,
+          products: category.products.map(p => 
+            p.id === product.id ? product : p
+          )
+        };
+      }
+      return category;
+    });
+
+    setCategories(updatedCategories);
+    setEditingProduct(null);
+    
+    toast({
+      title: "Product Updated",
+      description: `${product.name} has been updated successfully.`,
+      variant: "default",
+      className: "bg-green-700 border-green-600",
+    });
+  };
+
+  // Function to handle deleting a category or product
+  const handleDelete = () => {
+    if (!itemToDelete) return;
+    
+    if (itemToDelete.type === 'category') {
+      setCategories(categories.filter(category => category.id !== itemToDelete.id));
+      
+      toast({
+        title: "Category Deleted",
+        description: "The category has been deleted successfully.",
+        variant: "default",
+        className: "bg-amber-700 border-amber-600",
+      });
+    } else {
+      // Delete product
+      const updatedCategories = categories.map(category => {
+        if (category.id === itemToDelete.categoryId) {
+          return {
+            ...category,
+            products: category.products.filter(product => product.id !== itemToDelete.id)
+          };
+        }
+        return category;
+      });
+      
+      setCategories(updatedCategories);
+      
+      toast({
+        title: "Product Deleted",
+        description: "The product has been deleted successfully.",
+        variant: "default",
+        className: "bg-amber-700 border-amber-600",
+      });
+    }
+    
+    setItemToDelete(null);
+    setIsDeleteDialogOpen(false);
+  };
+
+  // Filter categories and products based on search term
+  const filteredCategories = searchTerm 
+    ? categories.map(category => ({
+        ...category,
+        products: category.products.filter(product => 
+          product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+          (product.description && product.description.toLowerCase().includes(searchTerm.toLowerCase()))
+        )
+      })).filter(category => 
+        category.products.length > 0 || 
+        category.name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : categories;
 
   const handleSaveChanges = async () => {
     setIsSaving(true);
