@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../../hooks/useAuth';
 import { Button } from '@/components/ui/button';
@@ -42,12 +42,6 @@ export default function AuthPage() {
     firstName: '',
     lastName: ''
   });
-
-  // Redirect if already authenticated
-  if (user) {
-    navigate(redirectPath);
-    return null;
-  }
   
   // Set any URL query errors/messages to form state
   useEffect(() => {
@@ -58,6 +52,13 @@ export default function AuthPage() {
       setFormSuccess(infoMessage);
     }
   }, [errorMessage, infoMessage]);
+  
+  // Handle redirect if already authenticated (using useEffect to avoid React errors)
+  useEffect(() => {
+    if (user) {
+      navigate(redirectPath);
+    }
+  }, [user, navigate, redirectPath]);
 
   // Handle login form submission
   const handleLogin = async (e: React.FormEvent) => {
@@ -76,9 +77,9 @@ export default function AuthPage() {
       await login(loginForm.username, loginForm.password);
       setFormSuccess('Login successful! Redirecting...');
 
-      // Redirect on success
+      // Redirect on success to the original requested page or dashboard
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate(redirectPath);
       }, 1000);
     } catch (err) {
       // Display error message
@@ -125,9 +126,9 @@ export default function AuthPage() {
 
       setFormSuccess('Registration successful! Redirecting...');
 
-      // Redirect on success
+      // Redirect on success to the original requested page or dashboard
       setTimeout(() => {
-        navigate('/dashboard');
+        navigate(redirectPath);
       }, 1000);
     } catch (err) {
       // Display error message

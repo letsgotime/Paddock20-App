@@ -169,9 +169,9 @@ export function setupAuth(app: Express) {
                 fullName: `${username} TestUser`,
                 isActive: true,
                 isEmailVerified: true,
-                interests: [],
-                onboardingCompleted: false,
-                lastLogin: new Date()
+                interests: [] as string[],
+                onboardingCompleted: false
+                // Removed lastLogin as it's not in the schema
               });
               console.log(`[DEV MODE] Created development user with ID: ${newUser.id}`);
               return done(null, newUser);
@@ -246,9 +246,8 @@ export function setupAuth(app: Express) {
       const newUser = await storage.createUser({
         ...userData,
         password: hashedPassword,
-        lastLogin: new Date(),
         verificationToken,
-        interests: userData.interests || [],
+        interests: (userData.interests || []) as string[],
         role: 'user',
         isActive: true,
         isEmailVerified: false,
