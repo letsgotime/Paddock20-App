@@ -1,18 +1,6 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import { VolumeX, Volume2, Home, ArrowLeft, ArrowRight } from "lucide-react";
 import { playMotorsportSound, getSoundSettings, setSoundEnabled } from "../services/soundService";
-import { useLocation } from "wouter";
-
-// Constants for localStorage keys
-const HISTORY_KEY = 'navigationHistory';
-const CURRENT_INDEX_KEY = 'navigationCurrentIndex';
-
-// Add navigationInProgress property to Window interface
-declare global {
-  interface Window {
-    navigationInProgress: boolean;
-  }
-}
 
 /**
  * FixedSoundBar - A fixed bottom bar showing GoTime logo, navigation controls and sound controls
@@ -22,147 +10,64 @@ declare global {
  */
 const FixedSoundBar: React.FC = () => {
   const [soundEnabled, setSoundEnabledState] = useState(true);
-  const [location, setLocation] = useLocation();
-  
-  // Navigation state
   const [canGoBack, setCanGoBack] = useState(false);
   const [canGoForward, setCanGoForward] = useState(false);
-  const [navigationHistory, setNavigationHistory] = useState<string[]>([]);
-  const [currentIndex, setCurrentIndex] = useState(0);
+  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/';
   
-  // Load initial navigation state
+  // Check browser history state on mount and whenever it might change
   useEffect(() => {
-    try {
-      // Get history from localStorage or initialize with current location
-      const savedHistory = localStorage.getItem(HISTORY_KEY);
-      const parsedHistory = savedHistory ? JSON.parse(savedHistory) : [location];
-      
-      // Get current index from localStorage or initialize with 0
-      const savedIndex = localStorage.getItem(CURRENT_INDEX_KEY);
-      const parsedIndex = savedIndex ? parseInt(savedIndex, 10) : 0;
-      
-      // Set state with safe values
-      setNavigationHistory(Array.isArray(parsedHistory) ? parsedHistory : [location]);
-      setCurrentIndex(isNaN(parsedIndex) ? 0 : parsedIndex);
-      
-      // Debug output
-      console.log("Navigation initialized:", {history: parsedHistory, currentIndex: parsedIndex});
-    } catch (error) {
-      console.error("Error initializing navigation:", error);
-      // Initialize with safe defaults
-      setNavigationHistory([location]);
-      setCurrentIndex(0);
-    }
+    // Update navigation button states based on window.history
+    const updateNavButtons = () => {
+      setCanGoBack(window.history.length > 1);
+      // We don't have a reliable way to check if forward is available
+      // So we disable forward button when using direct navigation
+      setCanGoForward(false);
+    };
+    
+    // Initial check
+    updateNavButtons();
+    
+    // Listen for history changes
+    window.addEventListener('popstate', updateNavButtons);
+    
+    return () => {
+      window.removeEventListener('popstate', updateNavButtons);
+    };
   }, []);
-  
-  // Update navigation buttons state
-  useEffect(() => {
-    setCanGoBack(currentIndex > 0);
-    setCanGoForward(currentIndex < navigationHistory.length - 1);
-    
-    // Save navigation state
-    localStorage.setItem(HISTORY_KEY, JSON.stringify(navigationHistory));
-    localStorage.setItem(CURRENT_INDEX_KEY, currentIndex.toString());
-    
-    // Debug output
-    console.log("Navigation state updated:", {
-      history: navigationHistory,
-      currentIndex: currentIndex,
-      canGoBack: currentIndex > 0,
-      canGoForward: currentIndex < navigationHistory.length - 1
-    });
-  }, [navigationHistory, currentIndex]);
-  
-  // Initialize the navigation progress flag if needed
-  useEffect(() => {
-    if (typeof window.navigationInProgress === 'undefined') {
-      window.navigationInProgress = false;
-    }
-  }, []);
-
-  // Track location changes
-  useEffect(() => {
-    if (navigationHistory.length === 0) {
-      // Initialize if empty
-      setNavigationHistory([location]);
-      return;
-    }
-    
-    // Get current path in history
-    const currentPath = navigationHistory[currentIndex];
-    
-    // Only add to history if path changed and not triggered by back/forward buttons
-    if (currentPath !== location && !window.navigationInProgress) {
-      // If user navigated from a non-latest point, truncate future history
-      const newHistory = currentIndex < navigationHistory.length - 1
-        ? [...navigationHistory.slice(0, currentIndex + 1), location]
-        : [...navigationHistory, location];
-      
-      setNavigationHistory(newHistory);
-      setCurrentIndex(newHistory.length - 1);
-    }
-    
-    // Reset navigation progress flag
-    window.navigationInProgress = false;
-  }, [location]);
   
   // Navigation functions
-  const goBack = useCallback(() => {
-    if (currentIndex > 0) {
-      try {
-        // Mark that we're navigating programmatically
-        window.navigationInProgress = true;
-        
-        // Update index and navigate
-        const newIndex = currentIndex - 1;
-        const prevPath = navigationHistory[newIndex];
-        
-        setCurrentIndex(newIndex);
-        setLocation(prevPath);
-        
-        // Play sound effect if enabled
-        if (soundEnabled) playMotorsportSound('ui_navigate');
-        
-        console.log("Navigating back to:", prevPath);
-      } catch (error) {
-        console.error("Error navigating back:", error);
-      }
-    }
-  }, [navigationHistory, currentIndex, setLocation, soundEnabled]);
-  
-  const goForward = useCallback(() => {
-    if (currentIndex < navigationHistory.length - 1) {
-      try {
-        // Mark that we're navigating programmatically
-        window.navigationInProgress = true;
-        
-        // Update index and navigate
-        const newIndex = currentIndex + 1;
-        const nextPath = navigationHistory[newIndex];
-        
-        setCurrentIndex(newIndex);
-        setLocation(nextPath);
-        
-        // Play sound effect if enabled
-        if (soundEnabled) playMotorsportSound('ui_navigate');
-        
-        console.log("Navigating forward to:", nextPath);
-      } catch (error) {
-        console.error("Error navigating forward:", error);
-      }
-    }
-  }, [navigationHistory, currentIndex, setLocation, soundEnabled]);
-  
-  const goHome = useCallback(() => {
+  const goBack = () => {
     try {
-      // Always navigate home (/) regardless of current location
-      // This ensures we go to homepage not dashboard
-      setLocation('/');
+      // Use browser history API
+      window.history.back();
       
-      // Create a new history entry (not using back/forward)
-      const newHistory = [...navigationHistory.slice(0, currentIndex + 1), '/'];
-      setNavigationHistory(newHistory);
-      setCurrentIndex(newHistory.length - 1);
+      // Play sound effect if enabled
+      if (soundEnabled) playMotorsportSound('ui_navigate');
+      
+      console.log("Navigating back");
+    } catch (error) {
+      console.error("Error navigating back:", error);
+    }
+  };
+  
+  const goForward = () => {
+    try {
+      // Use browser history API
+      window.history.forward();
+      
+      // Play sound effect if enabled
+      if (soundEnabled) playMotorsportSound('ui_navigate');
+      
+      console.log("Navigating forward");
+    } catch (error) {
+      console.error("Error navigating forward:", error);
+    }
+  };
+  
+  const goHome = () => {
+    try {
+      // Navigate to home page
+      window.location.href = '/';
       
       // Play sound effect if enabled
       if (soundEnabled) playMotorsportSound('ui_select');
@@ -171,7 +76,7 @@ const FixedSoundBar: React.FC = () => {
     } catch (error) {
       console.error("Error navigating home:", error);
     }
-  }, [navigationHistory, currentIndex, setLocation, soundEnabled]);
+  };
   
   // Initialize sound settings from sound service
   useEffect(() => {
@@ -263,7 +168,7 @@ const FixedSoundBar: React.FC = () => {
           {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
         </button>
         
-        {/* Sound Library link */}
+        {/* Sound Library link - using standard <a> tag for consistent navigation */}
         <a 
           href="/sound-library" 
           className="text-gray-400 hover:text-blue-400 p-2 transition-colors duration-200"
