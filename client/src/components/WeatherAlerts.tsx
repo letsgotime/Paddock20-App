@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { useWeather } from '@/contexts/WeatherContext';
+import { useWeather } from '@/contexts/FixedWeatherContext';
 import { 
   AlertCircle, 
   ThermometerSun, 

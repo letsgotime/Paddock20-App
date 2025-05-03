@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Download, Camera, Share2, Cloud, Check, History } from 'lucide-react';
 import html2canvas from 'html2canvas';
-import { useWeather } from '../contexts/WeatherContext';
+import { useWeather } from '../contexts/FixedWeatherContext';
 
 interface WeatherSnapshot {
   id: string;
@@ -60,7 +60,7 @@ const OneTapWeatherSnapshot: React.FC<OneTapWeatherSnapshotProps> = ({
       const humidity = weatherData.main?.humidity || 0;
       const windSpeed = weatherData.wind?.speed || 0;
       const feelsLike = weatherData.main?.feels_like || temp;
-      const surfaceTemp = automotiveWeatherData?.automotive_metrics?.track_surface?.temperature || temp;
+      const surfaceTemp = automotiveWeatherData?.conditions?.air_temperature || temp;
       
       // Create a new snapshot object with real API data
       const newSnapshot: WeatherSnapshot = {
@@ -306,15 +306,15 @@ const OneTapWeatherSnapshot: React.FC<OneTapWeatherSnapshotProps> = ({
               <div className="p-2 bg-black/60 rounded border border-blue-900/30 flex flex-col">
                 <span className="text-xs text-blue-400/70 font-medium mb-1">Track Grip</span>
                 <span className="text-white text-sm font-mono">
-                  {automotiveWeatherData?.automotive_metrics?.track_surface?.grip_level || "--"}
+                  {automotiveWeatherData?.driving_conditions?.road_condition || "--"}
                 </span>
               </div>
               
               <div className="p-2 bg-black/60 rounded border border-blue-900/30 flex flex-col">
                 <span className="text-xs text-blue-400/70 font-medium mb-1">Surface Temp</span>
                 <span className="text-white text-sm font-mono">
-                  {automotiveWeatherData?.automotive_metrics?.track_surface?.temperature 
-                    ? `${automotiveWeatherData.automotive_metrics.track_surface.temperature.toFixed(1)}°F`
+                  {automotiveWeatherData?.conditions?.air_temperature 
+                    ? `${automotiveWeatherData.conditions.air_temperature.toFixed(1)}°F`
                     : "--°F"}
                 </span>
               </div>
@@ -329,13 +329,13 @@ const OneTapWeatherSnapshot: React.FC<OneTapWeatherSnapshotProps> = ({
               <div className="p-2 bg-black/60 rounded border border-blue-900/30 flex flex-col">
                 <span className="text-xs text-blue-400/70 font-medium mb-1">Visibility</span>
                 <span className="text-white text-sm font-mono">
-                  {automotiveWeatherData?.visibility_assessment || "--"}
+                  {automotiveWeatherData?.driving_conditions?.visibility || "--"}
                 </span>
               </div>
             </div>
             
             {/* Driver Recommendations */}
-            {automotiveWeatherData?.automotive_metrics?.drive_recommendations && (
+            {automotiveWeatherData?.performance_metrics && (
               <div className="mt-3 pt-3 border-t border-blue-900/20">
                 <div className="text-xs text-blue-400 font-medium mb-2 font-orbitron uppercase tracking-wide">
                   Drive Recommendations
@@ -344,17 +344,17 @@ const OneTapWeatherSnapshot: React.FC<OneTapWeatherSnapshotProps> = ({
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
                   <div className="flex items-center text-xs">
                     <div className="w-3 h-3 rounded-full bg-blue-500/30 mr-2"></div>
-                    <span className="text-gray-400">Tire Warmup: </span>
+                    <span className="text-gray-400">Fuel Impact: </span>
                     <span className="text-white ml-1 font-mono">
-                      {automotiveWeatherData.automotive_metrics.drive_recommendations.tire_warmup_minutes.performance} min
+                      {automotiveWeatherData.performance_metrics.fuel_efficiency_impact}%
                     </span>
                   </div>
                   
                   <div className="flex items-center text-xs">
                     <div className="w-3 h-3 rounded-full bg-blue-500/30 mr-2"></div>
-                    <span className="text-gray-400">Traction: </span>
+                    <span className="text-gray-400">Handling: </span>
                     <span className="text-white ml-1 font-mono">
-                      {automotiveWeatherData.automotive_metrics.drive_recommendations.torque_management.recommended_percentage}%
+                      {automotiveWeatherData.performance_metrics.handling_adjustments}
                     </span>
                   </div>
                 </div>

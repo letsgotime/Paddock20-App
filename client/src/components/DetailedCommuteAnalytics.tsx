@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useWeather } from '../contexts/WeatherContext';
+import { useWeather } from '../contexts/FixedWeatherContext';
 import { 
   Thermometer, 
   Wind, 

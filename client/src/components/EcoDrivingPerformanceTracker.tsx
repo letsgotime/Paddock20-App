@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useWeather } from '../contexts/WeatherContext';
+import { useWeather } from '../contexts/FixedWeatherContext';
 import { Leaf, Gauge, BarChart3, Droplets, Wind, Thermometer, Car, Fuel, ArrowUpRight, ArrowDownRight, CloudRain } from 'lucide-react';
 
 const EcoDrivingPerformanceTracker: React.FC = () => {

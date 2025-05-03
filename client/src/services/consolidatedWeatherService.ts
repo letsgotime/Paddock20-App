@@ -1,196 +1,174 @@
 /**
  * Consolidated Weather Service
  * 
- * This service combines multiple weather API calls into a single request
- * to reduce API rate limiting issues and optimize data fetching.
+ * This service centralizes all weather API calls to a single endpoint
+ * Improves resilience, reduces API calls, and enhances caching
  */
 
-import { OneCallData, ForecastData, Location } from '@/lib/weather';
+import { Location, OneCallData, WeatherData, ForecastData } from '@/lib/weather';
+import { AutomotiveWeatherData } from '@/contexts/FixedWeatherContext';
 
-// Define the structure of consolidated weather response
-export interface ConsolidatedWeatherData {
-  oneCallData: OneCallData;
-  forecastData: ForecastData;
-  automotiveWeatherData: any; // Using any since the structure can vary
-  lastUpdated: string;
-  cacheTimestamp: number;
-}
+// Set the OpenWeather API key
+// In a production app, this should be injected from environment variables
+const API_KEY = import.meta.env.VITE_ACCUWEATHER_API_KEY || import.meta.env.OPENWEATHER_API_KEY;
+// Fallback coordinates if geolocation fails
+const DEFAULT_COORDINATES = { lat: 40.7128, lon: -74.006 }; // New York City
 
 /**
- * Fetch all required weather data in a single API call
- * This drastically reduces API usage and helps avoid rate limiting
+ * Fetch all weather data in a single call from our backend
+ * This reduces API usage and helps with caching
  */
 export async function fetchConsolidatedWeatherData(
   location: Location,
   unit: 'metric' | 'imperial' = 'imperial'
-): Promise<ConsolidatedWeatherData> {
-  // Check cache first
-  try {
-    const cachedData = getCachedWeatherData(location, unit);
-    if (cachedData) {
-      console.log('Using cached consolidated weather data', {
-        cacheAge: `${Math.round((Date.now() - cachedData.cacheTimestamp) / 60000)} minutes old`,
-        location: location
-      });
-      return cachedData;
-    }
-  } catch (error) {
-    console.warn('Error reading from consolidated weather cache:', error);
-  }
+): Promise<{
+  weatherData: WeatherData | null;
+  oneCallData: OneCallData | null;
+  forecastData: ForecastData | null;
+  automotiveWeatherData: AutomotiveWeatherData | null;
+  cacheTimestamp?: number;
+}> {
+  const { lat, lon } = location;
+  const units = unit === 'imperial' ? 'imperial' : 'metric';
+  const exclude = 'minutely'; // Exclude minutely data to reduce payload size
 
   try {
-    // Make a single API call that returns all needed weather data
-    // This endpoint should be implemented on the server to combine multiple API calls
+    // Set a reasonable timeout to prevent indefinite waits
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), 10000);
+
+    // Call our server-side consolidated weather endpoint to fetch and cache all weather data
     const response = await fetch(
-      `/api/consolidated-weather?lat=${location.lat}&lon=${location.lon}&units=${unit}`
+      `/api/weather/consolidated?lat=${lat}&lon=${lon}&units=${units}&exclude=${exclude}`,
+      { signal: controller.signal }
     );
-
+    
+    clearTimeout(timeoutId);
+    
     if (!response.ok) {
-      // If we get a rate limit response, try to use cached data
+      // Check for rate limit errors
       if (response.status === 429) {
-        const expiredCachedData = getExpiredCachedWeatherData(location);
-        if (expiredCachedData) {
-          console.log('Using expired cache due to rate limiting', {
-            cacheAge: `${Math.round((Date.now() - expiredCachedData.cacheTimestamp) / 60000)} minutes old`
-          });
-          return {
-            ...expiredCachedData,
-            // Add a flag to indicate this is from expired cache
-            oneCallData: {
-              ...expiredCachedData.oneCallData,
-              rateLimitedResponse: true
-            }
-          };
-        }
+        console.warn('Weather API rate limited. Using cached data if available.');
+        throw new Error('Weather API rate limited. Using cached data.');
       }
-      throw new Error(`Weather API error (${response.status}): ${await response.text()}`);
+      
+      // Check for unauthorized errors (like expired API key)
+      if (response.status === 401) {
+        console.warn('Weather API authentication failed. Check your API key.');
+        throw new Error('Weather API authentication failed.');
+      }
+      
+      // Other error handling
+      const errorText = await response.text();
+      throw new Error(`Weather API error: ${response.status} - ${errorText}`);
     }
 
+    // Parse the consolidated data from the server
     const data = await response.json();
     
-    // Cache the successful response
-    const consolidatedData: ConsolidatedWeatherData = {
-      oneCallData: data.oneCallData,
-      forecastData: data.forecastData,
-      automotiveWeatherData: data.automotiveWeatherData,
-      lastUpdated: new Date().toISOString(),
-      cacheTimestamp: Date.now()
-    };
+    // Add a timestamp to track when this data was received
+    data.cacheTimestamp = Date.now();
     
-    setCachedWeatherData(location, unit, consolidatedData);
-    
-    return consolidatedData;
+    return data;
   } catch (error) {
-    console.error('Error fetching consolidated weather data:', error);
+    // Re-throw the error to be handled by the caller
+    console.error("Error fetching consolidated weather data:", error);
     throw error;
   }
 }
 
-// Cache key for consolidated weather data
-const CACHE_KEY = 'cachedConsolidatedWeatherData';
-
-// Cache duration - 4 hours
-const CACHE_DURATION = 4 * 60 * 60 * 1000;
-
-// Cache duration for expired cache - 24 hours
-const EXPIRED_CACHE_DURATION = 24 * 60 * 60 * 1000;
-
-// Cache interface
-interface CachedData {
-  data: ConsolidatedWeatherData;
-  location: {
-    lat: number;
-    lon: number;
-  };
-  unit: 'metric' | 'imperial';
-  timestamp: number;
-}
-
 /**
- * Get cached weather data if it's still valid
+ * Get forecast summary with key information for automotive use
  */
-function getCachedWeatherData(
-  location: Location,
-  unit: 'metric' | 'imperial'
-): ConsolidatedWeatherData | null {
-  try {
-    const cachedDataString = localStorage.getItem(CACHE_KEY);
-    if (!cachedDataString) return null;
-    
-    const cachedData: CachedData = JSON.parse(cachedDataString);
-    
-    // Calculate if cache is still valid (within duration window)
-    const cacheAge = Date.now() - cachedData.timestamp;
-    const isCacheValid = cacheAge < CACHE_DURATION;
-    
-    // Check if the location is close enough (within ~5km) and unit matches
-    const isSameLocation = 
-      Math.abs(cachedData.location.lat - location.lat) < 0.05 && 
-      Math.abs(cachedData.location.lon - location.lon) < 0.05;
-    const isSameUnit = cachedData.unit === unit;
-    
-    // If cache is valid, location is close enough, and unit matches, use cached data
-    if (isCacheValid && isSameLocation && isSameUnit) {
-      return cachedData.data;
-    }
-  } catch (error) {
-    console.error('Error reading weather cache:', error);
-  }
-  
-  return null;
-}
-
-/**
- * Get expired cached weather data (for use during rate limiting)
- */
-function getExpiredCachedWeatherData(location: Location): ConsolidatedWeatherData | null {
-  try {
-    const cachedDataString = localStorage.getItem(CACHE_KEY);
-    if (!cachedDataString) return null;
-    
-    const cachedData: CachedData = JSON.parse(cachedDataString);
-    
-    // Calculate if cache is still within extended duration window
-    const cacheAge = Date.now() - cachedData.timestamp;
-    const isWithinExtendedDuration = cacheAge < EXPIRED_CACHE_DURATION;
-    
-    // Check if the location is close enough
-    const isSameLocation = 
-      Math.abs(cachedData.location.lat - location.lat) < 0.05 && 
-      Math.abs(cachedData.location.lon - location.lon) < 0.05;
-    
-    // If cache is within extended duration and location is close enough, use it
-    if (isWithinExtendedDuration && isSameLocation) {
-      return cachedData.data;
-    }
-  } catch (error) {
-    console.error('Error reading expired weather cache:', error);
-  }
-  
-  return null;
-}
-
-/**
- * Cache weather data for future use
- */
-function setCachedWeatherData(
-  location: Location,
-  unit: 'metric' | 'imperial',
-  data: ConsolidatedWeatherData
-): void {
-  try {
-    const cacheData: CachedData = {
-      data,
-      location: {
-        lat: location.lat,
-        lon: location.lon
-      },
-      unit,
-      timestamp: Date.now()
+export function getForecastSummary(forecast: ForecastData | null) {
+  if (!forecast || !forecast.list || forecast.list.length === 0) {
+    return {
+      tempRange: { min: null, max: null },
+      conditions: [],
+      precipitation: false
     };
-    
-    localStorage.setItem(CACHE_KEY, JSON.stringify(cacheData));
-  } catch (error) {
-    console.error('Error caching weather data:', error);
   }
+
+  // Get the next 12 hours (or fewer if not available)
+  const next12Hours = forecast.list.slice(0, 4);
+  
+  // Find min/max temperatures
+  const temps = next12Hours.map(item => item.main.temp);
+  const tempRange = {
+    min: Math.min(...temps),
+    max: Math.max(...temps)
+  };
+
+  // Get unique weather conditions
+  const conditionsSet = new Set();
+  next12Hours.forEach(item => {
+    if (item.weather && item.weather.length > 0) {
+      conditionsSet.add(item.weather[0].main);
+    }
+  });
+  const conditions = Array.from(conditionsSet) as string[];
+
+  // Check if precipitation expected
+  const precipitation = next12Hours.some(item => 
+    (item.rain && item.rain['3h'] > 0) || 
+    (item.snow && item.snow['3h'] > 0) ||
+    (item.weather && item.weather.some(w => 
+      ['Rain', 'Snow', 'Drizzle', 'Thunderstorm'].includes(w.main)
+    ))
+  );
+
+  return { tempRange, conditions, precipitation };
+}
+
+/**
+ * Get road and driving conditions based on current weather
+ */
+export function getDrivingConditions(data: OneCallData | null) {
+  if (!data || !data.current) {
+    return {
+      roadCondition: 'Unknown',
+      visibility: 'Unknown',
+      riskLevel: 'Unknown'
+    };
+  }
+
+  const { weather, rain, snow, visibility = 10000 } = data.current;
+  const weatherMain = weather?.[0]?.main || 'Clear';
+  const weatherDesc = weather?.[0]?.description || '';
+  
+  // Determine road condition
+  let roadCondition = 'Dry';
+  if (snow || weatherMain === 'Snow') {
+    roadCondition = 'Snow Covered';
+  } else if (rain || ['Rain', 'Thunderstorm', 'Drizzle'].includes(weatherMain)) {
+    roadCondition = 'Wet';
+  } else if (weatherDesc.includes('fog') || weatherDesc.includes('mist')) {
+    roadCondition = 'Damp';
+  } else if (weatherMain === 'Haze' || weatherMain === 'Dust' || weatherMain === 'Sand') {
+    roadCondition = 'Dusty';
+  }
+  
+  // Determine visibility
+  let visibilityCategory = 'Excellent';
+  if (visibility < 1000) {
+    visibilityCategory = 'Very Poor';
+  } else if (visibility < 4000) {
+    visibilityCategory = 'Poor';
+  } else if (visibility < 7000) {
+    visibilityCategory = 'Moderate';
+  } else if (visibility < 9000) {
+    visibilityCategory = 'Good';
+  }
+  
+  // Determine risk level
+  let riskLevel = 'Low';
+  if (roadCondition === 'Snow Covered' || visibilityCategory === 'Very Poor') {
+    riskLevel = 'High';
+  } else if (roadCondition === 'Wet' || visibilityCategory === 'Poor') {
+    riskLevel = 'Moderate';
+  } else if (roadCondition === 'Damp' || visibilityCategory === 'Moderate') {
+    riskLevel = 'Low-Moderate';
+  }
+  
+  return { roadCondition, visibility: visibilityCategory, riskLevel };
 }
