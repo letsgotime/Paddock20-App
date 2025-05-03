@@ -37,6 +37,7 @@ interface VehicleData {
   purchaseDate: string;
   vehicleImage?: string;
   vin?: string;
+  purchaseLocation?: string;
 }
 
 // Initial vehicle data
