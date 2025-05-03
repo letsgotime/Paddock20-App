@@ -99,7 +99,7 @@ const FixedSoundBar: React.FC = () => {
           disabled={!canGoBack}
           className={`w-8 h-8 flex items-center justify-center rounded-full transition-all duration-200 ${
             canGoBack 
-              ? 'text-blue-400 hover:bg-blue-900/30 hover:text-blue-300 active:bg-blue-900/50 active:scale-95' 
+              ? 'text-[#08c519] hover:bg-green-900/20 hover:text-green-300 active:bg-green-900/30 active:scale-95' 
               : 'text-gray-600 opacity-50 cursor-not-allowed'
           }`}
           aria-label="Go back"
@@ -126,7 +126,7 @@ const FixedSoundBar: React.FC = () => {
           disabled={!canGoForward}
           className={`w-8 h-8 flex items-center justify-center rounded-full transition-all duration-200 ${
             canGoForward
-              ? 'text-blue-400 hover:bg-blue-900/30 hover:text-blue-300 active:bg-blue-900/50 active:scale-95' 
+              ? 'text-[#08c519] hover:bg-green-900/20 hover:text-green-300 active:bg-green-900/30 active:scale-95' 
               : 'text-gray-600 opacity-50 cursor-not-allowed'
           }`}
           aria-label="Go forward"
