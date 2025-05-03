@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useWeather } from '../contexts/WeatherContext';
-import { Route, CalendarCheck, Compass, Thermometer, Wind, CloudRain, MapPin, Clock, AlertTriangle, Car, CheckCircle2, XCircle } from 'lucide-react';
+import { Route, CalendarCheck, Compass, Thermometer, Wind, CloudRain, MapPin, Clock, AlertTriangle, Car, CheckCircle2, XCircle, Info, Flag } from 'lucide-react';
 import { formatDate } from '../utils/dateUtils';
 
 interface RoutePlannerProps {
@@ -848,15 +848,27 @@ const ContextualWeatherRoutePlanner: React.FC<RoutePlannerProps> = ({
                     <div className="absolute left-3 top-6 w-0.5 h-full bg-blue-900/30"></div>
                   )}
                   
-                  {/* Timeline point */}
-                  <div className="w-6 h-6 mt-1 rounded-full bg-blue-900/40 border border-blue-600 flex-shrink-0 z-10 flex items-center justify-center">
+                  {/* Timeline point with data quality indicator in border */}
+                  <div className={`w-6 h-6 mt-1 rounded-full bg-blue-900/40 
+                    ${point.dataQuality === 'low' 
+                      ? 'border border-amber-600' 
+                      : 'border border-blue-600'} 
+                    flex-shrink-0 z-10 flex items-center justify-center`}>
                     {index === 0 && <MapPin className="h-3 w-3 text-blue-400" />}
                     {index > 0 && index < routeWeatherConditions.length - 1 && <Car className="h-3 w-3 text-blue-400" />}
                     {index === routeWeatherConditions.length - 1 && <MapPin className="h-3 w-3 text-blue-400" />}
                   </div>
                   
                   {/* Timeline content */}
-                  <div className="ml-4 pb-6 w-full">
+                  <div className="ml-4 pb-6 w-full relative">
+                    {/* Data quality badge */}
+                    {point.dataQuality === 'low' && (
+                      <div className="absolute -top-1 right-0 bg-amber-900/50 border border-amber-800 text-amber-400 text-xs rounded px-1 py-0.5 flex items-center">
+                        <Info className="h-2.5 w-2.5 mr-0.5" />
+                        <span>Limited forecast accuracy</span>
+                      </div>
+                    )}
+                    
                     <div className="flex justify-between items-center mb-1">
                       <span className="text-white text-sm font-semibold">{point.time} - {point.location}</span>
                       <span className="text-xs text-gray-400">{point.temp}°{unit === 'imperial' ? 'F' : 'C'}</span>
@@ -868,6 +880,10 @@ const ContextualWeatherRoutePlanner: React.FC<RoutePlannerProps> = ({
                           src={`https://openweathermap.org/img/wn/${point.weatherIcon}.png`} 
                           alt={point.weatherDesc}
                           className="w-8 h-8"
+                          onError={(e) => {
+                            // Fallback if image fails to load
+                            (e.target as HTMLImageElement).src = 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9IiM2QkE0RDgiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVjYXA9InJvdW5kIiBzdHJva2UtbGluZWpvaW49InJvdW5kIj48cGF0aCBkPSJNMTcuNSA4YTQuNiA0LjQgMCAwIDAtNC42LTRBNC40IDQuNCAwIDAgMCA5IDYuNSA1IDUgMCAwIDAgNSAxMmE0LjQgNC40IDAgMCAwIDQgNGg5YTQuNSA0LjUgMCAwIDAgMC05WiIvPjwvc3ZnPg==';
+                          }}
                         />
                         <span className="text-xs text-gray-300 capitalize">{point.weatherDesc}</span>
                       </div>
@@ -889,8 +905,35 @@ const ContextualWeatherRoutePlanner: React.FC<RoutePlannerProps> = ({
                       
                       {point.warning && (
                         <div className={`mt-1 text-xs border-t border-gray-800 pt-1 ${getWarningStyle(point.warning.type)}`}>
-                          <AlertTriangle className="h-3 w-3 inline mr-1" />
-                          {point.warning.message}
+                          <div className="flex">
+                            <AlertTriangle className="h-3 w-3 mt-0.5 mr-1 flex-shrink-0" />
+                            <div className="flex flex-col">
+                              <span className="font-semibold">{point.warning.message}</span>
+                              
+                              {point.warning.riskScore !== undefined && (
+                                <div className="flex items-center mt-0.5 text-xs text-gray-400">
+                                  <div className="w-full max-w-[100px] bg-gray-700/40 h-1.5 rounded-full overflow-hidden">
+                                    <div 
+                                      className={`h-full rounded-full ${
+                                        point.warning.riskScore > 70 ? 'bg-red-500' : 
+                                        point.warning.riskScore > 40 ? 'bg-amber-500' : 'bg-blue-500'
+                                      }`}
+                                      style={{ width: `${Math.min(100, Math.max(0, point.warning.riskScore))}%` }}
+                                    ></div>
+                                  </div>
+                                  <span className="ml-1 text-[10px]">
+                                    Risk: {Math.round(point.warning.riskScore)}/100
+                                  </span>
+                                </div>
+                              )}
+                              
+                              {point.warning.confidence && point.warning.confidence !== 'high' && (
+                                <span className="mt-0.5 text-[10px] text-gray-400">
+                                  {point.warning.confidence === 'low' ? 'Low confidence prediction' : 'Medium confidence prediction'}
+                                </span>
+                              )}
+                            </div>
+                          </div>
                         </div>
                       )}
                     </div>
