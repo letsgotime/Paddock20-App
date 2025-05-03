@@ -4,6 +4,7 @@ import EventsPreview from '../components/EventsPreview';
 import MotorsportsGallery from '../components/MotorsportsGallery';
 import F1GoalSettingPanel from '../components/F1GoalSettingPanel';
 import { useWeather } from '../contexts/FixedWeatherContext';
+import ProfileDataCollector from '../services/ProfileDataCollector';
 import { Thermometer, Droplets, Wind, Sun, Leaf, Gauge, Cloud, ArrowUp, Compass, Timer, Clock, Zap, Map, Shield, Calendar, Trophy, Flame, Sunrise, Sunset, Moon } from 'lucide-react';
 
 // Array of driving insights to rotate through - based on weather patterns
@@ -67,6 +68,30 @@ const Paddock20HomePage: React.FC = () => {
       setDateFormat(savedDateFormat);
     }
   }, []);
+  
+  // Log page view to the User Profile system when the component mounts
+  useEffect(() => {
+    // Log that the user visited the Paddock20 homepage
+    ProfileDataCollector.logPageView("Paddock20HomePage");
+    
+    // Feed weather data into the profile if available
+    if (weatherData) {
+      ProfileDataCollector.collectWeatherData(weatherData);
+    }
+    
+    // Create a sample goal for demo purposes when visiting the homepage
+    const currentDate = new Date();
+    const targetDate = new Date();
+    targetDate.setDate(targetDate.getDate() + 30); // Goal for 30 days in the future
+    
+    ProfileDataCollector.collectGoalData({
+      type: 'achievement',
+      description: 'Visit 5 new driving routes within the month',
+      targetDate: targetDate.toISOString(),
+    });
+    
+    // This would be a good place to sync other data with the profile
+  }, [weatherData]); // Only run once on mount and when weather changes
   
   // Update clock and cycle through driving insights
   useEffect(() => {
