@@ -1,6 +1,12 @@
-import React, { useState, useEffect } from "react";
-import { VolumeX, Volume2, Home, ArrowLeft, ArrowRight } from "lucide-react";
-import { playMotorsportSound, getSoundSettings, setSoundEnabled } from "../services/soundService";
+import React, { useState, useEffect, useRef } from "react";
+import { VolumeX, Volume2, Home, ArrowLeft, ArrowRight, Music, Music2 } from "lucide-react";
+import { 
+  playMotorsportSound, 
+  getSoundSettings, 
+  setSoundEnabled, 
+  setAmbientSoundsEnabled
+} from "../services/soundService";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 
 /**
  * FixedSoundBar - A fixed bottom bar showing GoTime logo, navigation controls and sound controls
@@ -8,12 +14,17 @@ import { playMotorsportSound, getSoundSettings, setSoundEnabled } from "../servi
  * This component is designed to be always visible regardless of authentication state
  * and is positioned at the bottom of the screen using fixed positioning.
  * 
- * It uses direct anchor tags for navigation to ensure maximum compatibility.
+ * Now uses React Router's Link component for seamless SPA navigation.
  */
 const FixedSoundBar: React.FC = () => {
-  const [soundEnabled, setSoundEnabledState] = useState(true);
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [soundEnabled, setSoundEnabledState] = useState(false); // Default off
+  const [ambientEnabled, setAmbientEnabledState] = useState(false); // Default off
   const [canGoBack, setCanGoBack] = useState(false);
   const [canGoForward, setCanGoForward] = useState(false);
+  const [showSoundMenu, setShowSoundMenu] = useState(false);
+  const soundMenuRef = useRef<HTMLDivElement>(null);
   
   // Check browser history state on mount and whenever it might change
   useEffect(() => {
@@ -32,23 +43,38 @@ const FixedSoundBar: React.FC = () => {
     return () => {
       window.removeEventListener('popstate', updateNavButtons);
     };
-  }, []);
+  }, [location.pathname]); // Re-check when location changes
   
   // Initialize sound settings from sound service
   useEffect(() => {
     try {
       const soundSettings = getSoundSettings();
       setSoundEnabledState(soundSettings.enabled);
+      setAmbientEnabledState(soundSettings.ambientEnabled);
     } catch (error) {
       console.error("Error loading sound settings:", error);
     }
   }, []);
+  
+  // Handle clicks outside the sound menu to close it
+  useEffect(() => {
+    function handleClickOutside(event: MouseEvent) {
+      if (soundMenuRef.current && !soundMenuRef.current.contains(event.target as Node)) {
+        setShowSoundMenu(false);
+      }
+    }
+    
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, []);
 
-  // Simple navigation handlers
+  // Navigation handlers using React Router
   const handleBackClick = (e: React.MouseEvent) => {
     if (canGoBack) {
       if (soundEnabled) playMotorsportSound('ui_navigate');
-      window.history.back();
+      navigate(-1); // Go back one step in history
     } else {
       e.preventDefault();
     }
@@ -57,18 +83,19 @@ const FixedSoundBar: React.FC = () => {
   const handleForwardClick = (e: React.MouseEvent) => {
     if (canGoForward) {
       if (soundEnabled) playMotorsportSound('ui_navigate');
-      window.history.forward();
+      navigate(1); // Go forward one step in history
     } else {
       e.preventDefault();
     }
   };
 
-  const handleHomeClick = (e: React.MouseEvent) => {
+  const handleHomeClick = () => {
     if (soundEnabled) playMotorsportSound('ui_select');
   };
 
-  const handleSoundLibraryClick = (e: React.MouseEvent) => {
+  const handleSoundLibraryClick = () => {
     if (soundEnabled) playMotorsportSound('button_press');
+    setShowSoundMenu(false);
   };
 
   const toggleSound = () => {
@@ -77,6 +104,7 @@ const FixedSoundBar: React.FC = () => {
       const newState = !soundEnabled;
       setSoundEnabledState(newState);
       setSoundEnabled(newState);
+      
       // Play sound effect for toggle
       if (newState) {
         playMotorsportSound('radio_beep');
@@ -84,6 +112,27 @@ const FixedSoundBar: React.FC = () => {
     } catch (error) {
       console.error("Error toggling sound:", error);
     }
+  };
+  
+  const toggleAmbientSound = () => {
+    try {
+      // Toggle ambient sound setting
+      const newState = !ambientEnabled;
+      setAmbientEnabledState(newState);
+      setAmbientSoundsEnabled(newState);
+      
+      // Play sound effect for toggle if sounds are enabled
+      if (soundEnabled) {
+        playMotorsportSound(newState ? 'start_chime' : 'button_press');
+      }
+    } catch (error) {
+      console.error("Error toggling ambient sound:", error);
+    }
+  };
+  
+  const toggleSoundMenu = () => {
+    setShowSoundMenu(!showSoundMenu);
+    if (soundEnabled) playMotorsportSound('menu_select');
   };
 
   return (
@@ -116,16 +165,16 @@ const FixedSoundBar: React.FC = () => {
         
         <div className="mx-1 h-4 w-px bg-blue-900/50"></div>
         
-        {/* Home Button - Using anchor tag for maximum compatibility */}
-        <a
-          href="/"
+        {/* Home Button - Using React Router Link for SPA navigation */}
+        <Link
+          to="/"
           onClick={handleHomeClick}
           className="w-7 h-7 flex items-center justify-center text-blue-400 hover:text-blue-300"
           aria-label="Go to home page"
           title="Home"
         >
           <Home size={18} />
-        </a>
+        </Link>
         
         <div className="mx-1 h-4 w-px bg-blue-900/50"></div>
         
@@ -146,32 +195,64 @@ const FixedSoundBar: React.FC = () => {
       </div>
       
       {/* Sound Controls */}
-      <div className="flex items-center space-x-2">
+      <div className="flex items-center space-x-2 relative">
         {/* Sound toggle button */}
         <button
-          onClick={toggleSound}
+          onClick={toggleSoundMenu}
           className="text-gray-400 hover:text-blue-400 p-2 rounded-full transition-colors duration-200"
-          aria-label={soundEnabled ? "Mute sounds" : "Enable sounds"}
-          title={soundEnabled ? "Mute sounds" : "Enable sounds"}
+          aria-label="Sound settings"
+          title="Sound settings"
         >
           {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
         </button>
         
-        {/* Sound Library link - Using standard anchor tag */}
-        <a 
-          href="/sound-library"
-          onClick={handleSoundLibraryClick}
-          className="text-gray-400 hover:text-blue-400 p-2 transition-colors duration-200"
-          aria-label="Sound Library"
-          title="Sound Library"
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M2 9.5a6 2.5 0 0 1 6 -2.5"></path>
-            <path d="M8 17a6 2.5 0 0 0 6 -2.5"></path>
-            <path d="M14 7a6 2.5 0 0 1 6 -2.5"></path>
-            <path d="M20 14.5a6 2.5 0 0 1 -6 2.5"></path>
-          </svg>
-        </a>
+        {/* Sound settings dropdown menu */}
+        {showSoundMenu && (
+          <div 
+            ref={soundMenuRef}
+            className="absolute bottom-full right-0 mb-2 bg-gray-900 border border-blue-900/50 rounded-md shadow-lg p-3 min-w-[180px] z-50"
+          >
+            <div className="text-sm text-blue-400 border-b border-blue-900/50 pb-1 mb-2">Sound Settings</div>
+            
+            {/* Sound effects toggle */}
+            <button 
+              onClick={toggleSound}
+              className="flex items-center justify-between w-full text-sm text-gray-300 hover:text-white py-1"
+            >
+              <span className="flex items-center">
+                <Volume2 size={14} className="mr-2" />
+                Sound Effects
+              </span>
+              <span className={`px-2 py-0.5 rounded ${soundEnabled ? 'bg-green-900 text-green-400' : 'bg-gray-800 text-gray-500'}`}>
+                {soundEnabled ? 'ON' : 'OFF'}
+              </span>
+            </button>
+            
+            {/* Ambient sound toggle */}
+            <button 
+              onClick={toggleAmbientSound}
+              className="flex items-center justify-between w-full text-sm text-gray-300 hover:text-white py-1 mt-1"
+            >
+              <span className="flex items-center">
+                <Music2 size={14} className="mr-2" />
+                Ambient Sounds
+              </span>
+              <span className={`px-2 py-0.5 rounded ${ambientEnabled ? 'bg-green-900 text-green-400' : 'bg-gray-800 text-gray-500'}`}>
+                {ambientEnabled ? 'ON' : 'OFF'}
+              </span>
+            </button>
+            
+            {/* Sound library link */}
+            <Link 
+              to="/sound-library"
+              onClick={handleSoundLibraryClick}
+              className="flex items-center w-full text-sm text-gray-300 hover:text-white py-1 mt-1"
+            >
+              <Music size={14} className="mr-2" />
+              Sound Library
+            </Link>
+          </div>
+        )}
       </div>
     </nav>
   );
