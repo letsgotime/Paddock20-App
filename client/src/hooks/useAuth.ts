@@ -1,70 +1,137 @@
-import { useState, useEffect } from 'react';
-import supabase from '../services/supabaseClient';
+// Temporary auth hook that uses localStorage until we integrate the full database auth
+// This will be replaced with a proper context-based implementation
 
-// Define a simplified session type for our application
-interface SimpleSession {
-  user: {
-    id: string;
-    email?: string;
-  };
+import { useState, useEffect } from 'react';
+
+// Interface to represent the session object
+interface User {
+  id: string;
+  username?: string;
+  email?: string;
+  profileImage?: string | null;
+  role?: 'user' | 'admin' | 'premium' | null;
+  // Add other properties that the app expects
 }
 
+interface Session {
+  user: User;
+}
+
+const LOCAL_STORAGE_KEY = 'paddock20_session';
+
+/**
+ * Temporary auth hook that works with localStorage
+ * This will be replaced with a proper database-backed auth system
+ */
 export function useAuth() {
-  const [session, setSession] = useState<SimpleSession | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
+  // Load the session from localStorage on first render
   useEffect(() => {
-    // Set up auth with a mock default session for development
-    if (supabase._isMockClient) {
-      // For mock client, just use the hardcoded session
-      setSession({ user: { id: '1', email: 'user@example.com' } });
-      setLoading(false);
-      
-      // No need to set up listeners or cleanup for mock
-      return;
-    }
-    
-    // This code runs for a real Supabase client
-    // Get the current session
-    const getSession = async () => {
-      try {
-        const { data } = await supabase.auth.getSession();
-        setSession(data.session);
-      } catch (error) {
-        console.error("Error getting session:", error);
-      } finally {
-        setLoading(false);
-      }
-    };
-    
-    getSession();
-
-    // Try to set up auth listener if it exists
     try {
-      let authListener: any = { subscription: { unsubscribe: () => {} } };
-      
-      if (supabase.auth.onAuthStateChange) {
-        const listener = supabase.auth.onAuthStateChange(
-          (_event: string, session: any) => {
-            setSession(session);
-          }
-        );
-        
-        if (listener && listener.data) {
-          authListener = listener.data;
-        }
+      const storedSession = localStorage.getItem(LOCAL_STORAGE_KEY);
+      if (storedSession) {
+        const parsedSession = JSON.parse(storedSession) as Session;
+        setSession(parsedSession);
+        setUser(parsedSession.user);
       }
-
-      return () => {
-        if (authListener && authListener.subscription && authListener.subscription.unsubscribe) {
-          authListener.subscription.unsubscribe();
-        }
-      };
-    } catch (error) {
-      console.error("Error setting up auth listener:", error);
-      return () => {};
+    } catch (err) {
+      console.error('Error loading session from localStorage:', err);
+      setError('Failed to load authentication data');
+    } finally {
+      setLoading(false);
     }
   }, []);
 
-  return { session, loading };
+  // Mock login function (will be replaced with actual API call)
+  const login = async (username: string, password: string) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Mock successful login
+      const mockUser: User = {
+        id: Math.random().toString(36).substring(2, 15),
+        username,
+        email: `${username}@example.com`,
+        role: 'user'
+      };
+      
+      const newSession = { user: mockUser };
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newSession));
+      
+      setSession(newSession);
+      setUser(mockUser);
+      
+      return mockUser;
+    } catch (err) {
+      console.error('Login error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Login failed';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Mock register function (will be replaced with actual API call)
+  const register = async (userData: any) => {
+    try {
+      setLoading(true);
+      setError(null);
+      
+      // Mock successful registration
+      const mockUser: User = {
+        id: Math.random().toString(36).substring(2, 15),
+        username: userData.username,
+        email: userData.email,
+        role: 'user'
+      };
+      
+      const newSession = { user: mockUser };
+      localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(newSession));
+      
+      setSession(newSession);
+      setUser(mockUser);
+      
+      return mockUser;
+    } catch (err) {
+      console.error('Registration error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Registration failed';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Mock logout function
+  const logout = async () => {
+    try {
+      setLoading(true);
+      localStorage.removeItem(LOCAL_STORAGE_KEY);
+      setSession(null);
+      setUser(null);
+    } catch (err) {
+      console.error('Logout error:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Logout failed';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return {
+    session,
+    user,
+    loading,
+    error,
+    login,
+    register,
+    logout
+  };
 }

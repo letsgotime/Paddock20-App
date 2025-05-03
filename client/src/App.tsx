@@ -65,6 +65,8 @@ import HomePage from "./pages/Home";
 import OneTapWeatherSnapshot from "./components/OneTapWeatherSnapshot";
 import UserOnboarding from "./components/UserOnboarding";
 import { useAuth } from "./hooks/useAuth";
+// Temporarily comment out AuthProvider until we complete the implementation
+// import { AuthProvider } from "./context/AuthContext";
 import { MAIN_CONTENT_ID, LiveRegion } from './lib/accessibility';
 import './paddock20.css';
 
@@ -163,11 +165,11 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        {/* Centralized Weather Provider - Provides weather data to all components */}
-        <WeatherProvider>
-          <GalleryProvider>
-            {/* Rewards Provider - for site-wide gamification */}
-            <RewardsProvider>
+          {/* Centralized Weather Provider - Provides weather data to all components */}
+          <WeatherProvider>
+            <GalleryProvider>
+              {/* Rewards Provider - for site-wide gamification */}
+              <RewardsProvider>
               {/* Skip link for keyboard navigation */}
               <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
                 Skip to main content
