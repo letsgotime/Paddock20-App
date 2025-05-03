@@ -275,94 +275,122 @@ class ProfileDataCollector {
    * @param vehicleContextData Vehicle data from the VehicleContext
    */
   static syncVehicleFromContext(vehicleContextData: any) {
-    const { profile, addVehicle, updateVehicle } = this.store;
+    // FIX: Store store operations in a local variable first to prevent state updates
+    // This helps to break the circular dependency causing the infinite update loop
+    const storeRef = this.store;
     
-    if (!profile) return;
+    // Prevent execution if profile is not available
+    if (!storeRef.profile) return;
     
-    // Prevent infinite loops by checking if we should process this sync
-    const eventSource = vehicleContextData?.source;
-    if (eventSource === 'ProfileDataCollector') {
-      console.log('Skipping sync from ProfileDataCollector to avoid infinite loop');
+    // CRITICAL FIX: Check if sync is already in progress to prevent infinite loops
+    if (ProfileDataCollector._syncInProgress) {
+      console.log('[Loop Prevention] Vehicle sync already in progress, skipping');
       return;
     }
     
-    // Log the syncing process
-    console.log('Syncing vehicle with profile system:', vehicleContextData.make, vehicleContextData.model);
+    // Track sync state
+    ProfileDataCollector._syncInProgress = true;
     
-    // Check if this vehicle already exists in the profile by comparing attributes
-    const existingVehicle = profile.vehicles.find((v: VehicleData) => 
-      v.make === vehicleContextData.make && 
-      v.model === vehicleContextData.model &&
-      (v.year === parseInt(vehicleContextData.year) || v.year.toString() === vehicleContextData.year)
-    );
-    
-    let updatedVehicle;
-    
-    if (existingVehicle) {
-      console.log('Updating existing profile vehicle:', existingVehicle.id);
-      // Create update data
-      const updateData = {
-        color: vehicleContextData.color,
-        nickname: vehicleContextData.nickname || vehicleContextData.car_name,
-        image: vehicleContextData.vehicle_image || vehicleContextData.vehicleImage,
-        mileage: parseInt(vehicleContextData.mileage) || 0,
-        // Include additional fields for comprehensive sync
-        lastServiced: vehicleContextData.last_service,
-        engineType: vehicleContextData.engine_type || vehicleContextData.engineType,
-        transmissionType: vehicleContextData.transmission || vehicleContextData.transmissionType,
-        purchaseDate: vehicleContextData.purchase_date || vehicleContextData.purchaseDate
-      };
+    try {
+      // Prevent infinite loops by checking the source
+      const eventSource = vehicleContextData?.source;
+      if (eventSource === 'ProfileDataCollector') {
+        console.log('Skipping sync from ProfileDataCollector to avoid infinite loop');
+        return;
+      }
       
-      // Create a modified copy of the object instead of updating state directly
-      // This prevents the infinite update loop
-      updatedVehicle = {
-        ...existingVehicle,
-        ...updateData
-      };
+      // Log the syncing process
+      console.log('Syncing vehicle with profile system:', vehicleContextData.make, vehicleContextData.model);
       
-      // Now perform the actual update using the store's method
-      // but block broadcasting this update to prevent further loops
-      updateVehicle(existingVehicle.id, {
-        ...updateData,
-        _skipBroadcast: true
-      });
-    } else {
-      console.log('Adding new vehicle to profile system');
-      // Prepare vehicle data for adding
-      const newVehicleData = {
-        make: vehicleContextData.make,
-        model: vehicleContextData.model,
-        year: parseInt(vehicleContextData.year) || vehicleContextData.year,
-        color: vehicleContextData.color,
-        nickname: vehicleContextData.nickname || vehicleContextData.car_name,
-        image: vehicleContextData.vehicle_image || vehicleContextData.vehicleImage,
-        mileage: parseInt(vehicleContextData.mileage) || 0,
-        // Include additional fields for comprehensive addition
-        lastServiced: vehicleContextData.last_service,
-        engineType: vehicleContextData.engine_type || vehicleContextData.engineType,
-        transmissionType: vehicleContextData.transmission || vehicleContextData.transmissionType,
-        purchaseDate: vehicleContextData.purchase_date || vehicleContextData.purchaseDate,
-        mods: [],
-        maintenanceRecords: []
-      };
+      // Check if this vehicle already exists in the profile by comparing attributes
+      const existingVehicle = storeRef.profile.vehicles.find((v: VehicleData) => 
+        v.make === vehicleContextData.make && 
+        v.model === vehicleContextData.model &&
+        (v.year === parseInt(vehicleContextData.year) || v.year.toString() === vehicleContextData.year)
+      );
       
-      // Add as a new vehicle to the profile and get the result
-      updatedVehicle = this.collectVehicleData(newVehicleData);
+      let updatedVehicle;
+      
+      if (existingVehicle) {
+        console.log('Updating existing profile vehicle:', existingVehicle.id);
+        // Create update data
+        const updateData = {
+          color: vehicleContextData.color,
+          nickname: vehicleContextData.nickname || vehicleContextData.car_name,
+          image: vehicleContextData.vehicle_image || vehicleContextData.vehicleImage,
+          mileage: parseInt(vehicleContextData.mileage) || 0,
+          // Include additional fields for comprehensive sync
+          lastServiced: vehicleContextData.last_service,
+          engineType: vehicleContextData.engine_type || vehicleContextData.engineType,
+          transmissionType: vehicleContextData.transmission || vehicleContextData.transmissionType,
+          purchaseDate: vehicleContextData.purchase_date || vehicleContextData.purchaseDate
+        };
+        
+        // Create an updated copy of the vehicle
+        updatedVehicle = {
+          ...existingVehicle,
+          ...updateData
+        };
+        
+        // CRITICAL FIX: Defer the state update to break the update chain
+        // Instead of immediately updating through the store
+        setTimeout(() => {
+          // Check if we're still in a good application state before updating
+          if (storeRef.profile && storeRef.profile.vehicles) {
+            // Now use the store method with the skipBroadcast flag
+            storeRef.updateVehicle(existingVehicle.id, {
+              ...updateData,
+              _skipBroadcast: true
+            });
+          }
+        }, 0);
+      } else {
+        console.log('Adding new vehicle to profile system');
+        // Prepare vehicle data for adding
+        const newVehicleData = {
+          make: vehicleContextData.make,
+          model: vehicleContextData.model,
+          year: parseInt(vehicleContextData.year) || vehicleContextData.year,
+          color: vehicleContextData.color,
+          nickname: vehicleContextData.nickname || vehicleContextData.car_name,
+          image: vehicleContextData.vehicle_image || vehicleContextData.vehicleImage,
+          mileage: parseInt(vehicleContextData.mileage) || 0,
+          // Include additional fields for comprehensive addition
+          lastServiced: vehicleContextData.last_service,
+          engineType: vehicleContextData.engine_type || vehicleContextData.engineType,
+          transmissionType: vehicleContextData.transmission || vehicleContextData.transmissionType,
+          purchaseDate: vehicleContextData.purchase_date || vehicleContextData.purchaseDate,
+          mods: [],
+          maintenanceRecords: [],
+          id: `profile-vehicle-${Date.now()}-${Math.floor(Math.random() * 10000)}`
+        };
+        
+        // CRITICAL FIX: Instead of immediately calling collectVehicleData (which causes state updates)
+        // We'll defer that operation
+        updatedVehicle = newVehicleData;
+        
+        setTimeout(() => {
+          // Make sure we're still in a good application state
+          if (storeRef.profile) {
+            this.collectVehicleData({
+              ...newVehicleData,
+              _skipBroadcast: true
+            });
+          }
+        }, 0);
+      }
+      
+      return updatedVehicle;
+    } finally {
+      // Always reset the sync flag when done
+      setTimeout(() => {
+        ProfileDataCollector._syncInProgress = false;
+      }, 100);
     }
-    
-    // We already broadcast in collectVehicleData for new vehicles
-    // For existing vehicles that were updated with _skipBroadcast
-    // only broadcast if the vehicle wasn't created by collectVehicleData
-    if (existingVehicle && !updatedVehicle._skipBroadcast) {
-      const broadcastData = {
-        ...updatedVehicle,
-        _source: 'ProfileDataCollector'
-      };
-      this.broadcastVehicleDataToAllComponents(broadcastData);
-    }
-    
-    return updatedVehicle;
   }
+  
+  // CRITICAL FIX: Added a static flag to track sync state and prevent infinite loops
+  private static _syncInProgress = false;
   
   /**
    * Syncs all vehicles from the array to the profile system
