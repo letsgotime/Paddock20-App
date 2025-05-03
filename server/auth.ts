@@ -14,7 +14,32 @@ import { storage } from "./storage";
 declare global {
   namespace Express {
     // Define our User interface for Express
-    interface User extends User {}
+    interface User {
+      id: number;
+      username: string;
+      password: string;
+      email: string;
+      firstName: string | null;
+      lastName: string | null;
+      fullName: string | null;
+      preferredUnit: string | null;
+      profileImage: string | null;
+      drivingExperience: string | null;
+      interests: string[];
+      bio: string | null;
+      role: string;
+      isActive: boolean;
+      lastLogin: Date | null;
+      resetToken: string | null;
+      resetTokenExpires: Date | null;
+      verificationToken: string | null;
+      isEmailVerified: boolean;
+      stripeCustomerId: string | null;
+      stripeSubscriptionId: string | null;
+      onboardingCompleted: boolean;
+      createdAt: Date;
+      updatedAt: Date | null;
+    }
   }
 }
 
@@ -47,7 +72,7 @@ export function setupAuth(app: Express) {
     secret: sessionSecret,
     resave: false,
     saveUninitialized: false,
-    store: sessionStore,
+    store: storage.sessionStore,
     cookie: {
       secure: isProduction, // Set to true in production 
       httpOnly: true,
@@ -71,21 +96,25 @@ export function setupAuth(app: Express) {
     new LocalStrategy(async (username, password, done) => {
       try {
         // Find user by username
-        const [user] = await db
-          .select()
-          .from(users)
-          .where(eq(users.username, username));
+        const user = await storage.getUserByUsername(username);
         
         // User not found or password doesn't match
         if (!user || !(await comparePasswords(password, user.password))) {
           return done(null, false, { message: "Invalid username or password" });
         }
         
-        // Update last login time
-        await db
-          .update(users)
-          .set({ lastLogin: new Date() })
-          .where(eq(users.id, user.id));
+        // Update last login time and record login attempt
+        await storage.updateUserLastLogin(user.id);
+        
+        // Record successful login attempt
+        await storage.createAuthLog({
+          userId: user.id,
+          action: 'login',
+          status: 'success',
+          ipAddress: null, // Set in middleware
+          userAgent: null, // Set in middleware
+          details: {}
+        });
         
         return done(null, user);
       } catch (error) {
@@ -101,10 +130,7 @@ export function setupAuth(app: Express) {
   
   passport.deserializeUser(async (id: number, done) => {
     try {
-      const [user] = await db
-        .select()
-        .from(users)
-        .where(eq(users.id, id));
+      const user = await storage.getUser(id);
         
       // User not found
       if (!user) {
@@ -123,12 +149,9 @@ export function setupAuth(app: Express) {
   app.post("/api/register", async (req, res) => {
     try {
       // Check if username already exists
-      const existingUsername = await db
-        .select()
-        .from(users)
-        .where(eq(users.username, req.body.username));
+      const existingUsername = await storage.getUserByUsername(req.body.username);
       
-      if (existingUsername.length > 0) {
+      if (existingUsername) {
         return res.status(400).json({ 
           success: false, 
           error: "Username already exists" 
@@ -136,12 +159,9 @@ export function setupAuth(app: Express) {
       }
       
       // Check if email already exists
-      const existingEmail = await db
-        .select()
-        .from(users)
-        .where(eq(users.email, req.body.email));
+      const existingEmail = await storage.getUserByEmail(req.body.email);
       
-      if (existingEmail.length > 0) {
+      if (existingEmail) {
         return res.status(400).json({ 
           success: false, 
           error: "Email already exists" 
@@ -154,17 +174,31 @@ export function setupAuth(app: Express) {
       // Remove confirmPassword before inserting
       const { confirmPassword, ...userData } = req.body;
       
-      // Insert user into database
-      const [newUser] = await db
-        .insert(users)
-        .values({
-          ...userData,
-          password: hashedPassword,
-          lastLogin: new Date(),
-          // Generate verification token
-          verificationToken: randomBytes(32).toString("hex"),
-        })
-        .returning();
+      // Generate verification token
+      const verificationToken = randomBytes(32).toString("hex");
+      
+      // Create user in database
+      const newUser = await storage.createUser({
+        ...userData,
+        password: hashedPassword,
+        lastLogin: new Date(),
+        verificationToken,
+        interests: userData.interests || [],
+        role: 'user',
+        isActive: true,
+        isEmailVerified: false,
+        onboardingCompleted: false
+      });
+      
+      // Log registration in auth logs
+      await storage.createAuthLog({
+        userId: newUser.id,
+        action: 'register',
+        status: 'success',
+        ip_address: null, // Set in middleware
+        user_agent: null, // Set in middleware
+        details: {}
+      });
       
       // Login the user (auto-login after registration)
       req.login(newUser, (err) => {
