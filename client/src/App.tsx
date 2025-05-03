@@ -162,6 +162,29 @@ function App() {
         window.history.pushState(null, '', returnPoint);
       }
     }
+    
+    // Listen for custom route change events from the FixedSoundBar
+    const handleRouteChange = (event: CustomEvent) => {
+      try {
+        const { path } = event.detail;
+        if (path && window.location.pathname !== path) {
+          // Navigate to the path using React Router programmatically
+          window.history.pushState(null, '', path);
+          // Dispatch a popstate event to trigger React Router navigation
+          window.dispatchEvent(new PopStateEvent('popstate'));
+        }
+      } catch (error) {
+        console.error('Error handling route change:', error);
+      }
+    };
+    
+    // Add event listener
+    window.addEventListener('routeChange', handleRouteChange as EventListener);
+    
+    // Clean up
+    return () => {
+      window.removeEventListener('routeChange', handleRouteChange as EventListener);
+    };
   }, []);
   
   // Initialize authentication status

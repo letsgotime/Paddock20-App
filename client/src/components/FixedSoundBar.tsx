@@ -12,7 +12,6 @@ const FixedSoundBar: React.FC = () => {
   const [soundEnabled, setSoundEnabledState] = useState(true);
   const [canGoBack, setCanGoBack] = useState(false);
   const [canGoForward, setCanGoForward] = useState(false);
-  const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/';
   
   // Check browser history state on mount and whenever it might change
   useEffect(() => {
@@ -66,8 +65,11 @@ const FixedSoundBar: React.FC = () => {
   
   const goHome = () => {
     try {
-      // Navigate to home page
-      window.location.href = '/';
+      // Use React Router to navigate programmatically
+      const event = new CustomEvent('routeChange', { 
+        detail: { path: '/' }
+      });
+      window.dispatchEvent(event);
       
       // Play sound effect if enabled
       if (soundEnabled) playMotorsportSound('ui_select');
@@ -75,6 +77,23 @@ const FixedSoundBar: React.FC = () => {
       console.log("Navigating to homepage");
     } catch (error) {
       console.error("Error navigating home:", error);
+    }
+  };
+  
+  const goToSoundLibrary = () => {
+    try {
+      // Use React Router to navigate programmatically
+      const event = new CustomEvent('routeChange', { 
+        detail: { path: '/sound-library' }
+      });
+      window.dispatchEvent(event);
+      
+      // Play sound effect if enabled
+      if (soundEnabled) playMotorsportSound('button_press');
+      
+      console.log("Navigating to sound library");
+    } catch (error) {
+      console.error("Error navigating to sound library:", error);
     }
   };
   
@@ -168,21 +187,12 @@ const FixedSoundBar: React.FC = () => {
           {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
         </button>
         
-        {/* Sound Library link - using standard <a> tag for consistent navigation */}
-        <a 
-          href="/sound-library" 
+        {/* Sound Library link - using router events for consistent navigation */}
+        <button 
+          onClick={goToSoundLibrary}
           className="text-gray-400 hover:text-blue-400 p-2 transition-colors duration-200"
           aria-label="Sound Library"
           title="Sound Library"
-          onClick={(e) => {
-            if (soundEnabled) {
-              try {
-                playMotorsportSound('button_press');
-              } catch (error) {
-                console.error("Error playing sound:", error);
-              }
-            }
-          }}
         >
           <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
             <path d="M2 9.5a6 2.5 0 0 1 6 -2.5"></path>
@@ -190,7 +200,7 @@ const FixedSoundBar: React.FC = () => {
             <path d="M14 7a6 2.5 0 0 1 6 -2.5"></path>
             <path d="M20 14.5a6 2.5 0 0 1 -6 2.5"></path>
           </svg>
-        </a>
+        </button>
       </div>
     </nav>
   );
