@@ -8,7 +8,7 @@ import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'rec
 
 // Mock user data for demo purposes
 const mockUserData = {
-  name: 'Alex',
+  name: 'Gavin',
   location: 'Charlotte, NC',
   memberLevel: 'Redline Racer',
   memberPoints: 752,
