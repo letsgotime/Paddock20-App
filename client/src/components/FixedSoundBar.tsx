@@ -86,7 +86,7 @@ const FixedSoundBar: React.FC = () => {
       {/* GoTime Logo */}
       <div className="flex items-center font-orbitron text-2xl no-underline">
         <img 
-          src="/assets/GoTime Logo-7FC844-White (1).png" 
+          src="/assets/GoTime White.png" 
           alt="GoTime Motorsports" 
           className="h-8 w-auto"
         />
