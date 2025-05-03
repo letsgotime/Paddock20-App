@@ -1,6 +1,7 @@
 import React, { useState, useEffect, lazy, Suspense } from 'react';
 import { MAIN_CONTENT_ID } from '../lib/accessibility';
-import { useWeather } from '../contexts/WeatherContext';
+// FIXED: Use the ConsolidatedWeatherContext instead of WeatherContext to fix the provider error
+import { useWeather } from '../contexts/ConsolidatedWeatherContext';
 import WorldClockPanel from '../components/WorldClockPanel';
 import { getDriveRecommendations } from '../services/driveRecommendations';
 import { fallbackDriveWindows, fallbackDrivingTips, fallbackPerformanceAdjustments } from '../utils/fallbackData';
@@ -18,6 +19,7 @@ const WeatherLoadingFallback = () => (
 );
 
 function Weather() {
+  // FIXED: Use consolidated weather context properties which matches the expected interface
   const { currentWeather, location, isLoading: isWeatherContextLoading, units } = useWeather();
   const [isPageReady, setIsPageReady] = useState(false);
   const [driveWindows, setDriveWindows] = useState([]);
