@@ -297,31 +297,69 @@ const Paddock20HomePage: React.FC = () => {
           </div>
         </div>
         
-        {/* Paddock20 Vision Statement */}
-        <div className="mb-8 text-center">
-          <h2 className="text-blue-400 font-orbitron text-3xl mb-3">Why Paddock20™? Why Now?</h2>
+        {/* Paddock20 Vision Statement - F1-Inspired Tech Container */}
+        <div className="mb-10 relative">
+          {/* Carbon fiber background with tech overlay */}
+          <div className="absolute inset-0 bg-[url('/assets/images/carbon-fiber-pattern.png')] bg-repeat opacity-10 rounded-xl"></div>
           
-          <div className="max-w-3xl mx-auto mb-4">
-            <h3 className="text-[#4B9CD3] font-orbitron text-xl mb-2">The Paddock Concept</h3>
-            <p className="text-gray-400">
-              In motorsports, the paddock is the secured area where teams prepare, service, and manage their race cars. It's where the real work happens — where strategy becomes reality.
-            </p>
-            <p className="text-gray-400 mt-2">
-              Having "paddock access" means you're part of the team, part of the action, not just spectating.
-            </p>
+          {/* Tech accent lines */}
+          <div className="absolute top-0 left-0 w-1 h-full bg-gradient-to-b from-[#4B9CD3] via-blue-400 to-transparent rounded-l"></div>
+          <div className="absolute top-0 right-0 w-1 h-full bg-gradient-to-b from-[#08c519] via-green-400/50 to-transparent rounded-r"></div>
+          <div className="absolute top-0 left-12 right-12 h-0.5 bg-gradient-to-r from-transparent via-blue-500 to-transparent"></div>
+          <div className="absolute bottom-0 left-12 right-12 h-0.5 bg-gradient-to-r from-transparent via-[#08c519] to-transparent"></div>
+          
+          {/* Telemetry-inspired header */}
+          <div className="bg-black/80 border-b border-blue-900/40 rounded-t-xl py-3 px-6 flex justify-between items-center">
+            <div className="flex items-center">
+              <div className="h-2.5 w-2.5 rounded-full bg-[#08c519] animate-pulse mr-2"></div>
+              <h2 className="text-[#4B9CD3] font-orbitron text-2xl tracking-wider">WHY PADDOCK20™? WHY NOW?</h2>
+            </div>
+            <div className="text-xs text-gray-400 font-mono">DRIVER INTELLIGENCE 2.0</div>
           </div>
           
-          <div className="max-w-3xl mx-auto">
-            <h3 className="text-[#4B9CD3] font-orbitron text-xl mb-2">Paddock20™ Vision</h3>
-            <p className="text-gray-400">
-              Because real enthusiasts deserve real systems. Because parking lot dreams deserve pit lane execution. Because knowing when to drive is as important as knowing how.
-            </p>
-            <p className="text-[#08c519] mt-3 font-medium">
-              No noise. No fake flex. Just pure data, pure drive, pure community. Built by operators who care about discipline more than downloads.
-            </p>
-            <p className="text-white mt-4 italic border-l-4 border-[#08c519] pl-4 text-left max-w-2xl mx-auto">
-              "The paddock isn't where you show off. It's where you get ready to win. Paddock20™ was built for that same mindset."
-            </p>
+          <div className="bg-black/50 backdrop-blur-sm p-6 rounded-b-xl border-t-0 border border-blue-900/20">
+            {/* The Paddock Concept Section */}
+            <div className="mb-6 bg-black/30 rounded-lg p-4 border border-blue-900/20">
+              <div className="flex items-center mb-3">
+                <div className="h-2 w-2 bg-blue-500 rounded-full mr-2"></div>
+                <h3 className="text-[#4B9CD3] font-orbitron text-xl">THE PADDOCK CONCEPT</h3>
+                <div className="ml-auto text-xs text-blue-400/70 font-mono px-2 py-0.5 bg-blue-500/10 rounded border border-blue-500/20">MOTORSPORT ORIGINS</div>
+              </div>
+              <p className="text-gray-300 pl-4 border-l border-blue-800/50">
+                In motorsports, the paddock is the secured area where teams prepare, service, and manage their race cars. It's where the real work happens — where strategy becomes reality.
+              </p>
+              <p className="text-gray-300 mt-3 pl-4 border-l border-blue-800/50">
+                Having "paddock access" means you're part of the team, part of the action, not just spectating.
+              </p>
+            </div>
+            
+            {/* Paddock20 Vision Section */}
+            <div className="bg-black/30 rounded-lg p-4 border border-green-900/20">
+              <div className="flex items-center mb-3">
+                <div className="h-2 w-2 bg-[#08c519] rounded-full mr-2"></div>
+                <h3 className="text-[#08c519] font-orbitron text-xl">PADDOCK20™ VISION</h3>
+                <div className="ml-auto text-xs text-green-400/70 font-mono px-2 py-0.5 bg-green-500/10 rounded border border-green-500/20">MISSION CRITICAL</div>
+              </div>
+              <p className="text-gray-300 pl-4 border-l border-green-800/50">
+                Because real enthusiasts deserve real systems. Because parking lot dreams deserve pit lane execution. Because knowing when to drive is as important as knowing how.
+              </p>
+              <p className="text-white mt-3 pl-4 border-l border-green-800/50 font-medium">
+                No noise. No fake flex. Just pure data, pure drive, pure community. Built by operators who care about discipline more than downloads.
+              </p>
+            </div>
+            
+            {/* Quote - F1 Telemetry Style */}
+            <div className="mt-6 bg-gradient-to-r from-black to-gray-900/80 p-4 rounded-lg border border-blue-900/40 flex items-center">
+              <div className="flex-shrink-0 w-1.5 h-16 bg-gradient-to-b from-[#08c519] to-blue-500 rounded-full mr-4"></div>
+              <p className="text-white italic font-medium">
+                "The paddock isn't where you show off. It's where you get ready to win. Paddock20™ was built for that same mindset."
+              </p>
+              <div className="flex-shrink-0 ml-auto">
+                <div className="h-10 w-10 rounded-full bg-black/60 border border-[#08c519]/30 flex items-center justify-center">
+                  <div className="h-2 w-2 rounded-full bg-[#08c519] animate-pulse"></div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
 
