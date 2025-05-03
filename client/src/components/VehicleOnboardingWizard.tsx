@@ -273,15 +273,24 @@ const VehicleOnboardingWizard: React.FC = () => {
       if (decodedInfo.error) {
         setVinError(decodedInfo.error);
         setIsDecoding(false);
+        // Allow manual entry as fallback
+        toast({
+          title: 'VIN Lookup Failed',
+          description: 'Unable to retrieve vehicle data from VIN. You can enter details manually.',
+          variant: 'destructive'
+        });
+        // Continue with manual entry
+        setCurrentStep(1);
         return;
       }
       
       // Update vehicle data with decoded information
+      // But keep default values if information is missing
       setVehicleData(prev => ({
         ...prev,
-        make: decodedInfo.make || prev.make,
-        model: decodedInfo.model || prev.model,
-        year: decodedInfo.year || prev.year,
+        make: decodedInfo.make || '',
+        model: decodedInfo.model || '',
+        year: decodedInfo.year || new Date().getFullYear().toString(),
         engineType: decodedInfo.engine || prev.engineType,
         transmissionType: decodedInfo.transmission || prev.transmissionType,
         vin: vinInput
@@ -290,14 +299,13 @@ const VehicleOnboardingWizard: React.FC = () => {
       // Show success message
       toast({
         title: 'VIN Decoded Successfully',
-        description: `Identified as ${decodedInfo.year} ${decodedInfo.make} ${decodedInfo.model}`,
+        description: `Identified as ${decodedInfo.year} ${decodedInfo.make} ${decodedInfo.model}. Please continue and fill in any missing information.`,
         variant: 'default'
       });
       
-      // Move to next step automatically if we have the core info
-      if (decodedInfo.make && decodedInfo.model && decodedInfo.year) {
-        setCurrentStep(2); // Skip to vehicle details step
-      }
+      // Always move to next step and let user verify
+      // This ensures proper two-way data flow and user verification
+      setCurrentStep(1); // Go to basic information step
       
     } catch (error) {
       console.error('Error decoding VIN:', error);
@@ -329,26 +337,21 @@ const VehicleOnboardingWizard: React.FC = () => {
       // 3. Read other data like mileage, engine type, etc.
       // 4. Populate the form with this data
       
-      // For demo purposes, let's set some fake data
-      setVehicleData(prev => ({
-        ...prev,
-        make: 'OBD Demo',
-        model: 'Connected Vehicle',
-        year: '2023',
-        mileage: '32456',
-        engineType: '2.0L Turbo',
-        vin: 'OBD1234567890DEMO'
-      }));
+      // For the manual entry option prompt only - let user enter real data
+      // This empty block is intentional - the user now needs to fill in the details manually
+      // but we've already confirmed OBD connection is working
       
       // Show success toast
       toast({
         title: 'OBD Connected',
-        description: 'Successfully connected to your vehicle\'s OBD port and retrieved data',
+        description: 'Successfully connected to your vehicle\'s OBD port. You can now enter your details.',
         variant: 'default'
       });
       
-      // Move to next step
-      setCurrentStep(2); // Skip to vehicle details
+      // Continue with manual entry for proper two-way integration
+      // Do NOT automatically set data, as that prevents proper data flow
+      // The user needs to enter the actual vehicle information
+      setCurrentStep(1); // Go to basic information step
       
     } catch (error) {
       console.error('Error connecting to OBD:', error);
@@ -373,28 +376,52 @@ const VehicleOnboardingWizard: React.FC = () => {
       // Add the vehicle using the context
       const newVehicle = await addVehicle(vehicleData);
       
-      // Sync vehicle with the user profile system
-      // This ensures the vehicle data is available across the entire app
-      ProfileDataCollector.syncVehicleFromContext({
+      // Create a complete vehicle object with all required properties
+      // This ensures consistent structure regardless of entry method
+      const completeVehicleData = {
         ...vehicleData,
         vehicle_image: vehicleData.vehicleImage,
-        car_name: vehicleData.nickname,
-        // These are needed to match the expected structure in ProfileDataCollector
-      });
+        car_name: vehicleData.nickname || `${vehicleData.year} ${vehicleData.make} ${vehicleData.model}`,
+        engine_type: vehicleData.engineType,
+        transmission: vehicleData.transmissionType,
+        entry_method: entryMethod, // Track how the vehicle was added
+        // Convert string values to appropriate types
+        year: parseInt(vehicleData.year) || new Date().getFullYear(),
+        mileage: parseInt(vehicleData.mileage) || 0,
+      };
       
-      console.log('Vehicle added and synced with driver profile:', vehicleData.make, vehicleData.model);
+      // Sync vehicle with the user profile system in both directions
+      // This ensures the vehicle data is available across the entire app
+      ProfileDataCollector.syncVehicleFromContext(completeVehicleData);
+      
+      // ProfileDataCollector.collectVehicleData expects different field names
+      // This maps the vehicle data to the format expected by collectVehicleData
+      const profileVehicleData = {
+        make: vehicleData.make,
+        model: vehicleData.model,
+        year: parseInt(vehicleData.year) || new Date().getFullYear(),
+        color: vehicleData.color,
+        nickname: vehicleData.nickname,
+        image: vehicleData.vehicleImage,
+        lastServiced: new Date().toISOString().split('T')[0],
+        engineType: vehicleData.engineType,
+        transmissionType: vehicleData.transmissionType,
+        purchaseDate: vehicleData.purchaseDate
+      };
+      
+      // Update the profile system for full two-way integration
+      ProfileDataCollector.collectVehicleData(profileVehicleData);
+      
+      console.log('Vehicle added and synced with driver profile (two-way integration):', vehicleData.make, vehicleData.model);
       
       // Show success message
       toast({
         title: 'Vehicle Added Successfully',
-        description: 'Your vehicle has been added to the Garage Vault and Driver Profile',
+        description: 'Your vehicle has been added to the Garage Vault and Driver Profile with two-way integration',
         variant: 'default'
       });
       
-      // Redirect or reset as needed
-      // window.location.href = '/garage-vault'; // Uncomment to redirect
-      
-      // Or reset the form if staying on the page
+      // Reset the form if staying on the page
       setVehicleData(initialVehicleData);
       setCurrentStep(0);
       setEntryMethod(EntryMethod.MANUAL);
