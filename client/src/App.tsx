@@ -33,6 +33,7 @@ import RedlineReportPage from "./pages/RedlineReportPage";
 import SeasonalChecklistPage from "./pages/SeasonalChecklistPage";
 import EBooksPage from "./pages/eBooksPage";
 import Paddock20HomePage from "./pages/Paddock20HomePage";
+import ProductOrganizerPage from "./pages/ProductOrganizerPage"; // Import the new page
 import DropdownNavbar from "./components/DropdownNavbar";
 import Footer from "./components/Footer";
 import { WeatherProvider } from "./contexts/WeatherContext";
