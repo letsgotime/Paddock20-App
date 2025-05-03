@@ -327,14 +327,22 @@ export const useUserProfileStore = create<UserProfileStore>()(
         } : null
       })),
       
-      updateVehicle: (id: string, updates: Partial<VehicleData>) => set((state) => ({
-        profile: state.profile ? {
-          ...state.profile,
-          vehicles: state.profile.vehicles.map(v => 
-            v.id === id ? { ...v, ...updates } : v
-          )
-        } : null
-      })),
+      updateVehicle: (id: string, updates: Partial<VehicleData> & { _skipBroadcast?: boolean }) => {
+        // Extract skipBroadcast flag and remove it from updates to avoid storing it
+        const skipBroadcast = updates._skipBroadcast || false;
+        const cleanUpdates = { ...updates };
+        delete cleanUpdates._skipBroadcast;
+        
+        // Update the profile state
+        return set((state) => ({
+          profile: state.profile ? {
+            ...state.profile,
+            vehicles: state.profile.vehicles.map(v => 
+              v.id === id ? { ...v, ...cleanUpdates } : v
+            )
+          } : null
+        }));
+      },
       
       removeVehicle: (id: string) => set((state) => ({
         profile: state.profile ? {
