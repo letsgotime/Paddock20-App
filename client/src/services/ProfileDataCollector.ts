@@ -159,10 +159,14 @@ class ProfileDataCollector {
     delete cleanData._skipBroadcast;
     delete cleanData._source;
     
-    // Create a full vehicle object with generated ID
+    // Create a full vehicle object with a proper user-friendly ID
+    const vehicleMake = cleanData.make || '';
+    const vehicleModel = cleanData.model || '';
+    const formattedVehicleId = `${vehicleMake.toLowerCase()}-${vehicleModel.toLowerCase()}-${Date.now()}`.replace(/\s+/g, '-');
+    
     const fullVehicleData = {
       ...cleanData,
-      id: `vehicle-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
+      id: formattedVehicleId
     };
     
     // Add to the profile system
@@ -365,15 +369,24 @@ class ProfileDataCollector {
           id: `profile-vehicle-${Date.now()}-${Math.floor(Math.random() * 10000)}`
         };
         
+        // Create a proper ID for the vehicle that's URL-friendly
+        const properVehicleId = `${vehicleContextData.make.toLowerCase()}-${vehicleContextData.model.toLowerCase()}-${Date.now()}`.replace(/\s+/g, '-');
+        
+        // Replace the random ID with a user-friendly ID
+        const newVehicleDataWithProperID = {
+          ...newVehicleData,
+          id: properVehicleId
+        };
+        
         // CRITICAL FIX: Instead of immediately calling collectVehicleData (which causes state updates)
         // We'll defer that operation
-        updatedVehicle = newVehicleData;
+        updatedVehicle = newVehicleDataWithProperID;
         
         setTimeout(() => {
           // Make sure we're still in a good application state
           if (storeRef.profile) {
             this.collectVehicleData({
-              ...newVehicleData,
+              ...newVehicleDataWithProperID,
               _skipBroadcast: true
             });
           }

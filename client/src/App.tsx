@@ -105,8 +105,17 @@ function App() {
   // Use the scroll-to-top hook to ensure pages always start at the top
   useScrollToTop();
   
-  // Mock user data for preview mode
-  const mockUser = { id: 99999, username: 'Gavin Brooks', email: 'gavin@gotime.com', firstName: 'Gavin', lastName: 'Brooks', fullName: 'Gavin Brooks', profileImage: null, role: 'admin' as const };
+  // Mock user data for preview mode - using correct Gavin's username
+  const mockUser = { 
+    id: 99999, 
+    username: 'gavingotime', 
+    email: 'gavin@gotime.com', 
+    firstName: 'Gavin', 
+    lastName: 'Brooks', 
+    fullName: 'Gavin Brooks', 
+    profileImage: null, 
+    role: 'admin' as const 
+  };
   const mockSession = { user: mockUser };
   
   // Initialize session state (will be overridden by auth hook if authenticated)
