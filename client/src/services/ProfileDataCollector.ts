@@ -139,6 +139,7 @@ class ProfileDataCollector {
   
   /**
    * Adds or updates a vehicle in the user's garage
+   * Also broadcasts the vehicle data to all site components
    * @param vehicleData Vehicle data (without ID)
    */
   static collectVehicleData(vehicleData: Omit<VehicleData, 'id'>) {
@@ -150,8 +151,75 @@ class ProfileDataCollector {
       id: `vehicle-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`
     };
     
+    // Add to the profile system
     addVehicle(fullVehicleData);
     this.updateLastActive();
+    
+    // Broadcast to all dashboard components
+    this.broadcastVehicleDataToAllComponents(fullVehicleData);
+    
+    return fullVehicleData;
+  }
+  
+  /**
+   * Broadcasts vehicle data to all site components
+   * This ensures complete two-way integration across the entire application
+   * @param vehicleData The vehicle data to broadcast
+   */
+  static broadcastVehicleDataToAllComponents(vehicleData: any) {
+    console.log('Broadcasting vehicle data to all site components:', vehicleData.make, vehicleData.model);
+    
+    // Create a custom event to broadcast vehicle data site-wide
+    const event = new CustomEvent('vehicle-data-update', {
+      detail: {
+        vehicle: vehicleData,
+        source: 'ProfileDataCollector',
+        timestamp: new Date().toISOString()
+      }
+    });
+    
+    // Dispatch the event to all listening components
+    window.dispatchEvent(event);
+    
+    // Target specific components with specialized events
+    
+    // Garage Vault
+    window.dispatchEvent(new CustomEvent('garage-vault-vehicle-update', {
+      detail: { vehicle: vehicleData }
+    }));
+    
+    // JuiceBox component
+    window.dispatchEvent(new CustomEvent('juice-box-vehicle-update', {
+      detail: { vehicle: vehicleData }
+    }));
+    
+    // Gallery component
+    window.dispatchEvent(new CustomEvent('gallery-vehicle-update', {
+      detail: { vehicle: vehicleData }
+    }));
+    
+    // Homepage dashboard
+    window.dispatchEvent(new CustomEvent('homepage-vehicle-update', {
+      detail: { vehicle: vehicleData }
+    }));
+    
+    // Weather dashboard (to show vehicle-specific weather)
+    window.dispatchEvent(new CustomEvent('weather-vehicle-update', {
+      detail: { vehicle: vehicleData }
+    }));
+    
+    // User settings
+    window.dispatchEvent(new CustomEvent('settings-vehicle-update', {
+      detail: { vehicle: vehicleData }
+    }));
+    
+    // Also notify the VehicleContext for direct integration
+    window.dispatchEvent(new CustomEvent('vehicle-updated', {
+      detail: {
+        vehicle: vehicleData,
+        source: 'ProfileDataCollector'
+      }
+    }));
   }
   
   /**
