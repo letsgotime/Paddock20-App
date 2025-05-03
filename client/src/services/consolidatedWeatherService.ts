@@ -6,7 +6,7 @@
  */
 
 import { Location, OneCallData, WeatherData, ForecastData } from '@/lib/weather';
-import { AutomotiveWeatherData } from '@/contexts/FixedWeatherContext';
+import { AutomotiveWeatherData } from '@/contexts/ConsolidatedWeatherContext';
 
 // Set the OpenWeather API key
 // In a production app, this should be injected from environment variables
@@ -65,6 +65,15 @@ export async function fetchConsolidatedWeatherData(
 
     // Parse the consolidated data from the server
     const data = await response.json();
+    
+    // Add logging for debugging
+    console.log("Received weather response:", data);
+    console.log("Weather data structure check:", {
+      weatherData: Boolean(data.weatherData),
+      oneCallData: Boolean(data.oneCallData),
+      forecastData: Boolean(data.forecastData),
+      automotiveWeatherData: Boolean(data.automotiveWeatherData)
+    });
     
     // Add a timestamp to track when this data was received
     data.cacheTimestamp = Date.now();

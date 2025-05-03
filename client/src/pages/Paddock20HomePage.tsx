@@ -595,9 +595,10 @@ const Paddock20HomePage: React.FC = () => {
                   </div>
                   <div className="text-white text-xl font-mono font-semibold group-hover:text-blue-300 transition-colors duration-300">
                     {automotiveWeatherData && 
-                     automotiveWeatherData.track_metrics && 
-                     typeof automotiveWeatherData.track_metrics.surface_temp === 'number'
-                      ? automotiveWeatherData.track_metrics.surface_temp.toFixed(1) + "°F"
+                     automotiveWeatherData.automotive_metrics && 
+                     automotiveWeatherData.automotive_metrics.track_surface &&
+                     typeof automotiveWeatherData.automotive_metrics.track_surface.temperature === 'number'
+                      ? automotiveWeatherData.automotive_metrics.track_surface.temperature.toFixed(1) + "°F"
                       : "78.2°F"}
                   </div>
                   <div className="mt-1 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
@@ -614,8 +615,9 @@ const Paddock20HomePage: React.FC = () => {
                   </div>
                   <div className="text-white text-xl font-mono font-semibold group-hover:text-blue-300 transition-colors duration-300">
                     {automotiveWeatherData && 
-                     automotiveWeatherData.conditions
-                      ? "5.1" 
+                     automotiveWeatherData.conditions &&
+                     typeof automotiveWeatherData.conditions.uv_index === 'number'
+                      ? automotiveWeatherData.conditions.uv_index.toFixed(1)
                       : "5.1"}
                   </div>
                   <div className="mt-1 h-1 w-full bg-gray-800 rounded-full overflow-hidden">

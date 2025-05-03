@@ -237,8 +237,11 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Using only OpenWeather API for all weather services
   
   // Consolidated weather API endpoint
-  app.get('/api/consolidated-weather', async (req, res) => {
+  app.get('/api/weather/consolidated', async (req, res) => {
     try {
+      // Ensure we're only returning JSON
+      res.setHeader('Content-Type', 'application/json');
+      
       const { lat, lon, units = 'imperial' } = req.query;
       
       if (!lat || !lon) {
