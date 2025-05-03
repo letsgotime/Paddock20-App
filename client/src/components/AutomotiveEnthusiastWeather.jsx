@@ -418,24 +418,24 @@ const AutomotiveEnthusiastWeather = () => {
           <div className="grid grid-cols-2 gap-3">
             <div className="bg-black/50 p-3 rounded-lg">
               <p className="text-gray-400 text-xs mb-1">Risk Level</p>
-              <p className={getRiskLevelColor(drivingConditions.riskLevel)}>{drivingConditions.riskLevel}</p>
+              <p className={getRiskLevelColor(drivingConditions?.riskLevel || 'Unknown')}>{drivingConditions?.riskLevel || 'Unknown'}</p>
             </div>
             <div className="bg-black/50 p-3 rounded-lg">
               <p className="text-gray-400 text-xs mb-1">Road Temp</p>
-              <p className="text-white">{formatTemperature(surfaces.asphalt.temperature, unit)}</p>
+              <p className="text-white">{surfaces?.asphalt?.temperature ? formatTemperature(surfaces.asphalt.temperature, unit) : 'N/A'}</p>
             </div>
             <div className="bg-black/50 p-3 rounded-lg">
               <p className="text-gray-400 text-xs mb-1">Traction</p>
-              <p className="text-white">{drivingConditions.traction}</p>
+              <p className="text-white">{drivingConditions?.traction || 'Unknown'}</p>
             </div>
             <div className="bg-black/50 p-3 rounded-lg">
               <p className="text-gray-400 text-xs mb-1">Visibility</p>
-              <p className="text-white">{drivingConditions.visibility}</p>
+              <p className="text-white">{drivingConditions?.visibility || 'Unknown'}</p>
             </div>
           </div>
           
           <div className="mt-3 text-gray-300 text-sm italic">
-            {drivingConditions.advisories && (
+            {drivingConditions?.advisories && drivingConditions.advisories.length > 0 && (
               <p>{drivingConditions.advisories[0]}</p>
             )}
           </div>
