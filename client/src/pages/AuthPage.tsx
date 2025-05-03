@@ -194,18 +194,18 @@ const AuthPage: React.FC = () => {
                 <form onSubmit={handleLoginSubmit}>
                   <CardContent className="space-y-4">
                     <div className="space-y-2">
-                      <Label htmlFor="username">Username</Label>
+                      <Label htmlFor="username" className="text-white">Username</Label>
                       <Input
                         id="username"
                         placeholder="Enter your username"
                         value={loginData.username}
                         onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
-                        className="bg-gray-800 border-gray-700"
+                        className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
                         required
                       />
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
+                      <Label htmlFor="password" className="text-white">Password</Label>
                       <div className="relative">
                         <Input
                           id="password"
@@ -213,7 +213,7 @@ const AuthPage: React.FC = () => {
                           placeholder="Enter your password"
                           value={loginData.password}
                           onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                          className="bg-gray-800 border-gray-700 pr-10"
+                          className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-400 pr-10"
                           required
                         />
                         <button
@@ -256,54 +256,54 @@ const AuthPage: React.FC = () => {
                   <CardContent className="space-y-4">
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="firstName">First Name</Label>
+                        <Label htmlFor="firstName" className="text-white">First Name</Label>
                         <Input
                           id="firstName"
                           placeholder="First name"
                           value={registerData.firstName}
                           onChange={(e) => setRegisterData({ ...registerData, firstName: e.target.value })}
-                          className="bg-gray-800 border-gray-700"
+                          className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="lastName">Last Name</Label>
+                        <Label htmlFor="lastName" className="text-white">Last Name</Label>
                         <Input
                           id="lastName"
                           placeholder="Last name"
                           value={registerData.lastName}
                           onChange={(e) => setRegisterData({ ...registerData, lastName: e.target.value })}
-                          className="bg-gray-800 border-gray-700"
+                          className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
                         />
                       </div>
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="username-register">Username</Label>
+                      <Label htmlFor="username-register" className="text-white">Username</Label>
                       <Input
                         id="username-register"
                         placeholder="Choose a username"
                         value={registerData.username}
                         onChange={(e) => setRegisterData({ ...registerData, username: e.target.value })}
-                        className="bg-gray-800 border-gray-700"
+                        className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
                         required
                       />
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
+                      <Label htmlFor="email" className="text-white">Email</Label>
                       <Input
                         id="email"
                         type="email"
                         placeholder="your.email@example.com"
                         value={registerData.email}
                         onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
-                        className="bg-gray-800 border-gray-700"
+                        className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-400"
                         required
                       />
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="password-register">Password</Label>
+                      <Label htmlFor="password-register" className="text-white">Password</Label>
                       <div className="relative">
                         <Input
                           id="password-register"
@@ -311,7 +311,7 @@ const AuthPage: React.FC = () => {
                           placeholder="Create a password"
                           value={registerData.password}
                           onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
-                          className="bg-gray-800 border-gray-700 pr-10"
+                          className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-400 pr-10"
                           required
                         />
                         <button
@@ -328,7 +328,7 @@ const AuthPage: React.FC = () => {
                     </div>
                     
                     <div className="space-y-2">
-                      <Label htmlFor="confirm-password">Confirm Password</Label>
+                      <Label htmlFor="confirm-password" className="text-white">Confirm Password</Label>
                       <div className="relative">
                         <Input
                           id="confirm-password"
@@ -336,7 +336,7 @@ const AuthPage: React.FC = () => {
                           placeholder="Confirm your password"
                           value={registerData.confirmPassword}
                           onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
-                          className="bg-gray-800 border-gray-700 pr-10"
+                          className="bg-gray-800 border-gray-700 text-white placeholder:text-gray-400 pr-10"
                           required
                         />
                         <button
