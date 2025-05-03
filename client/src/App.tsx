@@ -237,8 +237,8 @@ function App() {
                       {/* GoTime Motorsports logo with navigation and sound controls - always fixed to bottom */}
                       <FixedSoundBar />
 
-                      {/* Main content area - adjusted for fixed headers and footer */}
-                      <main id={MAIN_CONTENT_ID} className="container mx-auto px-4 mt-[120px] pb-[70px]" tabIndex={-1}>
+                      {/* Main content area - adjusted for fixed header at top and fixed footer at bottom */}
+                      <main id={MAIN_CONTENT_ID} className="container mx-auto px-4 mt-[60px] pb-[70px]" tabIndex={-1}>
                         {/* Toast notifications with ARIA live region built in */}
                         <Toaster />
                         

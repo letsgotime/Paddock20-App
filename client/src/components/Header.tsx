@@ -97,7 +97,7 @@ const Header: React.FC = () => {
   };
 
   return (
-    <header className="fixed top-[60px] left-0 right-0 z-[8000] w-full bg-black border-b-2 border-blue-700 bg-gradient-to-r from-black via-black to-[#05071A]">
+    <header className="fixed top-0 left-0 right-0 z-[8000] w-full bg-black border-b-2 border-blue-700 bg-gradient-to-r from-black via-black to-[#05071A]">
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         {/* Logo Section */}
         <div className="flex items-center">
