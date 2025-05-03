@@ -1154,9 +1154,9 @@ const Paddock20HomePage: React.FC = () => {
         <h2 className="text-blue-400 font-orbitron text-3xl mb-8 text-center">Your Command Center</h2>
         <div className="grid md:grid-cols-2 gap-8">
           
-          {/* Weather Center */}
-          <Link to="/new-weather-center" className="bg-gray-900 p-6 rounded-lg border border-gray-700 shadow-lg hover:border-green-500 transition-colors">
-            <h3 className="text-blue-400 font-orbitron text-2xl mb-4">☁️ Weather Center</h3>
+          {/* Weather Paddock */}
+          <Link to="/weather-paddock" className="bg-gray-900 p-6 rounded-lg border border-gray-700 shadow-lg hover:border-green-500 transition-colors">
+            <h3 className="text-blue-400 font-orbitron text-2xl mb-4">☁️ Weather Paddock</h3>
             <p className="text-white font-openSans text-base leading-relaxed">
               Live conditions. Surface temps. Tire readiness. Torque specs. All in one glance.
               Precision starts before the ignition turns.
