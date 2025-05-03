@@ -300,7 +300,7 @@ function App() {
                           <Route path="/beta-agreement" element={<BetaAgreement />} />
                         
                           {/* Protected routes */}
-                          <Route path="/" element={<ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
+                          <Route path="/" element={<ProtectedRoute><UnifiedDashboardProfilePage /></ProtectedRoute>} />
                           <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
                           <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
                           <Route path="/personalized-dashboard" element={<ProtectedRoute><PersonalizedDashboard /></ProtectedRoute>} />
