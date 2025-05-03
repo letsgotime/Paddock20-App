@@ -189,34 +189,66 @@ class ProfileDataCollector {
     
     if (!profile) return;
     
+    // Log the syncing process
+    console.log('Syncing vehicle with profile system:', vehicleContextData.make, vehicleContextData.model);
+    
     // Check if this vehicle already exists in the profile by comparing attributes
     const existingVehicle = profile.vehicles.find((v: VehicleData) => 
       v.make === vehicleContextData.make && 
       v.model === vehicleContextData.model &&
-      v.year === parseInt(vehicleContextData.year)
+      (v.year === parseInt(vehicleContextData.year) || v.year.toString() === vehicleContextData.year)
     );
     
     if (existingVehicle) {
+      console.log('Updating existing profile vehicle:', existingVehicle.id);
       // Update the existing vehicle with any new data
       updateVehicle(existingVehicle.id, {
         color: vehicleContextData.color,
         nickname: vehicleContextData.nickname || vehicleContextData.car_name,
-        image: vehicleContextData.vehicle_image,
-        // Map any other relevant fields
+        image: vehicleContextData.vehicle_image || vehicleContextData.vehicleImage,
+        mileage: parseInt(vehicleContextData.mileage) || 0,
+        // Include additional fields for comprehensive sync
+        lastServiced: vehicleContextData.last_service,
+        engineType: vehicleContextData.engine_type || vehicleContextData.engineType,
+        transmissionType: vehicleContextData.transmission || vehicleContextData.transmissionType,
+        purchaseDate: vehicleContextData.purchase_date || vehicleContextData.purchaseDate
       });
     } else {
+      console.log('Adding new vehicle to profile system');
       // Add as a new vehicle to the profile
       this.collectVehicleData({
         make: vehicleContextData.make,
         model: vehicleContextData.model,
-        year: parseInt(vehicleContextData.year),
+        year: parseInt(vehicleContextData.year) || vehicleContextData.year,
         color: vehicleContextData.color,
         nickname: vehicleContextData.nickname || vehicleContextData.car_name,
-        image: vehicleContextData.vehicle_image,
+        image: vehicleContextData.vehicle_image || vehicleContextData.vehicleImage,
+        mileage: parseInt(vehicleContextData.mileage) || 0,
+        // Include additional fields for comprehensive addition
+        lastServiced: vehicleContextData.last_service,
+        engineType: vehicleContextData.engine_type || vehicleContextData.engineType,
+        transmissionType: vehicleContextData.transmission || vehicleContextData.transmissionType,
+        purchaseDate: vehicleContextData.purchase_date || vehicleContextData.purchaseDate,
         mods: [],
         maintenanceRecords: []
       });
     }
+  }
+  
+  /**
+   * Syncs all vehicles from the array to the profile system
+   * Useful for batch operations like importing or initial setup
+   * @param vehiclesArray Array of vehicle data objects
+   */
+  static syncAllVehicles(vehiclesArray: any[]) {
+    console.log(`Syncing ${vehiclesArray.length} vehicles to profile system`);
+    
+    // Process each vehicle in the array
+    vehiclesArray.forEach(vehicle => {
+      this.syncVehicleFromContext(vehicle);
+    });
+    
+    this.updateLastActive();
   }
   
   /**
