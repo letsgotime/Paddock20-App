@@ -155,22 +155,23 @@ const FixedSoundBar: React.FC = () => {
   
   const goHome = useCallback(() => {
     try {
-      // Only navigate if not already home
-      if (location !== '/') {
-        setLocation('/');
-        
-        // Create a new history entry (not using back/forward)
-        const newHistory = [...navigationHistory.slice(0, currentIndex + 1), '/'];
-        setNavigationHistory(newHistory);
-        setCurrentIndex(newHistory.length - 1);
-      }
+      // Always navigate home (/) regardless of current location
+      // This ensures we go to homepage not dashboard
+      setLocation('/');
+      
+      // Create a new history entry (not using back/forward)
+      const newHistory = [...navigationHistory.slice(0, currentIndex + 1), '/'];
+      setNavigationHistory(newHistory);
+      setCurrentIndex(newHistory.length - 1);
       
       // Play sound effect if enabled
       if (soundEnabled) playMotorsportSound('ui_select');
+      
+      console.log("Navigating to homepage");
     } catch (error) {
       console.error("Error navigating home:", error);
     }
-  }, [location, navigationHistory, currentIndex, setLocation, soundEnabled]);
+  }, [navigationHistory, currentIndex, setLocation, soundEnabled]);
   
   // Initialize sound settings from sound service
   useEffect(() => {
