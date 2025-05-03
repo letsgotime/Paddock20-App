@@ -201,7 +201,7 @@ function App() {
       console.log('Initializing image cache for marketplace listings...');
       initializeImageCache()
         .then(() => console.log('Image cache initialized successfully'))
-        .catch((error) => console.error('Failed to initialize image cache:', error));
+        .catch((error: Error) => console.error('Failed to initialize image cache:', error));
     }
   }, [previewMode, effectiveSession]);
 

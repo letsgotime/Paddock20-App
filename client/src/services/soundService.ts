@@ -115,7 +115,13 @@ function getSoundPathFromKey(key: string): string | null {
   if (parts.length !== 2) return null;
   
   const [category, soundName] = parts;
-  return sounds[category as keyof typeof sounds]?.[soundName as any] || null;
+  
+  // Type-safe access to sounds object
+  const categoryObj = sounds[category as keyof typeof sounds];
+  if (!categoryObj) return null;
+  
+  // Type-safe access to sound within category
+  return (categoryObj as Record<string, string>)[soundName] || null;
 }
 
 /**
