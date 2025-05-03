@@ -6,6 +6,7 @@ import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
+import PageTitleManager from './components/PageTitleManager';
 // Import disabled to remove Unsplash API warnings
 // import { initializeImageCache } from "./services/unsplashService";
 import NavigationControls from './components/NavigationControls';
@@ -203,6 +204,8 @@ function App() {
       <TooltipProvider>
         {/* Authentication Provider for login/logout functionality */}
         <AuthProvider>
+          {/* Page Title Manager - Updates browser tab title based on current route */}
+          <PageTitleManager />
           {/* Vehicle Provider - Provides vehicle data to all components */}
           <VehicleProvider>
             {/* Vehicle Data Provider - Provides comprehensive vehicle activity, media, and document data */}
