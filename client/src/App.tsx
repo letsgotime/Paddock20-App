@@ -40,6 +40,7 @@ import { WeatherProvider } from "./contexts/WeatherContext";
 import { GalleryProvider } from "./contexts/GalleryContext";
 import { RewardsProvider } from "./contexts/RewardsContext";
 import { VehicleProvider } from "./contexts/VehicleContext";
+import { VehicleDataProvider } from "./contexts/VehicleDataContext";
 import RewardNotification from "./components/RewardNotification";
 import RewardsTracker from "./components/RewardsTracker";
 import AuthPage from "./pages/AuthPage";
@@ -211,82 +212,84 @@ function App() {
         <AuthProvider>
           {/* Vehicle Provider - Provides vehicle data to all components */}
           <VehicleProvider>
-            {/* Centralized Weather Provider - Provides weather data to all components */}
-            <WeatherProvider>
-              <GalleryProvider>
-                {/* Rewards Provider - for site-wide gamification */}
-                <RewardsProvider>
-                  {/* Skip link for keyboard navigation */}
-                  <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
-                    Skip to main content
-                  </a>
+            {/* Vehicle Data Provider - Provides comprehensive vehicle activity, media, and document data */}
+            <VehicleDataProvider>
+              {/* Centralized Weather Provider - Provides weather data to all components */}
+              <WeatherProvider>
+                <GalleryProvider>
+                  {/* Rewards Provider - for site-wide gamification */}
+                  <RewardsProvider>
+                    {/* Skip link for keyboard navigation */}
+                    <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
+                      Skip to main content
+                    </a>
                   
-                  {/* User Onboarding - Show for first time users or when terms update */}
-                  {(effectiveSession || previewMode) && !hasCompletedOnboarding && (
-                    <UserOnboarding onComplete={completeOnboarding} />
-                  )}
+                    {/* User Onboarding - Show for first time users or when terms update */}
+                    {(effectiveSession || previewMode) && !hasCompletedOnboarding && (
+                      <UserOnboarding onComplete={completeOnboarding} />
+                    )}
                   
-                  <div className="min-h-screen bg-black font-openSans text-white">
-                    {/* Authentication Header - always visible */}
-                    <Header />
+                    <div className="min-h-screen bg-black font-openSans text-white">
+                      {/* Authentication Header - always visible */}
+                      <Header />
                     
-                    {/* Main navigation header - only visible when logged in */}
-                    <header role="banner">
-                      {(effectiveSession || previewMode) && (
-                        <>
-                          <DropdownNavbar />
-                          <NavigationControls />
-                          <ContextualBreadcrumbs />
-                        </>
-                      )}
-                    </header>
+                      {/* Main navigation header - only visible when logged in */}
+                      <header role="banner">
+                        {(effectiveSession || previewMode) && (
+                          <>
+                            <DropdownNavbar />
+                            <NavigationControls />
+                            <ContextualBreadcrumbs />
+                          </>
+                        )}
+                      </header>
 
-                    {/* Main content area */}
-                    <main id={MAIN_CONTENT_ID} className="container mx-auto px-4" tabIndex={-1}>
-                      {/* Toast notifications with ARIA live region built in */}
-                      <Toaster />
+                      {/* Main content area */}
+                      <main id={MAIN_CONTENT_ID} className="container mx-auto px-4" tabIndex={-1}>
+                        {/* Toast notifications with ARIA live region built in */}
+                        <Toaster />
+                        
+                        {/* Global floating weather snapshot - will be available on all pages */}
+                        {(effectiveSession || previewMode) && (
+                          <OneTapWeatherSnapshot 
+                            floating={true}
+                            // Don't show on weather paddock page where it would be redundant
+                            className={window.location.pathname === '/weather-paddock' ? 'hidden' : ''}
+                          />
+                        )}
                       
-                      {/* Global floating weather snapshot - will be available on all pages */}
-                      {(effectiveSession || previewMode) && (
-                        <OneTapWeatherSnapshot 
-                          floating={true}
-                          // Don't show on weather paddock page where it would be redundant
-                          className={window.location.pathname === '/weather-paddock' ? 'hidden' : ''}
-                        />
-                      )}
-                      
-                      <Routes>
-                        {/* Public authentication route */}
-                        <Route path="/auth" element={!authSession && !previewMode ? <AuthPage /> : <Navigate to="/dashboard" replace />} />
+                        <Routes>
+                          {/* Public authentication route */}
+                          <Route path="/auth" element={!authSession && !previewMode ? <AuthPage /> : <Navigate to="/dashboard" replace />} />
+                          
+                          {/* Legal Document Pages - Publicly accessible */}
+                          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                          <Route path="/terms-of-service" element={<TermsOfService />} />
+                          <Route path="/beta-agreement" element={<BetaAgreement />} />
                         
-                        {/* Legal Document Pages - Publicly accessible */}
-                        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                        <Route path="/terms-of-service" element={<TermsOfService />} />
-                        <Route path="/beta-agreement" element={<BetaAgreement />} />
-                        
-                        {/* Protected routes */}
-                        <Route path="/" element={<ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
-                        <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-                        <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-                        <Route path="/personalized-dashboard" element={<ProtectedRoute><PersonalizedDashboard /></ProtectedRoute>} />
-                        {/* Main Garage Vault Hub - Central repository for all vehicle data */}
-                        <Route path="/garage-vault" element={<ProtectedRoute><GarageVaultPage /></ProtectedRoute>} />
-                        {/* New GoTime Garage Vault - Enhanced F1-style vehicle management */}
-                        <Route path="/gotime-garage" element={<ProtectedRoute><GoTimeGarageVault /></ProtectedRoute>} />
-                        {/* Legacy garage route redirects to new Garage Vault structure */}
-                        <Route path="/garage" element={<Navigate to="/garage-vault" replace />} />
-                        
-                        <Route path="/journal" element={<ProtectedRoute><Journal /></ProtectedRoute>} />
-                        <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
-                        <Route path="/motorsports" element={<ProtectedRoute><Motorsports /></ProtectedRoute>} />
-                        <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
-                        <Route path="/events-page" element={<ProtectedRoute><EventsPage /></ProtectedRoute>} />
-                        <Route path="/motorsports-events" element={<ProtectedRoute><MotorsportsEventsPage /></ProtectedRoute>} />
-                        <Route path="/juicebox" element={<ProtectedRoute><JuiceBox /></ProtectedRoute>} />
-                        <Route path="/gloss-reset" element={<ProtectedRoute><GlossResetPage /></ProtectedRoute>} />
-                        <Route path="/juice-loadouts" element={<ProtectedRoute><LoadoutsPage /></ProtectedRoute>} />
-                        <Route path="/gloss-growth" element={<ProtectedRoute><GlossGrowthPage /></ProtectedRoute>} />
-                        <Route path="/juicebox-videos" element={<ProtectedRoute><VideoLibraryPage /></ProtectedRoute>} />
+                          {/* Protected routes */}
+                          <Route path="/" element={<ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
+                          <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+                          <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+                          <Route path="/personalized-dashboard" element={<ProtectedRoute><PersonalizedDashboard /></ProtectedRoute>} />
+                          {/* Main Garage Vault Hub - Central repository for all vehicle data */}
+                          <Route path="/garage-vault" element={<ProtectedRoute><GarageVaultPage /></ProtectedRoute>} />
+                          {/* New GoTime Garage Vault - Enhanced F1-style vehicle management */}
+                          <Route path="/gotime-garage" element={<ProtectedRoute><GoTimeGarageVault /></ProtectedRoute>} />
+                          {/* Legacy garage route redirects to new Garage Vault structure */}
+                          <Route path="/garage" element={<Navigate to="/garage-vault" replace />} />
+                          
+                          <Route path="/journal" element={<ProtectedRoute><Journal /></ProtectedRoute>} />
+                          <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
+                          <Route path="/motorsports" element={<ProtectedRoute><Motorsports /></ProtectedRoute>} />
+                          <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
+                          <Route path="/events-page" element={<ProtectedRoute><EventsPage /></ProtectedRoute>} />
+                          <Route path="/motorsports-events" element={<ProtectedRoute><MotorsportsEventsPage /></ProtectedRoute>} />
+                          <Route path="/juicebox" element={<ProtectedRoute><JuiceBox /></ProtectedRoute>} />
+                          <Route path="/gloss-reset" element={<ProtectedRoute><GlossResetPage /></ProtectedRoute>} />
+                          <Route path="/juice-loadouts" element={<ProtectedRoute><LoadoutsPage /></ProtectedRoute>} />
+                          <Route path="/gloss-growth" element={<ProtectedRoute><GlossGrowthPage /></ProtectedRoute>} />
+                          <Route path="/juicebox-videos" element={<ProtectedRoute><VideoLibraryPage /></ProtectedRoute>} />
                         <Route path="/broker-portal" element={<ProtectedRoute><BrokerPortalPage /></ProtectedRoute>} />
                         <Route path="/weather" element={<ProtectedRoute><Weather /></ProtectedRoute>} />
                         <Route path="/weather-paddock" element={<ProtectedRoute><NewGTGWeatherPage /></ProtectedRoute>} />
@@ -334,6 +337,7 @@ function App() {
                 </RewardsProvider>
               </GalleryProvider>
             </WeatherProvider>
+            </VehicleDataProvider>
           </VehicleProvider>
         </AuthProvider>
       </TooltipProvider>
