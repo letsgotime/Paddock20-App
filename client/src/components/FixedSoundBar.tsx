@@ -82,7 +82,7 @@ const FixedSoundBar: React.FC = () => {
   }, []);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 flex items-center justify-between px-4 py-3 bg-black/95 border-t border-blue-900/50 shadow-[0_-5px_15px_rgba(0,0,0,0.3)] z-50">
+    <nav className="fixed bottom-[60px] left-0 right-0 flex items-center justify-between px-4 py-3 bg-black/95 border-t border-blue-900/50 shadow-[0_-5px_15px_rgba(0,0,0,0.3)] z-[9999]">
       {/* GoTime Logo */}
       <div className="flex items-center font-orbitron text-2xl no-underline">
         <img 
