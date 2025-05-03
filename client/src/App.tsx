@@ -65,7 +65,7 @@ import HomePage from "./pages/Home";
 import OneTapWeatherSnapshot from "./components/OneTapWeatherSnapshot";
 import UserOnboarding from "./components/UserOnboarding";
 import { useAuth } from "./hooks/useAuth";
-// Temporarily comment out AuthProvider until we complete the implementation
+// We'll add the AuthProvider back once we've fully migrated to the new auth system
 // import { AuthProvider } from "./context/AuthContext";
 import { MAIN_CONTENT_ID, LiveRegion } from './lib/accessibility';
 import './paddock20.css';
@@ -78,7 +78,7 @@ import BetaAgreement from './pages/BetaAgreement';
 function App() {
   // TEMPORARY: Force preview mode to bypass auth
   const previewMode = true;
-  const { session, loading } = useAuth();
+  const { user, loading, session } = useAuth();
   
   // State to track if the user has completed onboarding
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(() => {
