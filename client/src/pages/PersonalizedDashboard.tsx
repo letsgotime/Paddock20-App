@@ -5,10 +5,10 @@ import MoodEnergyTracker from '../components/MoodEnergyTracker.jsx';
 import WorldClockPanel from '../components/WorldClockPanel';
 import { Progress } from "@/components/ui/progress";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { useAuth } from '@/hooks/useAuth';
 
-// Mock user data for demo purposes
+// Mock user data for demo purposes - this will be merged with actual user data when available
 const mockUserData = {
-  name: 'Gavin',
   location: 'Charlotte, NC',
   memberLevel: 'Redline Racer',
   memberPoints: 752,
@@ -79,9 +79,29 @@ const mockUserData = {
 };
 
 const PersonalizedDashboard: React.FC = () => {
+  const { user } = useAuth();
   const [userData, setUserData] = useState(mockUserData);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [greeting, setGreeting] = useState('');
+  const [mergedUserData, setMergedUserData] = useState<any>({...mockUserData, name: ''});
+
+  useEffect(() => {
+    // Merge auth user data with mock data
+    if (user) {
+      // Use user's real name from authentication
+      const displayName = user.fullName || user.username;
+      setMergedUserData({
+        ...userData,
+        name: displayName
+      });
+    } else {
+      // Fallback to mock data with a generic name when not authenticated
+      setMergedUserData({
+        ...userData,
+        name: 'Driver'
+      });
+    }
+  }, [user, userData]);
 
   useEffect(() => {
     // Update greeting based on time of day
@@ -112,7 +132,7 @@ const PersonalizedDashboard: React.FC = () => {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header Section */}
         <div className="mb-8">
-          <h1 className="bts-header text-4xl mb-2">{greeting}, {userData.name}</h1>
+          <h1 className="bts-header text-4xl mb-2">{greeting}, {mergedUserData.name}</h1>
           <p className="text-gray-400">
             {currentTime.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })} | {currentTime.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}
           </p>
@@ -123,11 +143,11 @@ const PersonalizedDashboard: React.FC = () => {
           <div className="flex flex-col md:flex-row md:items-center justify-between">
             <div className="flex items-center">
               <div className="w-16 h-16 rounded-full bg-gradient-to-r from-blue-500 to-green-500 flex items-center justify-center text-white text-xl font-bold overflow-hidden border-2 border-green-400">
-                {userData.name.charAt(0)}
+                {mergedUserData.name ? mergedUserData.name.charAt(0) : ''}
               </div>
               <div className="ml-4">
                 <div className="flex items-center">
-                  <h2 className="bts-header text-2xl mr-3">{userData.name}</h2>
+                  <h2 className="bts-header text-2xl mr-3">{mergedUserData.name}</h2>
                   <span className="bg-green-500/20 text-green-400 px-2 py-1 rounded text-xs uppercase font-bold">{userData.memberLevel}</span>
                 </div>
                 <p className="text-gray-400 text-sm">{userData.location} • {userData.drivingStyle}</p>
