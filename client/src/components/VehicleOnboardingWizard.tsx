@@ -401,12 +401,8 @@ const VehicleOnboardingWizard: React.FC = () => {
       
       // Create a complete vehicle object with all required properties
       // This ensures consistent structure regardless of entry method
-      // Create a proper ID using make/model and timestamp (instead of random ID)
-      const properVehicleId = `${vehicleData.make.toLowerCase()}-${vehicleData.model.toLowerCase()}-${Date.now()}`.replace(/\s+/g, '-');
-      
       const completeVehicleData = {
         ...vehicleData,
-        id: properVehicleId, // Use a proper formatted ID
         vehicle_image: vehicleData.vehicleImage,
         car_name: vehicleData.nickname || `${vehicleData.year} ${vehicleData.make} ${vehicleData.model}`,
         engine_type: vehicleData.engineType,

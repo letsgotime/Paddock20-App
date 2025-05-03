@@ -134,27 +134,8 @@ export function VehicleProvider({ children }: { children: ReactNode }) {
           const savedVehicles = JSON.parse(savedVehiclesString);
           if (Array.isArray(savedVehicles) && savedVehicles.length > 0) {
             // Exclude any vehicle that has the same ID as our onboarded vehicle
-            let otherVehicles = savedVehicles.filter(v => v.id !== 'onboarded-1');
-            
-            // Fix problematic vehicle IDs that cause 404 errors (like "Vehicle 1746298350426 6wg9vtg")
-            otherVehicles = otherVehicles.map(vehicle => {
-              // Check if the vehicle ID has a problematic format (containing spaces or starts with "Vehicle")
-              if (vehicle.id.includes(' ') || vehicle.id.startsWith('Vehicle')) {
-                // Create a new ID based on make and model
-                const make = vehicle.make || '';
-                const model = vehicle.model || '';
-                const newId = `${make.toLowerCase()}-${model.toLowerCase()}-${Date.now()}`.replace(/\s+/g, '-');
-                
-                console.log(`Fixed problematic vehicle ID: ${vehicle.id} → ${newId}`);
-                return {...vehicle, id: newId};
-              }
-              return vehicle;
-            });
-            
+            const otherVehicles = savedVehicles.filter(v => v.id !== 'onboarded-1');
             vehicleList = [...vehicleList, ...otherVehicles];
-            
-            // Save the updated vehicles back to localStorage
-            localStorage.setItem('vehicles', JSON.stringify(vehicleList));
           }
         } catch (error) {
           console.error('Error parsing saved vehicles:', error);
@@ -177,13 +158,8 @@ export function VehicleProvider({ children }: { children: ReactNode }) {
   // Function to add a new vehicle
   const addVehicle = (vehicleProfile: VehicleProfile) => {
     try {
-      // Create a user-friendly ID that includes vehicle make and model
-      const vehicleMake = vehicleProfile.make || '';
-      const vehicleModel = vehicleProfile.model || '';
-      const formattedVehicleId = `${vehicleMake.toLowerCase()}-${vehicleModel.toLowerCase()}-${Date.now()}`.replace(/\s+/g, '-');
-      
       const newVehicle: Vehicle = {
-        id: formattedVehicleId,
+        id: `vehicle-${Date.now()}`,
         car_id: `V${vehicles.length + 1}`,
         make: vehicleProfile.make,
         model: vehicleProfile.model,
