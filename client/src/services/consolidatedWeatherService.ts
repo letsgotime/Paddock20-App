@@ -10,7 +10,7 @@ import { AutomotiveWeatherData } from '@/contexts/FixedWeatherContext';
 
 // Set the OpenWeather API key
 // In a production app, this should be injected from environment variables
-const API_KEY = import.meta.env.VITE_ACCUWEATHER_API_KEY || import.meta.env.OPENWEATHER_API_KEY;
+const API_KEY = import.meta.env.VITE_OPENWEATHER_API_KEY;
 // Fallback coordinates if geolocation fails
 const DEFAULT_COORDINATES = { lat: 40.7128, lon: -74.006 }; // New York City
 
