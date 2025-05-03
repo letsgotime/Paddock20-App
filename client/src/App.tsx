@@ -105,10 +105,10 @@ function App() {
   // Use the scroll-to-top hook to ensure pages always start at the top
   useScrollToTop();
   
-  // Mock user data for preview mode - using correct Gavin's username
+  // Mock user data for preview mode - using correct Gavin's details
   const mockUser = { 
     id: 99999, 
-    username: 'gavingotime', 
+    username: 'Gavin GoTime', 
     email: 'gavin@gotime.com', 
     firstName: 'Gavin', 
     lastName: 'Brooks', 
