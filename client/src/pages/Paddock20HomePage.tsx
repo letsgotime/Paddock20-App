@@ -298,14 +298,31 @@ const Paddock20HomePage: React.FC = () => {
         </div>
         
         {/* Paddock20 Vision Statement */}
-        <div className="mb-6 text-center">
-          <h2 className="text-blue-400 font-orbitron text-3xl mb-2">Welcome to Your Paddock</h2>
-          <p className="text-gray-400 max-w-3xl mx-auto">
-            In motorsports, the paddock is where strategy becomes reality. Having "paddock access" means you're part of the team, not just spectating.
-          </p>
-          <p className="text-[#08c519] max-w-3xl mx-auto mt-2 font-medium">
-            Because real enthusiasts deserve real systems. No noise. No fake flex. Just pure data, pure drive, pure community.
-          </p>
+        <div className="mb-8 text-center">
+          <h2 className="text-blue-400 font-orbitron text-3xl mb-3">Why Paddock20™? Why Now?</h2>
+          
+          <div className="max-w-3xl mx-auto mb-4">
+            <h3 className="text-[#4B9CD3] font-orbitron text-xl mb-2">The Paddock Concept</h3>
+            <p className="text-gray-400">
+              In motorsports, the paddock is the secured area where teams prepare, service, and manage their race cars. It's where the real work happens — where strategy becomes reality.
+            </p>
+            <p className="text-gray-400 mt-2">
+              Having "paddock access" means you're part of the team, part of the action, not just spectating.
+            </p>
+          </div>
+          
+          <div className="max-w-3xl mx-auto">
+            <h3 className="text-[#4B9CD3] font-orbitron text-xl mb-2">Paddock20™ Vision</h3>
+            <p className="text-gray-400">
+              Because real enthusiasts deserve real systems. Because parking lot dreams deserve pit lane execution. Because knowing when to drive is as important as knowing how.
+            </p>
+            <p className="text-[#08c519] mt-3 font-medium">
+              No noise. No fake flex. Just pure data, pure drive, pure community. Built by operators who care about discipline more than downloads.
+            </p>
+            <p className="text-white mt-4 italic border-l-4 border-[#08c519] pl-4 text-left max-w-2xl mx-auto">
+              "The paddock isn't where you show off. It's where you get ready to win. Paddock20™ was built for that same mindset."
+            </p>
+          </div>
         </div>
 
       {/* Enhanced F1-Inspired Live Weather Station - Driver-Oriented Weather Dashboard */}
