@@ -81,7 +81,7 @@ function JuiceBoxPage() {
     // Convert products to CSV-friendly format
     const exportData = productCategories.flatMap(category => 
       category.products.map(product => ({
-        category: category.name,
+        category: category.category,
         name: product.name,
         link: product.link || 'N/A',
         notes: product.notes || 'N/A'

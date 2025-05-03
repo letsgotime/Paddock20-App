@@ -88,7 +88,7 @@ import { Vehicle } from '../contexts/VehicleContext';
 interface DetailingActivitiesFormProps {
   onSubmit: (activity: DetailingActivity) => void;
   onCancel: () => void;
-  vehicle?: Vehicle;
+  vehicle?: Vehicle | null;
 }
 
 const DETAILING_TYPES = [

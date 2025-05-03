@@ -206,7 +206,8 @@ const VehicleMediaLibrary: React.FC<VehicleMediaLibraryProps> = ({
   }, [mediaItems, searchTerm, activeCategory, maxItems]);
   
   // Get unique categories from media items
-  const categories = ['all', ...new Set(mediaItems.map(item => item.category))];
+  const uniqueCategories = Array.from(new Set(mediaItems.map(item => item.category)));
+  const categories = ['all', ...uniqueCategories];
   
   // Handle media item click
   const handleMediaClick = (media: MediaItem) => {
