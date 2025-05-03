@@ -122,21 +122,39 @@ const NavigationControls: React.FC = () => {
   }, [navigationHistory, location?.pathname]);
 
   const goBack = () => {
-    if (canGoBack && currentIndex > 0) {
-      isNavigatingProgrammatically.current = true;
-      const prevPath = navigationHistory[currentIndex - 1];
-      setCurrentIndex(currentIndex - 1);
-      navigate(prevPath);
-    }
+    // Always go back in browser history
+    window.history.back();
+    
+    // Let browser handle it
+    setTimeout(() => {
+      // Fallback for safety - if window.history.back() doesn't trigger
+      if (currentIndex > 0) {
+        isNavigatingProgrammatically.current = true;
+        const prevPath = navigationHistory[currentIndex - 1];
+        setCurrentIndex(currentIndex - 1);
+        navigate(prevPath);
+      } else {
+        navigate(-1);
+      }
+    }, 50);
   };
 
   const goForward = () => {
-    if (canGoForward && currentIndex < navigationHistory.length - 1) {
-      isNavigatingProgrammatically.current = true;
-      const nextPath = navigationHistory[currentIndex + 1];
-      setCurrentIndex(currentIndex + 1);
-      navigate(nextPath);
-    }
+    // Always go forward in browser history
+    window.history.forward();
+    
+    // Let browser handle it
+    setTimeout(() => {
+      // Fallback for safety - if window.history.forward() doesn't trigger
+      if (currentIndex < navigationHistory.length - 1) {
+        isNavigatingProgrammatically.current = true;
+        const nextPath = navigationHistory[currentIndex + 1];
+        setCurrentIndex(currentIndex + 1);
+        navigate(nextPath);
+      } else {
+        navigate(1);
+      }
+    }, 50);
   };
 
   const goHome = () => {
@@ -189,47 +207,45 @@ const NavigationControls: React.FC = () => {
     : '';
 
   return (
-    <div className="fixed top-0 left-1/2 transform -translate-x-1/2 z-20 flex justify-center pb-1 pt-2 bg-gradient-to-b from-black to-transparent">
-      <div className="flex items-center space-x-2 px-3 py-1 bg-black/90 backdrop-blur rounded-full border border-blue-900/30 shadow-lg">
+    <div className="fixed bottom-8 left-1/2 transform -translate-x-1/2 z-50 flex justify-center">
+      <div className="flex items-center space-x-2 px-3 py-1 bg-black/95 backdrop-blur rounded-full border border-blue-900/30 shadow-lg shadow-blue-900/10">
         <button
           onClick={goBack}
-          disabled={!canGoBack}
-          className={`w-9 h-9 flex items-center justify-center rounded-full transition-all ${
-            canGoBack 
+          className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${
+            true 
               ? 'text-blue-400 hover:bg-blue-900/30 hover:text-blue-300 active:bg-blue-900/50' 
               : 'text-gray-600 cursor-not-allowed'
           }`}
-          aria-label={canGoBack ? `Go back to ${prevPageName}` : "Can't go back"}
-          title={canGoBack ? `Back to ${prevPageName}` : ""}
+          aria-label={`Go back`}
+          title={`Back`}
         >
-          <ArrowLeft size={19} />
+          <ArrowLeft size={20} />
         </button>
         
         <div className="mx-0.5 h-5 w-px bg-blue-900/40"></div>
         
         <button
           onClick={goHome}
-          className="w-9 h-9 flex items-center justify-center rounded-full text-blue-400 hover:bg-blue-900/30 hover:text-blue-300 active:bg-blue-900/50 transition-all"
+          className="w-10 h-10 flex items-center justify-center rounded-full text-blue-400 hover:bg-blue-900/30 hover:text-blue-300 active:bg-blue-900/50 transition-all"
           aria-label="Go to home page"
           title="Go to home page"
         >
-          <Home size={19} />
+          <Home size={20} />
         </button>
         
         <div className="mx-0.5 h-5 w-px bg-blue-900/40"></div>
         
         <button
           onClick={goForward}
-          disabled={!canGoForward}
-          className={`w-9 h-9 flex items-center justify-center rounded-full transition-all ${
-            canGoForward 
+          className={`w-10 h-10 flex items-center justify-center rounded-full transition-all ${
+            true 
               ? 'text-blue-400 hover:bg-blue-900/30 hover:text-blue-300 active:bg-blue-900/50' 
               : 'text-gray-600 cursor-not-allowed'
           }`}
-          aria-label={canGoForward ? `Go forward to ${nextPageName}` : "Can't go forward"}
-          title={canGoForward ? `Forward to ${nextPageName}` : ""}
+          aria-label={`Go forward`}
+          title={`Forward`}
         >
-          <ArrowRight size={19} />
+          <ArrowRight size={20} />
         </button>
         
         <div className="hidden md:block mx-2 text-xs text-blue-400 opacity-60 font-semibold">
