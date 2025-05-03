@@ -11,19 +11,19 @@ interface CachedData<T> {
   unit: 'metric' | 'imperial';
 }
 
-// Cache configuration - much longer durations to minimize API calls
+// Cache configuration - extended durations to reduce API calls and avoid rate limiting
 const CACHE_CONFIG = {
   weather: {
     key: 'cachedWeatherData',
-    duration: 60 * 60 * 1000, // 1 hour in milliseconds
+    duration: 3 * 60 * 60 * 1000, // 3 hours in milliseconds (was 1 hour)
   },
   forecast: {
     key: 'cachedForecastData',
-    duration: 3 * 60 * 60 * 1000, // 3 hours in milliseconds
+    duration: 6 * 60 * 60 * 1000, // 6 hours in milliseconds (was 3 hours)
   },
   onecall: {
     key: 'cachedOneCallData',
-    duration: 4 * 60 * 60 * 1000, // 4 hours in milliseconds
+    duration: 8 * 60 * 60 * 1000, // 8 hours in milliseconds (was 4 hours)
   }
 };
 
