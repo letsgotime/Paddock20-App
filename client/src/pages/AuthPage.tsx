@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
 import { Eye, EyeOff, LogIn, UserPlus } from 'lucide-react';
@@ -80,6 +80,7 @@ const AuthPage: React.FC = () => {
         username: registerData.username,
         email: registerData.email,
         password: registerData.password,
+        confirmPassword: registerData.confirmPassword,
         firstName: registerData.firstName || undefined,
         lastName: registerData.lastName || undefined
       });

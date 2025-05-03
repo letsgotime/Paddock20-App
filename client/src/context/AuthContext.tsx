@@ -1,7 +1,7 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import { createContext, useState, useEffect, ReactNode } from 'react';
 import { useToast } from '@/hooks/use-toast';
 
-// Define User interface to match with server-side User model
+// User interface matches our database model
 interface User {
   id: number;
   username: string;
@@ -11,15 +11,20 @@ interface User {
   fullName: string | null;
   profileImage: string | null;
   role: 'user' | 'admin' | 'premium' | null;
-  // Add other user properties as needed
+  // Add other properties as needed
+}
+
+interface Session {
+  user: User;
 }
 
 interface AuthContextType {
   user: User | null;
+  session: Session | null;
   loading: boolean;
   error: string | null;
-  login: (username: string, password: string) => Promise<void>;
-  register: (userData: RegisterData) => Promise<void>;
+  login: (username: string, password: string) => Promise<User>;
+  register: (userData: RegisterData) => Promise<User>;
   logout: () => Promise<void>;
 }
 
@@ -27,25 +32,21 @@ interface RegisterData {
   username: string;
   email: string;
   password: string;
+  confirmPassword: string;
   firstName?: string;
   lastName?: string;
 }
 
-interface AuthProviderProps {
-  children: ReactNode;
-}
+export const AuthContext = createContext<AuthContextType | null>(null);
 
-// Create the Auth Context
-const AuthContext = createContext<AuthContextType | null>(null);
-
-// Auth Provider component
-export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
+export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Check if user is already logged in
+  // Check authentication status on first render
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
@@ -55,9 +56,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         if (response.ok) {
           const userData = await response.json();
           setUser(userData);
+          
+          if (userData) {
+            setSession({ user: userData });
+          }
         } else {
           // User is not authenticated or session expired
           setUser(null);
+          setSession(null);
         }
       } catch (err) {
         console.error('Error checking auth status:', err);
@@ -82,21 +88,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({ username, password }),
+        credentials: 'include',
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Login failed');
+        throw new Error(data.error || 'Login failed');
       }
 
-      const userData = await response.json();
-      setUser(userData);
+      setUser(data);
+      setSession({ user: data });
       
       toast({
         title: 'Login Successful',
-        description: `Welcome back, ${userData.username}!`,
-        variant: 'success',
+        description: `Welcome back, ${data.username}!`,
+        variant: 'default',
       });
+      
+      return data;
     } catch (err) {
       console.error('Login error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Login failed';
@@ -108,7 +118,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         variant: 'destructive',
       });
       
-      throw err;
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -126,21 +136,25 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(userData),
+        credentials: 'include',
       });
 
+      const data = await response.json();
+
       if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Registration failed');
+        throw new Error(data.error || 'Registration failed');
       }
 
-      const newUser = await response.json();
-      setUser(newUser);
+      setUser(data);
+      setSession({ user: data });
       
       toast({
         title: 'Registration Successful',
-        description: 'Your account has been created!',
-        variant: 'success',
+        description: 'Your account has been created successfully!',
+        variant: 'default',
       });
+      
+      return data;
     } catch (err) {
       console.error('Registration error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Registration failed';
@@ -152,7 +166,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         variant: 'destructive',
       });
       
-      throw err;
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
@@ -165,17 +179,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       const response = await fetch('/api/logout', {
         method: 'POST',
+        credentials: 'include',
       });
 
       if (!response.ok) {
-        throw new Error('Logout failed');
+        const data = await response.json();
+        throw new Error(data.error || 'Logout failed');
       }
 
       setUser(null);
+      setSession(null);
       
       toast({
         title: 'Logged Out',
         description: 'You have been successfully logged out.',
+        variant: 'default',
       });
     } catch (err) {
       console.error('Logout error:', err);
@@ -188,34 +206,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         variant: 'destructive',
       });
       
-      throw err;
+      throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
   };
 
-  // Create the auth value object
-  const authValue: AuthContextType = {
+  const value = {
     user,
+    session,
     loading,
     error,
     login,
     register,
-    logout,
+    logout
   };
 
-  return (
-    <AuthContext.Provider value={authValue}>
-      {children}
-    </AuthContext.Provider>
-  );
-};
-
-// Custom hook to use the auth context
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-  return context;
-};
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}

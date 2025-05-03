@@ -78,7 +78,6 @@ import BetaAgreement from './pages/BetaAgreement';
 function App() {
   // TEMPORARY: Force preview mode to bypass auth
   const previewMode = true;
-  const { user, loading, session } = useAuth();
   
   // State to track if the user has completed onboarding
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(() => {
@@ -100,8 +99,17 @@ function App() {
   // Use the scroll-to-top hook to ensure pages always start at the top
   useScrollToTop();
   
-  // For preview purposes, we'll create a mock session
-  const effectiveSession = previewMode ? { user: { id: 'preview-user' } } : session;
+  // Mock user data for preview mode
+  const mockUser = { id: 99999, username: 'Gavin Brooks', email: 'gavin@gotime.com', firstName: 'Gavin', lastName: 'Brooks', fullName: 'Gavin Brooks', profileImage: null, role: 'admin' as const };
+  const mockSession = { user: mockUser };
+  
+  // Initialize session state (will be overridden by auth hook if authenticated)
+  const [authUser, setAuthUser] = useState<any>(null);
+  const [authSession, setAuthSession] = useState<any>(null);
+  const [authLoading, setAuthLoading] = useState<boolean>(false);
+  
+  const effectiveUser = previewMode ? mockUser : authUser;
+  const effectiveSession = previewMode ? mockSession : authSession;
   
   // Function to mark onboarding as complete
   const completeOnboarding = () => {
@@ -110,7 +118,7 @@ function App() {
 
   // Protected route component
   const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-    if (loading && !previewMode) {
+    if (authLoading && !previewMode) {
       return (
         <div className="min-h-screen bg-black flex items-center justify-center">
           <p className="text-white">Loading...</p>
@@ -150,6 +158,38 @@ function App() {
       }
     }
   }, []);
+  
+  // Initialize authentication status
+  useEffect(() => {
+    // Only check auth if not in preview mode
+    if (!previewMode) {
+      setAuthLoading(true);
+      
+      // Call our server-side auth endpoint
+      fetch('/api/user')
+        .then(async response => {
+          if (response.ok) {
+            const userData = await response.json();
+            setAuthUser(userData);
+            setAuthSession({ user: userData });
+            console.log('User authenticated:', userData.username);
+          } else {
+            // Not authenticated
+            setAuthUser(null);
+            setAuthSession(null);
+            console.log('User not authenticated');
+          }
+        })
+        .catch(error => {
+          console.error('Auth check failed:', error);
+          setAuthUser(null);
+          setAuthSession(null);
+        })
+        .finally(() => {
+          setAuthLoading(false);
+        });
+    }
+  }, [previewMode]);
   
   // Initialize Unsplash image cache for marketplace listings
   useEffect(() => {
@@ -208,7 +248,7 @@ function App() {
               
               <Routes>
                 {/* Public authentication route */}
-                <Route path="/auth" element={!session && !previewMode ? <AuthPage /> : <Navigate to="/dashboard" replace />} />
+                <Route path="/auth" element={!authSession && !previewMode ? <AuthPage /> : <Navigate to="/dashboard" replace />} />
                 
                 {/* Legal Document Pages - Publicly accessible */}
                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
