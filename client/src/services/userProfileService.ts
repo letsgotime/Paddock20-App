@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { persist, createJSONStorage } from 'zustand/middleware';
 
 // Types for different data components that will feed into the user profile
 export interface VehicleData {
@@ -274,57 +274,60 @@ const demoUserProfile: UserProfile = {
   lastActive: new Date().toISOString()
 };
 
+// Define the type for our store
+type UserProfileStore = {
+  profile: UserProfile | null;
+  isLoading: boolean;
+  error: string | null;
+  
+  // Actions
+  setProfile: (profile: UserProfile) => void;
+  updateProfile: (updates: Partial<UserProfile>) => void;
+  addVehicle: (vehicle: VehicleData) => void;
+  updateVehicle: (id: string, updates: Partial<VehicleData>) => void;
+  removeVehicle: (id: string) => void;
+  addDrive: (drive: DriveData) => void;
+  updateDrive: (id: string, updates: Partial<DriveData>) => void;
+  removeDrive: (id: string) => void;
+  addGoal: (goal: GoalData) => void;
+  updateGoal: (id: string, updates: Partial<GoalData>) => void;
+  removeGoal: (id: string) => void;
+  addEvent: (event: EventData) => void;
+  updateEvent: (id: string, updates: Partial<EventData>) => void;
+  removeEvent: (id: string) => void;
+  addGalleryImage: (image: GalleryImage) => void;
+  updateGalleryImage: (id: string, updates: Partial<GalleryImage>) => void;
+  removeGalleryImage: (id: string) => void;
+  updateUserPreferences: (preferences: Partial<UserPreference>) => void;
+  updateWeatherPreferences: (preferences: Partial<WeatherPreference>) => void;
+  
+  // For dev purposes - load demo data
+  loadDemoProfile: () => void;
+  resetProfile: () => void;
+};
+
 // Create a store with persistence
-export const useUserProfileStore = create(
-  persist<{
-    profile: UserProfile | null;
-    isLoading: boolean;
-    error: string | null;
-    
-    // Actions
-    setProfile: (profile: UserProfile) => void;
-    updateProfile: (updates: Partial<UserProfile>) => void;
-    addVehicle: (vehicle: VehicleData) => void;
-    updateVehicle: (id: string, updates: Partial<VehicleData>) => void;
-    removeVehicle: (id: string) => void;
-    addDrive: (drive: DriveData) => void;
-    updateDrive: (id: string, updates: Partial<DriveData>) => void;
-    removeDrive: (id: string) => void;
-    addGoal: (goal: GoalData) => void;
-    updateGoal: (id: string, updates: Partial<GoalData>) => void;
-    removeGoal: (id: string) => void;
-    addEvent: (event: EventData) => void;
-    updateEvent: (id: string, updates: Partial<EventData>) => void;
-    removeEvent: (id: string) => void;
-    addGalleryImage: (image: GalleryImage) => void;
-    updateGalleryImage: (id: string, updates: Partial<GalleryImage>) => void;
-    removeGalleryImage: (id: string) => void;
-    updateUserPreferences: (preferences: Partial<UserPreference>) => void;
-    updateWeatherPreferences: (preferences: Partial<WeatherPreference>) => void;
-    
-    // For dev purposes - load demo data
-    loadDemoProfile: () => void;
-    resetProfile: () => void;
-  }>(
-    {
+export const useUserProfileStore = create<UserProfileStore>()(
+  persist(
+    (set) => ({
       profile: null,
       isLoading: false,
       error: null,
       
-      setProfile: (profile) => set({ profile }),
+      setProfile: (profile: UserProfile) => set({ profile }),
       
-      updateProfile: (updates) => set((state) => ({
+      updateProfile: (updates: Partial<UserProfile>) => set((state) => ({
         profile: state.profile ? { ...state.profile, ...updates } : null
       })),
       
-      addVehicle: (vehicle) => set((state) => ({
+      addVehicle: (vehicle: VehicleData) => set((state) => ({
         profile: state.profile ? {
           ...state.profile,
           vehicles: [...state.profile.vehicles, vehicle]
         } : null
       })),
       
-      updateVehicle: (id, updates) => set((state) => ({
+      updateVehicle: (id: string, updates: Partial<VehicleData>) => set((state) => ({
         profile: state.profile ? {
           ...state.profile,
           vehicles: state.profile.vehicles.map(v => 
@@ -333,14 +336,14 @@ export const useUserProfileStore = create(
         } : null
       })),
       
-      removeVehicle: (id) => set((state) => ({
+      removeVehicle: (id: string) => set((state) => ({
         profile: state.profile ? {
           ...state.profile,
           vehicles: state.profile.vehicles.filter(v => v.id !== id)
         } : null
       })),
       
-      addDrive: (drive) => set((state) => ({
+      addDrive: (drive: DriveData) => set((state) => ({
         profile: state.profile ? {
           ...state.profile,
           drives: [...state.profile.drives, drive],
@@ -352,7 +355,7 @@ export const useUserProfileStore = create(
         } : null
       })),
       
-      updateDrive: (id, updates) => set((state) => ({
+      updateDrive: (id: string, updates: Partial<DriveData>) => set((state) => ({
         profile: state.profile ? {
           ...state.profile,
           drives: state.profile.drives.map(d => 
@@ -361,7 +364,7 @@ export const useUserProfileStore = create(
         } : null
       })),
       
-      removeDrive: (id) => set((state) => {
+      removeDrive: (id: string) => set((state) => {
         if (!state.profile) return { profile: null };
         
         const driveToRemove = state.profile.drives.find(d => d.id === id);
@@ -380,14 +383,14 @@ export const useUserProfileStore = create(
         };
       }),
       
-      addGoal: (goal) => set((state) => ({
+      addGoal: (goal: GoalData) => set((state) => ({
         profile: state.profile ? {
           ...state.profile,
           goals: [...state.profile.goals, goal]
         } : null
       })),
       
-      updateGoal: (id, updates) => set((state) => {
+      updateGoal: (id: string, updates: Partial<GoalData>) => set((state) => {
         if (!state.profile) return { profile: null };
         
         // Count completed goals if the status changed to completed
@@ -419,7 +422,7 @@ export const useUserProfileStore = create(
         };
       }),
       
-      removeGoal: (id) => set((state) => {
+      removeGoal: (id: string) => set((state) => {
         if (!state.profile) return { profile: null };
         
         // Check if the goal to remove was completed
@@ -440,14 +443,14 @@ export const useUserProfileStore = create(
         };
       }),
       
-      addEvent: (event) => set((state) => ({
+      addEvent: (event: EventData) => set((state) => ({
         profile: state.profile ? {
           ...state.profile,
           events: [...state.profile.events, event]
         } : null
       })),
       
-      updateEvent: (id, updates) => set((state) => ({
+      updateEvent: (id: string, updates: Partial<EventData>) => set((state) => ({
         profile: state.profile ? {
           ...state.profile,
           events: state.profile.events.map(e => 
@@ -456,21 +459,21 @@ export const useUserProfileStore = create(
         } : null
       })),
       
-      removeEvent: (id) => set((state) => ({
+      removeEvent: (id: string) => set((state) => ({
         profile: state.profile ? {
           ...state.profile,
           events: state.profile.events.filter(e => e.id !== id)
         } : null
       })),
       
-      addGalleryImage: (image) => set((state) => ({
+      addGalleryImage: (image: GalleryImage) => set((state) => ({
         profile: state.profile ? {
           ...state.profile,
           gallery: [...state.profile.gallery, image]
         } : null
       })),
       
-      updateGalleryImage: (id, updates) => set((state) => ({
+      updateGalleryImage: (id: string, updates: Partial<GalleryImage>) => set((state) => ({
         profile: state.profile ? {
           ...state.profile,
           gallery: state.profile.gallery.map(img => 
@@ -479,14 +482,14 @@ export const useUserProfileStore = create(
         } : null
       })),
       
-      removeGalleryImage: (id) => set((state) => ({
+      removeGalleryImage: (id: string) => set((state) => ({
         profile: state.profile ? {
           ...state.profile,
           gallery: state.profile.gallery.filter(img => img.id !== id)
         } : null
       })),
       
-      updateUserPreferences: (preferences) => set((state) => ({
+      updateUserPreferences: (preferences: Partial<UserPreference>) => set((state) => ({
         profile: state.profile ? {
           ...state.profile,
           preferences: {
@@ -496,7 +499,7 @@ export const useUserProfileStore = create(
         } : null
       })),
       
-      updateWeatherPreferences: (preferences) => set((state) => ({
+      updateWeatherPreferences: (preferences: Partial<WeatherPreference>) => set((state) => ({
         profile: state.profile ? {
           ...state.profile,
           weatherPreferences: {
@@ -509,9 +512,10 @@ export const useUserProfileStore = create(
       loadDemoProfile: () => set({ profile: demoUserProfile }),
       
       resetProfile: () => set({ profile: null, error: null })
-    },
+    }),
     {
       name: 'user-profile-storage',
+      storage: createJSONStorage(() => localStorage),
       partialize: (state) => ({ profile: state.profile }),
     }
   )
