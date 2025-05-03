@@ -14,9 +14,10 @@ const UserProfileHub: React.FC = () => {
   const [activeSection, setActiveSection] = useState<string | null>('summary');
   const [showMembershipInfo, setShowMembershipInfo] = useState(false);
   
-  // Load demo profile for development if no profile exists
+  // Load profile from local storage or create a new one
   useEffect(() => {
     if (!profile) {
+      // We'll use a customized demo profile that will be updated with real vehicle data
       loadDemoProfile();
     }
     
