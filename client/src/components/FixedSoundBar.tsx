@@ -1,7 +1,18 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import { VolumeX, Volume2, Home, ArrowLeft, ArrowRight } from "lucide-react";
 import { playMotorsportSound, getSoundSettings, setSoundEnabled } from "../services/soundService";
 import { useLocation } from "wouter";
+
+// Constants for localStorage keys
+const HISTORY_KEY = 'navigationHistory';
+const CURRENT_INDEX_KEY = 'navigationCurrentIndex';
+
+// Add navigationInProgress property to Window interface
+declare global {
+  interface Window {
+    navigationInProgress: boolean;
+  }
+}
 
 /**
  * FixedSoundBar - A fixed bottom bar showing GoTime logo, navigation controls and sound controls
@@ -13,63 +24,153 @@ const FixedSoundBar: React.FC = () => {
   const [soundEnabled, setSoundEnabledState] = useState(true);
   const [location, setLocation] = useLocation();
   
-  // Get navigation state from localStorage
+  // Navigation state
   const [canGoBack, setCanGoBack] = useState(false);
   const [canGoForward, setCanGoForward] = useState(false);
+  const [navigationHistory, setNavigationHistory] = useState<string[]>([]);
+  const [currentIndex, setCurrentIndex] = useState(0);
   
-  // Initialize navigation state
+  // Load initial navigation state
   useEffect(() => {
     try {
-      const navState = JSON.parse(localStorage.getItem('navigationState') || '{"history":[],"currentIndex":0}');
-      const currentIndex = navState.currentIndex;
-      const history = navState.history || [];
+      // Get history from localStorage or initialize with current location
+      const savedHistory = localStorage.getItem(HISTORY_KEY);
+      const parsedHistory = savedHistory ? JSON.parse(savedHistory) : [location];
       
-      setCanGoBack(currentIndex > 0);
-      setCanGoForward(currentIndex < history.length - 1);
+      // Get current index from localStorage or initialize with 0
+      const savedIndex = localStorage.getItem(CURRENT_INDEX_KEY);
+      const parsedIndex = savedIndex ? parseInt(savedIndex, 10) : 0;
+      
+      // Set state with safe values
+      setNavigationHistory(Array.isArray(parsedHistory) ? parsedHistory : [location]);
+      setCurrentIndex(isNaN(parsedIndex) ? 0 : parsedIndex);
+      
+      // Debug output
+      console.log("Navigation initialized:", {history: parsedHistory, currentIndex: parsedIndex});
     } catch (error) {
-      console.error("Error loading navigation state:", error);
+      console.error("Error initializing navigation:", error);
+      // Initialize with safe defaults
+      setNavigationHistory([location]);
+      setCurrentIndex(0);
     }
+  }, []);
+  
+  // Update navigation buttons state
+  useEffect(() => {
+    setCanGoBack(currentIndex > 0);
+    setCanGoForward(currentIndex < navigationHistory.length - 1);
+    
+    // Save navigation state
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(navigationHistory));
+    localStorage.setItem(CURRENT_INDEX_KEY, currentIndex.toString());
+    
+    // Debug output
+    console.log("Navigation state updated:", {
+      history: navigationHistory,
+      currentIndex: currentIndex,
+      canGoBack: currentIndex > 0,
+      canGoForward: currentIndex < navigationHistory.length - 1
+    });
+  }, [navigationHistory, currentIndex]);
+  
+  // Initialize the navigation progress flag if needed
+  useEffect(() => {
+    if (typeof window.navigationInProgress === 'undefined') {
+      window.navigationInProgress = false;
+    }
+  }, []);
+
+  // Track location changes
+  useEffect(() => {
+    if (navigationHistory.length === 0) {
+      // Initialize if empty
+      setNavigationHistory([location]);
+      return;
+    }
+    
+    // Get current path in history
+    const currentPath = navigationHistory[currentIndex];
+    
+    // Only add to history if path changed and not triggered by back/forward buttons
+    if (currentPath !== location && !window.navigationInProgress) {
+      // If user navigated from a non-latest point, truncate future history
+      const newHistory = currentIndex < navigationHistory.length - 1
+        ? [...navigationHistory.slice(0, currentIndex + 1), location]
+        : [...navigationHistory, location];
+      
+      setNavigationHistory(newHistory);
+      setCurrentIndex(newHistory.length - 1);
+    }
+    
+    // Reset navigation progress flag
+    window.navigationInProgress = false;
   }, [location]);
   
   // Navigation functions
-  const goBack = () => {
-    try {
-      const navState = JSON.parse(localStorage.getItem('navigationState') || '{"history":[],"currentIndex":0}');
-      if (navState.currentIndex > 0) {
-        navState.currentIndex--;
-        const prevPath = navState.history[navState.currentIndex];
-        localStorage.setItem('navigationState', JSON.stringify(navState));
+  const goBack = useCallback(() => {
+    if (currentIndex > 0) {
+      try {
+        // Mark that we're navigating programmatically
+        window.navigationInProgress = true;
+        
+        // Update index and navigate
+        const newIndex = currentIndex - 1;
+        const prevPath = navigationHistory[newIndex];
+        
+        setCurrentIndex(newIndex);
         setLocation(prevPath);
+        
+        // Play sound effect if enabled
         if (soundEnabled) playMotorsportSound('ui_navigate');
+        
+        console.log("Navigating back to:", prevPath);
+      } catch (error) {
+        console.error("Error navigating back:", error);
       }
-    } catch (error) {
-      console.error("Error navigating back:", error);
     }
-  };
+  }, [navigationHistory, currentIndex, setLocation, soundEnabled]);
   
-  const goForward = () => {
-    try {
-      const navState = JSON.parse(localStorage.getItem('navigationState') || '{"history":[],"currentIndex":0}');
-      if (navState.currentIndex < navState.history.length - 1) {
-        navState.currentIndex++;
-        const nextPath = navState.history[navState.currentIndex];
-        localStorage.setItem('navigationState', JSON.stringify(navState));
+  const goForward = useCallback(() => {
+    if (currentIndex < navigationHistory.length - 1) {
+      try {
+        // Mark that we're navigating programmatically
+        window.navigationInProgress = true;
+        
+        // Update index and navigate
+        const newIndex = currentIndex + 1;
+        const nextPath = navigationHistory[newIndex];
+        
+        setCurrentIndex(newIndex);
         setLocation(nextPath);
+        
+        // Play sound effect if enabled
         if (soundEnabled) playMotorsportSound('ui_navigate');
+        
+        console.log("Navigating forward to:", nextPath);
+      } catch (error) {
+        console.error("Error navigating forward:", error);
       }
-    } catch (error) {
-      console.error("Error navigating forward:", error);
     }
-  };
+  }, [navigationHistory, currentIndex, setLocation, soundEnabled]);
   
-  const goHome = () => {
+  const goHome = useCallback(() => {
     try {
-      setLocation('/');
+      // Only navigate if not already home
+      if (location !== '/') {
+        setLocation('/');
+        
+        // Create a new history entry (not using back/forward)
+        const newHistory = [...navigationHistory.slice(0, currentIndex + 1), '/'];
+        setNavigationHistory(newHistory);
+        setCurrentIndex(newHistory.length - 1);
+      }
+      
+      // Play sound effect if enabled
       if (soundEnabled) playMotorsportSound('ui_select');
     } catch (error) {
       console.error("Error navigating home:", error);
     }
-  };
+  }, [location, navigationHistory, currentIndex, setLocation, soundEnabled]);
   
   // Initialize sound settings from sound service
   useEffect(() => {
