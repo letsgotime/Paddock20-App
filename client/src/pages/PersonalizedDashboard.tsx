@@ -5,7 +5,6 @@ import MoodEnergyTracker from '../components/MoodEnergyTracker.jsx';
 import WorldClockPanel from '../components/WorldClockPanel';
 import { Progress } from "@/components/ui/progress";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { useAuth } from '@/hooks/useAuth';
 
 // Mock user data for demo purposes - this will be merged with actual user data when available
 const mockUserData = {
@@ -79,29 +78,31 @@ const mockUserData = {
 };
 
 const PersonalizedDashboard: React.FC = () => {
-  const { user } = useAuth();
+  // Default to mock user data in preview mode
+  const mockUser = { 
+    id: 99999, 
+    username: 'Gavin Brooks', 
+    email: 'gavin@gotime.com', 
+    firstName: 'Gavin', 
+    lastName: 'Brooks', 
+    fullName: 'Gavin Brooks', 
+    profileImage: null, 
+    role: 'admin' as const 
+  };
+
   const [userData, setUserData] = useState(mockUserData);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [greeting, setGreeting] = useState('');
-  const [mergedUserData, setMergedUserData] = useState<any>({...mockUserData, name: ''});
+  const [mergedUserData, setMergedUserData] = useState<any>({...mockUserData, name: 'Gavin Brooks'});
 
   useEffect(() => {
-    // Merge auth user data with mock data
-    if (user) {
-      // Use user's real name from authentication
-      const displayName = user.fullName || user.username;
-      setMergedUserData({
-        ...userData,
-        name: displayName
-      });
-    } else {
-      // Fallback to mock data with a generic name when not authenticated
-      setMergedUserData({
-        ...userData,
-        name: 'Driver'
-      });
-    }
-  }, [user, userData]);
+    // Always use mockUser in preview mode
+    const displayName = mockUser.fullName || mockUser.username;
+    setMergedUserData({
+      ...userData,
+      name: displayName
+    });
+  }, [userData]);
 
   useEffect(() => {
     // Update greeting based on time of day
