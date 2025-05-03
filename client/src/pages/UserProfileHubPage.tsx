@@ -1,35 +1,35 @@
 import React, { useEffect } from 'react';
 import UserProfileHub from '../components/UserProfileHub';
-import UserProfileCollector from '../services/userProfileService';
+import ProfileDataCollector from '../services/ProfileDataCollector';
 import { useWeather } from '../contexts/FixedWeatherContext';
 import { useVehicle } from '../contexts/VehicleContext';
 
 const UserProfileHubPage: React.FC = () => {
   // Fetch all the context data we need to populate the profile
   const { weatherData, automotiveWeatherData } = useWeather();
-  const { currentVehicle } = useVehicleContext();
+  const { activeVehicle, vehicles } = useVehicle();
   
-  // Feed data into the UserProfileCollector when component mounts or data changes
+  // Feed data into the ProfileDataCollector when component mounts or data changes
   useEffect(() => {
     // Log page view (tracks user activity)
-    UserProfileCollector.logPageView('UserProfileHubPage');
+    ProfileDataCollector.logPageView('UserProfileHubPage');
     
     // Feed weather data into the profile
     if (weatherData) {
-      UserProfileCollector.collectWeatherData(weatherData);
+      ProfileDataCollector.collectWeatherData(weatherData);
     }
     
     // Feed vehicle data if available
-    if (currentVehicle) {
-      // This would connect the selected vehicle to the profile
-      // In a real implementation, you'd sync this with the profile's vehicle list
-      console.log('Current vehicle selected:', currentVehicle);
+    if (activeVehicle) {
+      // This syncs the active vehicle from the VehicleContext to the profile
+      ProfileDataCollector.syncVehicleFromContext(activeVehicle);
+      console.log('Active vehicle synced with profile:', activeVehicle.make, activeVehicle.model);
     }
     
     // We could collect data from other parts of the app here
     // For example, from the drive journal, goals, events, etc.
     
-  }, [weatherData, currentVehicle]);
+  }, [weatherData, activeVehicle]);
   
   return (
     <div className="min-h-screen bg-black pt-20 sm:pt-24">
