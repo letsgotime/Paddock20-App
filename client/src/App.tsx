@@ -226,22 +226,19 @@ function App() {
                       {/* Authentication Header - always visible */}
                       <Header />
                     
-                      {/* GoTime Motorsports logo with ambient sound control - always fixed to top */}
-                      <FixedSoundBar />
-                      
                       {/* Main navigation header - only visible when logged in */}
                       <header role="banner">
-                        {/* Navigation controls and breadcrumbs - only visible when logged in */}
+                        {/* Breadcrumbs - only visible when logged in */}
                         {(effectiveSession || previewMode) && (
-                          <>
-                            <NavigationControls />
-                            <ContextualBreadcrumbs />
-                          </>
+                          <ContextualBreadcrumbs />
                         )}
                       </header>
+                      
+                      {/* GoTime Motorsports logo with navigation and sound controls - always fixed to bottom */}
+                      <FixedSoundBar />
 
-                      {/* Main content area - adjusted for fixed headers */}
-                      <main id={MAIN_CONTENT_ID} className="container mx-auto px-4 mt-[120px]" tabIndex={-1}>
+                      {/* Main content area - adjusted for fixed headers and footer */}
+                      <main id={MAIN_CONTENT_ID} className="container mx-auto px-4 mt-[120px] pb-[70px]" tabIndex={-1}>
                         {/* Toast notifications with ARIA live region built in */}
                         <Toaster />
                         
