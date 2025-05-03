@@ -299,6 +299,9 @@ function App() {
                           {/* Legacy garage route redirects to new Garage Vault structure */}
                           <Route path="/garage" element={<Navigate to="/garage-vault" replace />} />
                           
+                          {/* User Profile Hub - Central brain for all driver data */}
+                          <Route path="/profile" element={<ProtectedRoute><UserProfileHubPage /></ProtectedRoute>} />
+                          
                           <Route path="/journal" element={<ProtectedRoute><Journal /></ProtectedRoute>} />
                           <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
                           <Route path="/motorsports" element={<ProtectedRoute><Motorsports /></ProtectedRoute>} />

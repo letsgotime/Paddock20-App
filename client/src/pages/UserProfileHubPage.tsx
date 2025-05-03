@@ -1,167 +1,78 @@
 import React, { useEffect } from 'react';
-import { Link } from 'react-router-dom';
-import { 
-  User, Settings, Mail, 
-  Zap, ArrowRight, UserPlus, 
-  Clock, Calendar, Map 
-} from 'lucide-react';
 import UserProfileHub from '../components/UserProfileHub';
+import UserProfileCollector from '../services/userProfileService';
+import { useWeather } from '../contexts/FixedWeatherContext';
+import { useVehicle } from '../contexts/VehicleContext';
 
 const UserProfileHubPage: React.FC = () => {
+  // Fetch all the context data we need to populate the profile
+  const { weatherData, automotiveWeatherData } = useWeather();
+  const { currentVehicle } = useVehicleContext();
+  
+  // Feed data into the UserProfileCollector when component mounts or data changes
   useEffect(() => {
-    // Update the page title
-    document.title = 'ApexVault - User Profile Hub | Paddock20';
-  }, []);
-
+    // Log page view (tracks user activity)
+    UserProfileCollector.logPageView('UserProfileHubPage');
+    
+    // Feed weather data into the profile
+    if (weatherData) {
+      UserProfileCollector.collectWeatherData(weatherData);
+    }
+    
+    // Feed vehicle data if available
+    if (currentVehicle) {
+      // This would connect the selected vehicle to the profile
+      // In a real implementation, you'd sync this with the profile's vehicle list
+      console.log('Current vehicle selected:', currentVehicle);
+    }
+    
+    // We could collect data from other parts of the app here
+    // For example, from the drive journal, goals, events, etc.
+    
+  }, [weatherData, currentVehicle]);
+  
   return (
-    <div className="min-h-screen pt-4 pb-20">
+    <div className="min-h-screen bg-black pt-20 sm:pt-24">
+      {/* Background image added first, moved to the back with z-index */}
+      <div 
+        className="fixed inset-0 bg-cover bg-center z-0 opacity-20"
+        style={{
+          backgroundImage: "url('/assets/images/f1-stadium-sunset.png')",
+          backgroundAttachment: "fixed",
+        }}
+      ></div>
       
-      <div className="mb-6">
-        <div className="flex items-center justify-between">
-          <h1 className="text-3xl font-orbitron text-[#4B9CD3]">
-            ApexVault <span className="text-sm bg-[#08c519]/20 text-[#08c519] px-1 py-0.5 rounded-sm ml-2">BETA</span>
+      {/* Main content container */}
+      <div className="relative z-10 w-full max-w-[100%] sm:max-w-[1200px] mx-auto px-2 sm:px-4 pb-6">
+        {/* Page header - consistent with other pages */}
+        <div className="mb-4 text-center">
+          <h1 className="text-5xl sm:text-6xl font-bold font-orbitron">
+            <span className="text-[#4B9CD3]">DRIVE</span>
+            <span className="text-white">R </span>
+            <span className="text-green-500">PROFILE</span>
           </h1>
-          <div>
-            <Link 
-              to="/settings" 
-              className="bg-black/50 text-blue-400 hover:text-blue-300 transition-colors px-3 py-1.5 rounded-md border border-blue-900/30 text-sm inline-flex items-center"
-            >
-              <Settings className="h-4 w-4 mr-1.5" />
-              Settings
-            </Link>
-          </div>
-        </div>
-        <p className="text-gray-400 mt-1">
-          Your centralized driver profile hub for comprehensive identity and data management
-        </p>
-      </div>
-      
-      {/* Main Profile Hub */}
-      <div className="grid grid-cols-1 gap-6 mb-8">
-        <UserProfileHub />
-      </div>
-      
-      {/* Additional Sections */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-        {/* Quick Links Section */}
-        <div className="bg-gradient-to-r from-gray-900 to-black border border-blue-900/30 rounded-xl p-4">
-          <h2 className="text-[#4B9CD3] font-orbitron text-lg mb-3 pb-2 border-b border-blue-900/30 flex items-center">
-            <Zap className="h-5 w-5 mr-2" />
-            Quick Links
-          </h2>
-          
-          <div className="grid grid-cols-1 gap-3">
-            <Link 
-              to="/personalized-dashboard" 
-              className="bg-black/40 hover:bg-black/60 transition-colors rounded-md p-3 border border-blue-900/20 flex justify-between items-center"
-            >
-              <div className="flex items-center">
-                <User className="h-5 w-5 text-blue-400 mr-2" />
-                <span className="text-white">Driver Dashboard</span>
-              </div>
-              <ArrowRight className="h-4 w-4 text-blue-400" />
-            </Link>
-            
-            <Link 
-              to="/weather-paddock" 
-              className="bg-black/40 hover:bg-black/60 transition-colors rounded-md p-3 border border-blue-900/20 flex justify-between items-center"
-            >
-              <div className="flex items-center">
-                <Map className="h-5 w-5 text-blue-400 mr-2" />
-                <span className="text-white">Weather Paddock</span>
-              </div>
-              <ArrowRight className="h-4 w-4 text-blue-400" />
-            </Link>
-            
-            <Link 
-              to="/drive-journal" 
-              className="bg-black/40 hover:bg-black/60 transition-colors rounded-md p-3 border border-blue-900/20 flex justify-between items-center"
-            >
-              <div className="flex items-center">
-                <Calendar className="h-5 w-5 text-blue-400 mr-2" />
-                <span className="text-white">Drive Journal</span>
-              </div>
-              <ArrowRight className="h-4 w-4 text-blue-400" />
-            </Link>
-            
-            <Link 
-              to="/garage-vault" 
-              className="bg-black/40 hover:bg-black/60 transition-colors rounded-md p-3 border border-blue-900/20 flex justify-between items-center"
-            >
-              <div className="flex items-center">
-                <Clock className="h-5 w-5 text-blue-400 mr-2" />
-                <span className="text-white">Garage Vault</span>
-              </div>
-              <ArrowRight className="h-4 w-4 text-blue-400" />
-            </Link>
-          </div>
+          <p className="text-[#4B9CD3] font-orbitron text-lg sm:text-xl mt-2">YOUR AUTOMOTIVE IDENTITY</p>
         </div>
         
-        {/* Recent Updates Section */}
-        <div className="bg-gradient-to-r from-gray-900 to-black border border-blue-900/30 rounded-xl p-4">
-          <h2 className="text-[#4B9CD3] font-orbitron text-lg mb-3 pb-2 border-b border-blue-900/30 flex items-center">
-            <Mail className="h-5 w-5 mr-2" />
-            System Updates
-          </h2>
-          
-          <div className="space-y-4">
-            <div className="bg-black/40 rounded-md p-3 border border-green-900/20">
-              <div className="flex items-center mb-1">
-                <div className="h-2 w-2 rounded-full bg-green-500 mr-2"></div>
-                <h3 className="text-green-400 font-medium">ApexVault Launch</h3>
-              </div>
-              <p className="text-gray-300 text-sm">
-                Welcome to the new ApexVault User Profile Hub. Your centralized hub for identity and data management.
-              </p>
-              <p className="text-gray-500 text-xs mt-1">
-                Posted: {new Date().toLocaleDateString()}
-              </p>
-            </div>
-            
-            <div className="bg-black/40 rounded-md p-3 border border-blue-900/20">
-              <div className="flex items-center mb-1">
-                <div className="h-2 w-2 rounded-full bg-blue-500 mr-2"></div>
-                <h3 className="text-blue-400 font-medium">Paddock20 Platform Update</h3>
-              </div>
-              <p className="text-gray-300 text-sm">
-                New F1-inspired telemetry dashboard added to all weather and vehicle screens.
-              </p>
-              <p className="text-gray-500 text-xs mt-1">
-                Posted: {new Date(Date.now() - 604800000).toLocaleDateString()}
-              </p>
-            </div>
-            
-            <div className="bg-black/40 rounded-md p-3 border border-blue-900/20">
-              <div className="flex items-center mb-1">
-                <div className="h-2 w-2 rounded-full bg-blue-500 mr-2"></div>
-                <h3 className="text-blue-400 font-medium">Vehicle Data Integration</h3>
-              </div>
-              <p className="text-gray-300 text-sm">
-                Enhanced vehicle data pivoting across all modules for seamless experience.
-              </p>
-              <p className="text-gray-500 text-xs mt-1">
-                Posted: {new Date(Date.now() - 1209600000).toLocaleDateString()}
-              </p>
-            </div>
-          </div>
+        {/* Inspirational Tagline */}
+        <div className="mb-6">
+          <p className="text-white text-center text-xl">Drive Like a Champion. Build Your Legacy.</p>
         </div>
-      </div>
-      
-      {/* Invite Friends Banner */}
-      <div className="bg-gradient-to-r from-[#08c519]/10 to-black border border-[#08c519]/30 rounded-xl p-4 flex flex-col md:flex-row justify-between items-center">
-        <div>
-          <h3 className="text-[#08c519] font-orbitron text-lg mb-1">
-            Invite Friends to Paddock20
-          </h3>
-          <p className="text-gray-400 text-sm">
-            Share the Paddock20 experience with your car enthusiast friends
+        
+        {/* User Profile Component */}
+        <div className="mb-10">
+          <UserProfileHub />
+        </div>
+        
+        {/* Data exchange explanation - help users understand what's happening */}
+        <div className="bg-black/40 border border-blue-900/30 rounded-lg p-4 mb-8 text-center">
+          <h3 className="text-blue-400 text-lg mb-2 font-orbitron">INTEGRATED DRIVER DATA</h3>
+          <p className="text-gray-300 text-sm max-w-3xl mx-auto">
+            Your Driver Profile connects with all aspects of your automotive experience. 
+            Weather conditions, vehicle data, drive logs, and achievement progress are 
+            continuously synced to provide you with a complete picture of your driving life.
           </p>
         </div>
-        
-        <button className="mt-3 md:mt-0 bg-[#08c519]/20 hover:bg-[#08c519]/30 text-[#08c519] transition-colors px-4 py-2 rounded-md border border-[#08c519]/40 flex items-center">
-          <UserPlus className="h-4 w-4 mr-2" />
-          Send Invites
-        </button>
       </div>
     </div>
   );
