@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import EventsPreview from '../components/EventsPreview';
 import MotorsportsGallery from '../components/MotorsportsGallery';
 import { useWeather } from '../contexts/FixedWeatherContext';
-import { Thermometer, Droplets, Wind, Sun, Leaf, Gauge, Cloud, ArrowUp, Compass, Timer, Clock, Zap, Map, Shield, Calendar, Trophy, Flame } from 'lucide-react';
+import { Thermometer, Droplets, Wind, Sun, Leaf, Gauge, Cloud, ArrowUp, Compass, Timer, Clock, Zap, Map, Shield, Calendar, Trophy, Flame, Sunrise, Sunset, Moon } from 'lucide-react';
 
 // Array of driving insights to rotate through - based on weather patterns
 const drivingInsights = [
@@ -501,6 +501,68 @@ const Paddock20HomePage: React.FC = () => {
                   <div className="mt-1 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
                     <div className="h-full bg-green-500 group-hover:bg-green-400 transition-colors duration-300" 
                          style={{ width: weatherData?.wind?.speed ? `${Math.min(100, (weatherData.wind.speed/30)*100)}%` : '0%' }}></div>
+                  </div>
+                </div>
+                
+                {/* Sunrise Component */}
+                <div className="bg-black/70 p-3 rounded-sm border border-amber-700/30 relative overflow-hidden group hover:border-amber-500 hover:bg-black/90 hover:shadow-[0_0_10px_rgba(251,191,36,0.15)] transition-all duration-300 cursor-pointer">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-amber-500 group-hover:h-[105%] transition-all duration-500"></div>
+                  <div className="text-amber-400/90 text-xs mb-1 font-medium uppercase tracking-wider flex items-center">
+                    <Sunrise className="h-3 w-3 mr-1 group-hover:text-amber-300 transition-colors duration-300" />
+                    <span className="group-hover:text-amber-300 transition-colors duration-300">Sunrise</span>
+                  </div>
+                  <div className="text-white text-xl font-mono font-semibold group-hover:text-amber-300 transition-colors duration-300">
+                    {weatherData && weatherData.sys && weatherData.sys.sunrise
+                      ? new Date(weatherData.sys.sunrise * 1000).toLocaleTimeString('en-US', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: timeFormat === '12h'
+                        })
+                      : '6:15 AM'}
+                  </div>
+                  <div className="mt-1 flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="h-4 w-4 bg-amber-500/80 rounded-full mr-1.5 animate-pulse"></div>
+                      <span className="text-xs text-amber-400/80">Dawn</span>
+                    </div>
+                    <div className="text-[10px] font-mono text-amber-300/70">
+                      {weatherData && weatherData.sys && weatherData.sys.sunrise
+                        ? new Date().getHours() < new Date(weatherData.sys.sunrise * 1000).getHours()
+                          ? 'Upcoming'
+                          : 'Complete'
+                        : 'Upcoming'}
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Sunset Component */}
+                <div className="bg-black/70 p-3 rounded-sm border border-purple-700/30 relative overflow-hidden group hover:border-purple-500 hover:bg-black/90 hover:shadow-[0_0_10px_rgba(147,51,234,0.15)] transition-all duration-300 cursor-pointer">
+                  <div className="absolute top-0 left-0 w-1 h-full bg-purple-500 group-hover:h-[105%] transition-all duration-500"></div>
+                  <div className="text-purple-400/90 text-xs mb-1 font-medium uppercase tracking-wider flex items-center">
+                    <Sunset className="h-3 w-3 mr-1 group-hover:text-purple-300 transition-colors duration-300" />
+                    <span className="group-hover:text-purple-300 transition-colors duration-300">Sunset</span>
+                  </div>
+                  <div className="text-white text-xl font-mono font-semibold group-hover:text-purple-300 transition-colors duration-300">
+                    {weatherData && weatherData.sys && weatherData.sys.sunset
+                      ? new Date(weatherData.sys.sunset * 1000).toLocaleTimeString('en-US', {
+                          hour: '2-digit',
+                          minute: '2-digit',
+                          hour12: timeFormat === '12h'
+                        })
+                      : '7:45 PM'}
+                  </div>
+                  <div className="mt-1 flex items-center justify-between">
+                    <div className="flex items-center">
+                      <div className="h-4 w-4 bg-purple-500/80 rounded-full mr-1.5 animate-pulse"></div>
+                      <span className="text-xs text-purple-400/80">Dusk</span>
+                    </div>
+                    <div className="text-[10px] font-mono text-purple-300/70">
+                      {weatherData && weatherData.sys && weatherData.sys.sunset
+                        ? new Date().getHours() < new Date(weatherData.sys.sunset * 1000).getHours()
+                          ? 'Upcoming'
+                          : 'Complete'
+                        : 'Upcoming'}
+                    </div>
                   </div>
                 </div>
               </div>

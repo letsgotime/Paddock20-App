@@ -11,7 +11,7 @@ import {
 } from '@/services/weatherStateManager';
 import { OneCallData, WeatherData, ForecastData } from '@/lib/weather';
 
-// Cache configuration
+// Cache configuration constants
 const PRIMARY_CACHE_TTL_MINUTES = 60; // 1 hour primary cache
 const SECONDARY_CACHE_TTL_HOURS = 8;  // 8 hour secondary cache
 const REFRESH_INTERVAL_MINUTES = 60;  // How often we auto-refresh
@@ -33,6 +33,8 @@ export interface AutomotiveWeatherData {
     humidity: number;
     description: string;
     is_daytime: boolean;
+    // Add UV index for display
+    uv_index?: number;
   };
   driving_conditions: {
     road_condition: string;
@@ -52,10 +54,17 @@ export interface AutomotiveWeatherData {
     tire_wear_impact: number;
     handling_adjustments: string;
   };
+  // Add sunrise and sunset times
+  sun_times?: {
+    sunrise: number;
+    sunset: number;
+    sunrise_formatted: string;
+    sunset_formatted: string;
+    day_length: string;
+  };
 }
 
 // Use the GeoLocation type for the context
-
 interface WeatherContextType {
   weatherData: WeatherData | null;
   oneCallData: OneCallData | null;
@@ -102,9 +111,6 @@ const DEFAULT_LOCATION: GeoLocation = {
   lon: -74.006
 };
 
-// Cache TTL in minutes (deprecated, use PRIMARY_CACHE_TTL_MINUTES instead)
-const CACHE_TTL_MINUTES = 60;
-
 // Provider component
 export const WeatherProvider: React.FC<{children: React.ReactNode}> = ({ children }) => {
   // State for weather data
@@ -146,6 +152,20 @@ export const WeatherProvider: React.FC<{children: React.ReactNode}> = ({ childre
     }
   }, []);
 
+  // Helper function to format time from Unix timestamp
+  const formatTime = (timestamp: number): string => {
+    const date = new Date(timestamp * 1000);
+    return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  };
+
+  // Helper function to calculate day length
+  const calculateDayLength = (sunrise: number, sunset: number): string => {
+    const dayLengthSeconds = sunset - sunrise;
+    const hours = Math.floor(dayLengthSeconds / 3600);
+    const minutes = Math.floor((dayLengthSeconds % 3600) / 60);
+    return `${hours}h ${minutes}m`;
+  };
+
   // Create custom automotive friendly weather data
   const processAutomotiveData = (
     weatherData: WeatherData | null, 
@@ -160,6 +180,15 @@ export const WeatherProvider: React.FC<{children: React.ReactNode}> = ({ childre
     // Get forecast summary
     const forecast = getForecastSummary(forecastData);
     
+    // Process sunrise/sunset times
+    const sunTimes = weatherData.sys ? {
+      sunrise: weatherData.sys.sunrise,
+      sunset: weatherData.sys.sunset,
+      sunrise_formatted: formatTime(weatherData.sys.sunrise),
+      sunset_formatted: formatTime(weatherData.sys.sunset),
+      day_length: calculateDayLength(weatherData.sys.sunrise, weatherData.sys.sunset)
+    } : undefined;
+    
     // Simplified weather data optimized for driving
     return {
       conditions: {
@@ -169,7 +198,8 @@ export const WeatherProvider: React.FC<{children: React.ReactNode}> = ({ childre
         feels_like: weatherData.main.feels_like,
         humidity: weatherData.main.humidity,
         description: weatherData.weather[0].description,
-        is_daytime: isCurrentlyDaytime(weatherData)
+        is_daytime: isCurrentlyDaytime(weatherData),
+        uv_index: oneCallData?.current?.uvi || 0
       },
       driving_conditions: {
         road_condition: drivingConditions.roadCondition,
@@ -188,7 +218,8 @@ export const WeatherProvider: React.FC<{children: React.ReactNode}> = ({ childre
         fuel_efficiency_impact: calculateFuelEfficiencyImpact(weatherData, oneCallData),
         tire_wear_impact: calculateTireWearImpact(weatherData, oneCallData, drivingConditions.roadCondition),
         handling_adjustments: getHandlingRecommendation(weatherData, drivingConditions.roadCondition)
-      }
+      },
+      sun_times: sunTimes
     };
   };
 
@@ -412,13 +443,6 @@ export const WeatherProvider: React.FC<{children: React.ReactNode}> = ({ childre
     } finally {
       setIsLoading(false);
     }
-  };
-
-  // Format cache age for display
-  const formatCacheAge = (ageInMinutes: number): string => {
-    if (ageInMinutes < 1) return "Just now";
-    if (ageInMinutes < 60) return `${Math.round(ageInMinutes)} minutes old`;
-    return `${Math.round(ageInMinutes / 60)} hours old`;
   };
 
   // Function to manually refresh weather
