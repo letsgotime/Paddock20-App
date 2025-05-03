@@ -52,41 +52,76 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       try {
         setLoading(true);
         
-        // DEVELOPMENT MODE ONLY: Create a default user for testing
-        // This bypasses real authentication for development purposes
-        console.log('DEVELOPMENT MODE: Creating default user for testing');
+        // Try to get the user from the server
+        const response = await fetch('/api/user', {
+          credentials: 'include' // Send cookies for authentication
+        });
         
-        // Create a default test user
-        const defaultUser: User = {
-          id: 1,
-          username: 'gavin',
-          email: 'gavin@gotime.com',
-          firstName: 'Gavin',
-          lastName: 'Brooks',
-          fullName: 'Gavin Brooks',
-          profileImage: null,
-          role: 'user'
-        };
-        
-        // Set the user and session
-        setUser(defaultUser);
-        setSession({ user: defaultUser });
-        console.log('DEV MODE: Using default test user:', defaultUser.username);
-        
-        // Optional: Try the real API call anyway (but ignore failures)
-        try {
-          const response = await fetch('/api/user');
-          if (response.ok) {
-            const userData = await response.json();
-            console.log('Successfully connected to real auth API', userData);
+        // If authenticated successfully
+        if (response.ok) {
+          const data = await response.json();
+          if (data.success && data.user) {
+            setUser(data.user);
+            setSession({ user: data.user });
+            console.log('Successfully authenticated user:', data.user.username);
+          } else {
+            console.log('No authenticated user found');
+            setUser(null);
+            setSession(null);
           }
-        } catch (apiErr) {
-          console.log('Using dev mode auth - real API unreachable');
+        } 
+        // If not authenticated or error
+        else {
+          console.log('Not authenticated or auth error');
+          setUser(null);
+          setSession(null);
+          
+          // Check if we're in development mode
+          if (process.env.NODE_ENV === 'development') {
+            console.log('DEV MODE: Authentication bypass enabled');
+            
+            // For development only - create a mocked user
+            const isDevelopment = true;
+            if (isDevelopment) {
+              console.log('DEVELOPMENT MODE: Creating fallback user for testing');
+              // Create a default test user
+              const defaultUser: User = {
+                id: 1,
+                username: 'gavin',
+                email: 'gavin@gotime.com',
+                firstName: 'Gavin',
+                lastName: 'Brooks',
+                fullName: 'Gavin Brooks',
+                profileImage: null,
+                role: 'user'
+              };
+              
+              // Set the user and session
+              setUser(defaultUser);
+              setSession({ user: defaultUser });
+              console.log('DEV MODE: Using default test user:', defaultUser.username);
+            }
+          }
         }
-        
       } catch (err) {
         console.error('Error in auth system:', err);
         setError('Failed to initialize authentication');
+        
+        // In development mode, still provide a fallback user
+        if (process.env.NODE_ENV === 'development') {
+          const defaultUser: User = {
+            id: 1,
+            username: 'gavin',
+            email: 'gavin@gotime.com',
+            firstName: 'Gavin',
+            lastName: 'Brooks',
+            fullName: 'Gavin Brooks',
+            profileImage: null,
+            role: 'user'
+          };
+          setUser(defaultUser);
+          setSession({ user: defaultUser });
+        }
       } finally {
         setLoading(false);
       }
