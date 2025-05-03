@@ -51,8 +51,8 @@ const sounds = {
 // Cache audio objects for better performance
 const audioCache: Record<string, HTMLAudioElement> = {};
 
-// User preferences for sound (defaulting to enabled)
-let soundEnabled = true;
+// User preferences for sound (defaulting to disabled for ambient sounds)
+let soundEnabled = false; // Default to off as requested
 let volume = 0.5; // 50% volume by default
 
 /**
@@ -64,8 +64,11 @@ export function initSoundService(): void {
     const soundPrefs = localStorage.getItem('paddock20_sound_preferences');
     if (soundPrefs) {
       const prefs = JSON.parse(soundPrefs);
-      soundEnabled = prefs.enabled !== undefined ? prefs.enabled : true;
+      soundEnabled = prefs.enabled !== undefined ? prefs.enabled : false; // Default to off if not specified
       volume = prefs.volume !== undefined ? prefs.volume : 0.5;
+    } else {
+      // If no preferences are stored, initialize with sounds disabled
+      saveSoundPreferences();
     }
     
     // Pre-load common sound effects
