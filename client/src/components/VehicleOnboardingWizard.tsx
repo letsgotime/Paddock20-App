@@ -753,7 +753,7 @@ const VehicleOnboardingWizard: React.FC = () => {
               <ChevronLeft size={20} className="mr-1" /> Back
             </button>
           ) : (
-            <div></div> {/* Empty div for spacing */}
+            <div>{/* Empty div for spacing */}</div>
           )}
           
           {isReviewStep ? (
