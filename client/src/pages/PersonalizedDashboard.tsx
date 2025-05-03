@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, Navigate } from 'react-router-dom';
 import F1TelemetryWeatherStation from '../components/F1TelemetryWeatherStation';
 import MoodEnergyTracker from '../components/MoodEnergyTracker.jsx';
 import WorldClockPanel from '../components/WorldClockPanel';
 import { Progress } from "@/components/ui/progress";
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { useAuthContext } from '../hooks/useAuthContext';
+import { useToast } from "@/hooks/use-toast";
 
 // Mock user data for demo purposes - this will be merged with actual user data when available
 const mockUserData = {
@@ -79,37 +80,61 @@ const mockUserData = {
 };
 
 const PersonalizedDashboard: React.FC = () => {
-  // Try to get auth context, but gracefully handle when it's not available
-  let user = null;
-  let displayName = 'Driver';
+  const { toast } = useToast();
+  
+  // Authentication check - use try/catch to handle when auth context isn't available
+  let userInfo = { user: null, isAuthenticated: false, displayName: 'Driver' };
   
   try {
-    // Attempt to get auth context
     const authContext = useAuthContext();
-    user = authContext?.user;
+    const user = authContext?.user;
     
-    // Use authentication data if available
     if (user) {
-      displayName = user.fullName || user.username || 'Driver';
+      userInfo = {
+        user,
+        isAuthenticated: true,
+        displayName: user.fullName || user.username || 'Driver'
+      };
+    } else {
+      // Show toast for unauthenticated users
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to access your dashboard",
+        variant: "destructive",
+      });
+      
+      // Return redirect component for unauthenticated users
+      return <Navigate to="/auth" replace />;
     }
   } catch (error) {
-    // Fallback when auth context isn't available
-    console.log('Auth context not available, using default values');
+    console.error('Auth context error:', error);
+    
+    // Show toast for context errors
+    toast({
+      title: "Authentication Error",
+      description: "Please sign in to access your dashboard",
+      variant: "destructive",
+    });
+    
+    // Return redirect component for context errors
+    return <Navigate to="/auth" replace />;
   }
   
+  // Destructure for easier use in component
+  const { user, displayName } = userInfo;
+  
+  // Component state
   const [userData, setUserData] = useState(mockUserData);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [greeting, setGreeting] = useState('');
-  const [mergedUserData, setMergedUserData] = useState<any>({
+  const [mergedUserData, setMergedUserData] = useState({
     ...mockUserData, 
     name: displayName // Use authenticated user's name
   });
 
-  // Only update user data if we have a valid user object
+  // Update user data when authentication changes
   useEffect(() => {
-    // Only attempt to use user data if we have it
     if (user) {
-      // When authentication status changes, update the user's display name
       setMergedUserData(prevData => ({
         ...prevData,
         name: user.fullName || user.username || 'Driver'
@@ -117,6 +142,7 @@ const PersonalizedDashboard: React.FC = () => {
     }
   }, [user]);
 
+  // Time-based greeting effect
   useEffect(() => {
     // Update greeting based on time of day
     const hours = currentTime.getHours();
@@ -336,306 +362,80 @@ const PersonalizedDashboard: React.FC = () => {
           <div className="bts-card">
             <div className="flex justify-between items-center mb-4">
               <h2 className="bts-header-green">Daily Disciplines</h2>
-              <Link to="/hustle-planner" className="text-sm text-green-400 hover:underline">Update</Link>
+              <Link to="/daily-disciplines" className="text-sm text-green-400 hover:underline">View All</Link>
             </div>
-            <div className="space-y-3">
-              {userData.dailyDisciplines.map(discipline => {
-                const isCompletedToday = new Date(discipline.lastCompleted).toDateString() === new Date().toDateString();
-                return (
-                  <div key={discipline.id} className="p-3 bg-black/40 rounded-lg">
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center">
-                        <div className="mr-3 w-8 h-8 rounded-full bg-gray-800 flex items-center justify-center">
-                          {discipline.type === 'Mental' && <span>🧠</span>}
-                          {discipline.type === 'Physical' && <span>💪</span>}
-                          {discipline.type === 'Gratitude' && <span>🙏</span>}
-                        </div>
-                        <div>
-                          <h3 className="text-white font-medium">{discipline.type}</h3>
-                          <p className="text-gray-400 text-xs">
-                            {discipline.streak} day{discipline.streak !== 1 ? 's' : ''} streak
-                          </p>
-                        </div>
-                      </div>
-                      {isCompletedToday ? (
-                        <span className="text-green-400 text-2xl">✓</span>
-                      ) : (
-                        <Link to="/hustle-planner" className="px-2 py-1 bg-blue-500/20 text-blue-400 rounded text-xs uppercase">
-                          Complete
-                        </Link>
-                      )}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* Upcoming Events */}
-          <div className="bts-card">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="bts-header-green">Upcoming Events</h2>
-              <Link to="/events" className="text-sm text-green-400 hover:underline">View All</Link>
-            </div>
-            {userData.upcomingEvents.length > 0 ? (
-              <div className="space-y-3">
-                {userData.upcomingEvents.map(event => (
-                  <div key={event.id} className="p-3 bg-black/40 rounded-lg">
-                    <div className="flex justify-between">
-                      <h3 className="text-white font-medium">{event.title}</h3>
-                      <span className="text-amber-400 text-sm">
-                        {new Date(event.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                      </span>
-                    </div>
-                    <p className="text-gray-400 text-sm">{event.location}</p>
-                  </div>
-                ))}
-              </div>
-            ) : (
-              <div className="text-center p-6 bg-black/20 rounded-lg">
-                <p className="text-gray-400">No upcoming events</p>
-                <Link to="/events" className="mt-2 text-sm text-green-400 hover:underline block">Find Events</Link>
-              </div>
-            )}
-          </div>
-
-          {/* Drive Stats & Analytics */}
-          <div className="bts-card">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="bts-header-green">Drive Analytics</h2>
-              <Link to="/drive-journal" className="text-sm text-green-400 hover:underline">View History</Link>
-            </div>
-            <div className="bg-black/30 p-3 rounded-lg mb-4 border border-gray-800">
-              <h3 className="text-white text-sm mb-2">Monthly Mileage - 6 Month Trend</h3>
-              <div className="h-32">
-                <ResponsiveContainer width="100%" height="100%">
-                  <LineChart data={userData.driveStats}>
-                    <XAxis dataKey="month" stroke="#374151" tick={{ fill: '#9CA3AF' }} tickLine={{ stroke: '#374151' }} />
-                    <YAxis stroke="#374151" tick={{ fill: '#9CA3AF' }} tickLine={{ stroke: '#374151' }} />
-                    <Tooltip 
-                      contentStyle={{ background: '#111111', border: '1px solid #374151' }}
-                      labelStyle={{ color: '#E5E7EB' }}
-                      formatter={(value) => [`${value} miles`, 'Distance']}
-                    />
-                    <Line type="monotone" dataKey="miles" stroke="#22c55e" strokeWidth={2} dot={{ stroke: '#22c55e', strokeWidth: 2, r: 3, fill: '#1F2937' }} />
-                  </LineChart>
-                </ResponsiveContainer>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-3 mb-4">
-              <div className="bg-black/30 p-3 rounded-lg border border-gray-800 flex flex-col">
-                <span className="text-gray-400 text-xs">This Month</span>
-                <span className="text-green-400 text-xl font-medium mt-1">683 miles</span>
-                <span className="text-xs text-green-300 mt-1">↑ 18% from last month</span>
-              </div>
-              <div className="bg-black/30 p-3 rounded-lg border border-gray-800 flex flex-col">
-                <span className="text-gray-400 text-xs">2025 Total</span>
-                <span className="text-blue-400 text-xl font-medium mt-1">1,935 miles</span>
-                <span className="text-xs text-blue-300 mt-1">37% of yearly goal</span>
-              </div>
-            </div>
-            <h3 className="text-white text-sm mb-2">Favorite Routes</h3>
-            <div className="space-y-2">
-              {userData.favoriteRoutes.map(route => (
-                <div key={route.id} className="p-3 bg-black/40 rounded-lg">
+            <div className="space-y-4">
+              {userData.dailyDisciplines.map(discipline => (
+                <div key={discipline.id} className="p-3 bg-black/40 rounded-lg transition">
                   <div className="flex justify-between">
                     <div>
-                      <div className="flex items-center">
-                        <h4 className="text-white text-sm font-medium">{route.name}</h4>
-                        <div className="ml-2 flex items-center">
-                          {[...Array(route.rating)].map((_, i) => (
-                            <span key={i} className="text-yellow-400 text-xs">★</span>
-                          ))}
-                        </div>
+                      <h3 className="text-white font-medium">{discipline.type}</h3>
+                      <div className="flex items-center text-xs mt-1">
+                        <span className="text-green-400 mr-2">🔥 {discipline.streak} day streak</span>
+                        <span className="text-gray-500">{discipline.totalCompletions} total</span>
                       </div>
-                      <p className="text-gray-400 text-xs">{route.distance}</p>
                     </div>
-                    <div className="text-right">
-                      <span className="text-gray-500 text-xs">Last driven</span>
-                      <p className="text-gray-300 text-xs">{new Date(route.lastDriven).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
-                    </div>
+                    <Link to="/daily-disciplines" className="bg-black/30 hover:bg-black/50 px-3 py-2 rounded-lg text-white text-sm transition">Complete</Link>
                   </div>
                 </div>
               ))}
             </div>
           </div>
           
-          {/* Recent Activity */}
-          <div className="bts-card">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="bts-header-green">Recent Activity</h2>
+          {/* Drive Stats Chart */}
+          <div className="lg:col-span-2 bts-card">
+            <h2 className="bts-header-green mb-4">Driving Stats</h2>
+            <div className="h-64">
+              <ResponsiveContainer width="100%" height="100%">
+                <LineChart data={userData.driveStats}>
+                  <XAxis dataKey="month" stroke="#6B7280" />
+                  <YAxis stroke="#6B7280" />
+                  <Tooltip 
+                    contentStyle={{ backgroundColor: '#111', border: '1px solid #333' }} 
+                    itemStyle={{ color: '#E5E7EB' }}
+                    labelStyle={{ color: '#E5E7EB' }}
+                  />
+                  <Line 
+                    type="monotone" 
+                    dataKey="miles" 
+                    name="Miles" 
+                    stroke="#08c519" 
+                    strokeWidth={2}
+                    dot={{ r: 4, strokeWidth: 2, fill: '#000' }}
+                    activeDot={{ r: 6, strokeWidth: 0, fill: '#08c519' }}
+                  />
+                </LineChart>
+              </ResponsiveContainer>
             </div>
-            <div className="space-y-2">
-              {userData.recentActivity.map(activity => (
-                <div key={activity.id} className="p-3 bg-black/40 rounded-lg">
-                  <div className="flex items-start">
-                    <div className="w-8 h-8 rounded-full flex items-center justify-center bg-gray-800 mr-3 flex-shrink-0">
-                      {activity.type === 'drive' && <span>🚗</span>}
-                      {activity.type === 'maintenance' && <span>🔧</span>}
-                      {activity.type === 'manifestation' && <span>⭐</span>}
-                      {activity.type === 'event' && <span>📅</span>}
-                      {activity.type === 'purchase' && <span>🛒</span>}
+          </div>
+          
+          {/* Manifestation Goals */}
+          <div className="lg:col-span-3 bts-card">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="bts-header-green">Manifestation Goals</h2>
+              <Link to="/manifestation-station" className="text-sm text-green-400 hover:underline">View All</Link>
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {userData.recentManifestationProgress.map(goal => (
+                <div key={goal.id} className="p-4 bg-black/30 rounded-lg border border-gray-800">
+                  <div className="flex justify-between items-center mb-2">
+                    <div className="flex items-center">
+                      <span className="text-2xl mr-2">{goal.emoji}</span>
+                      <h3 className="text-white font-medium">{goal.goal}</h3>
                     </div>
-                    <div className="flex-grow">
-                      <div className="flex justify-between">
-                        <p className="text-white text-sm">{activity.description}</p>
-                        <p className="text-gray-500 text-xs ml-2">{new Date(activity.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
-                      </div>
-                      {activity.details && (
-                        <div className="mt-1 text-xs px-2 py-1 bg-black/30 rounded border border-gray-800">
-                          {activity.type === 'drive' && (
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">Route: {activity.details?.route || 'Custom route'}</span>
-                              <span className="text-gray-400">Duration: {activity.details?.duration || '0 min'}</span>
-                            </div>
-                          )}
-                          {activity.type === 'maintenance' && (
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">At: {activity.details?.location || 'Unknown'}</span>
-                              <span className="text-gray-400">Cost: ${activity.details?.cost || 0}</span>
-                            </div>
-                          )}
-                          {activity.type === 'purchase' && (
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">{activity.details?.item || 'Item'}</span>
-                              <span className="text-gray-400">Cost: ${activity.details?.cost || 0}</span>
-                            </div>
-                          )}
-                          {activity.type === 'event' && (
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">Date: {new Date(activity.details?.eventDate || new Date()).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</span>
-                              <span className="text-gray-400">Fee: ${activity.details?.cost || 0}</span>
-                            </div>
-                          )}
-                          {activity.type === 'manifestation' && (
-                            <div className="flex justify-between">
-                              <span className="text-gray-400">Previous: ${activity.details?.oldAmount?.toLocaleString() || 0}</span>
-                              <span className="text-gray-400">New: ${activity.details?.newAmount?.toLocaleString() || 0}</span>
-                            </div>
-                          )}
-                        </div>
-                      )}
-                    </div>
+                    <span className="text-green-400 text-xs font-mono">${goal.savedAmount.toLocaleString()} / ${goal.targetAmount.toLocaleString()}</span>
+                  </div>
+                  <Progress value={goal.progress} className="h-2 bg-gray-800" />
+                  <div className="flex justify-between text-xs text-gray-400 mt-2">
+                    <span>${goal.monthlyContribution.toLocaleString()}/month</span>
+                    <span>ETA: {new Date(goal.projectedDate).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
                   </div>
                 </div>
               ))}
             </div>
-          </div>
-
-          {/* Maintenance Alerts */}
-          <div className="bts-card">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="bts-header-green">Maintenance Alerts</h2>
-              <Link to="/garage-vault" className="text-sm text-green-400 hover:underline">View All</Link>
+            <div className="mt-4 flex justify-center">
+              <Link to="/manifestation-station" className="bts-button">Set New Goal</Link>
             </div>
-            {userData.maintenanceAlerts.length > 0 ? (
-              <div className="space-y-3">
-                {userData.maintenanceAlerts.map(alert => {
-                  const vehicle = getVehicleById(alert.vehicleId);
-                  return (
-                    <Link to={`/vehicle-mods/${alert.vehicleId}`} key={alert.id} className="block p-3 bg-black/40 rounded-lg hover:bg-black/60 transition">
-                      <div className="flex justify-between">
-                        <h3 className="text-white font-medium">{alert.type}</h3>
-                        <span className="text-red-400 text-sm">
-                          Due: {new Date(alert.dueDate).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                        </span>
-                      </div>
-                      <p className="text-gray-400 text-sm">{vehicle?.nickname || `${vehicle?.year} ${vehicle?.make} ${vehicle?.model}`}</p>
-                    </Link>
-                  );
-                })}
-              </div>
-            ) : (
-              <div className="text-center p-6 bg-black/20 rounded-lg">
-                <p className="text-gray-400">No maintenance alerts</p>
-              </div>
-            )}
-          </div>
-
-          {/* Paddock Badges */}
-          <div className="bts-card">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="bts-header-green">Paddock Badges</h2>
-              <Link to="/membership" className="text-sm text-green-400 hover:underline">All Badges</Link>
-            </div>
-            <div className="grid grid-cols-3 gap-3">
-              {userData.badges.map(badge => (
-                <div key={badge.id} className="flex flex-col items-center p-3 bg-black/40 rounded-lg">
-                  <div className="text-3xl mb-2">{badge.icon}</div>
-                  <p className="text-white text-xs text-center font-medium">{badge.name}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Manifestation Progress */}
-          <div className="bts-card">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="bts-header-green">Manifestation Progress</h2>
-              <Link to="/manifestation-station" className="text-sm text-green-400 hover:underline">Full Details</Link>
-            </div>
-            {userData.recentManifestationProgress.length > 0 ? (
-              <div className="space-y-4">
-                {userData.recentManifestationProgress.map(goal => (
-                  <div key={goal.id} className="p-3 bg-black/40 rounded-lg">
-                    <div className="flex justify-between mb-2">
-                      <div className="flex items-center">
-                        <span className="mr-2 text-lg">{goal.emoji}</span>
-                        <h3 className="text-white font-medium">{goal.goal}</h3>
-                      </div>
-                      <div className="flex flex-col items-end">
-                        <span className="text-blue-400 text-sm font-medium">{goal.progress}%</span>
-                        <span className="text-xs text-gray-500">Target: ${goal.targetAmount?.toLocaleString() || 0}</span>
-                      </div>
-                    </div>
-                    <div className="w-full bg-gray-700 rounded-full h-2.5 mb-2">
-                      <div 
-                        className="bg-gradient-to-r from-blue-500 to-blue-400 h-2.5 rounded-full" 
-                        style={{ width: `${goal.progress}%` }}
-                      ></div>
-                    </div>
-                    <div className="flex justify-between mt-3 pt-2 border-t border-gray-800 text-xs">
-                      <div>
-                        <span className="text-gray-400">Saved: </span>
-                        <span className="text-blue-300 font-mono">${goal.savedAmount?.toLocaleString() || 0}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-400">Monthly: </span>
-                        <span className="text-green-400 font-mono">${goal.monthlyContribution?.toLocaleString() || 0}</span>
-                      </div>
-                      <div>
-                        <span className="text-gray-400">ETA: </span>
-                        <span className="text-amber-400">{new Date(goal.projectedDate || new Date()).toLocaleDateString('en-US', { month: 'short', year: 'numeric' })}</span>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-                {userData.manifestationHistory.length > 0 && (
-                  <div className="bg-black/30 p-3 rounded-lg mt-4">
-                    <h3 className="text-gray-400 text-xs mb-2">Patek Philippe Savings History</h3>
-                    <div className="h-28">
-                      <ResponsiveContainer width="100%" height="100%">
-                        <LineChart data={userData.manifestationHistory}>
-                          <XAxis dataKey="month" stroke="#374151" tick={{ fill: '#9CA3AF' }} tickLine={{ stroke: '#374151' }} />
-                          <YAxis stroke="#374151" tick={{ fill: '#9CA3AF' }} tickLine={{ stroke: '#374151' }} tickFormatter={(value) => `$${value/1000}k`} />
-                          <Tooltip 
-                            contentStyle={{ background: '#111111', border: '1px solid #374151' }}
-                            labelStyle={{ color: '#E5E7EB' }}
-                            formatter={(value) => [`$${value.toLocaleString()}`, 'Amount']}
-                          />
-                          <Line type="monotone" dataKey="amount" stroke="#3B82F6" strokeWidth={2} dot={{ stroke: '#3B82F6', strokeWidth: 2, r: 3, fill: '#1F2937' }} />
-                        </LineChart>
-                      </ResponsiveContainer>
-                    </div>
-                  </div>
-                )}
-              </div>
-            ) : (
-              <div className="text-center p-6 bg-black/20 rounded-lg">
-                <p className="text-gray-400">No active manifestation goals</p>
-                <Link to="/manifestation-station" className="mt-2 text-sm text-green-400 hover:underline block">Create a Goal</Link>
-              </div>
-            )}
           </div>
         </div>
       </div>
