@@ -24,14 +24,73 @@ const UserProfileHub: React.FC = () => {
   useEffect(() => {
     // If we don't have a profile yet, load the base profile
     if (!profile && !initialLoadComplete) {
-      console.log("No profile found, loading initial profile");
-      loadDemoProfile(); // Load base profile structure
+      console.log("No profile found, checking for user data");
+      
+      // Get user data from authentication if available
+      try {
+        // Check localStorage for onboarding data
+        const onboardingData = localStorage.getItem('userOnboardingData');
+        if (onboardingData) {
+          console.log("Found user onboarding data, using that instead of demo profile");
+          const userData = JSON.parse(onboardingData);
+          
+          // Update the profile with user's real information
+          const realUserProfile = {
+            ...userData,
+            // Keep only the user-specific fields from userData and reset everything else
+            id: '1', // Keep the ID structure similar
+            memberSince: new Date().toISOString().split('T')[0],
+            lastActive: new Date().toISOString(),
+            vehicles: [], // Will be populated from vehicle onboarding
+            statistics: {
+              totalDrives: 0,
+              totalMiles: 0,
+              avgDriveTime: 0,
+              favoriteRoads: [],
+              achievements: 0,
+              goalsCompleted: 0,
+              eventsAttended: 0
+            },
+            drives: [],
+            goals: [],
+            events: [],
+            gallery: [],
+            preferences: {
+              theme: 'dark',
+              notifications: true,
+              timeFormat: '24h',
+              dateFormat: 'mdy',
+              soundEnabled: true
+            },
+            weatherPreferences: {
+              defaultLocation: {
+                lat: 33.7490,
+                lon: -84.3880,
+                name: 'Atlanta, GA'
+              },
+              units: 'imperial',
+              savedLocations: []
+            }
+          };
+          
+          // Reset and then set the profile to use the real user data
+          resetProfile();
+          useUserProfileStore.getState().setProfile(realUserProfile);
+        } else {
+          console.log("No user onboarding data found, loading demo profile as fallback");
+          loadDemoProfile(); // Load base profile structure as fallback
+        }
+      } catch (error) {
+        console.error("Error loading user profile:", error);
+        loadDemoProfile(); // Fallback to demo profile on error
+      }
+      
       setInitialLoadComplete(true);
     }
     
     // Log page view via console
     console.log('User visited: UserProfileHub');
-  }, [profile, loadDemoProfile, initialLoadComplete]);
+  }, [profile, loadDemoProfile, resetProfile, initialLoadComplete]);
   
   // Sync active vehicle with profile when it changes
   useEffect(() => {

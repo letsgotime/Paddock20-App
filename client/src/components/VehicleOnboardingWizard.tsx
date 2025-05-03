@@ -370,7 +370,30 @@ const VehicleOnboardingWizard: React.FC = () => {
     setIsSubmitting(true);
     
     try {
-      // Save the vehicle data to localStorage first
+      // Get current user data or create new user data structure
+      let userData = localStorage.getItem('userOnboardingData');
+      let userProfile = userData ? JSON.parse(userData) : {
+        username: 'driver1',
+        displayName: '',
+        membershipLevel: 'free',
+        bio: 'Passionate driver with a love for cars and the open road.',
+        location: '',
+      };
+      
+      // If this is the first vehicle, extract some user details from the vehicle
+      if (!userProfile.displayName && vehicleData.nickname) {
+        userProfile.displayName = vehicleData.nickname.split(' ')[0]; // Use first part of nickname as display name
+      }
+      
+      // Update user profile with vehicle data (if location not set, use the vehicle's location)
+      if (!userProfile.location && vehicleData.purchaseLocation) {
+        userProfile.location = vehicleData.purchaseLocation;
+      }
+      
+      // Save the updated user data first
+      localStorage.setItem('userOnboardingData', JSON.stringify(userProfile));
+      
+      // Save the vehicle data to localStorage 
       localStorage.setItem('vehicleProfile', JSON.stringify(vehicleData));
       
       // Add the vehicle using the context
@@ -414,10 +437,24 @@ const VehicleOnboardingWizard: React.FC = () => {
       
       console.log('Vehicle added and synced with driver profile (two-way integration):', vehicleData.make, vehicleData.model);
       
+      // Reset the profile to load the new user data
+      try {
+        // Force the profile system to rebuild itself from the updated onboarding data
+        const { resetProfile } = useUserProfileStore.getState();
+        resetProfile();
+        
+        // Reload the page to ensure all systems pick up the new data
+        setTimeout(() => {
+          window.location.reload();
+        }, 1500);
+      } catch (err) {
+        console.error('Error refreshing profile:', err);
+      }
+      
       // Show success message
       toast({
         title: 'Vehicle Added Successfully',
-        description: 'Your vehicle has been added to the Garage Vault and Driver Profile with two-way integration',
+        description: 'Your vehicle has been added to your profile and will be available across all Paddock20 features',
         variant: 'default'
       });
       
