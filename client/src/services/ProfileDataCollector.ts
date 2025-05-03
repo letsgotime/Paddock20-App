@@ -381,6 +381,172 @@ class ProfileDataCollector {
   }
   
   /**
+   * Archives a vehicle when it's been sold or no longer active
+   * Moves the vehicle to archived status and triggers appropriate events
+   * @param vehicleId ID of the vehicle to archive
+   * @param saleData Optional sale data if the vehicle was sold
+   * @returns The archived vehicle data or null if failed
+   */
+  static archiveVehicle(vehicleId: string, saleData?: {
+    saleDate: string;
+    salePrice: number;
+    buyer?: string;
+    notes?: string;
+  }): any {
+    console.log(`Archiving vehicle with ID: ${vehicleId}`, saleData ? 'with sale data' : '');
+    const { profile, updateVehicle } = this.store;
+    
+    if (!profile) {
+      console.warn('Cannot archive vehicle: No profile found');
+      return null;
+    }
+    
+    // Find the vehicle to archive
+    const vehicleToArchive = profile.vehicles.find((v: VehicleData) => v.id === vehicleId);
+    if (!vehicleToArchive) {
+      console.warn(`Cannot archive vehicle: Vehicle with ID ${vehicleId} not found`);
+      return null;
+    }
+    
+    // Update the vehicle with archived status
+    const archivedVehicle = {
+      ...vehicleToArchive,
+      status: 'archived',
+      archivedAt: new Date().toISOString(),
+      saleData: saleData || null
+    };
+    
+    // Update in profile store
+    updateVehicle(vehicleId, {
+      status: 'archived',
+      archivedAt: new Date().toISOString(),
+      saleData: saleData || null,
+      _skipBroadcast: true
+    });
+    
+    // Broadcast the archival to all components
+    console.log(`Broadcasting vehicle archival: ${vehicleToArchive.make} ${vehicleToArchive.model}`);
+    
+    // Create a custom event for the archival
+    const event = new CustomEvent('vehicle-data-update', {
+      detail: {
+        action: 'archive',
+        vehicleId: vehicleId,
+        vehicle: archivedVehicle,
+        saleData,
+        source: 'ProfileDataCollector',
+        timestamp: new Date().toISOString()
+      }
+    });
+    
+    // Dispatch to all listening components
+    window.dispatchEvent(event);
+    
+    // Target specific components with specialized events
+    
+    // Garage Vault
+    window.dispatchEvent(new CustomEvent('garage-vault-vehicle-update', {
+      detail: { 
+        action: 'archive',
+        vehicleId: vehicleId,
+        vehicle: archivedVehicle,
+        saleData
+      }
+    }));
+    
+    // JuiceBox component
+    window.dispatchEvent(new CustomEvent('juice-box-vehicle-update', {
+      detail: { 
+        action: 'archive',
+        vehicleId: vehicleId,
+        saleData
+      }
+    }));
+    
+    // User Profile Hub
+    window.dispatchEvent(new CustomEvent('profile-vehicle-update', {
+      detail: { 
+        action: 'archive',
+        vehicleId: vehicleId,
+        saleData
+      }
+    }));
+    
+    return archivedVehicle;
+  }
+  
+  /**
+   * Restores a previously archived vehicle
+   * @param vehicleId ID of the vehicle to restore
+   * @returns The restored vehicle data or null if failed
+   */
+  static restoreArchivedVehicle(vehicleId: string): any {
+    console.log(`Restoring archived vehicle with ID: ${vehicleId}`);
+    const { profile, updateVehicle } = this.store;
+    
+    if (!profile) {
+      console.warn('Cannot restore vehicle: No profile found');
+      return null;
+    }
+    
+    // Find the vehicle to restore
+    const vehicleToRestore = profile.vehicles.find((v: VehicleData) => v.id === vehicleId);
+    if (!vehicleToRestore) {
+      console.warn(`Cannot restore vehicle: Vehicle with ID ${vehicleId} not found`);
+      return null;
+    }
+    
+    if (vehicleToRestore.status !== 'archived') {
+      console.warn(`Vehicle with ID ${vehicleId} is not archived`);
+      return vehicleToRestore;
+    }
+    
+    // Update the vehicle with active status
+    const restoredVehicle = {
+      ...vehicleToRestore,
+      status: 'active',
+      archivedAt: undefined,
+      saleData: undefined
+    };
+    
+    // Update in profile store
+    updateVehicle(vehicleId, {
+      status: 'active',
+      archivedAt: undefined,
+      saleData: undefined,
+      _skipBroadcast: true
+    });
+    
+    // Broadcast the restoration to all components
+    console.log(`Broadcasting vehicle restoration: ${vehicleToRestore.make} ${vehicleToRestore.model}`);
+    
+    // Create a custom event for the restoration
+    const event = new CustomEvent('vehicle-data-update', {
+      detail: {
+        action: 'restore',
+        vehicleId: vehicleId,
+        vehicle: restoredVehicle,
+        source: 'ProfileDataCollector',
+        timestamp: new Date().toISOString()
+      }
+    });
+    
+    // Dispatch to all listening components
+    window.dispatchEvent(event);
+    
+    // Target specific components with specialized events
+    window.dispatchEvent(new CustomEvent('garage-vault-vehicle-update', {
+      detail: { 
+        action: 'restore',
+        vehicleId: vehicleId,
+        vehicle: restoredVehicle
+      }
+    }));
+    
+    return restoredVehicle;
+  }
+
+  /**
    * Deletes a vehicle from the user's profile
    * Also broadcasts the deletion to all components for two-way integration
    * @param vehicleId ID of the vehicle to delete
