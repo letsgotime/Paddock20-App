@@ -100,7 +100,7 @@ const EventsPage: React.FC = () => {
       {/* Hero Section */}
       <div className="py-8">
         <div className="container mx-auto px-4">
-          <h1 className="text-4xl font-bold text-blue-500 mb-4 font-orbitron">Paddock20 Events</h1>
+          <h1 className="text-4xl font-bold text-blue-500 mb-4 font-orbitron">P20 Events & Meetups</h1>
           <p className="text-gray-300 max-w-3xl mb-8">
             Discover exclusive automotive events curated for Paddock20 members. From high-performance track days 
             to exclusive car shows and private auctions - connect with fellow enthusiasts and showcase your prized vehicles.

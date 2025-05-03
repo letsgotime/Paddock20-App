@@ -43,6 +43,8 @@ export function getPageTitleFromPath(path: string): string {
     'weather': 'Weather',
     'drive-journal': 'Drive Journal',
     'route-planner': 'Route Planner',
+    'events': 'P20 Events & Meetups',
+    'events-page': 'P20 Events & Meetups',
   };
   
   // Check for special cases first
