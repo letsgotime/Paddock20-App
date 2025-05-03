@@ -262,8 +262,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Initialize the API key to use - either user provided or default
       const apiKey = userProvidedOpenWeatherKey || OPENWEATHER_API_KEY;
       
+      // Log for debugging
+      console.log(`Using OpenWeather API key: ${apiKey}`);
+      console.log(`OpenWeather API key from env: ${process.env.OPENWEATHER_API_KEY}`);
+      
       // Make weather API request
       const weatherUrl = `https://api.openweathermap.org/data/2.5/weather?lat=${lat}&lon=${lon}&units=${units}&appid=${apiKey}`;
+      console.log(`Making request to: ${weatherUrl}`);
       const weatherResponse = await fetch(weatherUrl);
       if (!weatherResponse.ok) {
         throw new Error(`Weather API error: ${weatherResponse.status}`);

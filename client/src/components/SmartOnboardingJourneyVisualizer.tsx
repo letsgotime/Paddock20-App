@@ -170,24 +170,28 @@ export default function SmartOnboardingJourneyVisualizer({
     
     const allCompleted = steps.length > 0 && steps.every(step => step.completed);
     
-    if (allCompleted && !profile.onboardingComplete) {
-      // Update the profile
-      const { updateProfile } = useUserProfileStore.getState();
+    if (allCompleted && profile.onboardingComplete === undefined) {
+      // Get the update function directly to avoid re-rendering loop
+      const updateProfile = useUserProfileStore.getState().updateProfile;
+      
+      // Add a _skipBroadcast flag to prevent circular updates
       updateProfile({ 
         onboardingComplete: true,
         hasViewedOnboarding: true,
-        lastActive: new Date().toISOString()
+        lastActive: new Date().toISOString(),
+        _skipBroadcast: true
       });
       
-      // Record activity in rewards system
+      // Record activity in rewards system with source tracking to prevent loops
       EngagementRewardsService.recordActivity(
         'profile_updated',
         'Completed onboarding process',
-        'onboarding'
+        'onboarding',
+        { source: 'SmartOnboardingJourneyVisualizer' }
       );
       
-      // Update last active timestamp
-      ProfileDataCollector.updateLastActive();
+      // Update last active timestamp with source tracking
+      ProfileDataCollector.updateLastActive('SmartOnboardingJourneyVisualizer');
     }
   }, [steps, profile]);
   
@@ -199,9 +203,12 @@ export default function SmartOnboardingJourneyVisualizer({
     
     console.log('Syncing all onboarded data to site-wide components...');
     
+    // Use a source identifier to prevent circular references
+    const SOURCE = 'SmartOnboardingJourneyVisualizer_syncAllData';
+    
     // Sync vehicle data
     if (vehicles.length > 0) {
-      ProfileDataCollector.syncAllVehicles(vehicles);
+      ProfileDataCollector.syncAllVehicles(vehicles, SOURCE);
     }
     
     // Sync driver profile data
@@ -209,7 +216,7 @@ export default function SmartOnboardingJourneyVisualizer({
       window.dispatchEvent(new CustomEvent('profile-update', {
         detail: {
           profile,
-          source: 'SmartOnboardingJourneyVisualizer'
+          source: SOURCE
         }
       }));
     }
@@ -219,7 +226,7 @@ export default function SmartOnboardingJourneyVisualizer({
       window.dispatchEvent(new CustomEvent('location-update', {
         detail: {
           location: profile.location,
-          source: 'SmartOnboardingJourneyVisualizer'
+          source: SOURCE
         }
       }));
     }
@@ -229,16 +236,17 @@ export default function SmartOnboardingJourneyVisualizer({
       window.dispatchEvent(new CustomEvent('goals-update', {
         detail: {
           goals: profile.goals,
-          source: 'SmartOnboardingJourneyVisualizer'
+          source: SOURCE
         }
       }));
     }
     
-    // Mark that we've viewed onboarding
-    const { updateProfile } = useUserProfileStore.getState();
+    // Mark that we've viewed onboarding (with _skipBroadcast flag to prevent loops)
+    const updateProfile = useUserProfileStore.getState().updateProfile;
     updateProfile({ 
       hasViewedOnboarding: true,
-      lastActive: new Date().toISOString()
+      lastActive: new Date().toISOString(),
+      _skipBroadcast: true
     });
   };
   

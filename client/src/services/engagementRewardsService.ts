@@ -349,30 +349,37 @@ class EngagementRewardsService {
   static recordActivity(
     activityType: ActivityType,
     description: string,
-    relatedEntityId?: string
+    relatedEntityId?: string,
+    options?: { source?: string, _skipBroadcast?: boolean }
   ): RewardActivity {
-    const { profile, updateProfile } = this.store;
+    // Extract source information to prevent circular updates
+    const source = options?.source || null;
+    const skipBroadcast = options?._skipBroadcast || false;
     
-    if (!profile) {
+    // Get store access directly to avoid hooks in non-component context
+    const storeState = this.store;
+    
+    if (!storeState.profile) {
       console.warn('Cannot record activity: No profile found');
       return null;
     }
     
     const pointsEarned = ACTIVITY_POINTS[activityType] || 0;
     
-    // Create the activity record
+    // Create the activity record with source tracking
     const activity: RewardActivity = {
       id: `activity-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`,
       timestamp: new Date().toISOString(),
       type: activityType,
       description,
       pointsEarned,
-      relatedEntityId
+      relatedEntityId,
+      source // Track which component initiated this activity
     };
     
     // Update user's records
     const updatedRewards = {
-      ...(profile.rewards || {
+      ...(storeState.profile.rewards || {
         totalPoints: 0,
         level: 1,
         activities: [],
