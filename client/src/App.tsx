@@ -83,8 +83,8 @@ import TermsOfService from './pages/TermsOfService';
 import BetaAgreement from './pages/BetaAgreement';
 
 function App() {
-  // TEMPORARY: Force preview mode to bypass auth
-  const previewMode = true;
+  // Require proper authentication - no preview mode
+  const previewMode = false;
   
   // State to track if the user has completed onboarding
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(() => {

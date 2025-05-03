@@ -76,51 +76,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(null);
           setSession(null);
           
-          // Check if we're in development mode
-          if (process.env.NODE_ENV === 'development') {
-            console.log('DEV MODE: Authentication bypass enabled');
-            
-            // For development only - create a mocked user
-            const isDevelopment = true;
-            if (isDevelopment) {
-              console.log('DEVELOPMENT MODE: Creating fallback user for testing');
-              // Create a default test user
-              const defaultUser: User = {
-                id: 1,
-                username: 'gavin',
-                email: 'gavin@gotime.com',
-                firstName: 'Gavin',
-                lastName: 'Brooks',
-                fullName: 'Gavin Brooks',
-                profileImage: null,
-                role: 'user'
-              };
-              
-              // Set the user and session
-              setUser(defaultUser);
-              setSession({ user: defaultUser });
-              console.log('DEV MODE: Using default test user:', defaultUser.username);
-            }
+          // Don't create fallback users - authentication must be secure
+          if (window.location.pathname !== '/auth') {
+            console.log('Redirecting to authentication page');
           }
         }
       } catch (err) {
         console.error('Error in auth system:', err);
         setError('Failed to initialize authentication');
+        setUser(null);
+        setSession(null);
         
-        // In development mode, still provide a fallback user
-        if (process.env.NODE_ENV === 'development') {
-          const defaultUser: User = {
-            id: 1,
-            username: 'gavin',
-            email: 'gavin@gotime.com',
-            firstName: 'Gavin',
-            lastName: 'Brooks',
-            fullName: 'Gavin Brooks',
-            profileImage: null,
-            role: 'user'
-          };
-          setUser(defaultUser);
-          setSession({ user: defaultUser });
+        // Redirect to auth page on error if not already there
+        if (window.location.pathname !== '/auth') {
+          window.location.href = '/auth';
         }
       } finally {
         setLoading(false);
