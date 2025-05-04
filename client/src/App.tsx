@@ -254,13 +254,8 @@ function App() {
                       {/* GoTime Motorsports logo with navigation and sound controls - always fixed to bottom */}
                       <FixedSoundBar />
                       
-                      {/* AI Support Chatbot - Available globally, moved above sound controls */}
+                      {/* AI Support Chatbot - Available globally */}
                       {(effectiveSession || previewMode) && <SupportChatbot />}
-                      
-                      {/* Sound Controls Panel - Fixed to the right side */}
-                      <div className="fixed right-4 bottom-20 z-[998] w-64">
-                        <SoundControlPanel />
-                      </div>
 
                       {/* Main content area - adjusted for fixed header at top and fixed footer at bottom */}
                       <main id={MAIN_CONTENT_ID} className="container mx-auto px-4 mt-[60px] pb-[70px]" tabIndex={-1}>

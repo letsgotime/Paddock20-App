@@ -205,41 +205,84 @@ const FixedSoundBar: React.FC = () => {
           {soundEnabled ? <Volume2 size={16} /> : <VolumeX size={16} />}
         </button>
         
-        {/* Sound settings dropdown menu */}
+        {/* Enhanced Sound settings dropdown menu - Combined with SoundControlPanel functionality */}
         {showSoundMenu && (
           <div 
             ref={soundMenuRef}
-            className="absolute bottom-full right-0 mb-2 bg-gray-900 border border-blue-900/50 rounded-md shadow-lg p-3 min-w-[180px] z-50"
+            className="absolute bottom-full right-0 mb-2 bg-gray-900 border border-blue-900/50 rounded-md shadow-lg p-3 min-w-[250px] z-50"
           >
-            <div className="text-sm text-blue-400 border-b border-blue-900/50 pb-1 mb-2">Sound Settings</div>
+            <div className="text-sm text-blue-400 border-b border-blue-900/50 pb-1 mb-2">Sound Controls</div>
             
             {/* Sound effects toggle */}
-            <button 
-              onClick={toggleSound}
-              className="flex items-center justify-between w-full text-sm text-gray-300 hover:text-white py-1"
-            >
-              <span className="flex items-center">
+            <div className="flex items-center justify-between mb-2">
+              <span className="flex items-center text-sm text-gray-300">
                 <Volume2 size={14} className="mr-2" />
                 Sound Effects
               </span>
-              <span className={`px-2 py-0.5 rounded ${soundEnabled ? 'bg-green-900 text-green-400' : 'bg-gray-800 text-gray-500'}`}>
+              <SoundButton
+                className={`px-2 py-0.5 rounded text-xs ${soundEnabled ? 'bg-green-900 text-green-400' : 'bg-gray-800 text-gray-500'}`}
+                onClick={toggleSound}
+                sound="ui_success"
+              >
                 {soundEnabled ? 'ON' : 'OFF'}
-              </span>
-            </button>
+              </SoundButton>
+            </div>
             
             {/* Ambient sound toggle */}
-            <button 
-              onClick={toggleAmbient}
-              className="flex items-center justify-between w-full text-sm text-gray-300 hover:text-white py-1 mt-1"
-            >
-              <span className="flex items-center">
+            <div className="flex items-center justify-between mb-2">
+              <span className="flex items-center text-sm text-gray-300">
                 <Music2 size={14} className="mr-2" />
                 Ambient Sounds
               </span>
-              <span className={`px-2 py-0.5 rounded ${ambientEnabled ? 'bg-green-900 text-green-400' : 'bg-gray-800 text-gray-500'}`}>
+              <SoundButton
+                className={`px-2 py-0.5 rounded text-xs ${ambientEnabled ? 'bg-green-900 text-green-400' : 'bg-gray-800 text-gray-500'}`}
+                onClick={toggleAmbient}
+                sound="ui_success"
+                disabled={!soundEnabled}
+              >
                 {ambientEnabled ? 'ON' : 'OFF'}
-              </span>
-            </button>
+              </SoundButton>
+            </div>
+            
+            {/* Master volume slider */}
+            <div className="mb-2">
+              <div className="flex justify-between text-xs text-gray-400 mb-1">
+                <span>Master Volume</span>
+                <span>{volume}%</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="100"
+                value={volume}
+                onChange={(e) => handleVolumeChange(parseInt(e.target.value))}
+                disabled={!soundEnabled}
+                className="w-full h-1.5 bg-gray-700 rounded-full appearance-none cursor-pointer"
+                style={{
+                  background: soundEnabled 
+                    ? `linear-gradient(to right, #3b82f6 ${volume}%, #374151 ${volume}%)` 
+                    : '#374151'
+                }}
+              />
+            </div>
+            
+            {/* Sound test buttons */}
+            <div className="grid grid-cols-2 gap-2 mb-2">
+              <SoundButton
+                className="w-full px-2 py-1 text-xs rounded bg-blue-900/20 hover:bg-blue-900/40 text-blue-400"
+                sound="ui_click"
+                disabled={!soundEnabled}
+              >
+                Test UI Sound
+              </SoundButton>
+              <SoundButton
+                className="w-full px-2 py-1 text-xs rounded bg-blue-900/20 hover:bg-blue-900/40 text-blue-400"
+                sound="notification"
+                disabled={!soundEnabled}
+              >
+                Test Notification
+              </SoundButton>
+            </div>
             
             {/* Sound library link */}
             <Link 
