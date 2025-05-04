@@ -122,11 +122,21 @@ const FixedSoundBar: React.FC = () => {
 
   const handleHomeClick = () => {
     if (soundEnabled) playSound('ui_success');
+    
+    // Update navigation history when clicking home link
+    const newHistory = [...navigationHistory.slice(0, currentHistoryIndex + 1), '/'];
+    setNavigationHistory(newHistory);
+    setCurrentHistoryIndex(newHistory.length - 1);
   };
 
   const handleSoundLibraryClick = () => {
     if (soundEnabled) playSound('ui_click');
     setShowSoundMenu(false);
+    
+    // Update navigation history when clicking sound library link
+    const newHistory = [...navigationHistory.slice(0, currentHistoryIndex + 1), '/sound-library'];
+    setNavigationHistory(newHistory);
+    setCurrentHistoryIndex(newHistory.length - 1);
   };
 
   const toggleSoundMenu = () => {
