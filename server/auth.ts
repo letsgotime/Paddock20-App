@@ -37,6 +37,9 @@ declare global {
       stripeCustomerId: string | null;
       stripeSubscriptionId: string | null;
       onboardingCompleted: boolean;
+      twoFactorEnabled: boolean;
+      twoFactorSecret: string | null;
+      twoFactorBackupCodes: string[] | null;
       createdAt: Date;
       updatedAt: Date | null;
     }
@@ -310,6 +313,35 @@ export function setupAuth(app: Express) {
         });
       }
       
+      // Check if user has two-factor authentication enabled
+      if (user.twoFactorEnabled) {
+        // Store temporary 2FA session data
+        req.session.temp2FA = {
+          userId: user.id,
+          username: user.username,
+          remember: Boolean(req.body.remember)
+        };
+        
+        // Log 2FA challenge
+        storage.createAuthLog({
+          userId: user.id,
+          action: 'login_2fa_required',
+          status: 'pending',
+          ipAddress: req.ip || null,
+          userAgent: req.get('User-Agent') || null,
+          details: { requestedAt: new Date() }
+        }).catch(err => console.error('Failed to log 2FA attempt:', err));
+        
+        // Return response indicating 2FA is required
+        return res.json({
+          success: true,
+          requireTwoFactor: true, 
+          message: "Two-factor authentication required",
+          username: user.username
+        });
+      }
+      
+      // Normal login flow (no 2FA)
       req.login(user, async (loginErr) => {
         if (loginErr) {
           console.error('Session creation error:', loginErr);
@@ -329,7 +361,19 @@ export function setupAuth(app: Express) {
             expiresAt: new Date(Date.now() + cookieMaxAge),
             ipAddress: req.ip || null,
             userAgent: req.get('User-Agent') || null
-            // Removed lastActive as it's not in the schema
+          });
+          
+          // Update last login time
+          await storage.updateUserLastLogin(user.id);
+          
+          // Log successful login
+          await storage.createAuthLog({
+            userId: user.id,
+            action: 'login',
+            status: 'success',
+            ipAddress: req.ip || null,
+            userAgent: req.get('User-Agent') || null,
+            details: {}
           });
         } catch (sessionError) {
           // Non-blocking - continue even if session tracking fails

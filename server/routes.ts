@@ -235,6 +235,8 @@ async function checkWeatherApiHealth(): Promise<boolean> {
 import twoFactorRoutes from './routes/twoFactorRoutes';
 
 export async function registerRoutes(app: Express): Promise<Server> {
+  // Register the Two-Factor Authentication Routes
+  app.use(twoFactorRoutes);
   // Setup user authentication system
   setupAuth(app);
   
