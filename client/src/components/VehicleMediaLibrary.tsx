@@ -4,7 +4,7 @@ import {
   Download, Share2, Search, Filter, ChevronDown,
   Trash2, Eye, Edit, Plus, Grid, List, ExternalLink
 } from 'lucide-react';
-import { Vehicle } from '../contexts/VehicleContext';
+import { Vehicle } from '../hooks/useVehicle';
 
 // Define media item types
 export interface MediaItem {

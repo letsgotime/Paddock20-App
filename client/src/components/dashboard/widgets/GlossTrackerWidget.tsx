@@ -1,5 +1,5 @@
 import React from 'react';
-import { useVehicle } from '@/contexts/VehicleContext';
+import { useVehicle } from '@/hooks/useVehicle';
 import { Droplets, Calendar, CheckCircle, PlusCircle, AlertTriangle } from 'lucide-react';
 
 const GlossTrackerWidget: React.FC = () => {

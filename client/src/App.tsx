@@ -38,6 +38,8 @@ import EBooksPage from "./pages/eBooksPage";
 import Paddock20HomePage from "./pages/Paddock20HomePage";
 import ProductOrganizerPage from "./pages/ProductOrganizerPage"; // Import the new page
 import UserProfileHubPage from "./pages/UserProfileHubPage"; // Import our new User Profile Hub
+import GaragePage from "./pages/GaragePage"; // Import our new Garage Page
+import AddVehiclePage from "./pages/AddVehiclePage"; // Import our new Add Vehicle Page
 import FixedSoundBar from "./components/FixedSoundBar";
 import Footer from "./components/Footer";
 import { WeatherProvider } from "./contexts/ConsolidatedWeatherContext";
@@ -304,8 +306,11 @@ function App() {
                           <Route path="/garage-vault" element={<ProtectedRoute><GarageVaultPage /></ProtectedRoute>} />
                           {/* New GoTime Garage Vault - Enhanced F1-style vehicle management */}
                           <Route path="/gotime-garage" element={<ProtectedRoute><GoTimeGarageVault /></ProtectedRoute>} />
-                          {/* Legacy garage route redirects to new Garage Vault structure */}
-                          <Route path="/garage" element={<Navigate to="/garage-vault" replace />} />
+                          {/* Garage Vehicle Management System */}
+                          <Route path="/garage" element={<ProtectedRoute><GaragePage /></ProtectedRoute>} />
+                          <Route path="/garage/add-vehicle" element={<ProtectedRoute><AddVehiclePage /></ProtectedRoute>} />
+                          <Route path="/garage/edit-vehicle/:id" element={<ProtectedRoute><AddVehiclePage /></ProtectedRoute>} />
+                          <Route path="/garage/vehicle/:id" element={<ProtectedRoute><GaragePage /></ProtectedRoute>} />
                           
                           {/* User Profile Hub - Central brain for all driver data */}
                           <Route path="/profile" element={<ProtectedRoute><UserProfileHubPage /></ProtectedRoute>} />

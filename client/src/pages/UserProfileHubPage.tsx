@@ -2,7 +2,7 @@ import React, { useEffect } from 'react';
 import UserProfileHub from '../components/UserProfileHub';
 import ProfileDataCollector from '../services/ProfileDataCollector';
 import { useWeather } from '../contexts/FixedWeatherContext';
-import { useVehicle } from '../contexts/VehicleContext';
+import { useVehicle } from '../hooks/useVehicle';
 import { useAuth } from '../hooks/useAuth';
 
 const UserProfileHubPage: React.FC = () => {

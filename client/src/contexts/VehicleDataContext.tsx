@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { Vehicle, useVehicle } from './VehicleContext';
+import { Vehicle } from '../hooks/useVehicle';
+import { useVehicle } from '../hooks/useVehicle';
 
 // Define activity interfaces
 export interface VehicleActivity {

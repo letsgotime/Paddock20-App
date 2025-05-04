@@ -3,7 +3,7 @@ import {
   Car, Cpu, Book, Activity, FileText, Camera, ChevronLeft, 
   ChevronRight, X, Check, Search, RefreshCw, Bluetooth, AlertCircle
 } from 'lucide-react';
-import { useVehicle, VehicleProfile } from '../contexts/VehicleContext';
+import { useVehicle, VehicleProfile } from '../hooks/useVehicle';
 import { decodeVIN, DecodedVehicleInfo, validateVIN } from '../services/vinDecoderService';
 import { toast } from '../hooks/use-toast';
 import ProfileDataCollector from '../services/ProfileDataCollector';

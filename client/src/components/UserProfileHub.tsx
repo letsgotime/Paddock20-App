@@ -8,7 +8,7 @@ import {
 import { toast } from '../hooks/use-toast';
 import { useUserProfileStore } from '../services/userProfileService';
 import { useAuth } from '../hooks/useAuth';
-import { useVehicle } from '../contexts/VehicleContext';
+import { useVehicle } from '../hooks/useVehicle';
 import ProfileDataCollector from '../services/ProfileDataCollector';
 import DataSourceConnector from '../services/DataSourceConnector';
 import { getUserDisplayName } from '../utils/DataIntegrityVerifier';
