@@ -160,7 +160,7 @@ const PodiumPursuitPage: React.FC = () => {
 
   // Get level icon based on driver level
   const getLevelIcon = () => {
-    const driverLevel = userRewards.level;
+    const driverLevel = userRewards?.level || 1;
     switch (true) {
       case driverLevel >= 25:
         return <Trophy className="text-purple-400 h-6 w-6" />;
@@ -179,7 +179,7 @@ const PodiumPursuitPage: React.FC = () => {
 
   // Get appropriate level name from predefined ranks
   const getLevelName = () => {
-    const driverLevel = userRewards.level;
+    const driverLevel = userRewards?.level || 1;
     const rank = DRIVER_RANKS.find(rank => driverLevel >= rank.minLevel);
     return rank ? rank.title : "Driver";
   };
@@ -223,11 +223,11 @@ const PodiumPursuitPage: React.FC = () => {
           <div className="flex flex-col justify-center items-center md:items-start">
             <div className="flex items-center">
               {getLevelIcon()}
-              <h2 className="ml-2 font-orbitron text-xl text-blue-400">Level {userRewards.level} {getLevelName()}</h2>
+              <h2 className="ml-2 font-orbitron text-xl text-blue-400">Level {userRewards?.level || 1} {getLevelName()}</h2>
             </div>
             <div className="flex items-center mt-2">
               <Star className="text-yellow-400 h-5 w-5 mr-2" />
-              <span className="text-yellow-400 font-bold text-lg">{userRewards.totalPoints.toLocaleString()} pts</span>
+              <span className="text-yellow-400 font-bold text-lg">{userRewards?.totalPoints?.toLocaleString() || '0'} pts</span>
             </div>
             <div className="w-full max-w-xs bg-gray-800 rounded-full h-3 mt-4 overflow-hidden">
               <div 
@@ -297,7 +297,7 @@ const PodiumPursuitPage: React.FC = () => {
           Recent Achievements
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {userRewards && userRewards.rewards ? 
+          {userRewards && Array.isArray(userRewards.rewards) && userRewards.rewards.length > 0 ? 
             userRewards.rewards.slice(-4).map((reward) => (
               <div key={reward.id} className="bg-gray-900/90 border border-blue-900/20 p-4 rounded-lg flex items-start">
                 <div className="mr-3 text-2xl">{reward.icon}</div>
