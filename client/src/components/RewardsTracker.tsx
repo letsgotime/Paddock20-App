@@ -29,14 +29,16 @@ const RewardsTracker: React.FC = () => {
     const checkTimeBasedRewards = () => {
       const hour = new Date().getHours();
       
-      // Night owl reward (after midnight)
-      if (hour >= 0 && hour < 5) {
-        rewards.unlockReward('night-owl');
-      }
-      
-      // Early bird reward (before 6am)
-      if (hour < 6) {
-        rewards.unlockReward('early-bird');
+      if (rewards && rewards.unlockReward) {
+        // Night owl reward (after midnight)
+        if (hour >= 0 && hour < 5) {
+          rewards.unlockReward('night-owl');
+        }
+        
+        // Early bird reward (before 6am)
+        if (hour < 6) {
+          rewards.unlockReward('early-bird');
+        }
       }
     };
     
