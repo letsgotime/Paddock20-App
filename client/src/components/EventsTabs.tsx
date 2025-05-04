@@ -13,7 +13,7 @@ interface EventsTabsProps {
  */
 const EventsTabs: React.FC<EventsTabsProps> = ({ activeTab, onTabChange }) => {
   const tabs = [
-    { id: 'community', label: 'Community Events', icon: <Users size={18} /> },
+    { id: 'community', label: 'P20 Community Events', icon: <Users size={18} /> },
     { id: 'motorsports', label: 'Motorsports Events', icon: <Trophy size={18} /> },
     // Future tabs can be added here
   ];
