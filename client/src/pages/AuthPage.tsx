@@ -23,11 +23,12 @@ const AuthPage: React.FC = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  // Redirect if already logged in
-  if (user) {
-    navigate('/dashboard', { replace: true });
-    return null;
-  }
+  // Redirect if already logged in (using useEffect to avoid React Router warnings)
+  React.useEffect(() => {
+    if (user) {
+      navigate('/dashboard', { replace: true });
+    }
+  }, [user, navigate]);
 
   // Login Form State
   const [loginData, setLoginData] = useState({

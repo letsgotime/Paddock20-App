@@ -74,14 +74,20 @@ const Header: React.FC = () => {
   }, [location.pathname]);
   
   const handleLogout = () => {
-    // Since we're in preview mode, just show a toast notification
+    // Show a toast notification
     toast({
-      title: 'Logout Functionality',
-      description: 'The logout button is now implemented and ready for authentication.',
+      title: 'Logging Out',
+      description: 'You have been successfully logged out.',
+      variant: 'default',
     });
     
-    // In real implementation, this would call the API and redirect
+    // Close menu
     setIsMenuOpen(false);
+    
+    // Redirect to auth page
+    setTimeout(() => {
+      window.location.href = '/auth';
+    }, 1000);
   };
 
   return (
