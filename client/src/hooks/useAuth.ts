@@ -1,5 +1,6 @@
 import { useState, useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
+import { getUserDisplayName } from '../utils/DataIntegrityVerifier';
 
 /**
  * Hook that provides access to authentication functionality
@@ -18,14 +19,19 @@ export function useAuth() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   
-  // Mock user for development
+  // Mock user for development - using dynamic display name
+  const userDisplayName = getUserDisplayName();
+  const nameParts = userDisplayName.split(' ');
+  const firstName = nameParts[0];
+  const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+  
   const user = {
     id: 1,
-    username: 'Gavin Brooks',
-    email: 'gavin@gotime.com',
-    firstName: 'Gavin',
-    lastName: 'Brooks',
-    fullName: 'Gavin Brooks',
+    username: userDisplayName,
+    email: `${firstName.toLowerCase()}@gotime.com`,
+    firstName: firstName,
+    lastName: lastName,
+    fullName: userDisplayName,
     role: 'admin' as const
   };
   

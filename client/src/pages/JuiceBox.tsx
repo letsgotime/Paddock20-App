@@ -352,7 +352,7 @@ function JuiceBoxPage() {
       {/* Introduction Section */}
       <div className="bg-gradient-to-r from-[#111111] to-[#1a1a1a] p-6 rounded-lg border border-gray-800 mb-10">
         <div className="text-center mb-6">
-          <p className="text-white text-lg mb-2">The curated, real-world-tested, gloss-backed, Gavin-approved detailing arsenal.</p>
+          <p className="text-white text-lg mb-2">The curated, real-world-tested, gloss-backed, expert-approved detailing arsenal.</p>
           <p className="text-gray-300">Your complete detailing product guide and management system.</p>
         </div>
         <div className="text-center mb-6">

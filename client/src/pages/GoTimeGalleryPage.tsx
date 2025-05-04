@@ -6,6 +6,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { motion } from "framer-motion";
 import { Image, Link, ExternalLink, Camera, Filter, Calendar, ChevronDown, ChevronLeft, ChevronRight, Maximize2, Download, Share2, Heart, Play, Grid, LayoutGrid, Columns, Clock, X } from "lucide-react";
+import { getUserDisplayName } from "../utils/DataIntegrityVerifier";
 
 interface GalleryItem {
   id: string;
@@ -267,7 +268,7 @@ const GoTimeGalleryPage: React.FC = () => {
             collection: "Formula 1 Experiences",
             date: "2023-05-28",
             location: "Monte Carlo, Monaco",
-            photographer: "Gavin Brooks",
+            photographer: getUserDisplayName(),
             tags: ["F1", "Monaco", "Racing", "Sunset", "Harbor"],
             featured: true,
             likes: 342,
@@ -1267,8 +1268,8 @@ const GoTimeGalleryPage: React.FC = () => {
               
               {/* Thumbnails */}
               <div className="bg-[#080808] border-t border-gray-800 p-2">
-                <ScrollArea className="h-24" orientation="horizontal">
-                  <div className="flex gap-2">
+                <ScrollArea className="h-24">
+                  <div className="flex gap-2 pb-4">
                     {filteredItems.map((item, index) => (
                       <div 
                         key={item.id} 

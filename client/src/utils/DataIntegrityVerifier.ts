@@ -13,10 +13,15 @@
  * from authorized sources and provides methods to replace hardcoded data.
  */
 
-import { useUserProfileStore } from '../services/userProfileService';
-import { useGallery } from '../contexts/GalleryContext';
-import { useVehicle } from '../contexts/VehicleContext';
-import { STORAGE_KEYS } from '../services/DataSourceConnector';
+// Define storage keys here to avoid import issues
+export const STORAGE_KEYS = {
+  ONBOARDING: 'userOnboardingData',
+  GALLERY: 'galleryData',
+  GARAGE: 'garageVaultData',
+  JUICEBOX: 'juiceBoxData',
+  USER_PROFILE: 'user-profile-storage',
+  VEHICLE_DATA: 'vehicleData'
+};
 
 /**
  * Checks if a component is using authorized data sources
@@ -119,14 +124,25 @@ export function logDataIntegrityViolation(report: DataIntegrityReport): void {
  * This replaces hardcoded user names throughout the app
  */
 export function getUserDisplayName(): string {
-  // First check the profile store
-  const { profile } = useUserProfileStore.getState();
-  if (profile && profile.displayName) {
-    return profile.displayName;
-  }
-  
-  // Then try onboarding data from localStorage
+  // Try to get data from local storage directly since we can't use hooks here
   try {
+    // Check user profile storage
+    const profileData = localStorage.getItem(STORAGE_KEYS.USER_PROFILE);
+    if (profileData) {
+      try {
+        const data = JSON.parse(profileData);
+        if (data?.state?.profile?.displayName) {
+          return data.state.profile.displayName;
+        }
+        if (data?.state?.profile?.username) {
+          return data.state.profile.username;
+        }
+      } catch (e) {
+        console.error('Error parsing profile data:', e);
+      }
+    }
+
+    // Check onboarding data
     const onboardingData = localStorage.getItem(STORAGE_KEYS.ONBOARDING);
     if (onboardingData) {
       const userData = JSON.parse(onboardingData);
@@ -137,12 +153,8 @@ export function getUserDisplayName(): string {
         return userData.username;
       }
     }
-  } catch (error) {
-    console.error('Error getting user display name:', error);
-  }
   
-  // Finally fall back to the authenticated user
-  try {
+    // Check authenticated user
     const authData = localStorage.getItem('auth_user');
     if (authData) {
       const user = JSON.parse(authData);
@@ -151,7 +163,7 @@ export function getUserDisplayName(): string {
       }
     }
   } catch (error) {
-    console.error('Error getting auth user data:', error);
+    console.error('Error getting user display name:', error);
   }
   
   // If all else fails, return a system name - NOT a hardcoded user name
@@ -205,24 +217,31 @@ export interface DataIntegrityReport {
 }
 
 /**
- * Gets a vehicle name from the vehicle context instead of hardcoding
+ * Gets a vehicle name from localStorage instead of hardcoding
  */
 export function getVehicleDisplayName(vehicleId?: string): string {
-  const vehicleContext = useVehicle();
-  
-  if (vehicleContext) {
-    // If a specific vehicle ID is provided
-    if (vehicleId && vehicleContext.vehicles) {
-      const vehicle = vehicleContext.vehicles.find(v => v.id === vehicleId);
-      if (vehicle) {
-        return vehicle.nickname || `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+  try {
+    // Try to load vehicle data from localStorage
+    const vehicleData = localStorage.getItem(STORAGE_KEYS.VEHICLE_DATA);
+    if (vehicleData) {
+      const data = JSON.parse(vehicleData);
+      
+      // If a specific vehicle ID is provided
+      if (vehicleId && data && data.vehicles) {
+        const vehicle = data.vehicles.find((v: any) => v.id === vehicleId);
+        if (vehicle) {
+          return vehicle.nickname || `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+        }
+      }
+      
+      // Otherwise return the active vehicle
+      if (data && data.activeVehicle) {
+        return data.activeVehicle.nickname || 
+          `${data.activeVehicle.year} ${data.activeVehicle.make} ${data.activeVehicle.model}`;
       }
     }
-    
-    // Otherwise return the currently selected vehicle
-    if (vehicleContext.vehicle) {
-      return vehicleContext.vehicle.nickname || `${vehicleContext.vehicle.year} ${vehicleContext.vehicle.make} ${vehicleContext.vehicle.model}`;
-    }
+  } catch (error) {
+    console.error('Error getting vehicle display name:', error);
   }
   
   return 'Your Vehicle';
