@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Link } from 'react-router-dom';
 import WeatherStation from '../components/WeatherStation';
 import WorldClockPanel from '../components/WorldClockPanel';
@@ -44,8 +44,8 @@ interface UserPreference {
 }
 
 function DashboardPage() {
-  const [userName, setUserName] = useState<string>('Car Enthusiast');
-  const [selectedVehicle, setSelectedVehicle] = useState<string>('Ferrari F8 Tributo');
+  const [userName, setUserName] = useState<string>('gavingotime');
+  const [selectedVehicle, setSelectedVehicle] = useState<string>('Audi RS6 Avant');
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
   const [recentDrives, setRecentDrives] = useState<RecentDrive[]>([]);
   const [maintenanceAlerts, setMaintenanceAlerts] = useState<MaintenanceAlert[]>([]);
@@ -64,11 +64,11 @@ function DashboardPage() {
   const [notifications, setNotifications] = useState<number>(3);
   const [showWelcomeMessage, setShowWelcomeMessage] = useState<boolean>(true);
   
-  // Mock user vehicles
+  // User vehicles
   const userVehicles = [
-    { id: 1, name: 'Ferrari F8 Tributo', year: 2023, image: '/assets/ferrari-f8.jpg', lastDriven: '2 days ago' },
-    { id: 2, name: 'Porsche 911 GT3', year: 2022, image: '/assets/porsche-gt3.jpg', lastDriven: '1 week ago' },
-    { id: 3, name: 'Lamborghini Huracán', year: 2021, image: '/assets/lambo-huracan.jpg', lastDriven: '3 weeks ago' }
+    { id: 1, name: 'Audi RS6 Avant', year: 2024, image: '/assets/audi-rs6.jpg', lastDriven: '2 days ago' },
+    { id: 2, name: 'BMW M5 Competition', year: 2023, image: '/assets/bmw-m5.jpg', lastDriven: '1 week ago' },
+    { id: 3, name: 'Mercedes AMG GT', year: 2022, image: '/assets/amg-gt.jpg', lastDriven: '3 weeks ago' }
   ];
 
   useEffect(() => {
@@ -76,20 +76,20 @@ function DashboardPage() {
     setTimeout(() => {
       setUpcomingEvents([
         { id: 1, title: 'Mountain Drive', date: '2025-04-30T09:00:00', type: 'drive', description: 'Scenic route through Blue Ridge Mountains' },
-        { id: 2, title: 'Track Day at Charlotte Motor Speedway', date: '2025-05-12T10:00:00', type: 'track', description: 'Private event with 10 laps' },
-        { id: 3, title: 'Oil Change', date: '2025-05-05T14:00:00', type: 'maintenance', description: 'Ferrari F8 Tributo' }
+        { id: 2, title: 'Track Day at Atlanta Motor Speedway', date: '2025-05-12T10:00:00', type: 'track', description: 'Private event with 10 laps' },
+        { id: 3, title: 'Oil Change', date: '2025-05-05T14:00:00', type: 'maintenance', description: 'Audi RS6 Avant' }
       ]);
       
       setRecentDrives([
-        { id: 1, date: '2025-04-26', startLocation: 'Charlotte, NC', endLocation: 'Asheville, NC', distance: 124.5, duration: 120, vehicle: 'Ferrari F8 Tributo' },
-        { id: 2, date: '2025-04-20', startLocation: 'Charlotte, NC', endLocation: 'Charleston, SC', distance: 209.3, duration: 180, vehicle: 'Porsche 911 GT3' },
-        { id: 3, date: '2025-04-15', startLocation: 'Charlotte, NC', endLocation: 'Raleigh, NC', distance: 130.2, duration: 110, vehicle: 'Ferrari F8 Tributo' }
+        { id: 1, date: '2025-04-26', startLocation: 'Roswell, GA', endLocation: 'Asheville, NC', distance: 124.5, duration: 120, vehicle: 'Audi RS6 Avant' },
+        { id: 2, date: '2025-04-20', startLocation: 'Roswell, GA', endLocation: 'Savannah, GA', distance: 209.3, duration: 180, vehicle: 'BMW M5 Competition' },
+        { id: 3, date: '2025-04-15', startLocation: 'Roswell, GA', endLocation: 'Atlanta, GA', distance: 30.2, duration: 45, vehicle: 'Mercedes AMG GT' }
       ]);
       
       setMaintenanceAlerts([
-        { id: 1, vehicle: 'Ferrari F8 Tributo', serviceDue: 'Oil Change', dueDate: '2025-05-05', priority: 'medium', mileage: 3500 },
-        { id: 2, vehicle: 'Porsche 911 GT3', serviceDue: 'Brake Fluid Flush', dueDate: '2025-05-10', priority: 'high', mileage: 5000 },
-        { id: 3, vehicle: 'Lamborghini Huracán', serviceDue: 'Annual Service', dueDate: '2025-06-15', priority: 'low', mileage: 12000 }
+        { id: 1, vehicle: 'Audi RS6 Avant', serviceDue: 'Oil Change', dueDate: '2025-05-05', priority: 'medium', mileage: 3500 },
+        { id: 2, vehicle: 'BMW M5 Competition', serviceDue: 'Brake Fluid Flush', dueDate: '2025-05-10', priority: 'high', mileage: 5000 },
+        { id: 3, vehicle: 'Mercedes AMG GT', serviceDue: 'Annual Service', dueDate: '2025-06-15', priority: 'low', mileage: 12000 }
       ]);
     }, 500);
     
@@ -352,6 +352,18 @@ function DashboardPage() {
     }
   };
 
+  const toggleEditMode = useCallback(() => {
+    setIsEditMode(prevState => !prevState);
+  }, []);
+  
+  const toggleWelcomeMessage = useCallback(() => {
+    setShowWelcomeMessage(prevState => !prevState);
+  }, []);
+  
+  const handleVehicleChange = useCallback((e: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedVehicle(e.target.value);
+  }, []);
+
   return (
     <div className="bg-black min-h-screen overflow-x-hidden">
       {/* F1-inspired carbon fiber background with telemetry grid */}
@@ -381,7 +393,7 @@ function DashboardPage() {
                 
                 <div>
                   <div className="flex items-center">
-                    <h1 className="text-blue-400 font-orbitron text-2xl uppercase font-bold tracking-widest border-b border-blue-500/30 pb-0.5">PADDOCK-20</h1>
+                    <h1 className="text-blue-400 font-orbitron text-2xl uppercase font-bold tracking-widest border-b border-blue-500/30 pb-0.5">PADDOCK20</h1>
                     <div className="ml-2 px-1.5 py-0.5 bg-green-500/20 border border-green-500 rounded text-[10px] text-green-400 font-mono tracking-tight">
                       VER 2027.4
                     </div>
@@ -389,7 +401,7 @@ function DashboardPage() {
                   <div className="flex items-center">
                     <div className="h-1.5 w-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse"></div>
                     <p className="text-xs text-gray-400">
-                      <span className="text-green-400 font-medium">{userName}</span>
+                      <span className="text-green-400 font-medium">gavingotime</span>
                       <span className="mx-1.5 text-gray-600">|</span>
                       <span className="uppercase font-mono tracking-tight">{new Date().toLocaleTimeString('en-US', {hour12: false})}</span>
                       <span className="mx-1.5 text-gray-600">|</span>
@@ -406,12 +418,12 @@ function DashboardPage() {
                   <Car size={14} className="text-blue-400 mr-2" />
                   <select 
                     value={selectedVehicle}
-                    onChange={(e) => setSelectedVehicle(e.target.value)}
+                    onChange={handleVehicleChange}
                     className="bg-transparent border-none text-white text-sm focus:ring-0 focus:outline-none pr-8 py-0"
                   >
-                    <option value="Ferrari F8 Tributo">Ferrari F8 Tributo</option>
-                    <option value="Porsche 911 GT3">Porsche 911 GT3</option>
-                    <option value="Lamborghini Huracán">Lamborghini Huracán</option>
+                    <option value="Audi RS6 Avant">Audi RS6 Avant</option>
+                    <option value="BMW M5 Competition">BMW M5 Competition</option>
+                    <option value="Mercedes AMG GT">Mercedes AMG GT</option>
                   </select>
                 </div>
                 
@@ -442,7 +454,7 @@ function DashboardPage() {
                             <Wrench size={14} className="text-red-400 mt-0.5 mr-2 flex-shrink-0" />
                             <div>
                               <p className="text-xs text-white font-medium">Maintenance Alert</p>
-                              <p className="text-xs text-gray-400">Ferrari F8 Tributo: Oil Change Due</p>
+                              <p className="text-xs text-gray-400">Audi RS6 Avant: Oil Change Due</p>
                             </div>
                           </div>
                           <span className="text-[10px] text-gray-500">2h ago</span>
@@ -466,7 +478,7 @@ function DashboardPage() {
                 
                 {/* Edit Mode Toggle */}
                 <button 
-                  onClick={() => setIsEditMode(!isEditMode)} 
+                  onClick={toggleEditMode} 
                   className={`bg-black/60 border ${isEditMode ? 'border-green-500' : 'border-gray-800 hover:border-blue-500'} p-2 rounded-lg transition-all group`}
                   title={isEditMode ? "Save Layout" : "Edit Dashboard"}
                 >
@@ -507,7 +519,7 @@ function DashboardPage() {
                           <p className="text-[10px] text-gray-500">2 Alerts</p>
                         </div>
                       </Link>
-                      <Link to="/juice-box" className="flex items-center p-2 hover:bg-blue-900/20 rounded group">
+                      <Link to="/" className="flex items-center p-2 hover:bg-blue-900/20 rounded group">
                         <div className="w-8 h-8 rounded-full bg-green-900/20 flex items-center justify-center mr-2 group-hover:scale-110 transition-transform">
                           <SprayCan size={14} className="text-green-400" />
                         </div>
@@ -516,7 +528,7 @@ function DashboardPage() {
                           <p className="text-[10px] text-gray-500">Detailing</p>
                         </div>
                       </Link>
-                      <Link to="/manifest-station" className="flex items-center p-2 hover:bg-blue-900/20 rounded group">
+                      <Link to="/" className="flex items-center p-2 hover:bg-blue-900/20 rounded group">
                         <div className="w-8 h-8 rounded-full bg-green-900/20 flex items-center justify-center mr-2 group-hover:scale-110 transition-transform">
                           <Brain size={14} className="text-green-400" />
                         </div>
