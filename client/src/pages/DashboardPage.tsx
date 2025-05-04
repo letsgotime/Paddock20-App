@@ -51,7 +51,7 @@ function DashboardPage() {
   const [maintenanceAlerts, setMaintenanceAlerts] = useState<MaintenanceAlert[]>([]);
   const [userPreferences, setUserPreferences] = useState<UserPreference[]>([]);
   const [dashboardLayout, setDashboardLayout] = useState<string[]>([
-    'weather', 'world_clock', 'vehicles', 'drives', 'events', 'maintenance', 'uniform', 'dreams'
+    'weather', 'world_clock', 'vehicles', 'drives', 'events', 'maintenance', 'uniform', 'dreams', 'membership', 'engagement'
   ]);
   
   // Add uniform section data
@@ -59,6 +59,24 @@ function DashboardPage() {
     helmetSize: 'Medium (58-59cm)',
     gloveSize: 'Large',
     shoeSize: '10.5 US'
+  });
+  
+  // Paddock20 membership data
+  const [membershipData, setMembershipData] = useState({
+    level: 'Platinum',
+    since: '2024-02-15',
+    points: 2350,
+    nextTier: 'Diamond',
+    pointsToNextTier: 650,
+    exclusiveEvents: 8,
+    trackDaysRemaining: 4,
+    benefits: [
+      'Unlimited Access to Paddock20 Venues',
+      'Priority Registration for Race Experiences',
+      'Complimentary Vehicle Transport',
+      'Exclusive Driving Coach Sessions',
+      'VIP Garage Access at Motorsport Events'
+    ]
   });
   
   // Dreams and preferences data
@@ -70,7 +88,200 @@ function DashboardPage() {
     dreamTruck: 'Ford F-150 Raptor',
     dreamHouse: 'Modern mountain home with 6-car garage',
     dreamRetirementLocation: 'Lake Como, Italy',
-    dreamGarageSetup: 'Climate-controlled 10+ car showroom with lift and detailing bay'
+    dreamGarageSetup: 'Climate-controlled 10+ car showroom with lift and detailing bay',
+    dreamExperience: 'Drive a Formula 1 car at Monaco Grand Prix',
+    dreamVacation: 'Supercar tour through the Alps with track days',
+    dreamRacetrackToOwn: 'Private 2-mile track with elevation changes and technical sections',
+    favoriteCarPart: 'The engine - heart and soul of the driving experience',
+    favoriteCarActivity: 'Track days with data analysis and driver coaching',
+    favoriteCarTVShow: 'Top Gear (Classic era with Clarkson, Hammond, and May)',
+    // Top 5 lists
+    topYouTubeChannels: [
+      'Hagerty',
+      'TheSmokingTire',
+      'DriveTribe',
+      'SavageGeese',
+      'Engineering Explained'
+    ],
+    topIGEnthusiasts: [
+      'Larry Chen (@larry_chen_foto)',
+      'Amy Shore (@amyshorephotography)',
+      'Magnus Walker (@magnuswalker)',
+      'Alex Choi (@alexchoi)',
+      'DDE (@dailydrivenexotics)'
+    ],
+    topCarPodcasts: [
+      'The Smoking Tire',
+      'Car Talk',
+      'The Drive',
+      'Spike\'s Car Radio',
+      'Everyday Driver'
+    ],
+    topCarAudiobooks: [
+      'Go Like Hell: Ford, Ferrari, and Their Battle for Speed and Glory at Le Mans',
+      'Faster: How a Jewish Driver, an American Heiress, and a Legendary Car Beat Hitler\'s Best',
+      'Drive: The Surprising Truth About What Motivates Us',
+      'The Art of Racing in the Rain',
+      'Ford GT: How Ford Silenced the Critics'
+    ],
+    topSports: [
+      'Formula 1',
+      'Rally racing',
+      'Endurance racing'
+    ],
+    topRaceCarEventClasses: [
+      'GT3',
+      'LMP2/LMDh',
+      'Formula 4/3/2'
+    ],
+    favoritePlaylists: [
+      'Track Day Intensity',
+      'Sunday Cruising',
+      'Garage Time',
+      'Night Drives',
+      'German Engineering Appreciation'
+    ],
+    favoriteCarBrands: [
+      'BMW',
+      'Porsche',
+      'Ferrari',
+      'Aston Martin',
+      'McLaren'
+    ],
+    favoriteModBrands: [
+      'Dinan',
+      'APR',
+      'Akrapovič',
+      'KW Suspension',
+      'HRE Wheels'
+    ],
+    favoriteTireBrands: [
+      'Michelin',
+      'Pirelli',
+      'Bridgestone',
+      'Continental',
+      'Yokohama'
+    ],
+    favoriteWheelBrands: [
+      'HRE',
+      'BBS',
+      'Vossen'
+    ],
+    favoriteApparelBrands: [
+      'Sparco',
+      'Alpine Stars',
+      'OMP',
+      'Puma Motorsport',
+      'McLaren F1 Team Store'
+    ]
+  });
+  
+  // Media section data 
+  const [mediaLibrary, setMediaLibrary] = useState({
+    totalItems: 187,
+    categories: [
+      {
+        name: 'Photos',
+        count: 142,
+        recentItems: [
+          { id: 'p1', title: 'Track day at Road Atlanta', date: '2025-04-15', type: 'image', path: '/assets/media/track-day-1.jpg' },
+          { id: 'p2', title: 'Tail of the Dragon run', date: '2025-03-22', type: 'image', path: '/assets/media/dragon-run.jpg' },
+          { id: 'p3', title: 'Cars & Coffee meetup', date: '2025-04-02', type: 'image', path: '/assets/media/cars-coffee.jpg' }
+        ]
+      },
+      {
+        name: 'Videos',
+        count: 28,
+        recentItems: [
+          { id: 'v1', title: 'Mountain Drive POV', date: '2025-04-18', type: 'video', duration: '12:48', path: '/assets/media/mountain-drive.mp4' },
+          { id: 'v2', title: 'Nürburgring Lap', date: '2024-08-10', type: 'video', duration: '9:32', path: '/assets/media/ring-lap.mp4' }
+        ]
+      },
+      {
+        name: 'Documents',
+        count: 14,
+        recentItems: [
+          { id: 'd1', title: 'BMW 330i Service Records', date: '2025-04-01', type: 'pdf', path: '/assets/media/service-records.pdf' },
+          { id: 'd2', title: 'Track Day Waiver', date: '2025-03-15', type: 'pdf', path: '/assets/media/track-waiver.pdf' }
+        ]
+      },
+      {
+        name: 'Voice Notes',
+        count: 3,
+        recentItems: [
+          { id: 'a1', title: 'Track Day Debrief', date: '2025-04-15', type: 'audio', duration: '3:44', path: '/assets/media/track-debrief.mp3' },
+          { id: 'a2', title: 'Car Setup Ideas', date: '2025-03-10', type: 'audio', duration: '2:17', path: '/assets/media/car-setup.mp3' }
+        ]
+      }
+    ],
+    recentUploads: [
+      { id: 'ru1', title: 'BMW at sunset', date: '2025-05-02', type: 'image', path: '/assets/media/bmw-sunset.jpg' },
+      { id: 'ru2', title: 'Engine sound sample', date: '2025-05-01', type: 'audio', duration: '0:58', path: '/assets/media/engine-sound.mp3' },
+      { id: 'ru3', title: 'Mountain Roads Map', date: '2025-04-29', type: 'pdf', path: '/assets/media/mountain-map.pdf' }
+    ],
+    favorites: [
+      { id: 'f1', title: 'First Track Day', date: '2024-06-12', type: 'video', duration: '15:22', path: '/assets/media/first-track-day.mp4' },
+      { id: 'f2', title: 'My Dream Garage', date: '2024-08-05', type: 'image', path: '/assets/media/dream-garage.jpg' }
+    ]
+  });
+  
+  // User engagement statistics
+  const [engagementData, setEngagementData] = useState({
+    totalInputs: 248,
+    inputsThisMonth: 42,
+    currentStreak: 8,
+    longestStreak: 14,
+    sections: [
+      { 
+        name: 'Drive Journal', 
+        entries: 37,
+        lastUpdated: '2025-05-01',
+        percentComplete: 92,
+        streakDays: 8
+      },
+      { 
+        name: 'Weather Reports', 
+        entries: 64,
+        lastUpdated: '2025-05-03',
+        percentComplete: 100,
+        streakDays: 12
+      },
+      { 
+        name: 'Vehicle Logs', 
+        entries: 28,
+        lastUpdated: '2025-04-28',
+        percentComplete: 75,
+        streakDays: 0
+      },
+      { 
+        name: 'Maintenance Records', 
+        entries: 19,
+        lastUpdated: '2025-04-30',
+        percentComplete: 80,
+        streakDays: 5
+      },
+      { 
+        name: 'Route Planning', 
+        entries: 41,
+        lastUpdated: '2025-05-02',
+        percentComplete: 88,
+        streakDays: 7
+      },
+      { 
+        name: 'Dreams & Goals', 
+        entries: 14,
+        lastUpdated: '2025-05-03',
+        percentComplete: 95,
+        streakDays: 9
+      },
+      { 
+        name: 'Profile Completion', 
+        entries: 45,
+        lastUpdated: '2025-05-03',
+        percentComplete: 98,
+        streakDays: 14
+      }
+    ]
   });
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [driveStats, setDriveStats] = useState({
@@ -143,6 +354,100 @@ function DashboardPage() {
 
   const renderDashboardPanel = (panelType: string) => {
     switch(panelType) {
+      case 'membership':
+        return (
+          <div className="apex-card rounded-lg mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="apex-header flex items-center">
+                <Shield className="mr-2 text-green-500" size={20} />
+                PADDOCK20 Membership
+              </h2>
+              <Link to="/member-benefits" className="text-green-500 hover:text-green-400 transition-colors flex items-center">
+                View Benefits <ChevronRight size={16} />
+              </Link>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-6">
+              {/* Membership overview card */}
+              <div className="bg-gradient-to-r from-gray-900 via-gray-800 to-gray-900 rounded-lg border border-blue-900/40 p-4 relative overflow-hidden">
+                {/* F1-style decorative element */}
+                <div className="absolute top-0 left-0 w-2 h-full bg-blue-500"></div>
+                
+                <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
+                  <div className="flex-1">
+                    <div className="flex items-center">
+                      <span className="text-xl font-bold text-blue-400">{membershipData.level}</span>
+                      <span className="ml-2 text-xs px-2 py-0.5 bg-blue-900/50 text-blue-300 rounded-full">
+                        Member since {new Date(membershipData.since).toLocaleDateString()}
+                      </span>
+                    </div>
+                    <div className="mt-1 mb-3">
+                      <span className="text-sm text-gray-400">
+                        {membershipData.pointsToNextTier} points away from {membershipData.nextTier}
+                      </span>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center bg-blue-900/30 px-3 py-1 rounded-md border border-blue-900/50">
+                    <Trophy className="h-4 w-4 text-blue-400 mr-2" />
+                    <span className="text-lg font-mono font-bold text-white">{membershipData.points}</span>
+                    <span className="ml-1 text-xs text-gray-400">pts</span>
+                  </div>
+                </div>
+                
+                <div className="mt-2 h-2 w-full bg-gray-800 rounded-full overflow-hidden">
+                  <div 
+                    className="h-full bg-blue-500" 
+                    style={{ width: `${Math.round((membershipData.points / (membershipData.points + membershipData.pointsToNextTier)) * 100)}%` }}
+                  ></div>
+                </div>
+              </div>
+              
+              {/* Membership perks grid */}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div className="bg-gray-900 p-4 rounded-lg border border-gray-800">
+                  <h3 className="text-blue-400 font-bold mb-2 flex items-center">
+                    <Calendar className="h-4 w-4 mr-2" />
+                    Exclusive Events
+                  </h3>
+                  <div className="flex items-center mb-2">
+                    <div className="w-12 h-12 rounded-full bg-blue-900/20 flex items-center justify-center mr-3">
+                      <span className="text-xl font-bold text-blue-400">{membershipData.exclusiveEvents}</span>
+                    </div>
+                    <p className="text-gray-300">Invitations to members-only track days, cars & coffee meetups, and pit lane experiences</p>
+                  </div>
+                </div>
+                
+                <div className="bg-gray-900 p-4 rounded-lg border border-gray-800">
+                  <h3 className="text-blue-400 font-bold mb-2 flex items-center">
+                    <Map className="h-4 w-4 mr-2" />
+                    Track Days
+                  </h3>
+                  <div className="flex items-center mb-2">
+                    <div className="w-12 h-12 rounded-full bg-blue-900/20 flex items-center justify-center mr-3">
+                      <span className="text-xl font-bold text-blue-400">{membershipData.trackDaysRemaining}</span>
+                    </div>
+                    <p className="text-gray-300">Complimentary track days remaining this season. Includes full-day access and instructor time.</p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Membership benefits list */}
+              <div className="bg-gray-900 p-4 rounded-lg border border-gray-800">
+                <h3 className="text-blue-400 font-bold mb-3">Member Benefits</h3>
+                <ul className="space-y-2">
+                  {membershipData.benefits.map((benefit, index) => (
+                    <li key={index} className="flex items-start">
+                      <Check className="text-green-500 h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
+                      <span className="text-gray-300">{benefit}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
+        );
+      
       case 'dreams':
         return (
           <div className="apex-card rounded-lg mb-6">
