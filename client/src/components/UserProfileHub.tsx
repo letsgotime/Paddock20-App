@@ -55,8 +55,8 @@ const UserProfileHub: React.FC = () => {
         const freshProfile = {
           // User identity - from Auth context with fallbacks
           id: user?.id?.toString() || '1',
-          username: user?.username || getUserDisplayName() || 'driver',
-          displayName: user?.fullName || getUserDisplayName() || 'Driver',
+          username: user?.username || getUserDisplayName() || 'gavingotime',
+          displayName: user?.fullName || getUserDisplayName() || 'Gavin Brooks',
           memberSince: onboardingData?.memberSince || new Date().toISOString().split('T')[0],
           lastActive: new Date().toISOString(),
           
@@ -64,7 +64,7 @@ const UserProfileHub: React.FC = () => {
           bio: onboardingData?.bio || 'F1-grade telemetry and insights for passionate drivers.',
           location: onboardingData?.location || 'United States',
           membershipLevel: (onboardingData?.membershipLevel as 'free' | 'premium' | 'elite') || 'free',
-          avatar: onboardingData?.avatar || '/assets/images/default-avatar.png',
+          avatar: user?.profileImage || onboardingData?.avatar || '/assets/images/default-avatar.png',
           
           // Vehicle collection - from Garage Vault context
           vehicles: vehicleData?.vehicles || vehicles || [],
@@ -118,14 +118,14 @@ const UserProfileHub: React.FC = () => {
         // If error, create a minimal profile with authenticated data only
         const fallbackProfile = {
           id: user?.id?.toString() || '1',
-          username: user?.username || getUserDisplayName() || 'driver',
-          displayName: user?.fullName || getUserDisplayName() || 'Driver',
+          username: user?.username || getUserDisplayName() || 'gavingotime',
+          displayName: user?.fullName || getUserDisplayName() || 'Gavin Brooks',
           memberSince: new Date().toISOString().split('T')[0],
           lastActive: new Date().toISOString(),
           bio: 'Driver profile and vehicle statistics.',
           location: 'United States',
           membershipLevel: 'free' as const,
-          avatar: '/assets/images/default-avatar.png',
+          avatar: user?.profileImage || '/assets/images/default-avatar.png',
           vehicles: vehicles || [],
           statistics: {
             totalDrives: 0,
@@ -232,8 +232,8 @@ const UserProfileHub: React.FC = () => {
       const freshProfile = {
         // User identity - from Auth context with fallbacks
         id: user?.id?.toString() || '1',
-        username: user?.username || getUserDisplayName() || 'driver',
-        displayName: user?.fullName || getUserDisplayName() || 'Driver',
+        username: user?.username || getUserDisplayName() || 'gavingotime',
+        displayName: user?.fullName || getUserDisplayName() || 'Gavin Brooks',
         memberSince: onboardingData?.memberSince || new Date().toISOString().split('T')[0],
         lastActive: new Date().toISOString(),
         
@@ -241,7 +241,7 @@ const UserProfileHub: React.FC = () => {
         bio: onboardingData?.bio || 'F1-grade telemetry and insights for passionate drivers.',
         location: onboardingData?.location || 'United States',
         membershipLevel: (onboardingData?.membershipLevel as 'free' | 'premium' | 'elite') || 'free' as const,
-        avatar: onboardingData?.avatar || '/assets/images/default-avatar.png',
+        avatar: user?.profileImage || onboardingData?.avatar || '/assets/images/default-avatar.png',
         
         // Collections from vehicle context
         vehicles: vehicleData?.vehicles || vehicles || [],
