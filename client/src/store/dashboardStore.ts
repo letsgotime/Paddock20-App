@@ -14,7 +14,7 @@ export type WidgetType =
   | 'quick-actions'
   | 'goals'
   | 'detailing-alerts'
-  | 'f1-telemetry'
+  | 'locker-room'
   | 'juicebox-recommendations'
   | 'recent-photos';
 

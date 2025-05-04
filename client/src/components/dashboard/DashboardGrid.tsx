@@ -19,7 +19,7 @@ const widgetExplanations: Record<string, string> = {
   maintenance: "Maintenance Alerts notifies you of upcoming service needs based on your vehicle's mileage and maintenance schedule.",
   'gloss-tracker': "Gloss Tracker helps you maintain a comprehensive history of your vehicle's paint condition and detailing sessions.",
   'quick-actions': "Quick Actions provides shortcuts to frequently used features across the Paddock20 platform.",
-  'f1-telemetry': "F1 Telemetry displays motorsport-inspired telemetry data for your vehicle and driving habits with race-inspired visualizations.",
+  'locker-room': "Track Day Locker keeps inventory of your racing equipment including helmet size, glove size, shoe size, and other track day gear.",
   'drive-journal': "Drive Journal records your drives with route maps, conditions, and notes to build a complete history of your driving experiences.",
   'recent-drives': "Recent Drives shows your latest recorded drives with statistics and highlights.",
   'motorsport-calendar': "Motorsport Calendar keeps track of upcoming racing events across your favorite motorsport series.",
