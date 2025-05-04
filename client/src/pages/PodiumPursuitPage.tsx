@@ -205,9 +205,38 @@ const PodiumPursuitPage: React.FC = () => {
     }));
   };
 
-  // Get progress stats for all categories
-  const allProgress = calculateProgress(null);
-  const completionPercentage = Math.round((allProgress.completed / allProgress.total) * 100);
+  // Get progress stats for all categories - wrapped in try-catch for safety
+  let allProgress = { total: 0, completed: 0 };
+  let completionPercentage = 0;
+  
+  try {
+    allProgress = calculateProgress(null);
+    completionPercentage = allProgress.total > 0 
+      ? Math.round((allProgress.completed / allProgress.total) * 100)
+      : 0;
+  } catch (error) {
+    console.error("Error calculating progress:", error);
+    // Fallbacks already set above
+  }
+
+  // Safety wrapper to handle any unexpected data issues
+  if (!userRewards) {
+    return (
+      <div className="podium-pursuit-page pb-12">
+        <PageTitle 
+          title="Podium Pursuit™" 
+          subtitle="Your performance journey through achievements, rewards, and milestones"
+          icon={<Medal className="text-blue-400 h-7 w-7" />}
+        />
+        <div className="flex flex-col items-center justify-center py-12">
+          <div className="text-center mb-6">
+            <h3 className="text-white font-orbitron text-xl mb-2">Loading Rewards Data</h3>
+            <p className="text-gray-400">Hang tight while we fetch your achievements and rewards...</p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="podium-pursuit-page pb-12">
@@ -232,14 +261,14 @@ const PodiumPursuitPage: React.FC = () => {
             <div className="w-full max-w-xs bg-gray-800 rounded-full h-3 mt-4 overflow-hidden">
               <div 
                 className="h-full bg-gradient-to-r from-blue-500 to-green-500" 
-                style={{ width: `${Math.min(100, (userRewards.totalPoints / (userRewards.totalPoints + pointsToNextLevel)) * 100)}%` }}
+                style={{ width: `${Math.min(100, ((userRewards?.totalPoints || 0) / ((userRewards?.totalPoints || 0) + pointsToNextLevel)) * 100)}%` }}
               ></div>
             </div>
             <div className="flex justify-between w-full max-w-xs text-xs text-gray-400 mt-1">
-              <span>Level {userRewards.level}</span>
+              <span>Level {userRewards?.level || 1}</span>
               <span className="flex items-center">
                 <Trophy className="inline h-3 w-3 mr-1 text-blue-400" />
-                {pointsToNextLevel.toLocaleString()} pts to Level {userRewards.level + 1}
+                {pointsToNextLevel.toLocaleString()} pts to Level {(userRewards?.level || 1) + 1}
               </span>
             </div>
           </div>
@@ -282,7 +311,15 @@ const PodiumPursuitPage: React.FC = () => {
                 </div>
                 <p className="text-xs text-gray-300">{category.name}</p>
                 <div className="mt-1 text-xs text-gray-400">
-                  {calculateProgress(category.id).completed}/{calculateProgress(category.id).total}
+                  {(() => {
+                    try {
+                      const progress = calculateProgress(category.id);
+                      return `${progress.completed}/${progress.total}`;
+                    } catch (error) {
+                      console.error(`Error calculating progress for ${category.id}:`, error);
+                      return '0/0';
+                    }
+                  })()}
                 </div>
               </div>
             ))}
@@ -325,8 +362,18 @@ const PodiumPursuitPage: React.FC = () => {
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {ACHIEVEMENT_CATEGORIES.map(category => {
-            const progress = calculateProgress(category.id);
-            const categoryPercentage = Math.round((progress.completed / progress.total) * 100);
+            let progress = { total: 0, completed: 0 };
+            let categoryPercentage = 0;
+            
+            try {
+              progress = calculateProgress(category.id);
+              categoryPercentage = progress.total > 0 
+                ? Math.round((progress.completed / progress.total) * 100)
+                : 0;
+            } catch (error) {
+              console.error(`Error calculating category progress for ${category.id}:`, error);
+              // Fallbacks already set above
+            }
             
             return (
               <div 
