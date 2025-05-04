@@ -45,14 +45,21 @@ interface UserPreference {
 
 function DashboardPage() {
   const [userName, setUserName] = useState<string>('gavingotime');
-  const [selectedVehicle, setSelectedVehicle] = useState<string>('Audi RS6 Avant');
+  const [selectedVehicle, setSelectedVehicle] = useState<string>('2020 BMW 330i xDrive');
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
   const [recentDrives, setRecentDrives] = useState<RecentDrive[]>([]);
   const [maintenanceAlerts, setMaintenanceAlerts] = useState<MaintenanceAlert[]>([]);
   const [userPreferences, setUserPreferences] = useState<UserPreference[]>([]);
   const [dashboardLayout, setDashboardLayout] = useState<string[]>([
-    'weather', 'world_clock', 'vehicles', 'drives', 'events', 'maintenance'
+    'weather', 'world_clock', 'vehicles', 'drives', 'events', 'maintenance', 'uniform'
   ]);
+  
+  // Add uniform section data
+  const [uniformData, setUniformData] = useState({
+    helmetSize: 'Medium (58-59cm)',
+    gloveSize: 'Large',
+    shoeSize: '10.5 US'
+  });
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [driveStats, setDriveStats] = useState({
     totalDrives: 12,
@@ -66,9 +73,9 @@ function DashboardPage() {
   
   // User vehicles
   const userVehicles = [
-    { id: 1, name: 'Audi RS6 Avant', year: 2024, image: '/assets/audi-rs6.jpg', lastDriven: '2 days ago' },
-    { id: 2, name: 'BMW M5 Competition', year: 2023, image: '/assets/bmw-m5.jpg', lastDriven: '1 week ago' },
-    { id: 3, name: 'Mercedes AMG GT', year: 2022, image: '/assets/amg-gt.jpg', lastDriven: '3 weeks ago' }
+    { id: 1, name: '2020 BMW 330i xDrive', year: 2020, image: '/assets/bmw-330i.jpg', lastDriven: '1 day ago' },
+    { id: 2, name: 'BMW M5 Competition', year: 2023, image: '/assets/bmw-m5.jpg', lastDriven: '2 weeks ago' },
+    { id: 3, name: 'Mercedes AMG GT', year: 2022, image: '/assets/amg-gt.jpg', lastDriven: '1 month ago' }
   ];
 
   useEffect(() => {
