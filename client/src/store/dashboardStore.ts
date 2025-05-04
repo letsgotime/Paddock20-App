@@ -16,6 +16,7 @@ export type WidgetType =
   | 'detailing-alerts'
   | 'locker-room'
   | 'juicebox-recommendations'
+  | 'dream-garage'
   | 'recent-photos';
 
 // Widget size options
@@ -115,8 +116,24 @@ const defaultWidgets: DashboardWidget[] = [
     id: uuidv4(),
     type: 'drive-journal',
     title: 'Drive Journal',
-    size: 'large',
+    size: 'medium',
     position: 5, 
+    visible: true,
+  },
+  {
+    id: uuidv4(),
+    type: 'dream-garage',
+    title: 'Dream Garage',
+    size: 'medium',
+    position: 6,
+    visible: true,
+  },
+  {
+    id: uuidv4(),
+    type: 'locker-room',
+    title: 'Track Day Locker',
+    size: 'medium',
+    position: 7,
     visible: true,
   }
 ];

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'wouter';
 import { MapPin, Calendar, ArrowRight, PlusCircle, Car } from 'lucide-react';
 
 // Sample drive data for demonstration
@@ -40,7 +40,7 @@ const recentDrives = [
 ];
 
 const DriveJournalWidget: React.FC = () => {
-  const navigate = useNavigate();
+  const [, setLocation] = useLocation();
   const [activeTab, setActiveTab] = useState<'recent' | 'planned'>('recent');
   
   return (
@@ -104,7 +104,7 @@ const DriveJournalWidget: React.FC = () => {
                   </div>
                   <button 
                     className="text-blue-400 hover:text-blue-300 flex items-center"
-                    onClick={() => navigate(`/drive-journal/${drive.id}`)}
+                    onClick={() => setLocation(`/drive-journal/${drive.id}`)}
                   >
                     <span>Details</span>
                     <ArrowRight className="h-3 w-3 ml-1" />
@@ -124,7 +124,7 @@ const DriveJournalWidget: React.FC = () => {
               points of interest, and optimal road conditions.
             </p>
             <button
-              onClick={() => navigate('/route-planner')}
+              onClick={() => setLocation('/route-planner')}
               className="flex items-center justify-center space-x-2 mx-auto bg-blue-900/50 hover:bg-blue-800/60 text-blue-300 px-4 py-2 rounded-md"
             >
               <PlusCircle className="h-4 w-4" />
@@ -137,7 +137,7 @@ const DriveJournalWidget: React.FC = () => {
       {/* Action Footer */}
       <div className="flex justify-between items-center">
         <button
-          onClick={() => navigate('/drive-journal')}
+          onClick={() => setLocation('/drive-journal')}
           className="text-sm text-blue-400 hover:text-blue-300 flex items-center"
         >
           <span>View All Drives</span>
@@ -145,7 +145,7 @@ const DriveJournalWidget: React.FC = () => {
         </button>
         
         <button
-          onClick={() => navigate('/drive-journal/new')}
+          onClick={() => setLocation('/drive-journal/new')}
           className="text-sm bg-green-900/30 hover:bg-green-800/40 text-green-400 px-3 py-1 rounded flex items-center space-x-1"
         >
           <PlusCircle className="h-3 w-3" />

@@ -10,6 +10,8 @@ import MaintenanceWidget from './widgets/MaintenanceWidget';
 import GlossTrackerWidget from './widgets/GlossTrackerWidget';
 import QuickActionsWidget from './widgets/QuickActionsWidget';
 import DriveJournalWidget from './widgets/DriveJournalWidget';
+import DreamGarageWidget from './widgets/DreamGarageWidget';
+import LockerRoomWidget from './widgets/LockerRoomWidget';
 import DefaultWidget from './widgets/DefaultWidget';
 
 // Tooltips/explanations for each widget type
@@ -27,6 +29,7 @@ const widgetExplanations: Record<string, string> = {
   'goals': "Goals lets you set and track personal achievements related to your automotive journey.",
   'detailing-alerts': "Detailing Alerts recommends optimal times for detailing work based on weather and your schedule.",
   'juicebox-recommendations': "Juice Box Recommendations suggests detailing products specifically for your vehicle's needs.",
+  'dream-garage': "Dream Garage showcases your top automotive and lifestyle preferences including favorite brands, dream cars, tracks, and aspirational lifestyle choices.",
   'recent-photos': "Recent Photos displays your latest automotive photography uploads."
 };
 
@@ -93,6 +96,26 @@ const renderWidget = (widget: WidgetType) => {
           explanationContent={explanation}
         >
           <DriveJournalWidget />
+        </DashboardWidget>
+      );
+    case 'dream-garage':
+      return (
+        <DashboardWidget 
+          key={widget.id} 
+          widget={widget}
+          explanationContent={explanation}
+        >
+          <DreamGarageWidget />
+        </DashboardWidget>
+      );
+    case 'locker-room':
+      return (
+        <DashboardWidget 
+          key={widget.id} 
+          widget={widget}
+          explanationContent={explanation}
+        >
+          <LockerRoomWidget />
         </DashboardWidget>
       );
     default:
