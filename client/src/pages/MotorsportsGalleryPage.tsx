@@ -74,36 +74,60 @@ const MotorsportsGalleryPage: React.FC = () => {
     // Extract all media from all events
     eventsData.forEach(event => {
       if (event.media && event.media.length > 0) {
-        allMedia = [...allMedia, ...event.media.map(m => ({...m, event: event.name}))];
+        const eventMedia = event.media.map(m => {
+          // Ensure the media item has the correct type
+          if (!m.type) {
+            console.warn('Media item missing type:', m);
+            return { ...m, type: 'image', event: event.name }; // Default to image if no type
+          }
+          return { ...m, event: event.name };
+        });
+        allMedia = [...allMedia, ...eventMedia];
       }
     });
     
-    console.log('Total media items before filtering:', allMedia.length);
+    console.log('Total media items before filtering:', allMedia.length, allMedia);
     console.log('Current media filter:', mediaFilter);
     
     // Apply search filter if query exists
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       allMedia = allMedia.filter(item => 
-        item.title.toLowerCase().includes(query) || 
-        item.description?.toLowerCase().includes(query) ||
-        item.event?.toLowerCase().includes(query)
+        (item.title && item.title.toLowerCase().includes(query)) || 
+        (item.description && item.description.toLowerCase().includes(query)) ||
+        (item.event && item.event.toLowerCase().includes(query))
       );
       console.log('Media items after search filter:', allMedia.length);
     }
     
-    // Apply media type filter
-    let filteredMedia = allMedia;
+    // Apply media type filter with enhanced logging
+    let filteredMedia = [...allMedia]; // Create a new array to avoid reference issues
     if (mediaFilter === 'photos') {
-      filteredMedia = allMedia.filter(item => item.type === 'image');
+      console.log('Filtering for photos only...');
+      filteredMedia = allMedia.filter(item => {
+        const isImage = item.type === 'image';
+        if (!isImage) {
+          console.log('Filtered out non-image:', item);
+        }
+        return isImage;
+      });
       console.log('Photos after filtering:', filteredMedia.length);
     } else if (mediaFilter === 'videos') {
-      filteredMedia = allMedia.filter(item => item.type === 'video');
+      console.log('Filtering for videos only...');
+      filteredMedia = allMedia.filter(item => {
+        const isVideo = item.type === 'video';
+        if (!isVideo) {
+          console.log('Filtered out non-video:', item);
+        }
+        return isVideo;
+      });
       console.log('Videos after filtering:', filteredMedia.length);
     }
     
-    console.log('Final media items after all filtering:', filteredMedia.length);
-    return filteredMedia;
+    console.log('Final media items after all filtering:', filteredMedia.length, filteredMedia);
+    
+    // Make sure we always return an array
+    return Array.isArray(filteredMedia) ? filteredMedia : [];
   };
   
   // Get media for active event
