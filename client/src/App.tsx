@@ -335,6 +335,7 @@ function App() {
                         <Route path="/seasonal-checklist" element={<ProtectedRoute><SeasonalChecklistPage /></ProtectedRoute>} />
                         <Route path="/pre-drive-checklist" element={<ProtectedRoute><PreDriveChecklistPage /></ProtectedRoute>} />
                         <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                        <Route path="/settings/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
                         <Route path="/apexvault" element={<ProtectedRoute><UserProfileHubPage /></ProtectedRoute>} />
                         <Route path="/vehicle-mods/:id" element={<ProtectedRoute><VehicleModsPage /></ProtectedRoute>} />
                         <Route path="/membership" element={<ProtectedRoute><MembershipPage /></ProtectedRoute>} />
