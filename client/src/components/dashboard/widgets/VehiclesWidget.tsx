@@ -4,15 +4,15 @@ import { Car, Plus, Check, Clock } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 const VehiclesWidget: React.FC = () => {
-  const { vehicles, activeVehicle, setActiveVehicle } = useVehicle();
-  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(activeVehicle?.id || null);
+  const { vehicles, selectedVehicle, setSelectedVehicle } = useVehicle();
+  const [selectedVehicleId, setSelectedVehicleId] = useState<string | null>(selectedVehicle?.id || null);
   
-  // Sets the active vehicle and updates the selection state
+  // Sets the selected vehicle and updates the selection state
   const handleVehicleSelect = (vehicleId: string) => {
     setSelectedVehicleId(vehicleId);
     const vehicle = vehicles.find(v => v.id === vehicleId);
     if (vehicle) {
-      setActiveVehicle(vehicle);
+      setSelectedVehicle(vehicle);
     }
   };
   
@@ -47,10 +47,10 @@ const VehiclesWidget: React.FC = () => {
             >
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
-                  {vehicle.imageUrl ? (
+                  {vehicle.primaryImage ? (
                     <img 
-                      src={vehicle.imageUrl} 
-                      alt={vehicle.displayName} 
+                      src={vehicle.primaryImage} 
+                      alt={vehicle.nickname || `${vehicle.year} ${vehicle.make} ${vehicle.model}`} 
                       className="w-10 h-10 rounded-md object-cover bg-black/50"
                     />
                   ) : (
@@ -61,7 +61,7 @@ const VehiclesWidget: React.FC = () => {
                   
                   <div className="ml-3">
                     <p className="font-medium text-blue-200">
-                      {vehicle.displayName}
+                      {vehicle.nickname || `${vehicle.make} ${vehicle.model}`}
                       {selectedVehicleId === vehicle.id && (
                         <span className="ml-2 text-green-400 text-xs">
                           <Check className="h-3 w-3 inline" />
@@ -79,10 +79,10 @@ const VehiclesWidget: React.FC = () => {
                 <div className="text-right text-xs text-gray-500 flex flex-col items-end">
                   <div className="flex items-center mb-1">
                     <Clock className="h-3 w-3 mr-1" />
-                    <span>2 days ago</span>
+                    <span>{new Date(vehicle.updatedAt).toLocaleDateString()}</span>
                   </div>
                   <span className="text-blue-400">
-                    {vehicle.mileage?.toLocaleString() || '—'} mi
+                    {vehicle.color || 'Color not set'}
                   </span>
                 </div>
               </div>
@@ -90,10 +90,10 @@ const VehiclesWidget: React.FC = () => {
               {/* Quick status indicators */}
               <div className="mt-2 flex items-center space-x-2">
                 <div className="bg-blue-900/30 rounded px-2 py-0.5 text-xs text-blue-300">
-                  Maintenance: {vehicle.maintenanceStatus || 'Good'}
+                  Maintenance: {vehicle.maintenanceItems?.length ? `${vehicle.maintenanceItems.length} items` : 'None'}
                 </div>
                 <div className="bg-blue-900/30 rounded px-2 py-0.5 text-xs text-blue-300">
-                  Gloss: {vehicle.glossLevel || '85%'}
+                  Modifications: {vehicle.modifications ? 'Yes' : 'Stock'}
                 </div>
               </div>
             </div>
