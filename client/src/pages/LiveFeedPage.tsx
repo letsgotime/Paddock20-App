@@ -299,7 +299,7 @@ const LiveFeedPage: React.FC = () => {
             <h3 className="font-bold text-lg text-blue-400 mb-4">Top Contributors</h3>
             <div className="space-y-3">
               <Contributor 
-                name="Alex Morgan"
+                name="Gavin Brooks"
                 level="Apex Legend"
                 avatar="https://randomuser.me/api/portraits/men/32.jpg"
                 contributions={247}
@@ -904,7 +904,7 @@ const getImageQuery = (type: FeedItem['type']): string => {
 };
 
 const getRandomName = (): string => {
-  const firstNames = ['Alex', 'Jordan', 'Casey', 'Taylor', 'Morgan', 'Jamie', 'Riley', 'Avery', 'Kendall', 'Parker', 'Michael', 'Sarah', 'David', 'Emma', 'James', 'Sophia', 'Robert', 'Olivia', 'John', 'Isabella'];
+  const firstNames = ['Jordan', 'Casey', 'Taylor', 'Morgan', 'Jamie', 'Riley', 'Avery', 'Kendall', 'Parker', 'Michael', 'Sarah', 'David', 'Emma', 'James', 'Sophia', 'Robert', 'Olivia', 'John', 'Isabella', 'Gavin'];
   const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Miller', 'Davis', 'Garcia', 'Rodriguez', 'Wilson', 'Martinez', 'Anderson', 'Taylor', 'Thomas', 'Hernandez', 'Moore', 'Martin', 'Jackson', 'Thompson', 'White'];
   
   return `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;

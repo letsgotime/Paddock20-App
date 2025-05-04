@@ -1,11 +1,20 @@
-import { useState } from 'react';
+import { useState, useContext } from 'react';
+import { AuthContext } from '../context/AuthContext';
 
 /**
- * Development version of auth hook with hardcoded values
- * to avoid authentication errors
+ * Hook that provides access to authentication functionality
+ * Falls back to development values if no context is available
  */
 export function useAuth() {
-  // Hardcoded dev user to prevent auth errors
+  // First try to use the real AuthContext
+  const authContext = useContext(AuthContext);
+  
+  // If we have an auth context, use it
+  if (authContext) {
+    return authContext;
+  }
+  
+  // Otherwise, provide a fallback implementation for development
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<Error | null>(null);
   
@@ -58,8 +67,10 @@ export function useAuth() {
     return true;
   };
   
+  // Return dev implementation
   return {
     user,
+    session: user ? { user } : null,
     loading,
     error,
     login,
@@ -67,5 +78,3 @@ export function useAuth() {
     logout
   };
 }
-
-// Types are already defined in AuthContext.tsx

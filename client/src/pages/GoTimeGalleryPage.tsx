@@ -267,7 +267,7 @@ const GoTimeGalleryPage: React.FC = () => {
             collection: "Formula 1 Experiences",
             date: "2023-05-28",
             location: "Monte Carlo, Monaco",
-            photographer: "Alex Daniels",
+            photographer: "Gavin Brooks",
             tags: ["F1", "Monaco", "Racing", "Sunset", "Harbor"],
             featured: true,
             likes: 342,

@@ -5,6 +5,7 @@ import WorldClockPanel from '../components/WorldClockPanel';
 import APIDebugger from '../components/APIDebugger';
 import supabase from '../services/supabaseClient';
 import DataSourceConnector from '../services/DataSourceConnector';
+import { useAuth } from '../hooks/useAuth';
 import { 
   Calendar, BarChart3, Car, Map, Settings, Bell, Shield, ChevronRight, 
   MessageSquare, HeartHandshake, Star, EyeOff, Gauge, ClipboardCheck, 
@@ -45,9 +46,9 @@ interface UserPreference {
 }
 
 function DashboardPage() {
-  // Get user data from AuthContext
-  const authContext = useContext(AuthContext);
-  const userName = authContext?.user?.username || 'gavingotime';
+  // Get user data from auth hook
+  const auth = useAuth();
+  const userName = auth?.user?.username || 'gavingotime';
   const [selectedVehicle, setSelectedVehicle] = useState<string>('2020 BMW 330i xDrive');
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
   const [recentDrives, setRecentDrives] = useState<RecentDrive[]>([]);
