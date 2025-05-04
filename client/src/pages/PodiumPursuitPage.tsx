@@ -297,16 +297,22 @@ const PodiumPursuitPage: React.FC = () => {
           Recent Achievements
         </h3>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {userRewards.rewards.slice(-4).map((reward) => (
-            <div key={reward.id} className="bg-gray-900/90 border border-blue-900/20 p-4 rounded-lg flex items-start">
-              <div className="mr-3 text-2xl">{reward.icon}</div>
-              <div>
-                <div className="text-white font-medium">{reward.title}</div>
-                <div className="text-sm text-blue-300 mt-1">{reward.points} pts</div>
-                <div className="text-xs text-gray-400 mt-1">Earned today</div>
+          {userRewards && userRewards.rewards ? 
+            userRewards.rewards.slice(-4).map((reward) => (
+              <div key={reward.id} className="bg-gray-900/90 border border-blue-900/20 p-4 rounded-lg flex items-start">
+                <div className="mr-3 text-2xl">{reward.icon}</div>
+                <div>
+                  <div className="text-white font-medium">{reward.title}</div>
+                  <div className="text-sm text-blue-300 mt-1">{reward.points} pts</div>
+                  <div className="text-xs text-gray-400 mt-1">Earned today</div>
+                </div>
               </div>
+            ))
+           : 
+            <div className="col-span-4 bg-gray-900/90 border border-blue-900/20 p-4 rounded-lg">
+              <p className="text-gray-400 text-center">No recent achievements yet. Complete challenges to earn rewards!</p>
             </div>
-          ))}
+          }
         </div>
       </section>
 
