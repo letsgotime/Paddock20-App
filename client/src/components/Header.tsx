@@ -70,9 +70,9 @@ const Header: React.FC = () => {
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, []);
   
-  // Close menu when route changes
+  // Close menu only when route changes, not on every render
   useEffect(() => {
-    // Always close the menu when location changes
+    // Only close if already open and the path actually changed
     if (isMenuOpen) {
       setIsMenuOpen(false);
       // Play close sound if enabled
@@ -81,7 +81,7 @@ const Header: React.FC = () => {
         playMotorsportSound('menu_select');
       }
     }
-  }, [location.pathname, isMenuOpen]);
+  }, [location.pathname]);
   
   const handleLogout = async () => {
     try {
