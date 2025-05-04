@@ -7,7 +7,7 @@ const F1TelemetryWeatherStation: React.FC = () => {
   const [forecast, setForecast] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [location, setLocation] = useState<{ lat: number | null, lon: number | null }>({ lat: null, lon: null });
-  const [locationName, setLocationName] = useState("Charlotte");
+  const [locationName, setLocationName] = useState("Your Location");
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
   const [automotiveData, setAutomotiveData] = useState<any>(null);
@@ -28,18 +28,18 @@ const F1TelemetryWeatherStation: React.FC = () => {
         },
         (error) => {
           console.error("Geolocation error:", error);
-          // Default to Charlotte, NC
-          setLocation({ lat: 35.2271, lon: -80.8431 });
+          // Use a default location
+          setLocation({ lat: 34.0232, lon: -84.3616 });
           toast({
             title: "Using default location",
-            description: "Charlotte, NC - Enable location for your area",
+            description: "Enable location services for local weather data",
             variant: "destructive",
           });
         }
       );
     } else {
-      // Default to Charlotte, NC if geolocation is not supported
-      setLocation({ lat: 35.2271, lon: -80.8431 });
+      // Default to Roswell, GA (30076) if geolocation is not supported
+      setLocation({ lat: 34.0232, lon: -84.3616 });
     }
   }, []);
 
@@ -74,7 +74,7 @@ const F1TelemetryWeatherStation: React.FC = () => {
       // If we don't have weather data yet, set default values
       if (!weather) {
         setWeather({
-          name: "Charlotte",
+          name: "Roswell",
           main: {
             temp: 72,
             feels_like: 75,
@@ -96,7 +96,7 @@ const F1TelemetryWeatherStation: React.FC = () => {
             all: 10
           }
         });
-        setLocationName("Charlotte");
+        setLocationName("Roswell");
       }
       
       // If we don't have automotive data yet, provide default values
@@ -189,9 +189,9 @@ const F1TelemetryWeatherStation: React.FC = () => {
       if (!response.ok) {
         // Instead of throwing error, handle gracefully
         setUsingFallbackData(true);
-        // Set default Charlotte weather data
+        // Set default Roswell weather data
         const fallbackData = {
-          name: "Charlotte",
+          name: "Roswell",
           main: {
             temp: 72,
             feels_like: 75,
@@ -218,7 +218,7 @@ const F1TelemetryWeatherStation: React.FC = () => {
       
       // Set default weather data
       const fallbackData = {
-        name: "Charlotte",
+        name: "Roswell",
         main: {
           temp: 72,
           feels_like: 75,
