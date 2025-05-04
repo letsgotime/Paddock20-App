@@ -4,9 +4,12 @@ import WeatherStation from '../components/WeatherStation';
 import WorldClockPanel from '../components/WorldClockPanel';
 import APIDebugger from '../components/APIDebugger';
 import supabase from '../services/supabaseClient';
-import { Calendar, BarChart3, Car, Map, Settings, Bell, Shield, ChevronRight, 
-         MessageSquare, HeartHandshake, Star, EyeOff, Gauge, ClipboardCheck, 
-         Wrench, Award, Trophy, FileText, Activity, Clock } from 'lucide-react';
+import { 
+  Calendar, BarChart3, Car, Map, Settings, Bell, Shield, ChevronRight, 
+  MessageSquare, HeartHandshake, Star, EyeOff, Gauge, ClipboardCheck, 
+  Wrench, Award, Trophy, FileText, Activity, Clock, User, 
+  Cloud, Brain, BookMarked, SprayCan
+} from 'lucide-react';
 
 interface UpcomingEvent {
   id: number;
@@ -47,7 +50,9 @@ function DashboardPage() {
   const [recentDrives, setRecentDrives] = useState<RecentDrive[]>([]);
   const [maintenanceAlerts, setMaintenanceAlerts] = useState<MaintenanceAlert[]>([]);
   const [userPreferences, setUserPreferences] = useState<UserPreference[]>([]);
-  const [dashboardLayout, setDashboardLayout] = useState<string[]>(['weather', 'world_clock', 'vehicles', 'drives', 'events', 'maintenance']);
+  const [dashboardLayout, setDashboardLayout] = useState<string[]>([
+    'weather', 'world_clock', 'vehicles', 'drives', 'events', 'maintenance'
+  ]);
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [driveStats, setDriveStats] = useState({
     totalDrives: 12,
@@ -260,21 +265,40 @@ function DashboardPage() {
                     ${event.type === 'drive' ? 'bg-green-900/30' : 
                       event.type === 'maintenance' ? 'bg-orange-900/30' : 
                       event.type === 'track' ? 'bg-red-900/30' : 'bg-blue-900/30'}`}>
-                    {event.type === 'drive' && <Map size={20} className="text-green-400" />}
-                    {event.type === 'maintenance' && <Wrench size={20} className="text-orange-400" />}
-                    {event.type === 'track' && <Gauge size={20} className="text-red-400" />}
-                    {event.type === 'event' && <Calendar size={20} className="text-blue-400" />}
+                    {event.type === 'drive' && <Map size={18} className="text-green-400" />}
+                    {event.type === 'maintenance' && <Wrench size={18} className="text-orange-400" />}
+                    {event.type === 'track' && <Activity size={18} className="text-red-400" />}
+                    {event.type === 'event' && <Calendar size={18} className="text-blue-400" />}
                   </div>
                   <div className="flex-1">
-                    <h3 className="text-white font-semibold">{event.title}</h3>
-                    <p className="text-xs text-gray-400">{event.description}</p>
-                  </div>
-                  <div className="text-right whitespace-nowrap">
-                    <p className="text-blue-400">{new Date(event.date).toLocaleDateString()}</p>
-                    <p className="text-xs text-gray-400">{new Date(event.date).toLocaleTimeString([], {hour: '2-digit', minute:'2-digit'})}</p>
+                    <p className="text-white font-medium">{event.title}</p>
+                    <div className="flex justify-between items-center mt-1">
+                      <p className="text-xs text-gray-400">{new Date(event.date).toLocaleString('en-US', {
+                        month: 'short',
+                        day: 'numeric',
+                        hour: 'numeric',
+                        minute: '2-digit'
+                      })}</p>
+                      {event.description && (
+                        <p className="text-xs text-gray-500">{event.description}</p>
+                      )}
+                    </div>
                   </div>
                 </div>
               ))}
+              
+              {upcomingEvents.length === 0 && (
+                <div className="py-6 text-center">
+                  <p className="text-gray-500">No upcoming events</p>
+                </div>
+              )}
+            </div>
+            
+            <div className="mt-4 flex justify-center">
+              <Link to="/add-event" className="text-blue-400 hover:text-blue-300 text-sm flex items-center">
+                <Calendar size={16} className="mr-1" />
+                <span>Add Event</span>
+              </Link>
             </div>
           </div>
         );
@@ -284,93 +308,41 @@ function DashboardPage() {
           <div className="apex-card rounded-lg mb-6">
             <div className="flex justify-between items-center mb-4">
               <h2 className="apex-header">Maintenance Alerts</h2>
-              <Link to="/garage-vault" className="text-green-500 hover:text-green-400 transition-colors flex items-center">
-                View Service History <ChevronRight size={16} />
+              <Link to="/maintenance-hub" className="text-green-500 hover:text-green-400 transition-colors flex items-center">
+                View All <ChevronRight size={16} />
               </Link>
             </div>
             
-            <div className="space-y-4">
+            <div className="divide-y divide-gray-800">
               {maintenanceAlerts.map(alert => (
-                <div key={alert.id} className={`p-3 rounded-lg border-l-4 bg-gray-900 flex justify-between items-center
-                  ${alert.priority === 'high' ? 'border-red-500' : 
-                    alert.priority === 'medium' ? 'border-yellow-500' : 
-                    'border-green-500'}`}
-                >
-                  <div>
-                    <h3 className="text-white font-semibold">{alert.serviceDue}</h3>
-                    <div className="flex items-center text-xs text-gray-400 mt-1">
-                      <Car size={12} className="mr-1" />
-                      <span className="mr-2">{alert.vehicle}</span>
-                      <Calendar size={12} className="mr-1" />
-                      <span>Due: {new Date(alert.dueDate).toLocaleDateString()}</span>
+                <div key={alert.id} className="py-3 hover:bg-gray-900/50 rounded-lg transition-colors">
+                  <div className="flex items-center">
+                    <div className={`w-2 h-full min-h-[40px] rounded-full mr-3
+                      ${alert.priority === 'high' ? 'bg-red-500' : 
+                        alert.priority === 'medium' ? 'bg-yellow-500' : 
+                        'bg-green-500'}`}>
                     </div>
-                  </div>
-                  <div className="text-right">
-                    <span className={`text-xs font-bold rounded-full px-2 py-1
-                      ${alert.priority === 'high' ? 'bg-red-900/30 text-red-400' : 
-                        alert.priority === 'medium' ? 'bg-yellow-900/30 text-yellow-400' : 
-                        'bg-green-900/30 text-green-400'}`}
-                    >
-                      {alert.priority === 'high' ? 'High Priority' : 
-                        alert.priority === 'medium' ? 'Medium Priority' : 
-                        'Low Priority'}
-                    </span>
-                    {alert.mileage && (
-                      <p className="text-xs text-gray-400 mt-1">Mileage: {alert.mileage}</p>
-                    )}
+                    <div className="flex-1">
+                      <div className="flex justify-between">
+                        <p className="text-white font-medium">{alert.serviceDue}</p>
+                        <p className="text-xs text-gray-400">Due: {new Date(alert.dueDate).toLocaleDateString()}</p>
+                      </div>
+                      <div className="flex justify-between items-center mt-1">
+                        <p className="text-xs text-gray-400">{alert.vehicle}</p>
+                        {alert.mileage && (
+                          <p className="text-xs text-gray-500">{alert.mileage.toLocaleString()} miles</p>
+                        )}
+                      </div>
+                    </div>
                   </div>
                 </div>
               ))}
-            </div>
-          </div>
-        );
-        
-      case 'achievements':
-        return (
-          <div className="apex-card rounded-lg mb-6">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="apex-header">Driver Achievements</h2>
-              <div className="bg-gray-900 px-3 py-1 rounded-full text-sm">
-                <span className="text-yellow-400 font-bold">{achievementPoints}</span>
-                <span className="text-gray-400 ml-1">points</span>
-              </div>
-            </div>
-            
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-2">
-              <div className="bg-gray-900 p-3 rounded-lg text-center">
-                <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-gradient-to-br from-blue-500 to-purple-500 flex items-center justify-center">
-                  <Trophy size={24} className="text-white" />
+              
+              {maintenanceAlerts.length === 0 && (
+                <div className="py-6 text-center">
+                  <p className="text-gray-500">No maintenance alerts</p>
                 </div>
-                <p className="text-white font-bold">Track Master</p>
-                <p className="text-xs text-gray-400">5 track days completed</p>
-              </div>
-              <div className="bg-gray-900 p-3 rounded-lg text-center">
-                <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-gradient-to-br from-green-500 to-emerald-500 flex items-center justify-center">
-                  <Map size={24} className="text-white" />
-                </div>
-                <p className="text-white font-bold">Road Warrior</p>
-                <p className="text-xs text-gray-400">1,000+ miles driven</p>
-              </div>
-              <div className="bg-gray-900 p-3 rounded-lg text-center">
-                <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center">
-                  <Wrench size={24} className="text-white" />
-                </div>
-                <p className="text-white font-bold">Mechanic</p>
-                <p className="text-xs text-gray-400">10 maintenance tasks</p>
-              </div>
-              <div className="bg-gray-900 p-3 rounded-lg text-center">
-                <div className="w-12 h-12 mx-auto mb-2 rounded-full bg-gradient-to-br from-rose-500 to-red-500 flex items-center justify-center">
-                  <Award size={24} className="text-white" />
-                </div>
-                <p className="text-white font-bold">Curve Master</p>
-                <p className="text-xs text-gray-400">Mountain route expert</p>
-              </div>
-            </div>
-            
-            <div className="text-center mt-3">
-              <Link to="#" className="text-blue-400 hover:text-blue-300 text-sm">
-                View all achievements →
-              </Link>
+              )}
             </div>
           </div>
         );
@@ -381,196 +353,448 @@ function DashboardPage() {
   };
 
   return (
-    <div className="p-6 md:p-10 bg-black min-h-screen">
-      <div className="max-w-7xl mx-auto">
-        {/* Logo and Header */}
-        <div className="flex flex-col md:flex-row justify-between items-center mb-8">
-          <div className="flex items-center space-x-4 mb-6 md:mb-0">
-            <img 
-              src="/assets/GTM Logo - Green-White.png" 
-              alt="GoTime Motorsports" 
-              className="h-16 w-auto"
-            />
-            <div>
-              <h1 className="text-blue-400 font-orbitron text-3xl uppercase">Paddock20 Dashboard</h1>
-              <p className="text-gray-400">Welcome back, <span className="text-white">{userName}</span></p>
+    <div className="bg-black min-h-screen overflow-x-hidden">
+      {/* F1-inspired carbon fiber background with telemetry grid */}
+      <div className="fixed inset-0 z-0 opacity-20">
+        <div className="absolute inset-0 bg-[radial-gradient(#2563eb_1px,transparent_1px)] bg-fixed bg-[size:20px_20px]"></div>
+      </div>
+      
+      {/* Main Dashboard Container */}
+      <div className="relative z-10">
+        {/* Top Command Bar - Fixed Position */}
+        <div className="sticky top-0 z-50 bg-gradient-to-r from-black/95 via-gray-900/90 to-black/95 border-b border-blue-500/30 backdrop-blur-md">
+          <div className="mx-auto py-3 px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between">
+              {/* Left: Logo & Branding */}
+              <div className="flex items-center">
+                <div className="relative mr-3 flex items-center">
+                  <img 
+                    src="/assets/GTM Logo - Green-White.png" 
+                    alt="GoTime Motorsports" 
+                    className="h-12 w-auto drop-shadow-[0_0_8px_rgba(8,197,25,0.6)]"
+                  />
+                  <div className="absolute -top-1 -right-1 h-3 w-3 flex items-center justify-center">
+                    <span className="animate-ping absolute h-full w-full rounded-full bg-green-500 opacity-75"></span>
+                    <span className="relative h-2 w-2 rounded-full bg-green-500"></span>
+                  </div>
+                </div>
+                
+                <div>
+                  <div className="flex items-center">
+                    <h1 className="text-blue-400 font-orbitron text-2xl uppercase font-bold tracking-widest border-b border-blue-500/30 pb-0.5">PADDOCK-20</h1>
+                    <div className="ml-2 px-1.5 py-0.5 bg-green-500/20 border border-green-500 rounded text-[10px] text-green-400 font-mono tracking-tight">
+                      VER 2027.4
+                    </div>
+                  </div>
+                  <div className="flex items-center">
+                    <div className="h-1.5 w-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse"></div>
+                    <p className="text-xs text-gray-400">
+                      <span className="text-green-400 font-medium">{userName}</span>
+                      <span className="mx-1.5 text-gray-600">|</span>
+                      <span className="uppercase font-mono tracking-tight">{new Date().toLocaleTimeString('en-US', {hour12: false})}</span>
+                      <span className="mx-1.5 text-gray-600">|</span>
+                      <span className="text-blue-400">ELITE DRIVER</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Right: Controls */}
+              <div className="flex items-center gap-3">
+                {/* Vehicle Selector */}
+                <div className="bg-black/60 border border-gray-800 rounded-lg px-3 py-1.5 hidden md:flex items-center">
+                  <Car size={14} className="text-blue-400 mr-2" />
+                  <select 
+                    value={selectedVehicle}
+                    onChange={(e) => setSelectedVehicle(e.target.value)}
+                    className="bg-transparent border-none text-white text-sm focus:ring-0 focus:outline-none pr-8 py-0"
+                  >
+                    <option value="Ferrari F8 Tributo">Ferrari F8 Tributo</option>
+                    <option value="Porsche 911 GT3">Porsche 911 GT3</option>
+                    <option value="Lamborghini Huracán">Lamborghini Huracán</option>
+                  </select>
+                </div>
+                
+                {/* Notifications */}
+                <div className="relative group">
+                  <button className="relative bg-black/60 border border-gray-800 hover:border-blue-500 p-2 rounded-lg transition-all">
+                    <Bell size={18} className="text-blue-400" />
+                    {notifications > 0 && (
+                      <div className="absolute -top-1 -right-1 flex">
+                        <span className="relative flex h-3 w-3">
+                          <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75"></span>
+                          <span className="relative inline-flex rounded-full h-3 w-3 bg-red-500 items-center justify-center text-[8px] text-white font-bold">{notifications}</span>
+                        </span>
+                      </div>
+                    )}
+                  </button>
+                  
+                  {/* Notifications Dropdown */}
+                  <div className="absolute top-full right-0 mt-1 w-80 bg-black/90 border border-blue-500/30 rounded-lg p-3 invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-300 z-50">
+                    <div className="flex items-center justify-between mb-2">
+                      <h3 className="text-blue-400 font-orbitron text-xs uppercase">System Notifications</h3>
+                      <span className="text-xs text-gray-500">Today</span>
+                    </div>
+                    <div className="space-y-2">
+                      <div className="p-2 bg-gray-900/50 rounded border-l-2 border-red-500 hover:bg-gray-900/80 transition-colors">
+                        <div className="flex justify-between items-start">
+                          <div className="flex">
+                            <Wrench size={14} className="text-red-400 mt-0.5 mr-2 flex-shrink-0" />
+                            <div>
+                              <p className="text-xs text-white font-medium">Maintenance Alert</p>
+                              <p className="text-xs text-gray-400">Ferrari F8 Tributo: Oil Change Due</p>
+                            </div>
+                          </div>
+                          <span className="text-[10px] text-gray-500">2h ago</span>
+                        </div>
+                      </div>
+                      <div className="p-2 bg-gray-900/50 rounded border-l-2 border-yellow-500 hover:bg-gray-900/80 transition-colors">
+                        <div className="flex justify-between items-start">
+                          <div className="flex">
+                            <Cloud size={14} className="text-yellow-400 mt-0.5 mr-2 flex-shrink-0" />
+                            <div>
+                              <p className="text-xs text-white font-medium">Weather Warning</p>
+                              <p className="text-xs text-gray-400">Rain expected on planned route</p>
+                            </div>
+                          </div>
+                          <span className="text-[10px] text-gray-500">5h ago</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Edit Mode Toggle */}
+                <button 
+                  onClick={() => setIsEditMode(!isEditMode)} 
+                  className={`bg-black/60 border ${isEditMode ? 'border-green-500' : 'border-gray-800 hover:border-blue-500'} p-2 rounded-lg transition-all group`}
+                  title={isEditMode ? "Save Layout" : "Edit Dashboard"}
+                >
+                  <Settings size={18} className={`${isEditMode ? 'text-green-400' : 'text-blue-400'} group-hover:rotate-90 transition-transform duration-300`} />
+                </button>
+                
+                {/* Command Center Menu */}
+                <div className="relative group z-50">
+                  <button className="bg-black/60 border border-gray-800 hover:border-blue-500 p-2 rounded-lg transition-all">
+                    <ChevronRight size={18} className="text-blue-400" />
+                  </button>
+                  
+                  {/* Command Center Dropdown */}
+                  <div className="absolute top-full right-0 mt-1 w-72 bg-black/90 backdrop-blur-sm border border-blue-500/30 rounded-lg invisible opacity-0 group-hover:visible group-hover:opacity-100 transition-all duration-300 z-50 overflow-hidden">
+                    <div className="p-3 border-b border-gray-800">
+                      <h3 className="text-blue-400 font-orbitron text-xs uppercase mb-1 flex items-center">
+                        <Shield className="h-3 w-3 mr-1.5" /> Command Center
+                      </h3>
+                      <p className="text-[11px] text-gray-400">Access your complete Paddock20 ecosystem</p>
+                    </div>
+                    
+                    <div className="grid grid-cols-2 p-2 gap-1.5">
+                      <Link to="/garage-vault" className="flex items-center p-2 hover:bg-blue-900/20 rounded group">
+                        <div className="w-8 h-8 rounded-full bg-blue-900/20 flex items-center justify-center mr-2 group-hover:scale-110 transition-transform">
+                          <Car size={14} className="text-blue-400" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-white">Garage Vault</p>
+                          <p className="text-[10px] text-gray-500">3 Vehicles</p>
+                        </div>
+                      </Link>
+                      <Link to="/maintenance-hub" className="flex items-center p-2 hover:bg-blue-900/20 rounded group">
+                        <div className="w-8 h-8 rounded-full bg-blue-900/20 flex items-center justify-center mr-2 group-hover:scale-110 transition-transform">
+                          <Wrench size={14} className="text-blue-400" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-white">Maintenance</p>
+                          <p className="text-[10px] text-gray-500">2 Alerts</p>
+                        </div>
+                      </Link>
+                      <Link to="/juice-box" className="flex items-center p-2 hover:bg-blue-900/20 rounded group">
+                        <div className="w-8 h-8 rounded-full bg-green-900/20 flex items-center justify-center mr-2 group-hover:scale-110 transition-transform">
+                          <SprayCan size={14} className="text-green-400" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-white">Juice Box</p>
+                          <p className="text-[10px] text-gray-500">Detailing</p>
+                        </div>
+                      </Link>
+                      <Link to="/manifest-station" className="flex items-center p-2 hover:bg-blue-900/20 rounded group">
+                        <div className="w-8 h-8 rounded-full bg-green-900/20 flex items-center justify-center mr-2 group-hover:scale-110 transition-transform">
+                          <Brain size={14} className="text-green-400" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-white">Manifest</p>
+                          <p className="text-[10px] text-gray-500">Build Assistant</p>
+                        </div>
+                      </Link>
+                      <Link to="/drive-journal" className="flex items-center p-2 hover:bg-blue-900/20 rounded group">
+                        <div className="w-8 h-8 rounded-full bg-yellow-900/20 flex items-center justify-center mr-2 group-hover:scale-110 transition-transform">
+                          <Clock size={14} className="text-yellow-400" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-white">Drive Journal</p>
+                          <p className="text-[10px] text-gray-500">{driveStats.totalDrives} Drives</p>
+                        </div>
+                      </Link>
+                      <Link to="/playlists" className="flex items-center p-2 hover:bg-blue-900/20 rounded group">
+                        <div className="w-8 h-8 rounded-full bg-yellow-900/20 flex items-center justify-center mr-2 group-hover:scale-110 transition-transform">
+                          <MessageSquare size={14} className="text-yellow-400" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-white">Playlists</p>
+                          <p className="text-[10px] text-gray-500">Media</p>
+                        </div>
+                      </Link>
+                      <Link to="/podium-pursuit" className="flex items-center p-2 hover:bg-blue-900/20 rounded group">
+                        <div className="w-8 h-8 rounded-full bg-purple-900/20 flex items-center justify-center mr-2 group-hover:scale-110 transition-transform">
+                          <Trophy size={14} className="text-purple-400" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-white">Podium Pursuit</p>
+                          <p className="text-[10px] text-gray-500">{achievementPoints} Points</p>
+                        </div>
+                      </Link>
+                      <Link to="/gallery" className="flex items-center p-2 hover:bg-blue-900/20 rounded group">
+                        <div className="w-8 h-8 rounded-full bg-purple-900/20 flex items-center justify-center mr-2 group-hover:scale-110 transition-transform">
+                          <BookMarked size={14} className="text-purple-400" />
+                        </div>
+                        <div>
+                          <p className="text-xs text-white">Media Gallery</p>
+                          <p className="text-[10px] text-gray-500">Photos & Docs</p>
+                        </div>
+                      </Link>
+                    </div>
+                    
+                    {/* Account Management */}
+                    <div className="border-t border-gray-800 p-2">
+                      <div className="p-2 flex items-center justify-between">
+                        <div className="flex items-center">
+                          <div className="w-8 h-8 rounded-full bg-gray-900 flex items-center justify-center mr-2">
+                            <User size={14} className="text-gray-400" />
+                          </div>
+                          <p className="text-xs text-gray-400">Account Settings</p>
+                        </div>
+                        <button 
+                          onClick={handleLogout}
+                          className="text-[10px] text-gray-500 hover:text-gray-300 transition-colors"
+                        >
+                          Sign Out
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        
+        {/* Main Dashboard Content */}
+        <div className="max-w-[1800px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+          {/* F1 Telemetry HUD - Top Stats Bar */}
+          <div className="bg-black/80 border border-blue-500/20 rounded-lg backdrop-blur-sm p-4 mb-6 relative overflow-hidden">
+            {/* F1-style scanline animation */}
+            <div className="absolute left-0 top-0 w-full h-full pointer-events-none">
+              <div className="absolute top-0 left-0 right-0 h-px bg-blue-500/30"></div>
+              <div className="absolute left-0 top-0 bottom-0 w-px bg-blue-500/30"></div>
+              <div className="absolute bottom-0 left-0 right-0 h-px bg-blue-500/30"></div>
+              <div className="absolute right-0 top-0 bottom-0 w-px bg-blue-500/30"></div>
+              <div className="absolute top-0 left-0 h-full w-1 bg-gradient-to-b from-blue-500 via-transparent to-transparent opacity-30"></div>
+            </div>
+            
+            {/* Telemetry Active Status */}
+            {showWelcomeMessage ? (
+              <div className="relative z-10 flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="h-12 w-1 bg-blue-500 rounded-full mr-4 animate-pulse"></div>
+                  <div>
+                    <div className="flex items-center">
+                      <h2 className="text-blue-400 font-orbitron text-lg uppercase tracking-wider">TELEMETRY ACTIVE</h2>
+                      <button 
+                        onClick={() => setShowWelcomeMessage(false)} 
+                        className="ml-3 text-gray-400 hover:text-white"
+                        title="Minimize Telemetry"
+                      >
+                        <EyeOff size={14} />
+                      </button>
+                    </div>
+                    <p className="text-xs text-gray-400 max-w-2xl">
+                      Full system integration active. Driver data synchronized across all Paddock20 modules. Activate individual command modules below or use quick access commands.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-4">
+                  <div className="flex flex-col items-end">
+                    <div className="text-xs text-gray-500 uppercase">SESSION</div>
+                    <div className="font-orbitron text-green-400 text-lg">ACTIVE</div>
+                  </div>
+                  
+                  <Link to="/route-planner" className="bg-green-500/20 border border-green-500 text-green-400 hover:bg-green-500/30 px-4 py-2 rounded text-sm font-medium transition-colors flex items-center">
+                    <Map size={16} className="mr-2" />
+                    Start New Drive
+                  </Link>
+                </div>
+              </div>
+            ) : (
+              <div className="relative z-10 flex flex-col md:flex-row items-center justify-between">
+                <div className="flex items-center mb-4 md:mb-0">
+                  <div className="h-10 w-1 bg-blue-500 rounded-full mr-4"></div>
+                  <div>
+                    <h2 className="text-blue-400 font-orbitron text-md uppercase tracking-wider flex items-center">
+                      <Trophy size={16} className="mr-2 text-yellow-400" />
+                      Driver Performance Dashboard
+                    </h2>
+                  </div>
+                </div>
+                
+                <div className="flex items-center space-x-3">
+                  <button
+                    onClick={() => setShowWelcomeMessage(true)}
+                    className="bg-blue-900/30 border border-blue-500/40 hover:bg-blue-900/50 text-blue-400 px-3 py-1.5 rounded text-xs font-medium transition-colors flex items-center"
+                  >
+                    <Gauge size={14} className="mr-1.5" />
+                    Show Telemetry
+                  </button>
+                  
+                  <Link to="/route-planner" className="bg-green-900/30 border border-green-500/40 hover:bg-green-900/50 text-green-400 px-3 py-1.5 rounded text-xs font-medium transition-colors flex items-center">
+                    <Map size={14} className="mr-1.5" />
+                    Plan Drive
+                  </Link>
+                </div>
+              </div>
+            )}
+          </div>
+          
+          {/* Dashboard Layout Edit Mode */}
+          {isEditMode && (
+            <div className="mb-6 bg-black/60 p-4 rounded-lg border border-blue-500/30">
+              <div className="flex justify-between items-center mb-4">
+                <h2 className="text-blue-400 font-orbitron text-sm uppercase">Command Center Layout</h2>
+                <div>
+                  <button 
+                    onClick={saveLayout} 
+                    className="bg-green-500/20 border border-green-500 text-green-400 hover:bg-green-500/30 px-3 py-1.5 rounded-lg mr-2 text-xs"
+                  >
+                    Save Layout
+                  </button>
+                  <button 
+                    onClick={() => setIsEditMode(false)} 
+                    className="bg-gray-900/80 border border-gray-700 text-gray-300 hover:text-white px-3 py-1.5 rounded-lg text-xs"
+                  >
+                    Cancel
+                  </button>
+                </div>
+              </div>
+              
+              <div className="space-y-2">
+                {dashboardLayout.map((panel, index) => (
+                  <div key={index} className="flex items-center bg-black/70 p-3 rounded-lg border border-gray-800">
+                    <div className="mr-3 text-gray-500 font-mono text-xs">
+                      {index + 1}.
+                    </div>
+                    <div className="flex-1 capitalize text-white">
+                      {panel.replace('_', ' ')} Module
+                    </div>
+                    <div className="flex space-x-2">
+                      <button 
+                        onClick={() => movePanel(index, 'up')} 
+                        disabled={index === 0}
+                        className={`p-1 rounded-full ${index === 0 ? 'text-gray-700' : 'text-blue-400 hover:bg-blue-900/20'}`}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
+                        </svg>
+                      </button>
+                      <button 
+                        onClick={() => movePanel(index, 'down')} 
+                        disabled={index === dashboardLayout.length - 1}
+                        className={`p-1 rounded-full ${index === dashboardLayout.length - 1 ? 'text-gray-700' : 'text-blue-400 hover:bg-blue-900/20'}`}
+                      >
+                        <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                          <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          
+          {/* Render dashboard panels according to user's layout preference */}
+          {dashboardLayout.map((panel, index) => (
+            <div key={index} className="mb-6">
+              {renderDashboardPanel(panel)}
+            </div>
+          ))}
+          
+          {/* Quick Action Grid */}
+          <div className="mt-8 mb-10">
+            <div className="flex items-center mb-4">
+              <div className="w-1 h-6 bg-green-500 mr-3"></div>
+              <h2 className="text-green-400 font-orbitron text-lg uppercase tracking-wider">Quick Navigation</h2>
+            </div>
+            
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              <Link to="/route-planner" className="bg-black/60 border border-blue-500/20 hover:border-blue-500/50 p-4 rounded-lg text-center transition-all duration-300 group">
+                <div className="w-12 h-12 bg-blue-900/20 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                  <Map size={24} className="text-blue-400" />
+                </div>
+                <p className="text-sm text-white font-medium">Route Planner</p>
+                <p className="text-xs text-gray-500">Plan your next drive</p>
+              </Link>
+              
+              <Link to="/drive-journal" className="bg-black/60 border border-green-500/20 hover:border-green-500/50 p-4 rounded-lg text-center transition-all duration-300 group">
+                <div className="w-12 h-12 bg-green-900/20 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                  <FileText size={24} className="text-green-400" />
+                </div>
+                <p className="text-sm text-white font-medium">Drive Journal</p>
+                <p className="text-xs text-gray-500">Log your experiences</p>
+              </Link>
+              
+              <Link to="/garage-vault" className="bg-black/60 border border-purple-500/20 hover:border-purple-500/50 p-4 rounded-lg text-center transition-all duration-300 group">
+                <div className="w-12 h-12 bg-purple-900/20 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                  <Car size={24} className="text-purple-400" />
+                </div>
+                <p className="text-sm text-white font-medium">Garage Vault</p>
+                <p className="text-xs text-gray-500">Manage your vehicles</p>
+              </Link>
+              
+              <Link to="/weather-paddock" className="bg-black/60 border border-cyan-500/20 hover:border-cyan-500/50 p-4 rounded-lg text-center transition-all duration-300 group">
+                <div className="w-12 h-12 bg-cyan-900/20 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                  <Cloud size={24} className="text-cyan-400" />
+                </div>
+                <p className="text-sm text-white font-medium">Weather</p>
+                <p className="text-xs text-gray-500">Check conditions</p>
+              </Link>
+              
+              <Link to="/juice-box" className="bg-black/60 border border-amber-500/20 hover:border-amber-500/50 p-4 rounded-lg text-center transition-all duration-300 group">
+                <div className="w-12 h-12 bg-amber-900/20 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                  <SprayCan size={24} className="text-amber-400" />
+                </div>
+                <p className="text-sm text-white font-medium">Juice Box™</p>
+                <p className="text-xs text-gray-500">Detailing expertise</p>
+              </Link>
+              
+              <Link to="/manifest-station" className="bg-black/60 border border-rose-500/20 hover:border-rose-500/50 p-4 rounded-lg text-center transition-all duration-300 group">
+                <div className="w-12 h-12 bg-rose-900/20 rounded-full flex items-center justify-center mx-auto mb-3 group-hover:scale-110 transition-transform">
+                  <Brain size={24} className="text-rose-400" />
+                </div>
+                <p className="text-sm text-white font-medium">Manifest</p>
+                <p className="text-xs text-gray-500">Build assistant</p>
+              </Link>
             </div>
           </div>
           
-          <div className="flex items-center space-x-4">
-            <button className="relative bg-gray-900 hover:bg-gray-800 p-2 rounded-full transition-colors">
-              <Bell size={20} className="text-gray-400" />
-              {notifications > 0 && (
-                <span className="absolute top-0 right-0 bg-red-500 text-white text-xs w-4 h-4 flex items-center justify-center rounded-full">
-                  {notifications}
-                </span>
-              )}
-            </button>
-            
-            <button 
-              onClick={() => setIsEditMode(!isEditMode)} 
-              className={`p-2 rounded-full transition-colors ${isEditMode ? 'bg-blue-600 text-white' : 'bg-gray-900 hover:bg-gray-800 text-gray-400'}`}
-            >
-              <Settings size={20} />
-            </button>
-            
-            <button 
-              onClick={handleLogout}
-              className="bg-red-600 hover:bg-red-700 text-white px-3 py-1.5 rounded-lg transition-colors"
-            >
-              Logout
-            </button>
+          {/* API Debugger Component - Developer Tool (hidden in production) */}
+          <div className="mt-12 mb-6">
+            <APIDebugger />
           </div>
-        </div>
-        
-        {/* Welcome Banner - Can be dismissed */}
-        {showWelcomeMessage && (
-          <div className="bg-gradient-to-r from-blue-900/50 to-purple-900/30 rounded-xl p-6 mb-8 relative">
-            <button 
-              onClick={() => setShowWelcomeMessage(false)} 
-              className="absolute top-3 right-3 text-gray-400 hover:text-white"
-            >
-              <EyeOff size={18} />
-            </button>
-            
-            <div className="flex flex-col md:flex-row items-center">
-              <div className="mb-4 md:mb-0 md:mr-6">
-                <h2 className="text-xl font-orbitron text-blue-400 mb-2">Welcome to Your Personalized Dashboard</h2>
-                <p className="text-gray-300">
-                  Track your vehicles, manage upcoming drives, get maintenance alerts, and more.
-                  Customize this dashboard to show exactly what you want to see.
-                </p>
-                <div className="mt-4 flex gap-3">
-                  <Link to="/garage-vault" className="apex-button bg-blue-600 hover:bg-blue-500 text-white px-4 py-2 rounded-lg transition-all flex items-center gap-2">
-                    <Car size={16} />
-                    <span>Explore Garage</span>
-                  </Link>
-                  <Link to="/route-planner" className="apex-button bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg transition-all flex items-center gap-2">
-                    <Map size={16} />
-                    <span>Plan a Drive</span>
-                  </Link>
-                </div>
-              </div>
-              <div className="flex-shrink-0 bg-gradient-to-br from-blue-900/30 to-purple-900/20 p-4 rounded-lg">
-                <div className="flex items-center gap-2 text-lg text-white">
-                  <Shield className="text-green-400" />
-                  <span>Driver Status: <span className="text-green-400 font-bold">Active</span></span>
-                </div>
-                <div className="mt-2 grid grid-cols-2 gap-4">
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-400">{driveStats.totalDrives}</div>
-                    <div className="text-xs text-gray-400">Total Drives</div>
-                  </div>
-                  <div className="text-center">
-                    <div className="text-2xl font-bold text-blue-400">{driveStats.totalDistance}</div>
-                    <div className="text-xs text-gray-400">Miles</div>
-                  </div>
-                </div>
-              </div>
-            </div>
+          
+          {/* Footer */}
+          <div className="mt-16 text-center text-gray-500 text-sm border-t border-gray-800 pt-6">
+            <p>Paddock20 Portal © {new Date().getFullYear()} GoTime Motorsports</p>
+            <p className="mt-1">Designed for true automotive enthusiasts</p>
           </div>
-        )}
-        
-        {/* Dashboard Layout Edit Mode */}
-        {isEditMode && (
-          <div className="mb-6 bg-gray-900/50 p-4 rounded-lg border border-blue-900/50">
-            <div className="flex justify-between items-center mb-4">
-              <h2 className="text-blue-400 font-orbitron">Customize Dashboard Layout</h2>
-              <div>
-                <button 
-                  onClick={saveLayout} 
-                  className="bg-green-600 hover:bg-green-500 text-white px-4 py-2 rounded-lg mr-2"
-                >
-                  Save Layout
-                </button>
-                <button 
-                  onClick={() => setIsEditMode(false)} 
-                  className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg"
-                >
-                  Cancel
-                </button>
-              </div>
-            </div>
-            
-            <div className="space-y-2">
-              {dashboardLayout.map((panel, index) => (
-                <div key={index} className="flex items-center bg-black/50 p-3 rounded-lg">
-                  <div className="mr-3 text-gray-500">
-                    {index + 1}.
-                  </div>
-                  <div className="flex-1 capitalize text-white">
-                    {panel} Panel
-                  </div>
-                  <div className="flex space-x-2">
-                    <button 
-                      onClick={() => movePanel(index, 'up')} 
-                      disabled={index === 0}
-                      className={`p-1 rounded-full ${index === 0 ? 'text-gray-700' : 'text-blue-400 hover:bg-blue-900/20'}`}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M5 15l7-7 7 7" />
-                      </svg>
-                    </button>
-                    <button 
-                      onClick={() => movePanel(index, 'down')} 
-                      disabled={index === dashboardLayout.length - 1}
-                      className={`p-1 rounded-full ${index === dashboardLayout.length - 1 ? 'text-gray-700' : 'text-blue-400 hover:bg-blue-900/20'}`}
-                    >
-                      <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M19 9l-7 7-7-7" />
-                      </svg>
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
-        
-        {/* Render dashboard panels according to user's layout preference */}
-        {dashboardLayout.map((panel, index) => (
-          <div key={index}>
-            {renderDashboardPanel(panel)}
-          </div>
-        ))}
-        
-        {/* Quick Action Links */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4 mt-8">
-          <Link to="/route-planner" className="bg-gradient-to-br from-blue-900/40 to-blue-900/10 p-4 rounded-lg text-center hover:from-blue-800/40 hover:to-blue-800/10 transition-all group">
-            <Map size={24} className="mx-auto mb-2 text-blue-400 group-hover:scale-110 transition-transform" />
-            <span className="text-sm text-white">Route Planner</span>
-          </Link>
-          <Link to="/drive-journal" className="bg-gradient-to-br from-green-900/40 to-green-900/10 p-4 rounded-lg text-center hover:from-green-800/40 hover:to-green-800/10 transition-all group">
-            <FileText size={24} className="mx-auto mb-2 text-green-400 group-hover:scale-110 transition-transform" />
-            <span className="text-sm text-white">Drive Journal</span>
-          </Link>
-          <Link to="/garage-vault" className="bg-gradient-to-br from-purple-900/40 to-purple-900/10 p-4 rounded-lg text-center hover:from-purple-800/40 hover:to-purple-800/10 transition-all group">
-            <Car size={24} className="mx-auto mb-2 text-purple-400 group-hover:scale-110 transition-transform" />
-            <span className="text-sm text-white">Garage Vault</span>
-          </Link>
-          <Link to="/weather" className="bg-gradient-to-br from-cyan-900/40 to-cyan-900/10 p-4 rounded-lg text-center hover:from-cyan-800/40 hover:to-cyan-800/10 transition-all group">
-            <Activity size={24} className="mx-auto mb-2 text-cyan-400 group-hover:scale-110 transition-transform" />
-            <span className="text-sm text-white">Weather</span>
-          </Link>
-          <Link to="/broker-portal" className="bg-gradient-to-br from-amber-900/40 to-amber-900/10 p-4 rounded-lg text-center hover:from-amber-800/40 hover:to-amber-800/10 transition-all group">
-            <HeartHandshake size={24} className="mx-auto mb-2 text-amber-400 group-hover:scale-110 transition-transform" />
-            <span className="text-sm text-white">Broker Portal</span>
-          </Link>
-          <Link to="/juicebox" className="bg-gradient-to-br from-rose-900/40 to-rose-900/10 p-4 rounded-lg text-center hover:from-rose-800/40 hover:to-rose-800/10 transition-all group">
-            <Star size={24} className="mx-auto mb-2 text-rose-400 group-hover:scale-110 transition-transform" />
-            <span className="text-sm text-white">Juice Box™</span>
-          </Link>
-        </div>
-        
-        {/* API Debugger Component - Developer Tool */}
-        <div className="mt-8 mb-6">
-          <APIDebugger />
-        </div>
-        
-        {/* Footer */}
-        <div className="mt-12 text-center text-gray-500 text-sm">
-          <p>Paddock20 Portal © {new Date().getFullYear()} GoTime Motorsports</p>
-          <p className="mt-1">Designed for true automotive enthusiasts</p>
         </div>
       </div>
     </div>
