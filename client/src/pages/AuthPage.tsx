@@ -1,8 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, EyeOff, LogIn, UserPlus } from 'lucide-react';
+import { Eye, EyeOff, LogIn, UserPlus, CheckCircle, XCircle } from 'lucide-react';
 
 // Import UI components
 import {
@@ -17,6 +17,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Progress } from '@/components/ui/progress';
 
 const AuthPage: React.FC = () => {
   const { login, register, loading, user } = useAuth();
@@ -48,6 +49,57 @@ const AuthPage: React.FC = () => {
   });
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  
+  // Password strength state
+  const [passwordStrength, setPasswordStrength] = useState(0);
+  const [passwordErrors, setPasswordErrors] = useState<string[]>([]);
+  
+  // Password validation
+  useEffect(() => {
+    const errors: string[] = [];
+    const password = registerData.password;
+    
+    // Start with a strength of 0
+    let strength = 0;
+    
+    // Check for minimum length (8 characters)
+    if (password.length < 8) {
+      errors.push('At least 8 characters');
+    } else {
+      strength += 20;
+    }
+    
+    // Check for uppercase letters
+    if (!/[A-Z]/.test(password)) {
+      errors.push('At least one uppercase letter');
+    } else {
+      strength += 20;
+    }
+    
+    // Check for lowercase letters
+    if (!/[a-z]/.test(password)) {
+      errors.push('At least one lowercase letter');
+    } else {
+      strength += 20;
+    }
+    
+    // Check for numbers
+    if (!/[0-9]/.test(password)) {
+      errors.push('At least one number');
+    } else {
+      strength += 20;
+    }
+    
+    // Check for special characters
+    if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+      errors.push('At least one special character');
+    } else {
+      strength += 20;
+    }
+    
+    setPasswordStrength(strength);
+    setPasswordErrors(errors);
+  }, [registerData.password]);
 
   // Handle Login
   const handleLoginSubmit = async (e: React.FormEvent) => {
