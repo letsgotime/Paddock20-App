@@ -1,6 +1,6 @@
 import PreDriveChecklistPage from './pages/PreDriveChecklistPage';
 import React, { useEffect, useState } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import Header from './components/Header';
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -213,22 +213,22 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        {/* Authentication Provider for login/logout functionality */}
-        <AuthProvider>
-          {/* Page Title Manager - Updates browser tab title based on current route */}
-          <PageTitleManager />
-          {/* Sound Provider - Provides F1-inspired sound effects throughout the app */}
-          <SoundProvider>
-            {/* Vehicle Provider - Provides vehicle data to all components */}
-            <VehicleProvider>
-              {/* Vehicle Data Provider - Provides comprehensive vehicle activity, media, and document data */}
-              <VehicleDataProvider>
-                {/* Centralized Weather Provider - Provides weather data to all components */}
-                <WeatherProvider>
-                  <GalleryProvider>
-                    {/* Rewards Provider - for site-wide gamification */}
-                    <RewardsProvider>
+        <TooltipProvider>
+          {/* Authentication Provider for login/logout functionality */}
+          <AuthProvider>
+            {/* Page Title Manager - Updates browser tab title based on current route */}
+            <PageTitleManager />
+            {/* Sound Provider - Provides F1-inspired sound effects throughout the app */}
+            <SoundProvider>
+              {/* Vehicle Provider - Provides vehicle data to all components */}
+              <VehicleProvider>
+                {/* Vehicle Data Provider - Provides comprehensive vehicle activity, media, and document data */}
+                <VehicleDataProvider>
+                  {/* Centralized Weather Provider - Provides weather data to all components */}
+                  <WeatherProvider>
+                    <GalleryProvider>
+                      {/* Rewards Provider - for site-wide gamification */}
+                      <RewardsProvider>
                     {/* Skip link for keyboard navigation */}
                     <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
                       Skip to main content
