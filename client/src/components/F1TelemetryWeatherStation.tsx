@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { Progress } from "@/components/ui/progress";
+import { useUserProfileStore } from '@/services/userProfileService';
 
 const F1TelemetryWeatherStation: React.FC = () => {
   const [weather, setWeather] = useState<any>(null);
@@ -13,10 +14,44 @@ const F1TelemetryWeatherStation: React.FC = () => {
   const [automotiveData, setAutomotiveData] = useState<any>(null);
   const [refreshTime, setRefreshTime] = useState<Date>(new Date());
   const [usingFallbackData, setUsingFallbackData] = useState(false);
+  const { profile } = useUserProfileStore();
 
-  // Get the user's current location
+  // Get user's preferred location
   useEffect(() => {
     setLoading(true);
+    
+    // First try to get location from user profile
+    if (profile && profile.weatherPreferences && profile.weatherPreferences.defaultLocation) {
+      const userLocation = profile.weatherPreferences.defaultLocation;
+      setLocation({
+        lat: userLocation.lat,
+        lon: userLocation.lon
+      });
+      setLocationName(userLocation.name);
+      setError(null);
+      return;
+    }
+    
+    // Next try to get location from onboarding data
+    const locationSettings = localStorage.getItem('locationSettings');
+    if (locationSettings) {
+      try {
+        const parsedSettings = JSON.parse(locationSettings);
+        if (parsedSettings && parsedSettings.coordinates) {
+          setLocation({
+            lat: parsedSettings.coordinates.lat,
+            lon: parsedSettings.coordinates.lon
+          });
+          setLocationName(parsedSettings.primaryLocation || "Saved Location");
+          setError(null);
+          return;
+        }
+      } catch (err) {
+        console.error("Error parsing saved location settings:", err);
+      }
+    }
+    
+    // Fall back to browser geolocation as last resort
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
         (position) => {
@@ -25,23 +60,30 @@ const F1TelemetryWeatherStation: React.FC = () => {
             lon: position.coords.longitude
           });
           setError(null);
+          
+          // Get reverse geocoded location name
+          fetch(`/api/reverse-geocode?lat=${position.coords.latitude}&lon=${position.coords.longitude}`)
+            .then(res => res.json())
+            .then(data => {
+              if (data && data.length > 0) {
+                setLocationName(data[0].name);
+              }
+            })
+            .catch(err => {
+              console.error("Error getting location name:", err);
+            });
         },
         (error) => {
           console.error("Geolocation error:", error);
-          // Use a default location
-          setLocation({ lat: 34.0232, lon: -84.3616 });
           toast({
-            title: "Using default location",
-            description: "Enable location services for local weather data",
+            title: "Location services unavailable",
+            description: "Please set your location in profile settings",
             variant: "destructive",
           });
         }
       );
-    } else {
-      // Default to Roswell, GA (30076) if geolocation is not supported
-      setLocation({ lat: 34.0232, lon: -84.3616 });
     }
-  }, []);
+  }, [profile]);
 
   // Fetch weather data when location is available
   useEffect(() => {
@@ -73,8 +115,11 @@ const F1TelemetryWeatherStation: React.FC = () => {
       
       // If we don't have weather data yet, set default values
       if (!weather) {
+        // Use current location name or a generic name if not available
+        const defaultName = locationName || "Your Location";
+        
         setWeather({
-          name: "Roswell",
+          name: defaultName,
           main: {
             temp: 72,
             feels_like: 75,
@@ -96,7 +141,11 @@ const F1TelemetryWeatherStation: React.FC = () => {
             all: 10
           }
         });
-        setLocationName("Roswell");
+        
+        // Only update location name if we're using a generic one
+        if (locationName === "Your Location") {
+          setLocationName(defaultName);
+        }
       }
       
       // If we don't have automotive data yet, provide default values
@@ -189,9 +238,10 @@ const F1TelemetryWeatherStation: React.FC = () => {
       if (!response.ok) {
         // Instead of throwing error, handle gracefully
         setUsingFallbackData(true);
-        // Set default Roswell weather data
+        // Use the current location name rather than hardcoding
+        const defaultName = locationName || "Your Location";
         const fallbackData = {
-          name: "Roswell",
+          name: defaultName,
           main: {
             temp: 72,
             feels_like: 75,
@@ -216,9 +266,10 @@ const F1TelemetryWeatherStation: React.FC = () => {
       // Don't log to console in production
       setUsingFallbackData(true);
       
-      // Set default weather data
+      // Set default weather data using current location name
+      const defaultName = locationName || "Your Location";
       const fallbackData = {
-        name: "Roswell",
+        name: defaultName,
         main: {
           temp: 72,
           feels_like: 75,
