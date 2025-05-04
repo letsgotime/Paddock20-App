@@ -210,11 +210,6 @@ const Header: React.FC = () => {
                     <span>Weather Paddock</span>
                   </Link>
                   
-                  <Link to="/weather-paddock" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
-                    <Cloud className="h-4 w-4 mr-2 text-blue-400" />
-                    <span>Weather Center</span>
-                  </Link>
-                  
                   <Link to="/route-planner" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <MapPin className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Fun Drive Planner</span>
@@ -222,7 +217,7 @@ const Header: React.FC = () => {
                   
                   <Link to="/events" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <Calendar className="h-4 w-4 mr-2 text-blue-400" />
-                    <span>Events & Meetups</span>
+                    <span>P20 Events & Meetups</span>
                   </Link>
                   
                   <Link to="/motorsports-events" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
