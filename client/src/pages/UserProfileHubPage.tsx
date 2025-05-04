@@ -3,10 +3,14 @@ import UserProfileHub from '../components/UserProfileHub';
 import ProfileDataCollector from '../services/ProfileDataCollector';
 import { useWeather } from '../contexts/FixedWeatherContext';
 import { useVehicle } from '../contexts/VehicleContext';
+import { useAuth } from '../hooks/useAuth';
 
 const UserProfileHubPage: React.FC = () => {
+  // Get authenticated user data
+  const { user } = useAuth();
+  
   // Fetch all the context data we need to populate the profile
-  const { weatherData, automotiveWeatherData } = useWeather();
+  const { weatherData } = useWeather();
   const { activeVehicle, vehicles } = useVehicle();
   
   // Feed data into the ProfileDataCollector when component mounts or data changes
@@ -35,15 +39,11 @@ const UserProfileHubPage: React.FC = () => {
       });
       console.log('All vehicles synced with profile. Total vehicles:', vehicles.length);
     }
-    
-    // We could collect data from other parts of the app here
-    // For example, from the drive journal, goals, events, etc.
-    
   }, [weatherData, activeVehicle, vehicles]);
   
   return (
     <div className="min-h-screen bg-black pt-20 sm:pt-24">
-      {/* Background image added first, moved to the back with z-index */}
+      {/* Background image with reduced opacity */}
       <div 
         className="fixed inset-0 bg-cover bg-center z-0 opacity-20"
         style={{
