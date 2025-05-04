@@ -165,7 +165,7 @@ const Header: React.FC = () => {
                     <span>Weather Paddock</span>
                   </Link>
                   
-                  <Link to="/new-weather-center" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/weather-paddock" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <Cloud className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Weather Center</span>
                   </Link>
@@ -195,7 +195,7 @@ const Header: React.FC = () => {
                     <span className="ml-2 text-xs text-green-500 font-orbitron">NEW</span>
                   </Link>
                   
-                  <Link to="/paddock20-vault" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/membership" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <Flag className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Paddock20 Membership</span>
                   </Link>
