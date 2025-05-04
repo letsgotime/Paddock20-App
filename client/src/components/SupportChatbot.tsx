@@ -68,18 +68,18 @@ const SupportChatbot: React.FC = () => {
 
   return (
     <>
-      {/* Floating chat button - Positioned above the FixedSoundBar */}
+      {/* Floating chat button - Positioned above sound controls */}
       <button
         onClick={() => setIsOpen(true)}
-        className="fixed bottom-20 right-6 bg-blue-500 hover:bg-blue-600 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg z-50 transition-all duration-300"
+        className="fixed bottom-28 right-6 bg-blue-500 hover:bg-blue-600 text-white rounded-full w-14 h-14 flex items-center justify-center shadow-lg z-[999] transition-all duration-300"
         aria-label="Open support chat"
       >
         <MessageSquare size={24} />
       </button>
 
-      {/* Chat window - Positioned above the FixedSoundBar */}
+      {/* Chat window - Positioned above sound controls */}
       {isOpen && (
-        <div className="fixed bottom-36 right-6 w-80 md:w-96 h-[500px] bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg shadow-xl flex flex-col border border-gray-700 z-50 overflow-hidden">
+        <div className="fixed bottom-44 right-6 w-80 md:w-96 h-[500px] bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg shadow-xl flex flex-col border border-gray-700 z-[999] overflow-hidden">
           {/* Chat header */}
           <div className="bg-gray-900 py-3 px-4 flex justify-between items-center border-b border-gray-700">
             <div className="flex items-center gap-2">
