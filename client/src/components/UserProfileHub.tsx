@@ -117,12 +117,12 @@ const UserProfileHub: React.FC = () => {
         
         // If error, create a minimal profile with authenticated data only
         const fallbackProfile = {
-          id: user?.id?.toString() || '1',
+          id: user?.id?.toString() || '',
           username: user?.username || getUserDisplayName() || '',
-          displayName: user?.fullName || getUserDisplayName() || 'Driver',
+          displayName: user?.fullName || getUserDisplayName() || '',
           memberSince: new Date().toISOString().split('T')[0],
           lastActive: new Date().toISOString(),
-          bio: 'Driver profile and vehicle statistics.',
+          bio: '',
           location: '',
           membershipLevel: 'free' as const,
           avatar: user?.profileImage || '/assets/images/default-avatar.png',
@@ -231,15 +231,15 @@ const UserProfileHub: React.FC = () => {
       // Create a fresh profile with updated data
       const freshProfile = {
         // User identity - from Auth context with fallbacks
-        id: user?.id?.toString() || '1',
+        id: user?.id?.toString() || '',
         username: user?.username || getUserDisplayName() || '',
-        displayName: user?.fullName || getUserDisplayName() || 'Driver',
+        displayName: user?.fullName || getUserDisplayName() || '',
         memberSince: onboardingData?.memberSince || new Date().toISOString().split('T')[0],
         lastActive: new Date().toISOString(),
         
         // User metadata with fallbacks
-        bio: onboardingData?.bio || 'F1-grade telemetry and insights for passionate drivers.',
-        location: onboardingData?.location || 'United States',
+        bio: onboardingData?.bio || '',
+        location: onboardingData?.location || '',
         membershipLevel: (onboardingData?.membershipLevel as 'free' | 'premium' | 'elite') || 'free' as const,
         avatar: user?.profileImage || onboardingData?.avatar || '/assets/images/default-avatar.png',
         
@@ -277,7 +277,7 @@ const UserProfileHub: React.FC = () => {
           defaultLocation: {
             lat: 33.7490,
             lon: -84.3880,
-            name: 'Atlanta, GA'
+            name: ''
           },
           units: 'imperial',
           savedLocations: []
