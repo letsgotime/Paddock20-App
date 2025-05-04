@@ -118,12 +118,12 @@ const UserProfileHub: React.FC = () => {
         // If error, create a minimal profile with authenticated data only
         const fallbackProfile = {
           id: user?.id?.toString() || '1',
-          username: user?.username || getUserDisplayName() || 'gavingotime',
-          displayName: user?.fullName || getUserDisplayName() || 'Gavin Brooks',
+          username: user?.username || getUserDisplayName() || '',
+          displayName: user?.fullName || getUserDisplayName() || 'Driver',
           memberSince: new Date().toISOString().split('T')[0],
           lastActive: new Date().toISOString(),
           bio: 'Driver profile and vehicle statistics.',
-          location: 'United States',
+          location: '',
           membershipLevel: 'free' as const,
           avatar: user?.profileImage || '/assets/images/default-avatar.png',
           vehicles: vehicles || [],
@@ -232,8 +232,8 @@ const UserProfileHub: React.FC = () => {
       const freshProfile = {
         // User identity - from Auth context with fallbacks
         id: user?.id?.toString() || '1',
-        username: user?.username || getUserDisplayName() || 'gavingotime',
-        displayName: user?.fullName || getUserDisplayName() || 'Gavin Brooks',
+        username: user?.username || getUserDisplayName() || '',
+        displayName: user?.fullName || getUserDisplayName() || 'Driver',
         memberSince: onboardingData?.memberSince || new Date().toISOString().split('T')[0],
         lastActive: new Date().toISOString(),
         
