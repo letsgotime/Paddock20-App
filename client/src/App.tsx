@@ -79,6 +79,7 @@ import { AuthProvider } from "./context/AuthContext";
 import { MAIN_CONTENT_ID, LiveRegion } from './lib/accessibility';
 import './paddock20.css';
 import { getUserDisplayName } from './utils/DataIntegrityVerifier';
+import DebugPage from "./pages/DebugPage";
 
 // Import legal pages
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -350,6 +351,7 @@ function App() {
                         <Route path="/podium-pursuit" element={<ProtectedRoute><PodiumPursuitPage /></ProtectedRoute>} />
                         <Route path="/sound-library" element={<ProtectedRoute><SoundLibraryPage /></ProtectedRoute>} />
                         <Route path="/product-organizer" element={<ProtectedRoute><ProductOrganizerPage /></ProtectedRoute>} />
+                        <Route path="/debug" element={<ProtectedRoute><DebugPage /></ProtectedRoute>} />
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                       

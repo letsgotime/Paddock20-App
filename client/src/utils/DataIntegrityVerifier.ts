@@ -1,130 +1,34 @@
 /**
- * DataIntegrityVerifier.ts
+ * DataIntegrityVerifier
  * 
- * Critical utility that enforces the project's strict data integrity policy:
- * - NO hardcoded user data anywhere in the application
- * - ALL data must come from authorized data sources:
- *   1. User onboarding data
- *   2. MyGallery (bi-directional database)
- *   3. Garage Vault (vehicle information)
- *   4. Juice Box (detailing data)
- * 
- * This utility verifies and ensures that components are only using data
- * from authorized sources and provides methods to replace hardcoded data.
+ * This utility provides safe methods to access user-related data without creating
+ * circular dependencies. It directly accesses storage to get user information
+ * rather than using hooks that might cause dependency issues.
  */
 
-// Define storage keys here to avoid import issues
-export const STORAGE_KEYS = {
-  ONBOARDING: 'userOnboardingData',
-  GALLERY: 'galleryData',
-  GARAGE: 'garageVaultData',
-  JUICEBOX: 'juiceBoxData',
-  USER_PROFILE: 'user-profile-storage',
-  VEHICLE_DATA: 'vehicleData'
+// Storage keys for retrieving data
+const STORAGE_KEYS = {
+  USER_PROFILE: 'paddock20_user_profile',
+  AUTH_USER: 'paddock20_auth_user',
+  VEHICLE_DATA: 'paddock20_vehicle_data',
+  GALLERY_DATA: 'paddock20_gallery',
+  USER_SETTINGS: 'paddock20_settings'
+};
+
+// System constants to use as fallbacks (non-user-specific)
+const SYSTEM_DEFAULTS = {
+  DEFAULT_USER_NAME: 'Paddock20 User',
+  DEFAULT_EMAIL_DOMAIN: 'paddock20.com',
+  DEFAULT_VEHICLE_OWNER: 'Vehicle Owner',
+  DEFAULT_APPROVAL_TEXT: 'expert-approved'
 };
 
 /**
- * Checks if a component is using authorized data sources
- * Returns an audit report with any integrity violations
- */
-export function verifyDataIntegrity(componentName: string, dataObject: any): DataIntegrityReport {
-  const report: DataIntegrityReport = {
-    componentName,
-    isCompliant: true,
-    hardcodedFields: [],
-    suggestedFixes: []
-  };
-
-  // Skip verification for whitelisted utility components
-  const whitelistedComponents = [
-    'Header', 
-    'Footer', 
-    'NavigationControls',
-    'PageTitle',
-    'FixedSoundBar'
-  ];
-
-  if (whitelistedComponents.includes(componentName)) {
-    return report;
-  }
-
-  // Check for common hardcoded data patterns
-  const verifyObject = (obj: any, path: string) => {
-    if (!obj || typeof obj !== 'object') return;
-
-    // Look for suspicious fields that might contain hardcoded user data
-    const suspiciousFields = [
-      'name', 'username', 'displayName', 'fullName', 'firstName', 'lastName',
-      'email', 'avatar', 'userImage', 'profileImage', 'photographer', 'author',
-      'creator', 'owner', 'user'
-    ];
-
-    Object.keys(obj).forEach(key => {
-      const currentPath = path ? `${path}.${key}` : key;
-      
-      // If this is a suspicious field with a string value, check if it might be hardcoded
-      if (suspiciousFields.includes(key) && typeof obj[key] === 'string' && !obj[key].includes('{{')) {
-        // Check if the value appears to be a hardcoded name rather than a placeholder or system value
-        const value = obj[key];
-        
-        // Skip system values and placeholders
-        const systemValues = ['Unknown User', 'System', 'GoTime', 'Paddock20', 'Admin', 'default', 'none'];
-        if (!systemValues.some(sv => value.toLowerCase().includes(sv.toLowerCase()))) {
-          report.isCompliant = false;
-          report.hardcodedFields.push({
-            path: currentPath,
-            value: value,
-            suggestedSource: getSuggestedDataSource(key)
-          });
-          
-          report.suggestedFixes.push(
-            `Replace hardcoded "${value}" with dynamic data from ${getSuggestedDataSource(key)}`
-          );
-        }
-      }
-      
-      // Recursively check nested objects and arrays
-      if (typeof obj[key] === 'object' && obj[key] !== null) {
-        if (Array.isArray(obj[key])) {
-          obj[key].forEach((item: any, index: number) => {
-            verifyObject(item, `${currentPath}[${index}]`);
-          });
-        } else {
-          verifyObject(obj[key], currentPath);
-        }
-      }
-    });
-  };
-  
-  verifyObject(dataObject, '');
-  return report;
-}
-
-/**
- * Logs a data integrity violation to the console
- * This is used for development to flag issues
- */
-export function logDataIntegrityViolation(report: DataIntegrityReport): void {
-  if (!report.isCompliant) {
-    console.warn(`😡 DATA INTEGRITY VIOLATION in ${report.componentName}`);
-    console.warn('Hardcoded data detected:');
-    report.hardcodedFields.forEach(field => {
-      console.warn(`  - ${field.path}: "${field.value}" (Use ${field.suggestedSource} instead)`);
-    });
-    console.warn('Suggested fixes:');
-    report.suggestedFixes.forEach((fix, index) => {
-      console.warn(`  ${index + 1}. ${fix}`);
-    });
-    console.warn('CRITICAL: All data MUST come from authorized sources. NO hardcoding allowed!');
-  }
-}
-
-/**
- * Gets the user display name from onboarding data
- * This replaces hardcoded user names throughout the app
+ * Get the user's display name without using hooks
+ * This is safe to call from any component without risking circular dependencies
  */
 export function getUserDisplayName(): string {
-  // Try to get data from local storage directly since we can't use hooks here
+  // Try to get data from local storage directly 
   try {
     // Check user profile storage
     const profileData = localStorage.getItem(STORAGE_KEYS.USER_PROFILE);
@@ -134,32 +38,46 @@ export function getUserDisplayName(): string {
         if (data?.state?.profile?.displayName) {
           return data.state.profile.displayName;
         }
-        if (data?.state?.profile?.username) {
-          return data.state.profile.username;
+        if (data?.profile?.displayName) {
+          return data.profile.displayName;
         }
       } catch (e) {
         console.error('Error parsing profile data:', e);
       }
     }
-
-    // Check onboarding data
-    const onboardingData = localStorage.getItem(STORAGE_KEYS.ONBOARDING);
-    if (onboardingData) {
-      const userData = JSON.parse(onboardingData);
-      if (userData && userData.displayName) {
-        return userData.displayName;
-      }
-      if (userData && userData.username) {
-        return userData.username;
+    
+    // Check auth user storage
+    const authData = localStorage.getItem(STORAGE_KEYS.AUTH_USER);
+    if (authData) {
+      try {
+        const data = JSON.parse(authData);
+        if (data?.username) {
+          return data.username;
+        }
+        if (data?.fullName) {
+          return data.fullName;
+        }
+        if (data?.firstName) {
+          return data.firstName + (data.lastName ? ` ${data.lastName}` : '');
+        }
+      } catch (e) {
+        console.error('Error parsing auth data:', e);
       }
     }
-  
-    // Check authenticated user
-    const authData = localStorage.getItem('auth_user');
-    if (authData) {
-      const user = JSON.parse(authData);
-      if (user && user.username) {
-        return user.username;
+    
+    // If we still don't have a name, check settings
+    const settingsData = localStorage.getItem(STORAGE_KEYS.USER_SETTINGS);
+    if (settingsData) {
+      try {
+        const data = JSON.parse(settingsData);
+        if (data?.displayName) {
+          return data.displayName;
+        }
+        if (data?.username) {
+          return data.username;
+        }
+      } catch (e) {
+        console.error('Error parsing settings data:', e);
       }
     }
   } catch (error) {
@@ -167,89 +85,140 @@ export function getUserDisplayName(): string {
   }
   
   // If all else fails, return a system name - NOT a hardcoded user name
-  return 'Paddock20 User';
+  return SYSTEM_DEFAULTS.DEFAULT_USER_NAME;
 }
 
 /**
- * Gets suggested data source for a field
+ * Get the user's email address without using hooks
  */
-function getSuggestedDataSource(fieldName: string): string {
-  const fieldToSourceMap: Record<string, string> = {
-    // User profile fields
-    'name': 'User Onboarding',
-    'username': 'User Onboarding',
-    'displayName': 'User Onboarding',
-    'fullName': 'User Onboarding',
-    'firstName': 'User Onboarding',
-    'lastName': 'User Onboarding',
-    'email': 'User Onboarding',
-    'avatar': 'User Onboarding',
-    'userImage': 'User Onboarding',
-    'profileImage': 'User Onboarding',
-    
-    // Gallery related fields
-    'photographer': 'MyGallery',
-    'author': 'MyGallery',
-    'creator': 'MyGallery',
-    
-    // Vehicle related fields
-    'owner': 'Garage Vault',
-    
-    // Generic user field
-    'user': 'User Onboarding'
-  };
-  
-  return fieldToSourceMap[fieldName] || 'an authorized data source';
-}
-
-/**
- * Interface for data integrity audit report
- */
-export interface DataIntegrityReport {
-  componentName: string;
-  isCompliant: boolean;
-  hardcodedFields: Array<{
-    path: string;
-    value: string;
-    suggestedSource: string;
-  }>;
-  suggestedFixes: string[];
-}
-
-/**
- * Gets a vehicle name from localStorage instead of hardcoding
- */
-export function getVehicleDisplayName(vehicleId?: string): string {
+export function getUserEmail(): string {
   try {
-    // Try to load vehicle data from localStorage
-    const vehicleData = localStorage.getItem(STORAGE_KEYS.VEHICLE_DATA);
-    if (vehicleData) {
-      const data = JSON.parse(vehicleData);
-      
-      // If a specific vehicle ID is provided
-      if (vehicleId && data && data.vehicles) {
-        const vehicle = data.vehicles.find((v: any) => v.id === vehicleId);
-        if (vehicle) {
-          return vehicle.nickname || `${vehicle.year} ${vehicle.make} ${vehicle.model}`;
+    // Check auth user storage
+    const authData = localStorage.getItem(STORAGE_KEYS.AUTH_USER);
+    if (authData) {
+      try {
+        const data = JSON.parse(authData);
+        if (data?.email) {
+          return data.email;
         }
-      }
-      
-      // Otherwise return the active vehicle
-      if (data && data.activeVehicle) {
-        return data.activeVehicle.nickname || 
-          `${data.activeVehicle.year} ${data.activeVehicle.make} ${data.activeVehicle.model}`;
+      } catch (e) {
+        console.error('Error parsing auth data:', e);
       }
     }
+    
+    // Check user profile storage
+    const profileData = localStorage.getItem(STORAGE_KEYS.USER_PROFILE);
+    if (profileData) {
+      try {
+        const data = JSON.parse(profileData);
+        if (data?.state?.profile?.email) {
+          return data.state.profile.email;
+        }
+        if (data?.profile?.email) {
+          return data.profile.email;
+        }
+      } catch (e) {
+        console.error('Error parsing profile data:', e);
+      }
+    }
+    
+    // If we have a username but no email, generate an email
+    const username = getUserDisplayName().split(' ')[0].toLowerCase();
+    if (username && username !== SYSTEM_DEFAULTS.DEFAULT_USER_NAME.toLowerCase()) {
+      return `${username}@${SYSTEM_DEFAULTS.DEFAULT_EMAIL_DOMAIN}`;
+    }
   } catch (error) {
-    console.error('Error getting vehicle display name:', error);
+    console.error('Error getting user email:', error);
   }
   
-  return 'Your Vehicle';
+  // Return a generic system email, not a specific person's email
+  return `user@${SYSTEM_DEFAULTS.DEFAULT_EMAIL_DOMAIN}`;
 }
 
-export default {
-  verifyDataIntegrity,
-  logDataIntegrityViolation,
-  getUserDisplayName,
-  getVehicleDisplayName
-};
+/**
+ * Get the vehicle owner name without using hooks
+ */
+export function getVehicleOwnerName(): string {
+  try {
+    // Check vehicle data storage
+    const vehicleData = localStorage.getItem(STORAGE_KEYS.VEHICLE_DATA);
+    if (vehicleData) {
+      try {
+        const data = JSON.parse(vehicleData);
+        if (data?.primaryVehicle?.owner) {
+          return data.primaryVehicle.owner;
+        }
+        if (data?.owner) {
+          return data.owner;
+        }
+      } catch (e) {
+        console.error('Error parsing vehicle data:', e);
+      }
+    }
+    
+    // If no specific owner, use the user's display name
+    const displayName = getUserDisplayName();
+    if (displayName !== SYSTEM_DEFAULTS.DEFAULT_USER_NAME) {
+      return displayName;
+    }
+  } catch (error) {
+    console.error('Error getting vehicle owner name:', error);
+  }
+  
+  // Return a generic owner name, not a specific person's name
+  return SYSTEM_DEFAULTS.DEFAULT_VEHICLE_OWNER;
+}
+
+/**
+ * Get approval text without hardcoding specific names
+ */
+export function getApprovalText(): string {
+  return SYSTEM_DEFAULTS.DEFAULT_APPROVAL_TEXT;
+}
+
+/**
+ * Check if a string contains potentially hardcoded user data
+ * @param value The string to check
+ * @returns True if the string contains suspicious patterns, false otherwise
+ */
+export function containsHardcodedUserData(value: string): boolean {
+  // Define patterns that might indicate hardcoded data
+  const suspiciousPatterns = [
+    'gavin',
+    'brooks',
+    'example.com',
+    'test',
+    'dummy',
+    'placeholder',
+    'sample',
+    'demo',
+    'john doe',
+    'jane doe'
+  ];
+  
+  // Check if any pattern is found in the value
+  return suspiciousPatterns.some(pattern => 
+    value.toLowerCase().includes(pattern.toLowerCase())
+  );
+}
+
+/**
+ * Generate dynamic image alt text based on context
+ * @param imageType The type of image (vehicle, gallery, product, etc.)
+ * @param itemName The name of the item in the image
+ * @returns Dynamically generated alt text
+ */
+export function generateDynamicAltText(imageType: string, itemName: string): string {
+  const owner = getVehicleOwnerName();
+  
+  switch (imageType.toLowerCase()) {
+    case 'vehicle':
+      return `${itemName || 'Vehicle'} owned by ${owner}`;
+    case 'gallery':
+      return `Gallery image of ${itemName} from ${owner}'s collection`;
+    case 'product':
+      return `${itemName || 'Product'} - ${SYSTEM_DEFAULTS.DEFAULT_APPROVAL_TEXT}`;
+    default:
+      return itemName || 'Image from Paddock20';
+  }
+}
