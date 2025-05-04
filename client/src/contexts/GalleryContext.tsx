@@ -3,22 +3,68 @@ import React, { createContext, useContext, useState, useEffect, ReactNode } from
 // Define data interfaces
 export interface MediaItem {
   id: string;
-  type: 'image' | 'video' | 'document' | 'audio';
+  type: 'image' | 'video' | 'document' | 'audio' | 'voice_note' | '3d_model';
   src: string;
   alt: string;
   title: string;
   description?: string;
+  
+  // Organizational metadata
   event?: string;
   date?: string;
   featured?: boolean;
   thumbnail?: string;
+  category?: string; // e.g., 'vehicles', 'drives', 'events', 'detailing'
+  subCategory?: string; // e.g., for vehicles: 'exterior', 'interior', 'engine', etc.
+  
+  // Vehicle association
+  vehicleId?: string; // ID of associated vehicle if applicable
+  vehicleName?: string; // Name of associated vehicle if applicable
+  vehicleYear?: number; // Year of associated vehicle if applicable
+  vehicleMake?: string; // Make of associated vehicle if applicable
+  vehicleModel?: string; // Model of associated vehicle if applicable
+  
+  // Drive association
+  driveId?: string; // ID of associated drive if applicable
+  driveName?: string; // Name of associated drive if applicable
+  driveDate?: string; // Date of associated drive if applicable
+  
+  // Detailing association
+  detailingSessionId?: string; // ID of associated detailing session if applicable
+  productUsed?: string[]; // List of products used if applicable
+  
+  // Ownership & security
   owner?: string; // ID of the user who owns this media
   secured?: boolean; // If the media has additional security
+  accessLevel?: 'public' | 'private' | 'shared'; // Access control level
+  sharedWith?: string[]; // IDs of users this is shared with
+  
+  // Technical metadata
   tags?: string[]; // For searchability
   fileSize?: number; // Size in bytes
   duration?: number; // For audio/video in seconds
   mimetype?: string; // For proper handling of different file types
+  dimensions?: { width: number; height: number }; // For images/videos
   externalSource?: string; // URL source if imported from external link
+  
+  // Location data
+  gpsCoordinates?: { lat: number; lng: number }; // GPS data if available
+  location?: string; // Text description of location
+  
+  // Bi-directional linkage
+  relatedMedia?: string[]; // IDs of related media items
+  parentId?: string; // ID of parent media item (for grouped items)
+  childIds?: string[]; // IDs of child media items
+  
+  // Usage tracking
+  usedInComponents?: string[]; // List of components this media is used in
+  lastAccessed?: string; // Timestamp of last access
+  accessCount?: number; // Number of times accessed
+  
+  // Version control
+  version?: number; // Version number for edited media
+  originalId?: string; // ID of original media if this is a version
+  editHistory?: string[]; // IDs of previous versions
 }
 
 export interface EventGroup {
@@ -29,24 +75,188 @@ export interface EventGroup {
   description: string;
   cover: string;
   media: MediaItem[];
+  
+  // Event metadata
+  eventType?: 'cars_and_coffee' | 'track_day' | 'road_trip' | 'car_show' | 'maintenance_day' | 'detailing_session' | 'race' | 'other';
+  startTime?: string;
+  endTime?: string;
+  recurring?: boolean;
+  recurrencePattern?: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  
+  // Organization
+  tags?: string[];
+  category?: string;
+  featured?: boolean;
+  
+  // Vehicle associations
+  vehicleIds?: string[]; // IDs of vehicles featured in this event
+  vehicleNames?: string[]; // Names of vehicles featured in this event
+  
+  // Location data
+  coordinates?: { lat: number; lng: number };
+  route?: { lat: number; lng: number }[]; // For road trips/drives
+  venue?: string;
+  
+  // Ownership & Access Control
   isUserGenerated?: boolean; // Whether this is a user-created event
   owner?: string; // User ID of the owner
   isPrivate?: boolean; // If this gallery is private
+  accessLevel?: 'public' | 'private' | 'shared'; // Access control level
   accessList?: string[]; // Users who can access if private
   securityLevel?: 'standard' | 'enhanced' | 'enterprise'; // Security tier
+  
+  // Connectivity
+  relatedEvents?: string[]; // IDs of related events
+  parentEventId?: string; // ID of parent event (for multi-day events)
+  childEventIds?: string[]; // IDs of child events
+  
+  // External connectivity for bi-directional linking
+  driveJournalId?: string; // Link to drive journal entry if applicable
+  maintenanceLogId?: string; // Link to maintenance log if applicable
+  detailingSessionId?: string; // Link to detailing session if applicable
+  
+  // Media organization
+  mediaByCategory?: Record<string, MediaItem[]>; // Media organized by category
+  mediaByVehicle?: Record<string, MediaItem[]>; // Media organized by vehicle
+  
+  // Statistics & Activity
+  viewCount?: number;
+  lastViewed?: string;
+  commentCount?: number;
+  likeCount?: number;
+  
+  // Versioning
+  version?: number;
+  lastUpdated?: string;
+  updateHistory?: { timestamp: string; userId: string; changes: string }[];
 }
 
 export interface UserGallery {
+  // Basic info
   userId: string;
   displayName: string;
   profileImage?: string;
   events: EventGroup[];
   featuredMedia: MediaItem[];
+  
+  // Enhanced organization
+  collections: {
+    id: string;
+    name: string;
+    description?: string;
+    cover?: string;
+    mediaIds: string[];
+    tags?: string[];
+    category?: string;
+    isPrivate?: boolean;
+    dateCreated: string;
+    lastModified: string;
+  }[];
+  
+  // Advanced categorization
+  mediaByCar: Record<string, MediaItem[]>; // Organized by vehicle
+  mediaByLocation: Record<string, MediaItem[]>; // Organized by location
+  mediaByCategory: Record<string, MediaItem[]>; // Organized by media category
+  mediaByTimeline: Record<string, MediaItem[]>; // Organized by time period
+  mediaByTag: Record<string, MediaItem[]>; // Organized by tags
+  
+  // Bi-directional system connections
+  connectedVehicles: {
+    vehicleId: string;
+    vehicleName: string;
+    mediaCount: number;
+    featuredMediaId?: string;
+  }[];
+  
+  connectedDrives: {
+    driveId: string;
+    driveName: string;
+    driveDate: string;
+    mediaCount: number;
+    featuredMediaId?: string;
+  }[];
+  
+  connectedDetailingSessions: {
+    sessionId: string;
+    sessionName: string;
+    sessionDate: string;
+    mediaCount: number;
+    featuredMediaId?: string;
+  }[];
+  
+  // Sharing and collaboration
+  sharedWithUsers: {
+    userId: string;
+    displayName: string;
+    accessLevel: 'view' | 'edit' | 'admin';
+    dateShared: string;
+  }[];
+  
+  sharedByUsers: {
+    userId: string;
+    displayName: string;
+    galleryId: string;
+    galleryName: string;
+    accessLevel: 'view' | 'edit' | 'admin';
+    dateShared: string;
+  }[];
+  
+  // Media statistics
+  mediaCounts: {
+    total: number;
+    byType: Record<string, number>; // e.g., { "image": 142, "video": 23, etc. }
+    byCategory: Record<string, number>; // Count by category
+    byVehicle: Record<string, number>; // Count by vehicle
+  };
+  
+  // Activity tracking
+  recentActivity: {
+    id: string;
+    type: 'upload' | 'edit' | 'delete' | 'share' | 'view';
+    mediaId?: string;
+    mediaTitle?: string;
+    timestamp: string;
+    details?: string;
+  }[];
+  
+  // Storage and usage info
+  storageUsed: number; // Bytes used
+  storageLimit: number; // Total bytes available
+  
+  // Security settings
   securitySettings: {
     defaultPrivacy: 'public' | 'private' | 'shared';
     defaultSecurityLevel: 'standard' | 'enhanced' | 'enterprise';
     twoFactorEnabled: boolean;
     encryptionEnabled: boolean;
+    watermarkEnabled?: boolean;
+    metadataStripping?: boolean;
+    autoBackup?: boolean;
+    backupFrequency?: 'daily' | 'weekly' | 'monthly';
+    lastBackup?: string;
+  };
+  
+  // Integrations with external services
+  externalConnections: {
+    service: string; // e.g., 'instagram', 'flickr', 'dropbox'
+    connected: boolean;
+    lastSync?: string;
+    autoSync?: boolean;
+  }[];
+  
+  // AI features for organization
+  aiFeatures: {
+    autoTagging: boolean;
+    facialRecognition: boolean;
+    objectDetection: boolean;
+    smartSorting: boolean;
+    contentClustering: boolean;
+    suggestedCollections: {
+      name: string;
+      description: string;
+      mediaIds: string[];
+      confidence: number;
+    }[];
   };
 }
 
@@ -110,10 +320,35 @@ export const GalleryProvider: React.FC<GalleryProviderProps> = ({ children }) =>
   }, []);
 
   const initSampleUserGallery = () => {
+    // Create sample media item for use in multiple structures
+    const sampleMedia = {
+      id: "user-1",
+      type: "image" as const,
+      src: "/assets/gallery/porsche-911-gt2-5795128_1280.jpg",
+      alt: "Porsche 911 GT2",
+      title: "My Porsche at the Track",
+      description: "Taking the Porsche out for a spin at Road Atlanta",
+      event: "My Track Day",
+      featured: true,
+      owner: 'demo-user',
+      vehicleId: 'v-001',
+      vehicleName: 'Porsche 911 GT2',
+      vehicleYear: 2023,
+      vehicleMake: 'Porsche',
+      vehicleModel: '911 GT2',
+      category: 'track_day',
+      tags: ['porsche', 'track day', 'road atlanta', 'performance'],
+      date: '2023-05-05'
+    };
+    
+    // Prepare a complete UserGallery with all the required fields
     const sampleUserGallery: UserGallery = {
+      // Basic info
       userId: 'demo-user',
       displayName: 'Demo User',
       profileImage: '/assets/gallery/user-profile.jpg',
+      
+      // Events with the sample media
       events: [
         {
           id: 'user-event-1',
@@ -126,39 +361,149 @@ export const GalleryProvider: React.FC<GalleryProviderProps> = ({ children }) =>
           owner: 'demo-user',
           isPrivate: false,
           securityLevel: 'standard',
-          media: [
-            {
-              id: "user-1",
-              type: "image",
-              src: "/assets/gallery/porsche-911-gt2-5795128_1280.jpg",
-              alt: "Porsche 911 GT2",
-              title: "My Porsche at the Track",
-              description: "Taking the Porsche out for a spin at Road Atlanta",
-              event: "My Track Day",
-              featured: true,
-              owner: 'demo-user'
-            }
-          ]
+          eventType: 'track_day',
+          media: [sampleMedia]
         }
       ],
-      featuredMedia: [
+      
+      // Featured media
+      featuredMedia: [sampleMedia],
+      
+      // Collections
+      collections: [
         {
-          id: "user-1",
-          type: "image",
-          src: "/assets/gallery/porsche-911-gt2-5795128_1280.jpg",
-          alt: "Porsche 911 GT2",
-          title: "My Porsche at the Track",
-          description: "Taking the Porsche out for a spin at Road Atlanta",
-          event: "My Track Day",
-          featured: true,
-          owner: 'demo-user'
+          id: 'coll-001',
+          name: 'Favorite Track Days',
+          description: 'My best experiences on the track',
+          cover: "/assets/gallery/porsche-911-gt2-5795128_1280.jpg",
+          mediaIds: ['user-1'],
+          tags: ['track day', 'performance', 'racing'],
+          category: 'track_days',
+          isPrivate: false,
+          dateCreated: '2023-05-06',
+          lastModified: '2023-05-06'
         }
       ],
+      
+      // Advanced categorization
+      mediaByCar: {
+        'Porsche 911 GT2': [sampleMedia]
+      },
+      mediaByLocation: {
+        'Road Atlanta': [sampleMedia]
+      },
+      mediaByCategory: {
+        'track_day': [sampleMedia]
+      },
+      mediaByTimeline: {
+        '2023-05': [sampleMedia]
+      },
+      mediaByTag: {
+        'porsche': [sampleMedia],
+        'track day': [sampleMedia]
+      },
+      
+      // Bi-directional connections
+      connectedVehicles: [
+        {
+          vehicleId: 'v-001',
+          vehicleName: 'Porsche 911 GT2',
+          mediaCount: 1,
+          featuredMediaId: 'user-1'
+        }
+      ],
+      
+      connectedDrives: [
+        {
+          driveId: 'd-001',
+          driveName: 'Road Atlanta Track Day',
+          driveDate: '2023-05-05',
+          mediaCount: 1,
+          featuredMediaId: 'user-1'
+        }
+      ],
+      
+      connectedDetailingSessions: [
+        {
+          sessionId: 'detail-001',
+          sessionName: 'Pre-Track Day Prep',
+          sessionDate: '2023-05-04',
+          mediaCount: 1,
+          featuredMediaId: 'user-1'
+        }
+      ],
+      
+      // Sharing
+      sharedWithUsers: [],
+      sharedByUsers: [],
+      
+      // Statistics
+      mediaCounts: {
+        total: 1,
+        byType: { "image": 1 },
+        byCategory: { "track_day": 1 },
+        byVehicle: { "Porsche 911 GT2": 1 }
+      },
+      
+      // Activity
+      recentActivity: [
+        {
+          id: 'act-001',
+          type: 'upload',
+          mediaId: 'user-1',
+          mediaTitle: 'My Porsche at the Track',
+          timestamp: '2023-05-05T15:30:00Z',
+          details: 'Uploaded track day photo'
+        }
+      ],
+      
+      // Storage info
+      storageUsed: 2500000, // ~2.5MB
+      storageLimit: 10737418240, // 10GB
+      
+      // Security settings
       securitySettings: {
         defaultPrivacy: 'public',
         defaultSecurityLevel: 'standard',
         twoFactorEnabled: false,
-        encryptionEnabled: false
+        encryptionEnabled: false,
+        watermarkEnabled: false,
+        metadataStripping: true,
+        autoBackup: true,
+        backupFrequency: 'weekly',
+        lastBackup: '2023-05-01T00:00:00Z'
+      },
+      
+      // External connections
+      externalConnections: [
+        {
+          service: 'instagram',
+          connected: false,
+          autoSync: false
+        },
+        {
+          service: 'dropbox',
+          connected: true,
+          lastSync: '2023-05-01T00:00:00Z',
+          autoSync: true
+        }
+      ],
+      
+      // AI features
+      aiFeatures: {
+        autoTagging: true,
+        facialRecognition: false,
+        objectDetection: true,
+        smartSorting: true,
+        contentClustering: true,
+        suggestedCollections: [
+          {
+            name: 'Porsche Collection',
+            description: 'All your Porsche-related media',
+            mediaIds: ['user-1'],
+            confidence: 0.95
+          }
+        ]
       }
     };
     

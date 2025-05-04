@@ -46,19 +46,61 @@ function getUserOnboardingData(): any {
 
 /**
  * Gets gallery data from local storage or gallery context
+ * @param category Optional category to filter by
+ * @param vehicleId Optional vehicle ID to filter by
+ * @param limit Optional limit on number of items returned
  */
-function getGalleryData(): any {
+function getGalleryData(category?: string, vehicleId?: string, limit?: number): any {
   try {
     // Try Context API first for real-time data
     const galleryContext = useGallery();
+    
+    // If we have the enhanced gallery structure, use it for better organization
+    if (galleryContext && galleryContext.userGalleries && galleryContext.userGalleries.length > 0) {
+      const userGallery = galleryContext.currentUserGallery || galleryContext.userGalleries[0];
+      
+      // Filter based on category if provided
+      if (category && userGallery.mediaByCategory && userGallery.mediaByCategory[category]) {
+        const categoryMedia = userGallery.mediaByCategory[category];
+        return limit ? categoryMedia.slice(0, limit) : categoryMedia;
+      }
+      
+      // Filter based on vehicle if provided
+      if (vehicleId && userGallery.mediaByCar) {
+        // Look for vehicle ID in connected vehicles
+        const vehicle = userGallery.connectedVehicles?.find(v => v.vehicleId === vehicleId);
+        if (vehicle && userGallery.mediaByCar[vehicle.vehicleName]) {
+          const vehicleMedia = userGallery.mediaByCar[vehicle.vehicleName];
+          return limit ? vehicleMedia.slice(0, limit) : vehicleMedia;
+        }
+      }
+      
+      // Return featured media as default
+      if (userGallery.featuredMedia && userGallery.featuredMedia.length > 0) {
+        return limit ? userGallery.featuredMedia.slice(0, limit) : userGallery.featuredMedia;
+      }
+      
+      // Collect media from all events as a fallback
+      const allMedia = [];
+      for (const event of userGallery.events) {
+        if (event.media && event.media.length > 0) {
+          allMedia.push(...event.media);
+        }
+      }
+      
+      return limit ? allMedia.slice(0, limit) : allMedia;
+    }
+    
+    // Fallback to the conventional gallery context
     if (galleryContext && galleryContext.featuredMedia && galleryContext.featuredMedia.length > 0) {
-      return galleryContext.featuredMedia;
+      return limit ? galleryContext.featuredMedia.slice(0, limit) : galleryContext.featuredMedia;
     }
     
     // Fall back to local storage if context is empty
     const data = localStorage.getItem(STORAGE_KEYS.GALLERY);
     if (data) {
-      return JSON.parse(data);
+      const parsed = JSON.parse(data);
+      return limit ? parsed.slice(0, limit) : parsed;
     }
     
     return [];
@@ -70,22 +112,67 @@ function getGalleryData(): any {
 
 /**
  * Gets vehicle data from local storage or vehicle context
+ * @param includeGalleryData If true, will also retrieve gallery data for each vehicle
+ * @param vehicleId Optional specific vehicle ID to retrieve
  */
-function getVehicleData(): any {
+function getVehicleData(includeGalleryData = false, vehicleId?: string): any {
   try {
     // Try Context API first for real-time data
     const vehicleContext = useVehicle();
+    const galleryContext = useGallery();
+    
+    let vehicles = [];
+    
+    // Get vehicles from context if available
     if (vehicleContext && vehicleContext.vehicles && vehicleContext.vehicles.length > 0) {
-      return vehicleContext.vehicles;
+      vehicles = vehicleId 
+        ? vehicleContext.vehicles.filter(v => v.id === vehicleId)
+        : [...vehicleContext.vehicles];
+    } else {
+      // Fall back to local storage if context is empty
+      const data = localStorage.getItem(STORAGE_KEYS.VEHICLE_DATA);
+      if (data) {
+        const parsedVehicles = JSON.parse(data);
+        vehicles = vehicleId 
+          ? parsedVehicles.filter(v => v.id === vehicleId)
+          : parsedVehicles;
+      }
     }
     
-    // Fall back to local storage if context is empty
-    const data = localStorage.getItem(STORAGE_KEYS.VEHICLE_DATA);
-    if (data) {
-      return JSON.parse(data);
+    // If we should include gallery data and have an enhanced gallery
+    if (includeGalleryData && galleryContext && galleryContext.userGalleries && galleryContext.userGalleries.length > 0) {
+      const userGallery = galleryContext.currentUserGallery || galleryContext.userGalleries[0];
+      
+      // If we have connected vehicles information
+      if (userGallery.connectedVehicles && userGallery.connectedVehicles.length > 0) {
+        // Enhance each vehicle with its connected gallery data
+        vehicles = vehicles.map(vehicle => {
+          const connectedVehicle = userGallery.connectedVehicles.find(v => v.vehicleId === vehicle.id);
+          
+          if (connectedVehicle) {
+            // Find media for this vehicle
+            let vehicleMedia = [];
+            
+            if (userGallery.mediaByCar && userGallery.mediaByCar[connectedVehicle.vehicleName]) {
+              vehicleMedia = userGallery.mediaByCar[connectedVehicle.vehicleName];
+            }
+            
+            // Return enhanced vehicle with gallery data
+            return {
+              ...vehicle,
+              mediaCount: connectedVehicle.mediaCount || vehicleMedia.length,
+              featuredMediaId: connectedVehicle.featuredMediaId,
+              featuredMedia: vehicleMedia.find(m => m.id === connectedVehicle.featuredMediaId),
+              gallery: vehicleMedia
+            };
+          }
+          
+          return vehicle;
+        });
+      }
     }
     
-    return [];
+    return vehicles;
   } catch (error) {
     console.error('Error retrieving vehicle data:', error);
     return [];
@@ -93,15 +180,102 @@ function getVehicleData(): any {
 }
 
 /**
- * Gets juice box data from local storage
+ * Gets juice box data from local storage with gallery integration
+ * @param detailingSessionId Optional session ID to filter data
+ * @param includeMedia Whether to include associated media
+ * @param productCategory Optional product category to filter by
  */
-function getJuiceBoxData(): any {
+function getJuiceBoxData(detailingSessionId?: string, includeMedia = false, productCategory?: string): any {
   try {
+    // First try to get the basic juice box data
     const data = localStorage.getItem(STORAGE_KEYS.JUICEBOX);
-    if (data) {
-      return JSON.parse(data);
+    let juiceBoxData = data ? JSON.parse(data) : null;
+    
+    // If we want to include media, get gallery data
+    if (includeMedia) {
+      const galleryContext = useGallery();
+      
+      // If we have the enhanced gallery with user galleries
+      if (galleryContext && galleryContext.userGalleries && galleryContext.userGalleries.length > 0) {
+        const userGallery = galleryContext.currentUserGallery || galleryContext.userGalleries[0];
+        
+        // If we have connected detailing sessions
+        if (userGallery.connectedDetailingSessions && userGallery.connectedDetailingSessions.length > 0) {
+          // Filter detailing sessions if requested
+          const sessions = detailingSessionId 
+            ? userGallery.connectedDetailingSessions.filter(s => s.sessionId === detailingSessionId)
+            : userGallery.connectedDetailingSessions;
+          
+          // Create a structure that combines juice box data with gallery data
+          if (!juiceBoxData) {
+            juiceBoxData = { detailingSessions: [] };
+          }
+          
+          if (!juiceBoxData.detailingSessions) {
+            juiceBoxData.detailingSessions = [];
+          }
+          
+          // For each session from the gallery, find or create a juice box session
+          sessions.forEach(gallerySession => {
+            // Find matching session in juice box data
+            let juiceBoxSession = juiceBoxData.detailingSessions.find(
+              s => s.id === gallerySession.sessionId
+            );
+            
+            // If no matching session, create one
+            if (!juiceBoxSession) {
+              juiceBoxSession = {
+                id: gallerySession.sessionId,
+                name: gallerySession.sessionName,
+                date: gallerySession.sessionDate,
+                products: [],
+                notes: '',
+                vehicle: ''
+              };
+              juiceBoxData.detailingSessions.push(juiceBoxSession);
+            }
+            
+            // Find all gallery media for this session
+            const sessionMedia = [];
+            userGallery.events.forEach(event => {
+              if (event.detailingSessionId === gallerySession.sessionId) {
+                sessionMedia.push(...event.media);
+              }
+            });
+            
+            // If we have media by category and looking for specific category
+            if (productCategory && userGallery.mediaByCategory && userGallery.mediaByCategory[productCategory]) {
+              const categoryMedia = userGallery.mediaByCategory[productCategory];
+              // Filter to only include media related to this session
+              const filteredCategoryMedia = categoryMedia.filter(
+                media => media.detailingSessionId === gallerySession.sessionId
+              );
+              
+              // Add to the session media if not already included
+              filteredCategoryMedia.forEach(media => {
+                if (!sessionMedia.some(m => m.id === media.id)) {
+                  sessionMedia.push(media);
+                }
+              });
+            }
+            
+            // Add gallery media to the juice box session
+            juiceBoxSession.media = sessionMedia;
+            juiceBoxSession.featuredMediaId = gallerySession.featuredMediaId;
+            
+            // Add featured media if available
+            if (gallerySession.featuredMediaId) {
+              const featuredMedia = sessionMedia.find(m => m.id === gallerySession.featuredMediaId);
+              if (featuredMedia) {
+                juiceBoxSession.featuredMedia = featuredMedia;
+              }
+            }
+          });
+        }
+      }
     }
-    return null;
+    
+    return juiceBoxData;
   } catch (error) {
     console.error('Error retrieving juice box data:', error);
     return null;
@@ -211,17 +385,136 @@ function loadRealUserProfile(): UserProfile | null {
 }
 
 /**
- * Gets drive data from user profile and drive journal
+ * Gets drive data from user profile and drive journal with gallery integration
  * This ensures backward compatibility with components expecting specific data structure
+ * @param driveId Optional drive ID to filter to a specific drive
+ * @param includeMedia Whether to include media related to drives
+ * @param limit Optional limit on number of drives returned
  */
-function getUserDriveData() {
+function getUserDriveData(driveId?: string, includeMedia = false, limit?: number) {
   const { profile } = useUserProfileStore.getState();
+  let drives = [];
   
+  // First get drives from the profile if available
   if (profile && profile.drives && profile.drives.length > 0) {
-    return profile.drives;
+    drives = driveId
+      ? profile.drives.filter(d => d.id === driveId)
+      : [...profile.drives];
   }
   
-  return [];
+  // If we want to include media, check the gallery for connected drives
+  if (includeMedia) {
+    const galleryContext = useGallery();
+    
+    // If we have the enhanced gallery with user galleries
+    if (galleryContext && galleryContext.userGalleries && galleryContext.userGalleries.length > 0) {
+      const userGallery = galleryContext.currentUserGallery || galleryContext.userGalleries[0];
+      
+      // If we have connected drives
+      if (userGallery.connectedDrives && userGallery.connectedDrives.length > 0) {
+        // Filter to specific drive if requested
+        const galleryDrives = driveId
+          ? userGallery.connectedDrives.filter(d => d.driveId === driveId)
+          : userGallery.connectedDrives;
+        
+        // For each drive in the drives array, enhance it with gallery data
+        drives = drives.map(drive => {
+          // Find matching gallery drive info
+          const galleryDrive = galleryDrives.find(d => d.driveId === drive.id);
+          
+          if (galleryDrive) {
+            // Find all media for this drive
+            const driveMedia = [];
+            
+            // Check all events for route data
+            userGallery.events.forEach(event => {
+              if (event.driveJournalId === drive.id) {
+                // Add media from the event
+                if (event.media && event.media.length > 0) {
+                  driveMedia.push(...event.media);
+                }
+                
+                // Add route data if available
+                if (event.route && event.route.length > 0) {
+                  drive.routeCoordinates = event.route;
+                }
+              }
+            });
+            
+            // Return enhanced drive with media
+            return {
+              ...drive,
+              mediaCount: galleryDrive.mediaCount || driveMedia.length,
+              featuredMediaId: galleryDrive.featuredMediaId,
+              featuredMedia: driveMedia.find(m => m.id === galleryDrive.featuredMediaId),
+              media: driveMedia,
+              galleryEvents: userGallery.events.filter(e => e.driveJournalId === drive.id).map(e => e.id)
+            };
+          }
+          
+          return drive;
+        });
+        
+        // Check if we're missing any drives from the gallery that aren't in the profile
+        galleryDrives.forEach(galleryDrive => {
+          // If this gallery drive isn't already in our drives list
+          if (!drives.some(d => d.id === galleryDrive.driveId)) {
+            // Create a basic drive object from gallery data
+            const newDrive = {
+              id: galleryDrive.driveId,
+              title: galleryDrive.driveName,
+              date: galleryDrive.driveDate,
+              startLocation: '',
+              endLocation: '',
+              distance: 0,
+              duration: 0,
+              mediaCount: galleryDrive.mediaCount,
+              featuredMediaId: galleryDrive.featuredMediaId
+            };
+            
+            // Find all events related to this drive
+            const relatedEvents = userGallery.events.filter(e => e.driveJournalId === galleryDrive.driveId);
+            
+            // Get media for this drive
+            const driveMedia = [];
+            relatedEvents.forEach(event => {
+              if (event.media && event.media.length > 0) {
+                driveMedia.push(...event.media);
+              }
+              
+              // Extract start/end location from event if available
+              if (event.location) {
+                newDrive.endLocation = event.location;
+                if (!newDrive.startLocation) {
+                  newDrive.startLocation = event.location;
+                }
+              }
+              
+              // Add route data if available
+              if (event.route && event.route.length > 0) {
+                newDrive.routeCoordinates = event.route;
+              }
+            });
+            
+            // Add media to the drive
+            newDrive.media = driveMedia;
+            newDrive.featuredMedia = driveMedia.find(m => m.id === galleryDrive.featuredMediaId);
+            newDrive.galleryEvents = relatedEvents.map(e => e.id);
+            
+            // Add to drives list
+            drives.push(newDrive);
+          }
+        });
+      }
+    }
+  }
+  
+  // Apply limit if specified
+  if (limit && limit > 0 && drives.length > limit) {
+    drives = drives.slice(0, limit);
+  }
+  
+  return drives;
 }
 
 /**
