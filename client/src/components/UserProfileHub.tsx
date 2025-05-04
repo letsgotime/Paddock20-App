@@ -2,115 +2,180 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { 
   User, Shield, Award, Car, Calendar, Droplets, Map, Camera, Sliders, 
-  ChevronDown, ChevronUp, ChevronRight, ExternalLink, Clock, Gauge, Zap,
-  RefreshCw
+  ChevronDown, ChevronUp, ChevronRight, Clock, Gauge, Zap,
+  RefreshCw, Activity, Trophy, BarChart2
 } from 'lucide-react';
 import { toast } from '../hooks/use-toast';
 import { useUserProfileStore } from '../services/userProfileService';
+import { useAuth } from '../hooks/useAuth';
 import { useVehicle } from '../contexts/VehicleContext';
 import ProfileDataCollector from '../services/ProfileDataCollector';
 import DataSourceConnector from '../services/DataSourceConnector';
+import { getUserDisplayName } from '../utils/DataIntegrityVerifier';
 
+/**
+ * F1-Style Driver Profile
+ * 
+ * This component displays the user's profile information in an F1 telemetry-style dashboard.
+ * All data comes from authorized sources:
+ * - Auth context for user identity
+ * - Vehicle context for garage data
+ * - Profile store for statistics and activity
+ * - DataSourceConnector for integrated data from all services
+ */
 const UserProfileHub: React.FC = () => {
-  // Get profile data from the store
-  const { profile, loadDemoProfile, resetProfile } = useUserProfileStore();
-  const { activeVehicle } = useVehicle();
+  // Get authenticated user data
+  const { user } = useAuth();
   
-  // UI state for expandable sections
+  // Get profile data from the store
+  const { profile, updateProfile, resetProfile } = useUserProfileStore();
+  
+  // Get vehicle data from context
+  const { activeVehicle, allVehicles } = useVehicle();
+  
+  // UI state for expandable sections and loading
   const [activeSection, setActiveSection] = useState<string | null>('summary');
   const [showMembershipInfo, setShowMembershipInfo] = useState(false);
-  const [initialLoadComplete, setInitialLoadComplete] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Logic to handle profile initialization or reset
+  // Load and synchronize profile data from all sources
   useEffect(() => {
-    // If we don't have a profile yet, load the base profile
-    if (!profile && !initialLoadComplete) {
-      console.log("No profile found, checking for user data");
+    const initializeProfile = async () => {
+      setIsLoading(true);
+      console.log("Initializing driver profile with authenticated data");
       
-      // Get user data from authentication if available
       try {
-        // Check localStorage for onboarding data
-        const onboardingData = localStorage.getItem('userOnboardingData');
-        if (onboardingData) {
-          console.log("Found user onboarding data, using that instead of demo profile");
-          const userData = JSON.parse(onboardingData);
+        // Get data from all sources via the connector
+        const onboardingData = await DataSourceConnector.getUserOnboardingData();
+        const vehicleData = await DataSourceConnector.getVehicleData();
+        const galleryData = await DataSourceConnector.getGalleryData();
+        const juiceBoxData = await DataSourceConnector.getJuiceBoxData();
+        
+        // Build comprehensive profile from all connected data sources
+        const freshProfile = {
+          // User identity - from Auth context with fallbacks
+          id: user?.id?.toString() || '1',
+          username: user?.username || getUserDisplayName() || 'driver',
+          displayName: user?.fullName || getUserDisplayName() || 'Driver',
+          memberSince: onboardingData?.memberSince || new Date().toISOString().split('T')[0],
+          lastActive: new Date().toISOString(),
           
-          // Update the profile with user's real information
-          // Use userData directly for user-specific fields
-          const realUserProfile = {
-            // Start with basic required structure
-            id: '1', 
-            username: userData.username || 'driver',
-            displayName: userData.displayName || userData.username || 'Driver',
-            memberSince: new Date().toISOString().split('T')[0],
-            lastActive: new Date().toISOString(),
-            
-            // Preserve user-specific data from onboarding
-            bio: userData.bio || 'Passionate driver with a love for cars and the open road.',
-            location: userData.location || 'Atlanta, GA',
-            membershipLevel: userData.membershipLevel || 'free',
-            avatar: userData.avatar || '/assets/images/default-avatar.png',
-            
-            // Initialize empty collections that will be populated later
-            vehicles: [], 
-            statistics: {
-              totalDrives: 0,
-              totalMiles: 0,
-              avgDriveTime: 0,
-              favoriteRoads: [],
-              achievements: 0,
-              goalsCompleted: 0,
-              eventsAttended: 0
-            },
-            drives: [],
-            goals: [],
-            events: [],
-            gallery: [],
-            
-            // Use user preferences if available or set defaults
-            preferences: userData.preferences || {
-              theme: 'dark',
-              notifications: true,
-              timeFormat: '24h',
-              dateFormat: 'mdy',
-              soundEnabled: true
-            },
-            
-            // Use weather preferences if available or set defaults
-            weatherPreferences: userData.weatherPreferences || {
-              defaultLocation: {
-                lat: 33.7490,
-                lon: -84.3880,
-                name: 'Atlanta, GA'
-              },
-              units: 'imperial',
-              savedLocations: []
-            }
-          };
+          // User metadata - with fallbacks
+          bio: onboardingData?.bio || 'F1-grade telemetry and insights for passionate drivers.',
+          location: onboardingData?.location || 'United States',
+          membershipLevel: onboardingData?.membershipLevel || 'free',
+          avatar: user?.profileImage || onboardingData?.avatar || '/assets/images/default-avatar.png',
           
-          // Reset and then set the profile to use the real user data
-          resetProfile();
-          useUserProfileStore.getState().setProfile(realUserProfile);
-        } else {
-          console.log("No user onboarding data found, loading demo profile as fallback");
-          loadDemoProfile(); // Load base profile structure as fallback
-        }
+          // Vehicle collection - from Garage Vault context
+          vehicles: vehicleData?.vehicles || allVehicles || [],
+          
+          // User statistics - aggregate from activity data
+          statistics: {
+            totalDrives: onboardingData?.statistics?.totalDrives || 0,
+            totalMiles: onboardingData?.statistics?.totalMiles || 0,
+            avgDriveTime: onboardingData?.statistics?.avgDriveTime || 0,
+            favoriteRoads: onboardingData?.statistics?.favoriteRoads || [],
+            achievements: onboardingData?.statistics?.achievements || 0,
+            goalsCompleted: onboardingData?.statistics?.goalsCompleted || 0,
+            eventsAttended: onboardingData?.statistics?.eventsAttended || 0
+          },
+          
+          // Collections from other data sources
+          drives: onboardingData?.drives || [],
+          goals: onboardingData?.goals || [],
+          events: onboardingData?.events || [],
+          gallery: galleryData || onboardingData?.gallery || [],
+          
+          // User preferences with fallbacks
+          preferences: onboardingData?.preferences || {
+            theme: 'dark',
+            notifications: true,
+            timeFormat: '24h',
+            dateFormat: 'mdy',
+            soundEnabled: true
+          },
+          
+          // Weather preferences with fallbacks
+          weatherPreferences: onboardingData?.weatherPreferences || {
+            defaultLocation: {
+              lat: 33.7490,
+              lon: -84.3880,
+              name: 'Atlanta, GA'
+            },
+            units: 'imperial',
+            savedLocations: []
+          }
+        };
+        
+        // Update profile with fresh aggregated data
+        updateProfile(freshProfile);
+        
+        // Log successful initialization
+        console.log('Driver profile initialized from authenticated sources');
       } catch (error) {
-        console.error("Error loading user profile:", error);
-        loadDemoProfile(); // Fallback to demo profile on error
+        console.error("Error loading user profile from data sources:", error);
+        
+        // If error, create a minimal profile with authenticated data only
+        const fallbackProfile = {
+          id: user?.id?.toString() || '1',
+          username: user?.username || getUserDisplayName() || 'driver',
+          displayName: user?.fullName || getUserDisplayName() || 'Driver',
+          memberSince: new Date().toISOString().split('T')[0],
+          lastActive: new Date().toISOString(),
+          bio: 'Driver profile and vehicle statistics.',
+          location: 'United States',
+          membershipLevel: 'free',
+          avatar: user?.profileImage || '/assets/images/default-avatar.png',
+          vehicles: allVehicles || [],
+          statistics: {
+            totalDrives: 0,
+            totalMiles: 0,
+            avgDriveTime: 0,
+            favoriteRoads: [],
+            achievements: 0,
+            goalsCompleted: 0,
+            eventsAttended: 0
+          },
+          drives: [],
+          goals: [],
+          events: [],
+          gallery: [],
+          preferences: {
+            theme: 'dark',
+            notifications: true,
+            timeFormat: '24h',
+            dateFormat: 'mdy',
+            soundEnabled: true
+          },
+          weatherPreferences: {
+            defaultLocation: {
+              lat: 33.7490,
+              lon: -84.3880,
+              name: 'United States'
+            },
+            units: 'imperial',
+            savedLocations: []
+          }
+        };
+        
+        // Update with fallback profile
+        updateProfile(fallbackProfile);
+      } finally {
+        setIsLoading(false);
       }
-      
-      setInitialLoadComplete(true);
-    }
+    };
     
-    // Log page view via console
-    console.log('User visited: UserProfileHub');
-  }, [profile, loadDemoProfile, resetProfile, initialLoadComplete]);
+    // Initialize profile
+    initializeProfile();
+    
+    // Log page view
+    ProfileDataCollector.logPageView('UserProfileHub');
+  }, [user, updateProfile, allVehicles]);
   
   // Sync active vehicle with profile when it changes
   useEffect(() => {
     if (activeVehicle && profile) {
-      console.log("Syncing active vehicle with profile:", activeVehicle.make, activeVehicle.model);
+      console.log("Syncing vehicle with profile:", activeVehicle.make, activeVehicle.model);
       ProfileDataCollector.syncVehicleFromContext(activeVehicle);
     }
   }, [activeVehicle, profile]);
@@ -124,7 +189,130 @@ const UserProfileHub: React.FC = () => {
     }
   };
   
-  if (!profile) {
+  // Format date safely
+  const formatDate = (dateString: string) => {
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+    } catch (error) {
+      console.error("Error formatting date:", error);
+      return dateString;
+    }
+  };
+  
+  // Calculate days since member joined
+  const calculateDaysSinceMember = () => {
+    try {
+      const memberSinceDate = new Date(profile?.memberSince || new Date());
+      const currentDate = new Date();
+      const differenceInTime = currentDate.getTime() - memberSinceDate.getTime();
+      return Math.floor(differenceInTime / (1000 * 3600 * 24));
+    } catch (error) {
+      console.error("Error calculating days:", error);
+      return 0;
+    }
+  };
+  
+  // Refresh profile data from all sources
+  const handleRefreshProfile = async () => {
+    setIsLoading(true);
+    
+    try {
+      // Reset the profile
+      resetProfile();
+      
+      // Wait a moment for state to clear
+      await new Promise(resolve => setTimeout(resolve, 100));
+      
+      // Get fresh data from all sources
+      const onboardingData = await DataSourceConnector.getUserOnboardingData();
+      const vehicleData = await DataSourceConnector.getVehicleData();
+      
+      // Create a fresh profile with updated data
+      const freshProfile = {
+        // User identity - from Auth context with fallbacks
+        id: user?.id?.toString() || '1',
+        username: user?.username || getUserDisplayName() || 'driver',
+        displayName: user?.fullName || getUserDisplayName() || 'Driver',
+        memberSince: onboardingData?.memberSince || new Date().toISOString().split('T')[0],
+        lastActive: new Date().toISOString(),
+        
+        // User metadata with fallbacks
+        bio: onboardingData?.bio || 'F1-grade telemetry and insights for passionate drivers.',
+        location: onboardingData?.location || 'United States',
+        membershipLevel: onboardingData?.membershipLevel || 'free',
+        avatar: user?.profileImage || onboardingData?.avatar || '/assets/images/default-avatar.png',
+        
+        // Collections from vehicle context
+        vehicles: vehicleData?.vehicles || allVehicles || [],
+        
+        // User statistics with fallbacks
+        statistics: onboardingData?.statistics || {
+          totalDrives: 0,
+          totalMiles: 0,
+          avgDriveTime: 0,
+          favoriteRoads: [],
+          achievements: 0,
+          goalsCompleted: 0,
+          eventsAttended: 0
+        },
+        
+        // Activity collections
+        drives: onboardingData?.drives || [],
+        goals: onboardingData?.goals || [],
+        events: onboardingData?.events || [],
+        gallery: onboardingData?.gallery || [],
+        
+        // Preferences with fallbacks
+        preferences: onboardingData?.preferences || {
+          theme: 'dark',
+          notifications: true,
+          timeFormat: '24h',
+          dateFormat: 'mdy',
+          soundEnabled: true
+        },
+        
+        // Weather preferences with fallbacks
+        weatherPreferences: onboardingData?.weatherPreferences || {
+          defaultLocation: {
+            lat: 33.7490,
+            lon: -84.3880,
+            name: 'Atlanta, GA'
+          },
+          units: 'imperial',
+          savedLocations: []
+        }
+      };
+      
+      // Update with fresh data
+      updateProfile(freshProfile);
+      
+      // If active vehicle exists, sync it
+      if (activeVehicle) {
+        ProfileDataCollector.syncVehicleFromContext(activeVehicle);
+      }
+      
+      // Show success message
+      toast({
+        title: "Profile Refreshed",
+        description: "Your profile has been updated with latest data",
+        variant: "default"
+      });
+    } catch (error) {
+      console.error("Error refreshing profile:", error);
+      
+      toast({
+        title: "Refresh Failed",
+        description: "Could not refresh profile data",
+        variant: "destructive"
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  // Loading state UI
+  if (isLoading || !profile) {
     return (
       <div className="bg-black border border-blue-900/30 rounded-xl overflow-hidden shadow-lg p-8 text-center">
         <div className="animate-pulse flex flex-col items-center">
@@ -140,20 +328,6 @@ const UserProfileHub: React.FC = () => {
       </div>
     );
   }
-  
-  // Format date
-  const formatDate = (dateString: string) => {
-    const date = new Date(dateString);
-    return date.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
-  };
-  
-  // Calculate days since member joined
-  const calculateDaysSinceMember = () => {
-    const memberSinceDate = new Date(profile.memberSince);
-    const currentDate = new Date();
-    const differenceInTime = currentDate.getTime() - memberSinceDate.getTime();
-    return Math.floor(differenceInTime / (1000 * 3600 * 24));
-  };
   
   return (
     <div className="bg-black border border-blue-900/30 rounded-xl overflow-hidden shadow-lg relative">
@@ -172,22 +346,7 @@ const UserProfileHub: React.FC = () => {
         
         <div className="flex items-center space-x-2">
           <button 
-            onClick={() => {
-              // Reset the profile then reload with current vehicle data
-              resetProfile();
-              setTimeout(() => {
-                loadDemoProfile();
-                if (activeVehicle) {
-                  ProfileDataCollector.syncVehicleFromContext(activeVehicle);
-                }
-              }, 100);
-              
-              toast({
-                title: "Profile Reset",
-                description: "Your profile has been reset with current vehicle data",
-                variant: "default"
-              });
-            }}
+            onClick={handleRefreshProfile}
             className="bg-green-700 hover:bg-green-600 px-2 py-0.5 rounded-sm text-xs border border-green-600 text-white flex items-center mr-2"
           >
             <RefreshCw className="h-3 w-3 mr-1" />
@@ -243,7 +402,7 @@ const UserProfileHub: React.FC = () => {
             <div className="h-24 w-24 sm:h-28 sm:w-28 rounded-full overflow-hidden border-2 border-blue-500/50 shadow-[0_0_15px_rgba(59,130,246,0.3)]">
               <img 
                 src={profile.avatar || '/assets/images/default-avatar.png'} 
-                alt={profile.displayName || profile.username} 
+                alt={`${profile.displayName || profile.username} profile photo`}
                 className="h-full w-full object-cover"
               />
             </div>
@@ -255,11 +414,11 @@ const UserProfileHub: React.FC = () => {
           {/* User details */}
           <div className="flex-1 text-center sm:text-left">
             <h1 className="text-white text-2xl font-bold mb-1">
-              {profile.displayName || profile.username}
+              {profile.displayName || profile.username || 'Driver'}
             </h1>
             <div className="text-blue-400 text-sm mb-2 flex items-center justify-center sm:justify-start">
               <User className="h-3.5 w-3.5 mr-1" />
-              @{profile.username}
+              @{profile.username || 'driver'}
             </div>
             
             {profile.bio && (
@@ -283,7 +442,7 @@ const UserProfileHub: React.FC = () => {
               
               <div className="bg-blue-900/20 px-2 py-1 rounded-sm text-blue-300 flex items-center border border-blue-900/30">
                 <Car className="h-3 w-3 mr-1" />
-                {profile.vehicles.length} {profile.vehicles.length === 1 ? 'Vehicle' : 'Vehicles'}
+                {profile.vehicles?.length || 0} {profile.vehicles?.length === 1 ? 'Vehicle' : 'Vehicles'}
               </div>
             </div>
           </div>
@@ -296,7 +455,7 @@ const UserProfileHub: React.FC = () => {
               </div>
               <div>
                 <div className="text-gray-400 text-xs">Total Drives</div>
-                <div className="text-white text-xl font-mono font-bold">{profile.statistics.totalDrives}</div>
+                <div className="text-white text-xl font-mono font-bold">{profile.statistics?.totalDrives || 0}</div>
               </div>
             </div>
             
@@ -306,7 +465,7 @@ const UserProfileHub: React.FC = () => {
               </div>
               <div>
                 <div className="text-gray-400 text-xs">Achievements</div>
-                <div className="text-white text-xl font-mono font-bold">{profile.statistics.achievements}</div>
+                <div className="text-white text-xl font-mono font-bold">{profile.statistics?.achievements || 0}</div>
               </div>
             </div>
           </div>
@@ -339,85 +498,63 @@ const UserProfileHub: React.FC = () => {
                 <div className="bg-black/70 p-3 rounded-sm border border-blue-900/30 relative overflow-hidden group hover:border-blue-500 hover:bg-black/90 transition-all duration-300">
                   <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
                   <div className="text-gray-400 text-xs mb-1 uppercase tracking-wider">Total Miles</div>
-                  <div className="text-white text-xl font-mono font-semibold">{profile.statistics.totalMiles.toLocaleString()}</div>
+                  <div className="text-white text-xl font-mono font-semibold">{profile.statistics?.totalMiles?.toLocaleString() || 0}</div>
                   <div className="mt-1 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500" style={{ width: `${Math.min(100, (profile.statistics.totalMiles/10000)*100)}%` }}></div>
+                    <div className="h-full bg-blue-500" style={{ width: `${Math.min(100, ((profile.statistics?.totalMiles || 0)/10000)*100)}%` }}></div>
                   </div>
                 </div>
                 
                 <div className="bg-black/70 p-3 rounded-sm border border-blue-900/30 relative overflow-hidden group hover:border-blue-500 hover:bg-black/90 transition-all duration-300">
                   <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
                   <div className="text-gray-400 text-xs mb-1 uppercase tracking-wider">Avg Drive Time</div>
-                  <div className="text-white text-xl font-mono font-semibold">{profile.statistics.avgDriveTime} min</div>
+                  <div className="text-white text-xl font-mono font-semibold">{profile.statistics?.avgDriveTime || 0} min</div>
                   <div className="mt-1 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500" style={{ width: `${Math.min(100, (profile.statistics.avgDriveTime/120)*100)}%` }}></div>
+                    <div className="h-full bg-blue-500" style={{ width: `${Math.min(100, ((profile.statistics?.avgDriveTime || 0)/120)*100)}%` }}></div>
                   </div>
                 </div>
                 
                 <div className="bg-black/70 p-3 rounded-sm border border-blue-900/30 relative overflow-hidden group hover:border-blue-500 hover:bg-black/90 transition-all duration-300">
                   <div className="absolute top-0 left-0 w-1 h-full bg-green-500"></div>
                   <div className="text-gray-400 text-xs mb-1 uppercase tracking-wider">Goals Completed</div>
-                  <div className="text-white text-xl font-mono font-semibold">{profile.statistics.goalsCompleted}</div>
+                  <div className="text-white text-xl font-mono font-semibold">{profile.statistics?.goalsCompleted || 0}</div>
                   <div className="mt-1 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-green-500" style={{ width: `${Math.min(100, (profile.statistics.goalsCompleted/10)*100)}%` }}></div>
+                    <div className="h-full bg-green-500" style={{ width: `${Math.min(100, ((profile.statistics?.goalsCompleted || 0)/20)*100)}%` }}></div>
                   </div>
                 </div>
                 
                 <div className="bg-black/70 p-3 rounded-sm border border-blue-900/30 relative overflow-hidden group hover:border-blue-500 hover:bg-black/90 transition-all duration-300">
-                  <div className="absolute top-0 left-0 w-1 h-full bg-blue-500"></div>
+                  <div className="absolute top-0 left-0 w-1 h-full bg-purple-500"></div>
                   <div className="text-gray-400 text-xs mb-1 uppercase tracking-wider">Events Attended</div>
-                  <div className="text-white text-xl font-mono font-semibold">{profile.statistics.eventsAttended}</div>
+                  <div className="text-white text-xl font-mono font-semibold">{profile.statistics?.eventsAttended || 0}</div>
                   <div className="mt-1 h-1 w-full bg-gray-800 rounded-full overflow-hidden">
-                    <div className="h-full bg-blue-500" style={{ width: `${Math.min(100, (profile.statistics.eventsAttended/10)*100)}%` }}></div>
+                    <div className="h-full bg-purple-500" style={{ width: `${Math.min(100, ((profile.statistics?.eventsAttended || 0)/10)*100)}%` }}></div>
                   </div>
                 </div>
               </div>
               
-              {/* Last activity timeline */}
-              <div className="border-t border-blue-900/20 pt-4">
-                <h4 className="text-sm text-blue-400 mb-3 flex items-center">
-                  <Clock className="h-4 w-4 mr-1" />
-                  Recent Activity
-                </h4>
-                
-                <div className="space-y-2">
-                  {/* Last activities would come from a real data source - using sample for now */}
-                  <div className="flex items-start gap-3">
-                    <div className="h-8 w-8 rounded-full bg-blue-900/30 flex items-center justify-center flex-shrink-0 border border-blue-900/40">
-                      <Map className="h-4 w-4 text-blue-400" />
-                    </div>
-                    <div>
-                      <div className="text-white text-sm">Completed a drive on Blue Ridge Parkway</div>
-                      <div className="text-gray-400 text-xs">Yesterday at 4:23 PM • 127 miles</div>
-                    </div>
+              {/* Favorite roads */}
+              <div className="mt-4">
+                <div className="text-gray-400 text-xs uppercase tracking-wider mb-2">Favorite Roads</div>
+                {profile.statistics?.favoriteRoads?.length > 0 ? (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2">
+                    {profile.statistics.favoriteRoads.map((road, index) => (
+                      <div key={index} className="bg-black/50 border border-blue-900/30 px-3 py-2 rounded-sm text-sm text-blue-300 flex items-center">
+                        <Map className="h-3.5 w-3.5 text-blue-400 mr-2" />
+                        <span>{road}</span>
+                      </div>
+                    ))}
                   </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="h-8 w-8 rounded-full bg-green-900/30 flex items-center justify-center flex-shrink-0 border border-green-900/40">
-                      <Award className="h-4 w-4 text-green-400" />
-                    </div>
-                    <div>
-                      <div className="text-white text-sm">Completed goal: Install upgraded suspension package</div>
-                      <div className="text-gray-400 text-xs">3 days ago • Vehicle modification</div>
-                    </div>
+                ) : (
+                  <div className="text-gray-500 text-sm italic">
+                    No favorite roads recorded yet. Start exploring!
                   </div>
-                  
-                  <div className="flex items-start gap-3">
-                    <div className="h-8 w-8 rounded-full bg-blue-900/30 flex items-center justify-center flex-shrink-0 border border-blue-900/40">
-                      <Calendar className="h-4 w-4 text-blue-400" />
-                    </div>
-                    <div>
-                      <div className="text-white text-sm">Registered for Cars & Coffee event</div>
-                      <div className="text-gray-400 text-xs">1 week ago • Atlanta Motorsports Park</div>
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
             </div>
           )}
         </div>
         
-        {/* Vehicles Section */}
+        {/* Vehicle Gallery Section */}
         <div className="mb-6">
           <div 
             className="mb-2 border border-blue-900/30 bg-blue-900/10 rounded-md p-3 cursor-pointer hover:bg-blue-900/20 transition-colors"
@@ -426,7 +563,7 @@ const UserProfileHub: React.FC = () => {
             <div className="flex justify-between items-center">
               <div className="flex items-center">
                 <Car className="h-4 w-4 text-blue-400 mr-2" />
-                <h3 className="text-blue-300 font-medium">Your Vehicles</h3>
+                <h3 className="text-blue-300 font-medium">Vehicle Collection</h3>
               </div>
               <div className="h-6 w-6 rounded flex items-center justify-center bg-black/40 border border-blue-900/30">
                 {activeSection === 'vehicles' ? 
@@ -438,81 +575,55 @@ const UserProfileHub: React.FC = () => {
           </div>
           
           {activeSection === 'vehicles' && (
-            <div className="space-y-4">
-              {profile.vehicles.map((vehicle) => (
-                <div key={vehicle.id} className="bg-black/30 border border-blue-900/20 rounded-md overflow-hidden">
-                  <div className="flex flex-col sm:flex-row">
-                    {/* Vehicle image */}
-                    <div className="sm:w-1/3 h-48 sm:h-auto relative">
-                      <img 
-                        src={vehicle.image || '/assets/images/default-car.png'} 
-                        alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
-                        className="w-full h-full object-cover"
-                      />
-                      <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black to-transparent h-20"></div>
-                      <div className="absolute bottom-0 left-0 right-0 p-3">
-                        <div className="text-white font-medium">{vehicle.nickname}</div>
-                        <div className="text-gray-300 text-sm">{vehicle.year} {vehicle.make} {vehicle.model}</div>
-                      </div>
-                    </div>
-                    
-                    {/* Vehicle details */}
-                    <div className="p-4 sm:w-2/3">
-                      <div className="grid grid-cols-2 gap-4 mb-4">
-                        <div>
-                          <div className="text-gray-400 text-xs mb-1">Color</div>
-                          <div className="text-white">{vehicle.color || 'Not specified'}</div>
-                        </div>
-                        
-                        <div>
-                          <div className="text-gray-400 text-xs mb-1">VIN</div>
-                          <div className="text-white">{vehicle.vin || 'Not specified'}</div>
-                        </div>
-                        
-                        <div>
-                          <div className="text-gray-400 text-xs mb-1">Modifications</div>
-                          <div className="text-white">{vehicle.mods?.length || 0} installed</div>
-                        </div>
-                        
-                        <div>
-                          <div className="text-gray-400 text-xs mb-1">Maintenance Records</div>
-                          <div className="text-white">{vehicle.maintenanceRecords?.length || 0} records</div>
-                        </div>
+            <div className="bg-black/30 border border-blue-900/20 rounded-md p-4">
+              {profile.vehicles?.length > 0 ? (
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {profile.vehicles.map((vehicle) => (
+                    <div 
+                      key={vehicle.id} 
+                      className="relative overflow-hidden rounded-md border border-gray-800 bg-black/50 group"
+                    >
+                      <div className="h-40 overflow-hidden">
+                        <img 
+                          src={vehicle.image || '/assets/images/default-car.jpg'} 
+                          alt={`${vehicle.year} ${vehicle.make} ${vehicle.model}`}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 to-transparent opacity-80"></div>
                       </div>
                       
-                      <div className="flex space-x-2">
-                        <Link to={`/vehicle/${vehicle.id}`} className="bg-blue-900/30 text-blue-300 px-3 py-1.5 rounded-md text-sm border border-blue-900/50 hover:bg-blue-900/50 transition-colors flex items-center">
-                          <Sliders className="h-4 w-4 mr-1.5" />
-                          Manage Vehicle
-                        </Link>
+                      <div className="absolute bottom-0 left-0 right-0 p-3">
+                        <div className="text-blue-300 font-semibold">{vehicle.nickname || `${vehicle.year} ${vehicle.make} ${vehicle.model}`}</div>
+                        <div className="text-gray-400 text-sm">{`${vehicle.year} ${vehicle.make} ${vehicle.model}`}</div>
                         
-                        <Link to="/add-vehicle" className="bg-green-900/30 text-green-300 px-3 py-1.5 rounded-md text-sm border border-green-900/50 hover:bg-green-900/50 transition-colors flex items-center">
-                          <Zap className="h-4 w-4 mr-1.5" />
-                          Garage
+                        <Link 
+                          to={`/garage/${vehicle.id}`}
+                          className="mt-2 flex items-center text-xs text-green-500 hover:text-green-400"
+                        >
+                          View Details <ChevronRight className="h-3 w-3 ml-1" />
                         </Link>
                       </div>
                     </div>
-                  </div>
-                </div>
-              ))}
-              
-              {profile.vehicles.length === 0 && (
-                <div className="bg-black/30 border border-blue-900/20 rounded-md p-6 text-center">
-                  <Car className="h-12 w-12 text-blue-900/60 mx-auto mb-3" />
-                  <h4 className="text-white text-lg mb-2">No vehicles added yet</h4>
-                  <p className="text-gray-400 text-sm mb-4">Add your first vehicle to unlock personalized insights and track maintenance.</p>
-                  <Link to="/add-vehicle" className="bg-blue-900/40 hover:bg-blue-900/60 transition-colors text-blue-300 px-4 py-2 rounded-md text-sm inline-flex items-center border border-blue-900/50">
-                    <Car className="h-4 w-4 mr-1.5" />
-                    Add Vehicle
+                  ))}
+                  
+                  <Link
+                    to="/garage/add-vehicle"
+                    className="flex flex-col items-center justify-center h-40 rounded-md border border-gray-800 border-dashed bg-black/20 p-4 hover:bg-black/30 transition-colors"
+                  >
+                    <Car className="h-8 w-8 text-blue-800 mb-2" />
+                    <span className="text-blue-400 text-sm font-medium">Add Vehicle</span>
+                    <span className="text-gray-500 text-xs mt-1">Track another vehicle in your collection</span>
                   </Link>
                 </div>
-              )}
-              
-              {profile.vehicles.length > 0 && (
-                <div className="text-center">
-                  <Link to="/add-vehicle" className="bg-blue-900/30 text-blue-300 px-3 py-1.5 rounded-md text-sm inline-flex items-center border border-blue-900/50 hover:bg-blue-900/50 transition-colors">
-                    <Car className="h-4 w-4 mr-1.5" />
-                    Add Another Vehicle
+              ) : (
+                <div className="text-center py-8">
+                  <Car className="h-10 w-10 text-blue-900/50 mx-auto mb-3" />
+                  <p className="text-gray-400 mb-3">You haven't added any vehicles yet.</p>
+                  <Link 
+                    to="/garage/add-vehicle"
+                    className="inline-block bg-blue-900/30 hover:bg-blue-900/40 text-blue-300 px-4 py-2 rounded-md text-sm transition-colors"
+                  >
+                    Add Your First Vehicle
                   </Link>
                 </div>
               )}
@@ -520,7 +631,7 @@ const UserProfileHub: React.FC = () => {
           )}
         </div>
         
-        {/* Drive History Section */}
+        {/* Recent Drives Section */}
         <div className="mb-6">
           <div 
             className="mb-2 border border-blue-900/30 bg-blue-900/10 rounded-md p-3 cursor-pointer hover:bg-blue-900/20 transition-colors"
@@ -529,7 +640,7 @@ const UserProfileHub: React.FC = () => {
             <div className="flex justify-between items-center">
               <div className="flex items-center">
                 <Map className="h-4 w-4 text-blue-400 mr-2" />
-                <h3 className="text-blue-300 font-medium">Drive History</h3>
+                <h3 className="text-blue-300 font-medium">Recent Drives</h3>
               </div>
               <div className="h-6 w-6 rounded flex items-center justify-center bg-black/40 border border-blue-900/30">
                 {activeSection === 'drives' ? 
@@ -541,235 +652,101 @@ const UserProfileHub: React.FC = () => {
           </div>
           
           {activeSection === 'drives' && (
-            <div className="space-y-4">
-              <div className="bg-black/30 border border-blue-900/20 rounded-md p-4">
-                <div className="overflow-x-auto">
-                  <table className="min-w-full">
-                    <thead>
-                      <tr className="border-b border-blue-900/30">
-                        <th className="text-left text-blue-400 text-xs uppercase tracking-wider pb-3">Date</th>
-                        <th className="text-left text-blue-400 text-xs uppercase tracking-wider pb-3">Route</th>
-                        <th className="text-left text-blue-400 text-xs uppercase tracking-wider pb-3">Distance</th>
-                        <th className="text-left text-blue-400 text-xs uppercase tracking-wider pb-3">Duration</th>
-                        <th className="text-left text-blue-400 text-xs uppercase tracking-wider pb-3">Weather</th>
-                        <th className="text-left text-blue-400 text-xs uppercase tracking-wider pb-3">Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody className="divide-y divide-blue-900/20">
-                      {profile.drives.map((drive) => (
-                        <tr key={drive.id} className="hover:bg-blue-900/10 transition-colors">
-                          <td className="py-3 text-white">{formatDate(drive.date)}</td>
-                          <td className="py-3 text-white">{drive.route || 'Not specified'}</td>
-                          <td className="py-3 text-white">{drive.distance ? `${drive.distance} miles` : '-'}</td>
-                          <td className="py-3 text-white">{drive.duration ? `${drive.duration} mins` : '-'}</td>
-                          <td className="py-3 text-white">
-                            <div className="flex items-center">
-                              {drive.weather === 'Sunny' && <Droplets className="h-4 w-4 text-blue-400 mr-1" />}
-                              {drive.weather || '-'}
-                            </div>
-                          </td>
-                          <td className="py-3 flex space-x-2">
-                            <Link to={`/drive/${drive.id}`} className="text-blue-400 hover:text-blue-300 transition-colors">
-                              <ExternalLink className="h-4 w-4" />
-                            </Link>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                
-                {profile.drives.length === 0 && (
-                  <div className="text-center py-12">
-                    <Map className="h-12 w-12 text-blue-900/60 mx-auto mb-3" />
-                    <h4 className="text-white text-lg mb-2">No drives recorded yet</h4>
-                    <p className="text-gray-400 text-sm mb-4">Record your drives to track your progress and build your driver profile.</p>
-                  </div>
-                )}
-              </div>
-              
-              <div className="text-center">
-                <Link to="/drive-logger" className="bg-blue-900/30 text-blue-300 px-3 py-1.5 rounded-md text-sm inline-flex items-center border border-blue-900/50 hover:bg-blue-900/50 transition-colors">
-                  <Map className="h-4 w-4 mr-1.5" />
-                  Log New Drive
-                </Link>
-              </div>
-            </div>
-          )}
-        </div>
-        
-        {/* Goals Section */}
-        <div className="mb-6">
-          <div 
-            className="mb-2 border border-blue-900/30 bg-blue-900/10 rounded-md p-3 cursor-pointer hover:bg-blue-900/20 transition-colors"
-            onClick={() => toggleSection('goals')}
-          >
-            <div className="flex justify-between items-center">
-              <div className="flex items-center">
-                <Award className="h-4 w-4 text-blue-400 mr-2" />
-                <h3 className="text-blue-300 font-medium">Your Goals</h3>
-              </div>
-              <div className="h-6 w-6 rounded flex items-center justify-center bg-black/40 border border-blue-900/30">
-                {activeSection === 'goals' ? 
-                  <ChevronUp className="h-4 w-4 text-blue-400" /> : 
-                  <ChevronDown className="h-4 w-4 text-blue-400" />
-                }
-              </div>
-            </div>
-          </div>
-          
-          {activeSection === 'goals' && (
-            <div className="space-y-4">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {profile.goals.map((goal) => {
-                  // Determine status color
-                  let statusColor = 'bg-blue-500';
-                  let statusTextColor = 'text-blue-400';
-                  let statusBg = 'bg-blue-900/20';
-                  let statusBorder = 'border-blue-900/30';
-                  
-                  if (goal.status === 'completed') {
-                    statusColor = 'bg-green-500';
-                    statusTextColor = 'text-green-400';
-                    statusBg = 'bg-green-900/20';
-                    statusBorder = 'border-green-900/30';
-                  } else if (goal.status === 'failed') {
-                    statusColor = 'bg-red-500';
-                    statusTextColor = 'text-red-400';
-                    statusBg = 'bg-red-900/20';
-                    statusBorder = 'border-red-900/30';
-                  }
-                  
-                  // Determine type icon
-                  let TypeIcon = Award;
-                  if (goal.type === 'vehicle') {
-                    TypeIcon = Car;
-                  }
-                  
-                  return (
+            <div className="bg-black/30 border border-blue-900/20 rounded-md p-4">
+              {profile.drives?.length > 0 ? (
+                <div className="space-y-3">
+                  {profile.drives.slice(0, 3).map((drive) => (
                     <div 
-                      key={goal.id} 
-                      className={`border ${statusBorder} ${statusBg} rounded-md p-4 relative overflow-hidden`}
+                      key={drive.id} 
+                      className="flex border border-gray-800 rounded-md overflow-hidden bg-black/50"
                     >
-                      {/* Status indicator line */}
-                      <div className={`absolute top-0 left-0 w-1 h-full ${statusColor}`}></div>
-                      
-                      <div className="flex justify-between items-start mb-3">
-                        <div className="flex items-center">
-                          <div className={`h-8 w-8 rounded-full ${statusBg} border ${statusBorder} flex items-center justify-center mr-3`}>
-                            <TypeIcon className={`h-4 w-4 ${statusTextColor}`} />
-                          </div>
-                          <div className="text-xs uppercase tracking-wider text-gray-400">{goal.type}</div>
-                        </div>
-                        
-                        <div className={`px-2 py-1 rounded-sm text-xs uppercase ${statusTextColor} border ${statusBorder} ${statusBg}`}>
-                          {goal.status}
-                        </div>
+                      <div className="w-24 h-20 bg-blue-900/20 flex items-center justify-center">
+                        <Map className="h-8 w-8 text-blue-800/70" />
                       </div>
-                      
-                      <p className="text-white mb-3">{goal.description}</p>
-                      
-                      <div className="flex justify-between items-center text-xs text-gray-400">
-                        <div>Created: {formatDate(goal.createdAt)}</div>
-                        <div>Target: {formatDate(goal.targetDate)}</div>
+                      <div className="p-3 flex-1">
+                        <div className="flex justify-between">
+                          <div className="text-blue-300 font-medium text-sm">{drive.route}</div>
+                          <div className="text-gray-500 text-xs">{drive.date}</div>
+                        </div>
+                        <div className="flex items-center gap-4 mt-1">
+                          <div className="text-gray-400 text-xs flex items-center">
+                            <Map className="h-3 w-3 mr-1" />
+                            {drive.distance} miles
+                          </div>
+                          <div className="text-gray-400 text-xs flex items-center">
+                            <Clock className="h-3 w-3 mr-1" />
+                            {Math.floor(drive.duration / 60)}h {drive.duration % 60}m
+                          </div>
+                          <div className="text-gray-400 text-xs flex items-center">
+                            <Zap className="h-3 w-3 mr-1" />
+                            {drive.avgSpeed} mph avg
+                          </div>
+                        </div>
+                        {drive.notes && <div className="text-gray-500 text-xs mt-1">{drive.notes}</div>}
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-              
-              {profile.goals.length === 0 && (
-                <div className="bg-black/30 border border-blue-900/20 rounded-md p-6 text-center">
-                  <Award className="h-12 w-12 text-blue-900/60 mx-auto mb-3" />
-                  <h4 className="text-white text-lg mb-2">No goals set yet</h4>
-                  <p className="text-gray-400 text-sm mb-4">Set goals to track your progress and achieve your automotive dreams.</p>
-                </div>
-              )}
-              
-              <div className="text-center">
-                <Link to="/goals" className="bg-blue-900/30 text-blue-300 px-3 py-1.5 rounded-md text-sm inline-flex items-center border border-blue-900/50 hover:bg-blue-900/50 transition-colors">
-                  <Award className="h-4 w-4 mr-1.5" />
-                  Set New Goal
-                </Link>
-              </div>
-            </div>
-          )}
-        </div>
-        
-        {/* Gallery Section */}
-        <div className="mb-6">
-          <div 
-            className="mb-2 border border-blue-900/30 bg-blue-900/10 rounded-md p-3 cursor-pointer hover:bg-blue-900/20 transition-colors"
-            onClick={() => toggleSection('gallery')}
-          >
-            <div className="flex justify-between items-center">
-              <div className="flex items-center">
-                <Camera className="h-4 w-4 text-blue-400 mr-2" />
-                <h3 className="text-blue-300 font-medium">Gallery</h3>
-              </div>
-              <div className="h-6 w-6 rounded flex items-center justify-center bg-black/40 border border-blue-900/30">
-                {activeSection === 'gallery' ? 
-                  <ChevronUp className="h-4 w-4 text-blue-400" /> : 
-                  <ChevronDown className="h-4 w-4 text-blue-400" />
-                }
-              </div>
-            </div>
-          </div>
-          
-          {activeSection === 'gallery' && (
-            <div className="space-y-4">
-              {profile.gallery.length > 0 ? (
-                <div className="bg-black/30 border border-blue-900/20 rounded-md p-4">
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4">
-                    {profile.gallery.map((image) => (
-                      <div key={image.id} className="group relative h-40 rounded-md overflow-hidden border border-blue-900/30">
-                        <img 
-                          src={image.url} 
-                          alt={image.caption || 'Gallery image'} 
-                          className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                        <div className="absolute bottom-0 left-0 right-0 p-2 translate-y-full group-hover:translate-y-0 transition-transform duration-300">
-                          <div className="text-white text-sm">{image.caption}</div>
-                          <div className="text-gray-300 text-xs">{formatDate(image.date)}</div>
-                        </div>
-                      </div>
-                    ))}
+                  ))}
+                  
+                  <div className="text-center mt-3">
+                    <Link 
+                      to="/drive-journal"
+                      className="inline-block text-blue-400 hover:text-blue-300 text-sm"
+                    >
+                      View All Drives
+                    </Link>
                   </div>
                 </div>
               ) : (
-                <div className="bg-black/30 border border-blue-900/20 rounded-md p-6 text-center">
-                  <Camera className="h-12 w-12 text-blue-900/60 mx-auto mb-3" />
-                  <h4 className="text-white text-lg mb-2">No images in your gallery</h4>
-                  <p className="text-gray-400 text-sm mb-4">Add photos of your vehicles, drives, and automotive experiences.</p>
+                <div className="text-center py-8">
+                  <Map className="h-10 w-10 text-blue-900/50 mx-auto mb-3" />
+                  <p className="text-gray-400 mb-3">You haven't logged any drives yet.</p>
+                  <Link 
+                    to="/drive-journal/new"
+                    className="inline-block bg-blue-900/30 hover:bg-blue-900/40 text-blue-300 px-4 py-2 rounded-md text-sm transition-colors"
+                  >
+                    Log Your First Drive
+                  </Link>
                 </div>
               )}
-              
-              <div className="text-center">
-                <Link to="/gallery" className="bg-blue-900/30 text-blue-300 px-3 py-1.5 rounded-md text-sm inline-flex items-center border border-blue-900/50 hover:bg-blue-900/50 transition-colors">
-                  <Camera className="h-4 w-4 mr-1.5" />
-                  View Full Gallery
-                </Link>
-              </div>
             </div>
           )}
         </div>
-      </div>
-      
-      {/* F1-style technical footer */}
-      <div className="bg-black/70 border-t border-blue-900/20 px-4 py-2 flex justify-between items-center relative z-10">
-        <div className="flex items-center">
-          <div className="h-1.5 w-1.5 rounded-full bg-green-500 mr-1.5"></div>
-          <span className="text-xs text-blue-400/70 font-mono">DRIVER ID: {profile.id.toUpperCase()}</span>
+        
+        {/* Profile Management Links */}
+        <div className="flex flex-wrap justify-center sm:justify-start gap-3 mt-8">
+          <Link 
+            to="/edit-profile"
+            className="bg-blue-900/20 hover:bg-blue-900/30 text-blue-300 px-4 py-2 rounded-md text-sm transition-colors flex items-center"
+          >
+            <User className="h-4 w-4 mr-2" />
+            Edit Profile
+          </Link>
+          
+          <Link 
+            to="/drive-journal"
+            className="bg-green-900/20 hover:bg-green-900/30 text-green-300 px-4 py-2 rounded-md text-sm transition-colors flex items-center"
+          >
+            <Activity className="h-4 w-4 mr-2" />
+            Drive Journal
+          </Link>
+          
+          <Link 
+            to="/garage"
+            className="bg-purple-900/20 hover:bg-purple-900/30 text-purple-300 px-4 py-2 rounded-md text-sm transition-colors flex items-center"
+          >
+            <Car className="h-4 w-4 mr-2" />
+            Garage Vault
+          </Link>
+          
+          <Link 
+            to="/gallery"
+            className="bg-gray-800/50 hover:bg-gray-800/70 text-gray-300 px-4 py-2 rounded-md text-sm transition-colors flex items-center"
+          >
+            <Camera className="h-4 w-4 mr-2" />
+            My Gallery
+          </Link>
         </div>
-        <div className="text-xs text-gray-500">
-          Last active: {new Date(profile.lastActive).toLocaleTimeString()}
-        </div>
       </div>
-      
-      {/* Technical accent lines for F1 styling */}
-      <div className="absolute -bottom-2 left-8 right-8 h-0.5 bg-gradient-to-r from-transparent via-blue-500/30 to-transparent"></div>
-      <div className="absolute -bottom-4 left-24 right-24 h-0.5 bg-gradient-to-r from-transparent via-blue-500/20 to-transparent"></div>
     </div>
   );
 };
