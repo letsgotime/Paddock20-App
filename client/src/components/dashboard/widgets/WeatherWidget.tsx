@@ -1,12 +1,58 @@
-import React, { useContext, useState, useEffect } from 'react';
-import { ConsolidatedWeatherContext } from '@/contexts/ConsolidatedWeatherContext';
+import React, { useState, useEffect } from 'react';
 import { Cloud, CloudRain, CloudSnow, Sun, Thermometer, Droplets, Wind, ArrowUp, ArrowDown, CloudLightning } from 'lucide-react';
-import { useVehicleContext } from '@/contexts/VehicleContext';
+
+// Mock weather data for the widget
+interface WeatherData {
+  weatherData: {
+    coord: { lon: number; lat: number };
+    weather: { id: number; main: string; description: string; icon: string }[];
+    main: {
+      temp: number;
+      feels_like: number;
+      temp_min: number;
+      temp_max: number;
+      pressure: number;
+      humidity: number;
+    };
+    wind: { speed: number; deg: number };
+    dt: number;
+    name: string;
+  };
+}
+
+const mockWeatherData: WeatherData = {
+  weatherData: {
+    coord: { lon: -84.29, lat: 33.99 },
+    weather: [{ id: 800, main: 'Clear', description: 'clear sky', icon: '01d' }],
+    main: {
+      temp: 78.6,
+      feels_like: 78.4,
+      temp_min: 76.1,
+      temp_max: 82.8,
+      pressure: 1015,
+      humidity: 55
+    },
+    wind: { speed: 8.5, deg: 270 },
+    dt: Math.floor(Date.now() / 1000),
+    name: 'Roswell'
+  }
+};
+
+// Mock active vehicle
+const mockVehicle = {
+  id: 'car1',
+  displayName: 'My F1 Car',
+  make: 'McLaren',
+  model: 'MCL38',
+  year: 2024
+};
 
 const WeatherWidget: React.FC = () => {
-  const { weatherData, isLoading, error, fetchWeather } = useContext(ConsolidatedWeatherContext);
-  const { activeVehicle } = useVehicleContext();
+  const [weatherData, setWeatherData] = useState<WeatherData>(mockWeatherData);
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState<Error | null>(null);
   const [refreshing, setRefreshing] = useState(false);
+  const activeVehicle = mockVehicle;
   
   // Get a weather icon based on weather condition
   const getWeatherIcon = (condition?: string, isNight?: boolean) => {
@@ -25,6 +71,34 @@ const WeatherWidget: React.FC = () => {
     } else {
       return <Cloud className="h-12 w-12 text-gray-300" />;
     }
+  };
+  
+  // Simulate fetching weather data
+  const fetchWeather = () => {
+    setIsLoading(true);
+    return new Promise<void>((resolve) => {
+      // Simulate API call with timeout
+      setTimeout(() => {
+        // Update with slightly different values to simulate new data
+        setWeatherData({
+          weatherData: {
+            ...mockWeatherData.weatherData,
+            main: {
+              ...mockWeatherData.weatherData.main,
+              temp: mockWeatherData.weatherData.main.temp + (Math.random() * 4 - 2), // +/- 2 degrees
+              humidity: Math.min(100, Math.max(30, mockWeatherData.weatherData.main.humidity + (Math.random() * 10 - 5))),
+            },
+            wind: {
+              speed: Math.max(0, mockWeatherData.weatherData.wind.speed + (Math.random() * 3 - 1.5)),
+              deg: (mockWeatherData.weatherData.wind.deg + Math.floor(Math.random() * 30)) % 360
+            },
+            dt: Math.floor(Date.now() / 1000)
+          }
+        });
+        setIsLoading(false);
+        resolve();
+      }, 800);
+    });
   };
   
   // Refresh weather data

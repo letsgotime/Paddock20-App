@@ -45,6 +45,8 @@ import { GalleryProvider } from "./contexts/GalleryContext";
 import { RewardsProvider } from "./contexts/RewardsContext";
 import { VehicleProvider } from "./contexts/VehicleContext";
 import { VehicleDataProvider } from "./contexts/VehicleDataContext";
+import { SoundProvider } from "./contexts/SoundContext";
+import SoundControlPanel from "./components/SoundControlPanel";
 import RewardNotification from "./components/RewardNotification";
 import RewardsTracker from "./components/RewardsTracker";
 import AuthPage from "./pages/AuthPage";
@@ -216,15 +218,17 @@ function App() {
         <AuthProvider>
           {/* Page Title Manager - Updates browser tab title based on current route */}
           <PageTitleManager />
-          {/* Vehicle Provider - Provides vehicle data to all components */}
-          <VehicleProvider>
-            {/* Vehicle Data Provider - Provides comprehensive vehicle activity, media, and document data */}
-            <VehicleDataProvider>
-              {/* Centralized Weather Provider - Provides weather data to all components */}
-              <WeatherProvider>
-                <GalleryProvider>
-                  {/* Rewards Provider - for site-wide gamification */}
-                  <RewardsProvider>
+          {/* Sound Provider - Provides F1-inspired sound effects throughout the app */}
+          <SoundProvider>
+            {/* Vehicle Provider - Provides vehicle data to all components */}
+            <VehicleProvider>
+              {/* Vehicle Data Provider - Provides comprehensive vehicle activity, media, and document data */}
+              <VehicleDataProvider>
+                {/* Centralized Weather Provider - Provides weather data to all components */}
+                <WeatherProvider>
+                  <GalleryProvider>
+                    {/* Rewards Provider - for site-wide gamification */}
+                    <RewardsProvider>
                     {/* Skip link for keyboard navigation */}
                     <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
                       Skip to main content
@@ -249,6 +253,11 @@ function App() {
                       
                       {/* GoTime Motorsports logo with navigation and sound controls - always fixed to bottom */}
                       <FixedSoundBar />
+                      
+                      {/* Sound Controls Panel - Fixed to the right side */}
+                      <div className="fixed right-4 bottom-20 z-[999] w-64">
+                        <SoundControlPanel />
+                      </div>
 
                       {/* Main content area - adjusted for fixed header at top and fixed footer at bottom */}
                       <main id={MAIN_CONTENT_ID} className="container mx-auto px-4 mt-[60px] pb-[70px]" tabIndex={-1}>
@@ -345,11 +354,12 @@ function App() {
                     {/* Footer with links and information */}
                     <Footer />
                   </div>
-                </RewardsProvider>
-              </GalleryProvider>
-            </WeatherProvider>
-            </VehicleDataProvider>
-          </VehicleProvider>
+                    </RewardsProvider>
+                  </GalleryProvider>
+                </WeatherProvider>
+              </VehicleDataProvider>
+            </VehicleProvider>
+          </SoundProvider>
         </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>

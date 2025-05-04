@@ -1,12 +1,8 @@
 import React, { useState, useEffect, useRef } from "react";
 import { VolumeX, Volume2, Home, ArrowLeft, ArrowRight, Music, Music2 } from "lucide-react";
-import { 
-  playMotorsportSound, 
-  getSoundSettings, 
-  setSoundEnabled, 
-  setAmbientSoundsEnabled
-} from "../services/soundService";
 import { useNavigate, useLocation, Link } from "react-router-dom";
+import { useSoundContext } from "@/contexts/SoundContext";
+import SoundButton from "@/components/ui/SoundButton";
 
 /**
  * FixedSoundBar - A fixed bottom bar showing GoTime logo, navigation controls and sound controls
@@ -19,8 +15,7 @@ import { useNavigate, useLocation, Link } from "react-router-dom";
 const FixedSoundBar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const [soundEnabled, setSoundEnabledState] = useState(false); // Default off
-  const [ambientEnabled, setAmbientEnabledState] = useState(false); // Default off
+  const { isEnabled: soundEnabled, ambientEnabled, playSound, toggleSound, toggleAmbient } = useSoundContext();
   const [canGoBack, setCanGoBack] = useState(false);
   const [canGoForward, setCanGoForward] = useState(false);
   const [showSoundMenu, setShowSoundMenu] = useState(false);
@@ -78,17 +73,6 @@ const FixedSoundBar: React.FC = () => {
     };
   }, [navigationHistory, currentHistoryIndex, location.pathname]);
   
-  // Initialize sound settings from sound service
-  useEffect(() => {
-    try {
-      const soundSettings = getSoundSettings();
-      setSoundEnabledState(soundSettings.enabled);
-      setAmbientEnabledState(soundSettings.ambientEnabled);
-    } catch (error) {
-      console.error("Error loading sound settings:", error);
-    }
-  }, []);
-  
   // Handle clicks outside the sound menu to close it
   useEffect(() => {
     function handleClickOutside(event: MouseEvent) {
@@ -106,7 +90,7 @@ const FixedSoundBar: React.FC = () => {
   // Navigation handlers using React Router and our custom history tracking
   const handleBackClick = (e: React.MouseEvent) => {
     if (canGoBack) {
-      if (soundEnabled) playMotorsportSound('ui_navigate');
+      if (soundEnabled) playSound('ui_click');
       
       // Go to previous path in our history
       const prevIndex = currentHistoryIndex - 1;
@@ -122,7 +106,7 @@ const FixedSoundBar: React.FC = () => {
 
   const handleForwardClick = (e: React.MouseEvent) => {
     if (canGoForward) {
-      if (soundEnabled) playMotorsportSound('ui_navigate');
+      if (soundEnabled) playSound('ui_click');
       
       // Go to next path in our history
       const nextIndex = currentHistoryIndex + 1;
@@ -137,49 +121,17 @@ const FixedSoundBar: React.FC = () => {
   };
 
   const handleHomeClick = () => {
-    if (soundEnabled) playMotorsportSound('ui_select');
+    if (soundEnabled) playSound('ui_success');
   };
 
   const handleSoundLibraryClick = () => {
-    if (soundEnabled) playMotorsportSound('button_press');
+    if (soundEnabled) playSound('ui_click');
     setShowSoundMenu(false);
   };
 
-  const toggleSound = () => {
-    try {
-      // Toggle sound setting
-      const newState = !soundEnabled;
-      setSoundEnabledState(newState);
-      setSoundEnabled(newState);
-      
-      // Play sound effect for toggle
-      if (newState) {
-        playMotorsportSound('radio_beep');
-      }
-    } catch (error) {
-      console.error("Error toggling sound:", error);
-    }
-  };
-  
-  const toggleAmbientSound = () => {
-    try {
-      // Toggle ambient sound setting
-      const newState = !ambientEnabled;
-      setAmbientEnabledState(newState);
-      setAmbientSoundsEnabled(newState);
-      
-      // Play sound effect for toggle if sounds are enabled
-      if (soundEnabled) {
-        playMotorsportSound(newState ? 'start_chime' : 'button_press');
-      }
-    } catch (error) {
-      console.error("Error toggling ambient sound:", error);
-    }
-  };
-  
   const toggleSoundMenu = () => {
     setShowSoundMenu(!showSoundMenu);
-    if (soundEnabled) playMotorsportSound('menu_select');
+    if (soundEnabled) playSound('ui_click');
   };
 
   return (
@@ -277,7 +229,7 @@ const FixedSoundBar: React.FC = () => {
             
             {/* Ambient sound toggle */}
             <button 
-              onClick={toggleAmbientSound}
+              onClick={toggleAmbient}
               className="flex items-center justify-between w-full text-sm text-gray-300 hover:text-white py-1 mt-1"
             >
               <span className="flex items-center">
