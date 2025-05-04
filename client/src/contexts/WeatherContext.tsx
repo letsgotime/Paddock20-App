@@ -119,7 +119,7 @@ const getSavedLocationsFromStorage = (): Location[] => {
   
   // Default locations if none are saved
   return [
-    { id: '1', name: 'Charlotte', lat: 35.2271, lon: -80.8431 },
+    { id: '1', name: 'Roswell, GA', lat: 34.0232, lon: -84.3616 },
     { id: '2', name: 'New York', lat: 40.7128, lon: -74.0060 },
     { id: '3', name: 'San Francisco', lat: 37.7749, lon: -122.4194 }
   ];

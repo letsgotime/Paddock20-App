@@ -54,7 +54,7 @@ const Header: React.FC = () => {
   const menuRef = useRef<HTMLDivElement>(null);
   
   // Hard-coded user information for now - will be replaced with actual authentication later
-  const userDisplayName = 'Gavin Brooks';
+  const userDisplayName = 'GavinGotime';
   
   // Handle click outside to close menu
   useEffect(() => {
