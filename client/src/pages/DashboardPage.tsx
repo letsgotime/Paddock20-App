@@ -48,7 +48,7 @@ interface UserPreference {
 function DashboardPage() {
   // Get user data from auth hook
   const auth = useAuth();
-  const userName = auth?.user?.username || 'gavingotime';
+  const userName = auth?.user?.username || 'driver';
   const [selectedVehicle, setSelectedVehicle] = useState<string>('2020 BMW 330i xDrive');
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
   const [recentDrives, setRecentDrives] = useState<RecentDrive[]>([]);
@@ -1227,7 +1227,7 @@ function DashboardPage() {
                   <div className="flex items-center">
                     <div className="h-1.5 w-1.5 rounded-full bg-green-500 mr-1.5 animate-pulse"></div>
                     <p className="text-xs text-gray-400">
-                      <span className="text-green-400 font-medium">gavingotime</span>
+                      <span className="text-green-400 font-medium">{userName}</span>
                       <span className="mx-1.5 text-gray-600">|</span>
                       <span className="uppercase font-mono tracking-tight">{new Date().toLocaleTimeString('en-US', {hour12: false})}</span>
                       <span className="mx-1.5 text-gray-600">|</span>

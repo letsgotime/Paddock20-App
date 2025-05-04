@@ -53,16 +53,16 @@ const UserProfileHub: React.FC = () => {
         
         // Build comprehensive profile from all connected data sources
         const freshProfile = {
-          // User identity - from Auth context with fallbacks
-          id: user?.id?.toString() || '1',
-          username: user?.username || getUserDisplayName() || 'gavingotime',
-          displayName: user?.fullName || getUserDisplayName() || 'Gavin Brooks',
+          // User identity - from Auth context with generic fallbacks, not hardcoded user data
+          id: user?.id?.toString() || 'guest',
+          username: user?.username || getUserDisplayName() || 'driver',
+          displayName: user?.fullName || getUserDisplayName() || 'Guest Driver',
           memberSince: onboardingData?.memberSince || new Date().toISOString().split('T')[0],
           lastActive: new Date().toISOString(),
           
-          // User metadata - with fallbacks
-          bio: onboardingData?.bio || 'F1-grade telemetry and insights for passionate drivers.',
-          location: onboardingData?.location || 'United States',
+          // User metadata - with dynamic fallbacks, not specific user details
+          bio: onboardingData?.bio || '',
+          location: onboardingData?.location || '',
           membershipLevel: (onboardingData?.membershipLevel as 'free' | 'premium' | 'elite') || 'free',
           avatar: user?.profileImage || onboardingData?.avatar || '/assets/images/default-avatar.png',
           
