@@ -158,18 +158,13 @@ const ContextualBreadcrumbs: React.FC = () => {
                 </span>
               ) : (
                 breadcrumb.path === '/' ? (
-                  // Use a standard anchor tag with hard redirect for reliable navigation to home
-                  <a 
-                    href="/"
+                  // Use wouter Link for faster client-side navigation
+                  <Link 
+                    to="/"
                     className="hover:text-blue-200 transition-colors"
-                    onClick={(e) => {
-                      e.preventDefault();
-                      // Use replace instead of href to avoid adding to history
-                      window.location.replace('/');
-                    }}
                   >
                     {breadcrumb.label}
-                  </a>
+                  </Link>
                 ) : (
                   <Link 
                     to={breadcrumb.path}
