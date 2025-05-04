@@ -38,18 +38,6 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { playMotorsportSound, getSoundSettings, setSoundEnabled } from "../services/soundService";
 
-// Mock user for preview mode (same as in App.tsx)
-const mockUser = { 
-  id: 99999, 
-  username: 'Alex Garza', 
-  email: 'alex@gotime.com', 
-  firstName: 'Alex', 
-  lastName: 'Garza', 
-  fullName: 'Alex Garza', 
-  profileImage: null, 
-  role: 'admin' as const 
-};
-
 /**
  * Header component with complete menu dropdown and ambient sounds control
  * 
@@ -65,9 +53,8 @@ const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   
-  // Always using mockUser for now with preview mode, but this will be replaced
-  // with real authentication once the system is ready
-  const user = mockUser;
+  // Hard-coded user information for now - will be replaced with actual authentication later
+  const userDisplayName = 'Gavin Brooks';
   
   // Handle click outside to close menu
   useEffect(() => {
@@ -110,14 +97,12 @@ const Header: React.FC = () => {
         {/* Controls Section */}
         <div className="flex items-center space-x-3">
           {/* User Info - Desktop */}
-          {user && (
-            <div className="hidden md:flex items-center text-white font-medium mr-1">
-              <span className="mr-1">
-                <User className="h-4 w-4 inline text-blue-400" />
-              </span>
-              <span className="text-sm text-blue-300">{user.username}</span>
-            </div>
-          )}
+          <div className="hidden md:flex items-center text-white font-medium mr-1">
+            <span className="mr-1">
+              <User className="h-4 w-4 inline text-blue-400" />
+            </span>
+            <span className="text-sm text-blue-300">{userDisplayName}</span>
+          </div>
           
           {/* Menu Dropdown */}
           <div className="relative" ref={menuRef}>
