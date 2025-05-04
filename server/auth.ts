@@ -136,6 +136,25 @@ export function setupAuth(app: Express) {
             return done(null, false, { message: "Invalid username or password" });
           }
           
+          // Check if the user has two-factor authentication enabled
+          if (user.twoFactorEnabled) {
+            console.log(`User ${username} has 2FA enabled, requiring verification`);
+            
+            // Log successful first-factor authentication
+            await storage.createAuthLog({
+              userId: user.id,
+              action: 'login_2fa_needed',
+              status: 'success',
+              ipAddress: null, // Would be set from middleware in production
+              userAgent: null, // Would be set from middleware in production
+              details: { stage: 'first_factor' }
+            });
+            
+            // Return the user but with a flag indicating 2FA is required
+            return done(null, user, { requiresTwoFactor: true });
+          }
+          
+          // If 2FA not enabled, proceed with standard login flow
           // Update last login time
           await storage.updateUserLastLogin(user.id);
           
@@ -154,6 +173,24 @@ export function setupAuth(app: Express) {
         // Development mode: Allow easier login for testing
         else {
           if (user) {
+            // Check if the user has two-factor authentication enabled
+            if (user.twoFactorEnabled) {
+              console.log(`[DEV MODE] User ${username} has 2FA enabled, requiring verification`);
+              
+              // Log successful first-factor authentication
+              await storage.createAuthLog({
+                userId: user.id,
+                action: 'login_2fa_needed',
+                status: 'success',
+                ipAddress: null,
+                userAgent: null,
+                details: { stage: 'first_factor', dev_mode: true }
+              });
+              
+              // Return the user but with a flag indicating 2FA is required
+              return done(null, user, { requiresTwoFactor: true });
+            }
+            
             // User exists, still update last login
             await storage.updateUserLastLogin(user.id);
             return done(null, user);
