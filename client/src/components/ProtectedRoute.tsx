@@ -5,7 +5,7 @@ import { Loader2 } from 'lucide-react';
 // Define a mock user for development purposes
 const devUser = {
   id: 1,
-  username: 'Gavin Brooks',
+  username: 'GavinGotime',
   email: 'gavin@gotime.com',
   role: 'admin'
 };
