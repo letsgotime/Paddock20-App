@@ -127,8 +127,8 @@ const Header: React.FC = () => {
         <div className="flex items-center space-x-3">
           {/* User Info - Desktop with dropdown */}
           <div 
-            className="hidden md:flex items-center text-white font-medium mr-1 relative group cursor-pointer"
-            onClick={() => {
+            className="hidden md:flex items-center text-white font-medium mr-1 relative group cursor-pointer user-dropdown-group"
+            onMouseEnter={() => {
               const soundSettings = getSoundSettings();
               if (soundSettings?.enabled) {
                 playMotorsportSound('menu_select');
@@ -144,22 +144,26 @@ const Header: React.FC = () => {
             </button>
             
             {/* User dropdown menu */}
-            <div className="absolute right-0 top-full mt-1 w-48 bg-black border border-blue-900 rounded-md shadow-lg overflow-hidden opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 z-50">
-              <Link to="/profile" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
-                <User className="h-4 w-4 mr-2 text-blue-400" />
-                <span>My Profile</span>
-              </Link>
-              <Link to="/settings" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
-                <Settings className="h-4 w-4 mr-2 text-blue-400" />
-                <span>Settings</span>
-              </Link>
-              <button 
-                onClick={handleLogout}
-                className="flex items-center w-full text-left px-4 py-2 text-white hover:bg-red-900/30 transition-colors"
-              >
-                <LogOut className="h-4 w-4 mr-2 text-red-400" />
-                <span>Log Out</span>
-              </button>
+            <div className="absolute right-0 top-full mt-1 w-48 bg-black border border-blue-900 rounded-md shadow-lg overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 user-dropdown-menu" 
+                 style={{ transitionDelay: '0.1s' }}
+            >
+              <div className="py-1 hover:py-1">
+                <Link to="/profile" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <User className="h-4 w-4 mr-2 text-blue-400" />
+                  <span>My Profile</span>
+                </Link>
+                <Link to="/settings" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Settings className="h-4 w-4 mr-2 text-blue-400" />
+                  <span>Settings</span>
+                </Link>
+                <button 
+                  onClick={handleLogout}
+                  className="flex items-center w-full text-left px-4 py-2 text-white hover:bg-red-900/30 transition-colors"
+                >
+                  <LogOut className="h-4 w-4 mr-2 text-red-400" />
+                  <span>Log Out</span>
+                </button>
+              </div>
             </div>
           </div>
           

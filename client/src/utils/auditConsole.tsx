@@ -275,7 +275,7 @@ export function DataIntegrityConsole() {
           </li>
           <li className="flex items-start">
             <ArrowRightCircle className="h-4 w-4 mr-1 mt-0.5 text-primary" />
-            <span>For fallbacks, use system constants (e.g., "Paddock20 User") not specific names</span>
+            <span>For fallbacks, use system constants (e.g., "Driver") not specific names</span>
           </li>
           <li className="flex items-start">
             <ArrowRightCircle className="h-4 w-4 mr-1 mt-0.5 text-primary" />
