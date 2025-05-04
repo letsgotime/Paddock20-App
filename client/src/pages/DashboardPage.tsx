@@ -8,7 +8,7 @@ import {
   Calendar, BarChart3, Car, Map, Settings, Bell, Shield, ChevronRight, 
   MessageSquare, HeartHandshake, Star, EyeOff, Gauge, ClipboardCheck, 
   Wrench, Award, Trophy, FileText, Activity, Clock, User, 
-  Cloud, Brain, BookMarked, SprayCan, Check
+  Cloud, Brain, BookMarked, SprayCan, Check, CheckCircle
 } from 'lucide-react';
 
 interface UpcomingEvent {
@@ -819,7 +819,7 @@ function DashboardPage() {
                 <ul className="space-y-2">
                   {membershipData.benefits.map((benefit, index) => (
                     <li key={index} className="flex items-start">
-                      <Check className="text-green-500 h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
+                      <CheckCircle className="text-green-500 h-5 w-5 mr-2 mt-0.5 flex-shrink-0" />
                       <span className="text-gray-300">{benefit}</span>
                     </li>
                   ))}
