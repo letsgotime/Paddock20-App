@@ -63,8 +63,8 @@ const UserProfileHub: React.FC = () => {
           // User metadata - with fallbacks
           bio: onboardingData?.bio || 'F1-grade telemetry and insights for passionate drivers.',
           location: onboardingData?.location || 'United States',
-          membershipLevel: onboardingData?.membershipLevel || 'free',
-          avatar: user?.profileImage || user?.avatar || onboardingData?.avatar || '/assets/images/default-avatar.png',
+          membershipLevel: (onboardingData?.membershipLevel as 'free' | 'premium' | 'elite') || 'free',
+          avatar: onboardingData?.avatar || '/assets/images/default-avatar.png',
           
           // Vehicle collection - from Garage Vault context
           vehicles: vehicleData?.vehicles || vehicles || [],
@@ -124,8 +124,8 @@ const UserProfileHub: React.FC = () => {
           lastActive: new Date().toISOString(),
           bio: 'Driver profile and vehicle statistics.',
           location: 'United States',
-          membershipLevel: 'free',
-          avatar: user?.profileImage || '/assets/images/default-avatar.png',
+          membershipLevel: 'free' as const,
+          avatar: '/assets/images/default-avatar.png',
           vehicles: vehicles || [],
           statistics: {
             totalDrives: 0,
@@ -240,8 +240,8 @@ const UserProfileHub: React.FC = () => {
         // User metadata with fallbacks
         bio: onboardingData?.bio || 'F1-grade telemetry and insights for passionate drivers.',
         location: onboardingData?.location || 'United States',
-        membershipLevel: onboardingData?.membershipLevel || 'free',
-        avatar: user?.profileImage || onboardingData?.avatar || '/assets/images/default-avatar.png',
+        membershipLevel: (onboardingData?.membershipLevel as 'free' | 'premium' | 'elite') || 'free' as const,
+        avatar: onboardingData?.avatar || '/assets/images/default-avatar.png',
         
         // Collections from vehicle context
         vehicles: vehicleData?.vehicles || vehicles || [],
@@ -675,7 +675,7 @@ const UserProfileHub: React.FC = () => {
                           </div>
                           <div className="text-gray-400 text-xs flex items-center">
                             <Clock className="h-3 w-3 mr-1" />
-                            {Math.floor(drive.duration / 60)}h {drive.duration % 60}m
+                            {drive.duration ? `${Math.floor(drive.duration / 60)}h ${drive.duration % 60}m` : 'N/A'}
                           </div>
                           <div className="text-gray-400 text-xs flex items-center">
                             <Zap className="h-3 w-3 mr-1" />
