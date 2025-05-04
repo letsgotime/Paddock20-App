@@ -1,6 +1,8 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Star, Heart, Car, Truck, Gauge, Map, Home, Clock, Bike, Compass, Edit2, Check, ChevronDown, ChevronUp, PlusCircle } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useUserProfileStore } from '@/services/userProfileService';
 
 // Define interfaces for our dreams categories
 interface DreamItem {
@@ -18,7 +20,7 @@ interface DreamCategory {
   expanded?: boolean;
 }
 
-// Sample dream categories data
+// Sample dream categories data for fallback
 const dreamCategoriesData: DreamCategory[] = [
   {
     id: 'favorite-tires',
@@ -196,6 +198,100 @@ const DreamGarageWidget: React.FC = () => {
   const [isEditing, setIsEditing] = useState(false);
   const [editingCategory, setEditingCategory] = useState<string | null>(null);
   const [editItem, setEditItem] = useState<{categoryId: string, itemId: string, name: string} | null>(null);
+  
+  // Get user data from auth context and user profile store
+  const { user } = useAuth();
+  const userProfile = useUserProfileStore(state => state.profile);
+  
+  // Load user preferences from profile when available
+  useEffect(() => {
+    if (user && userProfile) {
+      // If we have user preferences or profile data for dream garage
+      // create categories dynamically from the user's preferences
+      try {
+        // Map user dream garage data to our UI format
+        const userDreamCategories: DreamCategory[] = [];
+        
+        // Favorite car brands category
+        if (userProfile?.favoriteCarBrands?.length > 0) {
+          userDreamCategories.push({
+            id: 'favorite-car-brands',
+            name: 'Favorite Car Brands',
+            icon: <Car className="h-4 w-4" />,
+            items: userProfile.favoriteCarBrands.map((brand, idx) => ({
+              id: `fcb-${idx}`,
+              name: brand
+            }))
+          });
+        }
+        
+        // Favorite mod brands category
+        if (userProfile?.favoriteModBrands?.length > 0) {
+          userDreamCategories.push({
+            id: 'favorite-mod-brands',
+            name: 'Favorite Mod Brands',
+            icon: <Car className="h-4 w-4" />,
+            items: userProfile.favoriteModBrands.map((brand, idx) => ({
+              id: `fmb-${idx}`,
+              name: brand
+            }))
+          });
+        }
+        
+        // Favorite tire brands category
+        if (userProfile?.favoriteTireBrands?.length > 0) {
+          userDreamCategories.push({
+            id: 'favorite-tire-brands',
+            name: 'Favorite Tire Brands',
+            icon: <Gauge className="h-4 w-4" />,
+            items: userProfile.favoriteTireBrands.map((brand, idx) => ({
+              id: `ftb-${idx}`,
+              name: brand
+            }))
+          });
+        }
+        
+        // Favorite wheel brands category
+        if (userProfile?.favoriteWheelBrands?.length > 0) {
+          userDreamCategories.push({
+            id: 'favorite-wheel-brands',
+            name: 'Favorite Wheel Brands',
+            icon: <Gauge className="h-4 w-4" />,
+            items: userProfile.favoriteWheelBrands.map((brand, idx) => ({
+              id: `fwb-${idx}`,
+              name: brand
+            }))
+          });
+        }
+        
+        // Dream car builds category
+        if (userProfile?.dreamCarBuilds?.length > 0) {
+          userDreamCategories.push({
+            id: 'dream-car-builds',
+            name: 'Dream Car Builds',
+            icon: <Car className="h-4 w-4" />,
+            items: userProfile.dreamCarBuilds.map((build, idx) => ({
+              id: `dcb-${idx}`,
+              name: build.title
+            }))
+          });
+        }
+        
+        // Use fallback data to fill in any missing categories to ensure a complete experience
+        const completeCategories = userDreamCategories.length > 0 
+          ? [...userDreamCategories, ...dreamCategoriesData.filter(cat => 
+              !userDreamCategories.some(userCat => userCat.id === cat.id)
+            )] 
+          : dreamCategoriesData;
+          
+        setCategories(completeCategories);
+      } catch (error) {
+        console.error("Error loading user dream garage data:", error);
+        // Fallback to default data on error
+        setCategories(dreamCategoriesData);
+      }
+    }
+  }, [user, userProfile]);
   
   // Toggle category expansion
   const toggleCategoryExpand = (categoryId: string) => {

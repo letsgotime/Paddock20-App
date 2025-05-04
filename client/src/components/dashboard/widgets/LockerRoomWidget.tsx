@@ -1,9 +1,25 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Shield, Shirt, Ruler, BookPlus, Edit2, Check, ArrowRight } from 'lucide-react';
+import { useAuth } from '@/hooks/useAuth';
+import { useUserProfileStore } from '@/services/userProfileService';
 
-// Sample equipment data
-const equipmentData = {
+// Equipment data interface
+interface EquipmentData {
+  helmetSize: string;
+  shoeSize: string;
+  gloveSize: string;
+  suitSize: string;
+  otherEquipment: Array<{
+    id: number;
+    name: string;
+    status: string;
+    lastInspection: string;
+  }>;
+}
+
+// Default equipment data for fallback
+const defaultEquipmentData: EquipmentData = {
   helmetSize: 'Medium (58-59cm)',
   shoeSize: 'US 10.5 / EU 44',
   gloveSize: 'Medium',
@@ -19,7 +35,67 @@ const equipmentData = {
 const LockerRoomWidget: React.FC = () => {
   const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
-  const [equipment, setEquipment] = useState(equipmentData);
+  const [equipment, setEquipment] = useState<EquipmentData>(defaultEquipmentData);
+  
+  // Get user data from auth context and user profile store
+  const { user } = useAuth();
+  const userProfile = useUserProfileStore(state => state.profile);
+  
+  // Load user preferences from profile when available
+  useEffect(() => {
+    if (user && userProfile) {
+      try {
+        // Extract user equipment data if it exists in the profile
+        const userEquipment: Partial<EquipmentData> = {};
+        
+        if (userProfile.trackDayEquipment) {
+          // Get data from user profile
+          if (userProfile.trackDayEquipment.helmetSize) {
+            userEquipment.helmetSize = userProfile.trackDayEquipment.helmetSize;
+          }
+          
+          if (userProfile.trackDayEquipment.shoeSize) {
+            userEquipment.shoeSize = userProfile.trackDayEquipment.shoeSize;
+          }
+          
+          if (userProfile.trackDayEquipment.gloveSize) {
+            userEquipment.gloveSize = userProfile.trackDayEquipment.gloveSize;
+          }
+          
+          if (userProfile.trackDayEquipment.suitSize) {
+            userEquipment.suitSize = userProfile.trackDayEquipment.suitSize;
+          }
+          
+          if (userProfile.trackDayEquipment.items?.length > 0) {
+            userEquipment.otherEquipment = userProfile.trackDayEquipment.items.map((item, index) => ({
+              id: index + 1,
+              name: item.name,
+              status: item.status || 'Available',
+              lastInspection: item.lastInspection || new Date().toISOString().split('T')[0]
+            }));
+          }
+          
+          // Merge user data with default data for any missing fields
+          setEquipment({
+            ...defaultEquipmentData,
+            ...userEquipment
+          });
+          
+          // Also update form data with the new values
+          setFormData({
+            helmetSize: userEquipment.helmetSize || defaultEquipmentData.helmetSize,
+            shoeSize: userEquipment.shoeSize || defaultEquipmentData.shoeSize,
+            gloveSize: userEquipment.gloveSize || defaultEquipmentData.gloveSize,
+            suitSize: userEquipment.suitSize || defaultEquipmentData.suitSize
+          });
+        }
+      } catch (error) {
+        console.error("Error loading user track day equipment data:", error);
+        // Fallback to default data on error
+        setEquipment(defaultEquipmentData);
+      }
+    }
+  }, [user, userProfile]);
   
   // Edit form state
   const [formData, setFormData] = useState({
@@ -38,11 +114,37 @@ const LockerRoomWidget: React.FC = () => {
   };
   
   const saveChanges = () => {
-    setEquipment({
+    const updatedEquipment = {
       ...equipment,
       ...formData
-    });
+    };
+    
+    setEquipment(updatedEquipment);
     setIsEditing(false);
+    
+    // Save to user profile if available
+    if (userProfile && user) {
+      try {
+        // Update the user's track day equipment in the profile store
+        useUserProfileStore.getState().updateProfile({
+          trackDayEquipment: {
+            helmetSize: formData.helmetSize,
+            shoeSize: formData.shoeSize,
+            gloveSize: formData.gloveSize,
+            suitSize: formData.suitSize,
+            items: equipment.otherEquipment.map(item => ({
+              name: item.name,
+              status: item.status,
+              lastInspection: item.lastInspection
+            }))
+          }
+        });
+        
+        console.log('Track day locker data saved to user profile');
+      } catch (error) {
+        console.error('Error saving track day locker data:', error);
+      }
+    }
   };
   
   return (
