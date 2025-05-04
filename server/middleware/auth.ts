@@ -5,14 +5,13 @@ import { Request, Response, NextFunction } from 'express';
  * Checks if the user is authenticated and redirects to login if not
  */
 export function requireAuth(req: Request, res: Response, next: NextFunction) {
-  if (req.isAuthenticated()) {
-    return next();
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({
+      success: false,
+      message: 'Authentication required'
+    });
   }
-  
-  res.status(401).json({
-    success: false,
-    message: 'Authentication required'
-  });
+  next();
 }
 
 /**
@@ -20,14 +19,13 @@ export function requireAuth(req: Request, res: Response, next: NextFunction) {
  * Used during the 2FA verification process
  */
 export function require2FASession(req: Request, res: Response, next: NextFunction) {
-  if (req.session && req.session.temp2FA) {
-    return next();
+  if (!req.session.temp2FA) {
+    return res.status(400).json({
+      success: false,
+      message: 'No two-factor authentication session in progress'
+    });
   }
-  
-  res.status(401).json({
-    success: false,
-    message: 'No two-factor authentication session in progress'
-  });
+  next();
 }
 
 /**
