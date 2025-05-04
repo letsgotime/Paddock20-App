@@ -53,7 +53,7 @@ function DashboardPage() {
   const [maintenanceAlerts, setMaintenanceAlerts] = useState<MaintenanceAlert[]>([]);
   const [userPreferences, setUserPreferences] = useState<UserPreference[]>([]);
   const [dashboardLayout, setDashboardLayout] = useState<string[]>([
-    'weather', 'world_clock', 'vehicles', 'drives', 'events', 'maintenance', 'uniform', 'dreams', 'membership', 'engagement'
+    'weather', 'world_clock', 'vehicles', 'drives', 'events', 'maintenance', 'uniform', 'dreams', 'membership'
   ]);
   
   // Add uniform section data
