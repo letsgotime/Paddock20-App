@@ -173,7 +173,282 @@ function DashboardPage() {
       'OMP',
       'Puma Motorsport',
       'McLaren F1 Team Store'
-    ]
+    ],
+    dreamCarBuilds: [
+      {
+        title: 'Ultimate E30 M3 Resto-Mod',
+        description: 'Full restoration with modern S55 engine swap, carbon fiber body panels, and custom interior',
+        budget: 85000,
+        timelineMonths: 18,
+        mainImage: '/assets/media/dream-builds/e30-m3.jpg',
+        parts: ['S55 engine', 'KW Suspension', 'BBS wheels', 'AP Racing brakes', 'Custom roll cage'],
+        progress: 0
+      },
+      {
+        title: 'Porsche 911 Safari Build',
+        description: 'Off-road ready 911 with lifted suspension, all-terrain tires, and underbody protection',
+        budget: 120000,
+        timelineMonths: 12,
+        mainImage: '/assets/media/dream-builds/911-safari.jpg',
+        parts: ['Custom lift kit', 'BFGoodrich KO2 tires', 'Skid plates', 'Integrated winch', 'LED light bars'],
+        progress: 0
+      },
+      {
+        title: 'Carbon Fiber Track-Focused GT350R',
+        description: 'Fully stripped and caged Shelby GT350R with extensive aero enhancements',
+        budget: 95000,
+        timelineMonths: 9,
+        mainImage: '/assets/media/dream-builds/gt350r-track.jpg',
+        parts: ['Aftermarket supercharger', 'Full aero kit', 'Carbon ceramic brakes', 'Sequential transmission', 'Data logging system'],
+        progress: 0
+      },
+      {
+        title: 'Classic Land Rover Defender EV Conversion',
+        description: 'Vintage Defender rebuilt with modern Tesla powertrain and luxury interior',
+        budget: 150000,
+        timelineMonths: 24,
+        mainImage: '/assets/media/dream-builds/defender-ev.jpg',
+        parts: ['Tesla motors and batteries', 'Upgraded cooling system', 'Custom wiring harness', 'Modern dashboard displays', 'Heated leather seats'],
+        progress: 0
+      },
+      {
+        title: 'Ferrari F355 Challenge Car',
+        description: 'Road-legal F355 Challenge spec with modern reliability upgrades',
+        budget: 175000,
+        timelineMonths: 30,
+        mainImage: '/assets/media/dream-builds/f355-challenge.jpg',
+        parts: ['Full engine rebuild', 'Challenge-spec aero kit', 'Roll cage', 'Racing harnesses', 'Modern electronics'],
+        progress: 0
+      }
+    ],
+    favoriteHistoricRaces: [
+      '1955 Mille Miglia - Stirling Moss & Denis Jenkinson',
+      '1966 24 Hours of Le Mans - Ford vs Ferrari',
+      '1976 Formula 1 Japanese Grand Prix - Hunt vs Lauda',
+      '1992 Monaco Grand Prix - Senna vs Mansell',
+      '1998 Belgian Grand Prix - First lap chaos in the rain'
+    ],
+    favoriteCars: [
+      'BMW E46 M3 CSL',
+      'Porsche 911 GT3 (991.2)',
+      'Ferrari 458 Speciale',
+      'McLaren 675LT',
+      'Aston Martin V12 Vantage S'
+    ],
+    favoriteTrucks: [
+      'Ford F-150 Raptor',
+      'Land Rover Defender 110',
+      'Mercedes G63 AMG 6x6',
+      'Toyota Land Cruiser FJ40',
+      'Rivian R1T'
+    ],
+    vehicleExperiences: {
+      biggestVehicleDriven: 'Mercedes-Benz Actros Heavy-Duty Semi Truck',
+      biggestPlanePiloted: 'Cessna 172 Skyhawk (4-seater single-engine)',
+      biggestBoatOperated: '42-foot Sea Ray Sundancer yacht',
+      snowmobilingExperience: true,
+      snowmobilingDetails: 'Guided tour in Yellowstone National Park, 2024',
+      jetSkiingExperience: true,
+      jetSkiingDetails: 'Sea-Doo GTX Limited 300 in Miami, Summer 2023',
+      offRoadExperience: true,
+      trackExperience: true,
+      trackDays: 26,
+      drivingSchools: ['BMW Performance Center', 'Skip Barber Racing School'],
+      totalUniqueVehiclesDriven: 87
+    },
+    drivingPreferences: {
+      transmissionPreference: "Manual",
+      transmissionThoughts: "There's nothing like the pure engagement and connection of a proper manual transmission on the right car. The ritual of heel-toe downshifting, perfectly matching revs, and being in complete control creates a driving experience that can't be replicated. While DCTs are technically faster and more efficient, the tactile sensation and driver involvement of rowing through gears will always deliver a more rewarding and emotional driving experience, especially on canyon roads or track days.",
+      manualMustHaveCars: [
+        "Porsche 911 GT3 (6MT)",
+        "BMW M2 Competition",
+        "Honda Civic Type R",
+        "Mazda MX-5 Miata",
+        "Aston Martin Vantage AMR"
+      ],
+      acceptableDCTCars: [
+        "Ferrari 458 Speciale",
+        "Lamborghini Huracan Performante",
+        "Porsche 911 Turbo S",
+        "Audi R8 V10 Plus",
+        "McLaren 720S"
+      ]
+    },
+    vehicleOpinions: {
+      cigaretteBoats: {
+        rating: 9.5,
+        comments: "Cigarette boats represent the ultimate in marine performance and style. The legendary Miami-built speedboats deliver an unmatched combination of craftsmanship, engineering, and pure adrenaline. The 41' AMG Carbon Edition with twin Mercury Racing engines is my dream boat - that sound and acceleration is incomparable to anything else on water.",
+        dreamModel: "Cigarette Racing 41' AMG Carbon Edition",
+        ownedBefore: false,
+        bucketList: true,
+        favoriteBrands: ["Cigarette Racing", "Fountain", "Donzi", "Outerlimits", "MTI"]
+      },
+      privateJets: {
+        rating: 9.8,
+        comments: "Nothing compares to the freedom, luxury and efficiency of private aviation. The Gulfstream G650 represents the pinnacle of aircraft engineering with its incredible 7,000+ mile range, 0.925 Mach cruising speed, and magnificent cabin experience. The avionics technology in modern jets is as impressive as the comfort and convenience they provide.",
+        dreamModel: "Gulfstream G650ER",
+        ownedBefore: false,
+        bucketList: true,
+        favoriteBrands: ["Gulfstream", "Bombardier", "Dassault Falcon", "Cessna Citation", "Embraer"]
+      },
+      dailyDrivenTrackCars: {
+        rating: 8.7,
+        comments: "Daily driving a track-focused car creates an unmatched connection between driver and machine. The compromise is real - stiff suspension on city streets, higher maintenance costs, and cabin noise - but the reward is the smile every time you hit an on-ramp or find an empty backroad. The key is finding the right balance of performance and livability, like a Porsche 911 GT3 Touring or BMW M2 Competition that can deliver thrilling performance on the weekend while still functioning as reliable transportation during the week.",
+        currentDaily: "BMW M2 Competition",
+        idealBalance: "Porsche 911 GT3 Touring",
+        challenges: ["Ride comfort", "Ground clearance", "Fuel economy", "Maintenance costs", "Limited cargo space"],
+        benefits: ["Constant engagement", "Performance always available", "Driver skill development", "Appreciation of engineering", "Enthusiast community"]
+      }
+    },
+    dreamVehicleRotation: {
+      title: "Perfect 3-Car Rotation Between Residences",
+      mainResidence: "Atlanta Metropolitan Area",
+      secondaryResidence: "Miami Beach Waterfront Condo",
+      vehicles: [
+        {
+          make: "Porsche",
+          model: "911 GT3 Touring",
+          year: 2024,
+          color: "Gentian Blue Metallic",
+          purpose: "Daily driver with track capability",
+          modifications: ["Lightweight exhaust", "Custom suspension tune", "Clear PPF protection"],
+          notes: "Perfect balance of performance and everyday usability. The analog driving experience with the 6-speed manual transmission connects you to the road in a way that modern automated systems can't replicate."
+        },
+        {
+          make: "Aston Martin",
+          model: "DBS Superleggera Volante",
+          year: 2023,
+          color: "Magnetic Silver",
+          purpose: "Grand touring and special occasions",
+          modifications: ["Upgraded audio system", "Bespoke interior", "Ceramic coating"],
+          notes: "The ultimate grand tourer for long drives along the coast. The combination of a twin-turbo V12, convertible top, and British luxury creates an experience that engages all senses."
+        },
+        {
+          make: "Range Rover",
+          model: "Sport Autobiography Dynamic",
+          year: 2024,
+          color: "Santorini Black",
+          purpose: "Winter vehicle and utility",
+          modifications: ["Advanced off-road package", "Heated steering wheel", "Premium sound system"],
+          notes: "Luxury, capability, and presence in a refined package. Perfect for ski trips to Aspen or navigating through inclement weather with absolute confidence and comfort."
+        }
+      ],
+      rotationStrategy: "Seasonal with the Range Rover in Atlanta during winter months, the DBS primarily in Miami for coastal drives, and the GT3 Touring moving between locations based on track events and driving opportunities."
+    },
+    carCareAndDetailing: {
+      favoriteProducts: [
+        {
+          name: "Gyeon Q² Ceramic Coating",
+          type: "Ceramic coating",
+          rating: 10,
+          comments: "Revolutionary product that transformed my detailing experience. Nothing compares to the depth, gloss and protection it provides, plus the hydrophobic properties are incredible even after months of use."
+        },
+        {
+          name: "Sonax Perfect Finish",
+          type: "Compound/Polish",
+          rating: 9.8,
+          comments: "The perfect one-step solution that cuts aggressively but finishes down incredibly well, saving hours of work."
+        },
+        {
+          name: "P&S Bead Maker",
+          type: "Spray sealant",
+          rating: 9.5,
+          comments: "Unbelievable gloss enhancement and so easy to apply. The slickness it adds is something you have to feel to believe."
+        },
+        {
+          name: "CarPro IronX",
+          type: "Iron decontamination",
+          rating: 9.7,
+          comments: "Game-changing when it comes to deep cleaning before any paint correction work."
+        },
+        {
+          name: "Optimum No Rinse",
+          type: "Rinseless wash",
+          rating: 9.6,
+          comments: "Revolutionary product that changed how I wash cars, especially in areas with water restrictions."
+        }
+      ],
+      favoriteTools: [
+        "Rupes BigFoot LHR15 Mark III Polisher",
+        "Metro Vac Air Force Blaster",
+        "Scangrip Multimatch 3",
+        "Gyeon Smoothie Wash Mitt",
+        "The Rag Company Eagle Edgeless Towels"
+      ],
+      detailingFrequency: "Weekly maintenance, full detail monthly",
+      annualCareExpenditures: 3200,
+      preferredTechniques: [
+        "Two-bucket wash method",
+        "Paint decontamination before coating",
+        "Section-by-section polishing",
+        "Blower drying to avoid water spots",
+        "Ceramic coating maintenance with compatible products"
+      ]
+    },
+    gamingPreferences: {
+      preferredPlatform: "PlayStation",
+      platformHistory: ["PS1", "PS2", "PS3", "PS4", "PS5"],
+      favoriteRacingGames: [
+        {
+          title: "Gran Turismo 7",
+          platform: "PlayStation 5",
+          yearReleased: 2022,
+          hoursPlayed: 342,
+          currentlyPlaying: true,
+          favoriteAspects: [
+            "Physics realism",
+            "Car variety",
+            "Dynamic weather",
+            "Tuning options",
+            "Photo mode"
+          ],
+          comments: "The pinnacle of racing simulation with impressive attention to detail. The physics model is exceptional and the car selection is unmatched. I especially love the dynamic time and weather effects on tracks like the Nürburgring, which make every lap a unique challenge."
+        },
+        {
+          title: "Forza Horizon 5",
+          platform: "PC (Windows)",
+          yearReleased: 2021,
+          hoursPlayed: 208,
+          currentlyPlaying: true,
+          favoriteAspects: [
+            "Open world freedom",
+            "Visual fidelity",
+            "Car customization",
+            "Seasonal changes",
+            "Social features"
+          ],
+          comments: "The perfect balance between arcade fun and simulation elements in an incredible open world. The Mexico map is breathtaking and the freedom to explore while enjoying incredible car physics makes this the ultimate automotive playground."
+        },
+        {
+          title: "Assetto Corsa Competizione",
+          platform: "PC (Windows)",
+          yearReleased: 2019,
+          hoursPlayed: 187,
+          currentlyPlaying: true,
+          favoriteAspects: [
+            "GT3/GT4 realism",
+            "Tire model",
+            "Force feedback",
+            "Audio design",
+            "Competitive multiplayer"
+          ],
+          comments: "The most authentic GT racing experience available. The tire model and force feedback are unmatched, making every corner a technical challenge that rewards precision and consistency. The night racing and rain effects create an immersive experience that truly tests your skills."
+        }
+      ],
+      gamingSetup: {
+        display: "Samsung Odyssey G9 49-inch Curved Gaming Monitor",
+        controller: "Fanatec GT DD Pro Wheel Base with McLaren GT3 V2 wheel",
+        additionalHardware: [
+          "Fanatec ClubSport V3 Pedals with performance kit",
+          "Fanatec Shifter SQ V1.5",
+          "NextLevel Racing GT Track Cockpit",
+          "Buttkicker Gamer 2",
+          "PlayStation 5 Console",
+          "High-end gaming PC (RTX 4080, i9 processor)"
+        ],
+        totalInvestment: 7500
+      }
+    }
   });
   
   // Media section data 
