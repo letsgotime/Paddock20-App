@@ -47,7 +47,11 @@ export default function useSoundEffect() {
     setAmbientEnabled(prev => {
       // Play different sounds based on whether we're turning on or off
       if (!prev) {
-        playSoundSequence(['ambient_on', 'ambient_loop'], volume / 100);
+        // Fix the call to playSoundSequence - pass an array of SoundType
+        playSoundSequence([
+          'ambient_on' as SoundType, 
+          'ambient_loop' as SoundType
+        ], volume / 100);
       } else {
         playSound('ambient_off', volume / 100);
       }
