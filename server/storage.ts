@@ -43,6 +43,10 @@ export interface IStorage {
   updateUserLastLogin(id: number): Promise<boolean>;
   
   // Two-factor authentication methods
+  updateTwoFactorSecret(userId: number, secret: string): Promise<boolean>;
+  enableTwoFactor(userId: number, secret: string, backupCodes: string[]): Promise<boolean>; 
+  disableTwoFactor(userId: number): Promise<boolean>;
+  updateTwoFactorBackupCodes(userId: number, backupCodes: string[]): Promise<boolean>;
   
   // Authentication methods
   createSession(sessionData: InsertSession): Promise<Session>;
@@ -545,35 +549,38 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date()
       })
       .where(eq(users.id, userId));
-    return result.rowCount > 0;
+    
+    return result.rowCount ? result.rowCount > 0 : false;
   }
-
+  
   async enableTwoFactor(userId: number, secret: string, backupCodes: string[]): Promise<boolean> {
     const result = await db
       .update(users)
       .set({
-        twoFactorSecret: secret,
         twoFactorEnabled: true,
+        twoFactorSecret: secret,
         twoFactorBackupCodes: backupCodes,
         updatedAt: new Date()
       })
       .where(eq(users.id, userId));
-    return result.rowCount > 0;
+    
+    return result.rowCount ? result.rowCount > 0 : false;
   }
-
+  
   async disableTwoFactor(userId: number): Promise<boolean> {
     const result = await db
       .update(users)
       .set({
-        twoFactorSecret: null,
         twoFactorEnabled: false,
-        twoFactorBackupCodes: [],
+        twoFactorSecret: null,
+        twoFactorBackupCodes: null,
         updatedAt: new Date()
       })
       .where(eq(users.id, userId));
-    return result.rowCount > 0;
+    
+    return result.rowCount ? result.rowCount > 0 : false;
   }
-
+  
   async updateTwoFactorBackupCodes(userId: number, backupCodes: string[]): Promise<boolean> {
     const result = await db
       .update(users)
@@ -582,7 +589,8 @@ export class DatabaseStorage implements IStorage {
         updatedAt: new Date()
       })
       .where(eq(users.id, userId));
-    return result.rowCount > 0;
+    
+    return result.rowCount ? result.rowCount > 0 : false;
   }
 
   // Security methods
@@ -617,44 +625,6 @@ export class DatabaseStorage implements IStorage {
       .update(users)
       .set({
         failedLoginAttempts: count,
-        updatedAt: new Date()
-      })
-      .where(eq(users.id, userId));
-    return result.rowCount > 0;
-  }
-  
-  // Two-factor authentication methods
-  async enableTwoFactor(userId: number, secret: string, backupCodes: string[]): Promise<boolean> {
-    const result = await db
-      .update(users)
-      .set({
-        twoFactorSecret: secret,
-        twoFactorEnabled: true,
-        twoFactorBackupCodes: backupCodes,
-        updatedAt: new Date()
-      })
-      .where(eq(users.id, userId));
-    return result.rowCount > 0;
-  }
-  
-  async disableTwoFactor(userId: number): Promise<boolean> {
-    const result = await db
-      .update(users)
-      .set({
-        twoFactorSecret: null,
-        twoFactorEnabled: false,
-        twoFactorBackupCodes: [],
-        updatedAt: new Date()
-      })
-      .where(eq(users.id, userId));
-    return result.rowCount > 0;
-  }
-  
-  async updateTwoFactorBackupCodes(userId: number, backupCodes: string[]): Promise<boolean> {
-    const result = await db
-      .update(users)
-      .set({
-        twoFactorBackupCodes: backupCodes,
         updatedAt: new Date()
       })
       .where(eq(users.id, userId));

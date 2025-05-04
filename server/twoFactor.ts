@@ -1,6 +1,7 @@
 import * as speakeasy from 'speakeasy';
 import * as qrcode from 'qrcode';
 import { storage } from './storage';
+import { randomBytes } from 'crypto';
 
 /**
  * Interface for enabling two-factor authentication
@@ -15,13 +16,17 @@ interface EnableTwoFactorParams {
  * Generate backup code with format like: XXXX-XXXX-XXXX-XXXX
  */
 function generateBackupCode(): string {
-  const groups = [];
-  for (let i = 0; i < 4; i++) {
-    // Generate 4 alphanumeric characters
-    const group = Math.random().toString(36).substring(2, 6).toUpperCase();
-    groups.push(group);
-  }
-  return groups.join('-');
+  // Generate random bytes and convert to a hex string
+  const bytes = randomBytes(8);
+  const hexString = bytes.toString('hex');
+  
+  // Format as XXXX-XXXX-XXXX-XXXX
+  return [
+    hexString.substring(0, 4),
+    hexString.substring(4, 8),
+    hexString.substring(8, 12),
+    hexString.substring(12, 16)
+  ].join('-');
 }
 
 /**
@@ -36,37 +41,40 @@ class TwoFactorService {
    * @returns Object containing secret and otpauth URL
    */
   async generateSecret(userId: number, appName: string): Promise<{ secret: string; otpauthUrl: string; qrCodeUrl: string }> {
-    try {
-      // Get user to include username in the otpauth URL
-      const user = await storage.getUser(userId);
-      
-      if (!user) {
-        throw new Error('User not found');
-      }
-      
-      // Generate new secret
-      const secretObj = speakeasy.generateSecret({
-        name: `${appName}:${user.username}`,
-        length: 20
-      });
-      
-      // Check if the secret is valid (should always be the case with speakeasy.generateSecret)
-      if (!secretObj.base32) {
-        throw new Error('Failed to generate valid secret');
-      }
-      
-      // Generate QR code
-      const qrCodeUrl = await qrcode.toDataURL(secretObj.otpauth_url || '');
-      
-      return {
-        secret: secretObj.base32,
-        otpauthUrl: secretObj.otpauth_url || '',
-        qrCodeUrl
-      };
-    } catch (error) {
-      console.error('Error generating 2FA secret:', error);
-      throw error;
+    // Get user information for the label
+    const user = await storage.getUser(userId);
+    
+    if (!user) {
+      throw new Error('User not found');
     }
+    
+    // Generate a new secret
+    const secretObject = speakeasy.generateSecret({
+      length: 32, // Secure length
+      name: `${appName} (${user.email || user.username})` // Label for authenticator app
+    });
+    
+    // Save secret temporarily in database
+    await storage.updateTwoFactorSecret(userId, secretObject.base32);
+    
+    // Generate QR code for easier setup
+    const qrCodeUrl = await qrcode.toDataURL(secretObject.otpauth_url || '');
+    
+    // Log this action
+    await storage.createAuthLog({
+      userId,
+      action: '2fa_setup_initiated',
+      status: 'success',
+      ipAddress: null,
+      userAgent: null,
+      details: {}
+    });
+    
+    return {
+      secret: secretObject.base32,
+      otpauthUrl: secretObject.otpauth_url || '',
+      qrCodeUrl
+    };
   }
   
   /**
@@ -75,35 +83,49 @@ class TwoFactorService {
    * @returns Array of backup codes
    */
   async enableTwoFactor(params: EnableTwoFactorParams): Promise<string[]> {
-    try {
-      const { userId, secret, token } = params;
-      
-      // Verify token first
-      const verified = speakeasy.totp.verify({
-        secret,
-        encoding: 'base32',
-        token,
-        window: 1 // Allow 1 period before/after for clock skew
-      });
-      
-      if (!verified) {
-        throw new Error('Invalid verification code');
-      }
-      
-      // Generate backup codes
-      const backupCodes: string[] = [];
-      for (let i = 0; i < 8; i++) {
-        backupCodes.push(generateBackupCode());
-      }
-      
-      // Store the secret and backup codes
-      await storage.enableTwoFactor(userId, secret, backupCodes);
-      
-      return backupCodes;
-    } catch (error) {
-      console.error('Error enabling 2FA:', error);
-      throw error;
+    const { userId, secret, token } = params;
+    
+    // Get user to verify they exist
+    const user = await storage.getUser(userId);
+    
+    if (!user) {
+      throw new Error('User not found');
     }
+    
+    // Verify the token is correct to ensure proper 2FA setup
+    const verified = speakeasy.totp.verify({
+      secret,
+      encoding: 'base32',
+      token,
+      window: 1 // Allow for slight time skew (1 step = 30 seconds)
+    });
+    
+    if (!verified) {
+      throw new Error('Invalid verification code. Please try again.');
+    }
+    
+    // Generate backup codes
+    const backupCodes: string[] = [];
+    const numBackupCodes = 8;
+    
+    for (let i = 0; i < numBackupCodes; i++) {
+      backupCodes.push(generateBackupCode());
+    }
+    
+    // Enable 2FA for the user
+    await storage.enableTwoFactor(userId, secret, backupCodes);
+    
+    // Log successful 2FA setup
+    await storage.createAuthLog({
+      userId,
+      action: '2fa_enabled',
+      status: 'success',
+      ipAddress: null,
+      userAgent: null,
+      details: {}
+    });
+    
+    return backupCodes;
   }
   
   /**
@@ -111,12 +133,29 @@ class TwoFactorService {
    * @param userId User ID
    */
   async disableTwoFactor(userId: number): Promise<void> {
-    try {
-      await storage.disableTwoFactor(userId);
-    } catch (error) {
-      console.error('Error disabling 2FA:', error);
-      throw error;
+    // Get user to verify they exist
+    const user = await storage.getUser(userId);
+    
+    if (!user) {
+      throw new Error('User not found');
     }
+    
+    if (!user.twoFactorEnabled) {
+      throw new Error('Two-factor authentication is not enabled for this user');
+    }
+    
+    // Disable 2FA for the user
+    await storage.disableTwoFactor(userId);
+    
+    // Log 2FA disabled
+    await storage.createAuthLog({
+      userId,
+      action: '2fa_disabled',
+      status: 'success',
+      ipAddress: null,
+      userAgent: null,
+      details: {}
+    });
   }
   
   /**
@@ -127,49 +166,58 @@ class TwoFactorService {
    * @returns Boolean indicating successful verification
    */
   async verifyLogin(userId: number, token: string, useBackupCode: boolean = false): Promise<boolean> {
-    try {
-      const user = await storage.getUser(userId);
+    // Get user with their 2FA secret
+    const user = await storage.getUser(userId);
+    
+    if (!user) {
+      throw new Error('User not found');
+    }
+    
+    if (!user.twoFactorEnabled) {
+      throw new Error('Two-factor authentication is not enabled for this user');
+    }
+    
+    // If using backup code
+    if (useBackupCode && user.twoFactorBackupCodes) {
+      const backupCodes = user.twoFactorBackupCodes;
       
-      if (!user) {
-        throw new Error('User not found');
-      }
+      // Check if provided token is in the backup codes
+      const index = backupCodes.indexOf(token);
       
-      if (!user.twoFactorEnabled || !user.twoFactorSecret) {
-        throw new Error('Two-factor authentication is not enabled for this user');
-      }
-      
-      if (useBackupCode) {
-        // Verify backup code
-        const backupCodes = user.twoFactorBackupCodes as string[] || [];
-        const codeIndex = backupCodes.indexOf(token);
-        
-        if (codeIndex === -1) {
-          return false;
-        }
-        
+      if (index !== -1) {
         // Remove the used backup code
-        const newBackupCodes = [...backupCodes];
-        newBackupCodes.splice(codeIndex, 1);
+        const updatedBackupCodes = [...backupCodes];
+        updatedBackupCodes.splice(index, 1);
         
         // Update backup codes
-        await storage.updateBackupCodes(userId, newBackupCodes);
+        await storage.updateTwoFactorBackupCodes(userId, updatedBackupCodes);
+        
+        // Log backup code usage
+        await storage.createAuthLog({
+          userId,
+          action: '2fa_backup_code_used',
+          status: 'success',
+          ipAddress: null,
+          userAgent: null,
+          details: {}
+        });
         
         return true;
-      } else {
-        // Verify TOTP code
-        return speakeasy.totp.verify({
-          secret: user.twoFactorSecret,
-          encoding: 'base32',
-          token,
-          window: 1 // Allow 1 period before/after for clock skew
-        });
       }
-    } catch (error) {
-      console.error('Error verifying 2FA login:', error);
-      throw error;
+      
+      return false;
     }
+    
+    // Verify using TOTP
+    const verified = speakeasy.totp.verify({
+      secret: user.twoFactorSecret || '',
+      encoding: 'base32',
+      token,
+      window: 1 // Allow for slight time skew
+    });
+    
+    return verified;
   }
 }
 
-// Export singleton instance
 export const twoFactorService = new TwoFactorService();
