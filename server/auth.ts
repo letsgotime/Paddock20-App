@@ -49,6 +49,41 @@ declare global {
 // Create promisified version of scrypt
 const scryptAsync = promisify(scrypt);
 
+// Password validation function
+function validatePasswordStrength(password: string): { isValid: boolean; errors: string[] } {
+  const errors: string[] = [];
+  
+  // Check for minimum length
+  if (password.length < 8) {
+    errors.push('Password must be at least 8 characters long');
+  }
+  
+  // Check for uppercase letters
+  if (!/[A-Z]/.test(password)) {
+    errors.push('Password must include at least one uppercase letter');
+  }
+  
+  // Check for lowercase letters
+  if (!/[a-z]/.test(password)) {
+    errors.push('Password must include at least one lowercase letter');
+  }
+  
+  // Check for numbers
+  if (!/[0-9]/.test(password)) {
+    errors.push('Password must include at least one number');
+  }
+  
+  // Check for special characters
+  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
+    errors.push('Password must include at least one special character');
+  }
+  
+  return {
+    isValid: errors.length === 0,
+    errors
+  };
+}
+
 // Password hashing functions
 async function hashPassword(password: string): Promise<string> {
   const salt = randomBytes(16).toString("hex");
@@ -270,6 +305,24 @@ export function setupAuth(app: Express) {
         return res.status(400).json({ 
           success: false, 
           error: "Email already exists" 
+        });
+      }
+      
+      // Validate password strength
+      const { isValid, errors } = validatePasswordStrength(req.body.password);
+      if (!isValid) {
+        return res.status(400).json({
+          success: false,
+          error: "Password does not meet security requirements",
+          details: errors
+        });
+      }
+      
+      // Validate password confirmation
+      if (req.body.password !== req.body.confirmPassword) {
+        return res.status(400).json({
+          success: false,
+          error: "Passwords do not match"
         });
       }
       

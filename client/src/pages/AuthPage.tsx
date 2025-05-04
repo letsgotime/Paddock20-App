@@ -17,7 +17,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Progress } from '@/components/ui/progress';
 
 const AuthPage: React.FC = () => {
   const { login, register, loading, user } = useAuth();
@@ -118,11 +117,42 @@ const AuthPage: React.FC = () => {
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
+    // Validate password requirements
+    if (passwordErrors.length > 0) {
+      toast({
+        title: 'Password Requirements Not Met',
+        description: 'Please ensure your password meets all the requirements.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
     // Validate password match
     if (registerData.password !== registerData.confirmPassword) {
       toast({
         title: 'Password Error',
         description: 'Passwords do not match.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Validate email format
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(registerData.email)) {
+      toast({
+        title: 'Email Error',
+        description: 'Please enter a valid email address.',
+        variant: 'destructive',
+      });
+      return;
+    }
+    
+    // Validate username length
+    if (registerData.username.length < 3) {
+      toast({
+        title: 'Username Error',
+        description: 'Username must be at least 3 characters long.',
         variant: 'destructive',
       });
       return;
@@ -286,6 +316,7 @@ const AuthPage: React.FC = () => {
                           onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
                           className="bg-gray-800 border-gray-700 pr-10"
                           required
+                          aria-describedby="password-requirements"
                         />
                         <button
                           type="button"
@@ -298,6 +329,87 @@ const AuthPage: React.FC = () => {
                           }
                         </button>
                       </div>
+                      
+                      {/* Password strength indicator */}
+                      {registerData.password.length > 0 && (
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-xs">
+                            <span>Password strength:</span>
+                            <span className={
+                              passwordStrength < 40 ? 'text-red-500' : 
+                              passwordStrength < 80 ? 'text-yellow-500' : 
+                              'text-green-500'
+                            }>
+                              {passwordStrength < 40 ? 'Weak' : 
+                               passwordStrength < 80 ? 'Medium' : 
+                               'Strong'}
+                            </span>
+                          </div>
+                          
+                          <div className="w-full bg-gray-700 rounded-full h-1 overflow-hidden">
+                            <div 
+                              className={`h-full ${
+                                passwordStrength < 40 ? 'bg-red-500' : 
+                                passwordStrength < 80 ? 'bg-yellow-500' : 
+                                'bg-green-500'
+                              }`}
+                              style={{ width: `${passwordStrength}%` }}
+                            />
+                          </div>
+                          
+                          {/* Password requirements list */}
+                          <div className="text-xs space-y-1 mt-2" id="password-requirements">
+                            <p className="text-gray-400">Your password must include:</p>
+                            <ul className="space-y-1">
+                              <li className="flex items-center gap-1">
+                                {!/^.{8,}$/.test(registerData.password) ? 
+                                  <XCircle className="h-3 w-3 text-red-500" /> : 
+                                  <CheckCircle className="h-3 w-3 text-green-500" />
+                                }
+                                <span className={!/^.{8,}$/.test(registerData.password) ? 'text-red-500' : 'text-green-500'}>
+                                  At least 8 characters
+                                </span>
+                              </li>
+                              <li className="flex items-center gap-1">
+                                {!/[A-Z]/.test(registerData.password) ? 
+                                  <XCircle className="h-3 w-3 text-red-500" /> : 
+                                  <CheckCircle className="h-3 w-3 text-green-500" />
+                                }
+                                <span className={!/[A-Z]/.test(registerData.password) ? 'text-red-500' : 'text-green-500'}>
+                                  At least one uppercase letter
+                                </span>
+                              </li>
+                              <li className="flex items-center gap-1">
+                                {!/[a-z]/.test(registerData.password) ? 
+                                  <XCircle className="h-3 w-3 text-red-500" /> : 
+                                  <CheckCircle className="h-3 w-3 text-green-500" />
+                                }
+                                <span className={!/[a-z]/.test(registerData.password) ? 'text-red-500' : 'text-green-500'}>
+                                  At least one lowercase letter
+                                </span>
+                              </li>
+                              <li className="flex items-center gap-1">
+                                {!/[0-9]/.test(registerData.password) ? 
+                                  <XCircle className="h-3 w-3 text-red-500" /> : 
+                                  <CheckCircle className="h-3 w-3 text-green-500" />
+                                }
+                                <span className={!/[0-9]/.test(registerData.password) ? 'text-red-500' : 'text-green-500'}>
+                                  At least one number
+                                </span>
+                              </li>
+                              <li className="flex items-center gap-1">
+                                {!/[!@#$%^&*(),.?":{}|<>]/.test(registerData.password) ? 
+                                  <XCircle className="h-3 w-3 text-red-500" /> : 
+                                  <CheckCircle className="h-3 w-3 text-green-500" />
+                                }
+                                <span className={!/[!@#$%^&*(),.?":{}|<>]/.test(registerData.password) ? 'text-red-500' : 'text-green-500'}>
+                                  At least one special character
+                                </span>
+                              </li>
+                            </ul>
+                          </div>
+                        </div>
+                      )}
                     </div>
                     
                     <div className="space-y-2">
