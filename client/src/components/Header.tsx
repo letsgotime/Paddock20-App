@@ -72,8 +72,16 @@ const Header: React.FC = () => {
   
   // Close menu when route changes
   useEffect(() => {
-    setIsMenuOpen(false);
-  }, [location.pathname]);
+    // Always close the menu when location changes
+    if (isMenuOpen) {
+      setIsMenuOpen(false);
+      // Play close sound if enabled
+      const soundSettings = getSoundSettings();
+      if (soundSettings?.enabled) {
+        playMotorsportSound('menu_select');
+      }
+    }
+  }, [location.pathname, isMenuOpen]);
   
   const handleLogout = async () => {
     try {

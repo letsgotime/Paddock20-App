@@ -14,15 +14,21 @@ const RewardsTracker: React.FC = () => {
   
   // Track page visits for rewards
   useEffect(() => {
-    try {
-      if (location && location.pathname && rewards && typeof rewards.trackPageVisit === 'function') {
-        // Track the page visit
-        rewards.trackPageVisit(location.pathname);
+    const trackVisit = () => {
+      try {
+        if (location && location.pathname && rewards && typeof rewards.trackPageVisit === 'function') {
+          // Track the page visit
+          rewards.trackPageVisit(location.pathname);
+        }
+      } catch (error) {
+        console.error('Error tracking page visit:', error);
       }
-    } catch (error) {
-      console.error('Error tracking page visit:', error);
-    }
-  }, [location?.pathname, rewards]);
+    };
+    
+    // Add a small timeout to avoid potential render loops
+    const timer = setTimeout(trackVisit, 50);
+    return () => clearTimeout(timer);
+  }, [location?.pathname]); // Intentionally removed rewards dependency
   
   // Run periodic checks for time-based rewards
   useEffect(() => {
@@ -60,7 +66,7 @@ const RewardsTracker: React.FC = () => {
     } catch (error) {
       console.error('Error setting up time-based rewards:', error);
     }
-  }, [rewards]); // Only dependent on rewards changing, not recreating functions
+  }, []); // Empty dependency array to run only once on mount
   
   return null; // This component doesn't render anything
 };
