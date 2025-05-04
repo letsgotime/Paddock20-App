@@ -1,7 +1,7 @@
 import { create } from 'zustand';
-import { persist } from 'zustand/middleware';
+import { v4 as uuidv4 } from 'uuid';
 
-// Define widget types
+// Widget types available in the dashboard
 export type WidgetType = 
   | 'weather'
   | 'vehicles'
@@ -18,8 +18,10 @@ export type WidgetType =
   | 'juicebox-recommendations'
   | 'recent-photos';
 
+// Widget size options
 export type WidgetSize = 'small' | 'medium' | 'large';
 
+// Widget structure
 export interface DashboardWidget {
   id: string;
   type: WidgetType;
@@ -30,6 +32,7 @@ export interface DashboardWidget {
   config?: Record<string, any>; // Widget-specific configuration
 }
 
+// Dashboard theme settings
 interface DashboardTheme {
   mainColor: string;
   accentColor: string;
@@ -37,6 +40,7 @@ interface DashboardTheme {
   darkMode: boolean;
 }
 
+// Dashboard state
 interface DashboardState {
   // User's selected widgets
   widgets: DashboardWidget[];
@@ -57,9 +61,18 @@ interface DashboardState {
   setOnboardingComplete: (completed: boolean) => void;
 }
 
-// Define default widgets that all users start with
-const defaultWidgets: Omit<DashboardWidget, 'id'>[] = [
+// Default theme settings
+const defaultTheme: DashboardTheme = {
+  mainColor: '#1e3a8a', // Carolina blue
+  accentColor: '#08c519', // GoTime green
+  backgroundStyle: 'carbon-fiber',
+  darkMode: true,
+};
+
+// Default widgets
+const defaultWidgets: DashboardWidget[] = [
   {
+    id: uuidv4(),
     type: 'weather',
     title: 'Weather Paddock',
     size: 'medium',
@@ -67,6 +80,7 @@ const defaultWidgets: Omit<DashboardWidget, 'id'>[] = [
     visible: true,
   },
   {
+    id: uuidv4(),
     type: 'vehicles',
     title: 'My Vehicles',
     size: 'medium',
@@ -74,6 +88,7 @@ const defaultWidgets: Omit<DashboardWidget, 'id'>[] = [
     visible: true,
   },
   {
+    id: uuidv4(),
     type: 'maintenance',
     title: 'Maintenance Alerts',
     size: 'small',
@@ -81,6 +96,7 @@ const defaultWidgets: Omit<DashboardWidget, 'id'>[] = [
     visible: true,
   },
   {
+    id: uuidv4(),
     type: 'gloss-tracker',
     title: 'Gloss Tracker',
     size: 'small',
@@ -88,6 +104,7 @@ const defaultWidgets: Omit<DashboardWidget, 'id'>[] = [
     visible: true,
   },
   {
+    id: uuidv4(),
     type: 'quick-actions',
     title: 'Quick Actions',
     size: 'small',
@@ -95,102 +112,102 @@ const defaultWidgets: Omit<DashboardWidget, 'id'>[] = [
     visible: true,
   },
   {
+    id: uuidv4(),
     type: 'f1-telemetry',
     title: 'F1 Telemetry',
     size: 'large',
-    position: 5,
+    position: 5, 
     visible: true,
   }
 ];
 
-// Default dashboard theme
-const defaultTheme: DashboardTheme = {
-  mainColor: '#1e293b', // Slate-800
-  accentColor: '#08c519', // GoTime green
-  backgroundStyle: 'carbon-fiber',
-  darkMode: true,
-};
-
-// Create the store with persistence
-export const useDashboardStore = create<DashboardState>()(
-  persist(
-    (set, get) => ({
-      widgets: defaultWidgets.map((widget, index) => ({
+// Create dashboard store with Zustand
+export const useDashboardStore = create<DashboardState>()((set, get) => ({
+  widgets: [...defaultWidgets],
+  theme: { ...defaultTheme },
+  hasCompletedOnboarding: false,
+  
+  // Add a new widget to the dashboard
+  addWidget: (widget) => {
+    set((state) => {
+      const newWidget: DashboardWidget = {
         ...widget,
-        id: `widget-${widget.type}-${index}`,
-      })),
-      theme: defaultTheme,
-      hasCompletedOnboarding: false,
-
-      addWidget: (widget) => {
-        const { widgets } = get();
-        const newWidget: DashboardWidget = {
+        id: uuidv4(),
+        position: state.widgets.length,
+      };
+      return { widgets: [...state.widgets, newWidget] };
+    });
+  },
+  
+  // Remove a widget by ID
+  removeWidget: (id) => {
+    set((state) => {
+      const filteredWidgets = state.widgets.filter(widget => widget.id !== id);
+      // Reposition remaining widgets to maintain sequential order
+      const repositionedWidgets = filteredWidgets.map((widget, index) => ({
+        ...widget,
+        position: index,
+      }));
+      return { widgets: repositionedWidgets };
+    });
+  },
+  
+  // Update widget properties
+  updateWidget: (id, updates) => {
+    set((state) => ({
+      widgets: state.widgets.map(widget =>
+        widget.id === id ? { ...widget, ...updates } : widget
+      ),
+    }));
+  },
+  
+  // Reorder widgets based on an array of IDs in the new order
+  reorderWidgets: (orderedIds) => {
+    set((state) => {
+      // Create a temporary map for efficient lookups
+      const widgetMap = new Map(
+        state.widgets.map(widget => [widget.id, widget])
+      );
+      
+      // Create new array with updated positions
+      const reorderedWidgets = orderedIds.map((id, index) => {
+        const widget = widgetMap.get(id);
+        if (!widget) return null; // Skip if widget not found
+        return { ...widget, position: index };
+      }).filter(Boolean) as DashboardWidget[]; // Filter out null values
+      
+      // Add any widgets not in the ordered list at the end
+      const includedIds = new Set(orderedIds);
+      const remainingWidgets = state.widgets
+        .filter(widget => !includedIds.has(widget.id))
+        .map((widget, index) => ({
           ...widget,
-          id: `widget-${widget.type}-${Date.now()}`,
-          position: widgets.length,
-        };
-        set({ widgets: [...widgets, newWidget] });
-      },
-
-      removeWidget: (id) => {
-        const { widgets } = get();
-        const filteredWidgets = widgets.filter(widget => widget.id !== id);
-        // Reposition remaining widgets to prevent gaps
-        const repositionedWidgets = filteredWidgets.map((widget, index) => ({
-          ...widget,
-          position: index,
+          position: reorderedWidgets.length + index,
         }));
-        set({ widgets: repositionedWidgets });
-      },
+      
+      return { widgets: [...reorderedWidgets, ...remainingWidgets] };
+    });
+  },
+  
+  // Update theme settings
+  setTheme: (themeUpdates) => {
+    set((state) => ({
+      theme: { ...state.theme, ...themeUpdates },
+    }));
+  },
+  
+  // Reset dashboard to default settings
+  resetDashboard: () => {
+    set({
+      widgets: [...defaultWidgets],
+      theme: { ...defaultTheme },
+    });
+  },
+  
+  // Mark dashboard onboarding as complete
+  setOnboardingComplete: (completed) => {
+    set({ hasCompletedOnboarding: completed });
+  },
+}));
 
-      updateWidget: (id, updates) => {
-        const { widgets } = get();
-        const updatedWidgets = widgets.map(widget => 
-          widget.id === id ? { ...widget, ...updates } : widget
-        );
-        set({ widgets: updatedWidgets });
-      },
-
-      reorderWidgets: (orderedIds) => {
-        const { widgets } = get();
-        const reorderedWidgets = [...widgets];
-
-        orderedIds.forEach((id, index) => {
-          const widgetIndex = reorderedWidgets.findIndex(w => w.id === id);
-          if (widgetIndex !== -1) {
-            reorderedWidgets[widgetIndex] = {
-              ...reorderedWidgets[widgetIndex],
-              position: index,
-            };
-          }
-        });
-
-        // Sort by the new positions
-        reorderedWidgets.sort((a, b) => a.position - b.position);
-        set({ widgets: reorderedWidgets });
-      },
-
-      setTheme: (themeUpdates) => {
-        const { theme } = get();
-        set({ theme: { ...theme, ...themeUpdates } });
-      },
-
-      resetDashboard: () => {
-        set({
-          widgets: defaultWidgets.map((widget, index) => ({
-            ...widget,
-            id: `widget-${widget.type}-${index}`,
-          })),
-          theme: defaultTheme,
-        });
-      },
-
-      setOnboardingComplete: (completed) => {
-        set({ hasCompletedOnboarding: completed });
-      },
-    }),
-    {
-      name: 'paddock20-dashboard-storage',
-    }
-  )
-);
+export default useDashboardStore;
