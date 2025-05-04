@@ -76,6 +76,29 @@ export const VehicleProvider: React.FC<VehicleProviderProps> = ({ children }) =>
         if (savedVehicles) {
           const parsedVehicles = JSON.parse(savedVehicles) as Vehicle[];
           setVehicles(parsedVehicles);
+        } else if (user) {
+          // Initialize with an example vehicle if none exist yet
+          const defaultVehicle: Vehicle = {
+            id: `vehicle-${Date.now()}`,
+            make: 'BMW',
+            model: '330i',
+            year: '2020',
+            color: 'Alpine White',
+            vin: '',
+            licensePlate: '',
+            nickname: '330i xDrive',
+            description: 'Daily driver',
+            modifications: '',
+            primaryImage: '',
+            images: [],
+            maintenanceItems: [],
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+          setVehicles([defaultVehicle]);
+          
+          // Save to localStorage
+          localStorage.setItem('paddock20_vehicles', JSON.stringify([defaultVehicle]));
         }
       } catch (error) {
         console.error('Error loading vehicles:', error);
