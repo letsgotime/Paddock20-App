@@ -265,15 +265,13 @@ const Header: React.FC = () => {
                     <span>Settings</span>
                   </Link>
                   
-                  {user && (
-                    <button 
-                      onClick={handleLogout}
-                      className="flex items-center w-full text-left px-4 py-2 text-white hover:bg-red-900/30 transition-colors"
-                    >
-                      <LogOut className="h-4 w-4 mr-2 text-red-400" />
-                      <span>Log Out</span>
-                    </button>
-                  )}
+                  <button 
+                    onClick={handleLogout}
+                    className="flex items-center w-full text-left px-4 py-2 text-white hover:bg-red-900/30 transition-colors"
+                  >
+                    <LogOut className="h-4 w-4 mr-2 text-red-400" />
+                    <span>Log Out</span>
+                  </button>
                 </div>
               </div>
             )}
