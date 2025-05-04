@@ -341,6 +341,7 @@ function App() {
                         <Route path="/hustle-planner" element={<ProtectedRoute><HustlePlannerPage /></ProtectedRoute>} />
                         <Route path="/route-planner" element={<ProtectedRoute><RoutePlannerPage /></ProtectedRoute>} />
                         <Route path="/drive-journal" element={<ProtectedRoute><DriveJournalPage /></ProtectedRoute>} />
+                        <Route path="/drive-journal/new" element={<ProtectedRoute><DriveJournalPage /></ProtectedRoute>} />
                         <Route path="/ebooks" element={<ProtectedRoute><EBooksPage /></ProtectedRoute>} />
                         <Route path="/discounts" element={<ProtectedRoute><DiscountsPage /></ProtectedRoute>} />
                         <Route path="/contact" element={<ProtectedRoute><ContactPage /></ProtectedRoute>} />
