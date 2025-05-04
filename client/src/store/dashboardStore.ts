@@ -113,8 +113,8 @@ const defaultWidgets: DashboardWidget[] = [
   },
   {
     id: uuidv4(),
-    type: 'f1-telemetry',
-    title: 'F1 Telemetry',
+    type: 'drive-journal',
+    title: 'Drive Journal',
     size: 'large',
     position: 5, 
     visible: true,
