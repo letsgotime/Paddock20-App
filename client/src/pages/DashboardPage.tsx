@@ -44,14 +44,16 @@ interface UserPreference {
 }
 
 function DashboardPage() {
-  const [userName, setUserName] = useState<string>('gavingotime');
+  // Get user data from AuthContext
+  const authContext = useContext(AuthContext);
+  const userName = authContext?.user?.username || 'gavingotime';
   const [selectedVehicle, setSelectedVehicle] = useState<string>('2020 BMW 330i xDrive');
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
   const [recentDrives, setRecentDrives] = useState<RecentDrive[]>([]);
   const [maintenanceAlerts, setMaintenanceAlerts] = useState<MaintenanceAlert[]>([]);
   const [userPreferences, setUserPreferences] = useState<UserPreference[]>([]);
   const [dashboardLayout, setDashboardLayout] = useState<string[]>([
-    'weather', 'world_clock', 'vehicles', 'drives', 'events', 'maintenance', 'uniform', 'dreams', 'membership'
+    'weather', 'world_clock', 'vehicles', 'drives', 'events', 'maintenance', 'uniform', 'dreams', 'membership', 'engagement'
   ]);
   
   // Add uniform section data
