@@ -12,6 +12,7 @@ import {
 import { handleGoogleOAuth2Callback, handleAppleOAuth2Callback } from "./oauth";
 import { checkSlackIntegration, initializeSlackClient, shareVehicleToSlack, shareEventToSlack } from "./slack";
 import { setupAuth } from "./auth";
+import twoFactorRoutes from "./routes/twoFactorRoutes";
 
 // OpenWeather API keys - updated May 1, 2025
 const OPENWEATHER_API_KEYS = {
@@ -2306,6 +2307,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize Slack client on server startup
   initializeSlackClient();
 
+
+  
   const httpServer = createServer(app);
   return httpServer;
 }
