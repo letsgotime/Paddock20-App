@@ -11,7 +11,7 @@ import PageTitleManager from './components/PageTitleManager';
 // import { initializeImageCache } from "./services/unsplashService";
 import NavigationControls from './components/NavigationControls';
 import ContextualBreadcrumbs from './components/ContextualBreadcrumbs';
-import useScrollToTop from './hooks/useScrollToTop';
+import { useScrollToTop } from './hooks/useScrollToTop';
 import ProtectedRoute from './components/ProtectedRoute';
 import NotFound from "@/pages/not-found";
 import Home from "@/pages/Home";
