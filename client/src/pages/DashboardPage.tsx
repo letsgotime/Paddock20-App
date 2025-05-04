@@ -111,7 +111,7 @@ function DashboardPage() {
       'Larry Chen (@larry_chen_foto)',
       'Amy Shore (@amyshorephotography)',
       'Magnus Walker (@magnuswalker)',
-      'Alex Choi (@alexchoi)',
+      'Jason Cammisa (@jasoncammisa)',
       'DDE (@dailydrivenexotics)'
     ],
     topCarPodcasts: [

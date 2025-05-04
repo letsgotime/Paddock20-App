@@ -36,13 +36,23 @@ const UserProfileHub: React.FC = () => {
           const userData = JSON.parse(onboardingData);
           
           // Update the profile with user's real information
+          // Use userData directly for user-specific fields
           const realUserProfile = {
-            ...userData,
-            // Keep only the user-specific fields from userData and reset everything else
-            id: '1', // Keep the ID structure similar
+            // Start with basic required structure
+            id: '1', 
+            username: userData.username || 'driver',
+            displayName: userData.displayName || userData.username || 'Driver',
             memberSince: new Date().toISOString().split('T')[0],
             lastActive: new Date().toISOString(),
-            vehicles: [], // Will be populated from vehicle onboarding
+            
+            // Preserve user-specific data from onboarding
+            bio: userData.bio || 'Passionate driver with a love for cars and the open road.',
+            location: userData.location || 'Atlanta, GA',
+            membershipLevel: userData.membershipLevel || 'free',
+            avatar: userData.avatar || '/assets/images/default-avatar.png',
+            
+            // Initialize empty collections that will be populated later
+            vehicles: [], 
             statistics: {
               totalDrives: 0,
               totalMiles: 0,
@@ -56,14 +66,18 @@ const UserProfileHub: React.FC = () => {
             goals: [],
             events: [],
             gallery: [],
-            preferences: {
+            
+            // Use user preferences if available or set defaults
+            preferences: userData.preferences || {
               theme: 'dark',
               notifications: true,
               timeFormat: '24h',
               dateFormat: 'mdy',
               soundEnabled: true
             },
-            weatherPreferences: {
+            
+            // Use weather preferences if available or set defaults
+            weatherPreferences: userData.weatherPreferences || {
               defaultLocation: {
                 lat: 33.7490,
                 lon: -84.3880,
