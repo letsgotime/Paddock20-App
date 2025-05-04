@@ -15,7 +15,7 @@ import SoundButton from "@/components/ui/SoundButton";
 const FixedSoundBar: React.FC = () => {
   const navigate = useNavigate();
   const location = useLocation();
-  const { isEnabled: soundEnabled, ambientEnabled, playSound, toggleSound, toggleAmbient } = useSoundContext();
+  const { isEnabled: soundEnabled, ambientEnabled, volume, playSound, toggleSound, toggleAmbient, setVolumeLevel } = useSoundContext();
   const [canGoBack, setCanGoBack] = useState(false);
   const [canGoForward, setCanGoForward] = useState(false);
   const [showSoundMenu, setShowSoundMenu] = useState(false);
@@ -132,6 +132,16 @@ const FixedSoundBar: React.FC = () => {
   const toggleSoundMenu = () => {
     setShowSoundMenu(!showSoundMenu);
     if (soundEnabled) playSound('ui_click');
+  };
+  
+  // Handle volume change from the slider
+  const handleVolumeChange = (newValue: number) => {
+    setVolumeLevel(newValue);
+    
+    // Play a sample sound to demonstrate new volume
+    if (soundEnabled) {
+      playSound('ui_click');
+    }
   };
 
   return (
