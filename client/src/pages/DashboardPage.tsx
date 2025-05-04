@@ -51,7 +51,7 @@ function DashboardPage() {
   const [maintenanceAlerts, setMaintenanceAlerts] = useState<MaintenanceAlert[]>([]);
   const [userPreferences, setUserPreferences] = useState<UserPreference[]>([]);
   const [dashboardLayout, setDashboardLayout] = useState<string[]>([
-    'weather', 'world_clock', 'vehicles', 'drives', 'events', 'maintenance', 'uniform'
+    'weather', 'world_clock', 'vehicles', 'drives', 'events', 'maintenance', 'uniform', 'dreams'
   ]);
   
   // Add uniform section data
@@ -59,6 +59,18 @@ function DashboardPage() {
     helmetSize: 'Medium (58-59cm)',
     gloveSize: 'Large',
     shoeSize: '10.5 US'
+  });
+  
+  // Dreams and preferences data
+  const [dreamData, setDreamData] = useState({
+    favoriteRacetracks: ['Laguna Seca', 'Nürburgring', 'Circuit of the Americas'],
+    dreamDrives: ['Pacific Coast Highway', 'Stelvio Pass', 'Tail of the Dragon'],
+    dreamCar: 'Ferrari 488 Pista',
+    dreamMotorcycle: 'Ducati Panigale V4',
+    dreamTruck: 'Ford F-150 Raptor',
+    dreamHouse: 'Modern mountain home with 6-car garage',
+    dreamRetirementLocation: 'Lake Como, Italy',
+    dreamGarageSetup: 'Climate-controlled 10+ car showroom with lift and detailing bay'
   });
   const [isEditMode, setIsEditMode] = useState<boolean>(false);
   const [driveStats, setDriveStats] = useState({
@@ -131,6 +143,123 @@ function DashboardPage() {
 
   const renderDashboardPanel = (panelType: string) => {
     switch(panelType) {
+      case 'dreams':
+        return (
+          <div className="apex-card rounded-lg mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="apex-header">Automotive Dreams</h2>
+              <Link to="/dreams" className="text-green-500 hover:text-green-400 transition-colors flex items-center">
+                Edit Dreams <ChevronRight size={16} />
+              </Link>
+            </div>
+            
+            <div className="grid grid-cols-1 gap-4">
+              <div className="bg-gray-900 p-4 rounded-lg border border-gray-800">
+                <h3 className="text-blue-400 font-bold mb-2">Favorite Racetracks</h3>
+                <div className="flex flex-wrap gap-2">
+                  {dreamData.favoriteRacetracks.map((track, index) => (
+                    <span key={index} className="px-2 py-1 bg-gray-800 rounded-md text-sm text-gray-200">
+                      {track}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="bg-gray-900 p-4 rounded-lg border border-gray-800">
+                <h3 className="text-blue-400 font-bold mb-2">Dream Drives</h3>
+                <div className="flex flex-wrap gap-2">
+                  {dreamData.dreamDrives.map((drive, index) => (
+                    <span key={index} className="px-2 py-1 bg-gray-800 rounded-md text-sm text-gray-200">
+                      {drive}
+                    </span>
+                  ))}
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mt-2">
+                <div className="bg-gray-900 p-4 rounded-lg border border-gray-800">
+                  <h3 className="text-blue-400 font-bold mb-2">Dream Car</h3>
+                  <p className="text-gray-200">{dreamData.dreamCar}</p>
+                </div>
+                
+                <div className="bg-gray-900 p-4 rounded-lg border border-gray-800">
+                  <h3 className="text-blue-400 font-bold mb-2">Dream Motorcycle</h3>
+                  <p className="text-gray-200">{dreamData.dreamMotorcycle}</p>
+                </div>
+                
+                <div className="bg-gray-900 p-4 rounded-lg border border-gray-800">
+                  <h3 className="text-blue-400 font-bold mb-2">Dream Truck</h3>
+                  <p className="text-gray-200">{dreamData.dreamTruck}</p>
+                </div>
+              </div>
+              
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+                <div className="bg-gray-900 p-4 rounded-lg border border-gray-800">
+                  <h3 className="text-blue-400 font-bold mb-2">Dream House</h3>
+                  <p className="text-gray-200">{dreamData.dreamHouse}</p>
+                </div>
+                
+                <div className="bg-gray-900 p-4 rounded-lg border border-gray-800">
+                  <h3 className="text-blue-400 font-bold mb-2">Dream Retirement Location</h3>
+                  <p className="text-gray-200">{dreamData.dreamRetirementLocation}</p>
+                </div>
+              </div>
+              
+              <div className="bg-gray-900 p-4 rounded-lg border border-gray-800 mt-2">
+                <h3 className="text-blue-400 font-bold mb-2">Dream Garage Vault Setup</h3>
+                <p className="text-gray-200">{dreamData.dreamGarageSetup}</p>
+              </div>
+            </div>
+          </div>
+        );
+      
+      case 'uniform':
+        return (
+          <div className="apex-card rounded-lg mb-6">
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="apex-header">Racing Uniform Sizes</h2>
+              <Link to="/driver-equipment" className="text-green-500 hover:text-green-400 transition-colors flex items-center">
+                View All <ChevronRight size={16} />
+              </Link>
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="bg-gray-900 p-4 rounded-lg border border-gray-800 hover:border-blue-500 transition-all group">
+                <div className="h-12 w-12 rounded-full bg-blue-900/20 flex items-center justify-center mb-3 mx-auto">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8" />
+                  </svg>
+                </div>
+                <h3 className="text-center text-blue-400 font-bold">Helmet Size</h3>
+                <p className="text-center text-gray-200 text-xl mt-2">Medium (58-59cm)</p>
+                <p className="text-center text-xs text-gray-500 mt-2">Last updated: Feb 2025</p>
+              </div>
+              
+              <div className="bg-gray-900 p-4 rounded-lg border border-gray-800 hover:border-blue-500 transition-all group">
+                <div className="h-12 w-12 rounded-full bg-blue-900/20 flex items-center justify-center mb-3 mx-auto">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 11.5V14m0-2.5v-6a2.5 2.5 0 115 0v6a2.5 2.5 0 11-5 0zm-4 4h8" />
+                  </svg>
+                </div>
+                <h3 className="text-center text-blue-400 font-bold">Glove Size</h3>
+                <p className="text-center text-gray-200 text-xl mt-2">Large</p>
+                <p className="text-center text-xs text-gray-500 mt-2">Last updated: Feb 2025</p>
+              </div>
+              
+              <div className="bg-gray-900 p-4 rounded-lg border border-gray-800 hover:border-blue-500 transition-all group">
+                <div className="h-12 w-12 rounded-full bg-blue-900/20 flex items-center justify-center mb-3 mx-auto">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-6 w-6 text-blue-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M3 5a2 2 0 012-2h3.28a1 1 0 01.948.684l1.498 4.493a1 1 0 01-.502 1.21l-2.257 1.13a11.042 11.042 0 005.516 5.516l1.13-2.257a1 1 0 011.21-.502l4.493 1.498a1 1 0 01.684.949V19a2 2 0 01-2 2h-1C9.716 21 3 14.284 3 6V5z" />
+                  </svg>
+                </div>
+                <h3 className="text-center text-blue-400 font-bold">Shoe Size</h3>
+                <p className="text-center text-gray-200 text-xl mt-2">10.5 US</p>
+                <p className="text-center text-xs text-gray-500 mt-2">Last updated: Feb 2025</p>
+              </div>
+            </div>
+          </div>
+        );
+      
       case 'weather':
         return (
           <div className="block mb-6">
