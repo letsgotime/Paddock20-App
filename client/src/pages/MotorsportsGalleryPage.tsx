@@ -64,9 +64,22 @@ const MotorsportsGalleryPage: React.FC = () => {
   // Filter media based on active filter
   const getAllMedia = () => {
     let allMedia: MediaItem[] = [];
+    
+    // Check if events data is loaded
+    if (!eventsData || eventsData.length === 0) {
+      console.log('No events data available');
+      return [];
+    }
+    
+    // Extract all media from all events
     eventsData.forEach(event => {
-      allMedia = [...allMedia, ...event.media.map(m => ({...m, event: event.name}))];
+      if (event.media && event.media.length > 0) {
+        allMedia = [...allMedia, ...event.media.map(m => ({...m, event: event.name}))];
+      }
     });
+    
+    console.log('Total media items before filtering:', allMedia.length);
+    console.log('Current media filter:', mediaFilter);
     
     // Apply search filter if query exists
     if (searchQuery) {
@@ -76,26 +89,40 @@ const MotorsportsGalleryPage: React.FC = () => {
         item.description?.toLowerCase().includes(query) ||
         item.event?.toLowerCase().includes(query)
       );
+      console.log('Media items after search filter:', allMedia.length);
     }
     
     // Apply media type filter
+    let filteredMedia = allMedia;
     if (mediaFilter === 'photos') {
-      return allMedia.filter(item => item.type === 'image');
+      filteredMedia = allMedia.filter(item => item.type === 'image');
+      console.log('Photos after filtering:', filteredMedia.length);
     } else if (mediaFilter === 'videos') {
-      return allMedia.filter(item => item.type === 'video');
+      filteredMedia = allMedia.filter(item => item.type === 'video');
+      console.log('Videos after filtering:', filteredMedia.length);
     }
     
-    return allMedia;
+    console.log('Final media items after all filtering:', filteredMedia.length);
+    return filteredMedia;
   };
   
   // Get media for active event
   const getEventMedia = () => {
-    if (!activeEvent) return [];
+    if (!activeEvent) {
+      console.log('No active event selected');
+      return [];
+    }
     
     const event = eventsData.find(e => e.name === activeEvent);
-    if (!event) return [];
+    if (!event) {
+      console.log('Event not found:', activeEvent);
+      return [];
+    }
     
-    let filteredMedia = event.media;
+    console.log('Active event:', event.name);
+    
+    let filteredMedia = event.media || [];
+    console.log('Media items in event before filtering:', filteredMedia.length);
     
     // Apply search filter if query exists
     if (searchQuery) {
@@ -104,16 +131,21 @@ const MotorsportsGalleryPage: React.FC = () => {
         item.title.toLowerCase().includes(query) || 
         item.description?.toLowerCase().includes(query)
       );
+      console.log('Media items after search filter:', filteredMedia.length);
     }
     
     // Apply media type filter
+    let result = filteredMedia;
     if (mediaFilter === 'photos') {
-      return filteredMedia.filter(item => item.type === 'image');
+      result = filteredMedia.filter(item => item.type === 'image');
+      console.log('Photos after filtering:', result.length);
     } else if (mediaFilter === 'videos') {
-      return filteredMedia.filter(item => item.type === 'video');
+      result = filteredMedia.filter(item => item.type === 'video');
+      console.log('Videos after filtering:', result.length);
     }
     
-    return filteredMedia;
+    console.log('Final event media items after all filtering:', result.length);
+    return result;
   };
 
   // Simulate file upload
@@ -291,19 +323,40 @@ const MotorsportsGalleryPage: React.FC = () => {
               
               <div className="flex bg-black/60 rounded overflow-hidden border border-gray-800">
                 <button
-                  onClick={() => setMediaFilter('all')}
+                  onClick={() => {
+                    console.log('Setting filter to ALL');
+                    setMediaFilter('all');
+                    // Force grid view when changing filter
+                    if (activeView !== 'grid') {
+                      setActiveView('grid');
+                    }
+                  }}
                   className={`px-3 py-1.5 text-sm ${mediaFilter === 'all' ? 'bg-blue-900/30 text-blue-400' : 'text-gray-400'}`}
                 >
                   All
                 </button>
                 <button
-                  onClick={() => setMediaFilter('photos')}
+                  onClick={() => {
+                    console.log('Setting filter to PHOTOS');
+                    setMediaFilter('photos');
+                    // Force grid view when changing filter
+                    if (activeView !== 'grid') {
+                      setActiveView('grid');
+                    }
+                  }}
                   className={`px-3 py-1.5 text-sm ${mediaFilter === 'photos' ? 'bg-blue-900/30 text-blue-400' : 'text-gray-400'}`}
                 >
                   Photos
                 </button>
                 <button
-                  onClick={() => setMediaFilter('videos')}
+                  onClick={() => {
+                    console.log('Setting filter to VIDEOS');
+                    setMediaFilter('videos');
+                    // Force grid view when changing filter
+                    if (activeView !== 'grid') {
+                      setActiveView('grid');
+                    }
+                  }}
                   className={`px-3 py-1.5 text-sm ${mediaFilter === 'videos' ? 'bg-blue-900/30 text-blue-400' : 'text-gray-400'}`}
                 >
                   Videos
