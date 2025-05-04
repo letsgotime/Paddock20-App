@@ -836,7 +836,7 @@ function GarageVaultPage() {
                   <div>
                     <h2 className="text-blue-400 font-orbitron text-2xl mb-2">JuiceBox™ Checklists</h2>
                     <p className="text-gray-400">
-                      The curated, real-world tested, gloss-backed, Gavin-approved detailing and maintenance checklists
+                      The curated, real-world tested, gloss-backed, expert-approved detailing and maintenance checklists
                     </p>
                   </div>
                   

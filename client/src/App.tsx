@@ -78,6 +78,7 @@ import UserOnboarding from "./components/UserOnboarding";
 import { AuthProvider } from "./context/AuthContext";
 import { MAIN_CONTENT_ID, LiveRegion } from './lib/accessibility';
 import './paddock20.css';
+import { getUserDisplayName } from './utils/DataIntegrityVerifier';
 
 // Import legal pages
 import PrivacyPolicy from './pages/PrivacyPolicy';
@@ -108,8 +109,21 @@ function App() {
   // Use the scroll-to-top hook to ensure pages always start at the top
   useScrollToTop();
   
-  // Mock user data for preview mode
-  const mockUser = { id: 99999, username: 'Gavin Brooks', email: 'gavin@gotime.com', firstName: 'Gavin', lastName: 'Brooks', fullName: 'Gavin Brooks', profileImage: null, role: 'admin' as const };
+  // Mock user data for preview mode - using dynamic user display name
+  const userDisplayName = getUserDisplayName();
+  const nameParts = userDisplayName.split(' ');
+  const firstName = nameParts[0];
+  const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
+  const mockUser = { 
+    id: 99999, 
+    username: userDisplayName, 
+    email: `${firstName.toLowerCase()}@gotime.com`, 
+    firstName: firstName, 
+    lastName: lastName, 
+    fullName: userDisplayName, 
+    profileImage: null, 
+    role: 'admin' as const 
+  };
   const mockSession = { user: mockUser };
   
   // Initialize session state (will be overridden by auth hook if authenticated)

@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Check, X, ChevronDown, ChevronUp, CheckCircle, Circle, AlertCircle, Info } from 'lucide-react';
+import { getUserDisplayName } from '../utils/DataIntegrityVerifier';
 
 /**
  * JuiceBoxChecklists Component
- * Displays curated, real-world tested, gloss-backed, Gavin-approved
+ * Displays curated, real-world tested, gloss-backed, expert-approved
  * detailing and maintenance checklists
  */
 const JuiceBoxChecklists = ({ vehicle }) => {

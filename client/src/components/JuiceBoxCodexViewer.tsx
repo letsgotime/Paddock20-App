@@ -70,7 +70,7 @@ function JuiceBoxCodexViewer({ onAddProduct }: JuiceBoxCodexViewerProps) {
         <div className="bg-gradient-to-r from-[#111111] to-[#1a1a1a] p-6 rounded-lg border border-gray-800 mb-8">
           <div className="text-center mb-6">
             <h2 className="text-3xl font-orbitron text-blue-400 mb-2">🧃 GoTime Juice Box™</h2>
-            <p className="text-white text-lg italic mb-4">The curated, real-world-tested, gloss-backed, Gavin-approved detailing arsenal.</p>
+            <p className="text-white text-lg italic mb-4">The curated, real-world-tested, gloss-backed, expert-approved detailing arsenal.</p>
             <p className="text-gray-300">No hype. No noise. Just what works—again and again.</p>
           </div>
 

@@ -26,7 +26,13 @@ const AuthPage: React.FC = () => {
   // Redirect if already logged in (using useEffect to avoid React Router warnings)
   React.useEffect(() => {
     if (user) {
-      navigate('/dashboard', { replace: true });
+      // Check if there's a redirect parameter in the URL
+      const urlParams = new URLSearchParams(window.location.search);
+      const redirectPath = urlParams.get('redirect') || '/dashboard';
+      
+      // Navigate to the specified path or dashboard as default
+      navigate(redirectPath, { replace: true });
+      console.log('Redirecting authenticated user to:', redirectPath);
     }
   }, [user, navigate]);
 

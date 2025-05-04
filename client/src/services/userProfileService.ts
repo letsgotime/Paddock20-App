@@ -128,11 +128,17 @@ export interface UserProfile {
   lastActive: string;
 }
 
+import { getUserDisplayName } from '../utils/DataIntegrityVerifier';
+
+// Get the dynamic user display name
+const userDisplayName = getUserDisplayName();
+const username = userDisplayName.replace(' ', '') || 'MemberDriver';
+
 // Initial demo data for development
 const demoUserProfile: UserProfile = {
   id: '1',
-  username: 'GavinGotime',
-  displayName: 'GavinGotime',
+  username: username,
+  displayName: userDisplayName,
   avatar: '/assets/images/default-avatar.png',
   memberSince: '2023-04-15',
   membershipLevel: 'premium',
