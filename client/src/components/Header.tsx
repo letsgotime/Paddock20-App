@@ -54,8 +54,9 @@ const Header: React.FC = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
   
-  // Hard-coded user information for now - will be replaced with actual authentication later
-  const userDisplayName = 'GavinGotime';
+  // Get auth functionality from context
+  const { user, logout } = useAuth();
+  const userDisplayName = user?.username || 'Guest';
   
   // Handle click outside to close menu
   useEffect(() => {
@@ -73,9 +74,6 @@ const Header: React.FC = () => {
   useEffect(() => {
     setIsMenuOpen(false);
   }, [location.pathname]);
-  
-  // Get auth functionality from context
-  const { logout } = useAuth();
   
   const handleLogout = async () => {
     try {
