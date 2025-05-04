@@ -254,8 +254,11 @@ function App() {
                       {/* GoTime Motorsports logo with navigation and sound controls - always fixed to bottom */}
                       <FixedSoundBar />
                       
+                      {/* AI Support Chatbot - Available globally, moved above sound controls */}
+                      {(effectiveSession || previewMode) && <SupportChatbot />}
+                      
                       {/* Sound Controls Panel - Fixed to the right side */}
-                      <div className="fixed right-4 bottom-20 z-[999] w-64">
+                      <div className="fixed right-4 bottom-20 z-[998] w-64">
                         <SoundControlPanel />
                       </div>
 
@@ -341,8 +344,7 @@ function App() {
                         <Route path="*" element={<NotFound />} />
                       </Routes>
                       
-                      {/* AI Support Chatbot - Available globally */}
-                      {(effectiveSession || previewMode) && <SupportChatbot />}
+                      {/* Removed duplicate SupportChatbot component */}
                       
                       {/* Rewards notification - will show when rewards are earned */}
                       {(effectiveSession || previewMode) && <RewardNotification />}
