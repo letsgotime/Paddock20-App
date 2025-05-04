@@ -234,10 +234,11 @@ async function checkWeatherApiHealth(): Promise<boolean> {
 // Already imported at the top of the file
 
 export async function registerRoutes(app: Express): Promise<Server> {
-  // Register the Two-Factor Authentication Routes
-  app.use(twoFactorRoutes);
-  // Setup user authentication system
+  // Setup user authentication system first
   setupAuth(app);
+  
+  // Then register the Two-Factor Authentication Routes
+  app.use(twoFactorRoutes);
   
   // Using only OpenWeather API for all weather services
   
