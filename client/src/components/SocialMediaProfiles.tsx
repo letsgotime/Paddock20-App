@@ -1,4 +1,6 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../hooks/useAuth';
+import { Facebook, Instagram, Twitter, Linkedin, Youtube } from 'lucide-react';
 
 interface SocialMediaProfilesProps {
   className?: string;
@@ -7,12 +9,23 @@ interface SocialMediaProfilesProps {
   alignment?: 'left' | 'center' | 'right';
 }
 
+interface SocialMediaLink {
+  name: string;
+  url: string;
+  icon: React.ReactNode;
+  bgColor: string;
+  hoverBgColor: string;
+}
+
 const SocialMediaProfiles: React.FC<SocialMediaProfilesProps> = ({
   className = '',
   showTitle = true,
   iconSize = 'md',
   alignment = 'left'
 }) => {
+  const { user } = useAuth();
+  const [socialMediaLinks, setSocialMediaLinks] = useState<SocialMediaLink[]>([]);
+  
   const iconSizeClasses = {
     sm: 'w-8 h-8',
     md: 'w-12 h-12',
@@ -31,36 +44,47 @@ const SocialMediaProfiles: React.FC<SocialMediaProfilesProps> = ({
     right: 'text-right'
   };
   
-  // Get social media links from user profile or company settings
-  const getSocialMediaLinks = () => {
-    // First try to get data from user profile context 
-    try {
-      const profileData = localStorage.getItem('paddock20_user_profile');
-      if (profileData) {
-        const parsedData = JSON.parse(profileData);
-        if (parsedData?.socialMedia && Array.isArray(parsedData.socialMedia) && parsedData.socialMedia.length > 0) {
-          return parsedData.socialMedia;
+  // Load social media links based on the current authenticated user
+  useEffect(() => {
+    const loadSocialMedia = () => {
+      // Try to get data from user profile context first 
+      try {
+        // If we have user data from auth context with socialMedia field
+        if (user && user.socialMedia && Array.isArray(user.socialMedia)) {
+          setSocialMediaLinks(user.socialMedia);
+          return;
         }
-      }
-      
-      // Try company settings
-      const settingsData = localStorage.getItem('paddock20_settings');
-      if (settingsData) {
-        const parsedSettings = JSON.parse(settingsData);
-        if (parsedSettings?.companySocialMedia && Array.isArray(parsedSettings.companySocialMedia) && parsedSettings.companySocialMedia.length > 0) {
-          return parsedSettings.companySocialMedia;
+        
+        // Otherwise try localStorage as a fallback
+        const profileData = localStorage.getItem('paddock20_user_profile');
+        if (profileData) {
+          const parsedData = JSON.parse(profileData);
+          if (parsedData?.socialMedia && Array.isArray(parsedData.socialMedia) && parsedData.socialMedia.length > 0) {
+            setSocialMediaLinks(parsedData.socialMedia);
+            return;
+          }
         }
+        
+        // Try company settings
+        const settingsData = localStorage.getItem('paddock20_settings');
+        if (settingsData) {
+          const parsedSettings = JSON.parse(settingsData);
+          if (parsedSettings?.companySocialMedia && Array.isArray(parsedSettings.companySocialMedia) && parsedSettings.companySocialMedia.length > 0) {
+            setSocialMediaLinks(parsedSettings.companySocialMedia);
+            return;
+          }
+        }
+        
+        // If not found, create default empty array - no hardcoded fallbacks
+        setSocialMediaLinks([]);
+      } catch (error) {
+        console.error('Error getting social media data:', error);
+        setSocialMediaLinks([]);
       }
-    } catch (error) {
-      console.error('Error getting social media data:', error);
-    }
+    };
     
-    // Default to empty array if no data found - no hardcoded fallbacks
-    return [];
-  };
-  
-  // Get social media links dynamically
-  const socialMediaLinks = getSocialMediaLinks();
+    loadSocialMedia();
+  }, [user]);
   
   return (
     <div className={`w-full ${className}`}>

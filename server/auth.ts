@@ -550,41 +550,79 @@ export function setupAuth(app: Express) {
           });
         }
         
-        // Otherwise, create a development test user
+        // Create a development test user or fetch from storage
         console.log('[DEV BYPASS] Creating test user for development');
         
-        // Create a default development user with ID 2
-        const devUser = {
-          id: 2,
-          username: 'gavingotime', 
-          email: 'gavin@gotime.com',
-          firstName: 'Gavin',
-          lastName: 'Brooks',
-          fullName: 'Gavin Brooks',
-          preferredUnit: 'imperial',
-          profileImage: null,
-          drivingExperience: 'intermediate',
-          interests: ['driving', 'detailing', 'photography'] as string[],
-          bio: 'Automotive enthusiast with a passion for driving',
-          role: 'user',
-          isActive: true,
-          lastLogin: new Date(),
-          resetToken: null,
-          resetTokenExpires: null,
-          verificationToken: null,
-          isEmailVerified: true,
-          stripeCustomerId: null,
-          stripeSubscriptionId: null,
-          onboardingCompleted: false,
-          createdAt: new Date(),
-          updatedAt: null
-        };
-        
-        // Always return the development user
-        return res.json({
-          success: true,
-          user: devUser
-        });
+        try {
+          // First try to get an existing user from storage
+          // This allows the system to work with any created user, not just a hardcoded one
+          const existingUsers = await storage.getAllUsers();
+          
+          if (existingUsers && existingUsers.length > 0) {
+            // Use the first available user
+            const existingUser = existingUsers[0];
+            const { password, resetToken, verificationToken, ...safeUserData } = existingUser;
+            
+            console.log(`[DEV] Using existing user: ${existingUser.username}`);
+            
+            return res.json({
+              success: true,
+              user: safeUserData
+            });
+          }
+          
+          // If no users exist yet, create a dynamic user
+          const username = 'testuser_' + Math.floor(Math.random() * 1000);
+          
+          // Create a development user with dynamic values
+          const devUser = {
+            id: Math.floor(Math.random() * 1000) + 1,
+            username: username, 
+            email: `${username}@example.com`,
+            firstName: 'Test',
+            lastName: 'User',
+            fullName: 'Test User',
+            preferredUnit: 'imperial',
+            profileImage: null,
+            drivingExperience: 'beginner',
+            interests: [] as string[],
+            bio: '',
+            role: 'user',
+            isActive: true,
+            lastLogin: new Date(),
+            resetToken: null,
+            resetTokenExpires: null,
+            verificationToken: null,
+            isEmailVerified: true,
+            stripeCustomerId: null,
+            stripeSubscriptionId: null,
+            onboardingCompleted: false,
+            createdAt: new Date(),
+            updatedAt: null,
+            twoFactorEnabled: false,
+            twoFactorSecret: null,
+            twoFactorBackupCodes: null
+          };
+          
+          // Return the development user
+          return res.json({
+            success: true,
+            user: devUser
+          });
+        } catch (error) {
+          console.error('[DEV] Error getting/creating test user:', error);
+          
+          // Fallback to a minimal user if all else fails
+          return res.json({
+            success: true,
+            user: {
+              id: 999,
+              username: 'anonymous',
+              email: 'anonymous@example.com',
+              role: 'user'
+            }
+          });
+        }
       }
     } catch (error) {
       console.error("Get user error:", error);
