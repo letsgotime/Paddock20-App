@@ -8,7 +8,7 @@ import {
   Calendar, BarChart3, Car, Map, Settings, Bell, Shield, ChevronRight, 
   MessageSquare, HeartHandshake, Star, EyeOff, Gauge, ClipboardCheck, 
   Wrench, Award, Trophy, FileText, Activity, Clock, User, 
-  Cloud, Brain, BookMarked, SprayCan
+  Cloud, Brain, BookMarked, SprayCan, Check
 } from 'lucide-react';
 
 interface UpcomingEvent {
@@ -272,6 +272,112 @@ function DashboardPage() {
         "Porsche 911 Turbo S",
         "Audi R8 V10 Plus",
         "McLaren 720S"
+      ],
+      drivetrainPreference: "RWD",
+      drivetrainThoughts: "Rear-wheel drive delivers the purest driving experience with perfect balance, superior weight distribution, and the most natural steering feel. While AWD has its merits in adverse conditions or for maximum traction in high-horsepower applications, a well-sorted RWD platform with proper weight distribution and limited-slip differential provides the most engaging and rewarding driver experience. Front-wheel drive, while practical and economical, simply can't match the driving dynamics of a proper rear-drive setup.",
+      drivetrainRankings: [
+        {
+          type: "RWD",
+          rating: 9.8,
+          bestFor: ["Driver engagement", "Balance", "Natural steering", "Drifting", "Track use"],
+          compromises: ["Winter driving", "Wet weather traction"],
+          idealExamples: ["BMW M3", "Porsche 911", "Toyota GR86", "Mazda MX-5"]
+        },
+        {
+          type: "AWD",
+          rating: 8.4,
+          bestFor: ["All-weather capability", "Launch performance", "High-power applications"],
+          compromises: ["Added weight", "Understeer tendency", "Fuel economy", "Steering feel"],
+          idealExamples: ["Audi RS6", "Porsche 911 Turbo", "BMW M5", "Mercedes-AMG E63 S"]
+        },
+        {
+          type: "FWD",
+          rating: 6.5,
+          bestFor: ["Packaging efficiency", "Cost effectiveness", "Winter traction"],
+          compromises: ["Torque steer", "Handling balance", "Power delivery"],
+          idealExamples: ["Honda Civic Type R", "Hyundai Veloster N", "VW Golf GTI"]
+        }
+      ]
+    },
+    modificationPhilosophy: {
+      preferredApproach: "OEM+",
+      philosophyExplanation: "The OEM+ approach respects the manufacturer's engineering while tastefully enhancing the vehicle's character. Factory engineers spend thousands of hours perfecting a car's dynamics and character; wholesale changes rarely improve the overall package. The sweet spot is selecting the best factory-engineered parts from higher trim levels or special editions, adding subtle performance improvements that maintain reliability, and focusing on driver connection enhancements that preserve the original character while addressing specific weaknesses.",
+      acceptableMods: [
+        "Quality suspension components that maintain proper geometry",
+        "Wheels with proper offset and weight considerations", 
+        "Exhaust systems that enhance sound without being obnoxious",
+        "ECU tunes from reputable sources with proper development",
+        "Upgraded braking components from higher trim models",
+        "Subtle aesthetic enhancements that complement factory design"
+      ],
+      unacceptableMods: [
+        "Extreme stance or non-functional camber",
+        "Suspension setups that compromise handling for aesthetics",
+        "Generic eBay performance parts",
+        "Overly aggressive engine modifications that sacrifice reliability",
+        "Aggressive visual mods that disrupt the original design language"
+      ],
+      boltOnPhilosophy: "Selective bolt-on modifications can enhance the driving experience without compromising reliability. The key is choosing components that work harmoniously with factory systems, maintaining proper engineering tolerances, and focusing on holistic improvements rather than chasing dyno numbers. Quality intake and exhaust modifications, properly developed ECU tunes, and well-engineered suspension components can elevate a car's character while preserving its fundamental integrity.",
+      enginePreference: "Naturally Aspirated",
+      enginePhilosophy: "There's a mechanical purity and linear character to naturally aspirated engines that forced induction simply can't replicate. The immediate throttle response, progressive power delivery, and authentic engine sound create a more intimate connection between driver and machine. While turbocharging and supercharging deliver impressive performance metrics, they introduce a layer of complexity and character-altering boost that diminishes the raw, analog driving experience that defines the most engaging sports cars. A high-revving naturally aspirated engine that builds power progressively to a crescendo near redline represents the most rewarding and emotionally satisfying powertrain configuration.",
+      idealEngineSoundtrack: "Porsche 911 GT3 (4.0L flat-six at 9,000 RPM)",
+      aspirationPreferences: [
+        {
+          type: "Naturally Aspirated",
+          rating: 9.8,
+          favoriteExamples: [
+            "Porsche 911 GT3 (4.0L flat-six)",
+            "Ferrari 458 Speciale (4.5L V8)",
+            "Lexus LFA (4.8L V10)",
+            "BMW E92 M3 (4.0L V8)",
+            "Honda S2000 (2.0L inline-four)"
+          ],
+          bestQualities: [
+            "Linear power delivery",
+            "Instantaneous throttle response",
+            "Pure mechanical sound",
+            "Driving engagement",
+            "Mechanical simplicity and reliability"
+          ]
+        },
+        {
+          type: "Supercharged",
+          rating: 8.2,
+          favoriteExamples: [
+            "Jaguar F-Type R (5.0L V8)",
+            "Ford Mustang Shelby GT500 (5.2L V8)",
+            "Chevrolet Corvette ZR1 (6.2L V8)",
+            "Range Rover Sport SVR (5.0L V8)"
+          ],
+          bestQualities: [
+            "Immediate boost response",
+            "Linear power increase",
+            "Preservation of engine character",
+            "Distinctive supercharger whine"
+          ]
+        },
+        {
+          type: "Turbocharged",
+          rating: 7.5,
+          favoriteExamples: [
+            "McLaren 720S (4.0L V8)",
+            "BMW M5 (4.4L V8)",
+            "Porsche 911 Turbo S (3.8L flat-six)",
+            "Audi RS6 Avant (4.0L V8)"
+          ],
+          bestQualities: [
+            "Mid-range torque",
+            "Fuel efficiency potential",
+            "Tuning headroom",
+            "Exciting boost sensation"
+          ],
+          compromises: [
+            "Throttle response lag",
+            "Less linear power delivery",
+            "Artificial sound character",
+            "Added complexity"
+          ]
+        }
       ]
     },
     vehicleOpinions: {
