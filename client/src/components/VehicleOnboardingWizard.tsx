@@ -373,9 +373,14 @@ const VehicleOnboardingWizard: React.FC = () => {
     try {
       // Get current user data or create new user data structure
       let userData = localStorage.getItem('userOnboardingData');
+      
+      // Import auth data to get actual username
+      const authData = localStorage.getItem('paddock20_auth_user');
+      const currentUser = authData ? JSON.parse(authData) : null;
+      
       let userProfile = userData ? JSON.parse(userData) : {
-        username: 'driver1',
-        displayName: '',
+        username: currentUser?.username || localStorage.getItem('lastUsername') || '',
+        displayName: currentUser?.fullName || currentUser?.firstName || '',
         membershipLevel: 'free',
         bio: 'Passionate driver with a love for cars and the open road.',
         location: '',

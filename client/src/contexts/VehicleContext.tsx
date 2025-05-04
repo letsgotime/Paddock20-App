@@ -45,7 +45,8 @@ export const VehicleContext = createContext<VehicleContextType | undefined>(unde
 
 // Create a hook for direct use in components
 export function useVehicle() {
-  const context = useContext(VehicleContext);
+  // Using the imported React.useContext to avoid dependency issues
+  const context = React.useContext(VehicleContext);
   if (context === undefined) {
     throw new Error('useVehicle must be used within a VehicleProvider');
   }
