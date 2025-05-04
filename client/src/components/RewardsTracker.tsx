@@ -8,48 +8,59 @@ import { useRewardsTracker } from '../utils/rewardsTracker';
  * It should be placed high in the component tree.
  */
 const RewardsTracker: React.FC = () => {
-  // Initialize rewards tracker
+  // Initialize rewards tracker - need to declare outside try/catch for hook rules
   const rewards = useRewardsTracker();
   const location = useLocation();
   
   // Track page visits for rewards
   useEffect(() => {
-    if (location && location.pathname) {
-      // Track the page visit
-      rewards.trackPageVisit?.(location.pathname);
-      
-      // Don't check eligibility on every page load to avoid infinite loops
-      // This will be handled by the rewards tracker internally
+    try {
+      if (location && location.pathname && rewards && typeof rewards.trackPageVisit === 'function') {
+        // Track the page visit
+        rewards.trackPageVisit(location.pathname);
+      }
+    } catch (error) {
+      console.error('Error tracking page visit:', error);
     }
-  }, [location?.pathname]);
+  }, [location?.pathname, rewards]);
   
   // Run periodic checks for time-based rewards
   useEffect(() => {
-    // Check for time-based achievements (night owl, early bird)
-    const checkTimeBasedRewards = () => {
-      const hour = new Date().getHours();
+    try {
+      // Only proceed if rewards is properly initialized
+      if (!rewards || typeof rewards.unlockReward !== 'function') return;
       
-      if (rewards && rewards.unlockReward) {
-        // Night owl reward (after midnight)
-        if (hour >= 0 && hour < 5) {
-          rewards.unlockReward('night-owl');
+      // Check for time-based achievements (night owl, early bird)
+      const checkTimeBasedRewards = () => {
+        try {
+          const hour = new Date().getHours();
+          
+          // Night owl reward (after midnight)
+          if (hour >= 0 && hour < 5) {
+            rewards.unlockReward('night-owl');
+          }
+          
+          // Early bird reward (before 6am)
+          if (hour < 6) {
+            rewards.unlockReward('early-bird');
+          }
+        } catch (error) {
+          console.error('Error checking time-based rewards:', error);
         }
-        
-        // Early bird reward (before 6am)
-        if (hour < 6) {
-          rewards.unlockReward('early-bird');
-        }
-      }
-    };
-    
-    // Run immediately
-    checkTimeBasedRewards();
-    
-    // Then set up timer to check every hour
-    const timer = setInterval(checkTimeBasedRewards, 60 * 60 * 1000);
-    
-    return () => clearInterval(timer);
-  }, [rewards]);
+      };
+      
+      // Run immediately, but only once when component mounts
+      // or when rewards implementation changes
+      checkTimeBasedRewards();
+      
+      // Then set up timer to check every hour
+      const timer = setInterval(checkTimeBasedRewards, 60 * 60 * 1000);
+      
+      return () => clearInterval(timer);
+    } catch (error) {
+      console.error('Error setting up time-based rewards:', error);
+    }
+  }, [rewards]); // Only dependent on rewards changing, not recreating functions
   
   return null; // This component doesn't render anything
 };
