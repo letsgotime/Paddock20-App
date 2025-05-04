@@ -900,6 +900,18 @@ export const RewardsProvider: React.FC<{ children: ReactNode }> = ({ children })
   // Login tracking
   useEffect(() => {
     const today = new Date().toISOString().split('T')[0];
+    
+    // Add safety check for lastActive
+    if (!userRewards.lastActive) {
+      // Initialize lastActive if it doesn't exist
+      setUserRewards(prev => ({
+        ...prev,
+        lastActive: today,
+        streakDays: 1
+      }));
+      return; // Exit early
+    }
+    
     const lastActive = userRewards.lastActive.split('T')[0];
     
     // If it's a new day
