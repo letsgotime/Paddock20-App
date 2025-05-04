@@ -275,21 +275,29 @@ class ProfileDataCollector {
    * @param vehicleContextData Vehicle data from the VehicleContext
    */
   static syncVehicleFromContext(vehicleContextData: any) {
+    // Skip processing if the vehicle data is incomplete
+    if (!vehicleContextData || !vehicleContextData.make || !vehicleContextData.model) {
+      console.log('Vehicle data is incomplete, skipping sync:', vehicleContextData);
+      return;
+    }
+    
     // FIX: Store store operations in a local variable first to prevent state updates
     // This helps to break the circular dependency causing the infinite update loop
     const storeRef = this.store;
     
     // Prevent execution if profile is not available
-    if (!storeRef.profile) return;
-    
-    // CRITICAL FIX: Check if sync is already in progress to prevent infinite loops
-    if (ProfileDataCollector._syncInProgress) {
-      console.log('[Loop Prevention] Vehicle sync already in progress, skipping');
+    if (!storeRef.profile) {
+      console.log('Profile not available, skipping vehicle sync');
       return;
     }
     
-    // Track sync state
-    ProfileDataCollector._syncInProgress = true;
+    // IMPROVED CRITICAL FIX: Check if THIS SPECIFIC VEHICLE sync is already in progress
+    // This is much more precise than a global flag and prevents legitimate syncs from being blocked
+    if (this.isVehicleSyncInProgress(vehicleContextData)) {
+      console.log('[Loop Prevention] Vehicle sync already in progress for:', 
+        vehicleContextData.make, vehicleContextData.model);
+      return;
+    }
     
     try {
       // Prevent infinite loops by checking the source
@@ -380,17 +388,59 @@ class ProfileDataCollector {
         }, 0);
       }
       
-      return updatedVehicle;
-    } finally {
-      // Always reset the sync flag when done
+      // Mark this vehicle's sync as complete
       setTimeout(() => {
-        ProfileDataCollector._syncInProgress = false;
-      }, 100);
+        this.completeVehicleSync(vehicleContextData);
+      }, 500);
+      
+      return updatedVehicle;
+    } catch (error) {
+      console.error('Error syncing vehicle from context:', error);
+      // Make sure to mark sync as complete even on error
+      this.completeVehicleSync(vehicleContextData);
+      return null;
     }
   }
   
-  // CRITICAL FIX: Added a static flag to track sync state and prevent infinite loops
-  private static _syncInProgress = false;
+  // Track vehicles that are currently being synchronized to prevent loops
+  // Uses a Map with vehicle IDs (or make+model+year if ID not available) as keys
+  // and timestamps as values to automatically expire entries after some time
+  private static _syncInProgressVehicles = new Map<string, number>();
+  
+  /**
+   * Check if a specific vehicle is currently being synced
+   * @param vehicleData The vehicle data to check
+   * @returns Boolean indicating if this specific vehicle is already being synced
+   */
+  private static isVehicleSyncInProgress(vehicleData: any): boolean {
+    // Create a unique key for the vehicle based on available data
+    const vehicleKey = vehicleData.id || 
+      `${vehicleData.make}-${vehicleData.model}-${vehicleData.year}`;
+    
+    // Check if this vehicle is currently being synced
+    const syncTimestamp = this._syncInProgressVehicles.get(vehicleKey);
+    
+    // If no sync is in progress or the sync has expired (more than 5 seconds old)
+    if (!syncTimestamp || (Date.now() - syncTimestamp > 5000)) {
+      // Set or update the sync timestamp
+      this._syncInProgressVehicles.set(vehicleKey, Date.now());
+      return false;
+    }
+    
+    return true;
+  }
+  
+  /**
+   * Mark a vehicle sync as complete
+   * @param vehicleData The vehicle data to mark as complete
+   */
+  private static completeVehicleSync(vehicleData: any): void {
+    const vehicleKey = vehicleData.id || 
+      `${vehicleData.make}-${vehicleData.model}-${vehicleData.year}`;
+    
+    // Remove the vehicle from the in-progress map
+    this._syncInProgressVehicles.delete(vehicleKey);
+  }
   
   /**
    * Syncs all vehicles from the array to the profile system
