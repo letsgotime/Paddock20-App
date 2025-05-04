@@ -31,7 +31,7 @@ const UserProfileHub: React.FC = () => {
   const { profile, updateProfile, resetProfile } = useUserProfileStore();
   
   // Get vehicle data from context
-  const { activeVehicle, allVehicles } = useVehicle();
+  const { activeVehicle, vehicles } = useVehicle();
   
   // UI state for expandable sections and loading
   const [activeSection, setActiveSection] = useState<string | null>('summary');
@@ -64,10 +64,10 @@ const UserProfileHub: React.FC = () => {
           bio: onboardingData?.bio || 'F1-grade telemetry and insights for passionate drivers.',
           location: onboardingData?.location || 'United States',
           membershipLevel: onboardingData?.membershipLevel || 'free',
-          avatar: user?.profileImage || onboardingData?.avatar || '/assets/images/default-avatar.png',
+          avatar: user?.profileImage || user?.avatar || onboardingData?.avatar || '/assets/images/default-avatar.png',
           
           // Vehicle collection - from Garage Vault context
-          vehicles: vehicleData?.vehicles || allVehicles || [],
+          vehicles: vehicleData?.vehicles || vehicles || [],
           
           // User statistics - aggregate from activity data
           statistics: {
@@ -126,7 +126,7 @@ const UserProfileHub: React.FC = () => {
           location: 'United States',
           membershipLevel: 'free',
           avatar: user?.profileImage || '/assets/images/default-avatar.png',
-          vehicles: allVehicles || [],
+          vehicles: vehicles || [],
           statistics: {
             totalDrives: 0,
             totalMiles: 0,
@@ -170,7 +170,7 @@ const UserProfileHub: React.FC = () => {
     
     // Log page view
     ProfileDataCollector.logPageView('UserProfileHub');
-  }, [user, updateProfile, allVehicles]);
+  }, [user, updateProfile, vehicles]);
   
   // Sync active vehicle with profile when it changes
   useEffect(() => {
@@ -244,7 +244,7 @@ const UserProfileHub: React.FC = () => {
         avatar: user?.profileImage || onboardingData?.avatar || '/assets/images/default-avatar.png',
         
         // Collections from vehicle context
-        vehicles: vehicleData?.vehicles || allVehicles || [],
+        vehicles: vehicleData?.vehicles || vehicles || [],
         
         // User statistics with fallbacks
         statistics: onboardingData?.statistics || {
