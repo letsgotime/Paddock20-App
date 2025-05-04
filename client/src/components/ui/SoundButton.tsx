@@ -1,7 +1,7 @@
 import React, { ButtonHTMLAttributes } from 'react';
 import { cn } from '@/lib/utils';
 import { useSoundContext } from '@/contexts/SoundContext';
-import { SoundType } from '@/services/SoundService';
+import { SoundType } from '@/services/soundService';
 
 interface SoundButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   /**
