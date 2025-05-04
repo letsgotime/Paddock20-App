@@ -29,14 +29,68 @@ export function saveToWeatherCaches(location: Location, unit: string, data: any)
       data: data
     };
     
-    // Save to primary cache
-    localStorage.setItem(primaryCacheKey, JSON.stringify(cacheObject));
-    
-    // Also save to secondary (long-term) cache
-    localStorage.setItem(secondaryCacheKey, JSON.stringify(cacheObject));
-    
-    console.log('Weather data saved to both primary and secondary caches');
-    return true;
+    // Try to clear some space first if needed
+    try {
+      // A list of less critical data that can be cleared to make room
+      const nonEssentialCacheKeys = [
+        'paddock20_weatherLocationHistory',
+        'paddock20_modHistory',
+        'paddock20_drivingPreferences'
+      ];
+      
+      // Try to save to primary cache
+      try {
+        localStorage.setItem(primaryCacheKey, JSON.stringify(cacheObject));
+      } catch (storageError) {
+        console.warn('Storage quota exceeded, trying to free up space...');
+        
+        // Clear non-essential caches first
+        nonEssentialCacheKeys.forEach(key => {
+          try {
+            localStorage.removeItem(key);
+          } catch (e) {
+            // Continue with next item even if this one fails
+          }
+        });
+        
+        // Try saving primary cache again after clearing space
+        try {
+          localStorage.setItem(primaryCacheKey, JSON.stringify(cacheObject));
+        } catch (secondError) {
+          // If still failing, create a minimal version with just essential data
+          const minimalCacheObject = {
+            timestamp: now.toISOString(),
+            data: {
+              weatherData: data.weatherData,
+              forecastData: null,
+              oneCallData: null,
+              automotiveWeatherData: null
+            }
+          };
+          
+          try {
+            localStorage.setItem(primaryCacheKey, JSON.stringify(minimalCacheObject));
+          } catch (finalError) {
+            console.error('Still failed to save after clearing caches:', finalError);
+            throw finalError; // Let the outer catch handle this
+          }
+        }
+      }
+      
+      // Try to save to secondary cache after successfully saving to primary
+      try {
+        localStorage.setItem(secondaryCacheKey, JSON.stringify(cacheObject));
+        console.log('Weather data saved to both primary and secondary caches');
+        return true;
+      } catch (e) {
+        // Secondary cache failure is acceptable - already saved to primary
+        console.log('Weather data saved to primary cache only (secondary cache failed)');
+        return true;
+      }
+    } catch (innerError) {
+      // Propagate inner errors to outer catch
+      throw innerError;
+    }
   } catch (error) {
     console.error('Failed to save weather data to caches:', error);
     return false;

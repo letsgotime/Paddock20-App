@@ -854,7 +854,47 @@ export const RewardsProvider: React.FC<{ children: ReactNode }> = ({ children })
       stats: statsForStorage
     };
     
-    localStorage.setItem('paddock20_userRewards', JSON.stringify(rewardsForStorage));
+    try {
+      // Try to clear some space first
+      const keysToRemove = [
+        'paddock20_weatherCache_secondary',
+        'paddock20_weatherCache_backup',
+        'paddock20_weatherLocationHistory'
+      ];
+      
+      keysToRemove.forEach(key => {
+        try {
+          localStorage.removeItem(key);
+        } catch (e) {
+          console.warn(`Failed to remove item from localStorage: ${key}`);
+        }
+      });
+      
+      // Now try to save with reduced data if needed
+      try {
+        localStorage.setItem('paddock20_userRewards', JSON.stringify(rewardsForStorage));
+      } catch (storageError) {
+        console.warn('Storage quota exceeded, trying simplified rewards storage');
+        
+        // Create a minimal version with just the essential data
+        const minimalRewards = {
+          lastUpdated: new Date().toISOString(),
+          totalPoints: rewardsForStorage.totalPoints || 0,
+          level: rewardsForStorage.level || 1,
+          streakDays: rewardsForStorage.streakDays || 0
+        };
+        
+        try {
+          localStorage.setItem('paddock20_userRewards', JSON.stringify(minimalRewards));
+        } catch (finalError) {
+          console.error('Could not save even minimal rewards data to localStorage');
+          // Silent fail - we'll regenerate from server on next load
+        }
+      }
+    } catch (e) {
+      console.warn('Failed to save rewards data to localStorage', e);
+      // Silent fail - the application can continue without this storage
+    }
   }, [userRewards]);
   
   // Login tracking
