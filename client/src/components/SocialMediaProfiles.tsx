@@ -61,7 +61,6 @@ const SocialMediaProfiles: React.FC<SocialMediaProfilesProps> = ({
   
   // Get social media links dynamically
   const socialMediaLinks = getSocialMediaLinks();
-  ];
   
   return (
     <div className={`w-full ${className}`}>
