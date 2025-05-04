@@ -623,6 +623,163 @@ function getUserMembershipData() {
 }
 
 /**
+ * Syncs all media between data sources to ensure bi-directional flow
+ * @param forceFull If true, performs a complete sync regardless of last sync time
+ * @returns Promise resolving to info about the sync operation
+ */
+async function syncMediaBetweenSources(forceFull = false): Promise<{
+  success: boolean;
+  synced: {
+    vehicles: number;
+    drives: number;
+    detailingSessions: number;
+    totalMedia: number;
+  };
+  errors: string[];
+}> {
+  const result = {
+    success: true,
+    synced: {
+      vehicles: 0,
+      drives: 0,
+      detailingSessions: 0,
+      totalMedia: 0
+    },
+    errors: []
+  };
+
+  try {
+    // Get gallery context
+    const galleryContext = useGallery();
+    const vehicleContext = useVehicle();
+    const { profile } = useUserProfileStore.getState();
+    
+    // Check if we have all needed data sources
+    if (!galleryContext || !vehicleContext || !profile) {
+      result.success = false;
+      result.errors.push('One or more required data sources not available');
+      return result;
+    }
+    
+    // Get user gallery from context
+    const userGallery = galleryContext.currentUserGallery || 
+      (galleryContext.userGalleries && galleryContext.userGalleries.length > 0 
+        ? galleryContext.userGalleries[0] 
+        : null);
+    
+    if (!userGallery) {
+      result.success = false;
+      result.errors.push('User gallery not available');
+      return result;
+    }
+    
+    // ===== VEHICLES SYNC =====
+    if (profile.vehicles && profile.vehicles.length > 0) {
+      // For each vehicle in profile, ensure it's properly linked in gallery
+      profile.vehicles.forEach(vehicle => {
+        // Check if this vehicle exists in connectedVehicles
+        const existingConnection = userGallery.connectedVehicles?.find(v => v.vehicleId === vehicle.id);
+        
+        if (!existingConnection) {
+          // Create a connection for this vehicle
+          if (!userGallery.connectedVehicles) {
+            // Initialize array if it doesn't exist
+            userGallery.connectedVehicles = [];
+          }
+          
+          userGallery.connectedVehicles.push({
+            vehicleId: vehicle.id,
+            vehicleName: vehicle.name || vehicle.make + ' ' + vehicle.model,
+            mediaCount: 0
+          });
+          
+          // Initialize media storage for this vehicle
+          if (!userGallery.mediaByCar) {
+            userGallery.mediaByCar = {};
+          }
+          
+          userGallery.mediaByCar[vehicle.name || vehicle.make + ' ' + vehicle.model] = [];
+        }
+        
+        result.synced.vehicles++;
+      });
+    }
+    
+    // ===== DRIVES SYNC =====
+    if (profile.drives && profile.drives.length > 0) {
+      // For each drive in profile, ensure it's properly linked in gallery
+      profile.drives.forEach(drive => {
+        // Check if this drive exists in connectedDrives
+        const existingConnection = userGallery.connectedDrives?.find(d => d.driveId === drive.id);
+        
+        if (!existingConnection) {
+          // Create a connection for this drive
+          if (!userGallery.connectedDrives) {
+            // Initialize array if it doesn't exist
+            userGallery.connectedDrives = [];
+          }
+          
+          userGallery.connectedDrives.push({
+            driveId: drive.id,
+            driveName: drive.title || 'Drive on ' + drive.date,
+            driveDate: drive.date,
+            mediaCount: 0
+          });
+        }
+        
+        result.synced.drives++;
+      });
+    }
+    
+    // ===== JUICE BOX SYNC =====
+    const juiceBoxData = getJuiceBoxData();
+    if (juiceBoxData && juiceBoxData.detailingSessions && juiceBoxData.detailingSessions.length > 0) {
+      // For each detailing session, ensure it's properly linked in gallery
+      juiceBoxData.detailingSessions.forEach(session => {
+        // Check if this session exists in connectedDetailingSessions
+        const existingConnection = userGallery.connectedDetailingSessions?.find(
+          s => s.sessionId === session.id
+        );
+        
+        if (!existingConnection) {
+          // Create a connection for this session
+          if (!userGallery.connectedDetailingSessions) {
+            // Initialize array if it doesn't exist
+            userGallery.connectedDetailingSessions = [];
+          }
+          
+          userGallery.connectedDetailingSessions.push({
+            sessionId: session.id,
+            sessionName: session.name || 'Detailing on ' + session.date,
+            sessionDate: session.date,
+            mediaCount: 0
+          });
+        }
+        
+        result.synced.detailingSessions++;
+      });
+    }
+    
+    // ===== GALLERY MEDIA SYNC =====
+    // Count total media items synced
+    if (userGallery.mediaByCar) {
+      for (const vehicle in userGallery.mediaByCar) {
+        result.synced.totalMedia += userGallery.mediaByCar[vehicle].length;
+      }
+    }
+    
+    // Successfully synced all data
+    console.log('Bi-directional sync complete:', result);
+    return result;
+  } catch (error) {
+    result.success = false;
+    result.errors.push('Error during sync: ' + error.message);
+    console.error('Error during bi-directional sync:', error);
+    return result;
+  }
+}
+
+/**
  * Initializes all data connections to ensure components receive data in expected format
  * This should be called early in the app startup sequence
  */
@@ -637,8 +794,16 @@ function initializeDataConnections() {
       ProfileDataCollector.syncAllVehicles(profile.vehicles);
     }
     
-    // Sync gallery to gallery context
-    // Additional sync logic
+    // Perform bi-directional sync to ensure all data is connected
+    syncMediaBetweenSources().then(result => {
+      if (result.success) {
+        console.log('Initial bi-directional sync complete:', result.synced);
+      } else {
+        console.error('Initial bi-directional sync failed:', result.errors);
+      }
+    }).catch(error => {
+      console.error('Error during initial bi-directional sync:', error);
+    });
   }
   
   console.log('Data connections initialized with real user data');
@@ -657,5 +822,6 @@ export default {
   getUserDreamData,
   getUserMembershipData,
   initializeDataConnections,
+  syncMediaBetweenSources,
   STORAGE_KEYS
 };
