@@ -10,7 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 
 // Mock user data for demo purposes - this will be merged with actual user data when available
 const mockUserData = {
-  location: 'Charlotte, NC',
+  location: 'Roswell, GA (30076)',
   memberLevel: 'Redline Racer',
   memberPoints: 752,
   pointsToNextLevel: 248,
@@ -27,9 +27,9 @@ const mockUserData = {
     { id: 1, brand: 'Rolex', model: 'Daytona', year: 2022, imageUrl: 'https://content.rolex.com/dam/2022-11/upright-bba-with-shadow/m126500ln-0001.png', purchaseDate: '2023-06-15', value: 38500 }
   ],
   upcomingEvents: [
-    { id: 1, title: 'Carolina Cars & Coffee', date: '2025-05-03', location: 'Charlotte, NC', attending: 'confirmed', attendees: 187 },
+    { id: 1, title: 'North Georgia Cars & Coffee', date: '2025-05-03', location: 'Roswell, GA', attending: 'confirmed', attendees: 187 },
     { id: 2, title: 'Track Day - VIR', date: '2025-05-15', location: 'Virginia International Raceway', attending: 'confirmed', attendees: 42 },
-    { id: 3, title: 'Luxury Timepiece Exhibition', date: '2025-05-22', location: 'Ritz-Carlton, Charlotte', attending: 'pending', attendees: 65 }
+    { id: 3, title: 'Luxury Timepiece Exhibition', date: '2025-05-22', location: 'Ritz-Carlton, Atlanta', attending: 'pending', attendees: 65 }
   ],
   maintenanceAlerts: [
     { id: 1, vehicleId: 1, type: 'Oil Change', dueDate: '2025-05-10', priority: 'high', estimatedCost: 120 },
@@ -75,7 +75,7 @@ const mockUserData = {
   favoriteRoutes: [
     { id: 1, name: 'Blue Ridge Parkway Loop', distance: '187 miles', lastDriven: '2025-04-26', rating: 5 },
     { id: 2, name: 'Tail of the Dragon', distance: '11 miles', lastDriven: '2025-03-14', rating: 5 },
-    { id: 3, name: 'Charlotte Skyline Drive', distance: '28 miles', lastDriven: '2025-04-15', rating: 4 }
+    { id: 3, name: 'Atlanta Skyline Drive', distance: '28 miles', lastDriven: '2025-04-15', rating: 4 }
   ]
 };
 
