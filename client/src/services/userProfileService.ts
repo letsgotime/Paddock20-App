@@ -307,6 +307,58 @@ type UserProfileStore = {
 };
 
 // Create a store with persistence
+// Custom error handling storage
+const safeStorage = {
+  getItem: (name: string) => {
+    try {
+      return localStorage.getItem(name);
+    } catch (error) {
+      console.error('Failed to get item from localStorage:', error);
+      return null;
+    }
+  },
+  setItem: (name: string, value: string) => {
+    try {
+      // Try to clean up space if needed by removing some cached items
+      if (value.length > 2000000) { // If data is large, try to optimize it first
+        console.warn('Large profile data detected, consider optimizing your data structure');
+      }
+      
+      localStorage.setItem(name, value);
+    } catch (error) {
+      // Handle quota exceeded error
+      if (error instanceof DOMException && 
+         (error.name === 'QuotaExceededError' || 
+          error.name === 'NS_ERROR_DOM_QUOTA_REACHED')) {
+        
+        console.warn('Storage quota exceeded, trying to free up space...');
+        
+        // Try clearing other caches first
+        try {
+          // Clear non-essential caches
+          localStorage.removeItem('weather-cache');
+          localStorage.removeItem('telemetry-cache');
+          localStorage.removeItem('temp-storage');
+          
+          // Try again with cleaned storage
+          localStorage.setItem(name, value);
+        } catch (secondError) {
+          console.error('Still failed to save after clearing caches:', secondError);
+        }
+      } else {
+        console.error('Failed to save to localStorage:', error);
+      }
+    }
+  },
+  removeItem: (name: string) => {
+    try {
+      localStorage.removeItem(name);
+    } catch (error) {
+      console.error('Failed to remove item from localStorage:', error);
+    }
+  }
+};
+
 export const useUserProfileStore = create<UserProfileStore>()(
   persist(
     (set) => ({
@@ -523,7 +575,7 @@ export const useUserProfileStore = create<UserProfileStore>()(
     }),
     {
       name: 'user-profile-storage',
-      storage: createJSONStorage(() => localStorage),
+      storage: createJSONStorage(() => safeStorage),
       partialize: (state) => ({ profile: state.profile }),
     }
   )
