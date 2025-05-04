@@ -140,7 +140,7 @@ class TwoFactorService {
       
       if (useBackupCode) {
         // Verify backup code
-        const backupCodes = user.backupCodes || [];
+        const backupCodes = user.twoFactorBackupCodes as string[] || [];
         const codeIndex = backupCodes.indexOf(token);
         
         if (codeIndex === -1) {

@@ -42,6 +42,8 @@ export interface IStorage {
   checkPasswordResetToken(token: string): Promise<User | undefined>;
   updateUserLastLogin(id: number): Promise<boolean>;
   
+  // Two-factor authentication methods
+  
   // Authentication methods
   createSession(sessionData: InsertSession): Promise<Session>;
   getSession(id: string): Promise<Session | undefined>;
@@ -619,6 +621,49 @@ export class DatabaseStorage implements IStorage {
       })
       .where(eq(users.id, userId));
     return result.rowCount > 0;
+  }
+  
+  // Two-factor authentication methods
+  async enableTwoFactor(userId: number, secret: string, backupCodes: string[]): Promise<boolean> {
+    const result = await db
+      .update(users)
+      .set({
+        twoFactorSecret: secret,
+        twoFactorEnabled: true,
+        twoFactorBackupCodes: backupCodes,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
+    return result.rowCount > 0;
+  }
+  
+  async disableTwoFactor(userId: number): Promise<boolean> {
+    const result = await db
+      .update(users)
+      .set({
+        twoFactorSecret: null,
+        twoFactorEnabled: false,
+        twoFactorBackupCodes: [],
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
+    return result.rowCount > 0;
+  }
+  
+  async updateTwoFactorBackupCodes(userId: number, backupCodes: string[]): Promise<boolean> {
+    const result = await db
+      .update(users)
+      .set({
+        twoFactorBackupCodes: backupCodes,
+        updatedAt: new Date()
+      })
+      .where(eq(users.id, userId));
+    return result.rowCount > 0;
+  }
+  
+  // Alias for updateTwoFactorBackupCodes for compatibility with two-factor service
+  async updateBackupCodes(userId: number, backupCodes: string[]): Promise<boolean> {
+    return this.updateTwoFactorBackupCodes(userId, backupCodes);
   }
 }
 

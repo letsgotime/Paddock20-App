@@ -231,6 +231,9 @@ async function checkWeatherApiHealth(): Promise<boolean> {
   return await checkServiceHealth('OpenWeather API');
 }
 
+// Import 2FA routes
+import twoFactorRoutes from './routes/twoFactorRoutes';
+
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup user authentication system
   setupAuth(app);
