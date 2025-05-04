@@ -1,12 +1,15 @@
 import React, { useEffect } from 'react';
 import { useDashboardStore } from '@/store/dashboardStore';
 import DashboardGrid from '@/components/dashboard/DashboardGrid';
-import { Gauge, Settings, ChevronRight } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Gauge, Settings, ChevronRight, User } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
+import { useAuth } from '@/hooks/useAuth';
 
 const PersonalizedDashboard: React.FC = () => {
   const theme = useDashboardStore(state => state.theme);
   const hasCompletedOnboarding = useDashboardStore(state => state.hasCompletedOnboarding);
+  const navigate = useNavigate();
+  const { user } = useAuth();
   
   // Get background classes based on theme
   const getBackgroundClasses = () => {
@@ -27,6 +30,12 @@ const PersonalizedDashboard: React.FC = () => {
   useEffect(() => {
     // This would trigger the onboarding modal in a real implementation
   }, [hasCompletedOnboarding]);
+
+  // Handler for navigation
+  const handleNavigation = (path: string) => {
+    navigate(path);
+    window.scrollTo(0, 0);
+  };
   
   return (
     <div className={`min-h-screen ${getBackgroundClasses()}`}>
@@ -34,18 +43,28 @@ const PersonalizedDashboard: React.FC = () => {
       <div className="pt-6 pb-4 px-4 md:px-8">
         <div className="flex flex-wrap items-center justify-between gap-4 mb-2">
           <div>
-            <h1 className="text-3xl font-bold text-blue-300">Personalized Dashboard</h1>
-            <p className="text-gray-400">Your customized PADDOCK20 command center</p>
+            <h1 className="text-3xl font-orbitron text-blue-300">PADDOCK20</h1>
+            <p className="text-gray-400">Your customized command center</p>
           </div>
           
           <div className="flex items-center gap-3">
-            <Link
-              to="/settings/dashboard"
+            {/* User greeting with username */}
+            <div className="px-4 py-2 bg-blue-900/40 rounded-md mr-3">
+              <div className="flex items-center gap-2">
+                <User className="h-4 w-4 text-blue-300" />
+                <span className="text-sm text-blue-300 font-medium">
+                  {user ? `Welcome, ${user.username}` : 'Welcome'}
+                </span>
+              </div>
+            </div>
+            
+            <button
+              onClick={() => handleNavigation('/settings/dashboard')}
               className="flex items-center gap-2 px-4 py-2 bg-blue-900/40 hover:bg-blue-800/50 text-blue-300 rounded-md"
             >
               <Settings className="h-4 w-4" />
               <span>Settings</span>
-            </Link>
+            </button>
             
             <div className="px-3 py-1.5 bg-green-900/30 rounded-md border border-green-700/50">
               <div className="flex items-center gap-2">
@@ -58,30 +77,45 @@ const PersonalizedDashboard: React.FC = () => {
         
         {/* Quick navigation links */}
         <div className="flex items-center gap-x-6 gap-y-2 flex-wrap mt-4 text-sm">
-          <Link to="/garage-vault" className="flex items-center text-blue-400 hover:text-blue-300">
+          <button 
+            onClick={() => handleNavigation('/garage-vault')}
+            className="flex items-center text-blue-400 hover:text-blue-300"
+          >
             <span>Garage Vault</span>
             <ChevronRight className="h-4 w-4 ml-1" />
-          </Link>
+          </button>
           
-          <Link to="/weather-paddock" className="flex items-center text-blue-400 hover:text-blue-300">
+          <button 
+            onClick={() => handleNavigation('/weather-paddock')}
+            className="flex items-center text-blue-400 hover:text-blue-300"
+          >
             <span>Weather Paddock</span>
             <ChevronRight className="h-4 w-4 ml-1" />
-          </Link>
+          </button>
           
-          <Link to="/drive-journal" className="flex items-center text-blue-400 hover:text-blue-300">
+          <button 
+            onClick={() => handleNavigation('/drive-journal')}
+            className="flex items-center text-blue-400 hover:text-blue-300"
+          >
             <span>Drive Journal</span>
             <ChevronRight className="h-4 w-4 ml-1" />
-          </Link>
+          </button>
           
-          <Link to="/juicebox" className="flex items-center text-blue-400 hover:text-blue-300">
+          <button 
+            onClick={() => handleNavigation('/juicebox')}
+            className="flex items-center text-blue-400 hover:text-blue-300"
+          >
             <span>Juice Box</span>
             <ChevronRight className="h-4 w-4 ml-1" />
-          </Link>
+          </button>
           
-          <Link to="/profile" className="flex items-center text-blue-400 hover:text-blue-300">
+          <button 
+            onClick={() => handleNavigation('/profile')}
+            className="flex items-center text-blue-400 hover:text-blue-300"
+          >
             <span>My Profile</span>
             <ChevronRight className="h-4 w-4 ml-1" />
-          </Link>
+          </button>
         </div>
       </div>
       

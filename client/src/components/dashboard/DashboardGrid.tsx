@@ -9,7 +9,7 @@ import VehiclesWidget from './widgets/VehiclesWidget';
 import MaintenanceWidget from './widgets/MaintenanceWidget';
 import GlossTrackerWidget from './widgets/GlossTrackerWidget';
 import QuickActionsWidget from './widgets/QuickActionsWidget';
-import F1TelemetryWidget from './widgets/F1TelemetryWidget';
+import DriveJournalWidget from './widgets/DriveJournalWidget';
 import DefaultWidget from './widgets/DefaultWidget';
 
 // Tooltips/explanations for each widget type
@@ -85,14 +85,14 @@ const renderWidget = (widget: WidgetType) => {
           <QuickActionsWidget />
         </DashboardWidget>
       );
-    case 'f1-telemetry':
+    case 'drive-journal':
       return (
         <DashboardWidget 
           key={widget.id} 
           widget={widget}
           explanationContent={explanation}
         >
-          <F1TelemetryWidget />
+          <DriveJournalWidget />
         </DashboardWidget>
       );
     default:
@@ -123,7 +123,7 @@ const DashboardGrid: React.FC = () => {
       {/* Dashboard Header */}
       <div className="mb-6 flex flex-wrap items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-blue-300">Personalized Dashboard</h1>
+          <h1 className="text-2xl font-orbitron text-blue-300">PADDOCK20 DASHBOARD</h1>
           <p className="text-gray-400">Customize this dashboard to show what matters most to you</p>
         </div>
         
@@ -162,16 +162,69 @@ const DashboardGrid: React.FC = () => {
         </div>
       </div>
       
-      {/* Customization Modal - we'll implement this later */}
+      {/* Customization Modal with actual widget selection */}
       {isCustomizing && (
         <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50">
           <div className="bg-gray-900 border border-blue-900 rounded-lg p-6 max-w-3xl w-full max-h-[90vh] overflow-y-auto">
-            <h2 className="text-xl font-bold text-blue-300 mb-4">Customize Your Dashboard</h2>
+            <h2 className="text-xl font-orbitron text-blue-300 mb-4">Customize Your Dashboard</h2>
             <p className="text-gray-400 mb-6">
               Select widgets to show on your dashboard and arrange them as you prefer
             </p>
             
-            {/* Widget selection will be implemented here */}
+            {/* Widget selection */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+              {Object.entries(widgetExplanations).map(([widgetType, explanation]) => {
+                const isActive = widgets.some(w => w.type === widgetType && w.visible);
+                
+                return (
+                  <div 
+                    key={widgetType}
+                    className={`p-4 rounded-lg border ${
+                      isActive 
+                        ? 'border-blue-600 bg-blue-900/30' 
+                        : 'border-gray-700 bg-gray-800/50'
+                    }`}
+                  >
+                    <div className="flex items-start">
+                      <div className="flex-grow">
+                        <h3 className="text-blue-300 font-medium mb-1">
+                          {widgetType.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')}
+                        </h3>
+                        <p className="text-sm text-gray-400">{explanation}</p>
+                      </div>
+                      <div className="ml-4 flex items-center h-6">
+                        <input
+                          type="checkbox"
+                          checked={isActive}
+                          onChange={() => {
+                            // Find widget if it exists
+                            const existingWidget = widgets.find(w => w.type === widgetType);
+                            
+                            if (existingWidget) {
+                              // Toggle visibility
+                              useDashboardStore.getState().updateWidget(
+                                existingWidget.id, 
+                                { visible: !existingWidget.visible }
+                              );
+                            } else {
+                              // Create new widget
+                              useDashboardStore.getState().addWidget({
+                                type: widgetType as any,
+                                title: widgetType.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' '),
+                                size: 'medium',
+                                visible: true,
+                              });
+                            }
+                          }}
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-600 rounded"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+            
             <div className="mt-6 flex justify-end gap-2">
               <button 
                 className="px-4 py-2 bg-gray-800 hover:bg-gray-700 text-gray-300 rounded-md"
@@ -181,7 +234,10 @@ const DashboardGrid: React.FC = () => {
               </button>
               <button 
                 className="px-4 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-md"
-                onClick={() => setIsCustomizing(false)}
+                onClick={() => {
+                  // Apply changes and close modal
+                  setIsCustomizing(false);
+                }}
               >
                 Save Changes
               </button>
