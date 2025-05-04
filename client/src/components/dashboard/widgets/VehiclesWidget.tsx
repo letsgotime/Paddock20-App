@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useVehicle } from '@/hooks/useVehicle';
 import { Car, Plus, Check, Clock } from 'lucide-react';
+import { Link } from 'react-router-dom';
 
 const VehiclesWidget: React.FC = () => {
   const { vehicles, activeVehicle, setActiveVehicle } = useVehicle();
@@ -22,12 +23,13 @@ const VehiclesWidget: React.FC = () => {
           {vehicles.length > 0 ? 'Vehicle Fleet' : 'No Vehicles Added'}
         </h3>
         
-        <button 
+        <Link 
+          to="/garage/add-vehicle" 
           className="flex items-center text-xs bg-blue-900/40 hover:bg-blue-800/50 text-blue-300 rounded px-2 py-1"
         >
           <Plus className="h-3 w-3 mr-1" />
           <span>Add</span>
-        </button>
+        </Link>
       </div>
       
       {vehicles.length > 0 ? (
@@ -105,9 +107,12 @@ const VehiclesWidget: React.FC = () => {
           <p className="text-gray-400 text-sm mb-3">
             No vehicles in your collection yet
           </p>
-          <button className="text-xs bg-blue-700 hover:bg-blue-600 text-white rounded-md px-3 py-1.5">
+          <Link 
+            to="/garage/add-vehicle" 
+            className="text-xs bg-blue-700 hover:bg-blue-600 text-white rounded-md px-3 py-1.5"
+          >
             Add Your First Vehicle
-          </button>
+          </Link>
         </div>
       )}
     </div>
