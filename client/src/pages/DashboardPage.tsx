@@ -4,6 +4,7 @@ import WeatherStation from '../components/WeatherStation';
 import WorldClockPanel from '../components/WorldClockPanel';
 import APIDebugger from '../components/APIDebugger';
 import supabase from '../services/supabaseClient';
+import DataSourceConnector from '../services/DataSourceConnector';
 import { 
   Calendar, BarChart3, Car, Map, Settings, Bell, Shield, ChevronRight, 
   MessageSquare, HeartHandshake, Star, EyeOff, Gauge, ClipboardCheck, 

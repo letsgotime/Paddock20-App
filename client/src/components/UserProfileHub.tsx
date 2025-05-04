@@ -9,6 +9,7 @@ import { toast } from '../hooks/use-toast';
 import { useUserProfileStore } from '../services/userProfileService';
 import { useVehicle } from '../contexts/VehicleContext';
 import ProfileDataCollector from '../services/ProfileDataCollector';
+import DataSourceConnector from '../services/DataSourceConnector';
 
 const UserProfileHub: React.FC = () => {
   // Get profile data from the store
