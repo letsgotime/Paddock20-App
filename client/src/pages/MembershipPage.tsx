@@ -110,7 +110,7 @@ const MembershipPage: React.FC = () => {
   const testimonials: Testimonial[] = [
     {
       id: 1,
-      name: 'Alex Parker',
+      name: 'Chris Driver',
       avatar: '/assets/avatars/avatar-1.jpg',
       role: 'Ferrari F8 Tributo Owner',
       content: 'The Paddock20 Champion tier has transformed how I manage my collection. The flip concierge helped me source a limited-edition Porsche at below market value.',
