@@ -556,11 +556,11 @@ export function setupAuth(app: Express) {
         // Create a default development user with ID 2
         const devUser = {
           id: 2,
-          username: 'driver', 
-          email: 'driver@gotime.com',
-          firstName: 'Test',
-          lastName: 'Driver',
-          fullName: 'Test Driver',
+          username: 'gavingotime', 
+          email: 'gavin@gotime.com',
+          firstName: 'Gavin',
+          lastName: 'Brooks',
+          fullName: 'Gavin Brooks',
           preferredUnit: 'imperial',
           profileImage: null,
           drivingExperience: 'intermediate',
