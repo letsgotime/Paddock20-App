@@ -20,6 +20,34 @@
   display: block !important;
 }
 
+/* Header dropdown fixes */
+.user-dropdown-group:hover .user-dropdown-menu,
+.user-dropdown-menu:hover {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  display: block !important;
+}
+
+.user-dropdown-menu {
+  transition: opacity 0.3s, visibility 0.3s;
+  transition-delay: 0.15s;
+}
+
+.user-dropdown-group {
+  position: relative;
+}
+
+.user-dropdown-group::after {
+  content: '';
+  position: absolute;
+  height: 20px;
+  width: 100%;
+  bottom: -10px;
+  left: 0;
+  z-index: 49;
+}
+
 :root {
       --background: 0 0% 100%;
 --foreground: 20 14.3% 4.1%;

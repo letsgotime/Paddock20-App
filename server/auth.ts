@@ -553,19 +553,19 @@ export function setupAuth(app: Express) {
         // Otherwise, create a development test user
         console.log('[DEV BYPASS] Creating test user for development');
         
-        // Create a default development user with ID 1
+        // Create a default development user with ID 2
         const devUser = {
-          id: 1,
-          username: 'gavin', 
-          email: 'gavin@gotime.com',
-          firstName: 'Gavin',
-          lastName: 'Brooks',
-          fullName: 'Gavin Brooks',
+          id: 2,
+          username: 'driver', 
+          email: 'driver@gotime.com',
+          firstName: 'Test',
+          lastName: 'Driver',
+          fullName: 'Test Driver',
           preferredUnit: 'imperial',
           profileImage: null,
           drivingExperience: 'intermediate',
           interests: ['driving', 'detailing', 'photography'] as string[],
-          bio: 'Automotive enthusiast and GoTime driver',
+          bio: 'Automotive enthusiast with a passion for driving',
           role: 'user',
           isActive: true,
           lastLogin: new Date(),

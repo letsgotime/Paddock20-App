@@ -17,7 +17,7 @@ const STORAGE_KEYS = {
 
 // System constants to use as fallbacks (non-user-specific)
 const SYSTEM_DEFAULTS = {
-  DEFAULT_USER_NAME: 'Paddock20 User',
+  DEFAULT_USER_NAME: 'Driver',
   DEFAULT_EMAIL_DOMAIN: 'paddock20.com',
   DEFAULT_VEHICLE_OWNER: 'Vehicle Owner',
   DEFAULT_APPROVAL_TEXT: 'expert-approved'
@@ -132,7 +132,7 @@ export function getUserEmail(): string {
   }
   
   // Return a generic system email, not a specific person's email
-  return `user@${SYSTEM_DEFAULTS.DEFAULT_EMAIL_DOMAIN}`;
+  return `driver@${SYSTEM_DEFAULTS.DEFAULT_EMAIL_DOMAIN}`;
 }
 
 /**
