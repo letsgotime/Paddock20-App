@@ -823,8 +823,87 @@ const Paddock20HomePage: React.FC = () => {
         </div>
       </section>
       
-      {/* Garage Vault Widget Row */}
-      <section className="mb-10">
+      {/* User Dashboard & Garage Vault Row */}
+      <section className="mb-10 grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* User Dashboard Widget */}
+        <div className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg p-6 shadow-xl border border-gray-800">
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="font-orbitron text-blue-400 text-xl flex items-center">
+              <span className="inline-block w-1.5 h-6 bg-blue-500 mr-2"></span>
+              User Dashboard
+            </h2>
+            <div className="bg-green-600/30 px-2 py-1 rounded text-green-400 text-xs font-medium">
+              MEMBER ACCESS
+            </div>
+          </div>
+          
+          <div className="flex items-center mb-6">
+            <div className="h-16 w-16 rounded-full bg-gradient-to-br from-blue-600 to-blue-800 flex items-center justify-center">
+              <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+            <div className="ml-4">
+              <h3 className="text-white text-lg font-medium">Alex Garza</h3>
+              <p className="text-gray-400 text-sm flex items-center">
+                <span className="inline-block h-2 w-2 rounded-full bg-green-500 mr-2"></span>
+                Paddock20 Elite Member
+              </p>
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-3 mb-6">
+            <div className="bg-black/40 p-3 rounded border border-gray-800">
+              <p className="text-gray-400 text-xs mb-1">MEMBERSHIP</p>
+              <p className="text-white font-medium">Elite Tier</p>
+            </div>
+            <div className="bg-black/40 p-3 rounded border border-gray-800">
+              <p className="text-gray-400 text-xs mb-1">DRIVE LOGS</p>
+              <p className="text-white font-medium">23 Records</p>
+            </div>
+            <div className="bg-black/40 p-3 rounded border border-gray-800">
+              <p className="text-gray-400 text-xs mb-1">STATUS</p>
+              <p className="text-green-400 font-medium">Active</p>
+            </div>
+            <div className="bg-black/40 p-3 rounded border border-gray-800">
+              <p className="text-gray-400 text-xs mb-1">NEXT EVENT</p>
+              <p className="text-white font-medium">May 15</p>
+            </div>
+          </div>
+          
+          <div className="flex justify-between items-center">
+            <Link to="/dashboard" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1">
+              <span>My Dashboard</span>
+              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M5 12h14"></path>
+                <path d="M12 5l7 7-7 7"></path>
+              </svg>
+            </Link>
+            
+            <div className="flex gap-2">
+              <Link to="/dashboard" className="bg-green-600/10 hover:bg-green-600/20 text-green-400 p-1.5 rounded block">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
+                  <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                </svg>
+              </Link>
+              <Link to="/settings" className="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 p-1.5 rounded block">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+              </Link>
+              <Link to="/notifications" className="bg-purple-600/10 hover:bg-purple-600/20 text-purple-400 p-1.5 rounded block">
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                  <path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path>
+                  <path d="M13.73 21a2 2 0 0 1-3.46 0"></path>
+                </svg>
+              </Link>
+            </div>
+          </div>
+        </div>
+        
         {/* Garage Vault Widget */}
         <div className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg p-6 shadow-xl border border-gray-800">
           <div className="flex justify-between items-center mb-4">
