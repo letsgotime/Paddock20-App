@@ -64,7 +64,7 @@ const UserProfileHub: React.FC = () => {
           bio: onboardingData?.bio || '',
           location: onboardingData?.location || '',
           membershipLevel: (onboardingData?.membershipLevel as 'free' | 'premium' | 'elite') || 'free',
-          avatar: user?.profileImage || onboardingData?.avatar || '/assets/images/default-avatar.png',
+          avatar: onboardingData?.avatar || '/assets/images/default-avatar.png',
           
           // Vehicle collection - from Garage Vault context
           vehicles: vehicleData?.vehicles || vehicles || [],
@@ -125,7 +125,7 @@ const UserProfileHub: React.FC = () => {
           bio: '',
           location: '',
           membershipLevel: 'free' as const,
-          avatar: user?.profileImage || '/assets/images/default-avatar.png',
+          avatar: '/assets/images/default-avatar.png',
           vehicles: vehicles || [],
           statistics: {
             totalDrives: 0,
@@ -241,7 +241,7 @@ const UserProfileHub: React.FC = () => {
         bio: onboardingData?.bio || '',
         location: onboardingData?.location || '',
         membershipLevel: (onboardingData?.membershipLevel as 'free' | 'premium' | 'elite') || 'free' as const,
-        avatar: user?.profileImage || onboardingData?.avatar || '/assets/images/default-avatar.png',
+        avatar: onboardingData?.avatar || '/assets/images/default-avatar.png',
         
         // Collections from vehicle context
         vehicles: vehicleData?.vehicles || vehicles || [],
