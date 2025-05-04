@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useVehicle } from '@/contexts/VehicleContext';
+import { useVehicle } from '@/hooks/useVehicle';
 import { Gauge, Fuel, Thermometer, Activity, Info } from 'lucide-react';
 
 const F1TelemetryWidget: React.FC = () => {

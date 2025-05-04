@@ -18,7 +18,7 @@ import EnhancedVehicleDetail from '../components/EnhancedVehicleDetail';
 import VehicleOnboardingWizard from '../components/VehicleOnboardingWizard';
 import VehicleActivitySummary from '../components/VehicleActivitySummary';
 import VehicleMediaLibrary from '../components/VehicleMediaLibrary';
-import { useVehicle } from '../contexts/VehicleContext';
+import { useVehicle } from '../hooks/useVehicle';
 
 // Enhanced telemetry and data services
 import vehicleDataService from '../services/vehicleDataService';

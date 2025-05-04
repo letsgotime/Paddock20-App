@@ -25,7 +25,7 @@ import {
 import { useUserProfileStore } from '../services/userProfileService';
 import ProfileDataCollector from '../services/ProfileDataCollector';
 import EngagementRewardsService from '../services/engagementRewardsService';
-import { useVehicle } from '../contexts/VehicleContext';
+import { useVehicle } from '../hooks/useVehicle';
 
 interface OnboardingStep {
   id: string;

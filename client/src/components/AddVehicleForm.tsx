@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useVehicle } from '../contexts/VehicleContext';
+import { useVehicle } from '../hooks/useVehicle';
 
 interface AddVehicleFormProps {
   onAddVehicle?: (vehicleData: any) => void;

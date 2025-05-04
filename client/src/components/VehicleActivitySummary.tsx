@@ -3,7 +3,7 @@ import {
   Car, Wrench, SparkleIcon, Map, Book, Calendar, 
   RefreshCw, Clock, Zap, Droplets, Gauge, BarChart2 
 } from 'lucide-react';
-import { Vehicle } from '../contexts/VehicleContext';
+import { Vehicle } from '../hooks/useVehicle';
 
 // Define activity types
 interface ActivityCount {

@@ -11,7 +11,7 @@ import GlossHistory from '../components/GlossHistory';
 import JuiceBoxCodexViewer from '../components/JuiceBoxCodexViewer';
 import DetailingActivitiesForm from '../components/DetailingActivitiesForm';
 import { productCategories, sevenDaySchedule, detailingKits, trainingVideos, glossHistory } from '../data/detailingData';
-import { useVehicle } from '../contexts/VehicleContext';
+import { useVehicle } from '../hooks/useVehicle';
 import ProfileDataCollector from '../services/ProfileDataCollector';
 
 interface Product {

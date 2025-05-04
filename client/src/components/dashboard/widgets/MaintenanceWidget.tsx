@@ -1,5 +1,5 @@
 import React from 'react';
-import { useVehicle } from '@/contexts/VehicleContext';
+import { useVehicle } from '@/hooks/useVehicle';
 import { AlertTriangle, Check, Clock, Wrench, ArrowRight } from 'lucide-react';
 
 // Mock maintenance items for development

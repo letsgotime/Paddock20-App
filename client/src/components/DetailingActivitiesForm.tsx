@@ -83,7 +83,7 @@ interface DetailingActivity {
 }
 
 // Import Vehicle type
-import { Vehicle } from '../contexts/VehicleContext';
+import { Vehicle } from '../hooks/useVehicle';
 
 interface DetailingActivitiesFormProps {
   onSubmit: (activity: DetailingActivity) => void;

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { useVehicle } from '@/contexts/VehicleContext';
+import { useVehicle } from '@/hooks/useVehicle';
 import { Car, Plus, Check, Clock } from 'lucide-react';
 
 const VehiclesWidget: React.FC = () => {
