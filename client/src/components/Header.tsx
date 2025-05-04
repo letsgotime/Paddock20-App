@@ -37,6 +37,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { playMotorsportSound, getSoundSettings, setSoundEnabled } from "../services/soundService";
+import { useAuth } from '../hooks/useAuth';
 
 /**
  * Header component with complete menu dropdown and ambient sounds control
@@ -73,21 +74,37 @@ const Header: React.FC = () => {
     setIsMenuOpen(false);
   }, [location.pathname]);
   
-  const handleLogout = () => {
-    // Show a toast notification
-    toast({
-      title: 'Logging Out',
-      description: 'You have been successfully logged out.',
-      variant: 'default',
-    });
-    
-    // Close menu
-    setIsMenuOpen(false);
-    
-    // Redirect to auth page
-    setTimeout(() => {
-      window.location.href = '/auth';
-    }, 1000);
+  // Get auth functionality from context
+  const { logout } = useAuth();
+  
+  const handleLogout = async () => {
+    try {
+      // Play sound effect if enabled
+      const soundSettings = getSoundSettings();
+      if (soundSettings?.enabled) {
+        playMotorsportSound('logout');
+      }
+      
+      // Close menu
+      setIsMenuOpen(false);
+      
+      // Use the context's logout function
+      await logout();
+      
+      // Redirect to auth page
+      setTimeout(() => {
+        window.location.href = '/auth';
+      }, 1000);
+    } catch (error) {
+      console.error('Logout error:', error);
+      
+      // Show error toast
+      toast({
+        title: 'Logout Failed',
+        description: 'There was a problem logging out. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
@@ -102,12 +119,42 @@ const Header: React.FC = () => {
 
         {/* Controls Section */}
         <div className="flex items-center space-x-3">
-          {/* User Info - Desktop */}
-          <div className="hidden md:flex items-center text-white font-medium mr-1">
+          {/* User Info - Desktop with dropdown */}
+          <div 
+            className="hidden md:flex items-center text-white font-medium mr-1 relative group cursor-pointer"
+            onClick={() => {
+              const soundSettings = getSoundSettings();
+              if (soundSettings?.enabled) {
+                playMotorsportSound('menu_select');
+              }
+            }}
+          >
             <span className="mr-1">
               <User className="h-4 w-4 inline text-blue-400" />
             </span>
-            <span className="text-sm text-blue-300">{userDisplayName}</span>
+            <button className="text-sm text-blue-300 hover:text-blue-200 flex items-center">
+              {userDisplayName}
+              <ChevronDown className="h-3 w-3 ml-1" />
+            </button>
+            
+            {/* User dropdown menu */}
+            <div className="absolute right-0 top-full mt-1 w-48 bg-black border border-blue-900 rounded-md shadow-lg overflow-hidden opacity-0 pointer-events-none group-hover:opacity-100 group-hover:pointer-events-auto transition-opacity duration-200 z-50">
+              <Link to="/profile" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                <User className="h-4 w-4 mr-2 text-blue-400" />
+                <span>My Profile</span>
+              </Link>
+              <Link to="/settings" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                <Settings className="h-4 w-4 mr-2 text-blue-400" />
+                <span>Settings</span>
+              </Link>
+              <button 
+                onClick={handleLogout}
+                className="flex items-center w-full text-left px-4 py-2 text-white hover:bg-red-900/30 transition-colors"
+              >
+                <LogOut className="h-4 w-4 mr-2 text-red-400" />
+                <span>Log Out</span>
+              </button>
+            </div>
           </div>
           
           {/* Menu Dropdown */}
