@@ -1268,8 +1268,10 @@ export const RewardsProvider: React.FC<{ children: ReactNode }> = ({ children })
   const unlockReward = (rewardId: string) => {
     // Find the reward
     const reward = availableRewards.find(r => r.id === rewardId);
-    if (!reward || userRewards.rewards.some(r => r.id === rewardId)) {
-      return; // Reward doesn't exist or is already unlocked
+    
+    // Check if reward exists and if userRewards and rewards array exist before checking if already unlocked
+    if (!reward || !userRewards || !userRewards.rewards || !Array.isArray(userRewards.rewards) || userRewards.rewards.some(r => r.id === rewardId)) {
+      return; // Reward doesn't exist, userRewards not initialized, or already unlocked
     }
     
     // Mark as achieved
@@ -1303,6 +1305,10 @@ export const RewardsProvider: React.FC<{ children: ReactNode }> = ({ children })
   
   // Get pending achievements (useful for recommendations)
   const getPendingAchievements = () => {
+    if (!userRewards || !userRewards.rewards || !Array.isArray(userRewards.rewards)) {
+      return []; // Return empty array if userRewards is not initialized yet
+    }
+    
     const earnedRewardIds = new Set(userRewards.rewards.map(r => r.id));
     return availableRewards.filter(reward => 
       !earnedRewardIds.has(reward.id) && !reward.secretAchievement
@@ -1311,11 +1317,17 @@ export const RewardsProvider: React.FC<{ children: ReactNode }> = ({ children })
   
   // Get all completed achievements
   const getCompletedAchievements = () => {
+    if (!userRewards || !userRewards.rewards || !Array.isArray(userRewards.rewards)) {
+      return []; // Return empty array if userRewards is not initialized yet
+    }
     return userRewards.rewards;
   };
   
   // Get achievements by category
   const getAchievementsByCategory = (category: string) => {
+    if (!userRewards || !userRewards.rewards || !Array.isArray(userRewards.rewards)) {
+      return []; // Return empty array if userRewards is not initialized yet
+    }
     return userRewards.rewards.filter(r => r.category === category);
   };
   
