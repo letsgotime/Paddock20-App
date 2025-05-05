@@ -17,7 +17,7 @@ import userProfileWarehouse, {
   GalleryItem,
   DetailingActivity
 } from '../services/UserProfileWarehouse';
-import { useAuth } from '../hooks/use-auth';
+import { useAuth } from '../hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
 // Context interface
