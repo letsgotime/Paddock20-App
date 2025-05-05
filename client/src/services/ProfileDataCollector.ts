@@ -528,7 +528,7 @@ class ProfileDataCollector {
         action: 'archive',
         vehicleId: vehicleId,
         vehicle: archivedVehicle,
-        saleInfo: saleInfo,
+        formattedSaleData: formattedSaleData,
         source: 'ProfileDataCollector',
         timestamp: new Date().toISOString()
       }
@@ -545,7 +545,7 @@ class ProfileDataCollector {
         action: 'archive',
         vehicleId: vehicleId,
         vehicle: archivedVehicle,
-        saleInfo: saleInfo
+        formattedSaleData: formattedSaleData
       }
     }));
     
@@ -554,7 +554,7 @@ class ProfileDataCollector {
       detail: { 
         action: 'archive',
         vehicleId: vehicleId,
-        saleInfo: saleInfo
+        formattedSaleData: formattedSaleData
       }
     }));
     
