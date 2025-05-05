@@ -3,10 +3,26 @@ import {
   Car, Cpu, Book, Activity, FileText, Camera, ChevronLeft, 
   ChevronRight, X, Check, Search, RefreshCw, Bluetooth, AlertCircle
 } from 'lucide-react';
-import { useVehicle, VehicleProfile } from '../hooks/useVehicle';
+import { useVehicle } from '../hooks/useVehicle';
 import { decodeVIN, DecodedVehicleInfo, validateVIN } from '../services/vinDecoderService';
 import { toast } from '../hooks/use-toast';
 import ProfileDataCollector from '../services/ProfileDataCollector';
+
+// Define VehicleProfile interface for form fields
+interface VehicleProfile {
+  make: string;
+  model: string;
+  year: string;
+  nickname: string;
+  mileage: string;
+  engineType: string;
+  transmissionType: string;
+  color: string;
+  purchaseDate: string;
+  vehicleImage?: string;
+  vin?: string;
+  purchaseLocation?: string;
+}
 
 // Define the onboarding step interface
 interface OnboardingStep {
@@ -38,6 +54,7 @@ interface VehicleData {
   vehicleImage?: string;
   vin?: string;
   purchaseLocation?: string;
+  [key: string]: string | undefined; // Add index signature for dynamic access
 }
 
 // Initial vehicle data
