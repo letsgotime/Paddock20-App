@@ -318,6 +318,33 @@ function App() {
                                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
                                 <Route path="/terms-of-service" element={<TermsOfService />} />
                                 <Route path="/beta-agreement" element={<BetaAgreement />} />
+                                
+                                {/* User Onboarding - Requires authentication but not onboarding completion */}
+                                <Route 
+                                  path="/onboarding" 
+                                  element={
+                                    <UserOnboarding 
+                                      onComplete={(userId) => {
+                                        // Mark onboarding as complete
+                                        if (userId) {
+                                          const betaOnboardingKey = `paddock20_beta_onboarding_complete_${userId}`;
+                                          localStorage.setItem(betaOnboardingKey, 'true');
+                                          
+                                          // Also mark the legal agreements as accepted
+                                          const legalAgreementsKey = `paddock20_legal_agreements_${userId}`;
+                                          localStorage.setItem(legalAgreementsKey, JSON.stringify({
+                                            accepted: true,
+                                            version: '1.0',
+                                            timestamp: new Date().toISOString()
+                                          }));
+                                          
+                                          // Redirect to dashboard
+                                          window.location.href = '/';
+                                        }
+                                      }} 
+                                    />
+                                  } 
+                                />
                               
                                 {/* Protected routes */}
                                 <Route path="/" element={<ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
