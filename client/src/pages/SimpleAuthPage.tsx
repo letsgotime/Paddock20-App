@@ -159,7 +159,7 @@ const SimpleAuthPage = () => {
       <div className="flex w-full min-h-screen items-center justify-center p-6 z-20">
         {/* Left column - Brand messaging */}
         <div className="hidden lg:flex flex-col w-1/2 pr-8 max-w-md">
-          <div className="space-y-6">
+          <div className="space-y-6 sticky top-20">
             <div>
               <h1 className="text-5xl font-bold" style={{ fontFamily: 'Orbitron, sans-serif' }}>
                 <span className="text-[#1982FC]">PADDOCK</span>
