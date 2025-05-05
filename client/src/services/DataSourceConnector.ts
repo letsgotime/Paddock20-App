@@ -17,6 +17,9 @@ import { useGallery } from '../contexts/GalleryContext';
 import { useVehicle } from '../contexts/VehicleContext';
 import ProfileDataCollector from './ProfileDataCollector';
 
+// Import VehicleData from userProfileService for better compatibility
+import { VehicleData as ImportedVehicleData } from './userProfileService';
+
 // Define core type interfaces internally to ensure type safety
 interface VehicleData {
   id: string;
@@ -27,30 +30,101 @@ interface VehicleData {
   nickname?: string;
   vin?: string;
   primaryImage?: string;
-  status?: 'active' | 'archived' | 'sold';
+  status?: 'active' | 'archived' | 'sold' | 'inactive'; // Added 'inactive' to match ImportedVehicleData
   entry_method?: 'vin' | 'manual' | 'obd';
   name?: string; // Some components expect name
   title?: string; // Optional property for backwards compatibility
+  
+  // Add additional optional fields from ImportedVehicleData to ensure compatibility
+  mileage?: number;
+  engineType?: string;
+  transmissionType?: string;
+  drivetrain?: string;
+  bodyType?: string;
+  fuelType?: string;
+  updatedAt?: string;
+  createdAt?: string;
 }
 
+// Forward declare the imported DriveData interface for better compatibility
+import { DriveData as ImportedDriveData } from '../services/userProfileService';
+
+// Local DriveData interface that's compatible with both local code and imported interface
 interface DriveData {
   id: string;
   title?: string;
   date: string;
-  startLocation: string;
-  endLocation: string;
-  distance: number;
-  duration: number;
+  startLocation?: string;
+  endLocation?: string;
+  distance?: number; // Make optional to match ImportedDriveData
+  duration?: number; // Make optional to match ImportedDriveData
   mediaCount?: number;
   featuredMediaId?: string;
+  // Add additional fields from ImportedDriveData as optional to ensure compatibility
+  type?: string;
+  route?: any[] | string; // Allow both array and string for route compatibility
+  notes?: string;
+  rating?: number;
+  vehicleId?: string;
+  category?: string;
+  weather?: any;
+  tags?: string[];
 }
 
 // Enhanced version of DriveData with additional properties needed by components
 interface EnhancedDriveData extends DriveData {
-  routeCoordinates?: Array<{lat: number, lon: number}>;
+  routeCoordinates?: Array<Coordinate>;
+  standardizedRoute?: Array<Coordinate> | string;
   media?: MediaItem[];
   featuredMedia?: MediaItem;
   galleryEvents?: string[];
+}
+
+// Helper type for coordinate formats
+interface Coordinate {
+  lat: number;
+  lng?: number; // Used by some APIs and components
+  lon?: number; // Used by other APIs and components
+}
+
+// Helper function to standardize coordinate format
+function standardizeCoordinate(coord: any): Coordinate {
+  if (!coord) return { lat: 0 };
+  
+  const result: Coordinate = {
+    lat: coord.lat || 0
+  };
+  
+  // Handle either lng or lon format
+  if (coord.lng !== undefined) {
+    result.lon = coord.lng; // Ensure lon is set for components expecting lon
+    result.lng = coord.lng; // Keep lng for backward compatibility
+  } else if (coord.lon !== undefined) {
+    result.lng = coord.lon; // Ensure lng is set for components expecting lng
+    result.lon = coord.lon; // Keep lon for backward compatibility
+  }
+  
+  return result;
+}
+
+/**
+ * Ensures that all coordinates in a route have both lng and lon properties
+ * to maintain backward compatibility with different components
+ * @param route Array of coordinates or a string
+ * @returns Standardized route with both lng and lon properties
+ */
+function standardizeRoute(route: any[] | string | undefined): any[] | string | undefined {
+  if (!route) return undefined;
+  
+  // If route is a string, return as is (likely a serialized route)
+  if (typeof route === 'string') return route;
+  
+  // If it's an array, standardize each coordinate
+  if (Array.isArray(route)) {
+    return route.map(coord => standardizeCoordinate(coord));
+  }
+  
+  return route;
 }
 
 // Import MediaItem from GalleryContext to ensure type consistency
