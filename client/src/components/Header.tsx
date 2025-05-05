@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { 
   LogOut, 
+  LogIn,
   User, 
   Menu, 
   Volume2, 
@@ -37,6 +38,7 @@ import {
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { playMotorsportSound, getSoundSettings, setSoundEnabled } from "../services/soundService";
+// Using the consolidated auth context
 import { useAuth } from '../hooks/useAuth';
 
 /**
@@ -94,45 +96,18 @@ const Header: React.FC = () => {
       // Close menu
       setIsMenuOpen(false);
       
-      console.log('Starting logout process...');
+      console.log('Starting logout process through AuthContext...');
       
-      // Call API directly to ensure logout works
-      const response = await fetch('/api/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
+      // Use the AuthContext's logout method which handles everything
+      await logout();
       
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Logout failed');
-      }
+      console.log('Logout successful through AuthContext');
       
-      console.log('Server logout successful, now clearing local state');
-      
-      // Use the context's logout function to clean up local state (but don't wait for it)
-      try {
-        await logout();
-        console.log('Context logout successful');
-      } catch (logoutErr) {
-        console.error('Context logout error (continuing anyway):', logoutErr);
-      }
-      
-      // Show success toast
-      toast({
-        title: 'Logged Out',
-        description: 'You have been successfully logged out. Redirecting...',
-        variant: 'default',
-      });
-      
-      // Redirect to auth page
-      setTimeout(() => {
-        console.log('Redirecting to auth page...');
-        window.location.href = '/auth';
-      }, 1000);
+      // Toast is handled by the AuthContext
     } catch (error) {
       console.error('Logout error:', error);
       
-      // Show error toast
+      // Show error toast as fallback
       toast({
         title: 'Logout Failed',
         description: 'There was a problem logging out. Please try again.',
@@ -155,7 +130,7 @@ const Header: React.FC = () => {
         <div className="flex items-center space-x-3">
           {/* User Info - Desktop with dropdown */}
           <div 
-            className="hidden md:flex items-center text-white font-medium mr-1 relative group cursor-pointer user-dropdown-group"
+            className="flex items-center text-white font-medium mr-1 relative group cursor-pointer user-dropdown-group"
             onMouseEnter={() => {
               const soundSettings = getSoundSettings();
               if (soundSettings?.enabled) {
@@ -167,7 +142,7 @@ const Header: React.FC = () => {
               <User className="h-4 w-4 inline text-blue-400" />
             </span>
             <button className="text-sm text-blue-300 hover:text-blue-200 flex items-center">
-              {userDisplayName}
+              {user ? userDisplayName : "Guest"}
               <ChevronDown className="h-3 w-3 ml-1" />
             </button>
             
@@ -176,21 +151,30 @@ const Header: React.FC = () => {
                  style={{ transitionDelay: '0.1s' }}
             >
               <div className="py-1 hover:py-1">
-                <Link to="/profile" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
-                  <User className="h-4 w-4 mr-2 text-blue-400" />
-                  <span>My Profile</span>
-                </Link>
-                <Link to="/settings" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
-                  <Settings className="h-4 w-4 mr-2 text-blue-400" />
-                  <span>Settings</span>
-                </Link>
-                <button 
-                  onClick={handleLogout}
-                  className="flex items-center w-full text-left px-4 py-2 text-white hover:bg-red-900/30 transition-colors"
-                >
-                  <LogOut className="h-4 w-4 mr-2 text-red-400" />
-                  <span>Log Out</span>
-                </button>
+                {user ? (
+                  <>
+                    <Link to="/profile" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                      <User className="h-4 w-4 mr-2 text-blue-400" />
+                      <span>My Profile</span>
+                    </Link>
+                    <Link to="/settings" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                      <Settings className="h-4 w-4 mr-2 text-blue-400" />
+                      <span>Settings</span>
+                    </Link>
+                    <button 
+                      onClick={handleLogout}
+                      className="flex items-center w-full text-left px-4 py-2 text-white hover:bg-red-900/30 transition-colors"
+                    >
+                      <LogOut className="h-4 w-4 mr-2 text-red-400" />
+                      <span>Log Out</span>
+                    </button>
+                  </>
+                ) : (
+                  <Link to="/auth" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                    <User className="h-4 w-4 mr-2 text-blue-400" />
+                    <span>Login</span>
+                  </Link>
+                )}
               </div>
             </div>
           </div>
