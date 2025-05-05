@@ -133,129 +133,72 @@ export function setupAuth(app: Express) {
   passport.use(
     new LocalStrategy(async (username, password, done) => {
       try {
-        // Check if we're in development mode
-        const isDevelopment = process.env.NODE_ENV === 'development';
-        
-        // Try to find the user
+        // Try to find the user - no special development mode handling
         const user = await storage.getUserByUsername(username);
         
-        // Production mode: Verify user exists and password matches
-        if (!isDevelopment) {
-          // User not found
-          if (!user) {
-            console.log(`Login attempt for non-existent user: ${username}`);
-            return done(null, false, { message: "Invalid username or password" });
-          }
+        // User not found
+        if (!user) {
+          console.log(`Login attempt for non-existent user: ${username}`);
+          return done(null, false, { message: "Invalid username or password" });
+        }
+        
+        // Check if user is active
+        if (!user.isActive) {
+          console.log(`Login attempt for inactive user: ${username}`);
+          return done(null, false, { message: "Account is inactive" });
+        }
+        
+        // Verify password
+        const isPasswordValid = await comparePasswords(password, user.password);
+        if (!isPasswordValid) {
+          console.log(`Invalid password for user: ${username}`);
           
-          // Check if user is active
-          if (!user.isActive) {
-            console.log(`Login attempt for inactive user: ${username}`);
-            return done(null, false, { message: "Account is inactive" });
-          }
-          
-          // Verify password
-          const isPasswordValid = await comparePasswords(password, user.password);
-          if (!isPasswordValid) {
-            console.log(`Invalid password for user: ${username}`);
-            
-            // Log failed attempt
-            await storage.createAuthLog({
-              userId: user.id,
-              action: 'login',
-              status: 'failed',
-              ipAddress: null, // Would be set from middleware in production
-              userAgent: null, // Would be set from middleware in production
-              details: { reason: 'invalid_password' }
-            });
-            
-            return done(null, false, { message: "Invalid username or password" });
-          }
-          
-          // Check if the user has two-factor authentication enabled
-          if (user.twoFactorEnabled) {
-            console.log(`User ${username} has 2FA enabled, requiring verification`);
-            
-            // Log successful first-factor authentication
-            await storage.createAuthLog({
-              userId: user.id,
-              action: 'login_2fa_needed',
-              status: 'success',
-              ipAddress: null, // Would be set from middleware in production
-              userAgent: null, // Would be set from middleware in production
-              details: { stage: 'first_factor' }
-            });
-            
-            // Return the user but with a flag indicating 2FA is required
-            return done(null, user, { requiresTwoFactor: true });
-          }
-          
-          // If 2FA not enabled, proceed with standard login flow
-          // Update last login time
-          await storage.updateUserLastLogin(user.id);
-          
-          // Log successful login
+          // Log failed attempt
           await storage.createAuthLog({
             userId: user.id,
             action: 'login',
+            status: 'failed',
+            ipAddress: null, // Would be set from middleware in production
+            userAgent: null, // Would be set from middleware in production
+            details: { reason: 'invalid_password' }
+          });
+          
+          return done(null, false, { message: "Invalid username or password" });
+        }
+        
+        // Check if the user has two-factor authentication enabled
+        if (user.twoFactorEnabled) {
+          console.log(`User ${username} has 2FA enabled, requiring verification`);
+          
+          // Log successful first-factor authentication
+          await storage.createAuthLog({
+            userId: user.id,
+            action: 'login_2fa_needed',
             status: 'success',
             ipAddress: null, // Would be set from middleware in production
             userAgent: null, // Would be set from middleware in production
-            details: {}
+            details: { stage: 'first_factor' }
           });
           
-          return done(null, user);
-        } 
-        // Development mode: Allow easier login for testing
-        else {
-          if (user) {
-            // Check if the user has two-factor authentication enabled
-            if (user.twoFactorEnabled) {
-              console.log(`[DEV MODE] User ${username} has 2FA enabled, requiring verification`);
-              
-              // Log successful first-factor authentication
-              await storage.createAuthLog({
-                userId: user.id,
-                action: 'login_2fa_needed',
-                status: 'success',
-                ipAddress: null,
-                userAgent: null,
-                details: { stage: 'first_factor', dev_mode: true }
-              });
-              
-              // Return the user but with a flag indicating 2FA is required
-              return done(null, user, { requiresTwoFactor: true });
-            }
-            
-            // User exists, still update last login
-            await storage.updateUserLastLogin(user.id);
-            return done(null, user);
-          } else {
-            // Create a temporary development user on the fly
-            console.log(`[DEV MODE] Creating temporary development user: ${username}`);
-            try {
-              // Create a test user
-              const hashedPassword = await hashPassword(password);
-              const newUser = await storage.createUser({
-                username,
-                email: `${username}@test.com`,
-                password: hashedPassword,
-                firstName: username,
-                lastName: 'TestUser',
-                fullName: `${username} TestUser`,
-                isActive: true,
-                isEmailVerified: true,
-                interests: [] as string[],
-                onboardingCompleted: false
-                // Removed lastLogin as it's not in the schema
-              });
-              console.log(`[DEV MODE] Created development user with ID: ${newUser.id}`);
-              return done(null, newUser);
-            } catch (createError) {
-              console.error('[DEV MODE] Error creating test user:', createError);
-              return done(null, false, { message: "Could not create test user" });
-            }
-          }
+          // Return the user but with a flag indicating 2FA is required
+          return done(null, user, { requiresTwoFactor: true });
         }
+        
+        // If 2FA not enabled, proceed with standard login flow
+        // Update last login time
+        await storage.updateUserLastLogin(user.id);
+        
+        // Log successful login
+        await storage.createAuthLog({
+          userId: user.id,
+          action: 'login',
+          status: 'success',
+          ipAddress: null, // Would be set from middleware in production
+          userAgent: null, // Would be set from middleware in production
+          details: {}
+        });
+        
+        return done(null, user);
       } catch (error) {
         console.error('Authentication error:', error);
         return done(error);
@@ -570,110 +513,20 @@ export function setupAuth(app: Express) {
   // Get authenticated user
   app.get("/api/user", async (req, res) => {
     try {
-      // Check if we're in development mode
-      const isDevelopment = process.env.NODE_ENV === 'development';
-      
-      // In production, only return user data if properly authenticated
-      if (!isDevelopment) {
-        if (!req.isAuthenticated()) {
-          return res.status(401).json({ 
-            success: false, 
-            error: "Not authenticated" 
-          });
-        }
-        
-        // Return the authenticated user from the session
-        const { password, resetToken, verificationToken, ...safeUserData } = req.user;
-        return res.json({
-          success: true,
-          user: safeUserData
+      // Always require proper authentication - no development bypasses
+      if (!req.isAuthenticated()) {
+        return res.status(401).json({ 
+          success: false, 
+          error: "Not authenticated" 
         });
-      } 
-      // Development mode: Check for authenticated user or create test user
-      else {
-        // If user is properly authenticated, use that
-        if (req.isAuthenticated()) {
-          const { password, resetToken, verificationToken, ...safeUserData } = req.user;
-          return res.json({
-            success: true,
-            user: safeUserData
-          });
-        }
-        
-        // Create a development test user or fetch from storage
-        console.log('[DEV BYPASS] Creating test user for development');
-        
-        try {
-          // First try to get an existing user from storage
-          // This allows the system to work with any created user, not just a hardcoded one
-          const existingUsers = await storage.getAllUsers();
-          
-          if (existingUsers && existingUsers.length > 0) {
-            // Use the first available user
-            const existingUser = existingUsers[0];
-            const { password, resetToken, verificationToken, ...safeUserData } = existingUser;
-            
-            console.log(`[DEV] Using existing user: ${existingUser.username}`);
-            
-            return res.json({
-              success: true,
-              user: safeUserData
-            });
-          }
-          
-          // If no users exist yet, create a dynamic user
-          const username = 'testuser_' + Math.floor(Math.random() * 1000);
-          
-          // Create a development user with dynamic values
-          const devUser = {
-            id: Math.floor(Math.random() * 1000) + 1,
-            username: username, 
-            email: `${username}@example.com`,
-            firstName: 'Test',
-            lastName: 'User',
-            fullName: 'Test User',
-            preferredUnit: 'imperial',
-            profileImage: null,
-            drivingExperience: 'beginner',
-            interests: [] as string[],
-            bio: '',
-            role: 'user',
-            isActive: true,
-            lastLogin: new Date(),
-            resetToken: null,
-            resetTokenExpires: null,
-            verificationToken: null,
-            isEmailVerified: true,
-            stripeCustomerId: null,
-            stripeSubscriptionId: null,
-            onboardingCompleted: false,
-            createdAt: new Date(),
-            updatedAt: null,
-            twoFactorEnabled: false,
-            twoFactorSecret: null,
-            twoFactorBackupCodes: null
-          };
-          
-          // Return the development user
-          return res.json({
-            success: true,
-            user: devUser
-          });
-        } catch (error) {
-          console.error('[DEV] Error getting/creating test user:', error);
-          
-          // Fallback to a minimal user if all else fails
-          return res.json({
-            success: true,
-            user: {
-              id: 999,
-              username: 'anonymous',
-              email: 'anonymous@example.com',
-              role: 'user'
-            }
-          });
-        }
       }
+      
+      // Return the authenticated user from the session
+      const { password, resetToken, verificationToken, ...safeUserData } = req.user;
+      return res.json({
+        success: true,
+        user: safeUserData
+      });
     } catch (error) {
       console.error("Get user error:", error);
       res.status(500).json({ 

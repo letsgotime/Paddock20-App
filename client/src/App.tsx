@@ -91,9 +91,6 @@ import TermsOfService from './pages/TermsOfServicePage';
 import BetaAgreement from './pages/BetaAgreement';
 
 function App() {
-  // Require proper authentication - no preview mode
-  const previewMode = false;
-  
   // State to track if the user has completed onboarding
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(() => {
     // Check if user has completed the legal agreement flow
@@ -114,30 +111,10 @@ function App() {
   // Use the scroll-to-top hook to ensure pages always start at the top
   useScrollToTop();
   
-  // Mock user data for preview mode - using dynamic user display name
-  const userDisplayName = getUserDisplayName();
-  const nameParts = userDisplayName.split(' ');
-  const firstName = nameParts[0];
-  const lastName = nameParts.length > 1 ? nameParts.slice(1).join(' ') : '';
-  const mockUser = { 
-    id: 99999, 
-    username: userDisplayName, 
-    email: `${firstName.toLowerCase()}@gotime.com`, 
-    firstName: firstName, 
-    lastName: lastName, 
-    fullName: userDisplayName, 
-    profileImage: null, 
-    role: 'admin' as const 
-  };
-  const mockSession = { user: mockUser };
-  
   // Initialize session state (will be overridden by auth hook if authenticated)
   const [authUser, setAuthUser] = useState<any>(null);
   const [authSession, setAuthSession] = useState<any>(null);
   const [authLoading, setAuthLoading] = useState<boolean>(false);
-  
-  const effectiveUser = previewMode ? mockUser : authUser;
-  const effectiveSession = previewMode ? mockSession : authSession;
   
   // Function to mark onboarding as complete
   const completeOnboarding = () => {
@@ -197,35 +174,32 @@ function App() {
   
   // Initialize authentication status
   useEffect(() => {
-    // Only check auth if not in preview mode
-    if (!previewMode) {
-      setAuthLoading(true);
-      
-      // Call our server-side auth endpoint
-      fetch('/api/user')
-        .then(async response => {
-          if (response.ok) {
-            const userData = await response.json();
-            setAuthUser(userData);
-            setAuthSession({ user: userData });
-            console.log('User authenticated:', userData.username);
-          } else {
-            // Not authenticated
-            setAuthUser(null);
-            setAuthSession(null);
-            console.log('User not authenticated');
-          }
-        })
-        .catch(error => {
-          console.error('Auth check failed:', error);
+    setAuthLoading(true);
+    
+    // Call our server-side auth endpoint
+    fetch('/api/user')
+      .then(async response => {
+        if (response.ok) {
+          const userData = await response.json();
+          setAuthUser(userData);
+          setAuthSession({ user: userData });
+          console.log('User authenticated:', userData.username);
+        } else {
+          // Not authenticated
           setAuthUser(null);
           setAuthSession(null);
-        })
-        .finally(() => {
-          setAuthLoading(false);
-        });
-    }
-  }, [previewMode]);
+          console.log('User not authenticated');
+        }
+      })
+      .catch(error => {
+        console.error('Auth check failed:', error);
+        setAuthUser(null);
+        setAuthSession(null);
+      })
+      .finally(() => {
+        setAuthLoading(false);
+      });
+  }, []);
   
   // Disabled Unsplash image cache to remove API warnings
   // No image pre-fetching to avoid API rate limiting issues
@@ -274,7 +248,7 @@ function App() {
                           </a>
                         
                           {/* User Onboarding - Show for first time users or when terms update */}
-                          {(effectiveSession || previewMode) && !hasCompletedOnboarding && (
+                          {authSession && !hasCompletedOnboarding && (
                             <UserOnboarding onComplete={completeOnboarding} />
                           )}
                         
@@ -285,7 +259,7 @@ function App() {
                             {/* Main navigation header - only visible when logged in */}
                             <header role="banner">
                               {/* Breadcrumbs - only visible when logged in */}
-                              {(effectiveSession || previewMode) && (
+                              {authSession && (
                                 <ContextualBreadcrumbs />
                               )}
                             </header>
@@ -294,7 +268,7 @@ function App() {
                             <FixedSoundBar />
                             
                             {/* AI Support Chatbot - Available globally */}
-                            {(effectiveSession || previewMode) && <SupportChatbot />}
+                            {authSession && <SupportChatbot />}
 
                             {/* Main content area - adjusted for fixed header at top and fixed footer at bottom */}
                             <main id={MAIN_CONTENT_ID} className="container mx-auto px-4 mt-[60px] pb-[70px]" tabIndex={-1}>
@@ -302,7 +276,7 @@ function App() {
                               <Toaster />
                               
                               {/* Global floating weather snapshot - will be available on all pages */}
-                              {(effectiveSession || previewMode) && (
+                              {authSession && (
                                 <OneTapWeatherSnapshot 
                                   floating={true}
                                   // Don't show on weather paddock page where it would be redundant
@@ -414,10 +388,10 @@ function App() {
                               {/* Removed duplicate SupportChatbot component */}
                               
                               {/* Rewards notification - will show when rewards are earned */}
-                              {(effectiveSession || previewMode) && <RewardNotification />}
+                              {authSession && <RewardNotification />}
                               
                               {/* Invisible rewards tracker component that monitors user activity */}
-                              {(effectiveSession || previewMode) && <RewardsTracker />}
+                              {authSession && <RewardsTracker />}
                             </main>
 
                             {/* Footer with links and information */}
