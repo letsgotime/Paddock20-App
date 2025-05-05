@@ -45,7 +45,7 @@ export const legalDocuments = {
     <p>These Terms shall be governed by the laws of the State of California, without regard to its conflict of laws principles.</p>
     
     <h2>12. Contact Information</h2>
-    <p>If you have any questions about these Terms, please contact us at: legal@paddock20.com</p>
+    <p>If you have any questions about these Terms, please contact us at: legal@gotimemotorsports.com</p>
   `,
   
   privacyPolicy: `
@@ -103,7 +103,7 @@ export const legalDocuments = {
     <p>We may update our Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy on this page and updating the "Last Updated" date.</p>
     
     <h2>9. Contact Us</h2>
-    <p>If you have any questions about this Privacy Policy, please contact us at: privacy@paddock20.com</p>
+    <p>If you have any questions about this Privacy Policy, please contact us at: privacy@gotimemotorsports.com</p>
   `,
   
   betaAgreement: `
@@ -170,7 +170,7 @@ export const legalDocuments = {
     <p>Paddock20 may update this Beta Agreement from time to time. We will notify you of any significant changes.</p>
     
     <h2>10. Contact</h2>
-    <p>For questions or concerns about the Beta Program, please contact: beta@paddock20.com</p>
+    <p>For questions or concerns about the Beta Program, please contact: beta@gotimemotorsports.com</p>
   `,
   
   nonDisclosureAgreement: `
