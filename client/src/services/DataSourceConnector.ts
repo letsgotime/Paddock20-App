@@ -503,8 +503,8 @@ function getUserDriveData(driveId?: string, includeMedia = false, limit?: number
         galleryDrives.forEach(galleryDrive => {
           // If this gallery drive isn't already in our drives list
           if (!drives.some(d => d.id === galleryDrive.driveId)) {
-            // Create a basic drive object from gallery data
-            const newDrive = {
+            // Create a basic drive object from gallery data with enhanced properties
+            const newDrive: EnhancedDriveData = {
               id: galleryDrive.driveId,
               title: galleryDrive.driveName,
               date: galleryDrive.driveDate,
@@ -513,7 +513,10 @@ function getUserDriveData(driveId?: string, includeMedia = false, limit?: number
               distance: 0,
               duration: 0,
               mediaCount: galleryDrive.mediaCount,
-              featuredMediaId: galleryDrive.featuredMediaId
+              featuredMediaId: galleryDrive.featuredMediaId,
+              routeCoordinates: [],
+              media: [],
+              galleryEvents: []
             };
             
             // Find all events related to this drive
