@@ -399,15 +399,23 @@ const VehicleOnboardingWizard: React.FC = () => {
       // Save the updated user data first
       localStorage.setItem('userOnboardingData', JSON.stringify(userProfile));
       
-      // Save the vehicle data to localStorage 
-      localStorage.setItem('vehicleProfile', JSON.stringify(vehicleData));
-      
-      // Add the vehicle using the context
-      const newVehicle = await addVehicle(vehicleData);
-      
       // Parse year and mileage once to ensure consistent conversion
       const parsedYear = parseInt(vehicleData.year) || new Date().getFullYear();
       const parsedMileage = parseInt(vehicleData.mileage) || 0;
+      
+      // Save the vehicle data to localStorage with parsed values
+      localStorage.setItem('vehicleProfile', JSON.stringify({
+        ...vehicleData,
+        year: parsedYear,
+        mileage: parsedMileage
+      }));
+      
+      // Add the vehicle using the context - with correct number types
+      const newVehicle = await addVehicle({
+        ...vehicleData,
+        year: parsedYear,
+        mileage: parsedMileage
+      });
       
       // Create a complete vehicle object with all required properties
       // This ensures consistent structure regardless of entry method
