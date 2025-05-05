@@ -55,6 +55,7 @@ export interface IStorage {
   deleteSession(id: string): Promise<void>;
   getUserSessions(userId: number): Promise<Session[]>;
   deleteUserSessions(userId: number, currentSessionId?: string): Promise<void>;
+  deleteUser(userId: number): Promise<void>;
   updateSessionActivity(id: string): Promise<void>;
   cleanupExpiredSessions(): Promise<void>;
   
@@ -270,6 +271,26 @@ export class DatabaseStorage implements IStorage {
         .delete(sessions)
         .where(eq(sessions.userId, userId));
     }
+  }
+  
+  async deleteUser(userId: number): Promise<void> {
+    // Delete all sessions for the user
+    await this.deleteUserSessions(userId);
+    
+    // Delete all saved locations
+    await db
+      .delete(savedLocations)
+      .where(eq(savedLocations.userId, userId));
+    
+    // Delete all auth logs for the user
+    await db
+      .delete(authLogs)
+      .where(eq(authLogs.userId, userId));
+      
+    // Delete the user account
+    await db
+      .delete(users)
+      .where(eq(users.id, userId));
   }
   
   async updateSessionActivity(id: string): Promise<void> {

@@ -480,6 +480,56 @@ export function setupAuth(app: Express) {
     })(req, res, next);
   });
   
+  // Account deletion route for users who decline terms
+  app.delete("/api/user", async (req, res) => {
+    // User must be authenticated
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ 
+        success: false, 
+        error: "Not authenticated" 
+      });
+    }
+    
+    try {
+      const userId = req.user.id;
+      
+      // Log deletion request
+      await storage.createAuthLog({
+        userId,
+        action: 'account_deletion',
+        status: 'success',
+        ipAddress: req.ip || null,
+        userAgent: req.get('User-Agent') || null,
+        details: { reason: req.body.reason || 'declined_terms' }
+      });
+      
+      // Delete user from database
+      await storage.deleteUser(userId);
+      
+      // Logout the user
+      req.logout(async (err) => {
+        if (err) {
+          console.error('Error during logout after account deletion:', err);
+          return res.status(500).json({ 
+            success: false, 
+            error: "Logout failed after account deletion" 
+          });
+        }
+        
+        return res.json({ 
+          success: true, 
+          message: "Account successfully deleted" 
+        });
+      });
+    } catch (error) {
+      console.error('Account deletion error:', error);
+      res.status(500).json({ 
+        success: false, 
+        error: "Account deletion failed. Please try again." 
+      });
+    }
+  });
+  
   // Logout route
   app.post("/api/logout", async (req, res) => {
     if (!req.isAuthenticated()) {
