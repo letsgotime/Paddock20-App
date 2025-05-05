@@ -48,6 +48,7 @@ import { RewardsProvider } from "./contexts/RewardsContext";
 import { VehicleProvider } from "./contexts/VehicleContext";
 import { VehicleDataProvider } from "./contexts/VehicleDataContext";
 import { SoundProvider } from "./contexts/SoundContext";
+import { UserProfileProvider } from "./contexts/UserProfileContext";
 import SoundControlPanel from "./components/SoundControlPanel";
 import RewardNotification from "./components/RewardNotification";
 import RewardsTracker from "./components/RewardsTracker";
