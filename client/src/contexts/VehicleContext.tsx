@@ -28,7 +28,7 @@ export interface MaintenanceItem {
   completed: boolean;
   vehicleId: string;
 }
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '../hooks/useAuth';
 
 interface VehicleContextType {
   vehicles: Vehicle[];
