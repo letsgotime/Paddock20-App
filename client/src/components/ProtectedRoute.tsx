@@ -3,11 +3,6 @@ import { useLocation, Redirect } from 'wouter';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
-// Controls whether to bypass real authentication and use the mock user
-// Set to true for development environments, false for production
-// Changed to false to ensure proper authentication flow
-const DEV_MODE = false;
-
 interface ProtectedRouteProps {
   children: ReactNode;
 }
@@ -96,12 +91,12 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     return <Redirect to="/onboarding" />;
   }
 
-  // If authenticated (either through real auth or DEV_MODE) and has completed onboarding, show the protected content
-  if ((DEV_MODE || auth.user) && (DEV_MODE || hasCompletedOnboarding)) {
+  // If authenticated and has completed onboarding, show the protected content
+  if (auth.user && hasCompletedOnboarding) {
     return <>{children}</>;
   }
 
-  // If not authenticated and not in DEV_MODE, redirect to the login page
+  // If not authenticated, redirect to the login page
   // Also add a timestamp parameter to break any potential client-side caching
   return <Redirect to={`/auth?t=${Date.now()}`} />;
 }

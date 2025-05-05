@@ -93,20 +93,13 @@ class TwoFactorService {
     }
     
     // Verify the token is correct to ensure proper 2FA setup
-    let verified = false;
-    
-    // Development bypass for testing with '123456' token
-    if (process.env.NODE_ENV === 'development' && token === '123456') {
-      console.log('[DEV MODE] Bypassing 2FA verification with test token');
-      verified = true;
-    } else {
-      verified = speakeasy.totp.verify({
-        secret,
-        encoding: 'base32',
-        token,
-        window: 1 // Allow for slight time skew (1 step = 30 seconds)
-      });
-    }
+    // No development bypasses - always verify using proper TOTP
+    const verified = speakeasy.totp.verify({
+      secret,
+      encoding: 'base32',
+      token,
+      window: 1 // Allow for slight time skew (1 step = 30 seconds)
+    });
     
     if (!verified) {
       throw new Error('Invalid verification code. Please try again.');
