@@ -170,21 +170,21 @@ const SimpleAuthPage = () => {
               </div>
               
               <p className="text-xl text-white font-light leading-relaxed">
-                The revolutionary automotive lifestyle platform that transforms how enthusiasts track, experience, and celebrate their passion
+                The revolutionary automotive lifestyle platform with F1-grade intelligence that transforms everyday car care into an addictive experience
               </p>
               
               <div className="space-y-4 mt-8">
                 <div className="flex items-center">
                   <div className="h-8 w-1 bg-[#08c519] mr-4"></div>
-                  <p className="text-white text-lg">Turn everyday maintenance into F1-level precision</p>
+                  <p className="text-white text-lg">Track maintenance, mods, and detailing with precision</p>
                 </div>
                 <div className="flex items-center">
                   <div className="h-8 w-1 bg-[#1982FC] mr-4"></div>
-                  <p className="text-white text-lg">Discover epic drives that become legendary stories</p>
+                  <p className="text-white text-lg">Discover perfect drives with Weather Paddock intelligence</p>
                 </div>
                 <div className="flex items-center">
                   <div className="h-8 w-1 bg-[#08c519] mr-4"></div>
-                  <p className="text-white text-lg">Access an ecosystem built for true enthusiasts</p>
+                  <p className="text-white text-lg">Level up with premium features for the complete enthusiast</p>
                 </div>
               </div>
               
