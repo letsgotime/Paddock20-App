@@ -2,7 +2,8 @@ import { useContext } from 'react';
 import { AuthContext } from '../context/AuthContext';
 
 // Whether to enable development fallback that prevents errors
-const DEV_FALLBACK = true;
+// Set to false to ensure proper authentication in all environments
+const DEV_FALLBACK = false;
 const DEV_ENVIRONMENT = process.env.NODE_ENV === 'development';
 
 // Mock user for development fallback if needed

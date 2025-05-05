@@ -195,10 +195,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Logout function
+  // Enhanced Logout function with improved security
   const logout = async () => {
     try {
       setLoading(true);
+      
+      // Store the redirect path before clearing everything
+      const redirectPath = '/auth';
       
       // Clear user data first to prevent any auth-dependent components from breaking
       setUser(null);
@@ -210,17 +213,40 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       localStorage.removeItem('returnToPath');
       localStorage.removeItem('currentVehicle');
       
+      // Clear sensitive user data
+      localStorage.removeItem('userProfile');
+      localStorage.removeItem('userSettings');
+      localStorage.removeItem('userPreferences');
+      localStorage.removeItem('savedVehicles');
+      
       // Clear any other app state that might depend on the user
       sessionStorage.removeItem('weatherAppReturnPoint');
+      sessionStorage.removeItem('lastLocation');
+      sessionStorage.removeItem('lastSearch');
       
-      // Clear session cookies by setting expired date
-      document.cookie = 'connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      // Clear all session cookies by setting expired date
+      document.cookie.split(';').forEach(cookie => {
+        const trimmedCookie = cookie.trim();
+        const name = trimmedCookie.split('=')[0];
+        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
+      });
       
       // Now call the logout API (but we've already cleared local state)
-      const response = await fetch('/api/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
+      try {
+        const response = await fetch('/api/logout', {
+          method: 'POST',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+        
+        if (!response.ok) {
+          console.warn('Server-side logout returned non-200 status, but continuing client-side logout');
+        }
+      } catch (apiError) {
+        console.warn('Server-side logout API error, but continuing client-side logout:', apiError);
+      }
       
       toast({
         title: 'Logged Out',
@@ -228,10 +254,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         variant: 'default',
       });
       
-      // Use history API instead of direct location change to work with React Router
-      if (window.location.pathname !== '/auth') {
+      // Better handling of redirect with React Router
+      if (window.location.pathname !== redirectPath) {
         // Explicitly redirect to auth page with replace to prevent back button issues
-        window.history.replaceState(null, '', '/auth');
+        window.history.replaceState(null, '', redirectPath);
         // Dispatch an event to make React Router notice the URL change
         window.dispatchEvent(new PopStateEvent('popstate'));
       }
