@@ -253,20 +253,28 @@ export const UserProfileProvider: React.FC<{ children: ReactNode }> = ({ childre
   // Update profile with authenticated user data when available
   useEffect(() => {
     if (user && profile && initialized) {
-      // Check if we need to update the profile with auth data
-      if (user.id.toString() !== profile.identity.id || 
-          user.username !== profile.identity.username ||
-          user.email !== profile.identity.email) {
+      try {
+        // Check if we need to update the profile with auth data
+        // Safely convert IDs to strings for comparison 
+        const userId = user.id ? user.id.toString() : '';
+        const profileId = profile.identity?.id ? profile.identity.id.toString() : '';
         
-        console.log('Syncing authenticated user data to profile');
-        
-        // Update identity data from authenticated user
-        userProfileWarehouse.updateIdentity({
-          id: user.id.toString(),
-          username: user.username,
-          email: user.email,
-          lastActive: new Date().toISOString()
-        });
+        if (userId !== profileId || 
+            user.username !== profile.identity.username ||
+            user.email !== profile.identity.email) {
+          
+          console.log('Syncing authenticated user data to profile');
+          
+          // Update identity data from authenticated user
+          userProfileWarehouse.updateIdentity({
+            id: userId,
+            username: user.username || '',
+            email: user.email,
+            lastActive: new Date().toISOString()
+          });
+        }
+      } catch (error) {
+        console.error('Error syncing user data to profile:', error);
       }
     }
   }, [user, profile, initialized]);
