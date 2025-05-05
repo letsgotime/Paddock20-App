@@ -298,26 +298,81 @@ const SimpleAuthPage = () => {
                   </p>
                 </div>
                 
-                <div className="mb-4">
-                  <div className="flex flex-col space-y-2 p-3 bg-[#1982FC]/10 rounded-lg border border-[#1982FC]/30">
-                    <div className="flex items-start">
-                      <div className="flex items-center h-5 mt-0.5">
-                        <input
-                          id="terms"
-                          type="checkbox"
-                          required
-                          className="w-4 h-4 text-[#08c519] bg-gray-700 border-gray-600 rounded focus:ring-[#1982FC]"
-                        />
-                      </div>
-                      <label htmlFor="terms" className="ml-2 text-sm text-gray-200">
-                        <span className="font-semibold text-white">Beta Program Terms:</span> I agree to the <a href="#" className="text-[#1982FC] hover:underline">Terms of Service</a> and <a href="#" className="text-[#1982FC] hover:underline">Privacy Policy</a>.
-                      </label>
+                <div className="mb-6">
+                  <div className="flex flex-col space-y-5 p-5 bg-[#1982FC]/10 rounded-lg border border-[#1982FC]/30">
+                    <div>
+                      <p className="font-bold text-[#1982FC] text-sm tracking-wide mb-2">PADDOCK20 BETA PROGRAM AGREEMENTS</p>
+                      <p className="text-sm text-gray-300">
+                        Before proceeding, you must review and agree to the following legal documents. These agreements protect both you and Paddock20 throughout your beta experience.
+                      </p>
                     </div>
                     
-                    <p className="text-xs text-gray-300 mt-1 ml-6">
-                      Beta Users get discounted service for life. Beta Testers get free service for life, but require approval.
-                      See the following pages for Terms and Conditions. Thank you for supporting our Beta Program, and Automotive Enthusiast community.
-                    </p>
+                    <div className="space-y-4">
+                      {/* Terms of Service */}
+                      <div className="flex items-start">
+                        <div className="flex items-center h-5 mt-0.5">
+                          <input
+                            id="terms"
+                            type="checkbox"
+                            required
+                            className="w-4 h-4 text-[#08c519] bg-gray-700 border-gray-600 rounded focus:ring-[#1982FC]"
+                          />
+                        </div>
+                        <label htmlFor="terms" className="ml-2 text-sm">
+                          <span className="font-semibold text-white">I have read and agree to the </span> 
+                          <a href="#" className="text-[#1982FC] hover:underline font-semibold">Terms of Service</a>
+                          <p className="text-xs text-gray-300 mt-1">
+                            The Terms of Service outline your rights and obligations when using Paddock20, including acceptable use policies, intellectual property rights, and liability limitations.
+                          </p>
+                        </label>
+                      </div>
+                      
+                      {/* Privacy Policy */}
+                      <div className="flex items-start">
+                        <div className="flex items-center h-5 mt-0.5">
+                          <input
+                            id="privacy"
+                            type="checkbox"
+                            required
+                            className="w-4 h-4 text-[#08c519] bg-gray-700 border-gray-600 rounded focus:ring-[#1982FC]"
+                          />
+                        </div>
+                        <label htmlFor="privacy" className="ml-2 text-sm">
+                          <span className="font-semibold text-white">I have read and agree to the </span>
+                          <a href="#" className="text-[#1982FC] hover:underline font-semibold">Privacy Policy</a>
+                          <p className="text-xs text-gray-300 mt-1">
+                            Our Privacy Policy explains how we collect, use, store, and protect your personal information, including your rights regarding your data and our data retention practices.
+                          </p>
+                        </label>
+                      </div>
+                      
+                      {/* Beta Agreement */}
+                      <div className="flex items-start">
+                        <div className="flex items-center h-5 mt-0.5">
+                          <input
+                            id="beta-agreement"
+                            type="checkbox"
+                            required
+                            className="w-4 h-4 text-[#08c519] bg-gray-700 border-gray-600 rounded focus:ring-[#1982FC]"
+                          />
+                        </div>
+                        <label htmlFor="beta-agreement" className="ml-2 text-sm">
+                          <span className="font-semibold text-white">I have read and agree to the </span>
+                          <a href="#" className="text-[#1982FC] hover:underline font-semibold">Beta Agreement</a>
+                          <p className="text-xs text-gray-300 mt-1">
+                            The Beta Agreement covers special considerations for beta testers, including feature limitations, feedback expectations, reporting bugs, and confidentiality requirements.
+                          </p>
+                        </label>
+                      </div>
+                    </div>
+                    
+                    <div className="pt-2 border-t border-gray-800">
+                      <p className="text-xs text-[#08c519] font-semibold">BETA PROGRAM BENEFITS</p>
+                      <p className="text-xs text-gray-300 mt-1">
+                        Beta Users get discounted service for life. Beta Testers get free service for life, but require approval.
+                        Thank you for supporting our Beta Program and Automotive Enthusiast community.
+                      </p>
+                    </div>
                   </div>
                 </div>
               </>
@@ -368,8 +423,9 @@ const SimpleAuthPage = () => {
             
             {/* Error message display */}
             {errorMessage && (
-              <div className="mb-4 p-2 bg-red-900/50 border border-red-500 rounded-md text-white text-sm">
-                {errorMessage}
+              <div className="mb-4 p-3 bg-[#1982FC]/10 border border-[#1982FC]/50 rounded-md text-white text-sm flex items-start">
+                <AlertTriangle className="text-[#1982FC] mr-2 h-5 w-5 flex-shrink-0 mt-0.5" />
+                <span>{errorMessage}</span>
               </div>
             )}
             
