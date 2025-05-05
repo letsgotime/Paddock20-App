@@ -337,12 +337,12 @@ const Paddock20HomePage: React.FC = () => {
           <div className="absolute bottom-0 left-12 right-12 h-0.5 bg-gradient-to-r from-transparent via-[#08c519] to-transparent"></div>
           
           {/* Telemetry-inspired header */}
-          <div className="bg-black/80 border-b border-blue-900/40 rounded-t-xl py-3 px-6 flex justify-between items-center">
+          <div className="bg-black/80 border-b border-blue-900/40 rounded-t-xl py-3 px-3 sm:px-6 flex flex-wrap md:flex-nowrap justify-between items-center gap-2">
             <div className="flex items-center">
-              <div className="h-2.5 w-2.5 rounded-full bg-[#08c519] animate-pulse mr-2"></div>
-              <h2 className="text-[#4B9CD3] font-orbitron text-2xl tracking-wider">WHY PADDOCK20™? WHY NOW?</h2>
+              <div className="h-2.5 w-2.5 flex-shrink-0 rounded-full bg-[#08c519] animate-pulse mr-2"></div>
+              <h2 className="text-[#4B9CD3] font-orbitron text-lg sm:text-xl md:text-2xl tracking-wider truncate">WHY PADDOCK20™? WHY NOW?</h2>
             </div>
-            <div className="text-xs text-gray-400 font-mono">DRIVER INTELLIGENCE 2.0</div>
+            <div className="text-xs text-gray-400 font-mono whitespace-nowrap ml-auto">DRIVER INTELLIGENCE 2.0</div>
           </div>
           
           <div className="bg-black/50 backdrop-blur-sm p-6 rounded-b-xl border-t-0 border border-blue-900/20">
