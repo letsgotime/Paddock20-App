@@ -16,6 +16,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
 const AuthPage: React.FC = () => {
@@ -245,7 +246,18 @@ const AuthPage: React.FC = () => {
                       </div>
                     </div>
                   </CardContent>
-                  <CardFooter>
+                  <CardFooter className="flex flex-col space-y-4">
+                    <div className="flex items-start space-x-2">
+                      <Checkbox 
+                        id="login-confidentiality" 
+                        className="mt-1 data-[state=checked]:bg-blue-600"
+                        required 
+                      />
+                      <label htmlFor="login-confidentiality" className="text-xs text-gray-400">
+                        I confirm that I have read and agree to the <span className="text-blue-400">Confidentiality Agreement</span> and will not disclose any information from this platform.
+                      </label>
+                    </div>
+                    
                     <Button 
                       type="submit" 
                       className="w-full bg-blue-600 hover:bg-blue-700"
@@ -450,7 +462,18 @@ const AuthPage: React.FC = () => {
                       </div>
                     </div>
                   </CardContent>
-                  <CardFooter>
+                  <CardFooter className="flex flex-col space-y-4">
+                    <div className="flex items-start space-x-2">
+                      <Checkbox 
+                        id="register-confidentiality" 
+                        className="mt-1 data-[state=checked]:bg-emerald-600"
+                        required 
+                      />
+                      <label htmlFor="register-confidentiality" className="text-xs text-gray-400">
+                        I confirm that I have read and agree to the <span className="text-blue-400">Confidentiality Agreement</span> and will not disclose any information from this platform without authorization.
+                      </label>
+                    </div>
+                    
                     <Button 
                       type="submit" 
                       className="w-full bg-emerald-600 hover:bg-emerald-700"
@@ -490,9 +513,21 @@ const AuthPage: React.FC = () => {
                 <p className="text-gray-400">Connect with fellow enthusiasts, share your garage, and participate in exclusive automotive events.</p>
               </div>
               
-              <div className="mt-8 text-center">
-                <p className="text-sm text-gray-500">
-                  By signing up, you agree to our <a href="/terms-of-service" className="text-blue-400 hover:underline">Terms of Service</a> and <a href="/privacy-policy" className="text-blue-400 hover:underline">Privacy Policy</a>.
+              <div className="mt-8">
+                <div className="p-3 bg-gray-800 border border-blue-800 rounded-lg mb-4">
+                  <h4 className="text-sm font-semibold text-blue-400 flex items-center mb-2">
+                    <span className="w-2 h-2 bg-blue-500 rounded-full mr-1.5"></span>
+                    PADDOCK20 CONFIDENTIALITY AGREEMENT
+                  </h4>
+                  <p className="text-xs text-gray-400 mb-2">
+                    All information, data, and intellectual property accessed through this platform is strictly confidential and proprietary to GoTime Motorsports. By proceeding, you agree not to disclose, reproduce, or share any information without explicit written permission.
+                  </p>
+                  <p className="text-xs text-gray-400">
+                    Violation of this confidentiality agreement may result in immediate termination of access privileges and potential legal action under applicable intellectual property and trade secret laws.
+                  </p>
+                </div>
+                <p className="text-xs text-center text-gray-500">
+                  By signing up, you agree to our <a href="/terms-of-service" className="text-blue-400 hover:underline">Terms of Service</a>, <a href="/privacy-policy" className="text-blue-400 hover:underline">Privacy Policy</a>, and the Paddock20 Confidentiality Agreement above.
                 </p>
               </div>
             </div>
