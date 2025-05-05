@@ -57,7 +57,7 @@ function DashboardPage() {
   
   // Dashboard layout
   const [dashboardLayout] = useState<string[]>([
-    'weather', 'world_clock', 'vehicles', 'drives', 'events', 'maintenance'
+    'weather', 'world_clock', 'vehicles', 'drives', 'events', 'stats', 'maintenance'
   ]);
 
   // Load data from profile and vehicles when they change
@@ -137,7 +137,25 @@ function DashboardPage() {
   return (
     <div className="dashboard bg-black text-white">
       <div className="p-4">
-        <h1 className="text-2xl font-bold mb-6">Welcome, {userName}</h1>
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-2xl font-bold">Welcome, {userName}</h1>
+            {profile && (
+              <p className="text-gray-400">
+                {profile.membershipLevel === 'premium' && <span className="text-blue-400 mr-1">⭐</span>}
+                {profile.membershipLevel === 'elite' && <span className="text-yellow-400 mr-1">⭐⭐⭐</span>}
+                Member since {new Date(profile.memberSince).toLocaleDateString()}
+              </p>
+            )}
+          </div>
+          
+          {profile && profile.statistics && (
+            <div className="text-right">
+              <p className="text-sm text-gray-400">Total Drives: {profile.statistics.totalDrives || 0}</p>
+              <p className="text-sm text-gray-400">Total Miles: {profile.statistics.totalMiles || 0}</p>
+            </div>
+          )}
+        </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {/* Weather Widget */}
@@ -258,6 +276,118 @@ function DashboardPage() {
               </div>
             </div>
           )}
+          
+          {/* Statistics */}
+          {dashboardLayout.includes('stats') && (
+            <div className="bg-gray-900 rounded-lg p-4 shadow-lg">
+              <h2 className="text-xl flex items-center gap-2 mb-4">
+                <BarChart3 className="h-5 w-5" /> Activity Statistics
+              </h2>
+              <div className="space-y-3">
+                {profile && profile.statistics ? (
+                  <div>
+                    <div className="bg-gray-800 p-3 rounded mb-3">
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm">Total Distance</span>
+                        <span className="text-sm font-bold">{profile.statistics.totalMiles || 0} miles</span>
+                      </div>
+                      <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
+                        <div 
+                          className="bg-blue-500 h-full" 
+                          style={{ width: `${Math.min(100, (profile.statistics.totalMiles || 0) / 30)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                    <div className="bg-gray-800 p-3 rounded mb-3">
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm">Drive Count</span>
+                        <span className="text-sm font-bold">{profile.statistics.totalDrives || 0}</span>
+                      </div>
+                      <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
+                        <div 
+                          className="bg-green-500 h-full" 
+                          style={{ width: `${Math.min(100, (profile.statistics.totalDrives || 0) / 1.5)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                    <div className="bg-gray-800 p-3 rounded mb-3">
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm">Events Attended</span>
+                        <span className="text-sm font-bold">{profile.statistics.eventsAttended || 0}</span>
+                      </div>
+                      <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
+                        <div 
+                          className="bg-purple-500 h-full" 
+                          style={{ width: `${Math.min(100, (profile.statistics.eventsAttended || 0) / 0.5)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                    <div className="bg-gray-800 p-3 rounded">
+                      <div className="flex justify-between mb-1">
+                        <span className="text-sm">Goals Completed</span>
+                        <span className="text-sm font-bold">{profile.statistics.goalsCompleted || 0}</span>
+                      </div>
+                      <div className="w-full bg-gray-700 h-2 rounded-full overflow-hidden">
+                        <div 
+                          className="bg-yellow-500 h-full" 
+                          style={{ width: `${Math.min(100, (profile.statistics.goalsCompleted || 0) / 0.5)}%` }}
+                        ></div>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-4">
+                    <p className="text-gray-400">No statistics available</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+          
+          {/* Profile Summary */}
+          <div className="bg-gray-900 rounded-lg p-4 shadow-lg">
+            <h2 className="text-xl flex items-center gap-2 mb-4">
+              <User className="h-5 w-5" /> Profile Summary
+            </h2>
+            <div className="space-y-3">
+              {profile ? (
+                <div className="bg-gray-800 p-3 rounded">
+                  <div className="flex items-center mb-2">
+                    {profile.avatar && (
+                      <img 
+                        src={profile.avatar} 
+                        alt="Profile" 
+                        className="w-12 h-12 rounded-full mr-3"
+                      />
+                    )}
+                    <div>
+                      <p className="font-semibold">{profile.displayName || profile.username}</p>
+                      <p className="text-sm text-gray-400">{profile.location || 'No location set'}</p>
+                    </div>
+                  </div>
+                  {profile.bio && (
+                    <p className="text-sm text-gray-300 mt-2">{profile.bio}</p>
+                  )}
+                  {profile.statistics && (
+                    <div className="grid grid-cols-2 gap-2 mt-3">
+                      <div className="text-center p-2 bg-gray-700 rounded">
+                        <p className="text-xl font-bold">{profile.statistics.totalDrives || 0}</p>
+                        <p className="text-xs text-gray-400">Drives</p>
+                      </div>
+                      <div className="text-center p-2 bg-gray-700 rounded">
+                        <p className="text-xl font-bold">{profile.statistics.eventsAttended || 0}</p>
+                        <p className="text-xs text-gray-400">Events</p>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center py-4">
+                  <p className="text-gray-400">Profile not loaded</p>
+                </div>
+              )}
+            </div>
+          </div>
           
           {/* Maintenance Alerts */}
           {dashboardLayout.includes('maintenance') && (
