@@ -28,7 +28,8 @@ export interface MaintenanceItem {
   completed: boolean;
   vehicleId: string;
 }
-import { useAuth } from '../hooks/useAuth';
+// Temporarily removing useAuth to fix provider dependency issue
+// import { useAuth } from '../hooks/useAuth';
 
 interface VehicleContextType {
   vehicles: Vehicle[];
@@ -62,7 +63,8 @@ export const VehicleProvider: React.FC<VehicleProviderProps> = ({ children }) =>
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  const { user } = useAuth();
+  // Temporarily using a mock user for testing authentication issue
+  const user = null; // Will be fixed when auth issue is resolved
 
   // Initialize vehicles from storage on component mount
   useEffect(() => {

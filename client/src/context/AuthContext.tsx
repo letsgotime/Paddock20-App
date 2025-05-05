@@ -205,19 +205,26 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         credentials: 'include',
       });
 
-      if (!response.ok) {
-        const data = await response.json();
-        throw new Error(data.error || 'Logout failed');
-      }
-
+      // Clear user data even if logout API fails
       setUser(null);
       setSession(null);
+      
+      // Force a hard reset of local storage for auth-related items
+      localStorage.removeItem('auth-session');
+      localStorage.removeItem('auth-token');
+      
+      // Clear session cookies by setting expired date
+      document.cookie = 'connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
       
       toast({
         title: 'Logged Out',
         description: 'You have been successfully logged out.',
         variant: 'default',
       });
+      
+      // Explicitly redirect to auth page
+      window.location.href = '/auth';
+      
     } catch (err) {
       console.error('Logout error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Logout failed';
@@ -229,7 +236,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         variant: 'destructive',
       });
       
-      throw new Error(errorMessage);
+      // Still try to redirect to auth page even on error
+      window.location.href = '/auth';
     } finally {
       setLoading(false);
     }

@@ -5,7 +5,8 @@ import { useAuth } from '../hooks/useAuth';
 
 // Controls whether to bypass real authentication and use the mock user
 // Set to true for development environments, false for production
-const DEV_MODE = true;
+// Changed to false to ensure proper authentication flow
+const DEV_MODE = false;
 
 interface ProtectedRouteProps {
   children: ReactNode;

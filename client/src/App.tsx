@@ -1,6 +1,6 @@
 import PreDriveChecklistPage from './pages/PreDriveChecklistPage';
 import React, { useEffect, useState } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import Header from './components/Header';
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -78,7 +78,7 @@ import SupportChatbot from "./components/SupportChatbot";
 import HomePage from "./pages/Home";
 import OneTapWeatherSnapshot from "./components/OneTapWeatherSnapshot";
 import UserOnboarding from "./components/UserOnboarding";
-import { AuthProvider } from "./context/AuthContext";
+// Auth Provider is imported in main.tsx
 import { MAIN_CONTENT_ID, LiveRegion } from './lib/accessibility';
 import './paddock20.css';
 import { getUserDisplayName } from './utils/DataIntegrityVerifier';
@@ -231,24 +231,23 @@ function App() {
 
   return (
     <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          {/* Authentication Provider for login/logout functionality */}
-          <AuthProvider>
-            {/* Page Title Manager - Updates browser tab title based on current route */}
-            <PageTitleManager />
-            {/* User Profile Provider - centralized user data warehouse */}
-            <UserProfileProvider>
-              {/* Sound Provider - Provides F1-inspired sound effects throughout the app */}
-              <SoundProvider>
-                {/* Vehicle Provider - Provides vehicle data to all components */}
-                <VehicleProvider>
-                  {/* Vehicle Data Provider - Provides comprehensive vehicle activity, media, and document data */}
-                  <VehicleDataProvider>
-                    {/* Centralized Weather Provider - Provides weather data to all components */}
-                    <WeatherProvider>
-                      <GalleryProvider>
-                        {/* Rewards Provider - for site-wide gamification */}
-                        <RewardsProvider>
+      <TooltipProvider>
+        {/* Page Title Manager - Updates browser tab title based on current route */}
+        <PageTitleManager />
+        {/* User Profile Provider - centralized user data warehouse */}
+        <UserProfileProvider>
+          {/* Sound Provider - Provides F1-inspired sound effects throughout the app */}
+          <SoundProvider>
+            {/* Vehicle Provider - Provides vehicle data to all components */}
+            <VehicleProvider>
+              {/* Vehicle Data Provider - Provides comprehensive vehicle activity, media, and document data */}
+              <VehicleDataProvider>
+                {/* Centralized Weather Provider - Provides weather data to all components */}
+                <WeatherProvider>
+                  {/* Gallery Provider - For media management */}
+                  <GalleryProvider>
+                    {/* Rewards Provider - for site-wide gamification */}
+                    <RewardsProvider>
                           {/* Skip link for keyboard navigation */}
                           <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
                             Skip to main content
@@ -377,15 +376,14 @@ function App() {
                             {/* Footer with links and information */}
                             <Footer />
                           </div>
-                        </RewardsProvider>
-                      </GalleryProvider>
-                    </WeatherProvider>
-                  </VehicleDataProvider>
-                </VehicleProvider>
-              </SoundProvider>
-            </UserProfileProvider>
-          </AuthProvider>
-        </TooltipProvider>
+                    </RewardsProvider>
+                  </GalleryProvider>
+                </WeatherProvider>
+              </VehicleDataProvider>
+            </VehicleProvider>
+          </SoundProvider>
+        </UserProfileProvider>
+      </TooltipProvider>
     </QueryClientProvider>
   );
 }

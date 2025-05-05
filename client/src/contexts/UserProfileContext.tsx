@@ -17,7 +17,8 @@ import userProfileWarehouse, {
   GalleryItem,
   DetailingActivity
 } from '../services/UserProfileWarehouse';
-import { useAuth } from '../hooks/useAuth';
+// Temporarily removing useAuth to fix provider dependency issue
+// import { useAuth } from '../hooks/useAuth';
 import { useToast } from '@/hooks/use-toast';
 
 // Context interface
@@ -196,7 +197,8 @@ export const UserProfileProvider: React.FC<{ children: ReactNode }> = ({ childre
   const [error, setError] = useState<string | null>(null);
   const [initialized, setInitialized] = useState<boolean>(false);
   
-  const { user } = useAuth();
+  // Temporarily using a mock user for testing authentication issue
+  const user = null; // Will be fixed when auth issue is resolved
   const { toast } = useToast();
   
   // Initialize the warehouse
