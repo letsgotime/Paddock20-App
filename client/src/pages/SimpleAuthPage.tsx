@@ -1,12 +1,12 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Eye, EyeOff, LogIn, UserPlus, AlertTriangle } from 'lucide-react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation } from 'wouter';
 import LegalDocumentModal from '../components/LegalDocumentModal';
 import { legalDocuments } from '../data/legalDocuments';
 
 // This is a simplified auth page that should work even if there are issues with other components
 const SimpleAuthPage = () => {
-  const navigate = useNavigate();
+  const [location, setLocation] = useLocation();
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
@@ -91,9 +91,9 @@ const SimpleAuthPage = () => {
       if (response.ok) {
         // Success! Redirect to onboarding if new registration, dashboard if login
         if (!isLogin) {
-          navigate('/onboarding', { replace: true });
+          setLocation('/onboarding');
         } else {
-          navigate('/dashboard', { replace: true });
+          setLocation('/dashboard');
         }
       } else {
         // Handle errors
