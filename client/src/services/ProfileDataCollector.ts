@@ -563,7 +563,7 @@ class ProfileDataCollector {
       detail: { 
         action: 'archive',
         vehicleId: vehicleId,
-        saleInfo: saleInfo
+        formattedSaleData: formattedSaleData
       }
     }));
     
