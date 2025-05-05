@@ -294,9 +294,12 @@ export class SecureUserProfileWarehouse implements UserProfileWarehouseInterface
       // Sanitize the profile before setting
       const sanitizedProfile = this.sanitizeProfileData(profile);
       
-      // Update entire profile
-      const currentProfile = this.baseWarehouse.getProfile();
-      await this.updateProfile(sanitizedProfile);
+      // Use safeWrite to directly update the stored profile
+      const success = secureWrite(STORAGE_KEY, sanitizedProfile);
+      
+      if (!success) {
+        throw new Error('Failed to write profile to storage');
+      }
       
       // Create a backup after successful update
       this.backupProfile();
@@ -351,14 +354,25 @@ export class SecureUserProfileWarehouse implements UserProfileWarehouseInterface
       // Apply the updates and sanitize the result
       const updatedProfile = this.sanitizeProfileData({
         ...currentProfile,
-        ...sanitizedUpdates
+        ...sanitizedUpdates,
+        _metadata: {
+          ...currentProfile._metadata,
+          lastUpdated: new Date().toISOString()
+        }
       });
       
-      // Set the updated profile
-      await this.baseWarehouse.setProfile(updatedProfile);
+      // Set the updated profile using direct secureWrite
+      const success = secureWrite(STORAGE_KEY, updatedProfile);
+      
+      if (!success) {
+        throw new Error('Failed to write updated profile to storage');
+      }
       
       // Create a backup after significant changes
       this.backupProfile();
+      
+      // Notify listeners of the change
+      this.notifyListeners(updatedProfile);
       
       this.errorCount = 0; // Reset error count on successful update
     } catch (e) {
@@ -379,7 +393,25 @@ export class SecureUserProfileWarehouse implements UserProfileWarehouseInterface
    * Subscribe to profile changes
    */
   public subscribeToChanges(listener: (profile: UserProfileData) => void): () => void {
-    return this.baseWarehouse.subscribeToChanges(listener);
+    this.changeListeners.push(listener);
+    
+    // Initial call with current profile
+    const currentProfile = this.getProfile();
+    if (currentProfile) {
+      try {
+        listener(currentProfile);
+      } catch (e) {
+        console.error('Error in profile change listener (initial call):', e);
+      }
+    }
+    
+    // Return unsubscribe function
+    return () => {
+      const index = this.changeListeners.indexOf(listener);
+      if (index !== -1) {
+        this.changeListeners.splice(index, 1);
+      }
+    };
   }
   
   /**
@@ -465,6 +497,125 @@ export class SecureUserProfileWarehouse implements UserProfileWarehouseInterface
       }
       
       return defaultValue;
+    }
+  }
+  
+  /**
+   * Update identity section of the profile with sanitization
+   */
+  public updateIdentity(updates: Partial<UserProfileData['identity']>): void {
+    try {
+      // Get the current profile
+      const currentProfile = this.getProfile();
+      if (!currentProfile) {
+        throw new Error('Cannot update identity - no profile found');
+      }
+
+      // Sanitize the updates
+      const sanitizedIdentity = { ...currentProfile.identity };
+      
+      if (updates.displayName) sanitizedIdentity.displayName = sanitizeText(updates.displayName);
+      if (updates.username) sanitizedIdentity.username = sanitizeText(updates.username);
+      if (updates.bio) sanitizedIdentity.bio = sanitizeText(updates.bio);
+      if (updates.location) sanitizedIdentity.location = sanitizeText(updates.location);
+      if (updates.memberSince) sanitizedIdentity.memberSince = sanitizeDate(updates.memberSince);
+      if (updates.lastActive) sanitizedIdentity.lastActive = sanitizeDate(updates.lastActive);
+      if (updates.avatar) sanitizedIdentity.avatar = sanitizeText(updates.avatar);
+      if (updates.socialLinks) sanitizedIdentity.socialLinks = sanitizeObject(updates.socialLinks);
+      
+      // Update lastActive to now if not explicitly provided
+      if (!updates.lastActive) {
+        sanitizedIdentity.lastActive = new Date().toISOString();
+      }
+
+      // Create and update the profile
+      const updatedProfile = {
+        ...currentProfile,
+        identity: sanitizedIdentity,
+        _metadata: {
+          ...currentProfile._metadata,
+          lastUpdated: new Date().toISOString()
+        }
+      };
+
+      // Update the profile in the base warehouse
+      this.baseWarehouse.updateProfile(updatedProfile);
+      
+      // Create a backup
+      this.backupProfile();
+      
+      // Notify listeners of the change
+      this.notifyListeners(updatedProfile);
+      
+    } catch (e) {
+      console.error('Error updating identity:', e);
+      throw e;
+    }
+  }
+  
+  /**
+   * Update preferences section of the profile
+   */
+  public updatePreferences(updates: Partial<UserProfileData['preferences']>): void {
+    try {
+      // Get the current profile
+      const currentProfile = this.getProfile();
+      if (!currentProfile) {
+        throw new Error('Cannot update preferences - no profile found');
+      }
+      
+      // Apply and sanitize updates
+      const sanitizedPreferences = {
+        ...currentProfile.preferences,
+        ...sanitizeObject(updates)
+      };
+      
+      // Create the updated profile
+      const updatedProfile = {
+        ...currentProfile,
+        preferences: sanitizedPreferences,
+        _metadata: {
+          ...currentProfile._metadata,
+          lastUpdated: new Date().toISOString()
+        }
+      };
+      
+      // Update the profile in the base warehouse
+      this.baseWarehouse.updateProfile(updatedProfile);
+      
+      // Create a backup
+      this.backupProfile();
+      
+      // Notify listeners of the change
+      this.notifyListeners(updatedProfile);
+      
+    } catch (e) {
+      console.error('Error updating preferences:', e);
+      throw e;
+    }
+  }
+  
+  /**
+   * Reset the profile to default state
+   */
+  public resetProfile(): void {
+    try {
+      // Create a default profile
+      const defaultProfile = this.createDefaultProfile();
+      
+      // Update the profile in the base warehouse
+      this.baseWarehouse.updateProfile(defaultProfile);
+      
+      // Create a backup
+      this.backupProfile();
+      
+      // Notify listeners of the change
+      this.notifyListeners(defaultProfile);
+      
+      console.log('Profile has been reset to default state');
+    } catch (e) {
+      console.error('Error resetting profile:', e);
+      throw e;
     }
   }
 }
