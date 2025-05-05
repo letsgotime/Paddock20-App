@@ -17,6 +17,12 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   // Use the useAuth hook which provides a unified interface to authentication
   const auth = useAuth();
   
+  console.log('ProtectedRoute checking auth status:', { 
+    loading: auth.loading, 
+    user: auth.user ? 'authenticated' : 'not authenticated',
+    path: location.pathname
+  });
+  
   // Show loading state while checking authentication
   if (auth.loading) {
     return (
@@ -35,5 +41,6 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   }
 
   // If not authenticated and not in DEV_MODE, redirect to the login page
-  return <Navigate to="/auth" state={{ from: location }} replace />;
+  // Also add a timestamp parameter to break any potential client-side caching
+  return <Navigate to={`/auth?t=${Date.now()}`} state={{ from: location }} replace />;
 }
