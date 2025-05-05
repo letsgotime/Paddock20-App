@@ -170,7 +170,7 @@ const SimpleAuthPage = () => {
               </div>
               
               <p className="text-xl text-white font-light leading-relaxed">
-                The revolutionary automotive lifestyle platform with F1-grade intelligence that transforms everyday car care into an addictive experience
+                The bespoke automotive lifestyle platform with F1-precision intelligence that transforms everyday car care into a curated experience
               </p>
               
               <div className="space-y-4 mt-8">
