@@ -27,8 +27,16 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
         setCheckingOnboarding(true);
         
         try {
+          // Ensure we have a user with an ID
+          if (!auth.user || !auth.user.id) {
+            console.error('Cannot check onboarding: Invalid user or missing ID');
+            setHasCompletedOnboarding(false);
+            setCheckingOnboarding(false);
+            return;
+          }
+          
           // Get user ID safely
-          const userId = auth.user?.id ? auth.user.id.toString() : 'unknown';
+          const userId = auth.user.id.toString();
           
           // First check if user has completed beta onboarding
           const betaOnboardingKey = `paddock20_beta_onboarding_complete_${userId}`;

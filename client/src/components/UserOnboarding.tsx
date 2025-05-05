@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'wouter';
 import { 
   Check, X, ChevronRight, AlertTriangle, Shield, Car, Trophy, Clock, 
   User, Settings, Map, Calendar, Gauge, Heart, ThumbsUp, 
@@ -8,6 +8,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { handleDeclineTerms } from '../utils/accountUtils';
+import { useAuth } from '../hooks/useAuth';
 
 interface UserOnboardingProps {
   onComplete: (userId: number | string) => void;
@@ -113,6 +114,9 @@ const moduleOptions = [
  * Color scheme follows the dark carbon-fiber theme with Carolina blue accents.
  */
 const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
+  // Access authenticated user context
+  const auth = useAuth();
+  
   // Current step state (1-6)
   const [step, setStep] = useState(1);
   const [visibleStep, setVisibleStep] = useState(1);
@@ -415,6 +419,15 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
     // In a real app, this would save the data to a database
     // For now, we'll save to localStorage for demo purposes
     
+    // Get authenticated user ID
+    const userId = auth.user?.id;
+    
+    if (!userId) {
+      console.error('Cannot complete onboarding: No authenticated user found');
+      setError('Authentication error. Please try logging in again.');
+      return;
+    }
+    
     // Save legal agreements
     localStorage.setItem('userAgreements', JSON.stringify({
       accepted: true,
@@ -437,11 +450,13 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
     // Save routes
     localStorage.setItem('userRoutes', JSON.stringify(routes));
     
-    // Navigate to the homepage
-    window.location.href = '/';
+    // Complete onboarding by passing user ID
+    onComplete(userId);
     
-    // Complete onboarding
-    onComplete();
+    console.log('Onboarding completed for user ID:', userId);
+    
+    // Navigate to the homepage (this is now handled in the onComplete callback)
+    // Don't need window.location.href = '/' here anymore
   };
 
   // Simplified step navigation functions
@@ -685,7 +700,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                   </div>
                   <div className="flex-1">
                     <label htmlFor="terms-agreement" className="font-medium text-white cursor-pointer">
-                      I have read and agree to the <Link to="/terms-of-service" target="_blank" className="text-[#1982FC] hover:underline">Terms of Service</Link>
+                      I have read and agree to the <Link href="/terms-of-service" target="_blank" className="text-[#1982FC] hover:underline">Terms of Service</Link>
                     </label>
                     <p className="text-sm text-gray-300 mt-2">
                       The Terms of Service outline your rights and obligations when using Paddock20, including acceptable use policies, intellectual property rights, and liability limitations.
@@ -709,7 +724,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                   </div>
                   <div className="flex-1">
                     <label htmlFor="privacy-agreement" className="font-medium text-white cursor-pointer">
-                      I have read and agree to the <Link to="/privacy-policy" target="_blank" className="text-[#1982FC] hover:underline">Privacy Policy</Link>
+                      I have read and agree to the <Link href="/privacy-policy" target="_blank" className="text-[#1982FC] hover:underline">Privacy Policy</Link>
                     </label>
                     <p className="text-sm text-gray-300 mt-2">
                       Our Privacy Policy explains how we collect, use, store, and protect your personal information, including your rights regarding your data and our data retention practices.
