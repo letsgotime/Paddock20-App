@@ -780,6 +780,218 @@ async function syncMediaBetweenSources(forceFull = false): Promise<{
 }
 
 /**
+ * Reconciles vehicle data from multiple sources into a single consistent format
+ * This is crucial for fixing the multiple vehicle data source issue
+ * @param vehicleId Optional specific vehicle ID to reconcile
+ * @returns The reconciled vehicles array
+ */
+function reconcileVehicleData(vehicleId?: string): any[] {
+  console.log('Starting vehicle data reconciliation process...');
+  
+  try {
+    // Collect vehicles from all possible sources
+    const sources = {
+      // Primary sources
+      vehicleContext: useVehicle()?.vehicles || [],
+      userProfile: useUserProfileStore.getState().profile?.vehicles || [],
+      
+      // Secondary sources
+      localStorage: (() => {
+        try {
+          // Check multiple known storage locations
+          const vehicleData = localStorage.getItem(STORAGE_KEYS.VEHICLE_DATA);
+          const garageData = localStorage.getItem(STORAGE_KEYS.GARAGE);
+          const profileVehicles = localStorage.getItem(STORAGE_KEYS.USER_PROFILE);
+          
+          const results = [];
+          
+          if (vehicleData) {
+            try {
+              const parsed = JSON.parse(vehicleData);
+              if (Array.isArray(parsed)) {
+                results.push(...parsed);
+              }
+            } catch (e) {
+              console.error('Failed to parse vehicle data from localStorage');
+            }
+          }
+          
+          if (garageData) {
+            try {
+              const parsed = JSON.parse(garageData);
+              if (parsed && parsed.vehicles && Array.isArray(parsed.vehicles)) {
+                results.push(...parsed.vehicles);
+              }
+            } catch (e) {
+              console.error('Failed to parse garage data from localStorage');
+            }
+          }
+          
+          if (profileVehicles) {
+            try {
+              const parsed = JSON.parse(profileVehicles);
+              if (parsed && parsed.vehicles && Array.isArray(parsed.vehicles)) {
+                results.push(...parsed.vehicles);
+              }
+            } catch (e) {
+              console.error('Failed to parse profile vehicles from localStorage');
+            }
+          }
+          
+          return results;
+        } catch (e) {
+          console.error('Error accessing localStorage:', e);
+          return [];
+        }
+      })(),
+      
+      onboardingData: (() => {
+        try {
+          const data = localStorage.getItem(STORAGE_KEYS.ONBOARDING);
+          if (data) {
+            const parsed = JSON.parse(data);
+            if (parsed && parsed.vehicles && Array.isArray(parsed.vehicles)) {
+              return parsed.vehicles;
+            }
+          }
+          return [];
+        } catch (e) {
+          console.error('Error getting onboarding vehicles:', e);
+          return [];
+        }
+      })()
+    };
+    
+    // Create a map to collect all vehicles by ID
+    const vehicleMap = new Map();
+    
+    // Process each source, collecting all vehicle data
+    Object.entries(sources).forEach(([sourceName, vehicles]) => {
+      if (!Array.isArray(vehicles) || vehicles.length === 0) {
+        return;
+      }
+      
+      // Process each vehicle from this source
+      vehicles.forEach(vehicle => {
+        // Skip if we're reconciling a specific vehicle and this isn't it
+        if (vehicleId && vehicle.id !== vehicleId) {
+          return;
+        }
+        
+        // Ensure we have a valid ID
+        if (!vehicle.id) {
+          console.warn('Vehicle without ID found in', sourceName, '- skipping');
+          return;
+        }
+        
+        // If we already have this vehicle, merge the data
+        if (vehicleMap.has(vehicle.id)) {
+          const existingVehicle = vehicleMap.get(vehicle.id);
+          
+          // Always take the newer updatedAt timestamp if available
+          const existingDate = existingVehicle.updatedAt ? new Date(existingVehicle.updatedAt) : new Date(0);
+          const incomingDate = vehicle.updatedAt ? new Date(vehicle.updatedAt) : new Date(0);
+          
+          // If the incoming vehicle is newer, prioritize its data
+          if (incomingDate > existingDate) {
+            // Create a merged vehicle with the newer data taking precedence
+            vehicleMap.set(vehicle.id, {
+              ...existingVehicle,
+              ...vehicle,
+              // Parse year to number if it's a string
+              year: typeof vehicle.year === 'string' ? parseInt(vehicle.year) : vehicle.year,
+              // Parse mileage to number if it's a string
+              mileage: typeof vehicle.mileage === 'string' ? parseInt(vehicle.mileage) : vehicle.mileage,
+              // Merge source tracking
+              _source: (existingVehicle._source || '') + ',' + sourceName,
+              // Keep track of the last reconciliation
+              _lastReconciled: new Date().toISOString()
+            });
+          } else {
+            // Keep existing data but add source information
+            vehicleMap.set(vehicle.id, {
+              ...existingVehicle,
+              // Parse year to number if it's a string
+              year: typeof existingVehicle.year === 'string' ? parseInt(existingVehicle.year) : existingVehicle.year,
+              // Parse mileage to number if it's a string
+              mileage: typeof existingVehicle.mileage === 'string' ? parseInt(existingVehicle.mileage) : existingVehicle.mileage,
+              // Merge source tracking
+              _source: (existingVehicle._source || '') + ',' + sourceName,
+              // Keep track of the last reconciliation
+              _lastReconciled: new Date().toISOString()
+            });
+          }
+        } else {
+          // First time seeing this vehicle, just add it with source information
+          vehicleMap.set(vehicle.id, {
+            ...vehicle,
+            // Parse year to number if it's a string
+            year: typeof vehicle.year === 'string' ? parseInt(vehicle.year) : vehicle.year,
+            // Parse mileage to number if it's a string
+            mileage: typeof vehicle.mileage === 'string' ? parseInt(vehicle.mileage) : vehicle.mileage,
+            _source: sourceName,
+            _lastReconciled: new Date().toISOString()
+          });
+        }
+      });
+    });
+    
+    // Convert the map back to an array
+    const reconciledVehicles = Array.from(vehicleMap.values());
+    
+    console.log(`Vehicle reconciliation complete: ${reconciledVehicles.length} vehicles reconciled`);
+    
+    // Return the reconciled vehicles
+    return reconciledVehicles;
+  } catch (error) {
+    console.error('Error reconciling vehicle data:', error);
+    return [];
+  }
+}
+
+/**
+ * Updates all data stores with the reconciled vehicle data
+ * This ensures that all components see the same consistent vehicle data
+ * @param reconciledVehicles The array of reconciled vehicles
+ */
+function updateAllVehicleStores(reconciledVehicles: any[]): void {
+  if (!reconciledVehicles || reconciledVehicles.length === 0) {
+    console.warn('No reconciled vehicles to update stores with');
+    return;
+  }
+  
+  console.log(`Updating all data stores with ${reconciledVehicles.length} reconciled vehicles`);
+  
+  try {
+    // Update the user profile store
+    const { updateProfile } = useUserProfileStore.getState();
+    updateProfile({ 
+      vehicles: reconciledVehicles,
+      lastActive: new Date().toISOString()
+    });
+    
+    // Update localStorage for persistence
+    try {
+      localStorage.setItem(STORAGE_KEYS.VEHICLE_DATA, JSON.stringify(reconciledVehicles));
+      localStorage.setItem(STORAGE_KEYS.USER_PROFILE, JSON.stringify({
+        ...useUserProfileStore.getState().profile,
+        vehicles: reconciledVehicles,
+        lastActive: new Date().toISOString()
+      }));
+    } catch (e) {
+      console.error('Error updating localStorage with reconciled vehicles:', e);
+    }
+    
+    // Use the ProfileDataCollector to broadcast the updates to all components
+    ProfileDataCollector.syncAllVehicles(reconciledVehicles);
+    
+    console.log('All vehicle stores updated with reconciled data');
+  } catch (error) {
+    console.error('Error updating vehicle stores:', error);
+  }
+}
+
+/**
  * Initializes all data connections to ensure components receive data in expected format
  * This should be called early in the app startup sequence
  */
@@ -789,10 +1001,11 @@ function initializeDataConnections() {
   
   // If we have a profile, sync it to all contexts
   if (profile) {
-    // Sync vehicles to vehicle context
-    if (profile.vehicles && profile.vehicles.length > 0) {
-      ProfileDataCollector.syncAllVehicles(profile.vehicles);
-    }
+    // First reconcile vehicles from all sources
+    const reconciledVehicles = reconcileVehicleData();
+    
+    // Update all stores with the reconciled data
+    updateAllVehicleStores(reconciledVehicles);
     
     // Perform bi-directional sync to ensure all data is connected
     syncMediaBetweenSources().then(result => {
