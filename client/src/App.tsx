@@ -1,6 +1,6 @@
 import PreDriveChecklistPage from './pages/PreDriveChecklistPage';
 import React, { useEffect, useState } from 'react';
-import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
+import { Route, Link, useLocation } from 'wouter';
 import Header from './components/Header';
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -283,107 +283,99 @@ function App() {
                                   className={window.location.pathname === '/weather-paddock' ? 'hidden' : ''}
                                 />
                               )}
-                            
-                              <Routes>
-                                {/* Auth route - handled differently now */}
-                                <Route path="/auth" element={<Navigate to="/auth" replace />} />
                                 
-                                {/* Legal Document Pages - Publicly accessible */}
-                                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                                <Route path="/terms-of-service" element={<TermsOfService />} />
-                                <Route path="/beta-agreement" element={<BetaAgreement />} />
-                                
-                                {/* User Onboarding - Requires authentication but not onboarding completion */}
-                                <Route 
-                                  path="/onboarding" 
-                                  element={
-                                    <UserOnboarding 
-                                      onComplete={(userId) => {
-                                        // Mark onboarding as complete
-                                        if (userId) {
-                                          const betaOnboardingKey = `paddock20_beta_onboarding_complete_${userId}`;
-                                          localStorage.setItem(betaOnboardingKey, 'true');
-                                          
-                                          // Also mark the legal agreements as accepted
-                                          const legalAgreementsKey = `paddock20_legal_agreements_${userId}`;
-                                          localStorage.setItem(legalAgreementsKey, JSON.stringify({
-                                            accepted: true,
-                                            version: '1.0',
-                                            timestamp: new Date().toISOString()
-                                          }));
-                                          
-                                          // Redirect to dashboard
-                                          window.location.href = '/';
-                                        }
-                                      }} 
-                                    />
-                                  } 
-                                />
+                              {/* Legal Document Pages - Publicly accessible */}
+                              <Route path="/privacy-policy" component={PrivacyPolicy} />
+                              <Route path="/terms-of-service" component={TermsOfService} />
+                              <Route path="/beta-agreement" component={BetaAgreement} />
                               
-                                {/* Protected routes */}
-                                <Route path="/" element={<ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
-                                <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-                                <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-                                <Route path="/personalized-dashboard" element={<ProtectedRoute><PersonalizedDashboard /></ProtectedRoute>} />
-                                {/* Main Garage Vault Hub - Central repository for all vehicle data */}
-                                <Route path="/garage-vault" element={<ProtectedRoute><GarageVaultPage /></ProtectedRoute>} />
-                                {/* New GoTime Garage Vault - Enhanced F1-style vehicle management */}
-                                <Route path="/gotime-garage" element={<ProtectedRoute><GoTimeGarageVault /></ProtectedRoute>} />
-                                {/* Garage Vehicle Management System */}
-                                <Route path="/garage" element={<ProtectedRoute><GaragePage /></ProtectedRoute>} />
-                                <Route path="/garage/add-vehicle" element={<ProtectedRoute><AddVehiclePage /></ProtectedRoute>} />
-                                <Route path="/garage/edit-vehicle/:id" element={<ProtectedRoute><AddVehiclePage /></ProtectedRoute>} />
-                                <Route path="/garage/vehicle/:id" element={<ProtectedRoute><GaragePage /></ProtectedRoute>} />
-                                
-                                {/* User Profile Hub - Central brain for all driver data */}
-                                <Route path="/profile" element={<ProtectedRoute><UserProfileHubPage /></ProtectedRoute>} />
-                                
-                                <Route path="/journal" element={<ProtectedRoute><Journal /></ProtectedRoute>} />
-                                <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
-                                <Route path="/motorsports" element={<ProtectedRoute><Motorsports /></ProtectedRoute>} />
-                                <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
-                                <Route path="/events-page" element={<ProtectedRoute><EventsPage /></ProtectedRoute>} />
-                                <Route path="/motorsports-events" element={<ProtectedRoute><MotorsportsEventsPage /></ProtectedRoute>} />
-                                <Route path="/juicebox" element={<ProtectedRoute><JuiceBox /></ProtectedRoute>} />
-                                <Route path="/gloss-reset" element={<ProtectedRoute><GlossResetPage /></ProtectedRoute>} />
-                                <Route path="/juice-loadouts" element={<ProtectedRoute><LoadoutsPage /></ProtectedRoute>} />
-                                <Route path="/gloss-growth" element={<ProtectedRoute><GlossGrowthPage /></ProtectedRoute>} />
-                                <Route path="/juicebox-videos" element={<ProtectedRoute><VideoLibraryPage /></ProtectedRoute>} />
-                              <Route path="/broker-portal" element={<ProtectedRoute><BrokerPortalPage /></ProtectedRoute>} />
-                              <Route path="/weather" element={<ProtectedRoute><Weather /></ProtectedRoute>} />
-                              <Route path="/weather-paddock" element={<ProtectedRoute><NewGTGWeatherPage /></ProtectedRoute>} />
-                              {/* Keep old route for backward compatibility, but redirect to new name */}
-                              <Route path="/new-weather-center" element={<Navigate to="/weather-paddock" replace />} />
-                              <Route path="/redline" element={<ProtectedRoute><RedlineReportPage /></ProtectedRoute>} />
-                              <Route path="/seasonal-checklist" element={<ProtectedRoute><SeasonalChecklistPage /></ProtectedRoute>} />
-                              <Route path="/pre-drive-checklist" element={<ProtectedRoute><PreDriveChecklistPage /></ProtectedRoute>} />
-                              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-                              <Route path="/settings/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-                              <Route path="/apexvault" element={<ProtectedRoute><UserProfileHubPage /></ProtectedRoute>} />
-                              <Route path="/vehicle-mods/:id" element={<ProtectedRoute><VehicleModsPage /></ProtectedRoute>} />
-                              <Route path="/membership" element={<ProtectedRoute><MembershipPage /></ProtectedRoute>} />
-                              <Route path="/paddock20-vault" element={<Navigate to="/membership" replace />} />
-                              <Route path="/tires-timepieces" element={<ProtectedRoute><TiresTimepieces /></ProtectedRoute>} />
-                              <Route path="/manifestation-station" element={<ProtectedRoute><ManifestationStationPage /></ProtectedRoute>} />
-                              <Route path="/mod-planner" element={<ProtectedRoute><ModPlannerPage /></ProtectedRoute>} />
-                              <Route path="/concierge" element={<ProtectedRoute><ConciergePage /></ProtectedRoute>} />
-                              <Route path="/hustle-planner" element={<ProtectedRoute><HustlePlannerPage /></ProtectedRoute>} />
-                              <Route path="/route-planner" element={<ProtectedRoute><RoutePlannerPage /></ProtectedRoute>} />
-                              <Route path="/drive-journal" element={<ProtectedRoute><DriveJournalPage /></ProtectedRoute>} />
-                              <Route path="/drive-journal/new" element={<ProtectedRoute><DriveJournalPage /></ProtectedRoute>} />
-                              <Route path="/ebooks" element={<ProtectedRoute><EBooksPage /></ProtectedRoute>} />
-                              <Route path="/discounts" element={<ProtectedRoute><DiscountsPage /></ProtectedRoute>} />
-                              <Route path="/contact" element={<ProtectedRoute><ContactPage /></ProtectedRoute>} />
-                              <Route path="/chat-feed" element={<ProtectedRoute><ChatFeedPage /></ProtectedRoute>} />
-                              <Route path="/share" element={<ProtectedRoute><ShareDemoPage /></ProtectedRoute>} />
-                              <Route path="/mood-energy-tracker" element={<ProtectedRoute><MoodEnergyTrackerPage /></ProtectedRoute>} />
-                              <Route path="/motorsports-gallery" element={<ProtectedRoute><MotorsportsGalleryPage /></ProtectedRoute>} />
-                              <Route path="/podium-pursuit" element={<ProtectedRoute><PodiumPursuitPage /></ProtectedRoute>} />
-                              <Route path="/sound-library" element={<ProtectedRoute><SoundLibraryPage /></ProtectedRoute>} />
-                              <Route path="/product-organizer" element={<ProtectedRoute><ProductOrganizerPage /></ProtectedRoute>} />
-                              <Route path="/debug" element={<ProtectedRoute><DebugPage /></ProtectedRoute>} />
-                              <Route path="*" element={<NotFound />} />
-                              </Routes>
+                              {/* User Onboarding - Requires authentication but not onboarding completion */}
+                              <Route 
+                                path="/onboarding" 
+                                component={() => (
+                                  <UserOnboarding 
+                                    onComplete={(userId) => {
+                                      // Mark onboarding as complete
+                                      if (userId) {
+                                        const betaOnboardingKey = `paddock20_beta_onboarding_complete_${userId}`;
+                                        localStorage.setItem(betaOnboardingKey, 'true');
+                                        
+                                        // Also mark the legal agreements as accepted
+                                        const legalAgreementsKey = `paddock20_legal_agreements_${userId}`;
+                                        localStorage.setItem(legalAgreementsKey, JSON.stringify({
+                                          accepted: true,
+                                          version: '1.0',
+                                          timestamp: new Date().toISOString()
+                                        }));
+                                        
+                                        // Redirect to dashboard
+                                        window.location.href = '/';
+                                      }
+                                    }} 
+                                  />
+                                )} 
+                              />
+                            
+                              {/* Protected routes */}
+                              <Route path="/" component={() => <ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
+                              <Route path="/home" component={() => <ProtectedRoute><Home /></ProtectedRoute>} />
+                              <Route path="/dashboard" component={() => <ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+                              <Route path="/personalized-dashboard" component={() => <ProtectedRoute><PersonalizedDashboard /></ProtectedRoute>} />
+                              {/* Main Garage Vault Hub - Central repository for all vehicle data */}
+                              <Route path="/garage-vault" component={() => <ProtectedRoute><GarageVaultPage /></ProtectedRoute>} />
+                              {/* New GoTime Garage Vault - Enhanced F1-style vehicle management */}
+                              <Route path="/gotime-garage" component={() => <ProtectedRoute><GoTimeGarageVault /></ProtectedRoute>} />
+                              {/* Garage Vehicle Management System */}
+                              <Route path="/garage" component={() => <ProtectedRoute><GaragePage /></ProtectedRoute>} />
+                              <Route path="/garage/add-vehicle" component={() => <ProtectedRoute><AddVehiclePage /></ProtectedRoute>} />
+                              <Route path="/garage/edit-vehicle/:id" component={() => <ProtectedRoute><AddVehiclePage /></ProtectedRoute>} />
+                              <Route path="/garage/vehicle/:id" component={() => <ProtectedRoute><GaragePage /></ProtectedRoute>} />
+                              
+                              {/* User Profile Hub - Central brain for all driver data */}
+                              <Route path="/profile" component={() => <ProtectedRoute><UserProfileHubPage /></ProtectedRoute>} />
+                              
+                              <Route path="/journal" component={() => <ProtectedRoute><Journal /></ProtectedRoute>} />
+                              <Route path="/marketplace" component={() => <ProtectedRoute><Marketplace /></ProtectedRoute>} />
+                              <Route path="/motorsports" component={() => <ProtectedRoute><Motorsports /></ProtectedRoute>} />
+                              <Route path="/events" component={() => <ProtectedRoute><Events /></ProtectedRoute>} />
+                              <Route path="/events-page" component={() => <ProtectedRoute><EventsPage /></ProtectedRoute>} />
+                              <Route path="/motorsports-events" component={() => <ProtectedRoute><MotorsportsEventsPage /></ProtectedRoute>} />
+                              <Route path="/juicebox" component={() => <ProtectedRoute><JuiceBox /></ProtectedRoute>} />
+                              <Route path="/gloss-reset" component={() => <ProtectedRoute><GlossResetPage /></ProtectedRoute>} />
+                              <Route path="/juice-loadouts" component={() => <ProtectedRoute><LoadoutsPage /></ProtectedRoute>} />
+                              <Route path="/gloss-growth" component={() => <ProtectedRoute><GlossGrowthPage /></ProtectedRoute>} />
+                              <Route path="/juicebox-videos" component={() => <ProtectedRoute><VideoLibraryPage /></ProtectedRoute>} />
+                              <Route path="/broker-portal" component={() => <ProtectedRoute><BrokerPortalPage /></ProtectedRoute>} />
+                              <Route path="/weather" component={() => <ProtectedRoute><Weather /></ProtectedRoute>} />
+                              <Route path="/weather-paddock" component={() => <ProtectedRoute><NewGTGWeatherPage /></ProtectedRoute>} />
+                              <Route path="/redline" component={() => <ProtectedRoute><RedlineReportPage /></ProtectedRoute>} />
+                              <Route path="/seasonal-checklist" component={() => <ProtectedRoute><SeasonalChecklistPage /></ProtectedRoute>} />
+                              <Route path="/pre-drive-checklist" component={() => <ProtectedRoute><PreDriveChecklistPage /></ProtectedRoute>} />
+                              <Route path="/settings" component={() => <ProtectedRoute><Settings /></ProtectedRoute>} />
+                              <Route path="/settings/dashboard" component={() => <ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+                              <Route path="/apexvault" component={() => <ProtectedRoute><UserProfileHubPage /></ProtectedRoute>} />
+                              <Route path="/vehicle-mods/:id" component={() => <ProtectedRoute><VehicleModsPage /></ProtectedRoute>} />
+                              <Route path="/membership" component={() => <ProtectedRoute><MembershipPage /></ProtectedRoute>} />
+                              <Route path="/tires-timepieces" component={() => <ProtectedRoute><TiresTimepieces /></ProtectedRoute>} />
+                              <Route path="/manifestation-station" component={() => <ProtectedRoute><ManifestationStationPage /></ProtectedRoute>} />
+                              <Route path="/mod-planner" component={() => <ProtectedRoute><ModPlannerPage /></ProtectedRoute>} />
+                              <Route path="/concierge" component={() => <ProtectedRoute><ConciergePage /></ProtectedRoute>} />
+                              <Route path="/hustle-planner" component={() => <ProtectedRoute><HustlePlannerPage /></ProtectedRoute>} />
+                              <Route path="/route-planner" component={() => <ProtectedRoute><RoutePlannerPage /></ProtectedRoute>} />
+                              <Route path="/drive-journal" component={() => <ProtectedRoute><DriveJournalPage /></ProtectedRoute>} />
+                              <Route path="/drive-journal/new" component={() => <ProtectedRoute><DriveJournalPage /></ProtectedRoute>} />
+                              <Route path="/ebooks" component={() => <ProtectedRoute><EBooksPage /></ProtectedRoute>} />
+                              <Route path="/discounts" component={() => <ProtectedRoute><DiscountsPage /></ProtectedRoute>} />
+                              <Route path="/contact" component={() => <ProtectedRoute><ContactPage /></ProtectedRoute>} />
+                              <Route path="/chat-feed" component={() => <ProtectedRoute><ChatFeedPage /></ProtectedRoute>} />
+                              <Route path="/share" component={() => <ProtectedRoute><ShareDemoPage /></ProtectedRoute>} />
+                              <Route path="/mood-energy-tracker" component={() => <ProtectedRoute><MoodEnergyTrackerPage /></ProtectedRoute>} />
+                              <Route path="/motorsports-gallery" component={() => <ProtectedRoute><MotorsportsGalleryPage /></ProtectedRoute>} />
+                              <Route path="/podium-pursuit" component={() => <ProtectedRoute><PodiumPursuitPage /></ProtectedRoute>} />
+                              <Route path="/sound-library" component={() => <ProtectedRoute><SoundLibraryPage /></ProtectedRoute>} />
+                              <Route path="/product-organizer" component={() => <ProtectedRoute><ProductOrganizerPage /></ProtectedRoute>} />
+                              <Route path="/debug" component={() => <ProtectedRoute><DebugPage /></ProtectedRoute>} />
+                              <Route path="*" component={NotFound} />
                               
                               {/* Removed duplicate SupportChatbot component */}
                               
