@@ -236,156 +236,156 @@ function App() {
           <AuthProvider>
             {/* Page Title Manager - Updates browser tab title based on current route */}
             <PageTitleManager />
-            {/* Sound Provider - Provides F1-inspired sound effects throughout the app */}
-            <SoundProvider>
-              {/* Vehicle Provider - Provides vehicle data to all components */}
-              <VehicleProvider>
-                {/* Vehicle Data Provider - Provides comprehensive vehicle activity, media, and document data */}
-                <VehicleDataProvider>
-                  {/* Centralized Weather Provider - Provides weather data to all components */}
-                  <WeatherProvider>
-                    <GalleryProvider>
-                      {/* User Profile Provider - centralized user data warehouse */}
-                      <UserProfileProvider>
+            {/* User Profile Provider - centralized user data warehouse */}
+            <UserProfileProvider>
+              {/* Sound Provider - Provides F1-inspired sound effects throughout the app */}
+              <SoundProvider>
+                {/* Vehicle Provider - Provides vehicle data to all components */}
+                <VehicleProvider>
+                  {/* Vehicle Data Provider - Provides comprehensive vehicle activity, media, and document data */}
+                  <VehicleDataProvider>
+                    {/* Centralized Weather Provider - Provides weather data to all components */}
+                    <WeatherProvider>
+                      <GalleryProvider>
                         {/* Rewards Provider - for site-wide gamification */}
                         <RewardsProvider>
-                    {/* Skip link for keyboard navigation */}
-                    <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
-                      Skip to main content
-                    </a>
-                  
-                    {/* User Onboarding - Show for first time users or when terms update */}
-                    {(effectiveSession || previewMode) && !hasCompletedOnboarding && (
-                      <UserOnboarding onComplete={completeOnboarding} />
-                    )}
-                  
-                    <div className="min-h-screen bg-black font-openSans text-white">
-                      {/* Authentication Header - always visible */}
-                      <Header />
-                    
-                      {/* Main navigation header - only visible when logged in */}
-                      <header role="banner">
-                        {/* Breadcrumbs - only visible when logged in */}
-                        {(effectiveSession || previewMode) && (
-                          <ContextualBreadcrumbs />
-                        )}
-                      </header>
-                      
-                      {/* GoTime Motorsports logo with navigation and sound controls - always fixed to bottom */}
-                      <FixedSoundBar />
-                      
-                      {/* AI Support Chatbot - Available globally */}
-                      {(effectiveSession || previewMode) && <SupportChatbot />}
-
-                      {/* Main content area - adjusted for fixed header at top and fixed footer at bottom */}
-                      <main id={MAIN_CONTENT_ID} className="container mx-auto px-4 mt-[60px] pb-[70px]" tabIndex={-1}>
-                        {/* Toast notifications with ARIA live region built in */}
-                        <Toaster />
+                          {/* Skip link for keyboard navigation */}
+                          <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
+                            Skip to main content
+                          </a>
                         
-                        {/* Global floating weather snapshot - will be available on all pages */}
-                        {(effectiveSession || previewMode) && (
-                          <OneTapWeatherSnapshot 
-                            floating={true}
-                            // Don't show on weather paddock page where it would be redundant
-                            className={window.location.pathname === '/weather-paddock' ? 'hidden' : ''}
-                          />
-                        )}
-                      
-                        <Routes>
-                          {/* Public authentication route */}
-                          <Route path="/auth" element={!authSession && !previewMode ? <AuthPage /> : <Navigate to="/dashboard" replace />} />
-                          
-                          {/* Legal Document Pages - Publicly accessible */}
-                          <Route path="/privacy-policy" element={<PrivacyPolicy />} />
-                          <Route path="/terms-of-service" element={<TermsOfService />} />
-                          <Route path="/beta-agreement" element={<BetaAgreement />} />
+                          {/* User Onboarding - Show for first time users or when terms update */}
+                          {(effectiveSession || previewMode) && !hasCompletedOnboarding && (
+                            <UserOnboarding onComplete={completeOnboarding} />
+                          )}
                         
-                          {/* Protected routes */}
-                          <Route path="/" element={<ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
-                          <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-                          <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-                          <Route path="/personalized-dashboard" element={<ProtectedRoute><PersonalizedDashboard /></ProtectedRoute>} />
-                          {/* Main Garage Vault Hub - Central repository for all vehicle data */}
-                          <Route path="/garage-vault" element={<ProtectedRoute><GarageVaultPage /></ProtectedRoute>} />
-                          {/* New GoTime Garage Vault - Enhanced F1-style vehicle management */}
-                          <Route path="/gotime-garage" element={<ProtectedRoute><GoTimeGarageVault /></ProtectedRoute>} />
-                          {/* Garage Vehicle Management System */}
-                          <Route path="/garage" element={<ProtectedRoute><GaragePage /></ProtectedRoute>} />
-                          <Route path="/garage/add-vehicle" element={<ProtectedRoute><AddVehiclePage /></ProtectedRoute>} />
-                          <Route path="/garage/edit-vehicle/:id" element={<ProtectedRoute><AddVehiclePage /></ProtectedRoute>} />
-                          <Route path="/garage/vehicle/:id" element={<ProtectedRoute><GaragePage /></ProtectedRoute>} />
+                          <div className="min-h-screen bg-black font-openSans text-white">
+                            {/* Authentication Header - always visible */}
+                            <Header />
                           
-                          {/* User Profile Hub - Central brain for all driver data */}
-                          <Route path="/profile" element={<ProtectedRoute><UserProfileHubPage /></ProtectedRoute>} />
-                          
-                          <Route path="/journal" element={<ProtectedRoute><Journal /></ProtectedRoute>} />
-                          <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
-                          <Route path="/motorsports" element={<ProtectedRoute><Motorsports /></ProtectedRoute>} />
-                          <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
-                          <Route path="/events-page" element={<ProtectedRoute><EventsPage /></ProtectedRoute>} />
-                          <Route path="/motorsports-events" element={<ProtectedRoute><MotorsportsEventsPage /></ProtectedRoute>} />
-                          <Route path="/juicebox" element={<ProtectedRoute><JuiceBox /></ProtectedRoute>} />
-                          <Route path="/gloss-reset" element={<ProtectedRoute><GlossResetPage /></ProtectedRoute>} />
-                          <Route path="/juice-loadouts" element={<ProtectedRoute><LoadoutsPage /></ProtectedRoute>} />
-                          <Route path="/gloss-growth" element={<ProtectedRoute><GlossGrowthPage /></ProtectedRoute>} />
-                          <Route path="/juicebox-videos" element={<ProtectedRoute><VideoLibraryPage /></ProtectedRoute>} />
-                        <Route path="/broker-portal" element={<ProtectedRoute><BrokerPortalPage /></ProtectedRoute>} />
-                        <Route path="/weather" element={<ProtectedRoute><Weather /></ProtectedRoute>} />
-                        <Route path="/weather-paddock" element={<ProtectedRoute><NewGTGWeatherPage /></ProtectedRoute>} />
-                        {/* Keep old route for backward compatibility, but redirect to new name */}
-                        <Route path="/new-weather-center" element={<Navigate to="/weather-paddock" replace />} />
-                        <Route path="/redline" element={<ProtectedRoute><RedlineReportPage /></ProtectedRoute>} />
-                        <Route path="/seasonal-checklist" element={<ProtectedRoute><SeasonalChecklistPage /></ProtectedRoute>} />
-                        <Route path="/pre-drive-checklist" element={<ProtectedRoute><PreDriveChecklistPage /></ProtectedRoute>} />
-                        <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-                        <Route path="/settings/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-                        <Route path="/apexvault" element={<ProtectedRoute><UserProfileHubPage /></ProtectedRoute>} />
-                        <Route path="/vehicle-mods/:id" element={<ProtectedRoute><VehicleModsPage /></ProtectedRoute>} />
-                        <Route path="/membership" element={<ProtectedRoute><MembershipPage /></ProtectedRoute>} />
-                        <Route path="/paddock20-vault" element={<Navigate to="/membership" replace />} />
-                        <Route path="/tires-timepieces" element={<ProtectedRoute><TiresTimepieces /></ProtectedRoute>} />
-                        <Route path="/manifestation-station" element={<ProtectedRoute><ManifestationStationPage /></ProtectedRoute>} />
-                        <Route path="/mod-planner" element={<ProtectedRoute><ModPlannerPage /></ProtectedRoute>} />
-                        <Route path="/concierge" element={<ProtectedRoute><ConciergePage /></ProtectedRoute>} />
-                        <Route path="/hustle-planner" element={<ProtectedRoute><HustlePlannerPage /></ProtectedRoute>} />
-                        <Route path="/route-planner" element={<ProtectedRoute><RoutePlannerPage /></ProtectedRoute>} />
-                        <Route path="/drive-journal" element={<ProtectedRoute><DriveJournalPage /></ProtectedRoute>} />
-                        <Route path="/drive-journal/new" element={<ProtectedRoute><DriveJournalPage /></ProtectedRoute>} />
-                        <Route path="/ebooks" element={<ProtectedRoute><EBooksPage /></ProtectedRoute>} />
-                        <Route path="/discounts" element={<ProtectedRoute><DiscountsPage /></ProtectedRoute>} />
-                        <Route path="/contact" element={<ProtectedRoute><ContactPage /></ProtectedRoute>} />
-                        <Route path="/chat-feed" element={<ProtectedRoute><ChatFeedPage /></ProtectedRoute>} />
-                        <Route path="/share" element={<ProtectedRoute><ShareDemoPage /></ProtectedRoute>} />
-                        <Route path="/mood-energy-tracker" element={<ProtectedRoute><MoodEnergyTrackerPage /></ProtectedRoute>} />
-                        <Route path="/motorsports-gallery" element={<ProtectedRoute><MotorsportsGalleryPage /></ProtectedRoute>} />
-                        <Route path="/podium-pursuit" element={<ProtectedRoute><PodiumPursuitPage /></ProtectedRoute>} />
-                        <Route path="/sound-library" element={<ProtectedRoute><SoundLibraryPage /></ProtectedRoute>} />
-                        <Route path="/product-organizer" element={<ProtectedRoute><ProductOrganizerPage /></ProtectedRoute>} />
-                        <Route path="/debug" element={<ProtectedRoute><DebugPage /></ProtectedRoute>} />
-                        <Route path="*" element={<NotFound />} />
-                      </Routes>
-                      
-                      {/* Removed duplicate SupportChatbot component */}
-                      
-                      {/* Rewards notification - will show when rewards are earned */}
-                      {(effectiveSession || previewMode) && <RewardNotification />}
-                      
-                      {/* Invisible rewards tracker component that monitors user activity */}
-                      {(effectiveSession || previewMode) && <RewardsTracker />}
-                    </main>
+                            {/* Main navigation header - only visible when logged in */}
+                            <header role="banner">
+                              {/* Breadcrumbs - only visible when logged in */}
+                              {(effectiveSession || previewMode) && (
+                                <ContextualBreadcrumbs />
+                              )}
+                            </header>
+                            
+                            {/* GoTime Motorsports logo with navigation and sound controls - always fixed to bottom */}
+                            <FixedSoundBar />
+                            
+                            {/* AI Support Chatbot - Available globally */}
+                            {(effectiveSession || previewMode) && <SupportChatbot />}
 
-                    {/* Footer with links and information */}
-                    <Footer />
-                  </div>
+                            {/* Main content area - adjusted for fixed header at top and fixed footer at bottom */}
+                            <main id={MAIN_CONTENT_ID} className="container mx-auto px-4 mt-[60px] pb-[70px]" tabIndex={-1}>
+                              {/* Toast notifications with ARIA live region built in */}
+                              <Toaster />
+                              
+                              {/* Global floating weather snapshot - will be available on all pages */}
+                              {(effectiveSession || previewMode) && (
+                                <OneTapWeatherSnapshot 
+                                  floating={true}
+                                  // Don't show on weather paddock page where it would be redundant
+                                  className={window.location.pathname === '/weather-paddock' ? 'hidden' : ''}
+                                />
+                              )}
+                            
+                              <Routes>
+                                {/* Public authentication route */}
+                                <Route path="/auth" element={!authSession && !previewMode ? <AuthPage /> : <Navigate to="/dashboard" replace />} />
+                                
+                                {/* Legal Document Pages - Publicly accessible */}
+                                <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+                                <Route path="/terms-of-service" element={<TermsOfService />} />
+                                <Route path="/beta-agreement" element={<BetaAgreement />} />
+                              
+                                {/* Protected routes */}
+                                <Route path="/" element={<ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
+                                <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
+                                <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+                                <Route path="/personalized-dashboard" element={<ProtectedRoute><PersonalizedDashboard /></ProtectedRoute>} />
+                                {/* Main Garage Vault Hub - Central repository for all vehicle data */}
+                                <Route path="/garage-vault" element={<ProtectedRoute><GarageVaultPage /></ProtectedRoute>} />
+                                {/* New GoTime Garage Vault - Enhanced F1-style vehicle management */}
+                                <Route path="/gotime-garage" element={<ProtectedRoute><GoTimeGarageVault /></ProtectedRoute>} />
+                                {/* Garage Vehicle Management System */}
+                                <Route path="/garage" element={<ProtectedRoute><GaragePage /></ProtectedRoute>} />
+                                <Route path="/garage/add-vehicle" element={<ProtectedRoute><AddVehiclePage /></ProtectedRoute>} />
+                                <Route path="/garage/edit-vehicle/:id" element={<ProtectedRoute><AddVehiclePage /></ProtectedRoute>} />
+                                <Route path="/garage/vehicle/:id" element={<ProtectedRoute><GaragePage /></ProtectedRoute>} />
+                                
+                                {/* User Profile Hub - Central brain for all driver data */}
+                                <Route path="/profile" element={<ProtectedRoute><UserProfileHubPage /></ProtectedRoute>} />
+                                
+                                <Route path="/journal" element={<ProtectedRoute><Journal /></ProtectedRoute>} />
+                                <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
+                                <Route path="/motorsports" element={<ProtectedRoute><Motorsports /></ProtectedRoute>} />
+                                <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
+                                <Route path="/events-page" element={<ProtectedRoute><EventsPage /></ProtectedRoute>} />
+                                <Route path="/motorsports-events" element={<ProtectedRoute><MotorsportsEventsPage /></ProtectedRoute>} />
+                                <Route path="/juicebox" element={<ProtectedRoute><JuiceBox /></ProtectedRoute>} />
+                                <Route path="/gloss-reset" element={<ProtectedRoute><GlossResetPage /></ProtectedRoute>} />
+                                <Route path="/juice-loadouts" element={<ProtectedRoute><LoadoutsPage /></ProtectedRoute>} />
+                                <Route path="/gloss-growth" element={<ProtectedRoute><GlossGrowthPage /></ProtectedRoute>} />
+                                <Route path="/juicebox-videos" element={<ProtectedRoute><VideoLibraryPage /></ProtectedRoute>} />
+                              <Route path="/broker-portal" element={<ProtectedRoute><BrokerPortalPage /></ProtectedRoute>} />
+                              <Route path="/weather" element={<ProtectedRoute><Weather /></ProtectedRoute>} />
+                              <Route path="/weather-paddock" element={<ProtectedRoute><NewGTGWeatherPage /></ProtectedRoute>} />
+                              {/* Keep old route for backward compatibility, but redirect to new name */}
+                              <Route path="/new-weather-center" element={<Navigate to="/weather-paddock" replace />} />
+                              <Route path="/redline" element={<ProtectedRoute><RedlineReportPage /></ProtectedRoute>} />
+                              <Route path="/seasonal-checklist" element={<ProtectedRoute><SeasonalChecklistPage /></ProtectedRoute>} />
+                              <Route path="/pre-drive-checklist" element={<ProtectedRoute><PreDriveChecklistPage /></ProtectedRoute>} />
+                              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
+                              <Route path="/settings/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+                              <Route path="/apexvault" element={<ProtectedRoute><UserProfileHubPage /></ProtectedRoute>} />
+                              <Route path="/vehicle-mods/:id" element={<ProtectedRoute><VehicleModsPage /></ProtectedRoute>} />
+                              <Route path="/membership" element={<ProtectedRoute><MembershipPage /></ProtectedRoute>} />
+                              <Route path="/paddock20-vault" element={<Navigate to="/membership" replace />} />
+                              <Route path="/tires-timepieces" element={<ProtectedRoute><TiresTimepieces /></ProtectedRoute>} />
+                              <Route path="/manifestation-station" element={<ProtectedRoute><ManifestationStationPage /></ProtectedRoute>} />
+                              <Route path="/mod-planner" element={<ProtectedRoute><ModPlannerPage /></ProtectedRoute>} />
+                              <Route path="/concierge" element={<ProtectedRoute><ConciergePage /></ProtectedRoute>} />
+                              <Route path="/hustle-planner" element={<ProtectedRoute><HustlePlannerPage /></ProtectedRoute>} />
+                              <Route path="/route-planner" element={<ProtectedRoute><RoutePlannerPage /></ProtectedRoute>} />
+                              <Route path="/drive-journal" element={<ProtectedRoute><DriveJournalPage /></ProtectedRoute>} />
+                              <Route path="/drive-journal/new" element={<ProtectedRoute><DriveJournalPage /></ProtectedRoute>} />
+                              <Route path="/ebooks" element={<ProtectedRoute><EBooksPage /></ProtectedRoute>} />
+                              <Route path="/discounts" element={<ProtectedRoute><DiscountsPage /></ProtectedRoute>} />
+                              <Route path="/contact" element={<ProtectedRoute><ContactPage /></ProtectedRoute>} />
+                              <Route path="/chat-feed" element={<ProtectedRoute><ChatFeedPage /></ProtectedRoute>} />
+                              <Route path="/share" element={<ProtectedRoute><ShareDemoPage /></ProtectedRoute>} />
+                              <Route path="/mood-energy-tracker" element={<ProtectedRoute><MoodEnergyTrackerPage /></ProtectedRoute>} />
+                              <Route path="/motorsports-gallery" element={<ProtectedRoute><MotorsportsGalleryPage /></ProtectedRoute>} />
+                              <Route path="/podium-pursuit" element={<ProtectedRoute><PodiumPursuitPage /></ProtectedRoute>} />
+                              <Route path="/sound-library" element={<ProtectedRoute><SoundLibraryPage /></ProtectedRoute>} />
+                              <Route path="/product-organizer" element={<ProtectedRoute><ProductOrganizerPage /></ProtectedRoute>} />
+                              <Route path="/debug" element={<ProtectedRoute><DebugPage /></ProtectedRoute>} />
+                              <Route path="*" element={<NotFound />} />
+                              </Routes>
+                              
+                              {/* Removed duplicate SupportChatbot component */}
+                              
+                              {/* Rewards notification - will show when rewards are earned */}
+                              {(effectiveSession || previewMode) && <RewardNotification />}
+                              
+                              {/* Invisible rewards tracker component that monitors user activity */}
+                              {(effectiveSession || previewMode) && <RewardsTracker />}
+                            </main>
+
+                            {/* Footer with links and information */}
+                            <Footer />
+                          </div>
                         </RewardsProvider>
-                      </UserProfileProvider>
-                    </GalleryProvider>
-                  </WeatherProvider>
-                </VehicleDataProvider>
-              </VehicleProvider>
-            </SoundProvider>
+                      </GalleryProvider>
+                    </WeatherProvider>
+                  </VehicleDataProvider>
+                </VehicleProvider>
+              </SoundProvider>
+            </UserProfileProvider>
           </AuthProvider>
-      </TooltipProvider>
+        </TooltipProvider>
     </QueryClientProvider>
   );
 }
