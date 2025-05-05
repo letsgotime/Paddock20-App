@@ -654,8 +654,8 @@ export function setupAuth(app: Express) {
       // Send welcome email for verified users
       try {
         const { sendWelcomeEmail } = require('./services/emailService');
-        // Check if the user is a beta tester
-        const isBetaTester = updatedUser.role === 'beta_tester';
+        // Check if the user is a premium user (beta tester)
+        const isBetaTester = updatedUser.role === 'premium';
         await sendWelcomeEmail(
           updatedUser.email,
           updatedUser.username,
@@ -668,7 +668,8 @@ export function setupAuth(app: Express) {
       }
       
       // Redirect to frontend verification success page
-      res.redirect("/email-verified");
+      const frontendUrl = process.env.FRONTEND_URL || '';
+      res.redirect(`${frontendUrl}/email-verified`);
     } catch (error) {
       console.error("Email verification error:", error);
       res.status(500).json({ 
