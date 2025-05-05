@@ -36,7 +36,7 @@ const LegalDocumentModal: React.FC<LegalDocumentModalProps> = ({
       
       {/* Modal content */}
       <div 
-        className="relative w-full max-w-3xl max-h-[80vh] overflow-auto rounded-xl border border-gray-800 bg-black/90 backdrop-blur-md shadow-2xl"
+        className="relative w-full max-w-3xl max-h-[90vh] overflow-hidden rounded-xl border border-gray-800 bg-black/90 backdrop-blur-md shadow-2xl"
         style={{
           boxShadow: '0 0 40px rgba(8, 197, 25, 0.15), 0 0 20px rgba(25, 130, 252, 0.15)'
         }}
@@ -48,7 +48,7 @@ const LegalDocumentModal: React.FC<LegalDocumentModalProps> = ({
         <div className="absolute top-0 bottom-0 right-0 w-1 bg-[#08c519]"></div>
         
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-gray-800">
+        <div className="sticky top-0 z-10 flex items-center justify-between px-6 py-4 border-b border-gray-800 bg-black/90 backdrop-blur-md">
           <h2 
             className="text-xl font-bold text-white tracking-wide"
             style={{ fontFamily: 'Orbitron, sans-serif' }}
@@ -65,11 +65,10 @@ const LegalDocumentModal: React.FC<LegalDocumentModalProps> = ({
         </div>
         
         {/* Document content */}
-        <div className="p-6 bg-gradient-to-b from-[#1982FC]/10 to-[#08c519]/10 border-y border-gray-800">
+        <div className="p-6 bg-gradient-to-b from-[#1982FC]/10 to-[#08c519]/10 border-y border-gray-800 overflow-y-auto" style={{ maxHeight: '60vh' }}>
           <div 
             className="prose prose-invert max-w-none text-gray-300"
             dangerouslySetInnerHTML={{ __html: content }}
-            style={{ maxHeight: '50vh', overflowY: 'auto', padding: '1rem', borderRadius: '0.5rem' }}
           />
         </div>
         

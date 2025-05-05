@@ -1,7 +1,9 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useLocation, useParams, useRoute, Link } from 'wouter';
-import { CheckCircle, ArrowRight, AlertTriangle, Car, User, Shield, Wrench, BarChart4, Camera, Upload, Image } from 'lucide-react';
+import { CheckCircle, ArrowRight, AlertTriangle, Car, User, Shield, Wrench, BarChart4, Camera, Upload, Image, FileText, RefreshCw, Mail, UserCircle, X } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
+import { legalDocuments } from '../data/legalDocuments';
+import LegalDocumentModal from '../components/LegalDocumentModal';
 
 const OnboardingPage: React.FC = () => {
   const [_, navigate] = useLocation();
@@ -11,10 +13,18 @@ const OnboardingPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-  // User profile data
+  // Legal document states
+  const [activeDocument, setActiveDocument] = useState<string | null>(null);
+  const [termsAgreed, setTermsAgreed] = useState(false);
+  const [privacyAgreed, setPrivacyAgreed] = useState(false);
+  const [betaAgreed, setBetaAgreed] = useState(false);
+  
+  // User profile data - pre-populated from authentication
+  const [email, setEmail] = useState<string>(user?.email || '');
+  const [username, setUsername] = useState<string>(user?.username || '');
   const [drivingExperience, setDrivingExperience] = useState<string>('intermediate');
   const [interests, setInterests] = useState<string[]>([]);
-  const [fullName, setFullName] = useState('');
+  const [fullName, setFullName] = useState(user?.fullName || user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : '');
   const [helmetSize, setHelmetSize] = useState<string>('');
   const [shoeSize, setShoeSize] = useState<string>('');
   const [gloveSizeUS, setGloveSizeUS] = useState<string>('');
@@ -46,10 +56,49 @@ const OnboardingPage: React.FC = () => {
     }
   }, [user, navigate]);
   
+  // Open legal document modal
+  const openLegalDocument = (documentType: string) => {
+    setActiveDocument(documentType);
+  };
+  
+  // Legal checkbox validation
+  const validateLegalAgreements = () => {
+    if (!termsAgreed || !privacyAgreed || !betaAgreed) {
+      setError('Please agree to all terms and conditions to continue');
+      return false;
+    }
+    return true;
+  };
+  
   // Form submission for each step
   const handleContinue = async () => {
-    if (currentStep < 3) {
-      setCurrentStep(prevStep => prevStep + 1);
+    // Step 1 validation
+    if (currentStep === 1) {
+      if (!fullName) {
+        setError('Please enter your full name');
+        return;
+      }
+      
+      if (!validateLegalAgreements()) {
+        return;
+      }
+      
+      setCurrentStep(2);
+      return;
+    }
+    
+    // Step 2 validation
+    if (currentStep === 2) {
+      const hasCompleteVehicle = vehicles.some(v => 
+        v.make && v.model && v.year
+      );
+      
+      if (!hasCompleteVehicle) {
+        setError('Please enter at least one vehicle with make, model, and year');
+        return;
+      }
+      
+      setCurrentStep(3);
       return;
     }
     
@@ -202,15 +251,40 @@ const OnboardingPage: React.FC = () => {
     setError(null);
   };
   
-  // Trigger file input click
-  const triggerFileInput = () => {
+  // Trigger file input click with explicit browser file dialog
+  const triggerFileInput = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    
+    // Ensure we have a reference to the file input
     if (fileInputRef.current) {
-      fileInputRef.current.click();
+      // Create a new click event and dispatch it to truly open the file dialog
+      const clickEvent = new MouseEvent('click', {
+        view: window,
+        bubbles: true,
+        cancelable: true,
+      });
+      fileInputRef.current.dispatchEvent(clickEvent);
     }
   };
   
   return (
     <div className="flex min-h-screen overflow-hidden relative">
+      {/* Legal Document Modal */}
+      {activeDocument && (
+        <LegalDocumentModal
+          title={activeDocument === 'termsOfService' ? 'Terms of Service' : 
+                activeDocument === 'privacyPolicy' ? 'Privacy Policy' : 'Beta Agreement'}
+          content={legalDocuments[activeDocument as keyof typeof legalDocuments]}
+          isOpen={!!activeDocument}
+          onClose={() => setActiveDocument(null)}
+          callback={() => {
+            if (activeDocument === 'termsOfService') setTermsAgreed(true);
+            if (activeDocument === 'privacyPolicy') setPrivacyAgreed(true);
+            if (activeDocument === 'betaAgreement') setBetaAgreed(true);
+          }}
+        />
+      )}
       {/* Dynamic F1 background with overlay */}
       <div 
         className="absolute inset-0 bg-cover bg-center"
@@ -313,6 +387,41 @@ const OnboardingPage: React.FC = () => {
               <div className="space-y-6">
                 <h2 className="text-2xl font-bold text-white mb-4" style={{ fontFamily: 'Orbitron, sans-serif' }}>DRIVER PROFILE</h2>
                 
+                {/* Account Information */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+                  <div>
+                    <label htmlFor="username" className="block text-sm font-medium text-gray-300 mb-2 flex items-center">
+                      <UserCircle className="w-4 h-4 mr-1 text-[#1982FC]" />
+                      Username
+                    </label>
+                    <input
+                      id="username"
+                      type="text"
+                      className="w-full rounded-md bg-gray-700/50 border border-gray-700 px-3 py-2 text-white focus:border-[#1982FC] focus:outline-none"
+                      value={username}
+                      readOnly
+                      disabled
+                    />
+                    <p className="mt-1 text-xs text-gray-500">Your username cannot be changed</p>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-2 flex items-center">
+                      <Mail className="w-4 h-4 mr-1 text-[#1982FC]" />
+                      Email Address
+                    </label>
+                    <input
+                      id="email"
+                      type="email"
+                      className="w-full rounded-md bg-gray-700/50 border border-gray-700 px-3 py-2 text-white focus:border-[#1982FC] focus:outline-none"
+                      value={email}
+                      readOnly
+                      disabled
+                    />
+                    <p className="mt-1 text-xs text-gray-500">Email used for account notifications</p>
+                  </div>
+                </div>
+                
                 <div>
                   <label htmlFor="fullName" className="block text-sm font-medium text-gray-300 mb-2">
                     Full Name
@@ -365,6 +474,91 @@ const OnboardingPage: React.FC = () => {
                     >
                       <p className="font-medium text-white">Advanced</p>
                       <p className="text-xs text-gray-400 mt-1">Experienced enthusiast</p>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Legal Agreements Section */}
+                <div className="pt-6 border-t border-gray-700 mt-6">
+                  <h3 className="text-xl font-semibold text-white mb-4">LEGAL AGREEMENTS</h3>
+                  <p className="text-sm text-gray-300 mb-4">
+                    Please review and accept our terms to activate your Paddock20 membership
+                  </p>
+                  
+                  <div className="space-y-4">
+                    {/* Terms of Service */}
+                    <div className="flex items-start space-x-3">
+                      <div className="flex items-center h-5 mt-1">
+                        <input
+                          id="terms"
+                          type="checkbox"
+                          className="w-4 h-4 border border-gray-700 rounded bg-gray-800 accent-[#08c519]"
+                          checked={termsAgreed}
+                          onChange={(e) => setTermsAgreed(e.target.checked)}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <label htmlFor="terms" className="text-sm text-gray-200 font-medium">
+                          I have read and agree to the <button 
+                            type="button"
+                            className="text-[#1982FC] hover:underline"
+                            onClick={() => openLegalDocument('termsOfService')}
+                          >Terms of Service</button>
+                        </label>
+                        <p className="text-xs text-gray-400 mt-1">
+                          The Terms of Service outline your rights and obligations when using Paddock20, including acceptable use policies, intellectual property rights, and liability limitations.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Privacy Policy */}
+                    <div className="flex items-start space-x-3">
+                      <div className="flex items-center h-5 mt-1">
+                        <input
+                          id="privacy"
+                          type="checkbox"
+                          className="w-4 h-4 border border-gray-700 rounded bg-gray-800 accent-[#08c519]"
+                          checked={privacyAgreed}
+                          onChange={(e) => setPrivacyAgreed(e.target.checked)}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <label htmlFor="privacy" className="text-sm text-gray-200 font-medium">
+                          I have read and agree to the <button 
+                            type="button"
+                            className="text-[#1982FC] hover:underline"
+                            onClick={() => openLegalDocument('privacyPolicy')}
+                          >Privacy Policy</button>
+                        </label>
+                        <p className="text-xs text-gray-400 mt-1">
+                          Our Privacy Policy explains how we collect, use, store, and protect your personal information, including your rights regarding your data and our data retention practices.
+                        </p>
+                      </div>
+                    </div>
+                    
+                    {/* Beta Agreement */}
+                    <div className="flex items-start space-x-3">
+                      <div className="flex items-center h-5 mt-1">
+                        <input
+                          id="beta"
+                          type="checkbox"
+                          className="w-4 h-4 border border-gray-700 rounded bg-gray-800 accent-[#08c519]"
+                          checked={betaAgreed}
+                          onChange={(e) => setBetaAgreed(e.target.checked)}
+                        />
+                      </div>
+                      <div className="flex-1">
+                        <label htmlFor="beta" className="text-sm text-gray-200 font-medium">
+                          I have read and agree to the <button 
+                            type="button"
+                            className="text-[#1982FC] hover:underline"
+                            onClick={() => openLegalDocument('betaAgreement')}
+                          >Beta Agreement</button>
+                        </label>
+                        <p className="text-xs text-gray-400 mt-1">
+                          The Beta Agreement covers special considerations for beta testers, including feature limitations, feedback expectations, reporting bugs, and confidentiality requirements.
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -447,7 +641,7 @@ const OnboardingPage: React.FC = () => {
                       </select>
                     </div>
 
-                    {/* Profile Image Upload */}
+                    {/* Profile Image Upload with enhanced UI */}
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">
                         Profile Photo
@@ -459,23 +653,42 @@ const OnboardingPage: React.FC = () => {
                         className="hidden"
                         onChange={handleImageUpload}
                       />
-                      <div 
-                        onClick={triggerFileInput}
-                        className="w-full h-44 flex flex-col items-center justify-center rounded-md border-2 border-dashed border-gray-700 hover:border-[#1982FC] cursor-pointer transition-colors bg-gray-800/50 overflow-hidden"
-                      >
-                        {profileImagePreview ? (
-                          <img 
-                            src={profileImagePreview} 
-                            alt="Profile preview" 
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <>
-                            <Camera size={32} className="text-gray-500 mb-2" />
-                            <p className="text-sm text-gray-400">Click to upload your photo</p>
-                            <p className="text-xs text-gray-500 mt-1">JPG, PNG, GIF (max 5MB)</p>
-                          </>
-                        )}
+                      <div className="relative">
+                        <div 
+                          onClick={triggerFileInput}
+                          className="w-full h-44 flex flex-col items-center justify-center rounded-md border-2 border-dashed border-gray-700 hover:border-[#1982FC] cursor-pointer transition-colors bg-gray-800/50 overflow-hidden"
+                        >
+                          {profileImagePreview ? (
+                            <>
+                              <img 
+                                src={profileImagePreview} 
+                                alt="Profile preview" 
+                                className="w-full h-full object-cover"
+                              />
+                              <div className="absolute inset-0 bg-black/20 opacity-0 hover:opacity-100 transition-opacity flex items-center justify-center">
+                                <button 
+                                  onClick={triggerFileInput}
+                                  className="bg-gray-900/80 hover:bg-gray-800 text-white py-2 px-4 rounded-md shadow-lg transition-all flex items-center space-x-2"
+                                >
+                                  <RefreshCw size={16} />
+                                  <span>Change Photo</span>
+                                </button>
+                              </div>
+                            </>
+                          ) : (
+                            <>
+                              <Camera size={40} className="text-[#1982FC] mb-3" />
+                              <p className="text-sm text-gray-300 font-medium">Click to choose a profile photo</p>
+                              <p className="text-xs text-gray-400 mt-1">JPG, PNG, GIF or WEBP (max 5MB)</p>
+                              <button 
+                                onClick={triggerFileInput}
+                                className="mt-3 bg-gray-800 hover:bg-gray-700 text-white py-1.5 px-3 rounded-md border border-gray-700 transition-colors text-sm"
+                              >
+                                Select Image
+                              </button>
+                            </>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>
