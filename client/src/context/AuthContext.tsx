@@ -28,13 +28,16 @@ interface AuthContextType {
   logout: () => Promise<void>;
 }
 
-interface RegisterData {
+export interface RegisterData {
   username: string;
   email: string;
   password: string;
   confirmPassword: string;
   firstName?: string;
   lastName?: string;
+  betaProgram?: 'user' | 'tester'; // Beta program type
+  hasAgreedToNDA?: boolean;       // NDA agreement flag
+  feedbackCommitment?: boolean;    // For beta testers only
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);

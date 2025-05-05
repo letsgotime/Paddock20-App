@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, EyeOff, LogIn, UserPlus, CheckCircle, XCircle, Car, GaugeCircle, MapPin, Calendar, AreaChart } from 'lucide-react';
+import { Eye, EyeOff, LogIn, UserPlus, CheckCircle, XCircle, Car, GaugeCircle, MapPin, Calendar, AreaChart, ArrowRight, ChevronRight, ChevronLeft, Award, Shield, Bell } from 'lucide-react';
 
 // Import UI components
 import {
@@ -19,7 +19,7 @@ import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 
-const AuthPage: React.FC = () => {
+const AuthPage = () => {
   const { login, register, loading, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -45,6 +45,9 @@ const AuthPage: React.FC = () => {
   });
   const [showLoginPassword, setShowLoginPassword] = useState(false);
 
+  // Multi-step registration state
+  const [registrationStep, setRegistrationStep] = useState(1); // Tracks the current step (1, 2, or 3)
+  
   // Register Form State
   const [registerData, setRegisterData] = useState({
     username: '',
@@ -53,8 +56,11 @@ const AuthPage: React.FC = () => {
     confirmPassword: '',
     firstName: '',
     lastName: '',
-    betaProgram: '', // 'user' or 'tester'
-    hasAgreedToNDA: false
+    betaProgram: 'user', // 'user' or 'tester', default to 'user'
+    hasAgreedToNDA: false,
+    feedbackCommitment: false, // Only relevant for beta testers
+    approvalStatus: '', // 'pending', 'approved', 'denied'
+    registrationComplete: false
   });
   const [showRegisterPassword, setShowRegisterPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -123,64 +129,145 @@ const AuthPage: React.FC = () => {
     }
   };
 
-  // Handle Register
+  // Handle Register - now multi-step
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    // Validate password requirements
-    if (passwordErrors.length > 0) {
-      toast({
-        title: 'Password Requirements Not Met',
-        description: 'Please ensure your password meets all the requirements.',
-        variant: 'destructive',
-      });
+    if (registrationStep === 1) {
+      // First step validation - basic user info
+      
+      // Validate password requirements
+      if (passwordErrors.length > 0) {
+        toast({
+          title: 'Password Requirements Not Met',
+          description: 'Please ensure your password meets all the requirements.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Validate password match
+      if (registerData.password !== registerData.confirmPassword) {
+        toast({
+          title: 'Password Error',
+          description: 'Passwords do not match.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Validate email format
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(registerData.email)) {
+        toast({
+          title: 'Email Error',
+          description: 'Please enter a valid email address.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Validate username length
+      if (registerData.username.length < 3) {
+        toast({
+          title: 'Username Error',
+          description: 'Username must be at least 3 characters long.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // NDA agreement required
+      if (!registerData.hasAgreedToNDA) {
+        toast({
+          title: 'Agreement Required',
+          description: 'You must agree to the confidentiality terms to continue.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Move to beta program selection
+      setRegistrationStep(2);
       return;
     }
     
-    // Validate password match
-    if (registerData.password !== registerData.confirmPassword) {
-      toast({
-        title: 'Password Error',
-        description: 'Passwords do not match.',
-        variant: 'destructive',
-      });
+    if (registrationStep === 2) {
+      // Beta program selection validation
+      if (!registerData.betaProgram) {
+        toast({
+          title: 'Beta Program Selection Required',
+          description: 'Please select either Beta User or Beta Tester to continue.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // For Beta Testers, they need to agree to provide feedback
+      if (registerData.betaProgram === 'tester' && !registerData.feedbackCommitment) {
+        toast({
+          title: 'Feedback Commitment Required',
+          description: 'Beta Testers must commit to providing detailed feedback.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      
+      // Move to confirmation step
+      setRegistrationStep(3);
       return;
     }
     
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(registerData.email)) {
-      toast({
-        title: 'Email Error',
-        description: 'Please enter a valid email address.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    // Validate username length
-    if (registerData.username.length < 3) {
-      toast({
-        title: 'Username Error',
-        description: 'Username must be at least 3 characters long.',
-        variant: 'destructive',
-      });
-      return;
-    }
-    
-    try {
-      await register({
-        username: registerData.username,
-        email: registerData.email,
-        password: registerData.password,
-        confirmPassword: registerData.confirmPassword,
-        firstName: registerData.firstName || undefined,
-        lastName: registerData.lastName || undefined
-      });
-      // No need to show toast or navigate - handled in AuthContext
-    } catch (error) {
-      // Error toast is handled in AuthContext
-      console.error('Registration failed:', error);
+    if (registrationStep === 3) {
+      // Final registration submission
+      try {
+        // For beta users, immediately register and grant access
+        if (registerData.betaProgram === 'user') {
+          await register({
+            username: registerData.username,
+            email: registerData.email,
+            password: registerData.password,
+            confirmPassword: registerData.confirmPassword,
+            firstName: registerData.firstName || undefined,
+            lastName: registerData.lastName || undefined,
+            betaProgram: registerData.betaProgram,
+            hasAgreedToNDA: registerData.hasAgreedToNDA
+          });
+          // No need to show toast or navigate - handled in AuthContext
+        } 
+        // For beta testers, we'll send approval email
+        else if (registerData.betaProgram === 'tester') {
+          // Send approval request to support@gotimedigital.com
+          // This would typically be an API call
+          console.log('Sending Beta Tester approval request to support@gotimedigital.com');
+          
+          // For now, just show a confirmation message
+          toast({
+            title: 'Beta Tester Request Submitted',
+            description: 'Your request has been sent for approval. You will receive an email with next steps.',
+            variant: 'default',
+          });
+          
+          // Reset the form for now
+          setRegisterData({
+            username: '',
+            email: '',
+            password: '',
+            confirmPassword: '',
+            firstName: '',
+            lastName: '',
+            betaProgram: '',
+            hasAgreedToNDA: false,
+            feedbackCommitment: false,
+            approvalStatus: 'pending',
+            registrationComplete: false
+          });
+          setRegistrationStep(1);
+        }
+      } catch (error) {
+        // Error toast is handled in AuthContext
+        console.error('Registration failed:', error);
+      }
     }
   };
 
@@ -266,218 +353,485 @@ const AuthPage: React.FC = () => {
             {/* Register Tab */}
             <TabsContent value="register">
               <Card className="border-gray-800 bg-gray-900">
-                <CardHeader>
-                  <CardTitle className="text-2xl text-gray-100">Create an account</CardTitle>
+                <CardHeader className="relative">
+                  <div className="absolute -top-1 left-0 w-full flex justify-between items-center px-6 pt-4">
+                    <div className="flex space-x-2">
+                      <div className={`h-1 w-10 rounded-full ${registrationStep >= 1 ? 'bg-blue-500' : 'bg-gray-700'}`}></div>
+                      <div className={`h-1 w-10 rounded-full ${registrationStep >= 2 ? 'bg-blue-500' : 'bg-gray-700'}`}></div>
+                      <div className={`h-1 w-10 rounded-full ${registrationStep >= 3 ? 'bg-blue-500' : 'bg-gray-700'}`}></div>
+                    </div>
+                    <div className="text-gray-400 text-xs">
+                      Step {registrationStep} of 3
+                    </div>
+                  </div>
+                  
+                  <CardTitle className="text-2xl text-gray-100 mt-4">
+                    {registrationStep === 1 && "Create your account"}
+                    {registrationStep === 2 && "Choose your Beta Program"}
+                    {registrationStep === 3 && "Confirm your details"}
+                  </CardTitle>
                   <CardDescription className="text-gray-400">
-                    Join the Paddock20 community
+                    {registrationStep === 1 && "Join the Paddock20 community"}
+                    {registrationStep === 2 && "Select your preferred Beta involvement level"}
+                    {registrationStep === 3 && "Review and complete your registration"}
                   </CardDescription>
                 </CardHeader>
                 <form onSubmit={handleRegisterSubmit}>
                   <CardContent className="space-y-4">
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="firstName">First Name</Label>
-                        <Input
-                          id="firstName"
-                          placeholder="First name"
-                          value={registerData.firstName}
-                          onChange={(e) => setRegisterData({ ...registerData, firstName: e.target.value })}
-                          className="bg-gray-800 border-gray-700"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="lastName">Last Name</Label>
-                        <Input
-                          id="lastName"
-                          placeholder="Last name"
-                          value={registerData.lastName}
-                          onChange={(e) => setRegisterData({ ...registerData, lastName: e.target.value })}
-                          className="bg-gray-800 border-gray-700"
-                        />
-                      </div>
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="username-register">Username</Label>
-                      <Input
-                        id="username-register"
-                        placeholder="Choose a username"
-                        value={registerData.username}
-                        onChange={(e) => setRegisterData({ ...registerData, username: e.target.value })}
-                        className="bg-gray-800 border-gray-700"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="email">Email</Label>
-                      <Input
-                        id="email"
-                        type="email"
-                        placeholder="your.email@example.com"
-                        value={registerData.email}
-                        onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
-                        className="bg-gray-800 border-gray-700"
-                        required
-                      />
-                    </div>
-                    
-                    <div className="space-y-2">
-                      <Label htmlFor="password-register">Password</Label>
-                      <div className="relative">
-                        <Input
-                          id="password-register"
-                          type={showRegisterPassword ? 'text' : 'password'}
-                          placeholder="Create a password"
-                          value={registerData.password}
-                          onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
-                          className="bg-gray-800 border-gray-700 pr-10"
-                          required
-                          aria-describedby="password-requirements"
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowRegisterPassword(!showRegisterPassword)}
-                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5"
-                        >
-                          {showRegisterPassword ? 
-                            <EyeOff className="h-5 w-5 text-gray-400" /> : 
-                            <Eye className="h-5 w-5 text-gray-400" />
-                          }
-                        </button>
-                      </div>
-                      
-                      {/* Password strength indicator */}
-                      {registerData.password.length > 0 && (
-                        <div className="space-y-2">
-                          <div className="flex items-center justify-between text-xs">
-                            <span>Password strength:</span>
-                            <span className={
-                              passwordStrength < 40 ? 'text-red-500' : 
-                              passwordStrength < 80 ? 'text-yellow-500' : 
-                              'text-green-500'
-                            }>
-                              {passwordStrength < 40 ? 'Weak' : 
-                               passwordStrength < 80 ? 'Medium' : 
-                               'Strong'}
-                            </span>
-                          </div>
-                          
-                          <div className="w-full bg-gray-700 rounded-full h-1 overflow-hidden">
-                            <div 
-                              className={`h-full ${
-                                passwordStrength < 40 ? 'bg-red-500' : 
-                                passwordStrength < 80 ? 'bg-yellow-500' : 
-                                'bg-green-500'
-                              }`}
-                              style={{ width: `${passwordStrength}%` }}
+                    {registrationStep === 1 && (
+                      <>
+                        <div className="grid grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor="firstName">First Name</Label>
+                            <Input
+                              id="firstName"
+                              placeholder="First name"
+                              value={registerData.firstName}
+                              onChange={(e) => setRegisterData({ ...registerData, firstName: e.target.value })}
+                              className="bg-gray-800 border-gray-700"
                             />
                           </div>
-                          
-                          {/* Password requirements list */}
-                          <div className="text-xs space-y-1 mt-2" id="password-requirements">
-                            <p className="text-gray-400">Your password must include:</p>
-                            <ul className="space-y-1">
-                              <li className="flex items-center gap-1">
-                                {!/^.{8,}$/.test(registerData.password) ? 
-                                  <XCircle className="h-3 w-3 text-red-500" /> : 
-                                  <CheckCircle className="h-3 w-3 text-green-500" />
-                                }
-                                <span className={!/^.{8,}$/.test(registerData.password) ? 'text-red-500' : 'text-green-500'}>
-                                  At least 8 characters
-                                </span>
-                              </li>
-                              <li className="flex items-center gap-1">
-                                {!/[A-Z]/.test(registerData.password) ? 
-                                  <XCircle className="h-3 w-3 text-red-500" /> : 
-                                  <CheckCircle className="h-3 w-3 text-green-500" />
-                                }
-                                <span className={!/[A-Z]/.test(registerData.password) ? 'text-red-500' : 'text-green-500'}>
-                                  At least one uppercase letter
-                                </span>
-                              </li>
-                              <li className="flex items-center gap-1">
-                                {!/[a-z]/.test(registerData.password) ? 
-                                  <XCircle className="h-3 w-3 text-red-500" /> : 
-                                  <CheckCircle className="h-3 w-3 text-green-500" />
-                                }
-                                <span className={!/[a-z]/.test(registerData.password) ? 'text-red-500' : 'text-green-500'}>
-                                  At least one lowercase letter
-                                </span>
-                              </li>
-                              <li className="flex items-center gap-1">
-                                {!/[0-9]/.test(registerData.password) ? 
-                                  <XCircle className="h-3 w-3 text-red-500" /> : 
-                                  <CheckCircle className="h-3 w-3 text-green-500" />
-                                }
-                                <span className={!/[0-9]/.test(registerData.password) ? 'text-red-500' : 'text-green-500'}>
-                                  At least one number
-                                </span>
-                              </li>
-                              <li className="flex items-center gap-1">
-                                {!/[!@#$%^&*(),.?":{}|<>]/.test(registerData.password) ? 
-                                  <XCircle className="h-3 w-3 text-red-500" /> : 
-                                  <CheckCircle className="h-3 w-3 text-green-500" />
-                                }
-                                <span className={!/[!@#$%^&*(),.?":{}|<>]/.test(registerData.password) ? 'text-red-500' : 'text-green-500'}>
-                                  At least one special character
-                                </span>
-                              </li>
-                            </ul>
+                          <div className="space-y-2">
+                            <Label htmlFor="lastName">Last Name</Label>
+                            <Input
+                              id="lastName"
+                              placeholder="Last name"
+                              value={registerData.lastName}
+                              onChange={(e) => setRegisterData({ ...registerData, lastName: e.target.value })}
+                              className="bg-gray-800 border-gray-700"
+                            />
                           </div>
                         </div>
-                      )}
-                    </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="username-register">Username</Label>
+                          <Input
+                            id="username-register"
+                            placeholder="Choose a username"
+                            value={registerData.username}
+                            onChange={(e) => setRegisterData({ ...registerData, username: e.target.value })}
+                            className="bg-gray-800 border-gray-700"
+                            required
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="email">Email</Label>
+                          <Input
+                            id="email"
+                            type="email"
+                            placeholder="your.email@example.com"
+                            value={registerData.email}
+                            onChange={(e) => setRegisterData({ ...registerData, email: e.target.value })}
+                            className="bg-gray-800 border-gray-700"
+                            required
+                          />
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="password-register">Password</Label>
+                          <div className="relative">
+                            <Input
+                              id="password-register"
+                              type={showRegisterPassword ? 'text' : 'password'}
+                              placeholder="Create a password"
+                              value={registerData.password}
+                              onChange={(e) => setRegisterData({ ...registerData, password: e.target.value })}
+                              className="bg-gray-800 border-gray-700 pr-10"
+                              required
+                              aria-describedby="password-requirements"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowRegisterPassword(!showRegisterPassword)}
+                              className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5"
+                            >
+                              {showRegisterPassword ? 
+                                <EyeOff className="h-5 w-5 text-gray-400" /> : 
+                                <Eye className="h-5 w-5 text-gray-400" />
+                              }
+                            </button>
+                          </div>
+                          
+                          {/* Password strength indicator */}
+                          {registerData.password.length > 0 && (
+                            <div className="space-y-2">
+                              <div className="flex items-center justify-between text-xs">
+                                <span>Password strength:</span>
+                                <span className={
+                                  passwordStrength < 40 ? 'text-red-500' : 
+                                  passwordStrength < 80 ? 'text-yellow-500' : 
+                                  'text-green-500'
+                                }>
+                                  {passwordStrength < 40 ? 'Weak' : 
+                                   passwordStrength < 80 ? 'Medium' : 
+                                   'Strong'}
+                                </span>
+                              </div>
+                              
+                              <div className="w-full bg-gray-700 rounded-full h-1 overflow-hidden">
+                                <div 
+                                  className={`h-full ${
+                                    passwordStrength < 40 ? 'bg-red-500' : 
+                                    passwordStrength < 80 ? 'bg-yellow-500' : 
+                                    'bg-green-500'
+                                  }`}
+                                  style={{ width: `${passwordStrength}%` }}
+                                />
+                              </div>
+                              
+                              {/* Password requirements list */}
+                              <div className="text-xs space-y-1 mt-2" id="password-requirements">
+                                <p className="text-gray-400">Your password must include:</p>
+                                <ul className="space-y-1">
+                                  <li className="flex items-center gap-1">
+                                    {!/^.{8,}$/.test(registerData.password) ? 
+                                      <XCircle className="h-3 w-3 text-red-500" /> : 
+                                      <CheckCircle className="h-3 w-3 text-green-500" />
+                                    }
+                                    <span className={!/^.{8,}$/.test(registerData.password) ? 'text-red-500' : 'text-green-500'}>
+                                      At least 8 characters
+                                    </span>
+                                  </li>
+                                  <li className="flex items-center gap-1">
+                                    {!/[A-Z]/.test(registerData.password) ? 
+                                      <XCircle className="h-3 w-3 text-red-500" /> : 
+                                      <CheckCircle className="h-3 w-3 text-green-500" />
+                                    }
+                                    <span className={!/[A-Z]/.test(registerData.password) ? 'text-red-500' : 'text-green-500'}>
+                                      At least one uppercase letter
+                                    </span>
+                                  </li>
+                                  <li className="flex items-center gap-1">
+                                    {!/[a-z]/.test(registerData.password) ? 
+                                      <XCircle className="h-3 w-3 text-red-500" /> : 
+                                      <CheckCircle className="h-3 w-3 text-green-500" />
+                                    }
+                                    <span className={!/[a-z]/.test(registerData.password) ? 'text-red-500' : 'text-green-500'}>
+                                      At least one lowercase letter
+                                    </span>
+                                  </li>
+                                  <li className="flex items-center gap-1">
+                                    {!/[0-9]/.test(registerData.password) ? 
+                                      <XCircle className="h-3 w-3 text-red-500" /> : 
+                                      <CheckCircle className="h-3 w-3 text-green-500" />
+                                    }
+                                    <span className={!/[0-9]/.test(registerData.password) ? 'text-red-500' : 'text-green-500'}>
+                                      At least one number
+                                    </span>
+                                  </li>
+                                  <li className="flex items-center gap-1">
+                                    {!/[!@#$%^&*(),.?":{}|<>]/.test(registerData.password) ? 
+                                      <XCircle className="h-3 w-3 text-red-500" /> : 
+                                      <CheckCircle className="h-3 w-3 text-green-500" />
+                                    }
+                                    <span className={!/[!@#$%^&*(),.?":{}|<>]/.test(registerData.password) ? 'text-red-500' : 'text-green-500'}>
+                                      At least one special character
+                                    </span>
+                                  </li>
+                                </ul>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                        
+                        <div className="space-y-2">
+                          <Label htmlFor="confirm-password">Confirm Password</Label>
+                          <div className="relative">
+                            <Input
+                              id="confirm-password"
+                              type={showConfirmPassword ? 'text' : 'password'}
+                              placeholder="Confirm your password"
+                              value={registerData.confirmPassword}
+                              onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
+                              className="bg-gray-800 border-gray-700 pr-10"
+                              required
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                              className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5"
+                            >
+                              {showConfirmPassword ? 
+                                <EyeOff className="h-5 w-5 text-gray-400" /> : 
+                                <Eye className="h-5 w-5 text-gray-400" />
+                              }
+                            </button>
+                          </div>
+                        </div>
+                      </>
+                    )}
                     
-                    <div className="space-y-2">
-                      <Label htmlFor="confirm-password">Confirm Password</Label>
-                      <div className="relative">
-                        <Input
-                          id="confirm-password"
-                          type={showConfirmPassword ? 'text' : 'password'}
-                          placeholder="Confirm your password"
-                          value={registerData.confirmPassword}
-                          onChange={(e) => setRegisterData({ ...registerData, confirmPassword: e.target.value })}
-                          className="bg-gray-800 border-gray-700 pr-10"
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5"
-                        >
-                          {showConfirmPassword ? 
-                            <EyeOff className="h-5 w-5 text-gray-400" /> : 
-                            <Eye className="h-5 w-5 text-gray-400" />
-                          }
-                        </button>
-                      </div>
-                    </div>
+                    {registrationStep === 2 && (
+                      <>
+                        <div className="space-y-6">
+                          <div>
+                            <h3 className="text-lg font-medium text-gray-100 mb-4">Select Your Beta Program Level</h3>
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              {/* Beta User Option */}
+                              <div 
+                                className={`p-4 border rounded-lg flex flex-col space-y-3 ${
+                                  registerData.betaProgram === 'user' 
+                                    ? 'border-emerald-600 bg-gray-800' 
+                                    : 'border-gray-700 bg-gray-900'
+                                } cursor-pointer transition-colors`}
+                                onClick={() => setRegisterData({ ...registerData, betaProgram: 'user' })}
+                              >
+                                <div className="flex items-start space-x-3">
+                                  <div className={`p-2 rounded-full ${
+                                    registerData.betaProgram === 'user' ? 'bg-emerald-600' : 'bg-gray-700'
+                                  }`}>
+                                    <Car className="h-5 w-5 text-white" />
+                                  </div>
+                                  <div>
+                                    <h4 className="font-bold text-gray-100">Beta User</h4>
+                                    <p className="text-sm text-gray-400">Immediate access with discounted rates</p>
+                                  </div>
+                                </div>
+                                <ul className="space-y-2 text-sm">
+                                  <li className="flex items-start space-x-2">
+                                    <CheckCircle className="h-4 w-4 text-emerald-500 mt-0.5" />
+                                    <span className="text-gray-300">Discounted subscription for life</span>
+                                  </li>
+                                  <li className="flex items-start space-x-2">
+                                    <CheckCircle className="h-4 w-4 text-emerald-500 mt-0.5" />
+                                    <span className="text-gray-300">Auto-approved instant access</span>
+                                  </li>
+                                  <li className="flex items-start space-x-2">
+                                    <CheckCircle className="h-4 w-4 text-emerald-500 mt-0.5" />
+                                    <span className="text-gray-300">Basic feedback requested</span>
+                                  </li>
+                                </ul>
+                              </div>
+                              
+                              {/* Beta Tester Option */}
+                              <div 
+                                className={`p-4 border rounded-lg flex flex-col space-y-3 ${
+                                  registerData.betaProgram === 'tester' 
+                                    ? 'border-blue-600 bg-gray-800' 
+                                    : 'border-gray-700 bg-gray-900'
+                                } cursor-pointer transition-colors`}
+                                onClick={() => setRegisterData({ ...registerData, betaProgram: 'tester' })}
+                              >
+                                <div className="flex items-start space-x-3">
+                                  <div className={`p-2 rounded-full ${
+                                    registerData.betaProgram === 'tester' ? 'bg-blue-600' : 'bg-gray-700'
+                                  }`}>
+                                    <GaugeCircle className="h-5 w-5 text-white" />
+                                  </div>
+                                  <div>
+                                    <h4 className="font-bold text-gray-100">Beta Tester</h4>
+                                    <p className="text-sm text-gray-400">Requires approval & detailed feedback</p>
+                                  </div>
+                                </div>
+                                <ul className="space-y-2 text-sm">
+                                  <li className="flex items-start space-x-2">
+                                    <CheckCircle className="h-4 w-4 text-blue-500 mt-0.5" />
+                                    <span className="text-gray-300">Free subscription for life</span>
+                                  </li>
+                                  <li className="flex items-start space-x-2">
+                                    <CheckCircle className="h-4 w-4 text-blue-500 mt-0.5" />
+                                    <span className="text-gray-300">Email approval required</span>
+                                  </li>
+                                  <li className="flex items-start space-x-2">
+                                    <CheckCircle className="h-4 w-4 text-blue-500 mt-0.5" />
+                                    <span className="text-gray-300">Detailed feedback commitment</span>
+                                  </li>
+                                </ul>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          {/* Additional commitment for Beta Testers */}
+                          {registerData.betaProgram === 'tester' && (
+                            <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 space-y-4">
+                              <h4 className="font-medium text-gray-100">Beta Tester Commitment</h4>
+                              <p className="text-sm text-gray-400">
+                                As a Beta Tester, you'll receive free access for life in exchange for your valuable feedback on features, usability, and bug reports.
+                              </p>
+                              <div className="flex items-start space-x-2">
+                                <Checkbox 
+                                  id="beta-tester-commitment" 
+                                  className="mt-1 data-[state=checked]:bg-blue-600"
+                                  checked={registerData.feedbackCommitment}
+                                  onCheckedChange={(checked) => 
+                                    setRegisterData({ ...registerData, feedbackCommitment: !!checked })
+                                  }
+                                  required={registerData.betaProgram === 'tester'}
+                                />
+                                <label htmlFor="beta-tester-commitment" className="text-sm text-gray-300">
+                                  I commit to providing detailed feedback on features, reporting bugs, and participating in scheduled testing sessions when requested.
+                                </label>
+                              </div>
+                            </div>
+                          )}
+                        </div>
+                      </>
+                    )}
+                    
+                    {registrationStep === 3 && (
+                      <>
+                        <div className="space-y-5">
+                          <h3 className="text-lg font-medium text-gray-100">Confirm Your Registration Details</h3>
+                          
+                          <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 space-y-3">
+                            <h4 className="text-sm font-semibold text-blue-400 flex items-center">
+                              <span className="w-2 h-2 bg-blue-500 rounded-full mr-1.5"></span>
+                              PERSONAL INFORMATION
+                            </h4>
+                            <div className="grid grid-cols-2 gap-x-4 gap-y-2 text-sm">
+                              <div>
+                                <p className="text-gray-400">Name</p>
+                                <p className="text-gray-200">{registerData.firstName || '-'} {registerData.lastName || '-'}</p>
+                              </div>
+                              <div>
+                                <p className="text-gray-400">Username</p>
+                                <p className="text-gray-200">{registerData.username}</p>
+                              </div>
+                              <div>
+                                <p className="text-gray-400">Email</p>
+                                <p className="text-gray-200">{registerData.email}</p>
+                              </div>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 space-y-3">
+                            <h4 className="text-sm font-semibold text-emerald-400 flex items-center">
+                              <span className="w-2 h-2 bg-emerald-500 rounded-full mr-1.5"></span>
+                              BETA PROGRAM SELECTION
+                            </h4>
+                            <div className="text-sm">
+                              <p className="text-gray-400">Beta Level</p>
+                              <div className="flex items-center mt-1">
+                                {registerData.betaProgram === 'user' ? (
+                                  <>
+                                    <div className="bg-emerald-600 p-1.5 rounded-full mr-2">
+                                      <Car className="h-4 w-4 text-white" />
+                                    </div>
+                                    <span className="text-emerald-400 font-medium">Beta User</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <div className="bg-blue-600 p-1.5 rounded-full mr-2">
+                                      <GaugeCircle className="h-4 w-4 text-white" />
+                                    </div>
+                                    <span className="text-blue-400 font-medium">Beta Tester</span>
+                                  </>
+                                )}
+                              </div>
+                              <p className="mt-2 text-gray-300">
+                                {registerData.betaProgram === 'user' 
+                                  ? 'You will have immediate access with discounted subscription rates for life.'
+                                  : 'Your request will be sent for approval. If approved, you will receive free access for life.'}
+                              </p>
+                            </div>
+                          </div>
+                          
+                          <div className="bg-gray-800 border border-gray-700 rounded-lg p-4 space-y-3">
+                            <h4 className="text-sm font-semibold text-gray-300 flex items-center">
+                              <span className="w-2 h-2 bg-gray-500 rounded-full mr-1.5"></span>
+                              CONFIDENTIALITY STATUS
+                            </h4>
+                            <div className="flex items-center text-sm">
+                              <Shield className="h-4 w-4 text-blue-400 mr-2" />
+                              <span>
+                                {registerData.hasAgreedToNDA 
+                                  ? 'You have agreed to the confidentiality terms'
+                                  : 'You must agree to the confidentiality terms to continue'}
+                              </span>
+                            </div>
+                            {registerData.betaProgram === 'tester' && (
+                              <div className="flex items-center text-sm mt-2">
+                                <Bell className="h-4 w-4 text-blue-400 mr-2" />
+                                <span>
+                                  {registerData.feedbackCommitment 
+                                    ? 'You have committed to providing detailed feedback'
+                                    : 'You must commit to providing feedback to continue'}
+                                </span>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </>
+                    )}
                   </CardContent>
+                  
                   <CardFooter className="flex flex-col space-y-4">
-                    <div className="flex items-start space-x-2">
-                      <Checkbox 
-                        id="register-confidentiality" 
-                        className="mt-1 data-[state=checked]:bg-emerald-600"
-                        checked={registerData.hasAgreedToNDA}
-                        onCheckedChange={(checked) => 
-                          setRegisterData({ ...registerData, hasAgreedToNDA: !!checked })
-                        }
-                        required 
-                      />
-                      <label htmlFor="register-confidentiality" className="text-xs text-gray-400">
-                        I confirm that I have read and agree to the <span className="text-blue-400">Confidentiality Agreement</span> and will not disclose any information from this platform without authorization.
-                      </label>
-                    </div>
+                    {registrationStep === 1 && (
+                      <>
+                        <div className="flex items-start space-x-2">
+                          <Checkbox 
+                            id="register-confidentiality" 
+                            className="mt-1 data-[state=checked]:bg-emerald-600"
+                            checked={registerData.hasAgreedToNDA}
+                            onCheckedChange={(checked) => 
+                              setRegisterData({ ...registerData, hasAgreedToNDA: !!checked })
+                            }
+                            required 
+                          />
+                          <label htmlFor="register-confidentiality" className="text-xs text-gray-400">
+                            I confirm that I have read and agree to the <span className="text-blue-400">Confidentiality Agreement</span> and will not disclose any information from this platform without authorization.
+                          </label>
+                        </div>
+                        
+                        <Button 
+                          type="submit" 
+                          className="w-full bg-emerald-600 hover:bg-emerald-700"
+                          disabled={loading || !registerData.hasAgreedToNDA}
+                        >
+                          Continue to Beta Program Selection
+                          <ArrowRight className="ml-2 h-5 w-5" />
+                        </Button>
+                      </>
+                    )}
                     
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-emerald-600 hover:bg-emerald-700"
-                      disabled={loading || !registerData.hasAgreedToNDA}
-                    >
-                      {loading ? 'Processing...' : 'Continue to Beta Program Selection'}
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </Button>
+                    {registrationStep === 2 && (
+                      <div className="flex justify-between w-full">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          className="flex-1 mr-2 border-gray-700 text-gray-300 hover:bg-gray-800"
+                          onClick={() => setRegistrationStep(1)}
+                        >
+                          <ChevronLeft className="mr-2 h-5 w-5" />
+                          Back
+                        </Button>
+                        <Button 
+                          type="submit" 
+                          className="flex-1 ml-2 bg-emerald-600 hover:bg-emerald-700"
+                          disabled={loading || !registerData.betaProgram || (registerData.betaProgram === 'tester' && !registerData.feedbackCommitment)}
+                        >
+                          Continue to Review
+                          <ArrowRight className="ml-2 h-5 w-5" />
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {registrationStep === 3 && (
+                      <div className="flex justify-between w-full">
+                        <Button 
+                          type="button" 
+                          variant="outline" 
+                          className="flex-1 mr-2 border-gray-700 text-gray-300 hover:bg-gray-800"
+                          onClick={() => setRegistrationStep(2)}
+                        >
+                          <ChevronLeft className="mr-2 h-5 w-5" />
+                          Back
+                        </Button>
+                        <Button 
+                          type="submit" 
+                          className="flex-1 ml-2 bg-emerald-600 hover:bg-emerald-700"
+                          disabled={loading}
+                        >
+                          {loading ? 'Processing...' : (
+                            registerData.betaProgram === 'user' 
+                              ? 'Complete Registration' 
+                              : 'Submit for Approval'
+                          )}
+                          <UserPlus className="ml-2 h-5 w-5" />
+                        </Button>
+                      </div>
+                    )}
                   </CardFooter>
                 </form>
               </Card>
