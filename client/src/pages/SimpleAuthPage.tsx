@@ -300,18 +300,25 @@ const SimpleAuthPage = () => {
                 </div>
                 
                 <div className="mb-4">
-                  <div className="flex items-start">
-                    <div className="flex items-center h-5">
-                      <input
-                        id="terms"
-                        type="checkbox"
-                        required
-                        className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
-                      />
+                  <div className="flex flex-col space-y-2 p-3 bg-[#1982FC]/10 rounded-lg border border-[#1982FC]/30">
+                    <div className="flex items-start">
+                      <div className="flex items-center h-5 mt-0.5">
+                        <input
+                          id="terms"
+                          type="checkbox"
+                          required
+                          className="w-4 h-4 text-[#08c519] bg-gray-700 border-gray-600 rounded focus:ring-[#1982FC]"
+                        />
+                      </div>
+                      <label htmlFor="terms" className="ml-2 text-sm text-gray-200">
+                        <span className="font-semibold text-white">Beta Program Terms:</span> I agree to the <a href="#" className="text-[#1982FC] hover:underline">Terms of Service</a> and <a href="#" className="text-[#1982FC] hover:underline">Privacy Policy</a>.
+                      </label>
                     </div>
-                    <label htmlFor="terms" className="ml-2 text-xs font-medium text-gray-300">
-                      I agree to the <a href="#" className="text-blue-400 hover:underline">Terms of Service</a> and <a href="#" className="text-blue-400 hover:underline">Privacy Policy</a>. I also agree to the NDA terms for the Beta Program.
-                    </label>
+                    
+                    <p className="text-xs text-gray-300 mt-1 ml-6">
+                      Beta Users get discounted service for life. Beta Testers get free service for life, but require approval.
+                      See the following pages for Terms and Conditions. Thank you for supporting our Beta Program, and Automotive Enthusiast community.
+                    </p>
                   </div>
                 </div>
               </>
