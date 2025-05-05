@@ -7,6 +7,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import PageTitleManager from './components/PageTitleManager';
+import { AuthProvider } from './context/AuthContext';
 // Import disabled to remove Unsplash API warnings
 // import { initializeImageCache } from "./services/unsplashService";
 import NavigationControls from './components/NavigationControls';
@@ -234,20 +235,22 @@ function App() {
       <TooltipProvider>
         {/* Page Title Manager - Updates browser tab title based on current route */}
         <PageTitleManager />
-        {/* User Profile Provider - centralized user data warehouse */}
-        <UserProfileProvider>
-          {/* Sound Provider - Provides F1-inspired sound effects throughout the app */}
-          <SoundProvider>
-            {/* Vehicle Provider - Provides vehicle data to all components */}
-            <VehicleProvider>
-              {/* Vehicle Data Provider - Provides comprehensive vehicle activity, media, and document data */}
-              <VehicleDataProvider>
-                {/* Centralized Weather Provider - Provides weather data to all components */}
-                <WeatherProvider>
-                  {/* Gallery Provider - For media management */}
-                  <GalleryProvider>
-                    {/* Rewards Provider - for site-wide gamification */}
-                    <RewardsProvider>
+        {/* Auth Provider - Provides authentication context to all components */}
+        <AuthProvider>
+          {/* User Profile Provider - centralized user data warehouse */}
+          <UserProfileProvider>
+            {/* Sound Provider - Provides F1-inspired sound effects throughout the app */}
+            <SoundProvider>
+              {/* Vehicle Provider - Provides vehicle data to all components */}
+              <VehicleProvider>
+                {/* Vehicle Data Provider - Provides comprehensive vehicle activity, media, and document data */}
+                <VehicleDataProvider>
+                  {/* Centralized Weather Provider - Provides weather data to all components */}
+                  <WeatherProvider>
+                    {/* Gallery Provider - For media management */}
+                    <GalleryProvider>
+                      {/* Rewards Provider - for site-wide gamification */}
+                      <RewardsProvider>
                           {/* Skip link for keyboard navigation */}
                           <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
                             Skip to main content
@@ -376,13 +379,14 @@ function App() {
                             {/* Footer with links and information */}
                             <Footer />
                           </div>
-                    </RewardsProvider>
-                  </GalleryProvider>
-                </WeatherProvider>
-              </VehicleDataProvider>
-            </VehicleProvider>
-          </SoundProvider>
-        </UserProfileProvider>
+                      </RewardsProvider>
+                    </GalleryProvider>
+                  </WeatherProvider>
+                </VehicleDataProvider>
+              </VehicleProvider>
+            </SoundProvider>
+          </UserProfileProvider>
+        </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
