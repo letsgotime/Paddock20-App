@@ -124,21 +124,21 @@ const SimpleAuthPage = () => {
       
       {/* Carbon fiber texture overlay */}
       <div 
-        className="absolute inset-0 bg-cover bg-center opacity-50 mix-blend-multiply"
+        className="absolute inset-0 bg-cover bg-center opacity-70 mix-blend-multiply"
         style={{ 
           backgroundImage: `url('/assets/Stock Photos/F1/carbon-fiber-texture-dark.png')`,
         }}
       />
       
-      {/* F1-inspired racing stripes */}
+      {/* F1-inspired blue and green racing stripes */}
       <div className="absolute top-0 left-0 right-0 h-1 bg-[#08c519] z-10"></div>
       <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#1982FC] z-10"></div>
-      <div className="absolute top-0 bottom-0 left-0 w-1 bg-[#ff2800] z-10"></div>
-      <div className="absolute top-0 bottom-0 right-0 w-1 bg-[#ff2800] z-10"></div>
+      <div className="absolute top-0 bottom-0 left-0 w-1 bg-[#1982FC] z-10"></div>
+      <div className="absolute top-0 bottom-0 right-0 w-1 bg-[#08c519] z-10"></div>
       
-      {/* Red diagonal racing stripes - inspired by F1 designs */}
-      <div className="absolute -top-20 -left-20 w-40 h-[150vh] bg-[#ff2800] opacity-20 rotate-45 z-10"></div>
-      <div className="absolute -bottom-20 -right-20 w-40 h-[150vh] bg-[#ff2800] opacity-20 rotate-45 z-10"></div>
+      {/* Blue diagonal racing stripes */}
+      <div className="absolute -top-20 -left-20 w-40 h-[150vh] bg-[#1982FC] opacity-20 rotate-45 z-10"></div>
+      <div className="absolute -bottom-20 -right-20 w-40 h-[150vh] bg-[#08c519] opacity-20 rotate-45 z-10"></div>
       
       {/* Content container with glassmorphism */}
       <div className="flex w-full min-h-screen items-center justify-center p-6 z-20">
@@ -167,7 +167,7 @@ const SimpleAuthPage = () => {
                 <p className="text-white text-lg">Exclusive community & insights</p>
               </div>
               <div className="flex items-center">
-                <div className="h-8 w-1 bg-[#ff2800] mr-4"></div>
+                <div className="h-8 w-1 bg-[#08c519] mr-4"></div>
                 <p className="text-white text-lg">Advanced automotive analytics</p>
               </div>
             </div>
@@ -186,8 +186,7 @@ const SimpleAuthPage = () => {
           <div className="backdrop-blur-md bg-black/60 rounded-2xl border border-gray-800 p-8 shadow-2xl"
             style={{
               boxShadow: `0 0 40px rgba(8, 197, 25, 0.15), 
-                          0 0 20px rgba(25, 130, 252, 0.15),
-                          0 0 60px rgba(255, 40, 0, 0.1)`
+                          0 0 20px rgba(25, 130, 252, 0.15)`
             }}
           >
             {/* Small brand logo on mobile */}
@@ -408,7 +407,7 @@ const SimpleAuthPage = () => {
             
             {/* Additional F1-inspired accent at the bottom of the form */}
             <div className="flex justify-center mt-8">
-              <div className="h-1 w-20 bg-gradient-to-r from-[#ff2800] via-[#1982FC] to-[#08c519]"></div>
+              <div className="h-1 w-20 bg-gradient-to-r from-[#1982FC] via-[#1982FC] to-[#08c519]"></div>
             </div>
           </form>
           </div>
