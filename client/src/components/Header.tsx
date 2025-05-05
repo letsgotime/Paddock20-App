@@ -94,11 +94,39 @@ const Header: React.FC = () => {
       // Close menu
       setIsMenuOpen(false);
       
-      // Use the context's logout function
-      await logout();
+      console.log('Starting logout process...');
+      
+      // Call API directly to ensure logout works
+      const response = await fetch('/api/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
+      
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.error || 'Logout failed');
+      }
+      
+      console.log('Server logout successful, now clearing local state');
+      
+      // Use the context's logout function to clean up local state (but don't wait for it)
+      try {
+        await logout();
+        console.log('Context logout successful');
+      } catch (logoutErr) {
+        console.error('Context logout error (continuing anyway):', logoutErr);
+      }
+      
+      // Show success toast
+      toast({
+        title: 'Logged Out',
+        description: 'You have been successfully logged out. Redirecting...',
+        variant: 'default',
+      });
       
       // Redirect to auth page
       setTimeout(() => {
+        console.log('Redirecting to auth page...');
         window.location.href = '/auth';
       }, 1000);
     } catch (error) {
