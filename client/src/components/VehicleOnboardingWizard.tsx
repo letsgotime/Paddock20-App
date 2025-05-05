@@ -427,37 +427,89 @@ const VehicleOnboardingWizard: React.FC = () => {
         mileage: parsedMileage
       }));
       
-      // Add the vehicle using the context - with correct number types
-      const newVehicle = await addVehicle({
-        ...vehicleData,
-        year: parsedYear,
-        mileage: parsedMileage
-      });
+      // Generate a unique ID for the vehicle if one doesn't exist
+      const generatedId = vehicleData.id || `vehicle_${Date.now()}`;
       
       // Create a complete vehicle object with all required properties
-      // This ensures consistent structure regardless of entry method
+      // This ensures consistent structure regardless of entry method (VIN or manual)
       const completeVehicleData = {
-        ...vehicleData,
-        vehicle_image: vehicleData.vehicleImage,
-        car_name: vehicleData.nickname || `${vehicleData.year} ${vehicleData.make} ${vehicleData.model}`,
-        engine_type: vehicleData.engineType,
-        transmission: vehicleData.transmissionType,
-        entry_method: entryMethod, // Track how the vehicle was added
-        // Use the parsed values for consistency
-        year: parsedYear,
-        mileage: parsedMileage,
-      };
-      
-      // Sync vehicle with the user profile system in both directions
-      // This ensures the vehicle data is available across the entire app
-      ProfileDataCollector.syncVehicleFromContext(completeVehicleData);
-      
-      // ProfileDataCollector.collectVehicleData expects different field names
-      // This maps the vehicle data to the format expected by collectVehicleData
-      const profileVehicleData = {
+        id: generatedId,
         make: vehicleData.make,
         model: vehicleData.model,
-        // Use the already parsed year value to ensure consistency
+        year: parsedYear, // Always use the parsedYear (number type)
+        color: vehicleData.color,
+        nickname: vehicleData.nickname,
+        mileage: parsedMileage, // Always use parsedMileage (number type)
+        vin: vehicleData.vin,
+        primaryImage: vehicleData.vehicleImage,
+        vehicleImage: vehicleData.vehicleImage,
+        engineType: vehicleData.engineType,
+        transmissionType: vehicleData.transmissionType,
+        purchaseDate: vehicleData.purchaseDate,
+        purchaseLocation: vehicleData.purchaseLocation,
+        
+        // Additional fields for compatibility with various components
+        vehicle_image: vehicleData.vehicleImage,
+        car_name: vehicleData.nickname || `${parsedYear} ${vehicleData.make} ${vehicleData.model}`,
+        engine_type: vehicleData.engineType,
+        transmission: vehicleData.transmissionType,
+        
+        // Track entry method (VIN, manual, or OBD)
+        entry_method: entryMethod,
+        
+        // Add metadata for data reconciliation
+        _source: 'VehicleOnboardingWizard',
+        _skipBroadcast: false, // Allow broadcasting to ensure immediate updates
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        status: 'active'
+      };
+      
+      try {
+        // Import DataSourceConnector for reconciliation functions
+        const DataSourceConnector = await import('@/services/DataSourceConnector').then(m => m.default);
+        
+        // First, save to vehicle data localStorage for immediate persistence
+        const vehicleDataKey = DataSourceConnector.STORAGE_KEYS.VEHICLE_DATA;
+        const existingVehicles = localStorage.getItem(vehicleDataKey);
+        const vehicleArray = existingVehicles ? JSON.parse(existingVehicles) : [];
+        
+        // Check if vehicle with this ID already exists
+        const existingIndex = vehicleArray.findIndex((v: any) => v.id === generatedId);
+        if (existingIndex >= 0) {
+          // Update existing vehicle
+          vehicleArray[existingIndex] = {
+            ...vehicleArray[existingIndex],
+            ...completeVehicleData,
+            updatedAt: new Date().toISOString()
+          };
+        } else {
+          // Add new vehicle
+          vehicleArray.push(completeVehicleData);
+        }
+        
+        // Save updated vehicle array
+        localStorage.setItem(vehicleDataKey, JSON.stringify(vehicleArray));
+        
+        console.log('Vehicle saved to localStorage with consistent data format');
+      } catch (err) {
+        console.error('Error saving to localStorage:', err);
+        // Continue anyway since we'll still add the vehicle via the context
+      }
+      
+      // Add the vehicle using the VehicleContext
+      // This ensures proper event handling and context updates
+      const newVehicle = await addVehicle(completeVehicleData);
+      
+      // Use ProfileDataCollector for backward compatibility
+      // This ensures all components receive the new vehicle data
+      ProfileDataCollector.syncVehicleFromContext(completeVehicleData);
+      
+      // Also use collectVehicleData for compatibility with some older components
+      const profileVehicleData = {
+        id: generatedId,
+        make: vehicleData.make,
+        model: vehicleData.model,
         year: parsedYear,
         color: vehicleData.color,
         nickname: vehicleData.nickname,
@@ -466,12 +518,25 @@ const VehicleOnboardingWizard: React.FC = () => {
         engineType: vehicleData.engineType,
         transmissionType: vehicleData.transmissionType,
         purchaseDate: vehicleData.purchaseDate,
-        // Add mileage to ensure it's consistently shared
-        mileage: parsedMileage
+        mileage: parsedMileage,
+        status: 'active'
       };
       
-      // Update the profile system for full two-way integration
+      // Update the profile system with the new vehicle data
       ProfileDataCollector.collectVehicleData(profileVehicleData);
+      
+      try {
+        // Run data reconciliation to ensure all systems have the same vehicle data
+        const DataSourceConnector = await import('@/services/DataSourceConnector').then(m => m.default);
+        
+        // Reconcile this specific vehicle to ensure consistency across all data stores
+        const reconciledVehicles = await DataSourceConnector.reconcileVehicleData(generatedId);
+        
+        console.log('Vehicle reconciliation complete for new vehicle:', vehicleData.make, vehicleData.model);
+      } catch (err) {
+        console.error('Error during vehicle reconciliation:', err);
+        // Continue anyway as the basic vehicle addition has already succeeded
+      }
       
       console.log('Vehicle added and synced with driver profile (two-way integration):', vehicleData.make, vehicleData.model);
       

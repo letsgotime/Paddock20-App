@@ -1036,5 +1036,7 @@ export default {
   getUserMembershipData,
   initializeDataConnections,
   syncMediaBetweenSources,
+  reconcileVehicleData,
+  updateAllVehicleStores,
   STORAGE_KEYS
 };
