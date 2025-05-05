@@ -49,7 +49,12 @@ function DashboardPage() {
   // Get user data from auth hook
   const auth = useAuth();
   const userName = auth?.user?.username || 'driver';
-  const [selectedVehicle, setSelectedVehicle] = useState<string>('2020 BMW 330i xDrive');
+  const { user } = useAuth();
+  const { vehicles, selectedVehicle: activeVehicle } = useVehicle();
+  const { profile } = useUserProfileStore();
+  
+  // Get user profile data from the store
+  const [selectedVehicle, setSelectedVehicle] = useState<string>('');
   const [upcomingEvents, setUpcomingEvents] = useState<UpcomingEvent[]>([]);
   const [recentDrives, setRecentDrives] = useState<RecentDrive[]>([]);
   const [maintenanceAlerts, setMaintenanceAlerts] = useState<MaintenanceAlert[]>([]);
@@ -58,46 +63,40 @@ function DashboardPage() {
     'weather', 'world_clock', 'vehicles', 'drives', 'events', 'maintenance', 'uniform', 'dreams', 'membership'
   ]);
   
-  // Add uniform section data
+  // Add uniform section data - initialized with empty values and populated from user profile
   const [uniformData, setUniformData] = useState({
-    helmetSize: 'Medium (58-59cm)',
-    gloveSize: 'Large',
-    shoeSize: '10.5 US'
+    helmetSize: '',
+    gloveSize: '',
+    shoeSize: ''
   });
   
-  // Paddock20 membership data
+  // Initialize membership data with empty values
   const [membershipData, setMembershipData] = useState({
-    level: 'Platinum',
-    since: '2024-02-15',
-    points: 2350,
-    nextTier: 'Diamond',
-    pointsToNextTier: 650,
-    exclusiveEvents: 8,
-    trackDaysRemaining: 4,
-    benefits: [
-      'Unlimited Access to Paddock20 Venues',
-      'Priority Registration for Race Experiences',
-      'Complimentary Vehicle Transport',
-      'Exclusive Driving Coach Sessions',
-      'VIP Garage Access at Motorsport Events'
-    ]
+    level: '',
+    since: '',
+    points: 0,
+    nextTier: '',
+    pointsToNextTier: 0,
+    exclusiveEvents: 0,
+    trackDaysRemaining: 0,
+    benefits: [] as string[]
   });
   
-  // Dreams and preferences data
+  // Initialize dreams data with empty values
   const [dreamData, setDreamData] = useState({
-    favoriteRacetracks: ['Laguna Seca', 'Nürburgring', 'Circuit of the Americas'],
-    dreamDrives: ['Pacific Coast Highway', 'Stelvio Pass', 'Tail of the Dragon'],
-    dreamCar: 'Ferrari 488 Pista',
-    dreamMotorcycle: 'Ducati Panigale V4',
-    dreamTruck: 'Ford F-150 Raptor',
-    dreamHouse: 'Modern mountain home with 6-car garage',
-    dreamRetirementLocation: 'Lake Como, Italy',
-    dreamGarageSetup: 'Climate-controlled 10+ car showroom with lift and detailing bay',
-    dreamExperience: 'Drive a Formula 1 car at Monaco Grand Prix',
-    dreamVacation: 'Supercar tour through the Alps with track days',
-    dreamRacetrackToOwn: 'Private 2-mile track with elevation changes and technical sections',
-    favoriteCarPart: 'The engine - heart and soul of the driving experience',
-    favoriteCarActivity: 'Track days with data analysis and driver coaching',
+    favoriteRacetracks: [] as string[],
+    dreamDrives: [] as string[],
+    dreamCar: '',
+    dreamMotorcycle: '',
+    dreamTruck: '',
+    dreamHouse: '',
+    dreamRetirementLocation: '',
+    dreamGarageSetup: '',
+    dreamExperience: '',
+    dreamVacation: '',
+    dreamRacetrackToOwn: '',
+    favoriteCarPart: '',
+    favoriteCarActivity: '',
     favoriteCarTVShow: 'Top Gear (Classic era with Clarkson, Hammond, and May)',
     // Top 5 lists
     topYouTubeChannels: [
