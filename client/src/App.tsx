@@ -89,6 +89,7 @@ import DebugPage from "./pages/DebugPage";
 import PrivacyPolicy from './pages/PrivacyPolicyPage';
 import TermsOfService from './pages/TermsOfServicePage';
 import BetaAgreement from './pages/BetaAgreement';
+import EmailVerifiedPage from './pages/EmailVerifiedPage';
 
 function App() {
   // State to track if the user has completed onboarding
@@ -288,6 +289,7 @@ function App() {
                               <Route path="/privacy-policy" component={PrivacyPolicy} />
                               <Route path="/terms-of-service" component={TermsOfService} />
                               <Route path="/beta-agreement" component={BetaAgreement} />
+                              <Route path="/email-verified" component={EmailVerifiedPage} />
                               
                               {/* User Onboarding - Requires authentication but not onboarding completion */}
                               <Route 
