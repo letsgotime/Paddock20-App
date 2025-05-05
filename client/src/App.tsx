@@ -1,6 +1,6 @@
 import PreDriveChecklistPage from './pages/PreDriveChecklistPage';
 import React, { useEffect, useState } from 'react';
-import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { Routes, Route, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import Header from './components/Header';
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -53,7 +53,7 @@ import { UserProfileProvider } from "./contexts/UserProfileContext";
 import SoundControlPanel from "./components/SoundControlPanel";
 import RewardNotification from "./components/RewardNotification";
 import RewardsTracker from "./components/RewardsTracker";
-import AuthPage from "./pages/AuthPage";
+import SimpleAuthPage from "./pages/SimpleAuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import PersonalizedDashboard from "./pages/PersonalizedDashboard";
 import GarageVaultPage from "./pages/GarageVaultPage";
@@ -230,6 +230,23 @@ function App() {
   // Disabled Unsplash image cache to remove API warnings
   // No image pre-fetching to avoid API rate limiting issues
 
+  // Check if the current path is /auth
+  const location = useLocation();
+  const isAuthPage = location.pathname === '/auth';
+  
+  // If we're on the auth page, render only the SimpleAuthPage component
+  if (isAuthPage) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <SimpleAuthPage />
+        </TooltipProvider>
+      </QueryClientProvider>
+    );
+  }
+  
+  // Otherwise, render the full application
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -294,8 +311,8 @@ function App() {
                               )}
                             
                               <Routes>
-                                {/* Public authentication route */}
-                                <Route path="/auth" element={<AuthPage />} />
+                                {/* Auth route - handled differently now */}
+                                <Route path="/auth" element={<Navigate to="/auth" replace />} />
                                 
                                 {/* Legal Document Pages - Publicly accessible */}
                                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />
