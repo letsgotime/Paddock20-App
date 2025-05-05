@@ -295,7 +295,7 @@ function App() {
                             
                               <Routes>
                                 {/* Public authentication route */}
-                                <Route path="/auth" element={!authSession && !previewMode ? <AuthPage /> : <Navigate to="/dashboard" replace />} />
+                                <Route path="/auth" element={<AuthPage />} />
                                 
                                 {/* Legal Document Pages - Publicly accessible */}
                                 <Route path="/privacy-policy" element={<PrivacyPolicy />} />

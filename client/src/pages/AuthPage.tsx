@@ -27,14 +27,18 @@ const AuthPage = () => {
   
   // Redirect if already logged in (using useEffect to avoid React Router warnings)
   React.useEffect(() => {
+    console.log('AuthPage useEffect - user:', user ? 'authenticated' : 'not authenticated');
+    
     if (user) {
       // Check if there's a redirect parameter in the URL
       const urlParams = new URLSearchParams(window.location.search);
       const redirectPath = urlParams.get('redirect') || '/dashboard';
       
       // Navigate to the specified path or dashboard as default
-      navigate(redirectPath, { replace: true });
       console.log('Redirecting authenticated user to:', redirectPath);
+      navigate(redirectPath, { replace: true });
+    } else {
+      console.log('User not authenticated, showing auth forms');
     }
   }, [user, navigate]);
 
@@ -271,6 +275,9 @@ const AuthPage = () => {
     }
   };
 
+  // Ensure we're showing the correct content
+  console.log('AuthPage rendering, registration step:', registrationStep);
+  
   return (
     <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-gray-900 to-black text-white">
       <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8 p-4">
