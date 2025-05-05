@@ -304,7 +304,7 @@ export const UserProfileProvider: React.FC<{ children: ReactNode }> = ({ childre
   const updateVehicle = (id: string, updates: Partial<VehicleReference>) => {
     if (!profile) return;
     try {
-      userProfileWarehouse.updateVehicle(id, updates);
+      userProfileWarehouse.updateVehicleReference(id, updates);
     } catch (error) {
       console.error('Error updating vehicle in profile:', error);
     }
