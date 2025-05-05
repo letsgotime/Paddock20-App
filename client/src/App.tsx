@@ -245,8 +245,10 @@ function App() {
                   {/* Centralized Weather Provider - Provides weather data to all components */}
                   <WeatherProvider>
                     <GalleryProvider>
-                      {/* Rewards Provider - for site-wide gamification */}
-                      <RewardsProvider>
+                      {/* User Profile Provider - centralized user data warehouse */}
+                      <UserProfileProvider>
+                        {/* Rewards Provider - for site-wide gamification */}
+                        <RewardsProvider>
                     {/* Skip link for keyboard navigation */}
                     <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
                       Skip to main content
@@ -375,13 +377,14 @@ function App() {
                     {/* Footer with links and information */}
                     <Footer />
                   </div>
-                    </RewardsProvider>
-                  </GalleryProvider>
-                </WeatherProvider>
-              </VehicleDataProvider>
-            </VehicleProvider>
-          </SoundProvider>
-        </AuthProvider>
+                        </RewardsProvider>
+                      </UserProfileProvider>
+                    </GalleryProvider>
+                  </WeatherProvider>
+                </VehicleDataProvider>
+              </VehicleProvider>
+            </SoundProvider>
+          </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );

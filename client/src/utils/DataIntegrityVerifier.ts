@@ -1,224 +1,214 @@
 /**
- * DataIntegrityVerifier
+ * DataIntegrityVerifier.ts
  * 
- * This utility provides safe methods to access user-related data without creating
- * circular dependencies. It directly accesses storage to get user information
- * rather than using hooks that might cause dependency issues.
+ * Utility functions for verifying data integrity across the application.
+ * These functions help maintain data consistency and provide fallbacks when necessary.
  */
 
-// Storage keys for retrieving data
-const STORAGE_KEYS = {
-  USER_PROFILE: 'paddock20_user_profile',
-  AUTH_USER: 'paddock20_auth_user',
-  VEHICLE_DATA: 'paddock20_vehicle_data',
-  GALLERY_DATA: 'paddock20_gallery',
-  USER_SETTINGS: 'paddock20_settings'
-};
-
-// System constants to use as fallbacks (non-user-specific)
-const SYSTEM_DEFAULTS = {
-  DEFAULT_USER_NAME: 'Driver',
-  DEFAULT_EMAIL_DOMAIN: 'paddock20.com',
-  DEFAULT_VEHICLE_OWNER: 'Vehicle Owner',
-  DEFAULT_APPROVAL_TEXT: 'expert-approved'
-};
-
 /**
- * Get the user's display name without using hooks
- * This is safe to call from any component without risking circular dependencies
+ * Get the display name for the current user - with fallback
+ * @returns The user's display name or a default name
  */
 export function getUserDisplayName(): string {
-  // Try to get data from local storage directly 
   try {
-    // Check user profile storage
-    const profileData = localStorage.getItem(STORAGE_KEYS.USER_PROFILE);
-    if (profileData) {
-      try {
-        const data = JSON.parse(profileData);
-        if (data?.state?.profile?.displayName) {
-          return data.state.profile.displayName;
-        }
-        if (data?.profile?.displayName) {
-          return data.profile.displayName;
-        }
-      } catch (e) {
-        console.error('Error parsing profile data:', e);
+    // Check local storage for user information
+    const userProfileData = localStorage.getItem('userProfile');
+    if (userProfileData) {
+      const userProfile = JSON.parse(userProfileData);
+      if (userProfile.displayName) {
+        return userProfile.displayName;
+      }
+      if (userProfile.username) {
+        return userProfile.username;
       }
     }
     
-    // Check auth user storage
-    const authData = localStorage.getItem(STORAGE_KEYS.AUTH_USER);
-    if (authData) {
-      try {
-        const data = JSON.parse(authData);
-        if (data?.username) {
-          return data.username;
-        }
-        if (data?.fullName) {
-          return data.fullName;
-        }
-        if (data?.firstName) {
-          return data.firstName + (data.lastName ? ` ${data.lastName}` : '');
-        }
-      } catch (e) {
-        console.error('Error parsing auth data:', e);
+    // Check auth context data (from session)
+    const userData = localStorage.getItem('user-data');
+    if (userData) {
+      const userDataObj = JSON.parse(userData);
+      if (userDataObj.user && userDataObj.user.displayName) {
+        return userDataObj.user.displayName;
+      }
+      if (userDataObj.user && userDataObj.user.username) {
+        return userDataObj.user.username;
       }
     }
     
-    // If we still don't have a name, check settings
-    const settingsData = localStorage.getItem(STORAGE_KEYS.USER_SETTINGS);
-    if (settingsData) {
-      try {
-        const data = JSON.parse(settingsData);
-        if (data?.displayName) {
-          return data.displayName;
-        }
-        if (data?.username) {
-          return data.username;
-        }
-      } catch (e) {
-        console.error('Error parsing settings data:', e);
-      }
+    // Fallback to environment variable or config setting if available
+    if (import.meta.env.VITE_DEFAULT_USERNAME) {
+      return import.meta.env.VITE_DEFAULT_USERNAME as string;
     }
+    
+    // Final fallback
+    return 'GoTime Member';
   } catch (error) {
-    console.error('Error getting user display name:', error);
+    console.error('Error retrieving user display name:', error);
+    return 'GoTime Member';
+  }
+}
+
+/**
+ * Verify if a value is a valid string
+ * @param value The value to check
+ * @param fallback Optional fallback value
+ * @returns The validated string or fallback
+ */
+export function verifyString(value: any, fallback: string = ''): string {
+  if (typeof value === 'string' && value.trim() !== '') {
+    return value;
+  }
+  return fallback;
+}
+
+/**
+ * Verify if a value is a valid number
+ * @param value The value to check
+ * @param fallback Optional fallback value
+ * @returns The validated number or fallback
+ */
+export function verifyNumber(value: any, fallback: number = 0): number {
+  if (typeof value === 'number' && !isNaN(value)) {
+    return value;
   }
   
-  // If all else fails, return a system name - NOT a hardcoded user name
-  return SYSTEM_DEFAULTS.DEFAULT_USER_NAME;
-}
-
-/**
- * Get the user's email address without using hooks
- */
-export function getUserEmail(): string {
-  try {
-    // Check auth user storage
-    const authData = localStorage.getItem(STORAGE_KEYS.AUTH_USER);
-    if (authData) {
-      try {
-        const data = JSON.parse(authData);
-        if (data?.email) {
-          return data.email;
-        }
-      } catch (e) {
-        console.error('Error parsing auth data:', e);
-      }
+  if (typeof value === 'string') {
+    const parsed = parseFloat(value);
+    if (!isNaN(parsed)) {
+      return parsed;
     }
-    
-    // Check user profile storage
-    const profileData = localStorage.getItem(STORAGE_KEYS.USER_PROFILE);
-    if (profileData) {
-      try {
-        const data = JSON.parse(profileData);
-        if (data?.state?.profile?.email) {
-          return data.state.profile.email;
-        }
-        if (data?.profile?.email) {
-          return data.profile.email;
-        }
-      } catch (e) {
-        console.error('Error parsing profile data:', e);
-      }
-    }
-    
-    // If we have a username but no email, generate an email
-    const username = getUserDisplayName().split(' ')[0].toLowerCase();
-    if (username && username !== SYSTEM_DEFAULTS.DEFAULT_USER_NAME.toLowerCase()) {
-      return `${username}@${SYSTEM_DEFAULTS.DEFAULT_EMAIL_DOMAIN}`;
-    }
-  } catch (error) {
-    console.error('Error getting user email:', error);
   }
   
-  // Return a generic system email, not a specific person's email
-  return `driver@${SYSTEM_DEFAULTS.DEFAULT_EMAIL_DOMAIN}`;
+  return fallback;
 }
 
 /**
- * Get the vehicle owner name without using hooks
+ * Verify if a value is a valid boolean
+ * @param value The value to check
+ * @param fallback Optional fallback value
+ * @returns The validated boolean or fallback
  */
-export function getVehicleOwnerName(): string {
+export function verifyBoolean(value: any, fallback: boolean = false): boolean {
+  if (typeof value === 'boolean') {
+    return value;
+  }
+  
+  if (value === 'true') return true;
+  if (value === 'false') return false;
+  
+  return fallback;
+}
+
+/**
+ * Verify if a value is a valid array
+ * @param value The value to check
+ * @param fallback Optional fallback array
+ * @returns The validated array or fallback
+ */
+export function verifyArray<T>(value: any, fallback: T[] = []): T[] {
+  if (Array.isArray(value)) {
+    return value;
+  }
+  return fallback;
+}
+
+/**
+ * Verify if a value is a valid object
+ * @param value The value to check
+ * @param fallback Optional fallback object
+ * @returns The validated object or fallback
+ */
+export function verifyObject<T extends object>(value: any, fallback: T): T {
+  if (value && typeof value === 'object' && !Array.isArray(value)) {
+    return value as T;
+  }
+  return fallback;
+}
+
+/**
+ * Verify if a value is a valid date (string)
+ * @param value The value to check
+ * @param fallback Optional fallback date
+ * @returns The validated date string or fallback
+ */
+export function verifyDate(value: any, fallback: string = new Date().toISOString()): string {
+  if (typeof value === 'string') {
+    try {
+      const date = new Date(value);
+      if (!isNaN(date.getTime())) {
+        return value;
+      }
+    } catch (e) {
+      // Invalid date string
+    }
+  }
+  
+  if (value instanceof Date && !isNaN(value.getTime())) {
+    return value.toISOString();
+  }
+  
+  return fallback;
+}
+
+/**
+ * Verify if a value is one of the allowed enum values
+ * @param value The value to check
+ * @param allowedValues Array of allowed values
+ * @param fallback Optional fallback value
+ * @returns The validated enum value or fallback
+ */
+export function verifyEnum<T extends string>(value: any, allowedValues: T[], fallback: T): T {
+  if (typeof value === 'string' && allowedValues.includes(value as T)) {
+    return value as T;
+  }
+  return fallback;
+}
+
+/**
+ * Safely parse JSON with a fallback
+ * @param jsonString The JSON string to parse
+ * @param fallback Optional fallback value
+ * @returns The parsed object or fallback
+ */
+export function safeParseJSON<T>(jsonString: string | null | undefined, fallback: T): T {
+  if (!jsonString) return fallback;
+  
   try {
-    // Check vehicle data storage
-    const vehicleData = localStorage.getItem(STORAGE_KEYS.VEHICLE_DATA);
-    if (vehicleData) {
-      try {
-        const data = JSON.parse(vehicleData);
-        if (data?.primaryVehicle?.owner) {
-          return data.primaryVehicle.owner;
-        }
-        if (data?.owner) {
-          return data.owner;
-        }
-      } catch (e) {
-        console.error('Error parsing vehicle data:', e);
+    return JSON.parse(jsonString) as T;
+  } catch (error) {
+    console.error('Error parsing JSON:', error);
+    return fallback;
+  }
+}
+
+/**
+ * Get the current user ID with fallback
+ * @returns The user's ID or a default
+ */
+export function getUserId(): string {
+  try {
+    // Check local storage for user information
+    const userProfileData = localStorage.getItem('userProfile');
+    if (userProfileData) {
+      const userProfile = JSON.parse(userProfileData);
+      if (userProfile.id) {
+        return userProfile.id.toString();
       }
     }
     
-    // If no specific owner, use the user's display name
-    const displayName = getUserDisplayName();
-    if (displayName !== SYSTEM_DEFAULTS.DEFAULT_USER_NAME) {
-      return displayName;
+    // Check auth context data (from session)
+    const userData = localStorage.getItem('user-data');
+    if (userData) {
+      const userDataObj = JSON.parse(userData);
+      if (userDataObj.user && userDataObj.user.id) {
+        return userDataObj.user.id.toString();
+      }
     }
+    
+    // Generate a temporary ID if none found
+    return `temp-${Math.floor(Math.random() * 1000000)}`;
   } catch (error) {
-    console.error('Error getting vehicle owner name:', error);
-  }
-  
-  // Return a generic owner name, not a specific person's name
-  return SYSTEM_DEFAULTS.DEFAULT_VEHICLE_OWNER;
-}
-
-/**
- * Get approval text without hardcoding specific names
- */
-export function getApprovalText(): string {
-  return SYSTEM_DEFAULTS.DEFAULT_APPROVAL_TEXT;
-}
-
-/**
- * Check if a string contains potentially hardcoded user data
- * @param value The string to check
- * @returns True if the string contains suspicious patterns, false otherwise
- */
-export function containsHardcodedUserData(value: string): boolean {
-  // Define patterns that might indicate hardcoded data
-  const suspiciousPatterns = [
-    'gavin',
-    'brooks',
-    'example.com',
-    'test',
-    'dummy',
-    'placeholder',
-    'sample',
-    'demo',
-    'john doe',
-    'jane doe'
-  ];
-  
-  // Check if any pattern is found in the value
-  return suspiciousPatterns.some(pattern => 
-    value.toLowerCase().includes(pattern.toLowerCase())
-  );
-}
-
-/**
- * Generate dynamic image alt text based on context
- * @param imageType The type of image (vehicle, gallery, product, etc.)
- * @param itemName The name of the item in the image
- * @returns Dynamically generated alt text
- */
-export function generateDynamicAltText(imageType: string, itemName: string): string {
-  const owner = getVehicleOwnerName();
-  
-  switch (imageType.toLowerCase()) {
-    case 'vehicle':
-      return `${itemName || 'Vehicle'} owned by ${owner}`;
-    case 'gallery':
-      return `Gallery image of ${itemName} from ${owner}'s collection`;
-    case 'product':
-      return `${itemName || 'Product'} - ${SYSTEM_DEFAULTS.DEFAULT_APPROVAL_TEXT}`;
-    default:
-      return itemName || 'Image from Paddock20';
+    console.error('Error retrieving user ID:', error);
+    return `temp-${Math.floor(Math.random() * 1000000)}`;
   }
 }

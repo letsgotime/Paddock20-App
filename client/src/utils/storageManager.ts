@@ -1,371 +1,220 @@
 /**
- * StorageManager.ts
+ * Storage Manager Utility
  * 
- * A utility to manage localStorage more effectively, handling quota limits
- * and implementing data compression/cleanup strategies when needed.
+ * A wrapper around localStorage with error handling, typing, and persistence features.
+ * Provides a standardized interface for working with localStorage across the application.
  */
 
-// Size constants (in bytes)
-const MAX_ITEM_SIZE = 1024 * 1024; // 1MB max per item
-const STORAGE_WARNING_THRESHOLD = 0.8; // 80% of quota
-
-// Track storage usage
-let storageUsageCache: number | null = null;
-let storageQuotaCache: number | null = null;
-
-/**
- * Estimates current storage usage and available quota
- * @returns Object containing usage info
- */
-export const getStorageInfo = (): { 
-  used: number;
-  quota: number | undefined;
-  percentage: number;
-  isNearLimit: boolean;
-} => {
+// Implementing the StateStorage interface required by Zustand's persist middleware
+export const getItem = (key: string): string | null => {
   try {
-    // Use cached values if available to avoid expensive calculations
-    if (storageUsageCache !== null && storageQuotaCache !== null) {
-      return {
-        used: storageUsageCache,
-        quota: storageQuotaCache,
-        percentage: storageQuotaCache ? storageUsageCache / storageQuotaCache : 0,
-        isNearLimit: storageQuotaCache ? 
-          (storageUsageCache / storageQuotaCache) > STORAGE_WARNING_THRESHOLD : false
-      };
-    }
-    
-    // Calculate size of all items
-    let totalSize = 0;
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key) {
-        const value = localStorage.getItem(key) || '';
-        totalSize += key.length + value.length * 2; // UTF-16 chars are 2 bytes each
-      }
-    }
-    
-    // Estimate quota (5MB is common default)
-    const estimatedQuota = 5 * 1024 * 1024;
-    
-    // Cache results
-    storageUsageCache = totalSize;
-    storageQuotaCache = estimatedQuota;
-    
-    return {
-      used: totalSize,
-      quota: estimatedQuota, 
-      percentage: totalSize / estimatedQuota,
-      isNearLimit: (totalSize / estimatedQuota) > STORAGE_WARNING_THRESHOLD
-    };
-  } catch (e) {
-    console.error('Error calculating storage usage:', e);
-    return { used: 0, quota: undefined, percentage: 0, isNearLimit: false };
-  }
-};
-
-/**
- * Compresses a string to reduce storage size
- * Uses a simple approach that works well for JSON data
- */
-export const compressData = (data: string): string => {
-  try {
-    // Simple compression: remove whitespace from JSON
-    const parsed = JSON.parse(data);
-    return JSON.stringify(parsed);
-  } catch (e) {
-    // Not valid JSON, return as is
-    return data;
-  }
-};
-
-/**
- * Saves an item to localStorage with automatic quota management
- */
-export const safeSetItem = (key: string, value: string): boolean => {
-  try {
-    // Check if we're near storage limit
-    const storageInfo = getStorageInfo();
-    
-    // If item is too large, compress it
-    let processedValue = value;
-    if (value.length > MAX_ITEM_SIZE) {
-      processedValue = compressData(value);
-      console.log(`Large item detected (${key}), compression applied: ${Math.round((1 - processedValue.length / value.length) * 100)}% reduction`);
-    }
-    
-    // If we're near the storage limit, try to free up space
-    if (storageInfo.isNearLimit) {
-      if (!freeUpStorage()) {
-        console.warn('Storage is near limit and cleanup failed, save might fail');
-      }
-    }
-    
-    // Try to save the item
-    localStorage.setItem(key, processedValue);
-    
-    // Reset cache as we've modified storage
-    storageUsageCache = null;
-    return true;
-  } catch (e) {
-    // Last-resort emergency cleanup if saving failed
-    console.error('Storage error when saving, attempting emergency cleanup:', e);
-    
-    if (emergencyStorageCleanup()) {
-      try {
-        // Try once more after cleanup
-        localStorage.setItem(key, compressData(value));
-        return true;
-      } catch (retryError) {
-        console.error('Still failed to save after emergency cleanup:', retryError);
-      }
-    }
-    
-    return false;
-  }
-};
-
-/**
- * Attempts to free up storage by cleaning up old or less important data
- */
-export const freeUpStorage = (): boolean => {
-  try {
-    // Strategy 1: Remove expired items
-    const expiredItems = findExpiredItems();
-    if (expiredItems.length > 0) {
-      expiredItems.forEach(key => localStorage.removeItem(key));
-      console.log(`Freed up space by removing ${expiredItems.length} expired items`);
-      return true;
-    }
-    
-    // Strategy 2: Compress large items
-    const largeItems = findLargeItems();
-    if (largeItems.length > 0) {
-      largeItems.forEach(key => {
-        const value = localStorage.getItem(key);
-        if (value) {
-          const compressed = compressData(value);
-          localStorage.setItem(key, compressed);
-        }
-      });
-      console.log(`Compressed ${largeItems.length} large items`);
-      return true;
-    }
-    
-    // Strategy 3: Clean non-essential caches
-    const cacheKeys = findCacheItems();
-    if (cacheKeys.length > 0) {
-      cacheKeys.forEach(key => localStorage.removeItem(key));
-      console.log(`Removed ${cacheKeys.length} cache items`);
-      return true;
-    }
-    
-    return false;
-  } catch (e) {
-    console.error('Error during storage cleanup:', e);
-    return false;
-  }
-};
-
-/**
- * Last resort emergency cleanup - removes non-critical data to free space
- */
-export const emergencyStorageCleanup = (): boolean => {
-  try {
-    // Get a list of all items sorted by size (largest first)
-    const allItems: {key: string, size: number}[] = [];
-    
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key) {
-        const value = localStorage.getItem(key) || '';
-        allItems.push({
-          key,
-          size: key.length + value.length * 2
-        });
-      }
-    }
-    
-    // Sort by size, largest first
-    allItems.sort((a, b) => b.size - a.size);
-    
-    // Start removing largest non-essential items
-    let removedCount = 0;
-    
-    for (const item of allItems) {
-      // Skip user profile data which is essential
-      if (item.key.includes('user-profile') || 
-          item.key === 'auth-token' || 
-          item.key === 'current-user') {
-        continue;
-      }
-      
-      // Always safe to remove caches
-      if (item.key.includes('cache') || 
-          item.key.includes('temp') ||
-          item.key.includes('logs') ||
-          item.key.includes('history')) {
-        localStorage.removeItem(item.key);
-        removedCount++;
-        
-        // Stop after removing a few items to avoid excessive data loss
-        if (removedCount >= 3) break;
-      }
-    }
-    
-    // If we still need space, start being more aggressive
-    if (removedCount === 0) {
-      // Remove the largest item that's not the user's core profile
-      for (const item of allItems) {
-        if (!item.key.includes('user-profile')) {
-          localStorage.removeItem(item.key);
-          removedCount++;
-          break;
-        }
-      }
-    }
-    
-    console.warn(`Emergency cleanup removed ${removedCount} items`);
-    return removedCount > 0;
-  } catch (e) {
-    console.error('Error during emergency cleanup:', e);
-    return false;
-  }
-};
-
-/**
- * Find items that might be expired based on naming conventions
- */
-const findExpiredItems = (): string[] => {
-  const expiredItems: string[] = [];
-  
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (!key) continue;
-    
-    // Check for keys that might have expiration info
-    if (key.includes('timestamp') || key.includes('expires')) {
-      try {
-        const value = localStorage.getItem(key);
-        if (!value) continue;
-        
-        // Check if it contains a timestamp
-        const timestamp = parseInt(value);
-        if (!isNaN(timestamp) && timestamp < Date.now()) {
-          // Parent key is usually the key without 'timestamp' or 'expires'
-          const parentKey = key.replace('-timestamp', '').replace('-expires', '');
-          
-          if (localStorage.getItem(parentKey)) {
-            expiredItems.push(parentKey);
-            expiredItems.push(key); // Also remove the timestamp key
-          }
-        }
-      } catch (e) {
-        // Skip this item if we can't parse it
-      }
-    }
-    
-    // Look for temporary tokens
-    if (key.includes('temp-token') || key.includes('session-token')) {
-      expiredItems.push(key);
-    }
-  }
-  
-  return expiredItems;
-};
-
-/**
- * Find items larger than a threshold
- */
-const findLargeItems = (): string[] => {
-  const largeItems: string[] = [];
-  const SIZE_THRESHOLD = 100 * 1024; // 100KB
-  
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (!key) continue;
-    
     const value = localStorage.getItem(key);
-    if (!value) continue;
-    
-    if (value.length > SIZE_THRESHOLD) {
-      largeItems.push(key);
-    }
+    return value;
+  } catch (error) {
+    console.error(`Error getting item from storage [${key}]:`, error);
+    return null;
   }
-  
-  return largeItems;
+};
+
+export const setItem = (key: string, value: string): void => {
+  try {
+    localStorage.setItem(key, value);
+  } catch (error) {
+    console.error(`Error setting item in storage [${key}]:`, error);
+  }
+};
+
+export const removeItem = (key: string): void => {
+  try {
+    localStorage.removeItem(key);
+  } catch (error) {
+    console.error(`Error removing item from storage [${key}]:`, error);
+  }
 };
 
 /**
- * Find items that look like caches or temporary data
+ * Get a typed item from localStorage
+ * @param key The storage key
+ * @param defaultValue Optional default value if key doesn't exist
+ * @returns The parsed value or defaultValue if not found
  */
-const findCacheItems = (): string[] => {
-  const cacheItems: string[] = [];
-  
-  for (let i = 0; i < localStorage.length; i++) {
-    const key = localStorage.key(i);
-    if (!key) continue;
+export function getStorageItem<T>(key: string, defaultValue?: T): T | undefined {
+  try {
+    const item = localStorage.getItem(key);
     
-    if (key.includes('cache') || 
-        key.includes('temp') || 
-        key.includes('log') ||
-        key.includes('history') ||
-        key.includes('recent-') ||
-        key.includes('-state')) {
-      cacheItems.push(key);
+    if (item === null) {
+      return defaultValue;
     }
+    
+    return JSON.parse(item) as T;
+  } catch (error) {
+    console.error(`Error retrieving ${key} from localStorage:`, error);
+    return defaultValue;
   }
-  
-  return cacheItems;
-};
+}
 
 /**
- * Replace localStorage.setItem with our safer version
+ * Set a typed item in localStorage
+ * @param key The storage key
+ * @param value The value to store
+ * @returns Boolean indicating success
  */
-export const enhanceLocalStorage = (): void => {
-  const originalSetItem = localStorage.setItem;
-  
-  localStorage.setItem = function(key: string, value: string) {
-    try {
-      originalSetItem.call(localStorage, key, value);
-    } catch (e) {
-      console.warn('Storage quota exceeded, attempting cleanup');
-      
-      if (freeUpStorage()) {
-        try {
-          originalSetItem.call(localStorage, key, value);
-          console.log('Successfully saved item after cleanup');
-        } catch (retryError) {
-          console.error('Still failed to save after cleanup, trying compression');
-          
-          try {
-            const compressed = compressData(value);
-            originalSetItem.call(localStorage, key, compressed);
-            console.log('Successfully saved compressed item');
-          } catch (compressionError) {
-            console.error('Failed to save even with compression, attempting emergency cleanup');
-            
-            if (emergencyStorageCleanup()) {
-              try {
-                originalSetItem.call(localStorage, key, compressData(value));
-                console.log('Successfully saved after emergency cleanup');
-              } catch (emergencyError) {
-                console.error('All storage strategies failed:', emergencyError);
-                throw emergencyError; // Re-throw if all strategies failed
-              }
-            } else {
-              throw compressionError;
-            }
-          }
-        }
-      } else {
-        throw e; // Re-throw if cleanup didn't help
+export function setStorageItem<T>(key: string, value: T): boolean {
+  try {
+    localStorage.setItem(key, JSON.stringify(value));
+    return true;
+  } catch (error) {
+    console.error(`Error setting ${key} in localStorage:`, error);
+    return false;
+  }
+}
+
+/**
+ * Remove an item from localStorage
+ * @param key The storage key to remove
+ * @returns Boolean indicating success
+ */
+export function removeStorageItem(key: string): boolean {
+  try {
+    localStorage.removeItem(key);
+    return true;
+  } catch (error) {
+    console.error(`Error removing ${key} from localStorage:`, error);
+    return false;
+  }
+}
+
+/**
+ * Check if a key exists in localStorage
+ * @param key The storage key to check
+ * @returns Boolean indicating if the key exists
+ */
+export function hasStorageItem(key: string): boolean {
+  try {
+    return localStorage.getItem(key) !== null;
+  } catch (error) {
+    console.error(`Error checking for ${key} in localStorage:`, error);
+    return false;
+  }
+}
+
+/**
+ * Get all keys in localStorage that match a specific prefix
+ * @param prefix The prefix to match
+ * @returns Array of matching keys
+ */
+export function getKeysWithPrefix(prefix: string): string[] {
+  try {
+    const keys: string[] = [];
+    
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key && key.startsWith(prefix)) {
+        keys.push(key);
       }
     }
-  };
-};
-
-// Initialize enhanced localStorage
-if (typeof window !== 'undefined') {
-  enhanceLocalStorage();
+    
+    return keys;
+  } catch (error) {
+    console.error(`Error getting keys with prefix ${prefix}:`, error);
+    return [];
+  }
 }
+
+/**
+ * Clear all items from localStorage matching a prefix
+ * @param prefix The prefix to match
+ * @returns Number of items cleared
+ */
+export function clearItemsWithPrefix(prefix: string): number {
+  try {
+    const keys = getKeysWithPrefix(prefix);
+    
+    keys.forEach(key => {
+      localStorage.removeItem(key);
+    });
+    
+    return keys.length;
+  } catch (error) {
+    console.error(`Error clearing items with prefix ${prefix}:`, error);
+    return 0;
+  }
+}
+
+/**
+ * Get the total size of localStorage in use (in bytes)
+ * @returns The size in bytes
+ */
+export function getStorageSize(): number {
+  try {
+    let size = 0;
+    
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key) {
+        const value = localStorage.getItem(key) || '';
+        size += key.length + value.length;
+      }
+    }
+    
+    return size;
+  } catch (error) {
+    console.error('Error calculating storage size:', error);
+    return 0;
+  }
+}
+
+/**
+ * Check if localStorage is available and working
+ * @returns Boolean indicating if storage is available
+ */
+export function isStorageAvailable(): boolean {
+  try {
+    const test = '__storage_test__';
+    localStorage.setItem(test, test);
+    localStorage.removeItem(test);
+    return true;
+  } catch (error) {
+    return false;
+  }
+}
+
+/**
+ * Get all data in localStorage as an object
+ * @returns An object with all localStorage data
+ */
+export function getAllStorageData(): Record<string, any> {
+  try {
+    const data: Record<string, any> = {};
+    
+    for (let i = 0; i < localStorage.length; i++) {
+      const key = localStorage.key(i);
+      if (key) {
+        try {
+          const value = localStorage.getItem(key);
+          if (value) {
+            data[key] = JSON.parse(value);
+          }
+        } catch (parseError) {
+          // If we can't parse as JSON, store as string
+          const value = localStorage.getItem(key);
+          if (value) {
+            data[key] = value;
+          }
+        }
+      }
+    }
+    
+    return data;
+  } catch (error) {
+    console.error('Error getting all storage data:', error);
+    return {};
+  }
+}
+
+// Export the storage interface for Zustand persist middleware
+export default {
+  getItem,
+  setItem,
+  removeItem
+};
