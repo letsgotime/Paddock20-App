@@ -170,28 +170,28 @@ const SimpleAuthPage = () => {
               </div>
               
               <p className="text-xl text-white font-light leading-relaxed">
-                The ultimate automotive intelligence platform for passionate enthusiasts and drivers
+                Your complete automotive lifestyle experience with F1-grade intelligence and enthusiast-driven features
               </p>
               
               <div className="space-y-4 mt-8">
                 <div className="flex items-center">
                   <div className="h-8 w-1 bg-[#08c519] mr-4"></div>
-                  <p className="text-white text-lg">Premium F1-inspired telemetry</p>
+                  <p className="text-white text-lg">Track, journal, and optimize your drives</p>
                 </div>
                 <div className="flex items-center">
                   <div className="h-8 w-1 bg-[#1982FC] mr-4"></div>
-                  <p className="text-white text-lg">Exclusive community & insights</p>
+                  <p className="text-white text-lg">Manage your garage with precision</p>
                 </div>
                 <div className="flex items-center">
                   <div className="h-8 w-1 bg-[#08c519] mr-4"></div>
-                  <p className="text-white text-lg">Advanced automotive analytics</p>
+                  <p className="text-white text-lg">Discover premium events & experiences</p>
                 </div>
               </div>
               
               <div className="mt-4 p-4 rounded-lg bg-black/30 border border-gray-800">
                 <p className="text-[#08c519] font-semibold">BETA ACCESS</p>
                 <p className="text-gray-300 mt-1">
-                  You're part of an exclusive group of drivers shaping the future of automotive intelligence
+                  Experience the full throttle version with all premium features unlocked during our beta phase
                 </p>
               </div>
             </div>
