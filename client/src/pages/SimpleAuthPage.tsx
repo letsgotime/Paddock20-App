@@ -9,6 +9,7 @@ const SimpleAuthPage = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [email, setEmail] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
@@ -34,6 +35,12 @@ const SimpleAuthPage = () => {
     
     if (!isLogin && !email) {
       setErrorMessage('Please enter an email address for registration');
+      return;
+    }
+    
+    // Check if passwords match for registration
+    if (!isLogin && password !== confirmPassword) {
+      setErrorMessage('Passwords do not match. Please try again.');
       return;
     }
     
@@ -232,7 +239,7 @@ const SimpleAuthPage = () => {
               </>
             )}
             
-            <div className="mb-6">
+            <div className="mb-4">
               <label htmlFor="password" className="mb-2 block text-sm font-medium text-gray-300">
                 Password
               </label>
@@ -255,6 +262,25 @@ const SimpleAuthPage = () => {
                 </button>
               </div>
             </div>
+            
+            {!isLogin && (
+              <div className="mb-6">
+                <label htmlFor="confirm-password" className="mb-2 block text-sm font-medium text-gray-300">
+                  Confirm Password
+                </label>
+                <div className="relative">
+                  <input
+                    id="confirm-password"
+                    type={showPassword ? 'text' : 'password'}
+                    className="w-full rounded-md bg-gray-800 border border-gray-700 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                    placeholder="Confirm your password"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    required={!isLogin}
+                  />
+                </div>
+              </div>
+            )}
             
             {/* Error message display */}
             {errorMessage && (
