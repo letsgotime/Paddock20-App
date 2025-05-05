@@ -428,27 +428,37 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
       return;
     }
     
-    // Save legal agreements
-    localStorage.setItem('userAgreements', JSON.stringify({
+    // Save legal agreements with user-specific key
+    const legalAgreementsKey = `paddock20_legal_agreements_${userId}`;
+    localStorage.setItem(legalAgreementsKey, JSON.stringify({
       accepted: true,
       timestamp: new Date().toISOString(),
       version: '1.0' // increment this when terms change
     }));
     
-    // Save user profile
-    localStorage.setItem('userProfile', JSON.stringify(userProfile));
+    // Set beta onboarding complete flag with user-specific key
+    const betaOnboardingKey = `paddock20_beta_onboarding_complete_${userId}`;
+    localStorage.setItem(betaOnboardingKey, 'true');
     
-    // Save vehicle profile
-    localStorage.setItem('vehicleProfile', JSON.stringify(vehicleProfile));
+    // Save user profile with user-specific key
+    const userProfileKey = `paddock20_user_profile_${userId}`;
+    localStorage.setItem(userProfileKey, JSON.stringify(userProfile));
     
-    // Save dashboard preferences
-    localStorage.setItem('dashboardPreferences', JSON.stringify(dashboardPrefs));
+    // Save vehicle profile with user-specific key
+    const vehicleProfileKey = `paddock20_vehicle_profile_${userId}`;
+    localStorage.setItem(vehicleProfileKey, JSON.stringify(vehicleProfile));
     
-    // Save location settings
-    localStorage.setItem('locationSettings', JSON.stringify(locationSettings));
+    // Save dashboard preferences with user-specific key
+    const dashboardPrefsKey = `paddock20_dashboard_prefs_${userId}`;
+    localStorage.setItem(dashboardPrefsKey, JSON.stringify(dashboardPrefs));
     
-    // Save routes
-    localStorage.setItem('userRoutes', JSON.stringify(routes));
+    // Save location settings with user-specific key
+    const locationSettingsKey = `paddock20_location_settings_${userId}`;
+    localStorage.setItem(locationSettingsKey, JSON.stringify(locationSettings));
+    
+    // Save routes with user-specific key
+    const routesKey = `paddock20_routes_${userId}`;
+    localStorage.setItem(routesKey, JSON.stringify(routes));
     
     // Complete onboarding by passing user ID
     onComplete(userId);
