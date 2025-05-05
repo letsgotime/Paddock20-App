@@ -21,53 +21,49 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
   
   // Check if the user has completed the beta onboarding process
   useEffect(() => {
-    if (auth.user) {
-      // Check user agreement status
-      const checkOnboardingStatus = () => {
-        setCheckingOnboarding(true);
-        
-        try {
-          // Ensure we have a user with an ID
-          if (!auth.user || !auth.user.id) {
-            console.error('Cannot check onboarding: Invalid user or missing ID');
-            setHasCompletedOnboarding(false);
-            setCheckingOnboarding(false);
-            return;
-          }
-          
-          // Get user ID safely
-          const userId = auth.user.id.toString();
-          
-          // First check if user has completed beta onboarding
-          const betaOnboardingKey = `paddock20_beta_onboarding_complete_${userId}`;
-          const hasCompletedBetaOnboarding = localStorage.getItem(betaOnboardingKey) === 'true';
-          
-          // Then check if user has agreed to legal terms
-          const legalAgreementsKey = `paddock20_legal_agreements_${userId}`;
-          const legalAgreements = localStorage.getItem(legalAgreementsKey);
-          const hasAgreedToTerms = legalAgreements ? JSON.parse(legalAgreements).accepted : false;
-          
-          // Both must be complete to proceed
-          const onboardingComplete = hasCompletedBetaOnboarding && hasAgreedToTerms;
-          setHasCompletedOnboarding(onboardingComplete);
-          
-          console.log('Onboarding status check:', { 
-            userId,
-            hasCompletedBetaOnboarding,
-            hasAgreedToTerms,
-            onboardingComplete
-          });
-        } catch (error) {
-          console.error('Error checking onboarding status:', error);
-          // If any error occurs, force user through onboarding again
-          setHasCompletedOnboarding(false);
-        } finally {
-          setCheckingOnboarding(false);
-        }
-      };
-      
-      checkOnboardingStatus();
+    // Only check onboarding status if we have an authenticated user
+    if (!auth.user) {
+      setCheckingOnboarding(false);
+      return;
     }
+    
+    // Check user agreement status
+    const checkOnboardingStatus = () => {
+      setCheckingOnboarding(true);
+      
+      try {
+        // Get user ID safely (we already checked auth.user is not null above)
+        const userId = auth.user.id.toString();
+        
+        // First check if user has completed beta onboarding
+        const betaOnboardingKey = `paddock20_beta_onboarding_complete_${userId}`;
+        const hasCompletedBetaOnboarding = localStorage.getItem(betaOnboardingKey) === 'true';
+        
+        // Then check if user has agreed to legal terms
+        const legalAgreementsKey = `paddock20_legal_agreements_${userId}`;
+        const legalAgreements = localStorage.getItem(legalAgreementsKey);
+        const hasAgreedToTerms = legalAgreements ? JSON.parse(legalAgreements).accepted : false;
+        
+        // Both must be complete to proceed
+        const onboardingComplete = hasCompletedBetaOnboarding && hasAgreedToTerms;
+        setHasCompletedOnboarding(onboardingComplete);
+        
+        console.log('Onboarding status check:', { 
+          userId,
+          hasCompletedBetaOnboarding,
+          hasAgreedToTerms,
+          onboardingComplete
+        });
+      } catch (error) {
+        console.error('Error checking onboarding status:', error);
+        // If any error occurs, force user through onboarding again
+        setHasCompletedOnboarding(false);
+      } finally {
+        setCheckingOnboarding(false);
+      }
+    };
+    
+    checkOnboardingStatus();
   }, [auth.user]);
   
   console.log('ProtectedRoute checking auth status:', { 
