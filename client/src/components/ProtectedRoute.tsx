@@ -1,5 +1,5 @@
 import { ReactNode, useEffect, useState } from 'react';
-import { Navigate, useLocation } from 'react-router-dom';
+import { useLocation, Redirect } from 'wouter';
 import { Loader2 } from 'lucide-react';
 import { useAuth } from '../hooks/useAuth';
 
@@ -13,7 +13,7 @@ interface ProtectedRouteProps {
 }
 
 export default function ProtectedRoute({ children }: ProtectedRouteProps) {
-  const location = useLocation();
+  const [location] = useLocation();
   // Use the useAuth hook which provides a unified interface to authentication
   const auth = useAuth();
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean | null>(null);
@@ -75,7 +75,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
     checkingOnboarding,
     user: auth.user ? 'authenticated' : 'not authenticated',
     hasCompletedOnboarding,
-    path: location.pathname
+    currentPath: location
   });
   
   // Show loading state while checking authentication
@@ -94,7 +94,7 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   // If authenticated but hasn't completed onboarding, redirect to onboarding
   if (auth.user && hasCompletedOnboarding === false) {
-    return <Navigate to="/onboarding" state={{ from: location }} replace />;
+    return <Redirect to="/onboarding" />;
   }
 
   // If authenticated (either through real auth or DEV_MODE) and has completed onboarding, show the protected content
@@ -104,5 +104,5 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
 
   // If not authenticated and not in DEV_MODE, redirect to the login page
   // Also add a timestamp parameter to break any potential client-side caching
-  return <Navigate to={`/auth?t=${Date.now()}`} state={{ from: location }} replace />;
+  return <Redirect to={`/auth?t=${Date.now()}`} />;
 }

@@ -464,12 +464,83 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
   const prevStep = () => handleStepTransition('prev');
 
   return (
-    <div className="fixed inset-0 bg-[url('/assets/Stock Photos/F1/carbon-fiber-texture-dark.png')] bg-opacity-95 bg-blend-overlay bg-black z-50 flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black z-50 flex items-center justify-center p-4 overflow-hidden">
+      {/* Dynamic background that changes with each step */}
+      <div className="absolute inset-0 z-0">
+        {step === 1 && (
+          <div 
+            className="absolute inset-0 bg-cover bg-center opacity-40"
+            style={{ 
+              backgroundImage: `url('/assets/Stock Photos/F1/ferrari-f1-pitstop-aerial.png')`,
+              filter: 'brightness(0.5)',
+              animation: 'pulse 5s infinite ease-in-out'
+            }}
+          />
+        )}
+        {step === 2 && (
+          <div 
+            className="absolute inset-0 bg-cover bg-center opacity-40"
+            style={{ 
+              backgroundImage: `url('/assets/Stock Photos/F1/f1-stadium-sunset.png')`,
+              filter: 'brightness(0.5)',
+              animation: 'pulse 5s infinite ease-in-out'
+            }}
+          />
+        )}
+        {step === 3 && (
+          <div 
+            className="absolute inset-0 bg-cover bg-center opacity-40"
+            style={{ 
+              backgroundImage: `url('/assets/Stock Photos/F1/redbull-honda-track.png')`,
+              filter: 'brightness(0.5)',
+              animation: 'pulse 5s infinite ease-in-out'
+            }}
+          />
+        )}
+        {(step === 4 || step === 5) && (
+          <div 
+            className="absolute inset-0 bg-cover bg-center opacity-40"
+            style={{ 
+              backgroundImage: `url('/assets/Stock Photos/F1/ferrari-laferrari-mountains.png')`,
+              filter: 'brightness(0.5)',
+              animation: 'pulse 5s infinite ease-in-out'
+            }}
+          />
+        )}
+        {step === 6 && (
+          <div 
+            className="absolute inset-0 bg-cover bg-center opacity-40"
+            style={{ 
+              backgroundImage: `url('/assets/Stock Photos/F1/redbull-sparks-night.png')`,
+              filter: 'brightness(0.5)',
+              animation: 'pulse 5s infinite ease-in-out'
+            }}
+          />
+        )}
+        
+        {/* Overlaid carbon fiber texture on all backgrounds */}
+        <div 
+          className="absolute inset-0 bg-cover bg-center opacity-80"
+          style={{ 
+            backgroundImage: `url('/assets/Stock Photos/F1/carbon-fiber-texture-dark.png')`,
+            backgroundBlendMode: 'overlay',
+            mixBlendMode: 'multiply'
+          }}
+        />
+        
+        {/* F1-inspired racing stripe elements */}
+        <div className="absolute top-0 left-0 right-0 h-1 bg-[#08c519]"></div>
+        <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#1982FC]"></div>
+        <div className="absolute top-0 bottom-0 left-0 w-1 bg-[#ff2800]"></div>
+        <div className="absolute top-0 bottom-0 right-0 w-1 bg-[#ff2800]"></div>
+      </div>
+      
       <div 
-        className={`relative bg-gradient-to-b from-gray-900 to-black border border-gray-800 rounded-xl shadow-2xl max-w-3xl w-full overflow-hidden transition-opacity duration-300 ${animateIn ? 'opacity-100' : 'opacity-0'}`}
+        className={`relative z-10 backdrop-blur-lg bg-gradient-to-b from-gray-900/90 to-black/90 border border-gray-800 rounded-xl shadow-2xl max-w-4xl w-full overflow-hidden transition-all duration-500 transform ${animateIn ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
         style={{
-          boxShadow: `0 0 40px rgba(25, 130, 252, 0.2), 
-                      0 0 20px rgba(25, 130, 252, 0.1)`
+          boxShadow: `0 0 40px rgba(8, 197, 25, 0.2), 
+                      0 0 20px rgba(25, 130, 252, 0.2),
+                      0 0 60px rgba(255, 40, 0, 0.1)`
         }}
       >
         {/* Decorative elements */}
@@ -748,7 +819,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                   </div>
                   <div className="flex-1">
                     <label htmlFor="beta-agreement" className="font-medium text-white cursor-pointer">
-                      I have read and agree to the <Link to="/beta-agreement" target="_blank" className="text-[#1982FC] hover:underline">Beta Agreement</Link>
+                      I have read and agree to the <Link href="/beta-agreement" target="_blank" className="text-[#1982FC] hover:underline">Beta Agreement</Link>
                     </label>
                     <p className="text-sm text-gray-300 mt-2">
                       The Beta Agreement covers special considerations for beta testers, including feature limitations, feedback expectations, reporting bugs, and confidentiality requirements.
