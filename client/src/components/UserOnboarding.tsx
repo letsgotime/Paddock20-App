@@ -10,7 +10,7 @@ import {
 import { handleDeclineTerms } from '../utils/accountUtils';
 
 interface UserOnboardingProps {
-  onComplete: () => void;
+  onComplete: (userId: number | string) => void;
 }
 
 // Carolina blue color code for consistent branding
