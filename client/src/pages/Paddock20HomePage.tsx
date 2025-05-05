@@ -337,9 +337,19 @@ const Paddock20HomePage: React.FC = () => {
           <div className="absolute bottom-0 left-12 right-12 h-0.5 bg-gradient-to-r from-transparent via-[#08c519] to-transparent"></div>
           
           {/* Telemetry-inspired header */}
-          <div className="bg-black/80 border-b border-blue-900/40 rounded-t-xl py-3 px-6 flex items-center">
-            <div className="h-2.5 w-2.5 rounded-full bg-[#08c519] animate-pulse mr-2"></div>
-            <h2 className="text-[#4B9CD3] font-orbitron text-2xl tracking-wider">WHY PADDOCK20™? WHY NOW?</h2>
+          <div className="bg-gradient-to-r from-black to-black/90 border-b border-blue-900/60 rounded-t-xl backdrop-blur-sm py-4 px-6 flex items-center relative overflow-hidden">
+            {/* Carbon fiber pattern overlay */}
+            <div className="absolute inset-0 opacity-10 bg-[url('/assets/images/carbon-fiber-pattern.png')] bg-repeat pointer-events-none"></div>
+            
+            {/* Accent light glow */}
+            <div className="absolute left-0 top-0 w-full h-[1px] bg-gradient-to-r from-transparent via-blue-500/80 to-transparent"></div>
+            
+            {/* Status indicator */}
+            <div className="flex items-center z-10">
+              <div className="h-2.5 w-2.5 rounded-full bg-[#08c519] animate-pulse mr-3 shadow-[0_0_6px_#08c519]"></div>
+              <div className="mr-3 h-6 w-[1px] bg-blue-900/60"></div>
+              <h2 className="text-[#4B9CD3] font-orbitron text-2xl tracking-wider font-bold bg-gradient-to-b from-blue-300 to-[#4B9CD3] bg-clip-text text-transparent drop-shadow-sm">WHY PADDOCK20™? WHY NOW?</h2>
+            </div>
           </div>
           
           <div className="bg-black/50 backdrop-blur-sm p-6 rounded-b-xl border-t-0 border border-blue-900/20">
