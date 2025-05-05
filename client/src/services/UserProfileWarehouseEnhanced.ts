@@ -13,7 +13,7 @@
  * - Enhanced error logging
  */
 
-import { UserProfileWarehouse, UserProfileData } from './UserProfileWarehouse';
+import userProfileWarehouse, { UserProfileData } from './UserProfileWarehouse';
 import { secureWrite, secureRead, secureDelete, backupData, recoverData } from '../utils/secureStorage';
 import { sanitizeObject, sanitizeText, sanitizeDate } from '../utils/dataSanitizer';
 import { validateUserProfileData } from '../utils/dataValidation';
@@ -23,17 +23,28 @@ const STORAGE_KEY = 'user-profile-warehouse';
 const BACKUP_STORAGE_KEY = 'user-profile-warehouse-backup';
 const AUTO_BACKUP_INTERVAL_MS = 30 * 60 * 1000; // 30 minutes
 
+// Here's a simplified interface representing the methods we need from userProfileWarehouse
+interface UserProfileWarehouseInterface {
+  getProfile(): UserProfileData | null;
+  updateProfile(updates: Partial<UserProfileData>): void;
+  initialize(): Promise<void>;
+  updateIdentity(updates: Partial<UserProfileData['identity']>): void;
+  updatePreferences(updates: Partial<UserProfileData['preferences']>): void;
+  resetProfile(): void;
+}
+
 /**
  * Enhanced UserProfileWarehouse with secure storage and data protection
  */
-export class SecureUserProfileWarehouse {
-  private baseWarehouse: UserProfileWarehouse;
+export class SecureUserProfileWarehouse implements UserProfileWarehouseInterface {
+  private baseWarehouse: typeof userProfileWarehouse;
   private lastBackupTime: number = 0;
   private backupIntervalId: number | null = null;
   private errorCount: number = 0;
   private readonly MAX_ERRORS = 5;
+  private changeListeners: ((profile: UserProfileData) => void)[] = [];
   
-  constructor(baseWarehouse: UserProfileWarehouse) {
+  constructor(baseWarehouse = userProfileWarehouse) {
     this.baseWarehouse = baseWarehouse;
     this.setupBackupSchedule();
   }
@@ -94,12 +105,99 @@ export class SecureUserProfileWarehouse {
   }
   
   /**
+   * Create a default empty profile
+   */
+  public createDefaultProfile(): UserProfileData {
+    // Create a minimal valid profile structure
+    return {
+      identity: {
+        id: 'default-' + Date.now(),
+        username: 'default',
+        displayName: 'Default User',
+        memberSince: new Date().toISOString(),
+        lastActive: new Date().toISOString(),
+        membershipLevel: 'free',
+        onboardingCompleted: false
+      },
+      preferences: {
+        theme: 'dark',
+        timeFormat: '12h',
+        dateFormat: 'mdy', 
+        units: 'imperial',
+        soundEnabled: true,
+        weatherPreferences: {
+          defaultLocation: {
+            lat: 33.996,
+            lon: -84.292,
+            name: 'Default Location'
+          },
+          units: 'imperial'
+        }
+      },
+      agreements: {
+        termsAccepted: false,
+        privacyAccepted: false,
+        marketingOptIn: false
+      },
+      statistics: {
+        totalDrives: 0,
+        totalMiles: 0,
+        avgDriveTime: 0,
+        favoriteRoads: [],
+        achievements: 0,
+        goalsCompleted: 0,
+        eventsAttended: 0
+      },
+      vehicles: [],
+      drives: [],
+      goals: [],
+      events: [],
+      gallery: [],
+      detailingActivities: [],
+      juiceBox: {
+        favoriteProducts: [],
+        savedLoadouts: []
+      },
+      podiumPursuit: {
+        activeTargets: [],
+        acquiredTargets: []
+      },
+      routes: {
+        savedRoutes: [],
+        favoriteRoads: []
+      },
+      audio: {
+        playlists: [],
+        soundSettings: {
+          engineSoundEnhancement: true,
+          navigationVolume: 70,
+          musicVolume: 80,
+          notificationSounds: true
+        }
+      },
+      maintenance: {
+        records: [],
+        scheduledMaintenance: []
+      },
+      security: {
+        passwordLastChanged: new Date().toISOString(),
+        twoFactorEnabled: false
+      },
+      _metadata: {
+        version: '1.0.0',
+        lastUpdated: new Date().toISOString(),
+        createdAt: new Date().toISOString(),
+      }
+    };
+  }
+
+  /**
    * Attempt to recover profile from backup if main storage is corrupted
    */
   public async recoverFromBackup(): Promise<boolean> {
     try {
       // Create a default empty profile
-      const defaultProfile = this.baseWarehouse.createDefaultProfile();
+      const defaultProfile = this.createDefaultProfile();
       
       // Try to recover from backup
       const recoveredProfile = recoverData<UserProfileData>(
@@ -156,8 +254,7 @@ export class SecureUserProfileWarehouse {
       // Always update metadata
       sanitizedProfile._metadata = {
         ...sanitizedProfile._metadata,
-        lastUpdated: new Date().toISOString(),
-        sanitized: true
+        lastUpdated: new Date().toISOString()
       };
       
       return sanitizedProfile;
@@ -197,11 +294,15 @@ export class SecureUserProfileWarehouse {
       // Sanitize the profile before setting
       const sanitizedProfile = this.sanitizeProfileData(profile);
       
-      // Set the profile
-      await this.baseWarehouse.setProfile(sanitizedProfile);
+      // Update entire profile
+      const currentProfile = this.baseWarehouse.getProfile();
+      await this.updateProfile(sanitizedProfile);
       
       // Create a backup after successful update
       this.backupProfile();
+      
+      // Notify listeners
+      this.notifyListeners(sanitizedProfile);
       
       this.errorCount = 0; // Reset error count on successful save
     } catch (e) {
@@ -215,6 +316,21 @@ export class SecureUserProfileWarehouse {
       }
       
       throw e; // Re-throw the error after recovery attempt
+    }
+  }
+  
+  /**
+   * Notifies all listeners of profile changes
+   */
+  private notifyListeners(profile: UserProfileData | null): void {
+    if (!profile) return;
+    
+    for (const listener of this.changeListeners) {
+      try {
+        listener(profile);
+      } catch (error) {
+        console.error('Error in profile change listener:', error);
+      }
     }
   }
   
