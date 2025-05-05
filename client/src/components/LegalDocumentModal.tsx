@@ -6,13 +6,15 @@ interface LegalDocumentModalProps {
   content: string;
   isOpen: boolean;
   onClose: () => void;
+  callback?: () => void;
 }
 
 const LegalDocumentModal: React.FC<LegalDocumentModalProps> = ({
   title,
   content,
   isOpen,
-  onClose
+  onClose,
+  callback
 }) => {
   if (!isOpen) return null;
 
@@ -74,7 +76,10 @@ const LegalDocumentModal: React.FC<LegalDocumentModalProps> = ({
         {/* Footer */}
         <div className="flex justify-end px-6 py-4">
           <button
-            onClick={onClose}
+            onClick={() => {
+              if (callback) callback();
+              onClose();
+            }}
             className="px-5 py-2 bg-gradient-to-r from-[#1982FC]/80 to-[#08c519]/80 text-white font-medium rounded-md shadow-md hover:shadow-lg transition-all"
           >
             I Understand
