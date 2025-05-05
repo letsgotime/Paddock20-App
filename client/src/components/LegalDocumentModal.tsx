@@ -73,7 +73,14 @@ const LegalDocumentModal: React.FC<LegalDocumentModalProps> = ({
         </div>
         
         {/* Footer */}
-        <div className="flex justify-end px-6 py-4">
+        <div className="flex justify-between items-center px-6 py-4">
+          <button
+            onClick={onClose}
+            className="px-5 py-2 bg-gray-800 text-gray-300 font-medium rounded-md border border-gray-700 hover:bg-gray-700 transition-all"
+          >
+            Back to Registration
+          </button>
+          
           <button
             onClick={() => {
               if (callback) callback();
