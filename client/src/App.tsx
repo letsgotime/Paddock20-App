@@ -205,8 +205,8 @@ function App() {
   // No image pre-fetching to avoid API rate limiting issues
 
   // Check if the current path is /auth
-  const location = useLocation();
-  const isAuthPage = location.pathname === '/auth';
+  const [location] = useLocation();
+  const isAuthPage = location === '/auth';
   
   // If we're on the auth page, render only the SimpleAuthPage component
   if (isAuthPage) {
@@ -280,7 +280,7 @@ function App() {
                                 <OneTapWeatherSnapshot 
                                   floating={true}
                                   // Don't show on weather paddock page where it would be redundant
-                                  className={window.location.pathname === '/weather-paddock' ? 'hidden' : ''}
+                                  className={location === '/weather-paddock' ? 'hidden' : ''}
                                 />
                               )}
                                 
@@ -317,6 +317,7 @@ function App() {
                               />
                             
                               {/* Simplified routes for authentication testing */}
+                              <Route path="/auth" component={SimpleAuthPage} />
                               <Route path="/" component={() => <ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
                               <Route path="/dashboard" component={() => <ProtectedRoute><DashboardPage /></ProtectedRoute>} />
                               <Route path="*" component={NotFound} />
