@@ -86,8 +86,8 @@ import { getUserDisplayName } from './utils/DataIntegrityVerifier';
 import DebugPage from "./pages/DebugPage";
 
 // Import legal pages
-import PrivacyPolicy from './pages/PrivacyPolicy';
-import TermsOfService from './pages/TermsOfService';
+import PrivacyPolicy from './pages/PrivacyPolicyPage';
+import TermsOfService from './pages/TermsOfServicePage';
 import BetaAgreement from './pages/BetaAgreement';
 
 function App() {
