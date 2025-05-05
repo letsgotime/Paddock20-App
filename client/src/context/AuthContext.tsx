@@ -200,21 +200,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       setLoading(true);
       
-      const response = await fetch('/api/logout', {
-        method: 'POST',
-        credentials: 'include',
-      });
-
-      // Clear user data even if logout API fails
+      // Clear user data first to prevent any auth-dependent components from breaking
       setUser(null);
       setSession(null);
       
       // Force a hard reset of local storage for auth-related items
       localStorage.removeItem('auth-session');
       localStorage.removeItem('auth-token');
+      localStorage.removeItem('returnToPath');
+      localStorage.removeItem('currentVehicle');
+      
+      // Clear any other app state that might depend on the user
+      sessionStorage.removeItem('weatherAppReturnPoint');
       
       // Clear session cookies by setting expired date
       document.cookie = 'connect.sid=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;';
+      
+      // Now call the logout API (but we've already cleared local state)
+      const response = await fetch('/api/logout', {
+        method: 'POST',
+        credentials: 'include',
+      });
       
       toast({
         title: 'Logged Out',
@@ -222,8 +228,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         variant: 'default',
       });
       
-      // Explicitly redirect to auth page
-      window.location.href = '/auth';
+      // Use history API instead of direct location change to work with React Router
+      if (window.location.pathname !== '/auth') {
+        // Explicitly redirect to auth page with replace to prevent back button issues
+        window.history.replaceState(null, '', '/auth');
+        // Dispatch an event to make React Router notice the URL change
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      }
       
     } catch (err) {
       console.error('Logout error:', err);
@@ -237,7 +248,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
       
       // Still try to redirect to auth page even on error
-      window.location.href = '/auth';
+      if (window.location.pathname !== '/auth') {
+        window.history.replaceState(null, '', '/auth');
+        window.dispatchEvent(new PopStateEvent('popstate'));
+      }
     } finally {
       setLoading(false);
     }
