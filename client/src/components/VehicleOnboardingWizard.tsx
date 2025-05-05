@@ -7,6 +7,7 @@ import { useVehicle } from '../hooks/useVehicle';
 import { decodeVIN, DecodedVehicleInfo, validateVIN } from '../services/vinDecoderService';
 import { toast } from '../hooks/use-toast';
 import ProfileDataCollector from '../services/ProfileDataCollector';
+import VehicleDataWarehouse from '../services/VehicleDataWarehouse';
 
 // Define VehicleProfile interface for form fields
 interface VehicleProfile {
@@ -268,60 +269,156 @@ const VehicleOnboardingWizard: React.FC = () => {
     }));
   };
   
-  // Handler for decoding VIN
+  // Handler for decoding VIN - Primary vehicle data entry method (PRIORITY 1)
   const handleDecodeVIN = async () => {
     // Reset previous errors
     setVinError('');
     
-    // Validate VIN format first
+    // Validate VIN format first using our comprehensive VIN validator
     const validation = validateVIN(vinInput);
     if (!validation.isValid) {
       setVinError(validation.message || 'Invalid VIN format');
       return;
     }
     
-    // Start decoding process
+    // Start decoding process with visual feedback
     setIsDecoding(true);
     
     try {
-      // Call the VIN decoder service
+      // Call the NHTSA VIN decoder service
       const decodedInfo: DecodedVehicleInfo = await decodeVIN(vinInput);
+      
+      // Track that this vehicle came from VIN decoding
+      localStorage.setItem('last_vin_decoded', vinInput);
       
       // Handle any errors from the decoder
       if (decodedInfo.error) {
         setVinError(decodedInfo.error);
         setIsDecoding(false);
-        // Allow manual entry as fallback
+        
+        // Allow manual entry as fallback - show clear message to user
         toast({
           title: 'VIN Lookup Failed',
           description: 'Unable to retrieve vehicle data from VIN. You can enter details manually.',
           variant: 'destructive'
         });
-        // Continue with manual entry
+        
+        // Continue with manual entry (user-friendly fallback)
         setCurrentStep(1);
         return;
       }
       
-      // Update vehicle data with decoded information
-      // But keep default values if information is missing
-      setVehicleData(prev => ({
-        ...prev,
+      // Generate a unique ID for this vehicle based on the VIN
+      const generatedId = `vehicle_${Date.now()}_${vinInput.substring(vinInput.length - 6)}`;
+      
+      // Create a comprehensive vehicle data object from the decoded VIN
+      // This ensures all available data is captured from the VIN decoder
+      const vinDecodedVehicle = {
+        id: generatedId,
         make: decodedInfo.make || '',
         model: decodedInfo.model || '',
         year: decodedInfo.year || new Date().getFullYear().toString(),
+        engineType: decodedInfo.engine || '',
+        transmissionType: decodedInfo.transmission || '',
+        vehicleType: decodedInfo.vehicleType || '',
+        driveLine: decodedInfo.driveLine || '',
+        bodyStyle: decodedInfo.bodyStyle || '',
+        trim: decodedInfo.trim || '',
+        manufacturer: decodedInfo.manufacturer || '',
+        fuelType: decodedInfo.fuelType || '',
+        displacement: decodedInfo.displacement || '',
+        cylinders: decodedInfo.cylinders || '',
+        plantCountry: decodedInfo.plantCountry || '',
+        plantState: decodedInfo.plantState || '',
+        plantCity: decodedInfo.plantCity || '',
+        vin: vinInput,
+        
+        // Track data source for reconciliation
+        entry_method: EntryMethod.VIN,
+        _source: 'VIN_DECODER_NHTSA',
+        decodedAt: new Date().toISOString()
+      };
+      
+      // Store ALL 17 data points from VIN decoder in our central data warehouse
+      // This ensures every piece of information from the VIN is preserved and accessible
+      try {
+        // First store the raw VIN decode data for reference and API development
+        VehicleDataWarehouse.storeVinDecodeData(vinInput, decodedInfo);
+        
+        // Then store the full vehicle in our data warehouse as the single source of truth
+        // This creates a complete vehicle record with all 17+ data points properly stored
+        VehicleDataWarehouse.storeVehicle({
+          id: generatedId,
+          vin: vinInput,
+          entry_method: 'vin',
+          status: 'active',
+          
+          // Basic vehicle details
+          make: decodedInfo.make || '',
+          model: decodedInfo.model || '',
+          year: decodedInfo.year ? parseInt(decodedInfo.year) : new Date().getFullYear(),
+          nickname: vehicleData.nickname || `${decodedInfo.year} ${decodedInfo.make} ${decodedInfo.model}`,
+          mileage: vehicleData.mileage ? parseInt(vehicleData.mileage) : 0,
+          
+          // Engine and transmission details (from VIN)
+          engineType: decodedInfo.engine || '',
+          transmissionType: decodedInfo.transmission || '',
+          fuelType: decodedInfo.fuelType || '',
+          displacement: decodedInfo.displacement || '',
+          cylinders: decodedInfo.cylinders || '',
+          driveLine: decodedInfo.driveLine || '',
+          
+          // Vehicle classification (from VIN)
+          vehicleType: decodedInfo.vehicleType || '',
+          bodyStyle: decodedInfo.bodyStyle || '',
+          trim: decodedInfo.trim || '',
+          
+          // Manufacturing details (from VIN)
+          manufacturer: decodedInfo.manufacturer || '',
+          plantCountry: decodedInfo.plantCountry || '',
+          plantState: decodedInfo.plantState || '',
+          plantCity: decodedInfo.plantCity || '',
+          
+          // Metadata
+          _source: 'VIN_DECODER_NHTSA',
+          _lastUpdated: new Date().toISOString(),
+          _created: new Date().toISOString(),
+          _reconciled: false
+        });
+        
+        console.log('VIN decoded vehicle stored in central data warehouse with all 17+ data points');
+      } catch (err) {
+        console.error('Error storing VIN data in warehouse:', err);
+        // Non-critical error, continue with the flow
+      }
+      
+      // Update vehicle data with decoded information
+      // But keep existing values if information is missing
+      setVehicleData(prev => ({
+        ...prev,
+        id: generatedId,
+        make: decodedInfo.make || prev.make,
+        model: decodedInfo.model || prev.model,
+        year: decodedInfo.year || prev.year,
         engineType: decodedInfo.engine || prev.engineType,
         transmissionType: decodedInfo.transmission || prev.transmissionType,
-        vin: vinInput
+        vin: vinInput,
+        // Add any additional decoded fields that might be useful in the form
+        // This gives us maximum data extraction from the VIN
+        vehicleType: decodedInfo.vehicleType,
+        trim: decodedInfo.trim,
+        // Track the entry method
+        entry_method: EntryMethod.VIN
       }));
       
-      // Show success message
+      // Show success message with detailed vehicle information
       toast({
         title: 'VIN Decoded Successfully',
-        description: `Identified as ${decodedInfo.year} ${decodedInfo.make} ${decodedInfo.model}. Please continue and fill in any missing information.`,
+        description: `Identified as ${decodedInfo.year} ${decodedInfo.make} ${decodedInfo.model}${decodedInfo.trim ? ` ${decodedInfo.trim}` : ''}. Please verify and complete any missing information.`,
         variant: 'default'
       });
       
-      // Always move to next step and let user verify
+      // Move to the form to let user verify and complete missing information
       // This ensures proper two-way data flow and user verification
       setCurrentStep(1); // Go to basic information step
       
@@ -455,15 +552,25 @@ const VehicleOnboardingWizard: React.FC = () => {
         transmission: vehicleData.transmissionType,
         
         // Track entry method (VIN, manual, or OBD)
-        entry_method: entryMethod,
+        entry_method: entryMethod === EntryMethod.MANUAL ? 'manual' : 
+                     entryMethod === EntryMethod.VIN ? 'vin' : 'obd',
         
         // Add metadata for data reconciliation
         _source: 'VehicleOnboardingWizard',
-        _skipBroadcast: false, // Allow broadcasting to ensure immediate updates
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+        _lastUpdated: new Date().toISOString(),
+        _created: new Date().toISOString(),
         status: 'active'
       };
+      
+      // Store the vehicle in our central data warehouse as the single source of truth
+      try {
+        // This will store the vehicle with all available fields in our warehouse
+        const warehouseVehicle = VehicleDataWarehouse.storeVehicle(completeVehicleData);
+        console.log('Vehicle stored in central data warehouse:', warehouseVehicle.id);
+      } catch (err) {
+        console.error('Error storing vehicle in data warehouse:', err);
+        // Continue with other storage methods as fallback
+      }
       
       try {
         // Import DataSourceConnector for reconciliation functions
