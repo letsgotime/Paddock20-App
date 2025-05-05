@@ -4,7 +4,7 @@ export interface Vehicle {
   id: string;
   make: string;
   model: string;
-  year: string;
+  year: number; // Changed from string to number for consistency
   color: string;
   vin?: string;
   licensePlate?: string;
@@ -82,7 +82,7 @@ export const VehicleProvider: React.FC<VehicleProviderProps> = ({ children }) =>
                 id: v.id,
                 make: v.make,
                 model: v.model,
-                year: typeof v.year === 'number' ? v.year.toString() : v.year,
+                year: typeof v.year === 'string' ? parseInt(v.year) : v.year,
                 color: v.color || '',
                 vin: v.vin || '',
                 licensePlate: '',
@@ -142,7 +142,7 @@ export const VehicleProvider: React.FC<VehicleProviderProps> = ({ children }) =>
           id: vehicleData.id,
           make: vehicleData.make,
           model: vehicleData.model,
-          year: typeof vehicleData.year === 'number' ? vehicleData.year.toString() : vehicleData.year,
+          year: typeof vehicleData.year === 'string' ? parseInt(vehicleData.year) : vehicleData.year,
           color: vehicleData.color || '',
           vin: vehicleData.vin || '',
           licensePlate: '',
