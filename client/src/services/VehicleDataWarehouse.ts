@@ -14,6 +14,8 @@
  */
 
 import { DecodedVehicleInfo } from './vinDecoderService';
+import { STORAGE_KEYS } from '../utils/constants';
+import { safeSetItem } from '../utils/storageManager';
 
 // Comprehensive vehicle data type including all possible VIN-decoded fields
 export interface CompleteVehicleData {
@@ -78,13 +80,8 @@ export interface CompleteVehicleData {
   _reconciled: boolean;
 }
 
-// Storage keys
-const STORAGE_KEYS = {
-  VEHICLE_WAREHOUSE: 'paddock20_vehicle_warehouse',
-  VEHICLE_BACKUP: 'paddock20_vehicle_backup',
-  VIN_DECODE_HISTORY: 'paddock20_vin_history',
-  OBD_SCAN_HISTORY: 'paddock20_obd_history'
-};
+// Use constants from utils/constants.ts
+// (STORAGE_KEYS is already imported at the top of the file)
 
 /**
  * Adds or updates a vehicle in the warehouse
