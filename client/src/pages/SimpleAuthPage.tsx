@@ -191,7 +191,7 @@ const SimpleAuthPage = () => {
               <div className="mt-4 p-4 rounded-lg bg-black/30 border border-gray-800">
                 <p className="text-[#08c519] font-semibold">BETA ACCESS</p>
                 <p className="text-gray-300 mt-1">
-                  Join the movement. Experience all premium features now before they become exclusive paid add-ons
+                  Join the movement. Full access to our complete ecosystem during the exclusive beta phase
                 </p>
               </div>
             </div>
