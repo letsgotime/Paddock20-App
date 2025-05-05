@@ -1153,6 +1153,12 @@ export const RewardsProvider: React.FC<{ children: ReactNode }> = ({ children })
   
   // Check for collection achievements (bronze collector, silver collector, etc.)
   const checkCollectionAchievements = () => {
+    // Add null checks for userRewards and rewards array
+    if (!userRewards || !userRewards.rewards || !Array.isArray(userRewards.rewards)) {
+      console.warn('Cannot check collection achievements - rewards array is missing or invalid');
+      return;
+    }
+    
     // Count achievements by level
     const bronzeCount = userRewards.rewards.filter(r => r.level === 'bronze').length;
     const silverCount = userRewards.rewards.filter(r => r.level === 'silver').length;
