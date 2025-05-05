@@ -63,15 +63,16 @@ const LegalDocumentModal: React.FC<LegalDocumentModalProps> = ({
         </div>
         
         {/* Document content */}
-        <div className="p-6">
+        <div className="p-6 bg-gradient-to-b from-[#1982FC]/10 to-[#08c519]/10 border-y border-gray-800">
           <div 
             className="prose prose-invert max-w-none text-gray-300"
             dangerouslySetInnerHTML={{ __html: content }}
+            style={{ maxHeight: '50vh', overflowY: 'auto', padding: '1rem', borderRadius: '0.5rem' }}
           />
         </div>
         
         {/* Footer */}
-        <div className="flex justify-end px-6 py-4 border-t border-gray-800">
+        <div className="flex justify-end px-6 py-4">
           <button
             onClick={onClose}
             className="px-5 py-2 bg-gradient-to-r from-[#1982FC]/80 to-[#08c519]/80 text-white font-medium rounded-md shadow-md hover:shadow-lg transition-all"
