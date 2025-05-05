@@ -48,7 +48,7 @@ class UserDataService {
   private charitableActions: CharitableAction[] = [];
   private telemetryData: TelemetryData[] = [];
   private isInitialized: boolean = false;
-  private isDemoMode: boolean = true; // Set to false when connecting to real backend
+  private isDemoMode: boolean = false; // Connect to real backend to enforce security
 
   private constructor() {
     // Private constructor to enforce singleton pattern
