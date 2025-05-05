@@ -27,13 +27,16 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
       return;
     }
     
+    // At this point we know auth.user is not null
+    const user = auth.user; // Create a local variable to satisfy TypeScript
+    
     // Check user agreement status
     const checkOnboardingStatus = () => {
       setCheckingOnboarding(true);
       
       try {
-        // Get user ID safely (we already checked auth.user is not null above)
-        const userId = auth.user.id.toString();
+        // Get user ID safely
+        const userId = user.id.toString();
         
         // First check if user has completed beta onboarding
         const betaOnboardingKey = `paddock20_beta_onboarding_complete_${userId}`;
