@@ -30,6 +30,7 @@ interface VehicleData {
   status?: 'active' | 'archived' | 'sold';
   entry_method?: 'vin' | 'manual' | 'obd';
   name?: string; // Some components expect name
+  title?: string; // Optional property for backwards compatibility
 }
 
 interface DriveData {
@@ -52,14 +53,12 @@ interface EnhancedDriveData extends DriveData {
   galleryEvents?: string[];
 }
 
-interface MediaItem {
-  id: string;
-  url: string;
-  type: string;
-  timestamp?: string;
-  title?: string;
-  description?: string;
-}
+// Import MediaItem from GalleryContext to ensure type consistency
+import { MediaItem as GalleryMediaItem } from '../contexts/GalleryContext';
+
+// Re-export GalleryMediaItem as MediaItem to maintain backward compatibility
+// while ensuring type consistency across the application
+type MediaItem = GalleryMediaItem;
 
 // Local storage keys for our data sources
 const STORAGE_KEYS = {
@@ -537,9 +536,15 @@ function getUserDriveData(driveId?: string, includeMedia = false, limit?: number
                 }
               }
               
-              // Add route data if available
+              // Add route data if available, converting from lng to lon if needed
               if (event.route && event.route.length > 0) {
-                newDrive.routeCoordinates = event.route;
+                // Transform GPS format if needed (some components use lng, others use lon)
+                newDrive.routeCoordinates = event.route.map(coord => {
+                  return {
+                    lat: coord.lat,
+                    lon: coord.lng || coord.lon // Handle both formats
+                  };
+                });
               }
             });
             
@@ -734,9 +739,16 @@ async function syncMediaBetweenSources(forceFull = false): Promise<{
             userGallery.connectedVehicles = [];
           }
           
+          // Utility function to get a display name for the vehicle (used throughout the application)
+          const getVehicleDisplayName = (vehicle: VehicleData): string => {
+            return vehicle.name || 
+                  vehicle.nickname || 
+                  (vehicle.make && vehicle.model ? `${vehicle.make} ${vehicle.model}` : 'Unnamed Vehicle');
+          };
+          
           userGallery.connectedVehicles.push({
             vehicleId: vehicle.id,
-            vehicleName: vehicle.name || vehicle.make + ' ' + vehicle.model,
+            vehicleName: getVehicleDisplayName(vehicle),
             mediaCount: 0
           });
           
@@ -745,7 +757,8 @@ async function syncMediaBetweenSources(forceFull = false): Promise<{
             userGallery.mediaByCar = {};
           }
           
-          userGallery.mediaByCar[vehicle.name || vehicle.make + ' ' + vehicle.model] = [];
+          // Use the same getVehicleDisplayName function for consistency
+          userGallery.mediaByCar[getVehicleDisplayName(vehicle)] = [];
         }
         
         result.synced.vehicles++;
@@ -766,9 +779,14 @@ async function syncMediaBetweenSources(forceFull = false): Promise<{
             userGallery.connectedDrives = [];
           }
           
+          // Utility function to get a drive display name
+          const getDriveDisplayName = (drive: DriveData): string => {
+            return drive.title || 'Drive on ' + drive.date;
+          };
+          
           userGallery.connectedDrives.push({
             driveId: drive.id,
-            driveName: drive.title || 'Drive on ' + drive.date,
+            driveName: getDriveDisplayName(drive),
             driveDate: drive.date,
             mediaCount: 0
           });
@@ -782,7 +800,17 @@ async function syncMediaBetweenSources(forceFull = false): Promise<{
     const juiceBoxData = getJuiceBoxData();
     if (juiceBoxData && juiceBoxData.detailingSessions && juiceBoxData.detailingSessions.length > 0) {
       // For each detailing session, ensure it's properly linked in gallery
-      juiceBoxData.detailingSessions.forEach(session => {
+      // Define a type for detailing sessions
+      interface DetailingSession {
+        id: string;
+        name: string;
+        date: string;
+        products?: any[];
+        notes?: string;
+        vehicle?: string;
+      }
+      
+      juiceBoxData.detailingSessions.forEach((session: DetailingSession) => {
         // Check if this session exists in connectedDetailingSessions
         const existingConnection = userGallery.connectedDetailingSessions?.find(
           s => s.sessionId === session.id
