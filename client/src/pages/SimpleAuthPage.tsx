@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Eye, EyeOff, LogIn, UserPlus, AlertTriangle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import LegalDocumentModal from '../components/LegalDocumentModal';
+import { legalDocuments } from '../data/legalDocuments';
 
 // This is a simplified auth page that should work even if there are issues with other components
 const SimpleAuthPage = () => {
@@ -13,6 +15,13 @@ const SimpleAuthPage = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [showBetaOnboarding, setShowBetaOnboarding] = useState(false);
+  const [currentOnboardingStep, setCurrentOnboardingStep] = useState(0);
+  const [documentModalOpen, setDocumentModalOpen] = useState(false);
+  const [currentDocument, setCurrentDocument] = useState<{title: string, content: string}>({
+    title: "",
+    content: ""
+  });
   
   // Let's bypass the automatic redirection check to fix the issue
   // Instead we'll just show the login page regardless of authentication status
@@ -113,6 +122,14 @@ const SimpleAuthPage = () => {
   
   return (
     <div className="flex min-h-screen overflow-hidden relative">
+      {/* Legal Document Modal */}
+      <LegalDocumentModal
+        title={currentDocument.title}
+        content={currentDocument.content}
+        isOpen={documentModalOpen}
+        onClose={() => setDocumentModalOpen(false)}
+      />
+      
       {/* Dynamic F1 background with overlay */}
       <div 
         className="absolute inset-0 bg-cover bg-center"
@@ -320,7 +337,19 @@ const SimpleAuthPage = () => {
                         </div>
                         <label htmlFor="terms" className="ml-2 text-sm">
                           <span className="font-semibold text-white">I have read and agree to the </span> 
-                          <a href="#" className="text-[#1982FC] hover:underline font-semibold">Terms of Service</a>
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              setCurrentDocument({
+                                title: "Terms of Service",
+                                content: legalDocuments.termsOfService
+                              });
+                              setDocumentModalOpen(true);
+                            }}
+                            className="text-[#1982FC] hover:underline font-semibold"
+                          >
+                            Terms of Service
+                          </button>
                           <p className="text-xs text-gray-300 mt-1">
                             The Terms of Service outline your rights and obligations when using Paddock20, including acceptable use policies, intellectual property rights, and liability limitations.
                           </p>
@@ -339,7 +368,19 @@ const SimpleAuthPage = () => {
                         </div>
                         <label htmlFor="privacy" className="ml-2 text-sm">
                           <span className="font-semibold text-white">I have read and agree to the </span>
-                          <a href="#" className="text-[#1982FC] hover:underline font-semibold">Privacy Policy</a>
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              setCurrentDocument({
+                                title: "Privacy Policy",
+                                content: legalDocuments.privacyPolicy
+                              });
+                              setDocumentModalOpen(true);
+                            }}
+                            className="text-[#1982FC] hover:underline font-semibold"
+                          >
+                            Privacy Policy
+                          </button>
                           <p className="text-xs text-gray-300 mt-1">
                             Our Privacy Policy explains how we collect, use, store, and protect your personal information, including your rights regarding your data and our data retention practices.
                           </p>
@@ -358,7 +399,19 @@ const SimpleAuthPage = () => {
                         </div>
                         <label htmlFor="beta-agreement" className="ml-2 text-sm">
                           <span className="font-semibold text-white">I have read and agree to the </span>
-                          <a href="#" className="text-[#1982FC] hover:underline font-semibold">Beta Agreement</a>
+                          <button 
+                            type="button"
+                            onClick={() => {
+                              setCurrentDocument({
+                                title: "Beta Agreement",
+                                content: legalDocuments.betaAgreement
+                              });
+                              setDocumentModalOpen(true);
+                            }}
+                            className="text-[#1982FC] hover:underline font-semibold"
+                          >
+                            Beta Agreement
+                          </button>
                           <p className="text-xs text-gray-300 mt-1">
                             The Beta Agreement covers special considerations for beta testers, including feature limitations, feedback expectations, reporting bugs, and confidentiality requirements.
                           </p>
