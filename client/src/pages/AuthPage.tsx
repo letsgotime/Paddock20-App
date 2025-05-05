@@ -470,97 +470,13 @@ const AuthPage: React.FC = () => {
                       </label>
                     </div>
                     
-                    {/* F1-style Beta Program selection */}
-                    <div className="p-4 bg-gray-900 border border-red-800 rounded-lg mt-4 relative overflow-hidden">
-                      {/* F1 Stripe Detail */}
-                      <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-red-600 via-red-500 to-red-700"></div>
-                      
-                      <h4 className="text-sm font-bold text-red-500 flex items-center mb-2">
-                        <span className="w-2 h-2 bg-red-500 rounded-full mr-1.5"></span>
-                        PADDOCK20 BETA PROGRAM
-                      </h4>
-                      
-                      <div className="grid grid-cols-2 gap-4 mb-3">
-                        <div className="bg-gray-800 border border-gray-700 rounded-lg p-3">
-                          <div className="flex items-start space-x-2 mb-2">
-                            <Checkbox 
-                              id="beta-user" 
-                              className="mt-1 data-[state=checked]:bg-blue-600"
-                              name="betaProgram"
-                              checked={registerData.betaProgram === 'user'}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setRegisterData({ ...registerData, betaProgram: 'user' });
-                                } else if (registerData.betaProgram === 'user') {
-                                  setRegisterData({ ...registerData, betaProgram: '' });
-                                }
-                              }}
-                            />
-                            <div>
-                              <label htmlFor="beta-user" className="text-xs font-semibold text-blue-400 flex items-center">
-                                BETA USER ACCESS
-                              </label>
-                              <p className="text-xs text-gray-400 mt-1">
-                                Receive lifetime discounted membership and early access to new features
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-xs text-gray-500 italic">
-                            50% lifetime subscription discount
-                          </div>
-                        </div>
-                        
-                        <div className="bg-gray-800 border-2 border-green-800 rounded-lg p-3 relative">
-                          {/* Elite Badge */}
-                          <div className="absolute -top-2 -right-2 bg-green-600 text-white text-[10px] font-bold py-1 px-2 rounded-full">
-                            ELITE
-                          </div>
-                          
-                          <div className="flex items-start space-x-2 mb-2">
-                            <Checkbox 
-                              id="beta-tester" 
-                              className="mt-1 data-[state=checked]:bg-green-600"
-                              name="betaProgram"
-                              checked={registerData.betaProgram === 'tester'}
-                              onCheckedChange={(checked) => {
-                                if (checked) {
-                                  setRegisterData({ ...registerData, betaProgram: 'tester' });
-                                } else if (registerData.betaProgram === 'tester') {
-                                  setRegisterData({ ...registerData, betaProgram: '' });
-                                }
-                              }}
-                            />
-                            <div>
-                              <label htmlFor="beta-tester" className="text-xs font-semibold text-green-500 flex items-center">
-                                BETA TESTER PROGRAM
-                              </label>
-                              <p className="text-xs text-gray-400 mt-1">
-                                Commit to providing detailed feedback and gain lifetime free access
-                              </p>
-                            </div>
-                          </div>
-                          <div className="text-xs text-gray-500 italic">
-                            Requires approval + feedback commitments
-                          </div>
-                        </div>
-                      </div>
-                      
-                      <p className="text-xs text-gray-400">
-                        Beta Testers receive <span className="text-green-500 font-semibold">lifetime free membership</span> in exchange for active participation in product development. Beta Users receive <span className="text-blue-400 font-semibold">lifetime discounted membership</span> for early adoption.
-                      </p>
-                      
-                      <div className="text-xs text-right mt-2 text-gray-500">
-                        Selection processed within 24-48 hours
-                      </div>
-                    </div>
-                    
                     <Button 
                       type="submit" 
                       className="w-full bg-emerald-600 hover:bg-emerald-700"
-                      disabled={loading}
+                      disabled={loading || !registerData.hasAgreedToNDA}
                     >
-                      {loading ? 'Processing...' : 'Create Account'}
-                      <UserPlus className="ml-2 h-5 w-5" />
+                      {loading ? 'Processing...' : 'Continue to Beta Program Selection'}
+                      <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </CardFooter>
                 </form>
