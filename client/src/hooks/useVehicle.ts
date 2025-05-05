@@ -1,14 +1,16 @@
 import { useState, useEffect, useCallback, useContext } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import { VehicleContext, Vehicle, MaintenanceItem } from '../contexts/VehicleContext';
-import { useAuth } from '@/hooks/useAuth';
+// Temporarily removing useAuth to fix provider dependency issue
+// import { useAuth } from '@/hooks/useAuth';
 
 // Re-export these types for backward compatibility
 export type { Vehicle, MaintenanceItem };
 
 export function useVehicle() {
   const vehicleContext = useContext(VehicleContext);
-  const { user } = useAuth();
+  // Temporarily using a mock user for testing authentication issue
+  const user = null; // Will be fixed when auth issue is resolved
   const { toast } = useToast();
   
   // This will synchronize with local storage on component mount
