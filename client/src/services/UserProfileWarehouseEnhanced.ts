@@ -125,6 +125,7 @@ export class SecureUserProfileWarehouse implements UserProfileWarehouseInterface
         dateFormat: 'mdy', 
         units: 'imperial',
         soundEnabled: true,
+        notifications: true,
         weatherPreferences: {
           defaultLocation: {
             lat: 33.996,
@@ -180,8 +181,9 @@ export class SecureUserProfileWarehouse implements UserProfileWarehouseInterface
         scheduledMaintenance: []
       },
       security: {
-        passwordLastChanged: new Date().toISOString(),
-        twoFactorEnabled: false
+        verified: false,
+        verificationAttempts: 0,
+        lastVerificationAttempt: new Date().toISOString()
       },
       _metadata: {
         version: '1.0.0',
@@ -419,11 +421,23 @@ export class SecureUserProfileWarehouse implements UserProfileWarehouseInterface
    */
   public async initialize(): Promise<void> {
     try {
+      // First let the base warehouse initialize
       await this.baseWarehouse.initialize();
-      console.log('Secure UserProfileWarehouse initialized successfully');
       
-      // Create an initial backup
-      this.backupProfile();
+      // Check if we have a profile
+      const profile = this.getProfile();
+      
+      if (!profile) {
+        // If no profile exists, create a default one
+        console.log('No profile found, creating default profile');
+        const defaultProfile = this.createDefaultProfile();
+        await this.setProfile(defaultProfile);
+      } else {
+        // If we do have a profile, create a backup
+        this.backupProfile();
+      }
+      
+      console.log('Secure UserProfileWarehouse initialized successfully');
     } catch (e) {
       console.error('Error initializing secure profile warehouse:', e);
       
@@ -431,10 +445,14 @@ export class SecureUserProfileWarehouse implements UserProfileWarehouseInterface
       const recovered = await this.recoverFromBackup();
       
       if (!recovered) {
-        console.error('Could not recover profile from backup, using default');
+        console.error('Could not recover profile from backup, creating default profile');
         // Initialize with default profile
-        const defaultProfile = this.baseWarehouse.createDefaultProfile();
-        await this.baseWarehouse.setProfile(defaultProfile);
+        const defaultProfile = this.createDefaultProfile();
+        const success = secureWrite(STORAGE_KEY, defaultProfile);
+        
+        if (!success) {
+          throw new Error('Failed to create default profile');
+        }
       }
     }
   }
@@ -538,8 +556,12 @@ export class SecureUserProfileWarehouse implements UserProfileWarehouseInterface
         }
       };
 
-      // Update the profile in the base warehouse
-      this.baseWarehouse.updateProfile(updatedProfile);
+      // Write directly to storage
+      const success = secureWrite(STORAGE_KEY, updatedProfile);
+      
+      if (!success) {
+        throw new Error('Failed to write updated identity to storage');
+      }
       
       // Create a backup
       this.backupProfile();
@@ -580,8 +602,12 @@ export class SecureUserProfileWarehouse implements UserProfileWarehouseInterface
         }
       };
       
-      // Update the profile in the base warehouse
-      this.baseWarehouse.updateProfile(updatedProfile);
+      // Write directly to storage
+      const success = secureWrite(STORAGE_KEY, updatedProfile);
+      
+      if (!success) {
+        throw new Error('Failed to write updated preferences to storage');
+      }
       
       // Create a backup
       this.backupProfile();
@@ -603,8 +629,12 @@ export class SecureUserProfileWarehouse implements UserProfileWarehouseInterface
       // Create a default profile
       const defaultProfile = this.createDefaultProfile();
       
-      // Update the profile in the base warehouse
-      this.baseWarehouse.updateProfile(defaultProfile);
+      // Write directly to storage
+      const success = secureWrite(STORAGE_KEY, defaultProfile);
+      
+      if (!success) {
+        throw new Error('Failed to reset profile in storage');
+      }
       
       // Create a backup
       this.backupProfile();
