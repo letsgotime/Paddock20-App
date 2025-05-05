@@ -14,6 +14,7 @@ export interface Vehicle {
   primaryImage?: string;
   images?: string[];
   maintenanceItems?: MaintenanceItem[];
+  mileage?: number;
   createdAt: string;
   updatedAt: string;
 }
@@ -91,6 +92,7 @@ export const VehicleProvider: React.FC<VehicleProviderProps> = ({ children }) =>
                 modifications: '',
                 primaryImage: v.image || '',
                 images: [],
+                mileage: typeof v.mileage === 'string' ? parseInt(v.mileage) : v.mileage,
                 maintenanceItems: v.maintenanceRecords?.map((mr: any) => ({
                   id: mr.id,
                   name: mr.type,
@@ -151,6 +153,7 @@ export const VehicleProvider: React.FC<VehicleProviderProps> = ({ children }) =>
           modifications: '',
           primaryImage: vehicleData.image || '',
           images: [],
+          mileage: typeof vehicleData.mileage === 'string' ? parseInt(vehicleData.mileage) : vehicleData.mileage,
           maintenanceItems: [],
           createdAt: new Date().toISOString(),
           updatedAt: new Date().toISOString()

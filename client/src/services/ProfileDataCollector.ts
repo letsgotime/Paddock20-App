@@ -515,7 +515,7 @@ class ProfileDataCollector {
     // Update in profile store
     updateVehicle(vehicleId, {
       archivedAt: new Date().toISOString(),
-      saleData: saleData || null,
+      saleData: formattedSaleData,
       _skipBroadcast: true
     });
     
@@ -528,7 +528,7 @@ class ProfileDataCollector {
         action: 'archive',
         vehicleId: vehicleId,
         vehicle: archivedVehicle,
-        saleData,
+        saleInfo: saleInfo,
         source: 'ProfileDataCollector',
         timestamp: new Date().toISOString()
       }
@@ -545,7 +545,7 @@ class ProfileDataCollector {
         action: 'archive',
         vehicleId: vehicleId,
         vehicle: archivedVehicle,
-        saleData
+        saleInfo: saleInfo
       }
     }));
     
@@ -554,7 +554,7 @@ class ProfileDataCollector {
       detail: { 
         action: 'archive',
         vehicleId: vehicleId,
-        saleData
+        saleInfo: saleInfo
       }
     }));
     
@@ -563,7 +563,7 @@ class ProfileDataCollector {
       detail: { 
         action: 'archive',
         vehicleId: vehicleId,
-        saleData
+        saleInfo: saleInfo
       }
     }));
     
