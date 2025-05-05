@@ -310,11 +310,16 @@ class ProfileDataCollector {
       // Log the syncing process
       console.log('Syncing vehicle with profile system:', vehicleContextData.make, vehicleContextData.model);
       
-      // Check if this vehicle already exists in the profile by comparing attributes
+      // Properly parse the year value once for consistent comparison
+      const yearToCompare = typeof vehicleContextData.year === 'string'
+        ? parseInt(vehicleContextData.year) || new Date().getFullYear()
+        : vehicleContextData.year || new Date().getFullYear();
+      
+      // Check if this vehicle already exists in the profile by comparing attributes with consistent types
       const existingVehicle = storeRef.profile.vehicles.find((v: VehicleData) => 
         v.make === vehicleContextData.make && 
         v.model === vehicleContextData.model &&
-        (v.year === parseInt(vehicleContextData.year) || v.year.toString() === vehicleContextData.year)
+        (v.year === yearToCompare || parseInt(v.year.toString()) === yearToCompare)
       );
       
       let updatedVehicle;
@@ -355,10 +360,15 @@ class ProfileDataCollector {
       } else {
         console.log('Adding new vehicle to profile system');
         // Prepare vehicle data for adding
+        // Create a variable to hold the parsed year value to ensure consistency
+        const parsedYear = typeof vehicleContextData.year === 'string' 
+          ? parseInt(vehicleContextData.year) || new Date().getFullYear()
+          : vehicleContextData.year || new Date().getFullYear();
+          
         const newVehicleData = {
           make: vehicleContextData.make,
           model: vehicleContextData.model,
-          year: parseInt(vehicleContextData.year) || vehicleContextData.year,
+          year: parsedYear, // Use the consistently parsed year
           color: vehicleContextData.color,
           nickname: vehicleContextData.nickname || vehicleContextData.car_name,
           image: vehicleContextData.vehicle_image || vehicleContextData.vehicleImage,

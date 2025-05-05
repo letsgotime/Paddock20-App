@@ -28,9 +28,9 @@ interface OnboardingStep {
 interface VehicleData {
   make: string;
   model: string;
-  year: string;
+  year: string; // Keep as string for form input purposes
   nickname: string;
-  mileage: string;
+  mileage: string; // Keep as string for form input purposes
   engineType: string;
   transmissionType: string;
   color: string;
@@ -405,6 +405,10 @@ const VehicleOnboardingWizard: React.FC = () => {
       // Add the vehicle using the context
       const newVehicle = await addVehicle(vehicleData);
       
+      // Parse year and mileage once to ensure consistent conversion
+      const parsedYear = parseInt(vehicleData.year) || new Date().getFullYear();
+      const parsedMileage = parseInt(vehicleData.mileage) || 0;
+      
       // Create a complete vehicle object with all required properties
       // This ensures consistent structure regardless of entry method
       const completeVehicleData = {
@@ -414,9 +418,9 @@ const VehicleOnboardingWizard: React.FC = () => {
         engine_type: vehicleData.engineType,
         transmission: vehicleData.transmissionType,
         entry_method: entryMethod, // Track how the vehicle was added
-        // Convert string values to appropriate types
-        year: parseInt(vehicleData.year) || new Date().getFullYear(),
-        mileage: parseInt(vehicleData.mileage) || 0,
+        // Use the parsed values for consistency
+        year: parsedYear,
+        mileage: parsedMileage,
       };
       
       // Sync vehicle with the user profile system in both directions
@@ -428,14 +432,17 @@ const VehicleOnboardingWizard: React.FC = () => {
       const profileVehicleData = {
         make: vehicleData.make,
         model: vehicleData.model,
-        year: parseInt(vehicleData.year) || new Date().getFullYear(),
+        // Use the already parsed year value to ensure consistency
+        year: parsedYear,
         color: vehicleData.color,
         nickname: vehicleData.nickname,
         image: vehicleData.vehicleImage,
         lastServiced: new Date().toISOString().split('T')[0],
         engineType: vehicleData.engineType,
         transmissionType: vehicleData.transmissionType,
-        purchaseDate: vehicleData.purchaseDate
+        purchaseDate: vehicleData.purchaseDate,
+        // Add mileage to ensure it's consistently shared
+        mileage: parsedMileage
       };
       
       // Update the profile system for full two-way integration
