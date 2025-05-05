@@ -181,9 +181,7 @@ export class SecureUserProfileWarehouse implements UserProfileWarehouseInterface
         scheduledMaintenance: []
       },
       security: {
-        verified: false,
-        verificationAttempts: 0,
-        lastVerificationAttempt: new Date().toISOString()
+        passwordHash: ''
       },
       _metadata: {
         version: '1.0.0',
@@ -214,8 +212,12 @@ export class SecureUserProfileWarehouse implements UserProfileWarehouseInterface
         try {
           validateUserProfileData(recoveredProfile);
           
-          // Set the recovered profile
-          this.baseWarehouse.setProfile(recoveredProfile);
+          // Set the recovered profile using direct storage
+          const success = secureWrite(STORAGE_KEY, recoveredProfile);
+          
+          if (!success) {
+            throw new Error('Failed to write recovered profile to storage');
+          }
           console.log('Successfully recovered profile from backup');
           return true;
         } catch (e) {
