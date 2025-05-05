@@ -17,6 +17,50 @@ import { useGallery } from '../contexts/GalleryContext';
 import { useVehicle } from '../contexts/VehicleContext';
 import ProfileDataCollector from './ProfileDataCollector';
 
+// Define core type interfaces internally to ensure type safety
+interface VehicleData {
+  id: string;
+  make: string;
+  model: string;
+  year: number;
+  color?: string;
+  nickname?: string;
+  vin?: string;
+  primaryImage?: string;
+  status?: 'active' | 'archived' | 'sold';
+  entry_method?: 'vin' | 'manual' | 'obd';
+  name?: string; // Some components expect name
+}
+
+interface DriveData {
+  id: string;
+  title?: string;
+  date: string;
+  startLocation: string;
+  endLocation: string;
+  distance: number;
+  duration: number;
+  mediaCount?: number;
+  featuredMediaId?: string;
+}
+
+// Enhanced version of DriveData with additional properties needed by components
+interface EnhancedDriveData extends DriveData {
+  routeCoordinates?: Array<{lat: number, lon: number}>;
+  media?: MediaItem[];
+  featuredMedia?: MediaItem;
+  galleryEvents?: string[];
+}
+
+interface MediaItem {
+  id: string;
+  url: string;
+  type: string;
+  timestamp?: string;
+  title?: string;
+  description?: string;
+}
+
 // Local storage keys for our data sources
 const STORAGE_KEYS = {
   ONBOARDING: 'userOnboardingData',
@@ -134,7 +178,7 @@ function getVehicleData(includeGalleryData = false, vehicleId?: string): any {
       if (data) {
         const parsedVehicles = JSON.parse(data);
         vehicles = vehicleId 
-          ? parsedVehicles.filter(v => v.id === vehicleId)
+          ? parsedVehicles.filter((v: VehicleData) => v.id === vehicleId)
           : parsedVehicles;
       }
     }
@@ -146,12 +190,12 @@ function getVehicleData(includeGalleryData = false, vehicleId?: string): any {
       // If we have connected vehicles information
       if (userGallery.connectedVehicles && userGallery.connectedVehicles.length > 0) {
         // Enhance each vehicle with its connected gallery data
-        vehicles = vehicles.map(vehicle => {
+        vehicles = vehicles.map((vehicle: VehicleData) => {
           const connectedVehicle = userGallery.connectedVehicles.find(v => v.vehicleId === vehicle.id);
           
           if (connectedVehicle) {
             // Find media for this vehicle
-            let vehicleMedia = [];
+            let vehicleMedia: MediaItem[] = [];
             
             if (userGallery.mediaByCar && userGallery.mediaByCar[connectedVehicle.vehicleName]) {
               vehicleMedia = userGallery.mediaByCar[connectedVehicle.vehicleName];
@@ -219,7 +263,7 @@ function getJuiceBoxData(detailingSessionId?: string, includeMedia = false, prod
           sessions.forEach(gallerySession => {
             // Find matching session in juice box data
             let juiceBoxSession = juiceBoxData.detailingSessions.find(
-              s => s.id === gallerySession.sessionId
+              (s: {id: string}) => s.id === gallerySession.sessionId
             );
             
             // If no matching session, create one
@@ -236,7 +280,7 @@ function getJuiceBoxData(detailingSessionId?: string, includeMedia = false, prod
             }
             
             // Find all gallery media for this session
-            const sessionMedia = [];
+            const sessionMedia: MediaItem[] = [];
             userGallery.events.forEach(event => {
               if (event.detailingSessionId === gallerySession.sessionId) {
                 sessionMedia.push(...event.media);
@@ -391,9 +435,9 @@ function loadRealUserProfile(): UserProfile | null {
  * @param includeMedia Whether to include media related to drives
  * @param limit Optional limit on number of drives returned
  */
-function getUserDriveData(driveId?: string, includeMedia = false, limit?: number) {
+function getUserDriveData(driveId?: string, includeMedia = false, limit?: number): EnhancedDriveData[] {
   const { profile } = useUserProfileStore.getState();
-  let drives = [];
+  let drives: DriveData[] = [];
   
   // First get drives from the profile if available
   if (profile && profile.drives && profile.drives.length > 0) {
@@ -424,7 +468,7 @@ function getUserDriveData(driveId?: string, includeMedia = false, limit?: number
           
           if (galleryDrive) {
             // Find all media for this drive
-            const driveMedia = [];
+            const driveMedia: MediaItem[] = [];
             
             // Check all events for route data
             userGallery.events.forEach(event => {
@@ -476,7 +520,7 @@ function getUserDriveData(driveId?: string, includeMedia = false, limit?: number
             const relatedEvents = userGallery.events.filter(e => e.driveJournalId === galleryDrive.driveId);
             
             // Get media for this drive
-            const driveMedia = [];
+            const driveMedia: MediaItem[] = [];
             relatedEvents.forEach(event => {
               if (event.media && event.media.length > 0) {
                 driveMedia.push(...event.media);
