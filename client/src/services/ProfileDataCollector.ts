@@ -351,9 +351,10 @@ class ProfileDataCollector {
           // Check if we're still in a good application state before updating
           if (storeRef.profile && storeRef.profile.vehicles) {
             // Now use the store method with a metadata flag to skip broadcast
-            // This is a special internal flag, not part of the vehicle data
-            storeRef.updateVehicle(existingVehicle.id, updateData, {
-              skipBroadcast: true
+            // This is a special internal flag that we'll include in the update data
+            storeRef.updateVehicle(existingVehicle.id, { 
+              ...updateData, 
+              _skipBroadcast: true 
             });
           }
         }, 0);
@@ -475,13 +476,13 @@ class ProfileDataCollector {
    * @param saleData Optional sale data if the vehicle was sold
    * @returns The archived vehicle data or null if failed
    */
-  static archiveVehicle(vehicleId: string, saleData?: {
+  static archiveVehicle(vehicleId: string, saleInfo?: {
     saleDate: string;
     salePrice: number;
     buyer?: string;
     notes?: string;
   }): any {
-    console.log(`Archiving vehicle with ID: ${vehicleId}`, saleData ? 'with sale data' : '');
+    console.log(`Archiving vehicle with ID: ${vehicleId}`, saleInfo ? 'with sale data' : '');
     const { profile, updateVehicle } = this.store;
     
     if (!profile) {
@@ -496,20 +497,26 @@ class ProfileDataCollector {
       return null;
     }
     
+    // Convert the sale info to the expected saleData format
+    const formattedSaleData = saleInfo ? {
+      price: saleInfo.salePrice,
+      date: saleInfo.saleDate,
+      buyer: saleInfo.buyer
+    } : undefined;
+    
     // Update the vehicle with archived status
     const archivedVehicle = {
       ...vehicleToArchive,
       status: 'archived',
       archivedAt: new Date().toISOString(),
-      saleData: saleData || null
+      saleData: formattedSaleData
     };
     
     // Update in profile store
     updateVehicle(vehicleId, {
       archivedAt: new Date().toISOString(),
-      saleData: saleData || null
-    }, {
-      skipBroadcast: true
+      saleData: saleData || null,
+      _skipBroadcast: true
     });
     
     // Broadcast the archival to all components
@@ -600,9 +607,8 @@ class ProfileDataCollector {
     // Update in profile store
     updateVehicle(vehicleId, {
       archivedAt: undefined,
-      saleData: undefined
-    }, {
-      skipBroadcast: true
+      saleData: undefined,
+      _skipBroadcast: true
     });
     
     // Broadcast the restoration to all components

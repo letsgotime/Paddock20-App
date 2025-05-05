@@ -11,6 +11,13 @@ export interface VehicleData {
   vin?: string;
   nickname?: string;
   image?: string;
+  status?: 'active' | 'inactive' | 'archived' | 'sold';
+  archivedAt?: string;
+  saleData?: {
+    price: number;
+    date: string;
+    buyer?: string;
+  };
   mods?: {
     id: string;
     name: string;
@@ -24,6 +31,9 @@ export interface VehicleData {
     mileage: number;
     notes?: string;
   }[];
+  // Internal flags for synchronization (not stored)
+  _skipBroadcast?: boolean;
+  _source?: string;
 }
 
 export interface DriveData {
