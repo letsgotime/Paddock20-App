@@ -9,6 +9,12 @@
  * 
  * It ensures all components receive data in consistent formats while using real data sources.
  * 
+ * Key features:
+ * - Standardizes coordinate formats (lng/lon) across the application
+ * - Handles routes as both string and array formats
+ * - Ensures backward compatibility with all existing components
+ * - Links data between multiple sources with bi-directional flow
+ * 
  * CRITICAL: This service doesn't modify any UI rendering code, only provides data in the expected format.
  */
 
@@ -551,9 +557,12 @@ function getUserDriveData(driveId?: string, includeMedia = false, limit?: number
                   driveMedia.push(...event.media);
                 }
                 
-                // Add route data if available
+                // Add route data if available and standardize coordinates
                 if (event.route && event.route.length > 0) {
-                  drive.routeCoordinates = event.route;
+                  // Convert route to standard format with both lng and lon properties
+                  drive.routeCoordinates = event.route.map(coord => standardizeCoordinate(coord));
+                  // Store standardized route
+                  drive.standardizedRoute = standardizeRoute(event.route);
                 }
               }
             });
@@ -588,6 +597,7 @@ function getUserDriveData(driveId?: string, includeMedia = false, limit?: number
               mediaCount: galleryDrive.mediaCount,
               featuredMediaId: galleryDrive.featuredMediaId,
               routeCoordinates: [],
+              standardizedRoute: [],
               media: [],
               galleryEvents: []
             };
@@ -610,15 +620,12 @@ function getUserDriveData(driveId?: string, includeMedia = false, limit?: number
                 }
               }
               
-              // Add route data if available, converting from lng to lon if needed
+              // Add route data if available, standardizing coordinate format
               if (event.route && event.route.length > 0) {
-                // Transform GPS format if needed (some components use lng, others use lon)
-                newDrive.routeCoordinates = event.route.map(coord => {
-                  return {
-                    lat: coord.lat,
-                    lon: coord.lng || coord.lon // Handle both formats
-                  };
-                });
+                // Use our standardization function to ensure both lng and lon are available
+                newDrive.routeCoordinates = event.route.map(coord => standardizeCoordinate(coord));
+                // Also store the standardized route
+                newDrive.standardizedRoute = standardizeRoute(event.route);
               }
             });
             
@@ -1187,5 +1194,11 @@ export default {
   syncMediaBetweenSources,
   reconcileVehicleData,
   updateAllVehicleStores,
-  STORAGE_KEYS
+  STORAGE_KEYS,
+  // Export coordinate standardization functions for external use
+  standardizeCoordinate,
+  standardizeRoute
 };
+
+// Export the Coordinate interface for TypeScript users
+export type CoordinateType = Coordinate;
