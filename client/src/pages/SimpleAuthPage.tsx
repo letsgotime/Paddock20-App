@@ -65,6 +65,7 @@ const SimpleAuthPage = () => {
         : { 
             username, 
             password, 
+            confirmPassword,  // Add password confirmation for the server
             email,
             betaStatus,
             agreeToTerms: true // Since the form requires this checkbox to be checked
