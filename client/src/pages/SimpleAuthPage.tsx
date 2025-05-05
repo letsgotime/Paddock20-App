@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Eye, EyeOff, LogIn, UserPlus } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 
@@ -19,10 +19,12 @@ const SimpleAuthPage = () => {
     console.log('SimpleAuthPage loaded - this is the new simplified auth page');
   }, []);
   
+  // Reference to form elements for beta status
+  const formRef = useRef<HTMLFormElement>(null);
+  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage('');
-    console.log('Form submitted:', isLogin ? 'Login' : 'Register', { username, password, email });
     
     // Basic validation
     if (!username || !password) {
@@ -40,9 +42,28 @@ const SimpleAuthPage = () => {
     try {
       // Make the actual API call
       const endpoint = isLogin ? '/api/login' : '/api/register';
+      
+      // Get beta program status for registration
+      let betaStatus = 'beta_user'; // Default
+      if (!isLogin && formRef.current) {
+        const betaTesterRadio = formRef.current.querySelector('#beta-tester') as HTMLInputElement;
+        if (betaTesterRadio && betaTesterRadio.checked) {
+          betaStatus = 'beta_tester';
+        }
+      }
+      
+      // Construct user data based on login/register
       const userData = isLogin 
         ? { username, password } 
-        : { username, password, email };
+        : { 
+            username, 
+            password, 
+            email,
+            betaStatus,
+            agreeToTerms: true // Since the form requires this checkbox to be checked
+          };
+      
+      console.log('Form submitted:', isLogin ? 'Login' : 'Register', userData);
         
       const response = await fetch(endpoint, {
         method: 'POST',
@@ -57,8 +78,22 @@ const SimpleAuthPage = () => {
         navigate('/dashboard', { replace: true });
       } else {
         // Handle errors
-        const errorData = await response.json();
-        setErrorMessage(errorData.message || 'Authentication failed. Please try again.');
+        try {
+          const errorData = await response.json();
+          
+          // Check for specific error types
+          if (response.status === 400 && errorData.error && errorData.error.includes('already exists')) {
+            setErrorMessage('This username is already taken. Please choose a different one.');
+          } else if (response.status === 401) {
+            setErrorMessage('Invalid username or password. Please try again.');
+          } else {
+            setErrorMessage(errorData.error || errorData.message || 'Authentication failed. Please try again.');
+          }
+          
+          console.log('Auth error details:', errorData);
+        } catch (parseError) {
+          setErrorMessage('Authentication failed. Please try again.');
+        }
       }
     } catch (error) {
       console.error('Auth error:', error);
@@ -110,7 +145,7 @@ const SimpleAuthPage = () => {
             {isLogin ? 'Welcome back' : 'Create your account'}
           </h2>
           
-          <form onSubmit={handleSubmit}>
+          <form ref={formRef} onSubmit={handleSubmit}>
             <div className="mb-4">
               <label htmlFor="username" className="mb-2 block text-sm font-medium text-gray-300">
                 Username
@@ -127,20 +162,74 @@ const SimpleAuthPage = () => {
             </div>
             
             {!isLogin && (
-              <div className="mb-4">
-                <label htmlFor="email" className="mb-2 block text-sm font-medium text-gray-300">
-                  Email
-                </label>
-                <input
-                  id="email"
-                  type="email"
-                  className="w-full rounded-md bg-gray-800 border border-gray-700 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
-                  placeholder="Enter your email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required={!isLogin}
-                />
-              </div>
+              <>
+                <div className="mb-4">
+                  <label htmlFor="email" className="mb-2 block text-sm font-medium text-gray-300">
+                    Email
+                  </label>
+                  <input
+                    id="email"
+                    type="email"
+                    className="w-full rounded-md bg-gray-800 border border-gray-700 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                    placeholder="Enter your email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    required={!isLogin}
+                  />
+                </div>
+                
+                <div className="mb-4">
+                  <p className="mb-2 text-sm font-medium text-gray-300">
+                    Beta Program
+                  </p>
+                  <div className="flex items-start space-x-2">
+                    <div className="flex items-center bg-gray-800 border border-gray-700 rounded-md px-3 py-2">
+                      <input
+                        id="beta-user"
+                        type="radio"
+                        name="beta-status"
+                        value="beta_user"
+                        defaultChecked
+                        className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500"
+                      />
+                      <label htmlFor="beta-user" className="ml-2 text-sm font-medium text-gray-300">
+                        Beta User
+                      </label>
+                    </div>
+                    <div className="flex items-center bg-gray-800 border border-gray-700 rounded-md px-3 py-2">
+                      <input
+                        id="beta-tester"
+                        type="radio"
+                        name="beta-status"
+                        value="beta_tester"
+                        className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500"
+                      />
+                      <label htmlFor="beta-tester" className="ml-2 text-sm font-medium text-gray-300">
+                        Beta Tester
+                      </label>
+                    </div>
+                  </div>
+                  <p className="mt-1 text-xs text-gray-400">
+                    Beta Users get discounted service for life. Beta Testers get free service for life but require approval.
+                  </p>
+                </div>
+                
+                <div className="mb-4">
+                  <div className="flex items-start">
+                    <div className="flex items-center h-5">
+                      <input
+                        id="terms"
+                        type="checkbox"
+                        required
+                        className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 rounded focus:ring-blue-500"
+                      />
+                    </div>
+                    <label htmlFor="terms" className="ml-2 text-xs font-medium text-gray-300">
+                      I agree to the <a href="#" className="text-blue-400 hover:underline">Terms of Service</a> and <a href="#" className="text-blue-400 hover:underline">Privacy Policy</a>. I also agree to the NDA terms for the Beta Program.
+                    </label>
+                  </div>
+                </div>
+              </>
             )}
             
             <div className="mb-6">
