@@ -112,46 +112,123 @@ const SimpleAuthPage = () => {
   };
   
   return (
-    <div className="flex min-h-screen flex-col items-center justify-center bg-gradient-to-b from-gray-900 to-black p-4 text-white">
-      <div className="w-full max-w-md">
-        <div className="mb-8 text-center">
-          <h1 className="text-3xl font-bold text-blue-400">
-            PADDOCK<span style={{ color: '#08c519' }}>20</span>
-          </h1>
-          <p className="text-gray-300">Your automotive intelligence platform</p>
-        </div>
-        
-        <div className="mb-6 flex justify-center">
-          <div className="inline-flex rounded-md shadow-sm">
-            <button
-              type="button"
-              className={`px-4 py-2 text-sm font-medium rounded-l-lg ${
-                isLogin 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-              }`}
-              onClick={() => setIsLogin(true)}
-            >
-              Login
-            </button>
-            <button
-              type="button"
-              className={`px-4 py-2 text-sm font-medium rounded-r-lg ${
-                !isLogin 
-                  ? 'bg-blue-600 text-white' 
-                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
-              }`}
-              onClick={() => setIsLogin(false)}
-            >
-              Register
-            </button>
+    <div className="flex min-h-screen overflow-hidden relative">
+      {/* Dynamic F1 background with overlay */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ 
+          backgroundImage: `url('/assets/Stock Photos/F1/redbull-sparks-night.png')`,
+          filter: 'brightness(0.3) contrast(1.1)',
+        }}
+      />
+      
+      {/* Carbon fiber texture overlay */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center opacity-50 mix-blend-multiply"
+        style={{ 
+          backgroundImage: `url('/assets/Stock Photos/F1/carbon-fiber-texture-dark.png')`,
+        }}
+      />
+      
+      {/* F1-inspired racing stripes */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-[#08c519] z-10"></div>
+      <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#1982FC] z-10"></div>
+      <div className="absolute top-0 bottom-0 left-0 w-1 bg-[#ff2800] z-10"></div>
+      <div className="absolute top-0 bottom-0 right-0 w-1 bg-[#ff2800] z-10"></div>
+      
+      {/* Red diagonal racing stripes - inspired by F1 designs */}
+      <div className="absolute -top-20 -left-20 w-40 h-[150vh] bg-[#ff2800] opacity-20 rotate-45 z-10"></div>
+      <div className="absolute -bottom-20 -right-20 w-40 h-[150vh] bg-[#ff2800] opacity-20 rotate-45 z-10"></div>
+      
+      {/* Content container with glassmorphism */}
+      <div className="flex w-full min-h-screen items-center justify-center p-6 z-20">
+        {/* Left column - Brand messaging */}
+        <div className="hidden lg:flex flex-col w-1/2 pr-8 max-w-md">
+          <div className="space-y-6">
+            <div>
+              <h1 className="text-5xl font-bold" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                <span className="text-[#1982FC]">PADDOCK</span>
+                <span className="text-[#08c519]">20</span>
+              </h1>
+              <div className="h-1 w-32 bg-[#1982FC] mt-3"></div>
+            </div>
+            
+            <p className="text-xl text-white font-light leading-relaxed">
+              The ultimate automotive intelligence platform for passionate enthusiasts and drivers
+            </p>
+            
+            <div className="space-y-4 mt-8">
+              <div className="flex items-center">
+                <div className="h-8 w-1 bg-[#08c519] mr-4"></div>
+                <p className="text-white text-lg">Premium F1-inspired telemetry</p>
+              </div>
+              <div className="flex items-center">
+                <div className="h-8 w-1 bg-[#1982FC] mr-4"></div>
+                <p className="text-white text-lg">Exclusive community & insights</p>
+              </div>
+              <div className="flex items-center">
+                <div className="h-8 w-1 bg-[#ff2800] mr-4"></div>
+                <p className="text-white text-lg">Advanced automotive analytics</p>
+              </div>
+            </div>
+            
+            <div className="mt-4 p-4 rounded-lg bg-black/30 border border-gray-800">
+              <p className="text-[#08c519] font-semibold">BETA ACCESS</p>
+              <p className="text-gray-300 mt-1">
+                You're part of an exclusive group of drivers shaping the future of automotive intelligence
+              </p>
+            </div>
           </div>
         </div>
         
-        <div className="rounded-lg border border-gray-800 bg-gray-900 p-6 shadow-md">
-          <h2 className="mb-6 text-xl font-semibold text-gray-100">
-            {isLogin ? 'Welcome back' : 'Create your account'}
-          </h2>
+        {/* Right column - Authentication form */}
+        <div className="w-full lg:w-1/2 max-w-md">
+          <div className="backdrop-blur-md bg-black/60 rounded-2xl border border-gray-800 p-8 shadow-2xl"
+            style={{
+              boxShadow: `0 0 40px rgba(8, 197, 25, 0.15), 
+                          0 0 20px rgba(25, 130, 252, 0.15),
+                          0 0 60px rgba(255, 40, 0, 0.1)`
+            }}
+          >
+            {/* Small brand logo on mobile */}
+            <div className="mb-8 text-center block lg:hidden">
+              <h1 className="text-3xl font-bold" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                <span className="text-[#1982FC]">PADDOCK</span>
+                <span className="text-[#08c519]">20</span>
+              </h1>
+            </div>
+            
+            {/* Toggle buttons */}
+            <div className="mb-8">
+              <div className="flex justify-center space-x-0 rounded-lg p-1 bg-gray-900/70 border border-gray-800">
+                <button
+                  type="button"
+                  className={`flex-1 py-3 text-sm tracking-wider font-medium rounded-l-md transition-all duration-200 ${
+                    isLogin 
+                      ? 'bg-gradient-to-r from-[#1982FC]/80 to-[#08c519]/80 text-white shadow-lg' 
+                      : 'bg-transparent text-gray-400 hover:text-white'
+                  }`}
+                  onClick={() => setIsLogin(true)}
+                >
+                  SIGN IN
+                </button>
+                <button
+                  type="button"
+                  className={`flex-1 py-3 text-sm tracking-wider font-medium rounded-r-md transition-all duration-200 ${
+                    !isLogin 
+                      ? 'bg-gradient-to-r from-[#08c519]/80 to-[#1982FC]/80 text-white shadow-lg' 
+                      : 'bg-transparent text-gray-400 hover:text-white'
+                  }`}
+                  onClick={() => setIsLogin(false)}
+                >
+                  JOIN THE GRID
+                </button>
+              </div>
+            </div>
+            
+            <h2 className="mb-6 text-2xl font-bold text-white tracking-wide" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+              {isLogin ? 'WELCOME BACK' : 'CREATE YOUR PROFILE'}
+            </h2>
           
           <form ref={formRef} onSubmit={handleSubmit}>
             <div className="mb-4">
@@ -293,7 +370,13 @@ const SimpleAuthPage = () => {
             <button
               type="submit"
               disabled={isSubmitting}
-              className={`w-full rounded-md ${isSubmitting ? 'bg-blue-800' : 'bg-blue-600 hover:bg-blue-700'} py-2 font-medium text-white flex items-center justify-center`}
+              className={`w-full rounded-md ${
+                isSubmitting 
+                  ? 'bg-gray-700' 
+                  : isLogin 
+                    ? 'bg-gradient-to-r from-[#1982FC] to-[#08c519] hover:brightness-110' 
+                    : 'bg-gradient-to-r from-[#08c519] to-[#1982FC] hover:brightness-110'
+              } py-3 font-medium text-white flex items-center justify-center transition-all duration-200`}
             >
               {isSubmitting ? (
                 <>
@@ -301,21 +384,27 @@ const SimpleAuthPage = () => {
                     <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
                     <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                   </svg>
-                  Processing...
+                  PROCESSING...
                 </>
               ) : isLogin ? (
                 <>
-                  Sign In
+                  SIGN IN
                   <LogIn className="ml-2 h-4 w-4" />
                 </>
               ) : (
                 <>
-                  Create Account
+                  JOIN THE GRID
                   <UserPlus className="ml-2 h-4 w-4" />
                 </>
               )}
             </button>
+            
+            {/* Additional F1-inspired accent at the bottom of the form */}
+            <div className="flex justify-center mt-8">
+              <div className="h-1 w-20 bg-gradient-to-r from-[#ff2800] via-[#1982FC] to-[#08c519]"></div>
+            </div>
           </form>
+          </div>
         </div>
       </div>
     </div>
