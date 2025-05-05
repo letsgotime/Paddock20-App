@@ -138,44 +138,80 @@ const Header: React.FC = () => {
               }
             }}
           >
-            <span className="mr-1">
-              <User className="h-4 w-4 inline text-blue-400" />
-            </span>
+            <div className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-900/50 mr-2 border border-blue-700/70">
+              <User className="h-4 w-4 text-blue-300" />
+            </div>
             <button className="text-sm text-blue-300 hover:text-blue-200 flex items-center">
               {user ? userDisplayName : "Guest"}
               <ChevronDown className="h-3 w-3 ml-1" />
             </button>
             
-            {/* User dropdown menu */}
-            <div className="absolute right-0 top-full mt-1 w-48 bg-black border border-blue-900 rounded-md shadow-lg overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 user-dropdown-menu" 
+            {/* Enhanced User dropdown menu */}
+            <div className="absolute right-0 top-full mt-2 w-56 bg-black border border-blue-900 rounded-md shadow-lg overflow-hidden opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all duration-300 z-50 user-dropdown-menu" 
                  style={{ transitionDelay: '0.1s' }}
             >
-              <div className="py-1 hover:py-1">
+              {/* Header section with user info or login prompt */}
+              <div className="bg-blue-900/20 px-4 py-3 border-b border-blue-900/40">
+                {user ? (
+                  <div className="flex items-center">
+                    <div className="flex-shrink-0 mr-3">
+                      <div className="h-10 w-10 rounded-full bg-blue-900/50 flex items-center justify-center border border-blue-700">
+                        <User className="h-5 w-5 text-blue-300" />
+                      </div>
+                    </div>
+                    <div>
+                      <div className="text-sm font-medium text-blue-300">{userDisplayName}</div>
+                      <div className="text-xs text-gray-400 truncate">{user.email || 'No email set'}</div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-center py-1">
+                    <p className="text-sm text-gray-400">Please sign in to access all features</p>
+                  </div>
+                )}
+              </div>
+              
+              {/* Main menu section */}
+              <div className="py-1">
                 {user ? (
                   <>
                     <Link to="/profile" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                       <User className="h-4 w-4 mr-2 text-blue-400" />
                       <span>My Profile</span>
                     </Link>
+                    <Link to="/personalized-dashboard" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                      <LayoutDashboard className="h-4 w-4 mr-2 text-blue-400" />
+                      <span>My Dashboard</span>
+                    </Link>
+                    <Link to="/garage-vault" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                      <CarFront className="h-4 w-4 mr-2 text-blue-400" />
+                      <span>My Vehicles</span>
+                    </Link>
                     <Link to="/settings" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                       <Settings className="h-4 w-4 mr-2 text-blue-400" />
-                      <span>Settings</span>
+                      <span>Account Settings</span>
                     </Link>
-                    <button 
-                      onClick={handleLogout}
-                      className="flex items-center w-full text-left px-4 py-2 text-white hover:bg-red-900/30 transition-colors"
-                    >
-                      <LogOut className="h-4 w-4 mr-2 text-red-400" />
-                      <span>Log Out</span>
-                    </button>
                   </>
                 ) : (
                   <Link to="/auth" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <User className="h-4 w-4 mr-2 text-blue-400" />
-                    <span>Login</span>
+                    <span>Sign In / Register</span>
                   </Link>
                 )}
               </div>
+              
+              {/* Footer section with logout button when logged in */}
+              {user && (
+                <div className="border-t border-blue-900/40 py-2 px-4">
+                  <button 
+                    onClick={handleLogout}
+                    className="flex w-full items-center justify-center px-4 py-2 text-white bg-blue-600 hover:bg-blue-700 rounded transition-colors"
+                  >
+                    <LogOut className="h-4 w-4 mr-2" />
+                    <span className="font-medium">Sign Out</span>
+                  </button>
+                </div>
+              )}
             </div>
           </div>
           

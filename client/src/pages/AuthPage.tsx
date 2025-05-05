@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { useToast } from '@/hooks/use-toast';
-import { Eye, EyeOff, LogIn, UserPlus, CheckCircle, XCircle } from 'lucide-react';
+import { Eye, EyeOff, LogIn, UserPlus, CheckCircle, XCircle, Car, GaugeCircle, MapPin, Calendar, AreaChart } from 'lucide-react';
 
 // Import UI components
 import {
@@ -22,6 +22,7 @@ const AuthPage: React.FC = () => {
   const { login, register, loading, user } = useAuth();
   const { toast } = useToast();
   const navigate = useNavigate();
+  const location = useLocation();
   
   // Redirect if already logged in (using useEffect to avoid React Router warnings)
   React.useEffect(() => {
@@ -181,10 +182,16 @@ const AuthPage: React.FC = () => {
   };
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-black text-white">
+    <div className="flex min-h-screen items-center justify-center bg-gradient-to-b from-gray-900 to-black text-white">
       <div className="w-full max-w-6xl grid grid-cols-1 md:grid-cols-2 gap-8 p-4">
         {/* Auth Forms */}
         <div className="flex flex-col justify-center">
+          <div className="mb-6">
+            <h1 className="text-3xl md:text-4xl font-bold text-blue-400 mb-2">
+              PADDOCK<span style={{ color: '#08c519' }}>20</span>
+            </h1>
+            <p className="text-gray-300">Your automotive intelligence platform</p>
+          </div>
           <Tabs defaultValue="login" className="w-full">
             <TabsList className="grid w-full grid-cols-2 mb-4">
               <TabsTrigger value="login" className="text-lg">Login</TabsTrigger>
