@@ -69,36 +69,58 @@ export const VehicleProvider: React.FC<VehicleProviderProps> = ({ children }) =>
       try {
         setLoading(true);
         
-        // For now, we'll use localStorage as a data store
-        // In a production app, this would fetch from an API
+        // First try loading from the profile system's vehicle storage
+        const profileStore = localStorage.getItem('user-profile-storage');
+        if (profileStore) {
+          try {
+            const profileData = JSON.parse(profileStore);
+            if (profileData?.state?.profile?.vehicles?.length > 0) {
+              console.log('Loading vehicles from user profile storage');
+              
+              // Convert from user profile VehicleData format to Vehicle format
+              const profileVehicles = profileData.state.profile.vehicles.map((v: any) => ({
+                id: v.id,
+                make: v.make,
+                model: v.model,
+                year: typeof v.year === 'number' ? v.year.toString() : v.year,
+                color: v.color || '',
+                vin: v.vin || '',
+                licensePlate: '',
+                nickname: v.nickname || '',
+                description: '',
+                modifications: '',
+                primaryImage: v.image || '',
+                images: [],
+                maintenanceItems: v.maintenanceRecords?.map((mr: any) => ({
+                  id: mr.id,
+                  name: mr.type,
+                  description: mr.notes || '',
+                  date: mr.date,
+                  mileage: mr.mileage,
+                  completed: true,
+                  vehicleId: v.id
+                })) || [],
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString()
+              }));
+              
+              setVehicles(profileVehicles);
+              if (profileVehicles.length > 0) {
+                setSelectedVehicle(profileVehicles[0]);
+              }
+              return;
+            }
+          } catch (e) {
+            console.error('Error parsing profile store data:', e);
+          }
+        }
+        
+        // If that fails, fall back to direct localStorage
         const savedVehicles = localStorage.getItem('paddock20_vehicles');
         
         if (savedVehicles) {
           const parsedVehicles = JSON.parse(savedVehicles) as Vehicle[];
           setVehicles(parsedVehicles);
-        } else if (user) {
-          // Initialize with an example vehicle if none exist yet
-          const defaultVehicle: Vehicle = {
-            id: `vehicle-${Date.now()}`,
-            make: 'BMW',
-            model: '330i',
-            year: '2020',
-            color: 'Alpine White',
-            vin: '',
-            licensePlate: '',
-            nickname: '330i xDrive',
-            description: 'Daily driver',
-            modifications: '',
-            primaryImage: '',
-            images: [],
-            maintenanceItems: [],
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          };
-          setVehicles([defaultVehicle]);
-          
-          // Save to localStorage
-          localStorage.setItem('paddock20_vehicles', JSON.stringify([defaultVehicle]));
         }
       } catch (error) {
         console.error('Error loading vehicles:', error);
@@ -108,6 +130,52 @@ export const VehicleProvider: React.FC<VehicleProviderProps> = ({ children }) =>
     };
 
     loadVehicles();
+    
+    // Listen for vehicle updates from the ProfileDataCollector
+    const handleVehicleUpdate = (event: CustomEvent) => {
+      const vehicleData = event.detail?.vehicle;
+      if (vehicleData && event.detail?.source === 'ProfileDataCollector') {
+        console.log('Received vehicle update from ProfileDataCollector:', vehicleData);
+        
+        // Convert to Vehicle format
+        const newVehicle: Vehicle = {
+          id: vehicleData.id,
+          make: vehicleData.make,
+          model: vehicleData.model,
+          year: typeof vehicleData.year === 'number' ? vehicleData.year.toString() : vehicleData.year,
+          color: vehicleData.color || '',
+          vin: vehicleData.vin || '',
+          licensePlate: '',
+          nickname: vehicleData.nickname || '',
+          description: '',
+          modifications: '',
+          primaryImage: vehicleData.image || '',
+          images: [],
+          maintenanceItems: [],
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        };
+        
+        // Update our vehicle state
+        setVehicles(prev => {
+          // Check if this vehicle already exists
+          const exists = prev.some(v => v.id === newVehicle.id);
+          if (exists) {
+            return prev.map(v => v.id === newVehicle.id ? newVehicle : v);
+          } else {
+            return [...prev, newVehicle];
+          }
+        });
+      }
+    };
+    
+    window.addEventListener('vehicle-data-update', handleVehicleUpdate as EventListener);
+    window.addEventListener('vehicle-updated', handleVehicleUpdate as EventListener);
+    
+    return () => {
+      window.removeEventListener('vehicle-data-update', handleVehicleUpdate as EventListener);
+      window.removeEventListener('vehicle-updated', handleVehicleUpdate as EventListener);
+    };
   }, [user?.id]);
 
   // Save vehicles to storage whenever they change
