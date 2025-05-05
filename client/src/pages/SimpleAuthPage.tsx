@@ -16,7 +16,7 @@ const SimpleAuthPage = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
   const [documentModalOpen, setDocumentModalOpen] = useState(false);
-  const [currentDocument, setCurrentDocument] = useState<{title: string, content: string}>({
+  const [currentDocument, setCurrentDocument] = useState<{title: string, content: string, callback?: () => void}>({
     title: "",
     content: ""
   });
@@ -89,8 +89,12 @@ const SimpleAuthPage = () => {
       });
       
       if (response.ok) {
-        // Success! Redirect to dashboard
-        navigate('/dashboard', { replace: true });
+        // Success! Redirect to onboarding if new registration, dashboard if login
+        if (!isLogin) {
+          navigate('/onboarding', { replace: true });
+        } else {
+          navigate('/dashboard', { replace: true });
+        }
       } else {
         // Handle errors
         try {
@@ -126,6 +130,7 @@ const SimpleAuthPage = () => {
         content={currentDocument.content}
         isOpen={documentModalOpen}
         onClose={() => setDocumentModalOpen(false)}
+        callback={currentDocument.callback}
       />
       
       {/* Dynamic F1 background with overlay */}
@@ -341,9 +346,18 @@ const SimpleAuthPage = () => {
                               <button 
                                 type="button"
                                 onClick={() => {
+                                  // Create reference to the terms checkbox
+                                  const termsCheckbox = document.getElementById('terms') as HTMLInputElement;
+                                  
                                   setCurrentDocument({
                                     title: "Terms of Service",
-                                    content: legalDocuments.termsOfService
+                                    content: legalDocuments.termsOfService,
+                                    callback: () => {
+                                      // Auto-check the checkbox when user clicks "I Understand"
+                                      if (termsCheckbox) {
+                                        termsCheckbox.checked = true;
+                                      }
+                                    }
                                   });
                                   setDocumentModalOpen(true);
                                 }}
@@ -403,9 +417,18 @@ const SimpleAuthPage = () => {
                               <button 
                                 type="button"
                                 onClick={() => {
+                                  // Create reference to the beta-agreement checkbox
+                                  const betaCheckbox = document.getElementById('beta-agreement') as HTMLInputElement;
+                                  
                                   setCurrentDocument({
                                     title: "Beta Agreement",
-                                    content: legalDocuments.betaAgreement
+                                    content: legalDocuments.betaAgreement,
+                                    callback: () => {
+                                      // Auto-check the checkbox when user clicks "I Understand"
+                                      if (betaCheckbox) {
+                                        betaCheckbox.checked = true;
+                                      }
+                                    }
                                   });
                                   setDocumentModalOpen(true);
                                 }}
