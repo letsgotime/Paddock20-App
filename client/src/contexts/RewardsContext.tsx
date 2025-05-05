@@ -948,11 +948,13 @@ export const RewardsProvider: React.FC<{ children: ReactNode }> = ({ children })
       }
       
       // Check time-based secret achievements
-      const hour = new Date().getHours();
-      if (hour < 6 && !userRewards.rewards.some(r => r.id === 'early-bird')) {
-        unlockReward('early-bird');
-      } else if (hour >= 0 && hour < 5 && !userRewards.rewards.some(r => r.id === 'night-owl')) {
-        unlockReward('night-owl');
+      if (userRewards && userRewards.rewards && Array.isArray(userRewards.rewards)) {
+        const hour = new Date().getHours();
+        if (hour < 6 && !userRewards.rewards.some(r => r.id === 'early-bird')) {
+          unlockReward('early-bird');
+        } else if (hour >= 0 && hour < 5 && !userRewards.rewards.some(r => r.id === 'night-owl')) {
+          unlockReward('night-owl');
+        }
       }
     }
   }, []);
@@ -1019,7 +1021,7 @@ export const RewardsProvider: React.FC<{ children: ReactNode }> = ({ children })
         
         // Check if user has visited all sections
         const hasVisitedAll = allSections.every(section => updatedFeatures.has(section));
-        if (hasVisitedAll && !prev.rewards.some(r => r.id === 'paddock-explorer')) {
+        if (hasVisitedAll && prev.rewards && Array.isArray(prev.rewards) && !prev.rewards.some(r => r.id === 'paddock-explorer')) {
           setTimeout(() => unlockReward('paddock-explorer'), 100);
         }
       }
@@ -1137,6 +1139,12 @@ export const RewardsProvider: React.FC<{ children: ReactNode }> = ({ children })
   // Check achievements for a specific metric
   const checkMetricAchievements = (metric: RewardTriggerMetric, currentValue: number) => {
     if (!metricThresholds[metric]) return;
+    
+    // Add null checking for rewards array
+    if (!userRewards || !userRewards.rewards || !Array.isArray(userRewards.rewards)) {
+      console.warn('Cannot check metric achievements - rewards array is missing or invalid');
+      return;
+    }
     
     // Look for threshold achievements that the user qualifies for
     metricThresholds[metric].forEach(({ rewardId, threshold }) => {
