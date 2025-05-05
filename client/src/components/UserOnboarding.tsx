@@ -4,8 +4,10 @@ import {
   Check, X, ChevronRight, AlertTriangle, Shield, Car, Trophy, Clock, 
   User, Settings, Map, Calendar, Gauge, Heart, ThumbsUp, 
   Activity, Zap, Wrench, Smartphone, Palette, UserPlus, Mail, Key,
-  CircleDashed, Upload, Camera, FileText, PaintBucket, Cloud, PlusCircle
+  CircleDashed, Upload, Camera, FileText, PaintBucket, Cloud, PlusCircle,
+  Trash2
 } from 'lucide-react';
+import { handleDeclineTerms } from '../utils/accountUtils';
 
 interface UserOnboardingProps {
   onComplete: () => void;
@@ -127,6 +129,9 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
     privacyPolicy: false,
     betaAgreement: false
   });
+  
+  // Track state for declining agreements and handling account deletion
+  const [isDeclining, setIsDeclining] = useState(false);
   
   // User profile form state
   const [userProfile, setUserProfile] = useState<UserProfile>({
@@ -332,6 +337,26 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
     setError(null);
   };
 
+  // Handle declining terms and deleting account
+  const handleDeclineAndDelete = async () => {
+    setIsDeclining(true);
+    setError(null);
+    
+    try {
+      // Call the account deletion utility function
+      await handleDeclineTerms('declined_terms_during_onboarding');
+      
+      // The utility function handles redirect, but we'll add a fallback
+      setTimeout(() => {
+        window.location.href = '/auth';
+      }, 1000);
+    } catch (error) {
+      console.error('Error deleting account after declining terms:', error);
+      setError('Failed to process your request. Please try again.');
+      setIsDeclining(false);
+    }
+  };
+  
   // Handle smooth transitions between steps
   const handleStepTransition = (direction: 'next' | 'prev') => {
     // Validate current step before proceeding
@@ -724,9 +749,18 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                 </div>
               )}
               
-              <div className="text-sm text-gray-400 italic border-t border-gray-800 pt-6">
+              <div className="text-sm text-gray-400 italic border-t border-gray-800 pt-6 mb-4">
                 <p>By checking all boxes and continuing, you acknowledge that you have read,
                 understood, and agreed to all the terms and conditions outlined in these documents.</p>
+              </div>
+              
+              {/* Add warning about declining and account deletion */}
+              <div className="flex items-center p-4 rounded-lg bg-red-900/30 border border-red-700">
+                <Trash2 className="text-red-400 mr-3 flex-shrink-0" size={20} />
+                <p className="text-sm text-red-300">
+                  <span className="font-semibold">Warning:</span> Declining these agreements will result in the deletion of your account. 
+                  All data associated with your account will be permanently removed, and you will be redirected to the login page.
+                </p>
               </div>
             </div>
           )}
@@ -1625,6 +1659,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
               type="button"
               onClick={prevStep}
               className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-md text-gray-200 transition-colors flex items-center"
+              disabled={isDeclining}
             >
               <X className="mr-2" size={18} />
               <span>Back</span>
@@ -1633,10 +1668,24 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
             <div></div> // Empty div to maintain flex spacing
           )}
           
+          {/* Decline button only on legal agreements step */}
+          {step === 3 && (
+            <button
+              type="button"
+              onClick={handleDeclineAndDelete}
+              className="px-5 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition-colors flex items-center mx-2"
+              disabled={isDeclining}
+            >
+              <Trash2 className="mr-2" size={18} />
+              {isDeclining ? 'Processing...' : 'Decline & Delete Account'}
+            </button>
+          )}
+          
           <button
             type="button"
             onClick={nextStep}
             className="px-6 py-2 bg-[#1982FC] hover:bg-[#1982FC]/90 rounded-md text-white transition-colors flex items-center"
+            disabled={isDeclining}
           >
             <span>{step === 6 ? 'Complete Setup' : 'Continue'}</span>
             <ChevronRight className="ml-2" size={18} />
