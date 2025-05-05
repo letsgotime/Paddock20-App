@@ -278,15 +278,19 @@ export function setupAuth(app: Express) {
       // Generate verification token
       const verificationToken = randomBytes(32).toString("hex");
       
+      // Check if user is registering as a beta tester
+      const isBetaTester = userData.userType === 'beta_tester';
+      
       // Create user in database
       const newUser = await storage.createUser({
         ...userData,
         password: hashedPassword,
         verificationToken,
         interests: (userData.interests || []) as string[],
-        role: 'user',
+        role: isBetaTester ? 'beta_tester' : 'user',
         isActive: true,
-        isEmailVerified: false,
+        // Beta testers need email verification, regular users don't
+        isEmailVerified: !isBetaTester,
         onboardingCompleted: false
       });
       
@@ -300,6 +304,24 @@ export function setupAuth(app: Express) {
         details: {}
       });
       
+      // Send verification email for beta testers 
+      try {
+        const { sendVerificationEmail } = require('./services/emailService');
+        // Only send verification emails to beta testers
+        if (isBetaTester) {
+          await sendVerificationEmail(
+            newUser.email, 
+            newUser.verificationToken, 
+            newUser.username, 
+            true // isBetaTester = true
+          );
+          console.log(`Beta tester verification email sent to ${newUser.email}`);
+        }
+      } catch (emailError) {
+        console.error('Error sending verification email:', emailError);
+        // Non-blocking - continue even if email sending fails
+      }
+      
       // Login the user (auto-login after registration)
       req.login(newUser, (err) => {
         if (err) {
@@ -308,9 +330,6 @@ export function setupAuth(app: Express) {
             error: "Error logging in after registration" 
           });
         }
-        
-        // Send verification email (to be implemented)
-        // sendVerificationEmail(newUser.email, newUser.verificationToken);
         
         // Return user data (exclude sensitive information)
         const { password, resetToken, verificationToken, ...safeUserData } = newUser;
@@ -631,6 +650,22 @@ export function setupAuth(app: Express) {
         userAgent: null, // Set in middleware
         details: {}
       });
+      
+      // Send welcome email for verified users
+      try {
+        const { sendWelcomeEmail } = require('./services/emailService');
+        // Check if the user is a beta tester
+        const isBetaTester = updatedUser.role === 'beta_tester';
+        await sendWelcomeEmail(
+          updatedUser.email,
+          updatedUser.username,
+          isBetaTester
+        );
+        console.log(`Welcome email sent to ${updatedUser.email}`);
+      } catch (emailError) {
+        console.error('Error sending welcome email:', emailError);
+        // Non-blocking - continue even if email sending fails
+      }
       
       // Redirect to frontend verification success page
       res.redirect("/email-verified");
