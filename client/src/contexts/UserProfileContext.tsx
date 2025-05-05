@@ -312,7 +312,7 @@ export const UserProfileProvider: React.FC<{ children: ReactNode }> = ({ childre
   
   const removeVehicle = (id: string) => {
     if (!profile) return;
-    userProfileWarehouse.removeVehicle(id);
+    userProfileWarehouse.removeVehicleReference(id);
   };
   
   // Drive methods
