@@ -294,6 +294,16 @@ function App() {
                               {/* Auth0 callback route - Handles redirection after Auth0 authentication */}
                               <Route path="/auth/callback" component={Auth0Callback} />
                               
+                              {/* Auth Debug Page - For troubleshooting Auth0 integration */}
+                              <Route path="/auth/debug" component={() => {
+                                const AuthDebugPage = React.lazy(() => import('./pages/AuthDebugPage'));
+                                return (
+                                  <React.Suspense fallback={<div>Loading debug tool...</div>}>
+                                    <AuthDebugPage />
+                                  </React.Suspense>
+                                );
+                              }} />
+                              
                               {/* User Onboarding - Requires authentication but not onboarding completion */}
                               <Route 
                                 path="/onboarding" 
