@@ -1,109 +1,10 @@
-import React, { useState, useEffect } from 'react';
-import { Link } from 'wouter';
-import { 
-  Check, X, ChevronRight, AlertTriangle, Shield, Car, Trophy, Clock, 
-  User, Settings, Map, Calendar, Gauge, Heart, ThumbsUp, 
-  Activity, Zap, Wrench, Smartphone, Palette, UserPlus, Mail, Key,
-  CircleDashed, Upload, Camera, FileText, PaintBucket, Cloud, PlusCircle,
-  Trash2
-} from 'lucide-react';
-import { handleDeclineTerms } from '../utils/accountUtils';
+import React from 'react';
 import { useAuth } from '../hooks/useAuth';
 import OnboardingFlow from './dashboard/OnboardingFlow';
 
 interface UserOnboardingProps {
   onComplete: (userId: number | string) => void;
 }
-
-// Carolina blue color code for consistent branding
-const CAROLINA_BLUE = '#1982FC';
-const GOTIME_GREEN = '#08c519';
-
-// User profile type definition
-interface UserProfile {
-  fullName: string;
-  username: string;
-  email: string;
-  password: string;
-  confirmPassword: string;
-  profileImage: string;
-  drivingExperience: string;
-  interests: string[];
-  bio: string;
-}
-
-// Vehicle profile type definition
-interface VehicleProfile {
-  make: string;
-  model: string;
-  year: string;
-  engineType: string;
-  transmissionType: string;
-  nickname: string;
-  color: string;
-  vehicleImage: string;
-  mileage: string;
-  purchaseDate: string;
-}
-
-// Dashboard preferences type definition
-interface DashboardPreferences {
-  theme: 'dark' | 'darker';
-  showWeather: boolean;
-  showEvents: boolean;
-  showMaintenance: boolean;
-  showJuiceBox: boolean;
-  showGarageVault: boolean;
-  showManifestationStation: boolean;
-  primaryFocus: string;
-  notificationSettings: boolean;
-  tempDisplay: 'standard' | 'detailed' | 'compact';
-}
-
-// Location settings type definition
-interface LocationSettings {
-  primaryLocation: string;
-  units: 'imperial' | 'metric';
-  autoRefresh: boolean;
-}
-
-// Route type definition
-interface RouteInfo {
-  name: string;
-  points: string;
-}
-
-// Available interests for user selection
-const availableInterests = [
-  'Track Driving', 'Auto Detailing', 'Car Shows', 'Motorsport', 'Modifications',
-  'Classic Cars', 'Supercars', 'Off-roading', 'Restoration', 'Performance Tuning',
-  'Automotive Photography', 'Rally Racing', 'F1', 'NASCAR', 'Drift Racing'
-];
-
-// Available car manufacturers
-const carManufacturers = [
-  'Acura', 'Alfa Romeo', 'Aston Martin', 'Audi', 'Bentley', 'BMW', 'Bugatti',
-  'Buick', 'Cadillac', 'Chevrolet', 'Chrysler', 'Dodge', 'Ferrari', 'Fiat',
-  'Ford', 'Genesis', 'GMC', 'Honda', 'Hyundai', 'Infiniti', 'Jaguar', 'Jeep',
-  'Kia', 'Lamborghini', 'Land Rover', 'Lexus', 'Lincoln', 'Lotus', 'Maserati',
-  'Mazda', 'McLaren', 'Mercedes-Benz', 'Mini', 'Mitsubishi', 'Nissan', 'Porsche',
-  'Ram', 'Rolls-Royce', 'Subaru', 'Tesla', 'Toyota', 'Volkswagen', 'Volvo'
-];
-
-// Available engine types
-const engineTypes = [
-  'Gasoline', 'Diesel', 'Hybrid', 'Electric', 'Hydrogen Fuel Cell'
-];
-
-// Available transmission types
-const transmissionTypes = [
-  'Automatic', 'Manual', 'Dual-Clutch', 'CVT', 'Semi-Automatic'
-];
-
-// Module focus options
-const moduleOptions = [
-  'Weather & Drive', 'Detailing & Maintenance', 'Automotive Community', 'Vehicle Performance'
-];
 
 /**
  * UserOnboarding Component
@@ -113,17 +14,13 @@ const moduleOptions = [
  * 
  * Uses brand-consistent styling with Orbitron for headings and Open Sans for body text.
  * Color scheme follows the dark carbon-fiber theme with Carolina blue accents.
+ * 
+ * Now implemented with the simplified OnboardingFlow wrapper component that manages
+ * the transition between beta welcome and detailed onboarding.
  */
 const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
   // Access authenticated user context
   const auth = useAuth();
-  
-  // Current step state (1-6)
-  const [step, setStep] = useState(1);
-  const [visibleStep, setVisibleStep] = useState(1);
-  const [animateIn, setAnimateIn] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
   // Track if profile and vehicle images have been uploaded
   const [hasUploadedProfilePic, setHasUploadedProfilePic] = useState(false);
   const [hasUploadedVehicleImage, setHasUploadedVehicleImage] = useState(false);
