@@ -1089,229 +1089,168 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
             </div>
           )}
           
-          {/* Vehicle Profile Form */}
+          {/* Beta Role Selection */}
           {step === 5 && (
             <div className="space-y-6 animate-fadeIn">
               <div className="flex items-center bg-[#1982FC]/10 p-4 rounded-lg mb-6">
-                <Car className="text-[#1982FC] mr-4" size={24} />
+                <User className="text-[#1982FC] mr-4" size={24} />
                 <p className="text-gray-200">
-                  Set up your first vehicle in your Garage Vault. This information will help personalize your 
-                  maintenance schedules, detailing protocols, and weather recommendations.
+                  Choose your level of participation in the Paddock20 beta program. Your role will determine how you
+                  can contribute to shaping the platform.
                 </p>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                {/* Vehicle Image Upload */}
-                <div className="md:col-span-2 flex flex-col items-center justify-center p-6 border border-gray-700 rounded-lg bg-gray-800/30">
+              <div className="flex flex-col space-y-8">
+                <div className="text-center mb-2">
+                  <h3 className="text-xl font-bold text-white tracking-wide mb-4">
+                    Select Your Beta Participation Level
+                  </h3>
+                  <p className="text-gray-300 max-w-2xl mx-auto">
+                    Choose how you'd like to contribute to the Paddock20 beta program. You can change this selection later.
+                  </p>
+                </div>
+                
+                {/* Beta Role Cards */}
+                <div className="grid grid-cols-1 gap-6">
+                  {/* Beta User Card */}
                   <div 
-                    className="w-full h-48 mb-4 rounded-lg bg-gray-700 flex items-center justify-center border-2 border-[#1982FC]/50 overflow-hidden"
+                    className={`relative p-6 rounded-xl border-2 transition-all cursor-pointer 
+                      ${betaRole === 'user' 
+                        ? 'border-[#1982FC] bg-[#1982FC]/10' 
+                        : 'border-gray-700 hover:border-gray-600 bg-gray-800/50'}
+                    `}
+                    onClick={() => setBetaRole('user')}
                   >
-                    {hasUploadedVehicleImage ? (
-                      <img 
-                        src={vehicleProfile.vehicleImage || '/assets/Stock Photos/vehicle-placeholder.png'} 
-                        alt="Vehicle" 
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <Car size={60} className="text-gray-500" />
-                    )}
+                    <div className="absolute top-4 right-4">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center 
+                        ${betaRole === 'user' ? 'bg-[#1982FC]' : 'bg-gray-700'}
+                      `}>
+                        {betaRole === 'user' && <Check size={14} className="text-white" />}
+                      </div>
+                    </div>
+                    
+                    <div className="flex items-start">
+                      <div className="mr-4 p-3 rounded-full bg-[#1982FC]/20">
+                        <User size={24} className="text-[#1982FC]" />
+                      </div>
+                      
+                      <div className="flex-1">
+                        <h4 className="text-xl font-semibold text-white mb-2">
+                          Beta User
+                        </h4>
+                        
+                        <p className="text-gray-300 mb-4">
+                          Experience Paddock20 early and provide occasional feedback on your experience. 
+                          Perfect for enthusiasts who want to try the platform with minimal commitment.
+                        </p>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="flex items-start">
+                            <Check size={16} className="mt-1 mr-2 text-[#08c519]" />
+                            <span className="text-gray-300 text-sm">Early access to all features</span>
+                          </div>
+                          
+                          <div className="flex items-start">
+                            <Check size={16} className="mt-1 mr-2 text-[#08c519]" />
+                            <span className="text-gray-300 text-sm">Occasional feedback requests</span>
+                          </div>
+                          
+                          <div className="flex items-start">
+                            <Check size={16} className="mt-1 mr-2 text-[#08c519]" />
+                            <span className="text-gray-300 text-sm">Basic bug reporting</span>
+                          </div>
+                          
+                          <div className="flex items-start">
+                            <Check size={16} className="mt-1 mr-2 text-[#08c519]" />
+                            <span className="text-gray-300 text-sm">No additional commitments</span>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
                   </div>
                   
-                  <button
-                    type="button"
-                    onClick={handleVehicleImageUpload}
-                    className="px-4 py-2 bg-[#1982FC]/20 hover:bg-[#1982FC]/30 rounded-md text-[#1982FC] transition-colors flex items-center"
+                  {/* Beta Tester Card */}
+                  <div 
+                    className={`relative p-6 rounded-xl border-2 transition-all cursor-pointer 
+                      ${betaRole === 'tester' 
+                        ? 'border-[#1982FC] bg-[#1982FC]/10' 
+                        : 'border-gray-700 hover:border-gray-600 bg-gray-800/50'}
+                    `}
+                    onClick={() => setBetaRole('tester')}
                   >
-                    <Camera size={18} className="mr-2" />
-                    <span>{hasUploadedVehicleImage ? 'Change Photo' : 'Upload Photo'}</span>
-                  </button>
-                </div>
-                
-                {/* Vehicle Basics */}
-                <div className="md:col-span-2">
-                  <h3 className="text-lg font-semibold text-[#1982FC] mb-4 font-orbitron">
-                    Vehicle Information
-                  </h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label htmlFor="make" className="block text-sm font-medium text-gray-300 mb-1">
-                        Make <span className="text-red-500">*</span>
-                      </label>
-                      <select
-                        id="make"
-                        name="make"
-                        value={vehicleProfile.make}
-                        onChange={handleVehicleProfileChange}
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                      >
-                        <option value="">Select Make</option>
-                        {carManufacturers.map((make) => (
-                          <option key={make} value={make}>{make}</option>
-                        ))}
-                      </select>
+                    <div className="absolute top-4 right-4">
+                      <div className={`w-6 h-6 rounded-full flex items-center justify-center 
+                        ${betaRole === 'tester' ? 'bg-[#1982FC]' : 'bg-gray-700'}
+                      `}>
+                        {betaRole === 'tester' && <Check size={14} className="text-white" />}
+                      </div>
                     </div>
                     
-                    <div>
-                      <label htmlFor="model" className="block text-sm font-medium text-gray-300 mb-1">
-                        Model <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        id="model"
-                        name="model"
-                        type="text"
-                        value={vehicleProfile.model}
-                        onChange={handleVehicleProfileChange}
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                        placeholder="e.g. Mustang GT, 911 Turbo"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="year" className="block text-sm font-medium text-gray-300 mb-1">
-                        Year <span className="text-red-500">*</span>
-                      </label>
-                      <input
-                        id="year"
-                        name="year"
-                        type="text"
-                        value={vehicleProfile.year}
-                        onChange={handleVehicleProfileChange}
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                        placeholder="e.g. 2023"
-                      />
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Technical Details */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
-                    Technical Details
-                  </h3>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <label htmlFor="engineType" className="block text-sm font-medium text-gray-300 mb-1">
-                        Engine Type
-                      </label>
-                      <select
-                        id="engineType"
-                        name="engineType"
-                        value={vehicleProfile.engineType}
-                        onChange={handleVehicleProfileChange}
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                      >
-                        {engineTypes.map((type) => (
-                          <option key={type} value={type}>{type}</option>
-                        ))}
-                      </select>
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="transmissionType" className="block text-sm font-medium text-gray-300 mb-1">
-                        Transmission
-                      </label>
-                      <select
-                        id="transmissionType"
-                        name="transmissionType"
-                        value={vehicleProfile.transmissionType}
-                        onChange={handleVehicleProfileChange}
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                      >
-                        {transmissionTypes.map((type) => (
-                          <option key={type} value={type}>{type}</option>
-                        ))}
-                      </select>
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="mileage" className="block text-sm font-medium text-gray-300 mb-1">
-                        Current Mileage
-                      </label>
-                      <input
-                        id="mileage"
-                        name="mileage"
-                        type="text"
-                        value={vehicleProfile.mileage}
-                        onChange={handleVehicleProfileChange}
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                        placeholder="e.g. 15000"
-                      />
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Personalization */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
-                    Personalization
-                  </h3>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <label htmlFor="nickname" className="block text-sm font-medium text-gray-300 mb-1">
-                        Vehicle Nickname
-                      </label>
-                      <input
-                        id="nickname"
-                        name="nickname"
-                        type="text"
-                        value={vehicleProfile.nickname}
-                        onChange={handleVehicleProfileChange}
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                        placeholder="e.g. Black Beauty, The Beast"
-                      />
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="color" className="block text-sm font-medium text-gray-300 mb-1">
-                        Exterior Color
-                      </label>
-                      <div className="flex items-center space-x-2">
-                        <input 
-                          type="color" 
-                          id="colorPicker" 
-                          className="h-8 w-8 rounded-full overflow-hidden border-0 cursor-pointer"
-                        />
-                        <input
-                          type="text"
-                          value={vehicleProfile.color}
-                          onChange={handleVehicleProfileChange}
-                          name="color"
-                          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                          placeholder="e.g. Frozen Blue Metallic"
-                        />
+                    <div className="flex items-start">
+                      <div className="mr-4 p-3 rounded-full bg-[#1982FC]/20">
+                        <Trophy size={24} className="text-[#1982FC]" />
+                      </div>
+                      
+                      <div className="flex-1">
+                        <div className="flex items-center mb-2">
+                          <h4 className="text-xl font-semibold text-white">
+                            Beta Tester
+                          </h4>
+                          <span className="ml-2 px-2 py-0.5 text-xs bg-[#1982FC]/20 text-[#1982FC] rounded-full">
+                            Recommended
+                          </span>
+                        </div>
+                        
+                        <p className="text-gray-300 mb-4">
+                          Actively contribute to shaping Paddock20's future by participating in focused testing 
+                          sessions, providing detailed feedback, and getting direct access to the development team.
+                        </p>
+                        
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                          <div className="flex items-start">
+                            <Check size={16} className="mt-1 mr-2 text-[#08c519]" />
+                            <span className="text-gray-300 text-sm">All Beta User benefits</span>
+                          </div>
+                          
+                          <div className="flex items-start">
+                            <Check size={16} className="mt-1 mr-2 text-[#08c519]" />
+                            <span className="text-gray-300 text-sm">Priority feature access</span>
+                          </div>
+                          
+                          <div className="flex items-start">
+                            <Check size={16} className="mt-1 mr-2 text-[#08c519]" />
+                            <span className="text-gray-300 text-sm">Exclusive testing sessions</span>
+                          </div>
+                          
+                          <div className="flex items-start">
+                            <Check size={16} className="mt-1 mr-2 text-[#08c519]" />
+                            <span className="text-gray-300 text-sm">Direct developer communication</span>
+                          </div>
+                          
+                          <div className="flex items-start">
+                            <Check size={16} className="mt-1 mr-2 text-[#08c519]" />
+                            <span className="text-gray-300 text-sm">Beta Tester recognition</span>
+                          </div>
+                          
+                          <div className="flex items-start">
+                            <Check size={16} className="mt-1 mr-2 text-[#08c519]" />
+                            <span className="text-gray-300 text-sm">Early access to premium features</span>
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
                 </div>
                 
-                {/* Purchase Info */}
-                <div className="md:col-span-2 space-y-4">
-                  <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
-                    Purchase Information
-                  </h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <label htmlFor="purchaseDate" className="block text-sm font-medium text-gray-300 mb-1">
-                        Purchase Date
-                      </label>
-                      <input
-                        id="purchaseDate"
-                        name="purchaseDate"
-                        type="date"
-                        value={vehicleProfile.purchaseDate}
-                        onChange={handleVehicleProfileChange}
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                      />
+                <div className="border-t border-gray-700 pt-4 mt-2">
+                  <div className="flex justify-center">
+                    <div className="flex items-center bg-gray-800/50 py-2 px-3 rounded-lg">
+                      <Info size={16} className="text-[#1982FC] mr-2" />
+                      <span className="text-gray-300 text-sm">
+                        You can change your beta role at any time from your Profile Settings
+                      </span>
                     </div>
                   </div>
-                  
-                  <p className="text-sm text-gray-400 mt-2">
-                    This information helps with maintenance scheduling and building your vehicle's history.
-                  </p>
                 </div>
               </div>
               
