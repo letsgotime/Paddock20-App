@@ -139,6 +139,11 @@ const BetaEnrollmentPage = () => {
           // Store that the user has seen the beta welcome modal
           localStorage.setItem('paddock20_beta_status', 'seen_welcome');
         }}
+        onProceedToOnboarding={() => {
+          // No need to navigate directly to onboarding from beta enrollment page
+          // This is just a stub to satisfy the prop requirement
+          console.log('User completed beta welcome in beta enrollment page'); 
+        }}
       />
       
       <Card className="w-full max-w-2xl bg-gray-900 border-[#1982FC]">

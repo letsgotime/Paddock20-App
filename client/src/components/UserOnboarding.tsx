@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { handleDeclineTerms } from '../utils/accountUtils';
 import { useAuth } from '../hooks/useAuth';
+import OnboardingFlow from './dashboard/OnboardingFlow';
 
 interface UserOnboardingProps {
   onComplete: (userId: number | string) => void;
