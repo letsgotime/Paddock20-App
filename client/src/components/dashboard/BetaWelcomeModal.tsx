@@ -4,18 +4,33 @@ import { X } from 'lucide-react';
 interface BetaWelcomeModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onProceedToOnboarding: () => void;
 }
 
-const BetaWelcomeModal: React.FC<BetaWelcomeModalProps> = ({ isOpen, onClose }) => {
+const BetaWelcomeModal: React.FC<BetaWelcomeModalProps> = ({ 
+  isOpen, 
+  onClose,
+  onProceedToOnboarding 
+}) => {
   // Simplified - we'll always show the beta user status 
   // since this is the introduction modal
   const isBetaTester = false;
   
   if (!isOpen) return null;
   
+  // Handle clicking Get Started - this will close the beta modal and open the onboarding modal
+  const handleGetStarted = () => {
+    // Close this modal first
+    onClose();
+    // Trigger the onboarding modal after a short delay for animation
+    setTimeout(() => {
+      onProceedToOnboarding();
+    }, 300);
+  };
+  
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-gradient-to-b from-gray-900 to-black border border-blue-900/40 rounded-lg max-w-2xl w-full md:w-3/4 lg:w-2/3 p-6 relative mx-auto my-8">
+      <div className="bg-gradient-to-b from-gray-900 to-black border border-blue-900/40 rounded-lg max-w-2xl w-full md:w-3/4 lg:w-2/3 p-6 relative mx-auto my-8 animate-fadeIn">
         <button 
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-white" 
@@ -60,7 +75,7 @@ const BetaWelcomeModal: React.FC<BetaWelcomeModalProps> = ({ isOpen, onClose }) 
           
           <div className="pt-4">
             <button
-              onClick={onClose}
+              onClick={handleGetStarted}
               className="w-full py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-md font-medium"
             >
               Get Started
