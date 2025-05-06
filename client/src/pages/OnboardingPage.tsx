@@ -4,10 +4,12 @@ import { CheckCircle, ArrowRight, AlertTriangle, Car, User, Shield, Wrench, BarC
 import { useAuth } from '../hooks/useAuth';
 import { legalDocuments } from '../data/legalDocuments';
 import LegalDocumentModal from '../components/LegalDocumentModal';
+import { useToast } from '@/hooks/use-toast';
 
 const OnboardingPage: React.FC = () => {
   const [_, navigate] = useLocation();
   const { user } = useAuth();
+  const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
   const [currentStep, setCurrentStep] = useState(1);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -126,6 +128,7 @@ const OnboardingPage: React.FC = () => {
             helmetSize,
             shoeSize,
             gloveSizeUS,
+            betaTesterRequest, // Include beta tester request status
             // Don't include profile image in JSON, will be uploaded separately
           }),
         });
