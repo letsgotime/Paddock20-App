@@ -1,467 +1,271 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import { useAuth0 } from '@auth0/auth0-react';
-import { SpotifyAuth, SpotifyApi } from '../services/spotify/spotifyAuth';
-import { useToast } from '@/hooks/use-toast';
+/**
+ * Spotify Context
+ * 
+ * Provides Spotify functionality throughout the application
+ */
 import {
-  SpotifyTrack,
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  ReactNode,
+  useCallback
+} from 'react';
+import { spotifyAuth } from '../services/spotify/spotifyAuth';
+import { spotifyApi } from '../services/spotify/spotifyApi';
+import {
+  SpotifyProfile,
   SpotifyPlaylist,
-  SpotifyProfile
+  PlaylistResponse,
+  DrivePlaylist
 } from '../services/spotify/spotifyTypes';
+import { useToast } from '@/hooks/use-toast';
 
-interface SpotifyContextType {
-  // Authentication
-  isConnected: boolean;
-  connectSpotify: (returnTo?: string) => void;
-  disconnectSpotify: () => void;
+interface SpotifyContextProps {
+  // Authentication state
+  isAuthenticated: boolean;
+  login: () => void;
+  logout: () => void;
   
-  // User profile
-  userProfile: SpotifyProfile | null;
+  // Profile data
+  profile: SpotifyProfile | null;
+  isLoadingProfile: boolean;
   
   // Playlists
   playlists: SpotifyPlaylist[];
   isLoadingPlaylists: boolean;
-  loadPlaylists: () => Promise<void>;
-  getPlaylistById: (id: string) => SpotifyPlaylist | undefined;
+  refreshPlaylists: () => Promise<void>;
   
-  // Playlist operations
-  createPlaylist: (name: string, description?: string) => Promise<SpotifyPlaylist>;
-  addTracksToPlaylist: (playlistId: string, trackUris: string[]) => Promise<void>;
-  removeTracksFromPlaylist: (playlistId: string, trackUris: string[]) => Promise<void>;
+  // Drive-specific playlist functions
+  createDrivePlaylist: (
+    driveName: string,
+    duration: number,
+    mood?: string,
+    weather?: string,
+    route?: string,
+    distance?: number
+  ) => Promise<DrivePlaylist | null>;
   
-  // Track management
-  getRecommendations: (params: {
-    seed_tracks?: string[];
-    seed_artists?: string[];
-    seed_genres?: string[];
-    limit?: number;
-    target_energy?: number;
-    target_tempo?: number;
-    target_valence?: number;
-  }) => Promise<SpotifyTrack[]>;
-  searchTracks: (query: string, limit?: number) => Promise<SpotifyTrack[]>;
+  // User playlists management
+  getUserPlaylists: () => Promise<PlaylistResponse>;
+  getPlaylistById: (id: string) => Promise<SpotifyPlaylist | null>;
   
-  // Drive related operations
-  createDrivePlaylist: (name: string, description: string, tracks: SpotifyTrack[]) => Promise<SpotifyPlaylist>;
+  // General search
+  searchTracks: (query: string, limit?: number) => Promise<any>;
   
-  // Loading states
-  isLoading: boolean;
+  // Error state
+  error: string | null;
 }
 
-// Initialize context with default values
-const SpotifyContext = createContext<SpotifyContextType>({
-  isConnected: false,
-  connectSpotify: () => {},
-  disconnectSpotify: () => {},
-  userProfile: null,
-  playlists: [],
-  isLoadingPlaylists: false,
-  loadPlaylists: async () => {},
-  getPlaylistById: () => undefined,
-  createPlaylist: async () => ({} as SpotifyPlaylist),
-  addTracksToPlaylist: async () => {},
-  removeTracksFromPlaylist: async () => {},
-  getRecommendations: async () => [],
-  searchTracks: async () => [],
-  createDrivePlaylist: async () => ({} as SpotifyPlaylist),
-  isLoading: false,
-});
+const SpotifyContext = createContext<SpotifyContextProps | undefined>(undefined);
 
-// Provider component
-export const SpotifyProvider: React.FC<{children: ReactNode}> = ({ children }) => {
-  // Auth0 authentication
-  const { getAccessTokenSilently, isAuthenticated } = useAuth0();
+export function SpotifyProvider({ children }: { children: ReactNode }) {
   const { toast } = useToast();
   
-  // State
-  const [isConnected, setIsConnected] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [userProfile, setUserProfile] = useState<SpotifyProfile | null>(null);
+  // Authentication state
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
+  
+  // Profile state
+  const [profile, setProfile] = useState<SpotifyProfile | null>(null);
+  const [isLoadingProfile, setIsLoadingProfile] = useState<boolean>(false);
+  
+  // Playlists state
   const [playlists, setPlaylists] = useState<SpotifyPlaylist[]>([]);
   const [isLoadingPlaylists, setIsLoadingPlaylists] = useState<boolean>(false);
   
-  // Initialize Spotify services
-  const spotifyAuth = new SpotifyAuth();
-  const spotifyApi = new SpotifyApi();
+  // Error state
+  const [error, setError] = useState<string | null>(null);
   
-  // Check if the user has connected their Spotify account
-  const checkSpotifyConnection = async () => {
-    try {
-      if (!isAuthenticated) {
-        setIsConnected(false);
-        return;
+  // Check authentication status and load profile on mount
+  useEffect(() => {
+    const checkAuthStatus = async () => {
+      const isAuthed = spotifyAuth.isAuthenticated();
+      setIsAuthenticated(isAuthed);
+      
+      if (isAuthed) {
+        loadProfile();
+        loadPlaylists();
       }
-      
-      // Check if we have Spotify tokens in storage
-      const hasTokens = spotifyAuth.isTokenValid();
-      
-      if (!hasTokens) {
-        setIsConnected(false);
-        setIsLoading(false);
-        return;
-      }
-      
-      // Get Auth0 token for backend requests
-      const token = await getAccessTokenSilently();
-      
-      // Verify the token with Spotify
-      const isValid = await spotifyAuth.checkSession(token);
-      setIsConnected(isValid);
-      
-      // If connected, load user profile
-      if (isValid) {
-        await loadUserProfile(token);
-      }
-      
-      setIsLoading(false);
-    } catch (error) {
-      console.error('Error checking Spotify connection:', error);
-      setIsConnected(false);
-      setIsLoading(false);
-    }
-  };
+    };
+    
+    checkAuthStatus();
+  }, []);
   
   // Load user profile
-  const loadUserProfile = async (token: string) => {
-    try {
-      const profile = await spotifyApi.getProfile();
-      setUserProfile(profile as SpotifyProfile);
-    } catch (error) {
-      console.error('Error loading Spotify profile:', error);
-      setUserProfile(null);
+  const loadProfile = useCallback(async () => {
+    if (!spotifyAuth.isAuthenticated()) {
+      return;
     }
-  };
+    
+    setIsLoadingProfile(true);
+    setError(null);
+    
+    try {
+      const userProfile = await spotifyApi.getProfile();
+      setProfile(userProfile);
+    } catch (err) {
+      const errorMsg = 'Failed to load Spotify profile';
+      setError(errorMsg);
+      toast({
+        title: 'Spotify Error',
+        description: errorMsg,
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoadingProfile(false);
+    }
+  }, [toast]);
   
   // Load user playlists
-  const loadPlaylists = async () => {
+  const loadPlaylists = useCallback(async () => {
+    if (!spotifyAuth.isAuthenticated()) {
+      return;
+    }
+    
+    setIsLoadingPlaylists(true);
+    setError(null);
+    
     try {
-      setIsLoadingPlaylists(true);
-      
-      // Get Auth0 token for backend requests
-      const token = await getAccessTokenSilently();
-      
-      // Get playlists from Spotify
-      const response = await fetch('/api/spotify/me/playlists', {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to load playlists');
-      }
-      
-      const data = await response.json();
-      setPlaylists(data.items as SpotifyPlaylist[]);
-    } catch (error) {
-      console.error('Error loading playlists:', error);
+      const playlistResponse = await spotifyApi.getUserPlaylists();
+      setPlaylists(playlistResponse.items);
+    } catch (err) {
+      const errorMsg = 'Failed to load Spotify playlists';
+      setError(errorMsg);
       toast({
-        title: 'Failed to load playlists',
-        description: error instanceof Error ? error.message : 'Unknown error',
-        variant: 'destructive',
+        title: 'Spotify Error',
+        description: errorMsg,
+        variant: 'destructive'
       });
     } finally {
       setIsLoadingPlaylists(false);
     }
-  };
+  }, [toast]);
   
-  // Find playlist by ID
-  const getPlaylistById = (id: string): SpotifyPlaylist | undefined => {
-    return playlists.find(playlist => playlist.id === id);
-  };
+  // Refresh playlists
+  const refreshPlaylists = useCallback(async () => {
+    await loadPlaylists();
+  }, [loadPlaylists]);
   
-  // Create a new playlist
-  const createPlaylist = async (name: string, description?: string): Promise<SpotifyPlaylist> => {
-    try {
-      const token = await getAccessTokenSilently();
-      
-      const response = await fetch('/api/spotify/me/playlists', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          name,
-          description,
-          public: false
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to create playlist');
-      }
-      
-      const playlist = await response.json();
-      
-      // Update local playlists state
-      setPlaylists(prev => [...prev, playlist]);
-      
-      return playlist as SpotifyPlaylist;
-    } catch (error) {
-      console.error('Error creating playlist:', error);
+  // Login
+  const login = useCallback(() => {
+    spotifyAuth.authorize();
+  }, []);
+  
+  // Logout
+  const logout = useCallback(() => {
+    spotifyAuth.clearTokens();
+    setIsAuthenticated(false);
+    setProfile(null);
+    setPlaylists([]);
+  }, []);
+  
+  // Create a playlist for a drive
+  const createDrivePlaylist = useCallback(async (
+    driveName: string,
+    duration: number,
+    mood?: string,
+    weather?: string,
+    route?: string,
+    distance?: number
+  ): Promise<DrivePlaylist | null> => {
+    if (!spotifyAuth.isAuthenticated()) {
       toast({
-        title: 'Failed to create playlist',
-        description: error instanceof Error ? error.message : 'Unknown error',
-        variant: 'destructive',
+        title: 'Authentication Required',
+        description: 'Please log in to Spotify to create playlists',
+        variant: 'destructive'
       });
-      throw error;
+      return null;
     }
-  };
-  
-  // Add tracks to a playlist
-  const addTracksToPlaylist = async (playlistId: string, trackUris: string[]): Promise<void> => {
+    
+    setError(null);
+    
     try {
-      const token = await getAccessTokenSilently();
+      const playlist = await spotifyApi.createDrivePlaylist(
+        driveName,
+        duration,
+        mood,
+        weather,
+        route,
+        distance
+      );
       
-      const response = await fetch(`/api/spotify/playlists/${playlistId}/tracks`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          uris: trackUris
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to add tracks to playlist');
-      }
-      
-      // Refresh playlist to get updated tracks
-      await loadPlaylists();
+      // Refresh the playlists list
+      await refreshPlaylists();
       
       toast({
-        title: 'Tracks Added',
-        description: `${trackUris.length} tracks added to playlist`,
+        title: 'Playlist Created',
+        description: `Created "${playlist.name}" with ${playlist.tracks.total} tracks`,
       });
-    } catch (error) {
-      console.error('Error adding tracks to playlist:', error);
-      toast({
-        title: 'Failed to add tracks',
-        description: error instanceof Error ? error.message : 'Unknown error',
-        variant: 'destructive',
-      });
-      throw error;
-    }
-  };
-  
-  // Remove tracks from a playlist
-  const removeTracksFromPlaylist = async (playlistId: string, trackUris: string[]): Promise<void> => {
-    try {
-      const token = await getAccessTokenSilently();
-      
-      const response = await fetch(`/api/spotify/playlists/${playlistId}/tracks`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          tracks: trackUris.map(uri => ({ uri }))
-        })
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to remove tracks from playlist');
-      }
-      
-      // Refresh playlist to get updated tracks
-      await loadPlaylists();
-      
-      toast({
-        title: 'Tracks Removed',
-        description: `${trackUris.length} tracks removed from playlist`,
-      });
-    } catch (error) {
-      console.error('Error removing tracks from playlist:', error);
-      toast({
-        title: 'Failed to remove tracks',
-        description: error instanceof Error ? error.message : 'Unknown error',
-        variant: 'destructive',
-      });
-      throw error;
-    }
-  };
-  
-  // Get track recommendations
-  const getRecommendations = async (params: {
-    seed_tracks?: string[];
-    seed_artists?: string[];
-    seed_genres?: string[];
-    limit?: number;
-    target_energy?: number;
-    target_tempo?: number;
-    target_valence?: number;
-  }): Promise<SpotifyTrack[]> => {
-    try {
-      const token = await getAccessTokenSilently();
-      
-      // Convert params to query string
-      const queryParams = new URLSearchParams();
-      
-      if (params.seed_tracks?.length) {
-        queryParams.append('seed_tracks', params.seed_tracks.join(','));
-      }
-      
-      if (params.seed_artists?.length) {
-        queryParams.append('seed_artists', params.seed_artists.join(','));
-      }
-      
-      if (params.seed_genres?.length) {
-        queryParams.append('seed_genres', params.seed_genres.join(','));
-      }
-      
-      if (params.limit) {
-        queryParams.append('limit', params.limit.toString());
-      }
-      
-      if (typeof params.target_energy === 'number') {
-        queryParams.append('target_energy', params.target_energy.toString());
-      }
-      
-      if (typeof params.target_tempo === 'number') {
-        queryParams.append('target_tempo', params.target_tempo.toString());
-      }
-      
-      if (typeof params.target_valence === 'number') {
-        queryParams.append('target_valence', params.target_valence.toString());
-      }
-      
-      const response = await fetch(`/api/spotify/recommendations?${queryParams.toString()}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to get recommendations');
-      }
-      
-      const data = await response.json();
-      return data.tracks as SpotifyTrack[];
-    } catch (error) {
-      console.error('Error getting recommendations:', error);
-      toast({
-        title: 'Failed to get recommendations',
-        description: error instanceof Error ? error.message : 'Unknown error',
-        variant: 'destructive',
-      });
-      return [];
-    }
-  };
-  
-  // Search for tracks
-  const searchTracks = async (query: string, limit: number = 20): Promise<SpotifyTrack[]> => {
-    try {
-      const token = await getAccessTokenSilently();
-      
-      const response = await fetch(`/api/spotify/search?q=${encodeURIComponent(query)}&type=track&limit=${limit}`, {
-        headers: {
-          'Authorization': `Bearer ${token}`
-        }
-      });
-      
-      if (!response.ok) {
-        throw new Error('Failed to search tracks');
-      }
-      
-      const data = await response.json();
-      return data.tracks.items as SpotifyTrack[];
-    } catch (error) {
-      console.error('Error searching tracks:', error);
-      toast({
-        title: 'Failed to search tracks',
-        description: error instanceof Error ? error.message : 'Unknown error',
-        variant: 'destructive',
-      });
-      return [];
-    }
-  };
-  
-  // Create a playlist specifically for a drive
-  const createDrivePlaylist = async (
-    name: string,
-    description: string,
-    tracks: SpotifyTrack[]
-  ): Promise<SpotifyPlaylist> => {
-    try {
-      // Create a new playlist
-      const playlist = await createPlaylist(name, description);
-      
-      // Add tracks to the playlist
-      if (tracks.length > 0) {
-        const trackUris = tracks.map(track => track.uri);
-        await addTracksToPlaylist(playlist.id, trackUris);
-      }
       
       return playlist;
-    } catch (error) {
-      console.error('Error creating drive playlist:', error);
+    } catch (err) {
+      const errorMsg = 'Failed to create drive playlist';
+      setError(errorMsg);
       toast({
-        title: 'Failed to create drive playlist',
-        description: error instanceof Error ? error.message : 'Unknown error',
-        variant: 'destructive',
+        title: 'Spotify Error',
+        description: errorMsg,
+        variant: 'destructive'
       });
-      throw error;
+      return null;
     }
-  };
+  }, [toast, refreshPlaylists]);
   
-  // Connect to Spotify
-  const connectSpotify = (returnTo: string = window.location.pathname) => {
-    // Initiate Spotify authorization flow with return path
-    spotifyAuth.authorize(returnTo);
-  };
-  
-  // Disconnect from Spotify
-  const disconnectSpotify = () => {
-    // Clear stored tokens
-    spotifyAuth.clearTokens();
-    setIsConnected(false);
-    setUserProfile(null);
-    setPlaylists([]);
+  // Get user playlists
+  const getUserPlaylists = useCallback(async (): Promise<PlaylistResponse> => {
+    if (!spotifyAuth.isAuthenticated()) {
+      throw new Error('Not authenticated with Spotify');
+    }
     
-    toast({
-      title: 'Spotify Disconnected',
-      description: 'Your Spotify account has been disconnected',
-    });
-  };
-  
-  // Check connection on mount and when authentication changes
-  useEffect(() => {
-    if (isAuthenticated) {
-      checkSpotifyConnection();
-    } else {
-      setIsConnected(false);
-      setUserProfile(null);
-      setPlaylists([]);
-      setIsLoading(false);
+    try {
+      return await spotifyApi.getUserPlaylists();
+    } catch (err) {
+      setError('Failed to get user playlists');
+      throw err;
     }
-  }, [isAuthenticated]);
+  }, []);
   
-  // Load playlists when connected
-  useEffect(() => {
-    if (isConnected) {
-      loadPlaylists();
+  // Get a playlist by ID
+  const getPlaylistById = useCallback(async (id: string): Promise<SpotifyPlaylist | null> => {
+    if (!spotifyAuth.isAuthenticated()) {
+      return null;
     }
-  }, [isConnected]);
+    
+    try {
+      return await spotifyApi.getPlaylist(id);
+    } catch (err) {
+      setError(`Failed to get playlist: ${id}`);
+      return null;
+    }
+  }, []);
   
-  const contextValue: SpotifyContextType = {
-    isConnected,
-    connectSpotify,
-    disconnectSpotify,
-    userProfile,
+  // Search for tracks
+  const searchTracks = useCallback(async (query: string, limit = 20) => {
+    if (!spotifyAuth.isAuthenticated()) {
+      throw new Error('Not authenticated with Spotify');
+    }
+    
+    try {
+      return await spotifyApi.search(query, 'track', limit);
+    } catch (err) {
+      setError('Failed to search for tracks');
+      throw err;
+    }
+  }, []);
+  
+  const contextValue: SpotifyContextProps = {
+    isAuthenticated,
+    login,
+    logout,
+    profile,
+    isLoadingProfile,
     playlists,
     isLoadingPlaylists,
-    loadPlaylists,
-    getPlaylistById,
-    createPlaylist,
-    addTracksToPlaylist,
-    removeTracksFromPlaylist,
-    getRecommendations,
-    searchTracks,
+    refreshPlaylists,
     createDrivePlaylist,
-    isLoading,
+    getUserPlaylists,
+    getPlaylistById,
+    searchTracks,
+    error
   };
   
   return (
@@ -469,15 +273,15 @@ export const SpotifyProvider: React.FC<{children: ReactNode}> = ({ children }) =
       {children}
     </SpotifyContext.Provider>
   );
-};
+}
 
 // Custom hook to use the Spotify context
-export const useSpotify = () => {
+export function useSpotify() {
   const context = useContext(SpotifyContext);
   
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useSpotify must be used within a SpotifyProvider');
   }
   
   return context;
-};
+}
