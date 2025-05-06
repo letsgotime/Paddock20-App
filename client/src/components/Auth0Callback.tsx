@@ -34,9 +34,20 @@ const Auth0Callback = () => {
         console.log('✅ Authentication successful!');
         console.log('User:', user);
         
-        // Handle new registrations (if beta status was stored)
-        const betaStatus = localStorage.getItem('paddock20_beta_status');
-        if (betaStatus) {
+        // Check if this is a new user by looking at loginsCount or createdAt
+        // New users will have a recent createdAt timestamp or loginsCount of 1
+        const isNewUser = user && (
+          user?.metadata?.loginsCount === 1 || 
+          (user?.created_at && new Date(user.created_at).getTime() > Date.now() - 60000) // created within the last minute
+        );
+        
+        if (isNewUser) {
+          console.log('🆕 New user detected - directing to beta enrollment');
+          // Redirect to beta enrollment page
+          window.location.href = '/beta-enrollment';
+        }
+        // Handle legacy beta registration flow (if beta status was stored)
+        else if (localStorage.getItem('paddock20_beta_status')) {
           console.log('Beta status detected - directing to onboarding');
           
           // Clean up beta registration data
