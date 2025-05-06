@@ -190,6 +190,138 @@ const DashboardOnboarding: React.FC<{
     }));
   };
   
+  // Handle input changes for tire profile
+  const handleTireProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    
+    // Handle nested properties
+    if (name.includes('.')) {
+      const [parent, child] = name.split('.');
+      setTireProfile(prev => ({
+        ...prev,
+        [parent]: {
+          ...prev[parent as keyof TireManagementProfile] as object,
+          [child]: value
+        }
+      }));
+    } else {
+      setTireProfile(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+  };
+  
+  // Handle adding preferred tire brand
+  const handleAddPreferredBrand = (brand: string) => {
+    if (!brand.trim()) return;
+    
+    if (!tireProfile.preferredBrands.includes(brand.trim())) {
+      setTireProfile(prev => ({
+        ...prev,
+        preferredBrands: [...prev.preferredBrands, brand.trim()]
+      }));
+    }
+  };
+  
+  // Handle removing preferred tire brand
+  const handleRemovePreferredBrand = (index: number) => {
+    setTireProfile(prev => ({
+      ...prev,
+      preferredBrands: prev.preferredBrands.filter((_, i) => i !== index)
+    }));
+  };
+  
+  // Handle dream car change
+  const handleDreamCarChange = (index: number, field: string, value: string) => {
+    setDreamGarageProfile(prev => {
+      const updatedDreamCars = [...prev.dreamCars];
+      updatedDreamCars[index] = {
+        ...updatedDreamCars[index],
+        [field]: value
+      };
+      return {
+        ...prev,
+        dreamCars: updatedDreamCars
+      };
+    });
+  };
+  
+  // Handle adding a dream car
+  const handleAddDreamCar = () => {
+    setDreamGarageProfile(prev => ({
+      ...prev,
+      dreamCars: [...prev.dreamCars, { make: '', model: '', year: '', notes: '' }]
+    }));
+  };
+  
+  // Handle removing a dream car
+  const handleRemoveDreamCar = (index: number) => {
+    if (dreamGarageProfile.dreamCars.length <= 1) return;
+    
+    setDreamGarageProfile(prev => ({
+      ...prev,
+      dreamCars: prev.dreamCars.filter((_, i) => i !== index)
+    }));
+  };
+  
+  // Handle locker room size change
+  const handleLockerRoomSizeChange = (size: string) => {
+    setLockerRoomProfile(prev => ({
+      ...prev,
+      size
+    }));
+  };
+  
+  // Handle adding storage item (for storageNeeds, tools, or detailingSupplies)
+  const handleAddStorageItem = (category: 'storageNeeds' | 'tools' | 'detailingSupplies', item: string) => {
+    if (!item.trim()) return;
+    
+    if (!lockerRoomProfile[category].includes(item.trim())) {
+      setLockerRoomProfile(prev => ({
+        ...prev,
+        [category]: [...prev[category], item.trim()]
+      }));
+    }
+  };
+  
+  // Handle removing storage item
+  const handleRemoveStorageItem = (category: 'storageNeeds' | 'tools' | 'detailingSupplies', index: number) => {
+    setLockerRoomProfile(prev => ({
+      ...prev,
+      [category]: prev[category].filter((_, i) => i !== index)
+    }));
+  };
+  
+  // Handle Spotify profile changes
+  const handleSpotifyProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setSpotifyProfile(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+  
+  // Handle connecting to Spotify
+  const handleConnectSpotify = async () => {
+    setIsConnectingSpotify(true);
+    
+    // Simulate connection to Spotify
+    setTimeout(() => {
+      setSpotifyProfile(prev => ({
+        ...prev,
+        connected: true
+      }));
+      setIsConnectingSpotify(false);
+      
+      toast({
+        title: "Spotify Connected",
+        description: "Your Spotify account has been successfully linked.",
+        variant: "default",
+      });
+    }, 1500);
+  };
+  
   // Handle tire profile changes
   const handleTireProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
