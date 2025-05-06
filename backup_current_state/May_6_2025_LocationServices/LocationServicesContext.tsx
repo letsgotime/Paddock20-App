@@ -20,12 +20,10 @@ import { fetchConsolidatedWeatherData } from '@/services/consolidatedWeatherServ
 import { OneCallData, WeatherData, ForecastData, Location } from '@/lib/weather';
 import { AutomotiveWeatherData } from '@/contexts/ConsolidatedWeatherContext';
 import { useToast } from '@/hooks/use-toast';
-import { fetchTimeData, TimeData } from '@/services/time/timeService';
 
 // Cache configuration constants
 const LOCATION_CACHE_TTL_MINUTES = 30; // How long to cache location data
 const WEATHER_CACHE_TTL_MINUTES = 15;  // How long to cache weather data before forcing refresh
-const TIME_CACHE_TTL_MINUTES = 30;     // How long to cache time data before forcing refresh
 const EXTENDED_CACHE_TTL_HOURS = 8;    // Secondary cache for offline/error fallback
 const THROTTLE_TIME_MS = 10000;        // Minimum time between API calls (10 seconds)
 
@@ -54,24 +52,18 @@ export interface LocationServices {
   oneCallData: OneCallData | null;
   automotiveWeather: AutomotiveWeatherData | null;
   
-  // Time data
-  timeData: TimeData | null;
-  worldClocks: { location: LocationData; timeData: TimeData }[];
-  
   // Status information
   loading: {
     location: boolean;
     weather: boolean;
     automotive: boolean;
     services: boolean;
-    time: boolean;
   };
   errors: {
     location?: Error | null;
     weather?: Error | null;
     automotive?: Error | null;
     services?: Error | null;
-    time?: Error | null;
   };
   
   // Data freshness
@@ -80,14 +72,12 @@ export interface LocationServices {
     weather: Date | null;
     automotive: Date | null;
     services: Date | null;
-    time: Date | null;
   };
   
   // Cache information
   cacheStatus: {
     weather: string;
     automotive: string;
-    time: string;
   };
   
   // Unit preferences
@@ -114,20 +104,11 @@ interface LocationServicesContextType extends LocationServices {
   // Data refreshing
   refreshWeather: () => Promise<void>;
   refreshLocation: () => Promise<void>;
-  refreshTime: () => Promise<void>;
   refreshAll: () => Promise<void>;
   
-  // World clock management
-  addWorldClock: (location: LocationData) => Promise<void>;
-  removeWorldClock: (locationId: string) => void;
-  
-  // Time-related utilities
-  getOptimalDriveTime: (tripDurationMinutes: number) => string | null;
-  isGoldenHour: () => boolean;
-  
   // Helper functions
-  formatLastUpdated: (type: 'location' | 'weather' | 'automotive' | 'services' | 'time') => string;
-  isStale: (type: 'location' | 'weather' | 'automotive' | 'services' | 'time') => boolean;
+  formatLastUpdated: (type: 'location' | 'weather' | 'automotive' | 'services') => string;
+  isStale: (type: 'location' | 'weather' | 'automotive' | 'services') => boolean;
 }
 
 // Default location (Atlanta) - used when geolocation fails
@@ -163,35 +144,27 @@ export const LocationServicesProvider: React.FC<{ children: React.ReactNode }> =
   const [oneCallData, setOneCallData] = useState<OneCallData | null>(null);
   const [automotiveWeather, setAutomotiveWeather] = useState<AutomotiveWeatherData | null>(null);
   
-  // Time data state
-  const [timeData, setTimeData] = useState<TimeData | null>(null);
-  const [worldClocks, setWorldClocks] = useState<{ location: LocationData; timeData: TimeData }[]>([]);
-  
   // Loading state
   const [loadingLocation, setLoadingLocation] = useState<boolean>(true);
   const [loadingWeather, setLoadingWeather] = useState<boolean>(false);
   const [loadingAutomotive, setLoadingAutomotive] = useState<boolean>(false);
   const [loadingServices, setLoadingServices] = useState<boolean>(false);
-  const [loadingTime, setLoadingTime] = useState<boolean>(false);
   
   // Error state
   const [locationError, setLocationError] = useState<Error | null>(null);
   const [weatherError, setWeatherError] = useState<Error | null>(null);
   const [automotiveError, setAutomotiveError] = useState<Error | null>(null);
   const [servicesError, setServicesError] = useState<Error | null>(null);
-  const [timeError, setTimeError] = useState<Error | null>(null);
   
   // Data freshness state
   const [locationLastUpdated, setLocationLastUpdated] = useState<Date | null>(null);
   const [weatherLastUpdated, setWeatherLastUpdated] = useState<Date | null>(null);
   const [automotiveLastUpdated, setAutomotiveLastUpdated] = useState<Date | null>(null);
   const [servicesLastUpdated, setServicesLastUpdated] = useState<Date | null>(null);
-  const [timeLastUpdated, setTimeLastUpdated] = useState<Date | null>(null);
   
   // Cache status state
   const [weatherCacheStatus, setWeatherCacheStatus] = useState<string>('No cache');
   const [automotiveCacheStatus, setAutomotiveCacheStatus] = useState<string>('No cache');
-  const [timeCacheStatus, setTimeCacheStatus] = useState<string>('No cache');
   
   // User preferences state
   const [units, setUnitsState] = useState<'metric' | 'imperial'>('imperial');
