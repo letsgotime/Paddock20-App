@@ -94,6 +94,7 @@ import './paddock20.css';
 import { getUserDisplayName } from './utils/DataIntegrityVerifier';
 import DebugPage from "./pages/DebugPage";
 import GeocodingTestPage from "./pages/GeocodingTestPage";
+import ApiExplorerPage from "./pages/api-explorer-page";
 
 // Import legal pages
 import PrivacyPolicy from './pages/PrivacyPolicyPage';
@@ -277,6 +278,9 @@ function AuthenticatedContent({
               </React.Suspense>
             );
           }} />
+          
+          {/* API Explorer Page - Access to all integrated APIs */}
+          <Route path="/api-explorer" component={() => <ProtectedRoute><ApiExplorerPage /></ProtectedRoute>} />
           
           {/* Geocoding Test (Ultra-conservative API usage) - Directly rendered outside provider context */}
           <Route path="/geocoding-test" component={() => (

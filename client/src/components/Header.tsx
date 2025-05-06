@@ -315,6 +315,12 @@ const Header: React.FC = () => {
                     <span className="ml-2 text-xs text-green-500 font-orbitron">NEW</span>
                   </Link>
                   
+                  <Link to="/api-explorer" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                    <GitBranch className="h-4 w-4 mr-2 text-green-400" />
+                    <span>API Explorer</span>
+                    <span className="ml-2 text-xs text-green-500 font-orbitron">NEW</span>
+                  </Link>
+                  
                   <Link to="/onboarding-test" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <User className="h-4 w-4 mr-2 text-green-400" />
                     <span>Onboarding Test</span>
