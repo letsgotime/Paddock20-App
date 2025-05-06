@@ -11,8 +11,8 @@ const BetaWelcomeModal: React.FC<BetaWelcomeModalProps> = ({ onClose }) => {
   const isBetaTester = userProfile?.betaStatus === 'beta_tester';
   
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 px-4">
-      <div className="bg-gradient-to-b from-gray-900 to-black border border-blue-900/40 rounded-lg max-w-2xl w-full p-6 relative">
+    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 overflow-y-auto">
+      <div className="bg-gradient-to-b from-gray-900 to-black border border-blue-900/40 rounded-lg max-w-2xl w-full md:w-3/4 lg:w-2/3 p-6 relative mx-auto my-8">
         <button 
           onClick={onClose}
           className="absolute top-4 right-4 text-gray-400 hover:text-white" 
