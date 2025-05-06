@@ -245,6 +245,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register Auth0 related routes
   app.use(auth0Routes);
   
+  // Register Spotify API routes
+  app.use('/api/spotify', spotifyRoutes);
+  
   // Using only OpenWeather API for all weather services
   
   // Consolidated weather API endpoint
