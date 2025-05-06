@@ -13,15 +13,19 @@ const Auth0Callback = () => {
   const { isAuthenticated, isLoading, error } = useAuth0();
   
   useEffect(() => {
+    console.log('Auth0Callback state:', { isLoading, isAuthenticated, hasError: !!error });
+
     // If Auth0 authentication completed successfully
     if (!isLoading && isAuthenticated && !error) {
       console.log('Auth0 authentication successful, redirecting to dashboard');
       
       // Get stored beta program status if available (for new registrations)
       const betaStatus = localStorage.getItem('paddock20_beta_status');
+      console.log('Beta status from localStorage:', betaStatus);
       
       // If this was a new registration (beta status exists), redirect to onboarding
       if (betaStatus) {
+        console.log('Redirecting to onboarding page');
         setLocation('/onboarding');
         
         // Clean up the stored beta status
@@ -31,6 +35,7 @@ const Auth0Callback = () => {
         localStorage.removeItem('paddock20_feedback_commitment');
       } else {
         // Otherwise, redirect to the dashboard
+        console.log('Redirecting to dashboard page');
         setLocation('/dashboard');
       }
     } 
@@ -38,6 +43,14 @@ const Auth0Callback = () => {
     else if (!isLoading && !isAuthenticated && error) {
       console.error('Auth0 authentication error:', error);
       setLocation('/auth');
+    }
+    // If still loading, show the loading state
+    else if (isLoading) {
+      console.log('Auth0 authentication still loading...');
+    }
+    // If not authenticated but no error (initial state or logout)
+    else if (!isAuthenticated && !error) {
+      console.log('Not authenticated yet, waiting for Auth0 response...');
     }
   }, [isAuthenticated, isLoading, error, setLocation]);
 
