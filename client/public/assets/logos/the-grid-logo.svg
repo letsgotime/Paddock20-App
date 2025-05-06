@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="500" height="120" viewBox="0 0 500 120">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&display=swap');
+    .text-container { font-family: 'Orbitron', sans-serif; font-weight: 700; letter-spacing: 2px; }
+    .blue-text { fill: #1982FC; }
+    .green-text { fill: #08c519; }
+    .blue-stripe { fill: #1982FC; }
+    .green-stripe { fill: #08c519; }
+  </style>
+  
+  <g class="text-container">
+    <!-- THE -->
+    <text x="10" y="60" class="blue-text" font-size="40">THE</text>
+    
+    <!-- GRID -->
+    <text x="120" y="60" class="green-text" font-size="62">GRID</text>
+  </g>
+  
+  <!-- F1-style dual racing stripes -->
+  <rect x="10" y="85" width="120" height="4" class="blue-stripe" />
+  <rect x="140" y="85" width="240" height="4" class="green-stripe" />
+  <rect x="10" y="95" width="120" height="2" class="blue-stripe" />
+  <rect x="140" y="95" width="240" height="2" class="green-stripe" />
+</svg>
