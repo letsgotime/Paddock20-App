@@ -1,14 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { X } from 'lucide-react';
-import { useUserProfile } from '@/contexts/UserProfileContext';
 
 interface BetaWelcomeModalProps {
+  isOpen: boolean;
   onClose: () => void;
 }
 
-const BetaWelcomeModal: React.FC<BetaWelcomeModalProps> = ({ onClose }) => {
-  const { userProfile } = useUserProfile();
-  const isBetaTester = userProfile?.betaStatus === 'beta_tester';
+const BetaWelcomeModal: React.FC<BetaWelcomeModalProps> = ({ isOpen, onClose }) => {
+  // Simplified - we'll always show the beta user status 
+  // since this is the introduction modal
+  const isBetaTester = false;
+  
+  if (!isOpen) return null;
   
   return (
     <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 overflow-y-auto">

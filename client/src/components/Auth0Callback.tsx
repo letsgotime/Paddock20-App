@@ -55,25 +55,31 @@ const Auth0Callback = () => {
             return;
           }
           
-          // For existing users with Auth0 accounts
-          // IMPORTANT: Always show the beta modal and enrollment for new users
-          // This enforces the critical flow: AuthPage -> Auth0 -> Beta Enrollment -> Onboarding
+          // IMPORTANT: Enforce the exact flow: Marketing page → Auth0 → Beta Modal → Onboarding
           
-          // First, check if this is a new user or existing user
-          if (isNewUser) {
-            // Always direct new users to beta enrollment after Auth0 (even if they have an Auth0 account)
-            console.log('New authenticated user - directing to beta enrollment');
-            // Redirect to beta enrollment page using React Router
+          // Get the user's status from localStorage
+          const hasCompletedBetaEnrollment = localStorage.getItem('paddock20_beta_status');
+          const hasCompletedOnboarding = localStorage.getItem(`paddock20_beta_onboarding_complete_${user?.sub || 'guest'}`);
+          
+          console.log('Auth flow status checks:', { 
+            isAuthenticated: true, 
+            hasCompletedBetaEnrollment, 
+            hasCompletedOnboarding 
+          });
+          
+          // Step 1: After Auth0 authentication, always direct to Beta Enrollment first
+          if (!hasCompletedBetaEnrollment) {
+            console.log('✅ Auth0 complete - directing to beta enrollment modal');
             setLocation('/beta-enrollment');
           }
-          else if (!localStorage.getItem(`paddock20_beta_onboarding_complete_${user.sub}`)) {
-            // If the user hasn't completed onboarding yet, send them to onboarding
-            console.log('User without completed onboarding - directing to onboarding process');
+          // Step 2: If beta enrollment is complete, check if onboarding is complete
+          else if (!hasCompletedOnboarding) {
+            console.log('✅ Beta enrollment complete - directing to onboarding process');
             setLocation('/onboarding');
           } 
+          // Step 3: If both beta enrollment and onboarding are complete, go to dashboard
           else {
-            // Regular login - redirect to dashboard using React Router
-            console.log('Regular login - sending to dashboard');
+            console.log('✅ All steps complete - sending to dashboard');
             setLocation('/dashboard');
           }
         }, 500);

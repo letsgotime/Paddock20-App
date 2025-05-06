@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useLocation } from 'wouter';
 import { Loader2, CheckCircle2, ClipboardCheck, Zap } from 'lucide-react';
@@ -9,6 +9,7 @@ import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
 import { Label } from '@/components/ui/label';
+import BetaWelcomeModal from '@/components/dashboard/BetaWelcomeModal';
 
 /**
  * Beta Enrollment Page
@@ -19,6 +20,9 @@ const BetaEnrollmentPage = () => {
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   
+  // Welcome modal state
+  const [showBetaWelcomeModal, setShowBetaWelcomeModal] = useState(true);
+  
   // Form state
   const [isLoading, setIsLoading] = useState(false);
   const [betaRequested, setBetaRequested] = useState(false);
@@ -26,6 +30,11 @@ const BetaEnrollmentPage = () => {
   const [hasAgreedToTerms, setHasAgreedToTerms] = useState(false);
   const [hasAgreedToNDA, setHasAgreedToNDA] = useState(false);
   const [feedbackCommitment, setFeedbackCommitment] = useState(false);
+  
+  // Show the welcome modal when the component mounts
+  useEffect(() => {
+    setShowBetaWelcomeModal(true);
+  }, []);
   
   // Function to submit beta tester request
   const handleBetaRequest = async () => {
@@ -121,6 +130,16 @@ const BetaEnrollmentPage = () => {
   
   return (
     <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
+      {/* Beta Welcome Modal - shown first thing when user arrives at beta enrollment */}
+      <BetaWelcomeModal 
+        isOpen={showBetaWelcomeModal} 
+        onClose={() => {
+          setShowBetaWelcomeModal(false);
+          // Store that the user has seen the beta welcome modal
+          localStorage.setItem('paddock20_beta_status', 'seen_welcome');
+        }}
+      />
+      
       <Card className="w-full max-w-2xl bg-gray-900 border-[#1982FC]">
         <div className="p-6">
           <h1 className="text-2xl font-bold text-[#1982FC] mb-2">Join The Grid: Exclusive Beta Access</h1>
