@@ -177,12 +177,24 @@ const NewAuthPage = () => {
     })
       .then(async response => {
         if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.user) {
-            console.log('User already authenticated:', data.user.username);
-            setLocation('/dashboard');
-          } else {
-            console.log('Response OK but no valid user data, staying on login page');
+          try {
+            const data = await response.json();
+            if (data.success && data.user) {
+              console.log('User already authenticated:', data.user.username);
+              // Set a flag in localStorage to prevent redirect loops
+              const currentTime = new Date().getTime();
+              localStorage.setItem('lastRedirectTime', currentTime.toString());
+              
+              // Only redirect if we haven't redirected in the last 5 seconds
+              const lastRedirect = parseInt(localStorage.getItem('lastRedirectTime') || '0', 10);
+              if ((currentTime - lastRedirect) > 5000) {
+                window.location.href = '/dashboard';
+              }
+            } else {
+              console.log('Response OK but no valid user data, staying on login page');
+            }
+          } catch (e) {
+            console.error('Failed to parse user data', e);
           }
         } else {
           // Not authenticated, stay on login page
@@ -192,7 +204,7 @@ const NewAuthPage = () => {
       .catch(error => {
         console.error('Auth check failed:', error);
       });
-  }, [setLocation]);
+  }, []);
   
   // Add code to toggle beta tester specific fields
   useEffect(() => {
