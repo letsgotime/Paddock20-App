@@ -1,13 +1,13 @@
 import PreDriveChecklistPage from './pages/PreDriveChecklistPage';
 import React, { useEffect, useState } from 'react';
-import { Route, Link, useLocation } from 'wouter';
+import { Router, Route, Link, useLocation } from 'wouter';
 import Header from './components/Header';
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import PageTitleManager from './components/PageTitleManager';
-import { useAuth, SupabaseAuthProvider } from './context/SupabaseAuthContext';
+import { useAuth } from './context/SupabaseAuthContext';
 import SupabaseAuthPage from './pages/SupabaseAuthPage';
 import LogoutPage from './pages/LogoutPage';
 // Import disabled to remove Unsplash API warnings
@@ -450,48 +450,45 @@ function App() {
   }
   
   // Otherwise, render the full application
-  // Note: Adding SupabaseAuthProvider explicitly here to ensure the context is available
+  // Note: SupabaseAuthProvider is already applied in main.tsx
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         {/* Page Title Manager - Updates browser tab title based on current route */}
         <PageTitleManager />
         
-        {/* Auth Provider - Provides authentication context to all components */}
-        <SupabaseAuthProvider>
-          {/* User Profile Provider - centralized user data warehouse */}
-          <UserProfileProvider>
-            {/* Sound Provider - Provides F1-inspired sound effects throughout the app */}
-            <SoundProvider>
-              {/* Vehicle Provider - Provides vehicle data to all components */}
-              <VehicleProvider>
-                {/* Vehicle Data Provider - Provides comprehensive vehicle activity, media, and document data */}
-                <VehicleDataProvider>
-                  {/* Location Services Provider - Centralized location and weather data management */}
-                  <LocationServicesProvider>
-                    {/* Centralized Weather Provider - Provides weather data to all components */}
-                    <WeatherProvider>
-                      {/* Gallery Provider - For media management */}
-                      <GalleryProvider>
-                        {/* Rewards Provider - for site-wide gamification */}
-                        <RewardsProvider>
-                          {/* Spotify Provider - for Spotify integration */}
-                          <SpotifyProvider>
-                            {/* Use the AuthenticatedContent component to handle all auth-dependent UI */}
-                            <AuthenticatedContent 
-                              hasCompletedOnboarding={hasCompletedOnboarding}
-                              setHasCompletedOnboarding={setHasCompletedOnboarding}
-                            />
-                          </SpotifyProvider>
-                        </RewardsProvider>
-                      </GalleryProvider>
-                    </WeatherProvider>
-                  </LocationServicesProvider>
-                </VehicleDataProvider>
-              </VehicleProvider>
-            </SoundProvider>
-          </UserProfileProvider>
-        </SupabaseAuthProvider>
+        {/* User Profile Provider - centralized user data warehouse */}
+        <UserProfileProvider>
+          {/* Sound Provider - Provides F1-inspired sound effects throughout the app */}
+          <SoundProvider>
+            {/* Vehicle Provider - Provides vehicle data to all components */}
+            <VehicleProvider>
+              {/* Vehicle Data Provider - Provides comprehensive vehicle activity, media, and document data */}
+              <VehicleDataProvider>
+                {/* Location Services Provider - Centralized location and weather data management */}
+                <LocationServicesProvider>
+                  {/* Centralized Weather Provider - Provides weather data to all components */}
+                  <WeatherProvider>
+                    {/* Gallery Provider - For media management */}
+                    <GalleryProvider>
+                      {/* Rewards Provider - for site-wide gamification */}
+                      <RewardsProvider>
+                        {/* Spotify Provider - for Spotify integration */}
+                        <SpotifyProvider>
+                          {/* Use the AuthenticatedContent component to handle all auth-dependent UI */}
+                          <AuthenticatedContent 
+                            hasCompletedOnboarding={hasCompletedOnboarding}
+                            setHasCompletedOnboarding={setHasCompletedOnboarding}
+                          />
+                        </SpotifyProvider>
+                      </RewardsProvider>
+                    </GalleryProvider>
+                  </WeatherProvider>
+                </LocationServicesProvider>
+              </VehicleDataProvider>
+            </VehicleProvider>
+          </SoundProvider>
+        </UserProfileProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
