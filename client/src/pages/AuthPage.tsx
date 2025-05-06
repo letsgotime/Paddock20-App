@@ -1,22 +1,80 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle, ChevronRight } from 'lucide-react';
+import { CheckCircle, ChevronRight, LogOut, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const AuthPage = () => {
-  const { login, user } = useAuth();
+  const { login, user, logout } = useAuth();
   const navigate = useNavigate();
+  const [isLoggingOut, setIsLoggingOut] = useState(false);
   
-  // Redirect if already logged in
+  // Redirect if already logged in, but add a delay to give the logout time to process
   React.useEffect(() => {
-    if (user) {
+    // If there's a user and we're not in the process of logging out, redirect
+    if (user && !isLoggingOut) {
       const urlParams = new URLSearchParams(window.location.search);
       const redirectPath = urlParams.get('redirect') || '/dashboard';
-      navigate(redirectPath, { replace: true });
+      // Add a small delay to prevent immediate redirect if the user just clicked logout
+      const timer = setTimeout(() => {
+        navigate(redirectPath, { replace: true });
+      }, 500);
+      return () => clearTimeout(timer);
     }
-  }, [user, navigate]);
+  }, [user, navigate, isLoggingOut]);
   
+  const handleLogout = () => {
+    setIsLoggingOut(true);
+    logout();
+    // Reset the flag after a delay - the Auth0 logout should have completed by then
+    setTimeout(() => setIsLoggingOut(false), 2000);
+  };
+  
+  // Show a simpler debug version if user is logged in
+  if (user && !isLoggingOut) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white flex flex-col items-center justify-center p-4">
+        <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-xl p-8 w-full max-w-md shadow-xl">
+          <h2 className="text-2xl font-bold text-[#1982FC] mb-4 text-center">Currently Logged In</h2>
+          <p className="text-gray-200 mb-8 text-center">You are currently logged in as {user.username || user.email}</p>
+          
+          <div className="flex flex-col gap-4">
+            <Button 
+              onClick={handleLogout}
+              variant="destructive" 
+              className="w-full font-bold py-6 h-16 rounded-lg transition-all duration-200"
+            >
+              Log Out
+              <LogOut className="ml-2 h-5 w-5" />
+            </Button>
+            
+            <Button 
+              onClick={() => navigate('/dashboard')} 
+              className="w-full bg-[#1982FC] hover:bg-[#1982FC]/80 text-white font-bold py-6 h-16 rounded-lg transition-all duration-200"
+            >
+              Go to Dashboard
+              <ChevronRight className="ml-2 h-5 w-5" />
+            </Button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+  
+  // Show a loading state while logout is in progress
+  if (isLoggingOut) {
+    return (
+      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white flex flex-col items-center justify-center p-4">
+        <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-xl p-8 w-full max-w-md shadow-xl text-center">
+          <RefreshCw className="h-12 w-12 animate-spin text-[#1982FC] mx-auto mb-4" />
+          <h2 className="text-2xl font-bold text-white mb-4">Logging Out...</h2>
+          <p className="text-gray-200">Please wait while we complete the logout process</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Regular auth page for non-logged in users
   return (
     <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
       <div className="container mx-auto px-4 py-16 max-w-6xl">
