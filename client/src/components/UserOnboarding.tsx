@@ -557,8 +557,8 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
           <div className="flex items-center space-x-4">
             <Car className="text-[#1982FC] h-8 w-8" />
             <div>
-              <h1 className="text-2xl font-bold text-white font-orbitron tracking-wider">
-                PADDOCK<span className="text-[#1982FC]">20</span>
+              <h1 className="text-2xl font-bold font-orbitron tracking-wider">
+                <span className="text-[#1982FC]">PADDOCK</span><span className="text-[#08c519]">20</span>
               </h1>
               <p className="text-gray-400 text-sm">
                 The Ultimate Automotive Lifestyle Platform
@@ -592,7 +592,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                       JOIN THE PADDOCK
                     </h3>
                     <p className="text-gray-300 mb-4">
-                      Welcome to the exclusive PADDOCK20 beta program. You've been selected to be 
+                      Welcome to the exclusive <span className="text-[#1982FC]">PADDOCK</span><span className="text-[#08c519]">20</span> beta program. You've been selected to be 
                       among the first to experience this revolutionary automotive lifestyle platform.
                     </p>
                     <div className="flex items-center space-x-2 text-[#1982FC]">
@@ -704,7 +704,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                     </div>
                     
                     <p className="text-gray-300 mb-4">
-                      PADDOCK20 is an exclusive automotive lifestyle platform designed to revolutionize 
+                      <span className="text-[#1982FC]">PADDOCK</span><span className="text-[#08c519]">20</span> is an exclusive automotive lifestyle platform designed to revolutionize 
                       how enthusiasts track, manage, and enjoy their vehicles.
                     </p>
                     
@@ -889,17 +889,17 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                     
                     <div className="p-4 bg-gray-900 h-60 overflow-y-auto text-sm">
                       <div className="prose prose-sm prose-invert">
-                        <h4>PADDOCK20 Beta Terms of Service</h4>
+                        <h4><span className="text-[#1982FC]">PADDOCK</span><span className="text-[#08c519]">20</span> Beta Terms of Service</h4>
                         <p>Last Updated: May 5, 2025</p>
                         
                         <p>
-                          Welcome to the PADDOCK20 Beta Program. By participating in our beta testing, 
+                          Welcome to the <span className="text-[#1982FC]">PADDOCK</span><span className="text-[#08c519]">20</span> Beta Program. By participating in our beta testing, 
                           you agree to these Terms of Service ("Terms").
                         </p>
                         
                         <h5>1. Beta Access</h5>
                         <p>
-                          PADDOCK20 provides access to its beta platform for testing purposes only. 
+                          <span className="text-[#1982FC]">PADDOCK</span><span className="text-[#08c519]">20</span> provides access to its beta platform for testing purposes only. 
                           We make no guarantees regarding availability, performance, or feature completion.
                           Features may change, be removed, or be unavailable during the beta period.
                         </p>
@@ -913,7 +913,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                         
                         <h5>3. Feedback</h5>
                         <p>
-                          By providing feedback, suggestions, or ideas about PADDOCK20, you grant us a 
+                          By providing feedback, suggestions, or ideas about <span className="text-[#1982FC]">PADDOCK</span><span className="text-[#08c519]">20</span>, you grant us a 
                           non-exclusive, worldwide, royalty-free license to use and incorporate your 
                           feedback into our services without any obligation to compensate you.
                         </p>
@@ -950,7 +950,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                         
                         <h5>8. Limitation of Liability</h5>
                         <p>
-                          TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL PADDOCK20 BE LIABLE 
+                          TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL <span className="text-[#1982FC]">PADDOCK</span><span className="text-[#08c519]">20</span> BE LIABLE 
                           FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL OR PUNITIVE DAMAGES.
                         </p>
                       </div>
@@ -982,11 +982,11 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                     
                     <div className="p-4 bg-gray-900 h-60 overflow-y-auto text-sm">
                       <div className="prose prose-sm prose-invert">
-                        <h4>PADDOCK20 Privacy Policy</h4>
+                        <h4><span className="text-[#1982FC]">PADDOCK</span><span className="text-[#08c519]">20</span> Privacy Policy</h4>
                         <p>Last Updated: May 5, 2025</p>
                         
                         <p>
-                          This Privacy Policy explains how PADDOCK20 ("we", "our", or "us") collects, 
+                          This Privacy Policy explains how <span className="text-[#1982FC]">PADDOCK</span><span className="text-[#08c519]">20</span> ("we", "our", or "us") collects, 
                           uses, and shares your information when you participate in our beta program.
                         </p>
                         
