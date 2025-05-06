@@ -5,7 +5,7 @@ import {
   User, Settings, Map, Calendar, Gauge, Heart, ThumbsUp, 
   Activity, Zap, Wrench, Smartphone, Palette, UserPlus, Mail, Key,
   CircleDashed, Upload, Camera, FileText, PaintBucket, Cloud, PlusCircle,
-  Trash2
+  Trash2, Info
 } from 'lucide-react';
 import { handleDeclineTerms } from '../utils/accountUtils';
 import { useAuth } from '../hooks/useAuth';
@@ -1261,20 +1261,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                 </div>
               )}
             </div>
-          )}
-          
-          {/* Dashboard Customization with Location Settings */}
-          {step === 6 && (
-            <div className="space-y-6 animate-fadeIn">
-              <div className="flex items-center bg-[#1982FC]/10 p-4 rounded-lg mb-6">
-                <Settings className="text-[#1982FC] mr-4" size={24} />
-                <p className="text-gray-200">
-                  Customize your Paddock20 dashboard experience and set up your default preferences
-                  for weather and routes.
-                </p>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          )}>
                 {/* Weather Location Settings */}
                 <div className="md:col-span-2 space-y-4">
                   <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
