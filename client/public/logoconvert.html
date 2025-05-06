@@ -107,17 +107,17 @@
         
         <div class="logo-group" id="logo2" style="display: none;">
             <div class="logo-container">
-                <h2>Stacked Logo SVG (20 on top)</h2>
-                <img id="svgLogo3" src="assets/logos/paddock20-stacked.svg" alt="Paddock20 Stacked Logo">
+                <h2>Login Page Text Logo</h2>
+                <img id="svgLogo3" src="assets/logos/paddock20-text-logo.svg" alt="Paddock20 Text Logo">
             </div>
             
             <div class="logo-container">
                 <h2>PNG Conversion</h2>
                 <canvas id="canvas3" width="500" height="120"></canvas>
                 <br>
-                <a id="download3" class="download-btn" download="paddock20-stacked.png">Download PNG</a>
-                <a id="viewSvg3" class="download-btn" href="assets/logos/paddock20-stacked.svg" download="paddock20-stacked.svg">Download SVG</a>
-                <p class="note">This version has "20" positioned on top of "PADDOCK" as requested.</p>
+                <a id="download3" class="download-btn" download="paddock20-text-logo.png">Download PNG</a>
+                <a id="viewSvg3" class="download-btn" href="assets/logos/paddock20-text-logo.svg" download="paddock20-text-logo.svg">Download SVG</a>
+                <p class="note">This version matches the exact text-based logo style from the login page with Orbitron font.</p>
             </div>
         </div>
         
@@ -186,6 +186,15 @@
             };
             if (svgLogo2.complete) {
                 convertToPNG('svgLogo2', 'canvas2', 'download2');
+            }
+            
+            // Convert the third logo (login page style)
+            const svgLogo3 = document.getElementById('svgLogo3');
+            svgLogo3.onload = function() {
+                convertToPNG('svgLogo3', 'canvas3', 'download3');
+            };
+            if (svgLogo3.complete) {
+                convertToPNG('svgLogo3', 'canvas3', 'download3');
             }
         };
     </script>
