@@ -1002,7 +1002,7 @@ export const LocationServicesProvider: React.FC<{ children: React.ReactNode }> =
       }
     }
     
-    // Check evening golden hour
+    // Check evening GoTime Golden Hour™
     if (timeData.goldenHour.evening) {
       const eveningStart = timeData.goldenHour.evening.start;
       const eveningEnd = timeData.goldenHour.evening.end;
@@ -1031,7 +1031,7 @@ export const LocationServicesProvider: React.FC<{ children: React.ReactNode }> =
     
     // For now, just return a placeholder response
     if (isGoldenHour()) {
-      return "Now is an ideal time for a scenic drive during golden hour!";
+      return "Now is an ideal time for a scenic drive during GoTime Golden Hour™!";
     }
     
     return "Current conditions are acceptable for driving";

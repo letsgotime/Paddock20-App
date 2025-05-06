@@ -310,12 +310,12 @@ function calculateDaylightInfo(now: Date, sunrise: Date, sunset: Date) {
  * GoTime Golden Hour™ is typically the hour after sunrise and the hour before sunset
  */
 function calculateGoldenHours(sunrise: Date, sunset: Date) {
-  // Morning golden hour = sunrise to sunrise + 1 hour
+  // Morning GoTime Golden Hour™ = sunrise to sunrise + 1 hour
   const morningGoldenHourStart = new Date(sunrise);
   const morningGoldenHourEnd = new Date(sunrise);
   morningGoldenHourEnd.setHours(morningGoldenHourEnd.getHours() + 1);
   
-  // Evening golden hour = sunset - 1 hour to sunset
+  // Evening GoTime Golden Hour™ = sunset - 1 hour to sunset
   const eveningGoldenHourStart = new Date(sunset);
   eveningGoldenHourStart.setHours(eveningGoldenHourStart.getHours() - 1);
   const eveningGoldenHourEnd = new Date(sunset);
@@ -446,7 +446,7 @@ export function calculateOptimalDepartureTime(
   // - Weather forecast (avoid driving during precipitation)
   // - Daylight (prefer daylight driving)
   // - Traffic conditions (if available)
-  // - GoTime Golden Hour™ (scenic driving)
+  // - GoTime Golden Hour™ timing (ideal for scenic driving)
   
   // For now, let's implement a simple heuristic:
   // 1. If there's enough daylight remaining, suggest departing now
@@ -483,7 +483,7 @@ export function calculateOptimalDepartureTime(
       
       // If GoTime Golden Hour™ is approaching and trip is short enough
       if (nowHours < goTimeGoldenHourStartDecimal && goTimeGoldenHourStartDecimal - nowHours < 2 && tripDurationMinutes < 120) {
-        return `Depart at ${timeData.goldenHour.evening.start} for scenic sunset drive`;
+        return `Depart at ${timeData.goldenHour.evening.start} for a scenic drive during GoTime Golden Hour™`;
       }
     }
   }
@@ -491,7 +491,7 @@ export function calculateOptimalDepartureTime(
   // If it's night, suggest morning
   if (timeData.dayPeriod === 'night') {
     if (timeData.goldenHour && timeData.goldenHour.morning) {
-      return `Depart at ${timeData.goldenHour.morning.start} for optimal morning drive`;
+      return `Depart at ${timeData.goldenHour.morning.start} for a morning drive during GoTime Golden Hour™`;
     }
     return 'Depart after sunrise tomorrow for best conditions';
   }
