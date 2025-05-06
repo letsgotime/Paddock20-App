@@ -81,7 +81,7 @@ const Header: React.FC = () => {
       // Play close sound
       playSound('menu_close');
     }
-  }, [location.pathname]);
+  }, [location[0]]);
   
   const handleLogout = async () => {
     try {
@@ -127,10 +127,7 @@ const Header: React.FC = () => {
           <div 
             className="flex items-center text-white font-medium mr-1 relative group cursor-pointer user-dropdown-group"
             onMouseEnter={() => {
-              const soundSettings = getSoundSettings();
-              if (soundSettings?.enabled) {
-                playMotorsportSound('menu_select');
-              }
+              playSound('ui_hover');
             }}
           >
             <div className="flex items-center justify-center w-7 h-7 rounded-full bg-blue-900/50 mr-2 border border-blue-700/70">
@@ -215,11 +212,8 @@ const Header: React.FC = () => {
             <button
               onClick={() => {
                 setIsMenuOpen(!isMenuOpen);
-                const soundSettings = getSoundSettings();
-                if (soundSettings?.enabled) {
-                  // Play menu open/close sound
-                  playMotorsportSound(isMenuOpen ? 'menu_select' : 'toggle_switch');
-                }
+                // Play menu open/close sound
+                playSound(isMenuOpen ? 'menu_close' : 'menu_open');
               }}
               className="flex items-center justify-center px-3 py-2 rounded-md bg-blue-600 hover:bg-blue-700 text-white border border-blue-500"
               aria-expanded={isMenuOpen}
