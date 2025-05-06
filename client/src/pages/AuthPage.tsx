@@ -1,13 +1,22 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext';
+import { useAuth0 } from '@auth0/auth0-react';
 import { useLocation } from 'wouter';
 import { CheckCircle, ChevronRight, LogOut, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const AuthPage = () => {
+  // Use both our wrapped auth context and the direct Auth0 hook for maximum reliability
   const { login, register, user, logout, isAuthenticated } = useAuth();
+  const { loginWithRedirect } = useAuth0();
   const [, setLocation] = useLocation();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  
+  // Debug logs to help diagnose Auth0 issues
+  useEffect(() => {
+    console.log('Auth Page - Direct Auth0 Login Redirect URI:', `${window.location.origin}/auth/callback`);
+    console.log('Auth Page - Current location:', window.location.href);
+  }, []);
   
   // Redirect if already logged in, but add a delay to give the logout time to process
   React.useEffect(() => {
@@ -28,6 +37,16 @@ const AuthPage = () => {
     logout();
     // Reset the flag after a delay - the Auth0 logout should have completed by then
     setTimeout(() => setIsLoggingOut(false), 2000);
+  };
+
+  // Direct Auth0 login - using Auth0's own function to ensure redirect works properly
+  const handleDirectAuth0Login = () => {
+    // Use the Auth0 loginWithRedirect directly to avoid any middleware issues
+    loginWithRedirect({
+      authorizationParams: {
+        redirect_uri: `${window.location.origin}/auth/callback`,
+      }
+    });
   };
   
   // Show a simpler debug version if user is logged in
@@ -135,13 +154,25 @@ const AuthPage = () => {
                 </div>
               </div>
               
+              {/* Primary button - Try direct Auth0 login first */}
               <Button 
-                onClick={() => register()} 
+                onClick={handleDirectAuth0Login} 
                 className="w-full bg-[#08c519] hover:bg-[#08c519]/80 text-white font-bold text-xl py-6 h-16 rounded-lg transition-all duration-200 shadow-lg shadow-[#08c519]/20"
               >
                 Join the Grid
                 <ChevronRight className="ml-2 h-6 w-6" />
               </Button>
+              
+              {/* Fallback button that uses our wrapper method - just in case */}
+              <div className="mt-4">
+                <Button 
+                  onClick={() => register()} 
+                  variant="outline"
+                  className="w-full border-gray-700 text-gray-300 hover:text-white hover:bg-gray-800"
+                >
+                  Alternative Sign-In
+                </Button>
+              </div>
               
               <p className="text-sm text-center text-gray-400 mt-4">
                 By signing up, you agree to our <a href="/terms-of-service" className="text-[#1982FC] hover:underline">Terms of Service</a> and <a href="/privacy-policy" className="text-[#1982FC] hover:underline">Privacy Policy</a>
