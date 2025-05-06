@@ -1087,12 +1087,12 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                     
                     <div className="p-4 bg-gray-900 h-60 overflow-y-auto text-sm">
                       <div className="prose prose-sm prose-invert">
-                        <h4>PADDOCK20 Beta Testing Agreement</h4>
+                        <h4><span className="text-[#1982FC]">PADDOCK</span><span className="text-[#08c519]">20</span> Beta Testing Agreement</h4>
                         <p>Last Updated: May 5, 2025</p>
                         
                         <p>
                           This Beta Testing Agreement ("Agreement") governs your participation in the 
-                          PADDOCK20 beta testing program.
+                          <span className="text-[#1982FC]">PADDOCK</span><span className="text-[#08c519]">20</span> beta testing program.
                         </p>
                         
                         <h5>1. Beta Period</h5>
