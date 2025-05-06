@@ -13,7 +13,7 @@ import { handleGoogleOAuth2Callback, handleAppleOAuth2Callback } from "./oauth";
 import { checkSlackIntegration, initializeSlackClient, shareVehicleToSlack, shareEventToSlack } from "./slack";
 import { setupAuth } from "./auth";
 import twoFactorRoutes from "./routes/twoFactorRoutes";
-import auth0Routes from "./routes/auth0Routes";
+import supabaseAuthRoutes from "./routes/supabaseAuthRoutes";
 import spotifyRoutes from "./routes/spotifyRoutes";
 
 // OpenWeather API keys - updated May 1, 2025
@@ -242,8 +242,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Then register the Two-Factor Authentication Routes
   app.use(twoFactorRoutes);
   
-  // Register Auth0 related routes
-  app.use(auth0Routes);
+  // Register Supabase auth related routes
+  app.use(supabaseAuthRoutes);
   
   // Register Spotify API routes
   app.use('/api/spotify', spotifyRoutes);
