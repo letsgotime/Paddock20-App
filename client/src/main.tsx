@@ -4,9 +4,24 @@ import App from "./App";
 import "./index.css";
 import "./bts.css";
 import "./utils/storageManager"; // Initialize enhanced storage management
+import { Auth0Provider } from '@auth0/auth0-react';
+
+// Get Auth0 configuration from environment variables
+const domain = import.meta.env.VITE_AUTH0_DOMAIN as string;
+const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID as string;
+const redirectUri = window.location.origin;
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
-    <App />
+    <Auth0Provider
+      domain={domain}
+      clientId={clientId}
+      authorizationParams={{
+        redirect_uri: redirectUri,
+        scope: "openid profile email",
+      }}
+    >
+      <App />
+    </Auth0Provider>
   </BrowserRouter>
 );
