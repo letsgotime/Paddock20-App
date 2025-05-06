@@ -39,13 +39,55 @@ interface OnboardingVehicleProfile {
   profileImage: string;
 }
 
+interface TireManagementProfile {
+  currentTires: {
+    brand: string;
+    model: string;
+    type: string;
+    size: string;
+    purchaseDate: string;
+    treadDepth: string;
+    pressureFront: string;
+    pressureRear: string;
+    notes: string;
+  };
+  preferredBrands: string[];
+}
+
+interface DreamGarageProfile {
+  dreamCars: Array<{
+    make: string;
+    model: string;
+    year: string;
+    notes: string;
+  }>;
+}
+
+interface LockerRoomProfile {
+  size: string; // Small, Medium, Large
+  storageNeeds: string[];
+  tools: string[];
+  detailingSupplies: string[];
+}
+
+interface SpotifyProfile {
+  connected: boolean;
+  favoritePlaylist: string;
+  drivingPlaylist: string;
+  detailingPlaylist: string;
+}
+
 enum Step {
   Welcome = 0,
   UserProfile = 1,
   VehicleBasics = 2,
   VehicleDetails = 3,
-  PreferenceSettings = 4,
-  Complete = 5,
+  TireManagement = 4,
+  DreamGarage = 5,
+  LockerRoom = 6,
+  SpotifyIntegration = 7,
+  PreferenceSettings = 8,
+  Complete = 9,
 }
 
 const DashboardOnboarding: React.FC<{
@@ -61,6 +103,7 @@ const DashboardOnboarding: React.FC<{
   const [isProcessingVIN, setIsProcessingVIN] = useState(false);
   const [profileUploadProgress, setProfileUploadProgress] = useState(0);
   const [vehicleUploadProgress, setVehicleUploadProgress] = useState(0);
+  const [isConnectingSpotify, setIsConnectingSpotify] = useState(false);
   
   // Form data
   const [userProfile, setUserProfile] = useState<OnboardingUserProfile>({
@@ -87,6 +130,40 @@ const DashboardOnboarding: React.FC<{
     profileImage: '',
   });
   
+  // Additional profiles for the new features
+  const [tireProfile, setTireProfile] = useState<TireManagementProfile>({
+    currentTires: {
+      brand: '',
+      model: '',
+      type: '',
+      size: '',
+      purchaseDate: new Date().toISOString().split('T')[0],
+      treadDepth: '',
+      pressureFront: '',
+      pressureRear: '',
+      notes: '',
+    },
+    preferredBrands: []
+  });
+  
+  const [dreamGarageProfile, setDreamGarageProfile] = useState<DreamGarageProfile>({
+    dreamCars: [{ make: '', model: '', year: '', notes: '' }]
+  });
+  
+  const [lockerRoomProfile, setLockerRoomProfile] = useState<LockerRoomProfile>({
+    size: 'Medium',
+    storageNeeds: [],
+    tools: [],
+    detailingSupplies: []
+  });
+  
+  const [spotifyProfile, setSpotifyProfile] = useState<SpotifyProfile>({
+    connected: false,
+    favoritePlaylist: '',
+    drivingPlaylist: '',
+    detailingPlaylist: ''
+  });
+  
   // Handle input changes for user profile
   const handleUserProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
@@ -111,6 +188,131 @@ const DashboardOnboarding: React.FC<{
       ...prev,
       useVIN: !prev.useVIN
     }));
+  };
+  
+  // Handle tire profile changes
+  const handleTireProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    
+    if (name.startsWith('currentTires.')) {
+      const tireProp = name.split('.')[1];
+      setTireProfile(prev => ({
+        ...prev,
+        currentTires: {
+          ...prev.currentTires,
+          [tireProp]: value
+        }
+      }));
+    } else {
+      setTireProfile(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+  };
+  
+  // Handle preferred tire brands
+  const handleAddPreferredBrand = (brand: string) => {
+    if (brand.trim() === '') return;
+    setTireProfile(prev => ({
+      ...prev,
+      preferredBrands: [...prev.preferredBrands, brand.trim()]
+    }));
+  };
+  
+  const handleRemovePreferredBrand = (index: number) => {
+    setTireProfile(prev => ({
+      ...prev,
+      preferredBrands: prev.preferredBrands.filter((_, i) => i !== index)
+    }));
+  };
+  
+  // Handle dream garage changes
+  const handleDreamCarChange = (index: number, field: string, value: string) => {
+    setDreamGarageProfile(prev => {
+      const updatedCars = [...prev.dreamCars];
+      updatedCars[index] = {
+        ...updatedCars[index],
+        [field]: value
+      };
+      return {
+        ...prev,
+        dreamCars: updatedCars
+      };
+    });
+  };
+  
+  const handleAddDreamCar = () => {
+    setDreamGarageProfile(prev => ({
+      ...prev,
+      dreamCars: [...prev.dreamCars, { make: '', model: '', year: '', notes: '' }]
+    }));
+  };
+  
+  const handleRemoveDreamCar = (index: number) => {
+    if (dreamGarageProfile.dreamCars.length <= 1) return;
+    setDreamGarageProfile(prev => ({
+      ...prev,
+      dreamCars: prev.dreamCars.filter((_, i) => i !== index)
+    }));
+  };
+  
+  // Handle locker room changes
+  const handleLockerRoomSizeChange = (size: string) => {
+    setLockerRoomProfile(prev => ({
+      ...prev,
+      size
+    }));
+  };
+  
+  const handleAddStorageItem = (category: 'storageNeeds' | 'tools' | 'detailingSupplies', item: string) => {
+    if (item.trim() === '') return;
+    setLockerRoomProfile(prev => ({
+      ...prev,
+      [category]: [...prev[category], item.trim()]
+    }));
+  };
+  
+  const handleRemoveStorageItem = (category: 'storageNeeds' | 'tools' | 'detailingSupplies', index: number) => {
+    setLockerRoomProfile(prev => ({
+      ...prev,
+      [category]: prev[category].filter((_, i) => i !== index)
+    }));
+  };
+  
+  // Handle Spotify profile changes
+  const handleSpotifyProfileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setSpotifyProfile(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+  
+  const handleConnectSpotify = async () => {
+    setIsConnectingSpotify(true);
+    
+    // Simulate connecting to Spotify API
+    toast({
+      title: 'Spotify Connection',
+      description: 'This would connect to the Spotify API in the production version.',
+      variant: 'default',
+    });
+    
+    // Simulate successful connection after 2 seconds
+    setTimeout(() => {
+      setSpotifyProfile(prev => ({
+        ...prev,
+        connected: true
+      }));
+      setIsConnectingSpotify(false);
+      
+      toast({
+        title: 'Spotify Connected',
+        description: 'Successfully connected to Spotify (simulation)',
+        variant: 'default',
+      });
+    }, 2000);
   };
   
   // Handle VIN lookup
@@ -924,6 +1126,14 @@ const DashboardOnboarding: React.FC<{
         return renderVehicleBasicsForm();
       case Step.VehicleDetails:
         return renderVehicleDetailsForm();
+      case Step.TireManagement:
+        return renderTireManagementForm();
+      case Step.DreamGarage:
+        return renderDreamGarageForm();
+      case Step.LockerRoom:
+        return renderLockerRoomForm();
+      case Step.SpotifyIntegration:
+        return renderSpotifyIntegrationForm();
       case Step.PreferenceSettings:
         return renderPreferencesForm();
       case Step.Complete:
