@@ -198,14 +198,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           localStorage.removeItem('userProfile');
           localStorage.removeItem('loginShown');
           
-          // Redirect to auth page if not already there
-          if (window.location.pathname !== '/auth' && 
-              !window.location.pathname.includes('/email-verified') && 
-              !window.location.pathname.includes('/reset-password')) {
-            console.log('No authenticated session - redirecting to auth');
-            // Don't auto-redirect as it can cause loops
-            // window.location.href = '/auth';
-          }
+          // Do not auto-redirect - let the ProtectedRoute component handle redirects
+          // This was causing authentication loops and state issues
+          console.log('No authenticated session detected - ProtectedRoute will handle redirects');
         }
       } catch (err) {
         console.error('Error in auth system:', err);
