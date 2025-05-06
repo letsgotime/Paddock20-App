@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link } from "wouter";
 import { AlertCircle, Home, ArrowLeft, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -32,15 +32,19 @@ export default function NotFound() {
 
         <div className="grid grid-cols-2 gap-3">
           <Button asChild variant="outline" className="bg-gray-800 border-gray-700 text-white hover:bg-gray-700">
-            <Link to="/">
-              <Home className="h-4 w-4 mr-2" />
-              Homepage
+            <Link href="/">
+              <a className="flex items-center">
+                <Home className="h-4 w-4 mr-2" />
+                Homepage
+              </a>
             </Link>
           </Button>
           <Button asChild variant="outline" className="bg-gray-800 border-gray-700 text-white hover:bg-gray-700">
-            <Link to="/dashboard">
-              <ArrowLeft className="h-4 w-4 mr-2" />
-              Dashboard
+            <Link href="/dashboard">
+              <a className="flex items-center">
+                <ArrowLeft className="h-4 w-4 mr-2" />
+                Dashboard
+              </a>
             </Link>
           </Button>
         </div>
