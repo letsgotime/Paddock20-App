@@ -14,7 +14,9 @@ import {
   User,
   Calendar,
   Mail,
-  Clock
+  Clock,
+  Zap,
+  ClipboardCheck
 } from "lucide-react";
 
 interface BetaTester {
@@ -24,6 +26,16 @@ interface BetaTester {
   nickname: string;
   created_at: string;
   last_login: string;
+  user_metadata?: {
+    betaTesterStatus: 'pending' | 'approved' | 'rejected';
+    betaProgram: 'user' | 'tester';
+    betaAgreements?: {
+      terms: boolean;
+      nda: boolean;
+      feedback: boolean;
+    };
+    betaRequestDate?: string;
+  };
 }
 
 /**
@@ -207,6 +219,7 @@ const BetaTesterApprovalPanel: React.FC = () => {
           <TableRow className="bg-gray-900/50">
             <TableHead>User</TableHead>
             <TableHead>Email</TableHead>
+            <TableHead>Beta Program</TableHead>
             <TableHead>Created At</TableHead>
             <TableHead>Last Login</TableHead>
             {isPending && <TableHead>Actions</TableHead>}
@@ -228,6 +241,25 @@ const BetaTesterApprovalPanel: React.FC = () => {
                 <div className="flex items-center gap-2">
                   <Mail className="h-4 w-4 text-[#4B9CD3]" />
                   <span>{user.email}</span>
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2">
+                  {user.user_metadata?.betaProgram === 'tester' ? (
+                    <>
+                      <Zap className="h-4 w-4 text-[#08c519]" />
+                      <Badge variant="outline" className="bg-green-900/20 border-green-500/30 text-green-500">
+                        Beta Tester
+                      </Badge>
+                    </>
+                  ) : (
+                    <>
+                      <ClipboardCheck className="h-4 w-4 text-[#4B9CD3]" />
+                      <Badge variant="outline" className="bg-blue-900/20 border-[#4B9CD3]/30 text-[#4B9CD3]">
+                        Beta User
+                      </Badge>
+                    </>
+                  )}
                 </div>
               </TableCell>
               <TableCell>

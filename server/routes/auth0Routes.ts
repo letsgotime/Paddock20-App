@@ -195,13 +195,19 @@ router.post('/api/admin/approve-beta-tester/:userId', checkJwt, checkAdmin, asyn
     // Get management client
     const management = await getManagementClient();
     
-    // Update user metadata to approved status
+    // Get the current user metadata to preserve existing data like betaProgram
+    const user = await management.getUser({ id: userId });
+    const existingMetadata = user.user_metadata || {};
+    
+    console.log(`Approving user with beta program: ${existingMetadata.betaProgram || 'user'}`);
+    
+    // Update user metadata to approved status but keep other metadata values
     await management.updateUserMetadata({ id: userId }, {
-      betaTesterStatus: 'approved'
+      ...existingMetadata,
+      betaTesterStatus: 'approved',
+      approvalDate: new Date().toISOString()
     });
     
-    // Get user information for email (only necessary fields)
-    const user = await management.getUser({ id: userId, fields: 'email' });
     console.log(`User approved: ${user.email}`);
     
     // Invalidate cache since we've made a change
