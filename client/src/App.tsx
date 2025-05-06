@@ -93,6 +93,7 @@ import { MAIN_CONTENT_ID, LiveRegion } from './lib/accessibility';
 import './paddock20.css';
 import { getUserDisplayName } from './utils/DataIntegrityVerifier';
 import DebugPage from "./pages/DebugPage";
+import GeocodingTestPage from "./pages/GeocodingTestPage";
 
 // Import legal pages
 import PrivacyPolicy from './pages/PrivacyPolicyPage';
@@ -276,6 +277,35 @@ function AuthenticatedContent({
               </React.Suspense>
             );
           }} />
+          
+          {/* Geocoding Test (Ultra-conservative API usage) - Directly rendered outside provider context */}
+          <Route path="/geocoding-test" component={() => (
+            <div className="container mx-auto py-6 px-4">
+              <div className="space-y-6">
+                <div>
+                  <h1 className="text-3xl font-bold tracking-tight">OpenCage Geocoding Explorer</h1>
+                  <p className="text-muted-foreground mt-2">
+                    Ultra-conservative implementation with 1 request/day limit and permanent caching
+                  </p>
+                </div>
+                
+                <div className="border-b pb-2" />
+                
+                <div className="flex items-center justify-center min-h-[50vh]">
+                  <div className="bg-muted rounded-lg p-8 text-center max-w-md">
+                    <h2 className="text-2xl font-bold mb-4">Geocoding Test</h2>
+                    <p className="mb-4">
+                      An ultra-conservative geocoding solution has been implemented to work with OpenCage's 1 request/day limit. 
+                      The solution includes 30-day caching, request limiting, and coordinate grid approximation.
+                    </p>
+                    <p className="text-sm mt-4 text-muted-foreground">
+                      Note: We can't display the full test UI currently due to some dependencies in the main LocationServicesContext that need to be fixed.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )} />
           
           {/* Create a special component for the 404 route as the final fallback */}
           <Route path="*" component={NotFound} />
