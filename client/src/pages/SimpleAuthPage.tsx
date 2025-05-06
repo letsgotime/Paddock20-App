@@ -86,6 +86,7 @@ const SimpleAuthPage = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify(userData),
+        credentials: 'include', // Important: Include credentials for cookies
       });
       
       if (response.ok) {

@@ -227,12 +227,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sessionStorage.removeItem('lastLocation');
       sessionStorage.removeItem('lastSearch');
       
-      // Clear all session cookies by setting expired date
-      document.cookie.split(';').forEach(cookie => {
-        const trimmedCookie = cookie.trim();
-        const name = trimmedCookie.split('=')[0];
-        document.cookie = `${name}=; expires=Thu, 01 Jan 1970 00:00:00 UTC; path=/;`;
-      });
+      // We'll let the server handle cookie clearing to avoid conflicts
+      // Don't manually mess with cookies as it can conflict with the server's session management
       
       // Now call the logout API (but we've already cleared local state)
       try {
