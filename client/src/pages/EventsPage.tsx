@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import EventsPreview from '../components/EventsPreview';
 import EventsTabs from '../components/EventsTabs';
 import TrackConditionsTelemetry from '../components/TrackConditionsTelemetry';
+import P20EventsCalendar from '../components/P20EventsCalendar';
 import { CalendarDays, MapPin, Clock, Trophy, Users, Car } from 'lucide-react';
 
 interface TrackEvent {
@@ -117,18 +118,10 @@ const EventsPage: React.FC = () => {
           {/* Events Preview Section */}
           <EventsPreview />
           
-          {/* Calendar Section - Placeholder for future implementation */}
+          {/* P20 60-Week Event Calendar */}
           <div className="py-12">
             <h2 className="text-3xl font-bold text-blue-500 mb-6 font-orbitron">Event Calendar</h2>
-            <div className="bg-gradient-to-r from-gray-900 to-black rounded-lg p-8 shadow-lg">
-              <div className="text-center py-16">
-                <h3 className="text-2xl mb-4">Full Calendar Coming Soon</h3>
-                <p className="text-gray-300">
-                  Our interactive event calendar is under development. Soon you'll be able to filter events 
-                  by location, type, and date range - and sync directly with your personal calendar.
-                </p>
-              </div>
-            </div>
+            <P20EventsCalendar />
           </div>
           
           {/* Event Submission Section */}
