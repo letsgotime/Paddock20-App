@@ -92,6 +92,7 @@ import TermsOfService from './pages/TermsOfServicePage';
 import BetaAgreement from './pages/BetaAgreement';
 import EmailVerifiedPage from './pages/EmailVerifiedPage';
 import AdminPage from './pages/AdminPage';
+import BetaEnrollmentPage from './pages/BetaEnrollmentPage';
 
 function App() {
   // State to track if the user has completed onboarding
