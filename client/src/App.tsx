@@ -344,9 +344,8 @@ function App() {
               </SoundProvider>
             </UserProfileProvider>
           </AuthProvider>
-        </Auth0ProviderWithRedirectCallback>
-      </TooltipProvider>
-    </QueryClientProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
   );
 }
 
