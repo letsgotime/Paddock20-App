@@ -150,6 +150,68 @@ router.post('/api/auth/request-beta-status', checkJwt, async (req: Request, res:
   }
 });
 
+// Admin route to find user by username
+router.get('/api/admin/find-user/:username', checkJwt, checkAdmin, async (req: Request, res: Response) => {
+  try {
+    const { username } = req.params;
+    console.log(`Searching for user with username: ${username}`);
+    
+    // Get management client
+    const management = await getManagementClient();
+    
+    // Search for user by username
+    const usersResponse = await management.getUsers({
+      q: `nickname:"${username}" OR name:"${username}" OR username:"${username}"`,
+      search_engine: 'v3'
+    });
+    
+    const users = usersResponse.users || [];
+    
+    if (users.length > 0) {
+      return res.json({ 
+        found: true,
+        user: users[0],
+        message: 'User found'
+      });
+    } else {
+      return res.json({ 
+        found: false,
+        message: 'User not found'
+      });
+    }
+  } catch (error: any) {
+    console.error('Error finding user:', error);
+    return res.status(500).json({ 
+      error: 'Failed to find user',
+      message: error.message 
+    });
+  }
+});
+
+// Admin route to get user count
+router.get('/api/admin/user-count', checkJwt, checkAdmin, async (req: Request, res: Response) => {
+  try {
+    // Get management client
+    const management = await getManagementClient();
+    
+    // Get total users count
+    const usersResponse = await management.getUsers({
+      include_totals: true
+    });
+    
+    return res.json({ 
+      totalCount: usersResponse.total || 0,
+      message: 'User count retrieved successfully'
+    });
+  } catch (error: any) {
+    console.error('Error getting user count:', error);
+    return res.status(500).json({ 
+      error: 'Failed to get user count',
+      message: error.message 
+    });
+  }
+});
+
 // Admin route to get all pending beta testers (with caching)
 router.get('/api/admin/pending-beta-testers', checkJwt, checkAdmin, async (req: Request, res: Response) => {
   try {
