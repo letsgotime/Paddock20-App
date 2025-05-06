@@ -550,7 +550,7 @@ const NewAuthPage = () => {
                     }`}
                     onClick={() => setIsLogin(false)}
                   >
-                    JOIN THE PADDOCK
+                    JOIN THE GRID
                   </button>
                 </div>
               </div>
@@ -800,7 +800,7 @@ const NewAuthPage = () => {
                       className="text-[#1982FC] hover:underline"
                       onClick={() => setIsLogin(false)}
                     >
-                      Join the Paddock
+                      Join the Grid
                     </button>
                   </p>
                 ) : (
