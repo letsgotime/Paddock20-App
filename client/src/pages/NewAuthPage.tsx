@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { Eye, EyeOff, LogIn, UserPlus, AlertTriangle } from 'lucide-react';
 import { useLocation } from 'wouter';
+import { useAuth } from '../context/AuthContext';
 import LegalDocumentModal from '../components/LegalDocumentModal';
 // Import legal documents and define their structure
 interface LegalDocument {
@@ -143,9 +144,9 @@ const documentKeyMapping: {[key: string]: keyof typeof legalDocuments} = {
 };
 
 /**
- * NewAuthPage - A clean implementation focused on server-side authentication
- * This component handles both login and registration with proper error handling
- * and works exclusively with the server API, avoiding any context dependencies.
+ * NewAuthPage - Enhanced with Auth0 integration
+ * This component handles login and registration with proper error handling
+ * using Auth0 for authentication and working with the server API
  */
 const NewAuthPage = () => {
   const [location, setLocation] = useLocation();
@@ -163,6 +164,9 @@ const NewAuthPage = () => {
     title: "",
     content: ""
   });
+  
+  // Get auth functions from our Auth context
+  const auth = useAuth();
   
   // Reference to form elements for beta status
   const formRef = useRef<HTMLFormElement>(null);
@@ -320,46 +324,14 @@ const NewAuthPage = () => {
     
     try {
       if (isLogin) {
-        // Login through server API
-        console.log('Attempting login for:', username);
-        const response = await fetch('/api/login', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            username,
-            password,
-          }),
-          credentials: 'include', // Important for cookies
-        });
+        // Login through Auth0
+        console.log('Redirecting to Auth0 login...');
+        setSuccessMessage('Redirecting to Auth0 login...');
         
-        const data = await response.json();
+        // Use Auth0 login function from context
+        auth.login();
         
-        if (!response.ok) {
-          // Handle specific error responses
-          console.error('Login failed with status:', response.status);
-          throw new Error(data.error || 'Invalid username or password');
-        }
-        
-        // Check for 2FA requirement
-        if (data.requireTwoFactor) {
-          setErrorMessage('Two-factor authentication is required but not supported in this flow.');
-          return;
-        }
-        
-        // Verify success and user data
-        if (!data.success || !data.user) {
-          throw new Error('Login succeeded but user data is missing');
-        }
-        
-        console.log('Login successful:', data.user.username);
-        setSuccessMessage('Login successful! Redirecting...');
-        
-        // Wait a moment before redirecting
-        setTimeout(() => {
-          setLocation('/dashboard');
-        }, 1000);
+        return; // Early return as Auth0 will handle the redirect
       } else {
         // Registration through server API
         console.log('Attempting registration for:', username);

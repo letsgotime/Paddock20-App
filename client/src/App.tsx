@@ -7,7 +7,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import PageTitleManager from './components/PageTitleManager';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, Auth0ProviderWithRedirectCallback } from './context/AuthContext';
 // Import disabled to remove Unsplash API warnings
 // import { initializeImageCache } from "./services/unsplashService";
 import NavigationControls from './components/NavigationControls';
@@ -215,7 +215,11 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
-          <NewAuthPage />
+          <Auth0ProviderWithRedirectCallback>
+            <AuthProvider>
+              <NewAuthPage />
+            </AuthProvider>
+          </Auth0ProviderWithRedirectCallback>
         </TooltipProvider>
       </QueryClientProvider>
     );
@@ -227,8 +231,10 @@ function App() {
       <TooltipProvider>
         {/* Page Title Manager - Updates browser tab title based on current route */}
         <PageTitleManager />
-        {/* Auth Provider - Provides authentication context to all components */}
-        <AuthProvider>
+        {/* Auth0 Provider - Handles connection to Auth0 */}
+        <Auth0ProviderWithRedirectCallback>
+          {/* Auth Provider - Provides authentication context to all components */}
+          <AuthProvider>
           {/* User Profile Provider - centralized user data warehouse */}
           <UserProfileProvider>
             {/* Sound Provider - Provides F1-inspired sound effects throughout the app */}
@@ -345,6 +351,7 @@ function App() {
             </SoundProvider>
           </UserProfileProvider>
         </AuthProvider>
+        </Auth0ProviderWithRedirectCallback>
       </TooltipProvider>
     </QueryClientProvider>
   );

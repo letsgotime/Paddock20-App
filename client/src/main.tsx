@@ -4,9 +4,12 @@ import App from "./App";
 import "./index.css";
 import "./bts.css";
 import "./utils/storageManager"; // Initialize enhanced storage management
+import { Auth0ProviderWithRedirectCallback } from "./context/AuthContext";
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
-    <App />
+    <Auth0ProviderWithRedirectCallback>
+      <App />
+    </Auth0ProviderWithRedirectCallback>
   </BrowserRouter>
 );
