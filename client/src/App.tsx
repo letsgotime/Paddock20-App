@@ -226,6 +226,7 @@ function AuthenticatedContent({
           <Route path="/admin" component={() => <ProtectedRoute><AdminPage /></ProtectedRoute>} />
           <Route path="/spotify-test" component={() => <ProtectedRoute><SpotifyTestPage /></ProtectedRoute>} />
           <Route path="/spotify-env-check" component={() => <ProtectedRoute><SpotifyEnvCheck /></ProtectedRoute>} />
+          <Route path="/onboarding-test" component={() => <ProtectedRoute><OnboardingTestPage /></ProtectedRoute>} />
           
           {/* Debug Pages */}
           <Route path="/debug" component={() => {
