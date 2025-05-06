@@ -54,6 +54,7 @@ export class SpotifyAuth {
    * and the callback route in our application
    */
   public getRedirectUri(): string {
+    // Match the route defined in App.tsx
     return `${window.location.origin}/spotify/callback`;
   }
   

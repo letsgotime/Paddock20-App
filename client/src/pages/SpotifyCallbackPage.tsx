@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
-import { useLocation, useNavigate } from 'wouter';
+import { useLocation } from 'wouter';
 import { Loader2 } from 'lucide-react';
 import { useAuth0 } from '@auth0/auth0-react';
+// Import class directly
 import { SpotifyAuth } from '../services/spotify/spotifyAuth';
 import { useToast } from '@/hooks/use-toast';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
