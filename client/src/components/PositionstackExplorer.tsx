@@ -5,12 +5,12 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, RefreshCw, Search, MapPin, Trash2, AlertTriangle } from 'lucide-react';
-import { nominatimService } from '@/services/location/nominatimService';
+import { Loader2, RefreshCw, Search, MapPin, Trash2, ExternalLink } from 'lucide-react';
+import { positionstackService } from '@/services/location/positionstackService';
 import { LocationInfo } from '@/contexts/EnhancedLocationContext';
 import { useToast } from '@/components/ui/use-toast';
 
-const NominatimExplorer: React.FC = () => {
+const PositionstackExplorer: React.FC = () => {
   const { toast } = useToast();
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResults, setSearchResults] = useState<LocationInfo | null>(null);
@@ -43,8 +43,8 @@ const NominatimExplorer: React.FC = () => {
       // Got coordinates, now reverse geocode
       const { latitude, longitude } = position.coords;
       
-      // Call Nominatim reverse geocoding
-      const geocodeResult = await nominatimService.reverseGeocode(latitude, longitude);
+      // Call Positionstack reverse geocoding
+      const geocodeResult = await positionstackService.reverseGeocode(latitude, longitude);
       
       if (geocodeResult) {
         setCurrentLocation(geocodeResult);
@@ -74,7 +74,7 @@ const NominatimExplorer: React.FC = () => {
     
     setSearching(true);
     try {
-      const result = await nominatimService.geocode(searchQuery);
+      const result = await positionstackService.geocode(searchQuery);
       setSearchResults(result);
       if (!result) {
         toast({
@@ -97,35 +97,34 @@ const NominatimExplorer: React.FC = () => {
   };
   
   const clearCache = () => {
-    nominatimService.clearCache();
+    positionstackService.clearCache();
     updateCacheStats();
     toast({
       title: 'Cache Cleared',
-      description: 'The Nominatim geocoding cache has been cleared',
+      description: 'The Positionstack geocoding cache has been cleared',
     });
   };
   
   const updateCacheStats = () => {
-    const stats = nominatimService.getCacheStats();
+    const stats = positionstackService.getCacheStats();
     setCacheStats(stats);
   };
   
   // Initialize
   useEffect(() => {
     updateCacheStats();
-    // Do not automatically refresh location to respect API limits
-    // User must click the button to initiate a request
+    // Do not automatically refresh location to avoid API usage
   }, []);
   
   return (
     <div className="space-y-6">
-      <Alert className="mb-4 border-yellow-500 bg-yellow-50 text-yellow-900 dark:border-yellow-900 dark:bg-yellow-950 dark:text-yellow-100">
-        <AlertTriangle className="h-4 w-4" />
-        <AlertTitle>Strict Usage Policy</AlertTitle>
+      <Alert className="mb-4 border-blue-500 bg-blue-50 text-blue-900 dark:border-blue-900 dark:bg-blue-950 dark:text-blue-100">
+        <ExternalLink className="h-4 w-4" />
+        <AlertTitle>Positionstack API</AlertTitle>
         <AlertDescription>
-          This service follows OpenStreetMap Nominatim's usage policy. Requests are limited to 1 every 2 seconds.
+          Powered by the Positionstack geocoding API with 7-day aggressive caching and rate limiting.
           <div className="mt-2 text-xs">
-            Data {nominatimService.getAttribution()}
+            {positionstackService.getAttribution()}
           </div>
         </AlertDescription>
       </Alert>
@@ -138,7 +137,7 @@ const NominatimExplorer: React.FC = () => {
               <MapPin className="mr-2 h-5 w-5 text-primary" />
               Current Location
             </CardTitle>
-            <CardDescription>Your detected location with Nominatim geocoding</CardDescription>
+            <CardDescription>Your detected location with Positionstack geocoding</CardDescription>
           </CardHeader>
           
           <CardContent>
@@ -174,7 +173,7 @@ const NominatimExplorer: React.FC = () => {
                     <h4 className="text-sm font-semibold mb-2">Location Components</h4>
                     <div className="flex flex-wrap gap-2">
                       {Object.entries(currentLocation.components)
-                        .filter(([key, value]) => value && !key.includes('_code') && key !== 'ISO_3166')
+                        .filter(([key, value]) => value)
                         .map(([key, value]) => (
                           <Badge key={key} variant="outline" className="text-xs">
                             {key.replace(/_/g, ' ')}: {value}
@@ -221,7 +220,7 @@ const NominatimExplorer: React.FC = () => {
               Search Locations
             </CardTitle>
             <CardDescription>
-              Search for any location using OSM Nominatim
+              Search for any location using Positionstack
             </CardDescription>
           </CardHeader>
           
@@ -271,7 +270,7 @@ const NominatimExplorer: React.FC = () => {
                       <h4 className="text-sm font-semibold mb-2">Location Components</h4>
                       <div className="flex flex-wrap gap-2">
                         {Object.entries(searchResults.components)
-                          .filter(([key, value]) => value && !key.includes('_code') && key !== 'ISO_3166')
+                          .filter(([key, value]) => value)
                           .map(([key, value]) => (
                             <Badge key={key} variant="outline" className="text-xs">
                               {key.replace(/_/g, ' ')}: {value}
@@ -294,9 +293,9 @@ const NominatimExplorer: React.FC = () => {
       {/* Cache Information */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Nominatim Geocoding Cache</CardTitle>
+          <CardTitle className="text-lg">Positionstack Geocoding Cache</CardTitle>
           <CardDescription>
-            14-day caching to minimize API usage and respect usage policies
+            7-day caching for efficient API usage (100,000 requests/month limit)
           </CardDescription>
         </CardHeader>
         
@@ -326,7 +325,7 @@ const NominatimExplorer: React.FC = () => {
             
             <div className="flex justify-between items-center">
               <div className="text-sm text-muted-foreground">
-                <strong>Rate limiting:</strong> Max 1 request per 2 seconds with 14-day caching to respect Nominatim Usage Policy.
+                <strong>Plan:</strong> Basic Plan - 100,000 requests/month with 7-day aggressive caching
               </div>
               
               <Button variant="destructive" size="sm" onClick={clearCache}>
@@ -340,4 +339,4 @@ const NominatimExplorer: React.FC = () => {
   );
 };
 
-export default NominatimExplorer;
+export default PositionstackExplorer;
