@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'wouter';
 import { 
   LogOut, 
   LogIn,
@@ -38,7 +38,7 @@ import {
   Music
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { playMotorsportSound, getSoundSettings, setSoundEnabled } from "../services/soundService";
+import { playSound } from "../services/SoundService";
 // Using the consolidated auth context
 import { useAuth } from '../hooks/useAuth';
 
@@ -78,21 +78,15 @@ const Header: React.FC = () => {
     // Only close if already open and the path actually changed
     if (isMenuOpen) {
       setIsMenuOpen(false);
-      // Play close sound if enabled
-      const soundSettings = getSoundSettings();
-      if (soundSettings?.enabled) {
-        playMotorsportSound('menu_select');
-      }
+      // Play close sound
+      playSound('menu_close');
     }
   }, [location.pathname]);
   
   const handleLogout = async () => {
     try {
-      // Play sound effect if enabled
-      const soundSettings = getSoundSettings();
-      if (soundSettings?.enabled) {
-        playMotorsportSound('logout');
-      }
+      // Play sound effect
+      playSound('ui_click');
       
       // Close menu
       setIsMenuOpen(false);
