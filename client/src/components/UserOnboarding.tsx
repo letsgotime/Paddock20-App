@@ -117,7 +117,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
   // Access authenticated user context
   const auth = useAuth();
   
-  // Current step state (1-6)
+  // Current step state (1-5)
   const [step, setStep] = useState(1);
   const [visibleStep, setVisibleStep] = useState(1);
   const [animateIn, setAnimateIn] = useState(true);
@@ -397,374 +397,451 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
         // Animate out
         setAnimateIn(false);
         
-        // Short delay for animation then jump to step 6 (dashboard customization)
+        // Short delay for animation then jump to step 5 (beta role selection)
         setTimeout(() => {
-          setStep(6);
-          setError(null);
+          setStep(5);
+          setVisibleStep(5);
           setAnimateIn(true);
-          setVisibleStep(6);
-        }, 200);
+        }, 300);
+        return;
+      }
+      
+      // User profile validation
+      if (step === 4) {
+        if (!isUserProfileComplete()) {
+          setError('Please complete all required fields before continuing');
+          return;
+        }
         
-        return;
+        if (userProfile.password !== userProfile.confirmPassword) {
+          setError('Passwords do not match');
+          return;
+        }
       }
       
-      // Final step - complete onboarding
-      if (step === 6) {
-        completeOnboarding();
-        return;
+      // Vehicle profile validation
+      if (step === 5) {
+        // No validation needed here, beta role selection is always valid
       }
+      
+      // Animate out
+      setAnimateIn(false);
+      
+      // Short delay for animation
+      setTimeout(() => {
+        if (step < 5) {
+          setStep(step + 1);
+          setVisibleStep(step + 1);
+        } else {
+          // Process final submission
+          handleFinalSubmit();
+        }
+        setAnimateIn(true);
+      }, 300);
+    } else {
+      // Previous step (no validation needed)
+      // Animate out
+      setAnimateIn(false);
+      
+      // Short delay for animation
+      setTimeout(() => {
+        if (step > 1) {
+          setStep(step - 1);
+          setVisibleStep(step - 1);
+        }
+        setAnimateIn(true);
+      }, 300);
     }
-    
-    // Animate out
-    setAnimateIn(false);
-    
-    // Short delay for animation
-    setTimeout(() => {
-      // Special case for backing up from step 5
-      if (direction === 'prev' && step === 5) {
-        setStep(3); // Skip back to step 3, bypassing step 4
-        setVisibleStep(3);
-      } else if (direction === 'next') {
-        setStep(prev => prev + 1);
-        setVisibleStep(step + 1);
-      } else {
-        setStep(prev => Math.max(1, prev - 1));
-        setVisibleStep(Math.max(1, step - 1));
-      }
-      
-      setError(null);
-      setAnimateIn(true);
-    }, 200);
   };
   
-  // Final function to save all data and complete onboarding
-  const completeOnboarding = () => {
-    // In a real app, this would save the data to a database
-    // For now, we'll save to localStorage for demo purposes
+  // Final submission handler
+  const handleFinalSubmit = async () => {
+    setError(null);
     
-    // Get authenticated user ID
-    const userId = auth.user?.id;
-    
-    if (!userId) {
-      console.error('Cannot complete onboarding: No authenticated user found');
-      setError('Authentication error. Please try logging in again.');
-      return;
+    try {
+      // In a real app, this would submit all collected data
+      console.log('Submitting user profile:', userProfile);
+      console.log('Submitting vehicle profile:', vehicleProfile);
+      console.log('Submitting beta role:', betaRole);
+      
+      // Simulate successful completion with a delay
+      setTimeout(() => {
+        // Call the onComplete callback with the user ID
+        onComplete(auth.user?.id || 1);
+      }, 800);
+    } catch (error) {
+      console.error('Error submitting onboarding data:', error);
+      setError('Failed to complete the setup. Please try again.');
     }
-    
-    // Save legal agreements with user-specific key
-    const legalAgreementsKey = `paddock20_legal_agreements_${userId}`;
-    localStorage.setItem(legalAgreementsKey, JSON.stringify({
-      accepted: true,
-      timestamp: new Date().toISOString(),
-      version: '1.0' // increment this when terms change
-    }));
-    
-    // Set beta onboarding complete flag with user-specific key
-    const betaOnboardingKey = `paddock20_beta_onboarding_complete_${userId}`;
-    localStorage.setItem(betaOnboardingKey, 'true');
-    
-    // Save user profile with user-specific key
-    const userProfileKey = `paddock20_user_profile_${userId}`;
-    localStorage.setItem(userProfileKey, JSON.stringify(userProfile));
-    
-    // Save vehicle profile with user-specific key
-    const vehicleProfileKey = `paddock20_vehicle_profile_${userId}`;
-    localStorage.setItem(vehicleProfileKey, JSON.stringify(vehicleProfile));
-    
-    // Save dashboard preferences with user-specific key
-    const dashboardPrefsKey = `paddock20_dashboard_prefs_${userId}`;
-    localStorage.setItem(dashboardPrefsKey, JSON.stringify(dashboardPrefs));
-    
-    // Save location settings with user-specific key
-    const locationSettingsKey = `paddock20_location_settings_${userId}`;
-    localStorage.setItem(locationSettingsKey, JSON.stringify(locationSettings));
-    
-    // Save routes with user-specific key
-    const routesKey = `paddock20_routes_${userId}`;
-    localStorage.setItem(routesKey, JSON.stringify(routes));
-    
-    // Complete onboarding by passing user ID
-    onComplete(userId);
-    
-    console.log('Onboarding completed for user ID:', userId);
-    
-    // Navigate to the homepage (this is now handled in the onComplete callback)
-    // Don't need window.location.href = '/' here anymore
   };
-
-  // Simplified step navigation functions
-  const nextStep = () => handleStepTransition('next');
-  const prevStep = () => handleStepTransition('prev');
-
+  
+  // Immediate submission without steps
+  const handleSkipToComplete = async () => {
+    setError(null);
+    
+    try {
+      // Pre-populate minimal data to satisfy any validation
+      setUserProfile(prev => ({
+        ...prev,
+        fullName: prev.fullName || auth.user?.username || 'User',
+        username: prev.username || auth.user?.username || 'user',
+        email: prev.email || auth.user?.email || 'user@example.com',
+        password: 'password123',  // These will never be used as Auth0 handles auth
+        confirmPassword: 'password123',
+      }));
+      
+      // Set default vehicle info
+      setVehicleProfile(prev => ({
+        ...prev,
+        make: 'Default',
+        model: 'Default',
+        year: new Date().getFullYear().toString(),
+      }));
+      
+      // Simulate successful completion with a delay
+      setTimeout(() => {
+        // Call the onComplete callback with the user ID
+        onComplete(auth.user?.id || 1);
+      }, 800);
+    } catch (error) {
+      console.error('Error skipping onboarding:', error);
+      setError('Failed to complete the setup. Please try again.');
+    }
+  };
+  
+  // Get the step title based on the current step
+  const getStepTitle = () => {
+    switch (step) {
+      case 1:
+        return 'WELCOME TO PADDOCK20';
+      case 2:
+        return 'GETTING STARTED';
+      case 3:
+        return 'LEGAL AGREEMENTS';
+      case 4:
+        return 'YOUR PROFILE';
+      case 5:
+        return 'CHOOSE YOUR BETA ROLE';
+      default:
+        return 'WELCOME TO PADDOCK20';
+    }
+  };
+  
+  // Render the component
   return (
-    <div className="fixed inset-0 bg-black z-50 flex items-center justify-center p-4 overflow-hidden">
-      {/* Dynamic background that changes with each step */}
-      <div className="absolute inset-0 z-0">
-        {step === 1 && (
-          <div 
-            className="absolute inset-0 bg-cover bg-center opacity-40"
-            style={{ 
-              backgroundImage: `url('/assets/Stock Photos/F1/ferrari-f1-pitstop-aerial.png')`,
-              filter: 'brightness(0.5)',
-              animation: 'pulse 5s infinite ease-in-out'
-            }}
-          />
-        )}
-        {step === 2 && (
-          <div 
-            className="absolute inset-0 bg-cover bg-center opacity-40"
-            style={{ 
-              backgroundImage: `url('/assets/Stock Photos/F1/f1-stadium-sunset.png')`,
-              filter: 'brightness(0.5)',
-              animation: 'pulse 5s infinite ease-in-out'
-            }}
-          />
-        )}
-        {step === 3 && (
-          <div 
-            className="absolute inset-0 bg-cover bg-center opacity-40"
-            style={{ 
-              backgroundImage: `url('/assets/Stock Photos/F1/redbull-honda-track.png')`,
-              filter: 'brightness(0.5)',
-              animation: 'pulse 5s infinite ease-in-out'
-            }}
-          />
-        )}
-        {(step === 4 || step === 5) && (
-          <div 
-            className="absolute inset-0 bg-cover bg-center opacity-40"
-            style={{ 
-              backgroundImage: `url('/assets/Stock Photos/F1/ferrari-laferrari-mountains.png')`,
-              filter: 'brightness(0.5)',
-              animation: 'pulse 5s infinite ease-in-out'
-            }}
-          />
-        )}
-        {step === 6 && (
-          <div 
-            className="absolute inset-0 bg-cover bg-center opacity-40"
-            style={{ 
-              backgroundImage: `url('/assets/Stock Photos/F1/redbull-sparks-night.png')`,
-              filter: 'brightness(0.5)',
-              animation: 'pulse 5s infinite ease-in-out'
-            }}
-          />
-        )}
-        
+    <div className="min-h-screen bg-gray-900 flex items-center justify-center font-sans">
+      <div className="w-full max-w-6xl bg-gray-900 rounded-xl overflow-hidden shadow-2xl relative">
         {/* Overlaid carbon fiber texture on all backgrounds */}
         <div 
-          className="absolute inset-0 bg-cover bg-center opacity-80"
+          className="absolute inset-0 opacity-10 pointer-events-none"
           style={{ 
-            backgroundImage: `url('/assets/Stock Photos/F1/carbon-fiber-texture-dark.png')`,
-            backgroundBlendMode: 'overlay',
-            mixBlendMode: 'multiply'
+            backgroundImage: 'url("/assets/carbon-fiber-pattern.png")', 
+            backgroundRepeat: 'repeat',
+            backgroundSize: '200px'
           }}
         />
         
         {/* F1-inspired racing stripe elements */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-[#08c519]"></div>
-        <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#1982FC]"></div>
-        <div className="absolute top-0 bottom-0 left-0 w-1 bg-[#ff2800]"></div>
-        <div className="absolute top-0 bottom-0 right-0 w-1 bg-[#ff2800]"></div>
-      </div>
-      
-      <div 
-        className={`relative z-10 backdrop-blur-lg bg-gradient-to-b from-gray-900/90 to-black/90 border border-gray-800 rounded-xl shadow-2xl max-w-4xl w-full overflow-hidden transition-all duration-500 transform ${animateIn ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
-        style={{
-          boxShadow: `0 0 40px rgba(8, 197, 25, 0.2), 
-                      0 0 20px rgba(25, 130, 252, 0.2),
-                      0 0 60px rgba(255, 40, 0, 0.1)`
-        }}
-      >
+        <div className="absolute top-0 left-0 w-4 h-full bg-[#1982FC]" />
+        <div className="absolute top-0 left-4 w-1 h-full bg-[#08c519]" />
+        <div className="absolute top-0 right-0 w-1 h-full bg-[#08c519]" />
+        <div className="absolute bottom-0 left-0 w-full h-1 bg-[#1982FC]" />
+        
         {/* Decorative elements */}
-        <div className="absolute top-0 left-0 w-full h-1 bg-gradient-to-r from-[#1982FC] to-[#08c519]"></div>
-        <div className="absolute top-1 right-0 w-4 h-20 bg-gradient-to-b from-[#08c519] opacity-40"></div>
-        <div className="absolute bottom-20 left-0 w-4 h-20 bg-gradient-to-t from-[#1982FC] opacity-40"></div>
+        <div className="absolute bottom-0 right-0 w-32 h-32 opacity-10 pointer-events-none">
+          <Shield className="w-full h-full text-[#1982FC]" />
+        </div>
         
         {/* Header */}
-        <div className="border-b border-gray-800 p-6 flex justify-between items-center bg-gray-900/50">
-          <h2 className="text-2xl font-bold" style={{ fontFamily: 'Orbitron, sans-serif' }}>
-            {step === 1 && (
-              <span style={{ color: CAROLINA_BLUE }}>
-                WELCOME TO PADDOCK20 <span style={{ color: GOTIME_GREEN }}>BETA</span>
-              </span>
-            )}
-            {step === 2 && (
-              <span style={{ color: CAROLINA_BLUE }}>
-                ABOUT PADDOCK20 <span style={{ color: GOTIME_GREEN }}>BETA</span>
-              </span>
-            )}
-            {step === 3 && <span style={{ color: CAROLINA_BLUE }}>LEGAL AGREEMENTS REQUIRED</span>}
-            {step === 4 && <span style={{ color: CAROLINA_BLUE }}>YOUR PADDOCK20 PROFILE</span>}
-            {step === 5 && <span style={{ color: CAROLINA_BLUE }}>CHOOSE YOUR BETA ROLE</span>}
-          </h2>
-
+        <div className="bg-gray-900 px-8 pt-6 pb-4 border-b border-gray-800 flex items-center justify-between">
+          <div className="flex items-center space-x-4">
+            <Car className="text-[#1982FC] h-8 w-8" />
+            <div>
+              <h1 className="text-2xl font-bold text-white font-orbitron tracking-wider">
+                PADDOCK<span className="text-[#1982FC]">20</span>
+              </h1>
+              <p className="text-gray-400 text-sm">
+                The Ultimate Automotive Lifestyle Platform
+              </p>
+            </div>
+          </div>
+          
+          <div className="text-gray-400 flex items-center">
+            <CircleDashed className="animate-spin-slow mr-2 opacity-50" size={16} />
+            <span className="text-xs uppercase font-semibold tracking-wider">
+              Beta Access
+            </span>
+          </div>
         </div>
         
         {/* Step content */}
-        <div className="p-8 max-h-[70vh] overflow-y-auto">
+        <div className="p-8">
+          <div className="mb-8 flex flex-col md:flex-row md:items-center md:justify-between">
+            <h2 className="text-2xl font-bold text-white font-orbitron tracking-wide mb-4 md:mb-0">
+              {getStepTitle()}
+            </h2>
+          </div>
+          
+          {/* Step 1: Welcome */}
           {step === 1 && (
-            <div className="space-y-6 animate-fadeIn">
-              <div className="flex items-center p-4 bg-[#1982FC]/10 rounded-lg border border-[#1982FC]/30">
-                <div className="mr-4 bg-[#1982FC]/20 rounded-full p-2">
-                  <AlertTriangle style={{ color: CAROLINA_BLUE }} size={24} />
-                </div>
-                <p className="text-gray-200">
-                  Paddock20 is currently in <span style={{ color: GOTIME_GREEN }} className="font-bold">Beta</span>. 
-                  You've been granted early access to explore and test the application.
-                </p>
-              </div>
-              
-              <div className="relative">
-                <h3 className="text-xl font-bold font-orbitron text-white relative z-10 inline-block">
-                  What to expect<span style={{ color: CAROLINA_BLUE }}>:</span>
-                </h3>
-                <div className="absolute bottom-0 left-0 h-1 w-20 bg-gradient-to-r from-[#1982FC] to-transparent"></div>
-              </div>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-5 mt-2">
-                <div className="bg-gray-900/40 p-4 rounded-lg border-l-2" style={{ borderColor: GOTIME_GREEN }}>
-                  <div className="flex">
-                    <Check style={{ color: GOTIME_GREEN }} className="mt-1 mr-3 flex-shrink-0" size={18} />
-                    <div>
-                      <h4 className="font-bold text-white">Premium Features</h4>
-                      <p className="text-gray-300 text-sm mt-1">Cutting-edge automotive enthusiast tools and insights</p>
+            <div className={`space-y-6 ${animateIn ? 'animate-fadeIn' : 'animate-fadeOut'}`}>
+              <div className="flex flex-col md:flex-row space-y-6 md:space-y-0 md:space-x-8">
+                <div className="md:w-1/2 space-y-6">
+                  <div className="bg-[#1982FC]/10 p-6 rounded-lg">
+                    <h3 className="text-xl font-bold text-white mb-3 font-orbitron tracking-wide">
+                      JOIN THE PADDOCK
+                    </h3>
+                    <p className="text-gray-300 mb-4">
+                      Welcome to the exclusive PADDOCK20 beta program. You've been selected to be 
+                      among the first to experience this revolutionary automotive lifestyle platform.
+                    </p>
+                    <div className="flex items-center space-x-2 text-[#1982FC]">
+                      <Trophy size={20} />
+                      <span className="text-sm font-semibold">You are in the first wave of beta testers</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-semibold text-[#1982FC]">
+                      What to expect during setup:
+                    </h4>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-start">
+                        <div className="mt-1 mr-3 flex items-center justify-center w-5 h-5 bg-[#1982FC]/20 text-[#1982FC] rounded-full flex-shrink-0">
+                          <Check size={14} />
+                        </div>
+                        <div>
+                          <h5 className="text-white font-medium">Quick Legal Overview</h5>
+                          <p className="text-gray-400 text-sm">Standard beta testing terms to protect your privacy</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start">
+                        <div className="mt-1 mr-3 flex items-center justify-center w-5 h-5 bg-[#1982FC]/20 text-[#1982FC] rounded-full flex-shrink-0">
+                          <Check size={14} />
+                        </div>
+                        <div>
+                          <h5 className="text-white font-medium">Personalized Profile Setup</h5>
+                          <p className="text-gray-400 text-sm">Tell us about your automotive interests</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start">
+                        <div className="mt-1 mr-3 flex items-center justify-center w-5 h-5 bg-[#1982FC]/20 text-[#1982FC] rounded-full flex-shrink-0">
+                          <Check size={14} />
+                        </div>
+                        <div>
+                          <h5 className="text-white font-medium">Beta Role Selection</h5>
+                          <p className="text-gray-400 text-sm">Choose how you'd like to participate in the beta program</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
                 
-                <div className="bg-gray-900/40 p-4 rounded-lg border-l-2" style={{ borderColor: GOTIME_GREEN }}>
-                  <div className="flex">
-                    <Check style={{ color: GOTIME_GREEN }} className="mt-1 mr-3 flex-shrink-0" size={18} />
-                    <div>
-                      <h4 className="font-bold text-white">Exclusive Community</h4>
-                      <p className="text-gray-300 text-sm mt-1">Connect with like-minded automotive enthusiasts</p>
+                <div className="md:w-1/2 space-y-6">
+                  <div 
+                    className="h-48 rounded-lg overflow-hidden relative bg-cover bg-center"
+                    style={{ backgroundImage: 'url("/assets/Stock Photos/dashboard-hero.jpg")' }}
+                  >
+                    <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/70 to-transparent" />
+                    <div className="absolute bottom-0 left-0 p-4">
+                      <h3 className="text-white font-bold text-lg">Revolutionary Design</h3>
+                      <p className="text-gray-200 text-sm">
+                        Inspired by F1 telemetry and supercar aesthetics
+                      </p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="bg-gray-800/70 p-4 rounded-lg border border-gray-700">
+                      <div className="flex items-center mb-2">
+                        <PaintBucket className="text-[#1982FC] mr-2" size={18} />
+                        <h5 className="text-white font-medium">Detailing Insights</h5>
+                      </div>
+                      <p className="text-gray-400 text-sm">
+                        Track your vehicle's appearance with JuiceBox, our advanced detailing module
+                      </p>
+                    </div>
+                    
+                    <div className="bg-gray-800/70 p-4 rounded-lg border border-gray-700">
+                      <div className="flex items-center mb-2">
+                        <Cloud className="text-[#1982FC] mr-2" size={18} />
+                        <h5 className="text-white font-medium">Weather Integration</h5>
+                      </div>
+                      <p className="text-gray-400 text-sm">
+                        Get precise automotive weather data for better driving decisions
+                      </p>
+                    </div>
+                    
+                    <div className="bg-gray-800/70 p-4 rounded-lg border border-gray-700 md:col-span-2">
+                      <div className="flex items-center mb-2">
+                        <Zap className="text-[#08c519] mr-2" size={18} />
+                        <h5 className="text-white font-medium">Premium Beta Access</h5>
+                      </div>
+                      <p className="text-gray-400 text-sm">
+                        As a selected beta tester, you'll get first access to new features and premium modules as they're developed
+                      </p>
                     </div>
                   </div>
                 </div>
-                
-                <div className="bg-gray-900/40 p-4 rounded-lg border-l-2 border-red-500">
-                  <div className="flex">
-                    <X className="text-red-500 mt-1 mr-3 flex-shrink-0" size={18} />
-                    <div>
-                      <h4 className="font-bold text-white">Feature Evolution</h4>
-                      <p className="text-gray-300 text-sm mt-1">Some features may be incomplete or change over time</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-gray-900/40 p-4 rounded-lg border-l-2 border-red-500">
-                  <div className="flex">
-                    <X className="text-red-500 mt-1 mr-3 flex-shrink-0" size={18} />
-                    <div>
-                      <h4 className="font-bold text-white">Beta Status</h4>
-                      <p className="text-gray-300 text-sm mt-1">You may encounter occasional bugs or technical issues</p>
-                    </div>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="text-center">
-                <img 
-                  src="/favicon.png" 
-                  alt="GoTime Motorsports Logo" 
-                  className="h-12 mb-4 mx-auto opacity-90" 
-                />
-                <p className="text-gray-300">
-                  By proceeding, you're joining an exclusive group of automotive enthusiasts shaping the future of The Grid. 
-                  <span className="block mt-1 font-medium" style={{ color: CAROLINA_BLUE }}>
-                    Your feedback will be invaluable in creating the ultimate automotive enthusiast platform.
-                  </span>
-                </p>
               </div>
             </div>
           )}
           
+          {/* Step 2: Introduction */}
           {step === 2 && (
-            <div className="space-y-6 animate-fadeIn">
-              <div className="text-center mb-8">
-                <h3 className="text-2xl font-orbitron" style={{ color: CAROLINA_BLUE }}>
-                  THE PADDOCK20 EXPERIENCE
-                </h3>
-                
-                <p className="text-xl text-white mt-2 font-orbitron tracking-wide">
-                  Built for Drivers. Engineered for Dreamers. Designed for Legacy.
-                </p>
-                
-                <div className="w-40 h-1 mx-auto mt-4 bg-gradient-to-r from-transparent via-[#1982FC] to-transparent"></div>
-              </div>
-              
-              <p className="text-gray-300 leading-relaxed">
-                Paddock20 is an advanced mobility insights platform that transforms automotive telemetry, 
-                detailing management, and personal development into a comprehensive digital experience 
-                for automotive enthusiasts and detailing enthusiasts.
-              </p>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-6">
-                <div className="bg-gray-800/50 p-5 rounded-lg border border-gray-700 hover:border-[#1982FC] transition-colors group">
-                  <div className="flex items-start">
-                    <div className="bg-[#1982FC]/20 p-2 rounded-lg mr-4">
-                      <Clock style={{ color: CAROLINA_BLUE }} size={24} />
+            <div className={`space-y-6 ${animateIn ? 'animate-fadeIn' : 'animate-fadeOut'}`}>
+              <div className="flex flex-col md:flex-row space-y-6 md:space-y-0 md:space-x-8">
+                <div className="md:w-1/2 space-y-6">
+                  <div className="bg-[#1982FC]/10 p-6 rounded-lg">
+                    <div className="flex items-center mb-4">
+                      <Shield className="text-[#1982FC] mr-3" size={24} />
+                      <h3 className="text-xl font-bold text-white font-orbitron tracking-wide">
+                        BETA PROGRAM DETAILS
+                      </h3>
                     </div>
-                    <div>
-                      <h4 className="font-bold font-orbitron mb-2 group-hover:text-[#1982FC] transition-colors">
-                        Weather Paddock
-                      </h4>
-                      <p className="text-sm text-gray-300">
-                        Essential daily tools for driver enthusiasts: automotive-optimized weather, 
-                        world clocks, and F1-inspired telemetry.
-                      </p>
+                    
+                    <p className="text-gray-300 mb-4">
+                      PADDOCK20 is an exclusive automotive lifestyle platform designed to revolutionize 
+                      how enthusiasts track, manage, and enjoy their vehicles.
+                    </p>
+                    
+                    <p className="text-gray-300 mb-4">
+                      As a beta participant, you'll help shape the future of the platform through your 
+                      feedback and usage patterns.
+                    </p>
+                    
+                    <div className="flex items-center space-x-2 text-[#08c519]">
+                      <Clock size={20} />
+                      <span className="text-sm font-semibold">Expected beta duration: 3 months</span>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <h4 className="text-lg font-semibold text-[#1982FC]">
+                      What you'll get access to:
+                    </h4>
+                    
+                    <div className="space-y-3">
+                      <div className="flex items-start">
+                        <div className="mt-1 mr-3 flex items-center justify-center w-5 h-5 bg-[#1982FC]/20 text-[#1982FC] rounded-full flex-shrink-0">
+                          <Check size={14} />
+                        </div>
+                        <div>
+                          <h5 className="text-white font-medium">Weather Paddock</h5>
+                          <p className="text-gray-400 text-sm">Advanced weather intelligence for car care and driving</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start">
+                        <div className="mt-1 mr-3 flex items-center justify-center w-5 h-5 bg-[#1982FC]/20 text-[#1982FC] rounded-full flex-shrink-0">
+                          <Check size={14} />
+                        </div>
+                        <div>
+                          <h5 className="text-white font-medium">Garage Vault</h5>
+                          <p className="text-gray-400 text-sm">Comprehensive vehicle management and history tracking</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start">
+                        <div className="mt-1 mr-3 flex items-center justify-center w-5 h-5 bg-[#1982FC]/20 text-[#1982FC] rounded-full flex-shrink-0">
+                          <Check size={14} />
+                        </div>
+                        <div>
+                          <h5 className="text-white font-medium">JuiceBox</h5>
+                          <p className="text-gray-400 text-sm">Revolutionary detailing and appearance management</p>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start">
+                        <div className="mt-1 mr-3 flex items-center justify-center w-5 h-5 bg-[#1982FC]/20 text-[#1982FC] rounded-full flex-shrink-0">
+                          <Check size={14} />
+                        </div>
+                        <div>
+                          <h5 className="text-white font-medium">Manifestation Station</h5>
+                          <p className="text-gray-400 text-sm">Goal setting and progress tracking for your automotive dreams</p>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
                 
-                <div className="bg-gray-800/50 p-5 rounded-lg border border-gray-700 hover:border-[#1982FC] transition-colors group">
-                  <div className="flex items-start">
-                    <div className="bg-[#1982FC]/20 p-2 rounded-lg mr-4">
-                      <Car style={{ color: CAROLINA_BLUE }} size={24} />
-                    </div>
-                    <div>
-                      <h4 className="font-bold font-orbitron mb-2 group-hover:text-[#1982FC] transition-colors">
-                        JuiceBox
-                      </h4>
-                      <p className="text-sm text-gray-300">
-                        The most intuitive detailing page in the industry with comprehensive tracking 
-                        for car detailing, product usage, and maintenance protocols.
-                      </p>
+                <div className="md:w-1/2 space-y-6">
+                  <div className="bg-gray-800/80 p-6 rounded-lg border border-gray-700">
+                    <h4 className="text-lg font-semibold text-[#1982FC] mb-4">
+                      Beta Participant Options
+                    </h4>
+                    
+                    <div className="space-y-6">
+                      <div className="flex items-start">
+                        <div className="mt-1 mr-4 flex items-center justify-center w-8 h-8 bg-gray-700 text-[#1982FC] rounded-full flex-shrink-0">
+                          <User size={18} />
+                        </div>
+                        <div>
+                          <h5 className="text-white font-medium mb-1">Basic Beta User</h5>
+                          <p className="text-gray-400 text-sm mb-2">
+                            Experience the platform with minimal commitment. Perfect for casual users.
+                          </p>
+                          <ul className="text-sm text-gray-400 space-y-1">
+                            <li className="flex items-center">
+                              <Check size={14} className="text-[#08c519] mr-2 flex-shrink-0" />
+                              <span>Early access to all features</span>
+                            </li>
+                            <li className="flex items-center">
+                              <Check size={14} className="text-[#08c519] mr-2 flex-shrink-0" />
+                              <span>Occasional feedback requests</span>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
+                      
+                      <div className="flex items-start">
+                        <div className="mt-1 mr-4 flex items-center justify-center w-8 h-8 bg-[#1982FC]/20 text-[#1982FC] rounded-full flex-shrink-0">
+                          <Trophy size={18} />
+                        </div>
+                        <div>
+                          <div className="flex items-center mb-1">
+                            <h5 className="text-white font-medium">Active Beta Tester</h5>
+                            <span className="ml-2 px-2 py-0.5 bg-[#1982FC]/20 text-[#1982FC] text-xs rounded-full">Recommended</span>
+                          </div>
+                          <p className="text-gray-400 text-sm mb-2">
+                            Help shape the platform's future through active participation and feedback.
+                          </p>
+                          <ul className="text-sm text-gray-400 space-y-1">
+                            <li className="flex items-center">
+                              <Check size={14} className="text-[#08c519] mr-2 flex-shrink-0" />
+                              <span>Everything in Basic Beta User</span>
+                            </li>
+                            <li className="flex items-center">
+                              <Check size={14} className="text-[#08c519] mr-2 flex-shrink-0" />
+                              <span>Prioritized feature requests</span>
+                            </li>
+                            <li className="flex items-center">
+                              <Check size={14} className="text-[#08c519] mr-2 flex-shrink-0" />
+                              <span>Direct access to developers</span>
+                            </li>
+                            <li className="flex items-center">
+                              <Check size={14} className="text-[#08c519] mr-2 flex-shrink-0" />
+                              <span>Early access to premium features</span>
+                            </li>
+                          </ul>
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-                
-                <div className="bg-gray-800/50 p-5 rounded-lg border border-gray-700 hover:border-[#1982FC] transition-colors group">
-                  <div className="flex items-start">
-                    <div className="bg-[#1982FC]/20 p-2 rounded-lg mr-4">
-                      <Trophy style={{ color: CAROLINA_BLUE }} size={24} />
-                    </div>
-                    <div>
-                      <h4 className="font-bold font-orbitron mb-2 group-hover:text-[#1982FC] transition-colors">
-                        Manifestation Station
-                      </h4>
-                      <p className="text-sm text-gray-300">
-                        Set, track, and accomplish your automotive goals through our structured 
-                        goal-setting framework designed for enthusiasts.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-gray-800/50 p-5 rounded-lg border border-gray-700 hover:border-[#1982FC] transition-colors group">
-                  <div className="flex items-start">
-                    <div className="bg-[#1982FC]/20 p-2 rounded-lg mr-4">
-                      <Shield style={{ color: CAROLINA_BLUE }} size={24} />
-                    </div>
-                    <div>
-                      <h4 className="font-bold font-orbitron mb-2 group-hover:text-[#1982FC] transition-colors">
-                        Garage Vault
-                      </h4>
-                      <p className="text-sm text-gray-300">
-                        Comprehensive vehicle management system with integrated maintenance tracking, 
-                        modification planning, and documentation.
-                      </p>
+                  
+                  <div className="bg-gray-800/80 p-5 rounded-lg border border-gray-700">
+                    <div className="flex items-start">
+                      <AlertTriangle className="text-[#1982FC] mr-3 flex-shrink-0 mt-1" size={20} />
+                      <div>
+                        <h5 className="text-white font-medium mb-1">Important Notice</h5>
+                        <p className="text-gray-400 text-sm">
+                          As a beta tester, you understand the platform is still under development.
+                          Some features may change or be unavailable during certain periods.
+                        </p>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -772,138 +849,405 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
             </div>
           )}
           
+          {/* Step 3: Legal agreements */}
           {step === 3 && (
-            <div className="space-y-6 animate-fadeIn">
-              <div className="flex items-center bg-[#1982FC]/10 p-4 rounded-lg mb-6">
-                <Shield className="text-[#1982FC] mr-4" size={24} />
-                <p className="text-gray-200">
-                  Before proceeding, you must review and agree to the following legal documents.
-                  These agreements protect both you and Paddock20 throughout your beta experience.
-                </p>
-              </div>
-              
-              <div className="space-y-4">
-                <div className={`flex items-start space-x-3 p-4 rounded-lg transition-all duration-200 ${
-                  agreements.termsOfService 
-                    ? 'bg-[#1982FC]/20 border border-[#1982FC]/40' 
-                    : 'bg-gray-800/50 border border-gray-700 hover:bg-gray-800/80'
-                }`}>
-                  <div className="pt-0.5">
-                    <input 
-                      type="checkbox" 
-                      id="terms-agreement" 
-                      className="h-5 w-5 rounded border-gray-500 text-[#1982FC] focus:ring-[#1982FC] focus:ring-offset-gray-900"
-                      checked={agreements.termsOfService}
-                      onChange={() => handleAgreementChange('termsOfService')}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label htmlFor="terms-agreement" className="font-medium text-white cursor-pointer">
-                      I have read and agree to the <Link href="/terms-of-service" target="_blank" className="text-[#1982FC] hover:underline">Terms of Service</Link>
-                    </label>
-                    <p className="text-sm text-gray-300 mt-2">
-                      The Terms of Service outline your rights and obligations when using Paddock20, including acceptable use policies, intellectual property rights, and liability limitations.
-                    </p>
-                  </div>
-                </div>
-                
-                <div className={`flex items-start space-x-3 p-4 rounded-lg transition-all duration-200 ${
-                  agreements.privacyPolicy 
-                    ? 'bg-[#1982FC]/20 border border-[#1982FC]/40' 
-                    : 'bg-gray-800/50 border border-gray-700 hover:bg-gray-800/80'
-                }`}>
-                  <div className="pt-0.5">
-                    <input 
-                      type="checkbox" 
-                      id="privacy-agreement" 
-                      className="h-5 w-5 rounded border-gray-500 text-[#1982FC] focus:ring-[#1982FC] focus:ring-offset-gray-900"
-                      checked={agreements.privacyPolicy}
-                      onChange={() => handleAgreementChange('privacyPolicy')}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label htmlFor="privacy-agreement" className="font-medium text-white cursor-pointer">
-                      I have read and agree to the <Link href="/privacy-policy" target="_blank" className="text-[#1982FC] hover:underline">Privacy Policy</Link>
-                    </label>
-                    <p className="text-sm text-gray-300 mt-2">
-                      Our Privacy Policy explains how we collect, use, store, and protect your personal information, including your rights regarding your data and our data retention practices.
-                    </p>
-                  </div>
-                </div>
-                
-                <div className={`flex items-start space-x-3 p-4 rounded-lg transition-all duration-200 ${
-                  agreements.betaAgreement 
-                    ? 'bg-[#1982FC]/20 border border-[#1982FC]/40' 
-                    : 'bg-gray-800/50 border border-gray-700 hover:bg-gray-800/80'
-                }`}>
-                  <div className="pt-0.5">
-                    <input 
-                      type="checkbox" 
-                      id="beta-agreement" 
-                      className="h-5 w-5 rounded border-gray-500 text-[#1982FC] focus:ring-[#1982FC] focus:ring-offset-gray-900"
-                      checked={agreements.betaAgreement}
-                      onChange={() => handleAgreementChange('betaAgreement')}
-                    />
-                  </div>
-                  <div className="flex-1">
-                    <label htmlFor="beta-agreement" className="font-medium text-white cursor-pointer">
-                      I have read and agree to the <Link href="/beta-agreement" target="_blank" className="text-[#1982FC] hover:underline">Beta Agreement</Link>
-                    </label>
-                    <p className="text-sm text-gray-300 mt-2">
-                      The Beta Agreement covers special considerations for beta testers, including feature limitations, feedback expectations, reporting bugs, and confidentiality requirements.
-                    </p>
-                  </div>
+            <div className={`space-y-6 ${animateIn ? 'animate-fadeIn' : 'animate-fadeOut'}`}>
+              <div className="bg-[#1982FC]/10 p-4 rounded-lg mb-6">
+                <div className="flex items-center">
+                  <Shield className="text-[#1982FC] mr-4" size={24} />
+                  <p className="text-gray-200">
+                    Please review and accept the following agreements to proceed with the beta program.
+                    These agreements protect both your rights and the platform's intellectual property.
+                  </p>
                 </div>
               </div>
               
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="space-y-6">
+                  {/* Terms of Service Agreement */}
+                  <div className="border border-gray-700 rounded-lg overflow-hidden">
+                    <div className="bg-gray-800 px-4 py-3 flex items-center justify-between">
+                      <h3 className="text-white font-medium flex items-center">
+                        <FileText className="text-[#1982FC] mr-2" size={18} />
+                        Terms of Service
+                      </h3>
+                      <div>
+                        <div className="flex items-center">
+                          <input 
+                            type="checkbox" 
+                            id="termsOfService"
+                            checked={agreements.termsOfService}
+                            onChange={() => handleAgreementChange('termsOfService')}
+                            className="h-4 w-4 text-[#1982FC] focus:ring-[#1982FC] rounded"
+                          />
+                          <label htmlFor="termsOfService" className="ml-2 text-sm text-gray-300">
+                            I Accept
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 bg-gray-900 h-60 overflow-y-auto text-sm">
+                      <div className="prose prose-sm prose-invert">
+                        <h4>PADDOCK20 Beta Terms of Service</h4>
+                        <p>Last Updated: May 5, 2025</p>
+                        
+                        <p>
+                          Welcome to the PADDOCK20 Beta Program. By participating in our beta testing, 
+                          you agree to these Terms of Service ("Terms").
+                        </p>
+                        
+                        <h5>1. Beta Access</h5>
+                        <p>
+                          PADDOCK20 provides access to its beta platform for testing purposes only. 
+                          We make no guarantees regarding availability, performance, or feature completion.
+                          Features may change, be removed, or be unavailable during the beta period.
+                        </p>
+                        
+                        <h5>2. User Accounts</h5>
+                        <p>
+                          You are responsible for maintaining the confidentiality of your account 
+                          information and for all activities that occur under your account. You must 
+                          provide accurate information when creating your account.
+                        </p>
+                        
+                        <h5>3. Feedback</h5>
+                        <p>
+                          By providing feedback, suggestions, or ideas about PADDOCK20, you grant us a 
+                          non-exclusive, worldwide, royalty-free license to use and incorporate your 
+                          feedback into our services without any obligation to compensate you.
+                        </p>
+                        
+                        <h5>4. Data Usage</h5>
+                        <p>
+                          We collect usage data to improve the platform. This includes feature usage, 
+                          performance metrics, and crash reports. See our Privacy Policy for details.
+                        </p>
+                        
+                        <h5>5. Acceptable Use</h5>
+                        <p>
+                          You agree not to:
+                        </p>
+                        <ul>
+                          <li>Use the service for any illegal purpose</li>
+                          <li>Attempt to gain unauthorized access to any part of the service</li>
+                          <li>Interfere with or disrupt the service</li>
+                          <li>Share your beta access with unauthorized users</li>
+                        </ul>
+                        
+                        <h5>6. Termination</h5>
+                        <p>
+                          We reserve the right to terminate or suspend your access to the beta at any 
+                          time, with or without cause, and without prior notice.
+                        </p>
+                        
+                        <h5>7. Disclaimer of Warranties</h5>
+                        <p>
+                          THE SERVICE IS PROVIDED "AS IS" AND "AS AVAILABLE" WITHOUT WARRANTIES OF ANY 
+                          KIND. WE EXPRESSLY DISCLAIM ALL WARRANTIES, WHETHER EXPRESS, IMPLIED, OR 
+                          STATUTORY.
+                        </p>
+                        
+                        <h5>8. Limitation of Liability</h5>
+                        <p>
+                          TO THE MAXIMUM EXTENT PERMITTED BY LAW, IN NO EVENT SHALL PADDOCK20 BE LIABLE 
+                          FOR ANY INDIRECT, INCIDENTAL, SPECIAL, CONSEQUENTIAL OR PUNITIVE DAMAGES.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                
+                  {/* Privacy Policy Agreement */}
+                  <div className="border border-gray-700 rounded-lg overflow-hidden">
+                    <div className="bg-gray-800 px-4 py-3 flex items-center justify-between">
+                      <h3 className="text-white font-medium flex items-center">
+                        <Shield className="text-[#1982FC] mr-2" size={18} />
+                        Privacy Policy
+                      </h3>
+                      <div>
+                        <div className="flex items-center">
+                          <input 
+                            type="checkbox" 
+                            id="privacyPolicy"
+                            checked={agreements.privacyPolicy}
+                            onChange={() => handleAgreementChange('privacyPolicy')}
+                            className="h-4 w-4 text-[#1982FC] focus:ring-[#1982FC] rounded"
+                          />
+                          <label htmlFor="privacyPolicy" className="ml-2 text-sm text-gray-300">
+                            I Accept
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 bg-gray-900 h-60 overflow-y-auto text-sm">
+                      <div className="prose prose-sm prose-invert">
+                        <h4>PADDOCK20 Privacy Policy</h4>
+                        <p>Last Updated: May 5, 2025</p>
+                        
+                        <p>
+                          This Privacy Policy explains how PADDOCK20 ("we", "our", or "us") collects, 
+                          uses, and shares your information when you participate in our beta program.
+                        </p>
+                        
+                        <h5>1. Information We Collect</h5>
+                        <p>
+                          <strong>Account Information:</strong> When you register, we collect your name, 
+                          email address, and login credentials.
+                        </p>
+                        <p>
+                          <strong>Profile Information:</strong> Information you provide in your profile, 
+                          including your automotive interests, vehicles, and preferences.
+                        </p>
+                        <p>
+                          <strong>Vehicle Information:</strong> Details about your vehicles, including 
+                          make, model, year, and maintenance history.
+                        </p>
+                        <p>
+                          <strong>Usage Data:</strong> Information about how you use our service, including 
+                          features accessed, actions taken, and time spent.
+                        </p>
+                        <p>
+                          <strong>Device Information:</strong> Data about your device, IP address, 
+                          browser type, and operating system.
+                        </p>
+                        <p>
+                          <strong>Location Information:</strong> With your consent, we collect your 
+                          location to provide weather and route-specific features.
+                        </p>
+                        
+                        <h5>2. How We Use Your Information</h5>
+                        <p>
+                          We use the information we collect to:
+                        </p>
+                        <ul>
+                          <li>Provide, maintain, and improve the PADDOCK20 platform</li>
+                          <li>Process and complete transactions</li>
+                          <li>Monitor and analyze trends, usage, and activities</li>
+                          <li>Detect, investigate, and prevent fraudulent or unauthorized activities</li>
+                          <li>Communicate with you about the beta program, updates, and feedback requests</li>
+                        </ul>
+                        
+                        <h5>3. Sharing Your Information</h5>
+                        <p>
+                          We do not sell your personal information. We may share your information:
+                        </p>
+                        <ul>
+                          <li>With service providers who perform services on our behalf</li>
+                          <li>If required by law or to protect rights and safety</li>
+                          <li>In connection with a business transaction such as a merger or acquisition</li>
+                          <li>With your consent</li>
+                        </ul>
+                        
+                        <h5>4. Data Security</h5>
+                        <p>
+                          We implement reasonable security measures to protect your information. 
+                          However, no method of transmission or storage is 100% secure.
+                        </p>
+                        
+                        <h5>5. Data Retention</h5>
+                        <p>
+                          We retain your information for as long as necessary to provide the beta 
+                          service and fulfill the purposes outlined in this Privacy Policy.
+                        </p>
+                        
+                        <h5>6. Your Rights</h5>
+                        <p>
+                          Depending on your location, you may have rights regarding your personal 
+                          information, including the right to access, correct, delete, or export your data.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                
+                <div className="space-y-6">
+                  {/* Beta Agreement */}
+                  <div className="border border-gray-700 rounded-lg overflow-hidden">
+                    <div className="bg-gray-800 px-4 py-3 flex items-center justify-between">
+                      <h3 className="text-white font-medium flex items-center">
+                        <Key className="text-[#1982FC] mr-2" size={18} />
+                        Beta Testing Agreement
+                      </h3>
+                      <div>
+                        <div className="flex items-center">
+                          <input 
+                            type="checkbox" 
+                            id="betaAgreement"
+                            checked={agreements.betaAgreement}
+                            onChange={() => handleAgreementChange('betaAgreement')}
+                            className="h-4 w-4 text-[#1982FC] focus:ring-[#1982FC] rounded"
+                          />
+                          <label htmlFor="betaAgreement" className="ml-2 text-sm text-gray-300">
+                            I Accept
+                          </label>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    <div className="p-4 bg-gray-900 h-60 overflow-y-auto text-sm">
+                      <div className="prose prose-sm prose-invert">
+                        <h4>PADDOCK20 Beta Testing Agreement</h4>
+                        <p>Last Updated: May 5, 2025</p>
+                        
+                        <p>
+                          This Beta Testing Agreement ("Agreement") governs your participation in the 
+                          PADDOCK20 beta testing program.
+                        </p>
+                        
+                        <h5>1. Beta Period</h5>
+                        <p>
+                          The beta testing period is expected to last approximately 3 months but may 
+                          be extended or shortened at our discretion. You will be notified when the 
+                          beta period ends.
+                        </p>
+                        
+                        <h5>2. Confidentiality</h5>
+                        <p>
+                          As a beta tester, you may have access to confidential information, including 
+                          unreleased features, designs, and plans. You agree to:
+                        </p>
+                        <ul>
+                          <li>Keep all confidential information strictly confidential</li>
+                          <li>Not share screenshots, videos, or details about the beta without permission</li>
+                          <li>Not use confidential information for any purpose other than testing</li>
+                        </ul>
+                        
+                        <h5>3. Feedback</h5>
+                        <p>
+                          Your feedback is valuable to us. By participating in the beta, you agree to:
+                        </p>
+                        <ul>
+                          <li>Provide honest and constructive feedback about your experience</li>
+                          <li>Report any bugs, errors, or issues you encounter</li>
+                          <li>Respond to surveys or questionnaires about your testing experience</li>
+                          <li>Participate in feedback sessions if requested</li>
+                        </ul>
+                        
+                        <h5>4. Beta Tester Roles</h5>
+                        <p>
+                          Basic Beta Users: Will have access to all features and may provide feedback at their discretion.
+                        </p>
+                        <p>
+                          Active Beta Testers: Will have additional responsibilities including regular feedback 
+                          submission and participation in testing sessions.
+                        </p>
+                        
+                        <h5>5. Data Collection</h5>
+                        <p>
+                          During the beta, we will collect additional data about your usage of the platform, 
+                          including:
+                        </p>
+                        <ul>
+                          <li>Feature usage statistics</li>
+                          <li>Performance metrics</li>
+                          <li>Error logs and crash reports</li>
+                          <li>User journey analytics</li>
+                        </ul>
+                        <p>
+                          This data helps us improve the platform and identify issues.
+                        </p>
+                        
+                        <h5>6. No Compensation</h5>
+                        <p>
+                          Participation in the beta program is voluntary and without compensation. 
+                          The benefits you receive are early access to the platform and the opportunity 
+                          to help shape its development.
+                        </p>
+                        
+                        <h5>7. Termination</h5>
+                        <p>
+                          We may terminate your participation in the beta program at any time if you 
+                          violate this Agreement, the Terms of Service, or for any other reason at our 
+                          discretion.
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-4">
+                    <div className="bg-gray-800/80 p-5 rounded-lg border border-gray-700">
+                      <div className="flex items-center mb-3">
+                        <Shield className="text-[#1982FC] mr-3" size={20} />
+                        <h4 className="text-white font-medium">Data Security Commitment</h4>
+                      </div>
+                      <p className="text-gray-400 text-sm">
+                        We take your privacy and data security seriously. Your personal information, 
+                        vehicle details, and usage data are protected using industry-standard security 
+                        measures, including encryption and secure access controls.
+                      </p>
+                    </div>
+                    
+                    <div className="bg-gray-800/80 p-5 rounded-lg border border-gray-700">
+                      <div className="flex items-start">
+                        <Mail className="text-[#1982FC] mr-3 flex-shrink-0 mt-1" size={20} />
+                        <div>
+                          <h4 className="text-white font-medium mb-1">Contact Information</h4>
+                          <p className="text-gray-400 text-sm">
+                            If you have any questions about these agreements or the beta program, 
+                            please contact us at <span className="text-[#1982FC]">beta@paddock20.com</span>
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Error message */}
               {error && (
-                <div className="p-4 bg-red-900/30 border border-red-700 rounded-lg flex items-center">
+                <div className="p-4 bg-red-900/30 border border-red-700 rounded-lg flex items-center mt-4">
                   <X className="text-red-400 mr-2 flex-shrink-0" size={18} />
                   <span className="text-red-400 text-sm">{error}</span>
                 </div>
               )}
               
-              <div className="text-sm text-gray-400 italic border-t border-gray-800 pt-6 mb-4">
-                <p>By checking all boxes and continuing, you acknowledge that you have read,
-                understood, and agreed to all the terms and conditions outlined in these documents.</p>
-              </div>
-              
-              {/* Add warning about declining and account deletion */}
-              <div className="flex items-center p-4 rounded-lg bg-red-900/30 border border-red-700">
-                <Trash2 className="text-red-400 mr-3 flex-shrink-0" size={20} />
-                <p className="text-sm text-red-300">
-                  <span className="font-semibold">Warning:</span> Declining these agreements will result in the deletion of your account. 
-                  All data associated with your account will be permanently removed, and you will be redirected to the login page.
-                </p>
+              {/* Decline option */}
+              <div className="mt-6 text-center">
+                <button
+                  type="button"
+                  onClick={() => setIsDeclining(true)}
+                  className="text-gray-400 hover:text-gray-300 text-sm transition-colors"
+                  disabled={isDeclining}
+                >
+                  {isDeclining ? (
+                    <span className="flex items-center">
+                      <CircleDashed className="animate-spin mr-2" size={14} />
+                      Processing...
+                    </span>
+                  ) : (
+                    "I do not accept these terms"
+                  )}
+                </button>
               </div>
             </div>
           )}
           
-          {/* User Profile Form */}
+          {/* Step 4: User Profile Setup */}
           {step === 4 && (
             <div className="space-y-6 animate-fadeIn">
               <div className="flex items-center bg-[#1982FC]/10 p-4 rounded-lg mb-6">
                 <User className="text-[#1982FC] mr-4" size={24} />
                 <p className="text-gray-200">
-                  Create your Paddock20 driver profile. This information helps personalize your experience
-                  and connect you with like-minded automotive enthusiasts.
+                  Tell us about yourself and your automotive interests. This helps us personalize your 
+                  PADDOCK20 experience.
                 </p>
               </div>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-x-8 gap-y-6">
                 {/* Profile Image Upload */}
-                <div className="md:col-span-2 flex flex-col items-center justify-center p-6 border border-gray-700 rounded-lg bg-gray-800/30">
+                <div className="flex flex-col items-center justify-center p-6 border border-gray-700 rounded-lg bg-gray-800/30">
                   <div 
                     className="w-32 h-32 mb-4 rounded-full bg-gray-700 flex items-center justify-center border-2 border-[#1982FC]/50 overflow-hidden"
                   >
                     {hasUploadedProfilePic ? (
                       <img 
-                        src={userProfile.profileImage || '/assets/Stock Photos/user-avatar-placeholder.png'} 
+                        src={userProfile.profileImage || '/assets/Stock Photos/default-avatar.png'} 
                         alt="Profile" 
                         className="w-full h-full object-cover"
                       />
                     ) : (
-                      <User size={50} className="text-gray-500" />
+                      <User size={60} className="text-gray-500" />
                     )}
                   </div>
                   
@@ -912,18 +1256,18 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                     onClick={handleProfileImageUpload}
                     className="px-4 py-2 bg-[#1982FC]/20 hover:bg-[#1982FC]/30 rounded-md text-[#1982FC] transition-colors flex items-center"
                   >
-                    <Camera size={18} className="mr-2" />
+                    <Upload size={18} className="mr-2" />
                     <span>{hasUploadedProfilePic ? 'Change Photo' : 'Upload Photo'}</span>
                   </button>
                 </div>
                 
-                {/* Basic Info */}
-                <div className="md:col-span-2">
-                  <h3 className="text-lg font-semibold text-[#1982FC] mb-4 font-orbitron">
+                {/* Basic Information */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
                     Basic Information
                   </h3>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-4">
                     <div>
                       <label htmlFor="fullName" className="block text-sm font-medium text-gray-300 mb-1">
                         Full Name <span className="text-red-500">*</span>
@@ -935,7 +1279,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                         value={userProfile.fullName}
                         onChange={handleUserProfileChange}
                         className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                        placeholder="Your full name"
+                        placeholder="Enter your full name"
                       />
                     </div>
                     
@@ -950,22 +1294,13 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                         value={userProfile.username}
                         onChange={handleUserProfileChange}
                         className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                        placeholder="Choose a unique username"
+                        placeholder="Choose a username"
                       />
                     </div>
-                  </div>
-                </div>
-                
-                {/* Account Info */}
-                <div className="md:col-span-2">
-                  <h3 className="text-lg font-semibold text-[#1982FC] mb-4 font-orbitron">
-                    Account Information
-                  </h3>
-                  
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    
                     <div>
                       <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1">
-                        Email <span className="text-red-500">*</span>
+                        Email Address <span className="text-red-500">*</span>
                       </label>
                       <input
                         id="email"
@@ -974,108 +1309,117 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                         value={userProfile.email}
                         onChange={handleUserProfileChange}
                         className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                        placeholder="Your email address"
+                        placeholder="Enter your email"
                       />
-                    </div>
-                    
-                    <div className="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
-                          Password <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          id="password"
-                          name="password"
-                          type="password"
-                          value={userProfile.password}
-                          onChange={handleUserProfileChange}
-                          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                          placeholder="Create a secure password"
-                        />
-                      </div>
-                      
-                      <div>
-                        <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-1">
-                          Confirm Password <span className="text-red-500">*</span>
-                        </label>
-                        <input
-                          id="confirmPassword"
-                          name="confirmPassword"
-                          type="password"
-                          value={userProfile.confirmPassword}
-                          onChange={handleUserProfileChange}
-                          className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                          placeholder="Confirm your password"
-                        />
-                      </div>
                     </div>
                   </div>
                 </div>
                 
-                {/* Enthusiast Profile */}
-                <div className="md:col-span-2">
-                  <h3 className="text-lg font-semibold text-[#1982FC] mb-4 font-orbitron">
-                    Enthusiast Profile
+                {/* Account Security */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
+                    Account Security
                   </h3>
                   
-                  <div className="grid grid-cols-1 gap-4">
+                  <div className="space-y-4">
                     <div>
-                      <label htmlFor="drivingExperience" className="block text-sm font-medium text-gray-300 mb-1">
-                        Driving Experience
+                      <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1">
+                        Password <span className="text-red-500">*</span>
                       </label>
-                      <select
-                        id="drivingExperience"
-                        name="drivingExperience"
-                        value={userProfile.drivingExperience}
+                      <input
+                        id="password"
+                        name="password"
+                        type="password"
+                        value={userProfile.password}
                         onChange={handleUserProfileChange}
                         className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                      >
-                        <option value="Beginner">Beginner (0-2 years)</option>
-                        <option value="Intermediate">Intermediate (3-5 years)</option>
-                        <option value="Experienced">Experienced (6-10 years)</option>
-                        <option value="Advanced">Advanced (11-20 years)</option>
-                        <option value="Expert">Expert (20+ years)</option>
-                      </select>
+                        placeholder="Create a password"
+                      />
                     </div>
                     
                     <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-3">
-                        Automotive Interests (Optional)
+                      <label htmlFor="confirmPassword" className="block text-sm font-medium text-gray-300 mb-1">
+                        Confirm Password <span className="text-red-500">*</span>
                       </label>
-                      <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                        {availableInterests.map((interest) => (
-                          <div 
-                            key={interest} 
-                            className={`px-3 py-2 rounded-md cursor-pointer text-sm flex items-center transition-colors ${
-                              userProfile.interests.includes(interest)
-                                ? 'bg-[#1982FC]/20 text-[#1982FC] border border-[#1982FC]/40'
-                                : 'bg-gray-800 text-gray-300 border border-gray-700 hover:bg-gray-800/80'
-                            }`}
-                            onClick={() => toggleInterest(interest)}
-                          >
-                            {userProfile.interests.includes(interest) && (
-                              <Check size={14} className="mr-1 flex-shrink-0" />
-                            )}
-                            <span className="truncate">{interest}</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label htmlFor="bio" className="block text-sm font-medium text-gray-300 mb-1">
-                        Bio (Optional)
-                      </label>
-                      <textarea
-                        id="bio"
-                        name="bio"
-                        rows={3}
-                        value={userProfile.bio}
+                      <input
+                        id="confirmPassword"
+                        name="confirmPassword"
+                        type="password"
+                        value={userProfile.confirmPassword}
                         onChange={handleUserProfileChange}
                         className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                        placeholder="Tell us about yourself and your automotive journey..."
-                      ></textarea>
+                        placeholder="Confirm your password"
+                      />
                     </div>
+                  </div>
+                  
+                  <div className="bg-gray-800/50 p-3 rounded-lg border border-gray-700 mt-2">
+                    <div className="flex items-center text-gray-400 text-xs">
+                      <Shield size={14} className="mr-2 text-[#1982FC]" />
+                      <span>Your data is protected with industry-standard encryption</span>
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Automotive Interests */}
+                <div className="space-y-4">
+                  <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
+                    Automotive Interests
+                  </h3>
+                  
+                  <div>
+                    <label className="block text-sm font-medium text-gray-300 mb-2">
+                      Select your interests
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {availableInterests.map((interest) => (
+                        <button
+                          key={interest}
+                          type="button"
+                          onClick={() => toggleInterest(interest)}
+                          className={`px-3 py-1.5 rounded-full text-sm transition-colors ${
+                            userProfile.interests.includes(interest)
+                              ? 'bg-[#1982FC] text-white'
+                              : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                          }`}
+                        >
+                          {interest}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="drivingExperience" className="block text-sm font-medium text-gray-300 mb-1">
+                      Driving Experience
+                    </label>
+                    <select
+                      id="drivingExperience"
+                      name="drivingExperience"
+                      value={userProfile.drivingExperience}
+                      onChange={handleUserProfileChange}
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
+                    >
+                      <option value="Beginner">Beginner</option>
+                      <option value="Intermediate">Intermediate</option>
+                      <option value="Advanced">Advanced</option>
+                      <option value="Professional">Professional</option>
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label htmlFor="bio" className="block text-sm font-medium text-gray-300 mb-1">
+                      Bio (Optional)
+                    </label>
+                    <textarea
+                      id="bio"
+                      name="bio"
+                      rows={3}
+                      value={userProfile.bio}
+                      onChange={handleUserProfileChange}
+                      className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
+                      placeholder="Tell us about yourself and your automotive passion..."
+                    />
                   </div>
                 </div>
               </div>
@@ -1261,434 +1605,6 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                 </div>
               )}
             </div>
-          )}>
-                {/* Weather Location Settings */}
-                <div className="md:col-span-2 space-y-4">
-                  <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
-                    Weather Location Settings
-                  </h3>
-                  
-                  <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-3">
-                        <label className="block text-sm font-medium text-gray-300">
-                          Primary Location
-                        </label>
-                        
-                        <div className="flex items-center space-x-2">
-                          <input
-                            type="text"
-                            name="primaryLocation"
-                            value={locationSettings.primaryLocation}
-                            onChange={handleLocationChange}
-                            className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                            placeholder="City, State or ZIP Code"
-                          />
-                          <button 
-                            onClick={handleDetectLocation}
-                            className="flex-shrink-0 p-2 bg-[#1982FC]/20 hover:bg-[#1982FC]/30 rounded-md text-[#1982FC] transition-colors"
-                            title="Use current location"
-                          >
-                            <Map size={18} />
-                          </button>
-                        </div>
-                        
-                        <p className="text-sm text-gray-400">
-                          This will be your default location for weather forecasts and driving conditions.
-                        </p>
-                      </div>
-                      
-                      <div className="space-y-3">
-                        <label className="block text-sm font-medium text-gray-300">
-                          Units Preference
-                        </label>
-                        
-                        <div className="flex items-center space-x-4">
-                          <div className="flex items-center space-x-2">
-                            <input
-                              type="radio"
-                              id="units-imperial"
-                              name="units"
-                              value="imperial"
-                              checked={locationSettings.units === 'imperial'}
-                              onChange={handleLocationChange}
-                              className="h-4 w-4 text-[#1982FC] focus:ring-[#1982FC] focus:ring-offset-gray-900"
-                            />
-                            <label htmlFor="units-imperial" className="text-sm text-gray-300">
-                              Imperial (°F, mph)
-                            </label>
-                          </div>
-                          
-                          <div className="flex items-center space-x-2">
-                            <input
-                              type="radio"
-                              id="units-metric"
-                              name="units"
-                              value="metric"
-                              checked={locationSettings.units === 'metric'}
-                              onChange={handleLocationChange}
-                              className="h-4 w-4 text-[#1982FC] focus:ring-[#1982FC] focus:ring-offset-gray-900"
-                            />
-                            <label htmlFor="units-metric" className="text-sm text-gray-300">
-                              Metric (°C, km/h)
-                            </label>
-                          </div>
-                        </div>
-                        
-                        <div className="flex items-center space-x-2 mt-2">
-                          <input
-                            type="checkbox"
-                            id="autoRefresh"
-                            name="autoRefresh"
-                            checked={locationSettings.autoRefresh}
-                            onChange={handleLocationCheckboxChange}
-                            className="h-4 w-4 rounded text-[#1982FC] focus:ring-[#1982FC] focus:ring-offset-gray-900"
-                          />
-                          <label htmlFor="autoRefresh" className="text-sm text-gray-300">
-                            Auto-refresh weather data when opening the app
-                          </label>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Favorite Routes & Commutes */}
-                <div className="md:col-span-2 space-y-4">
-                  <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
-                    Favorite Routes & Commutes
-                  </h3>
-                  
-                  <div className="bg-gray-800/50 border border-gray-700 rounded-lg p-4">
-                    <div className="space-y-4">
-                      {routes.map((route, index) => (
-                        <div key={index} className="grid grid-cols-1 md:grid-cols-5 gap-3 pb-3 border-b border-gray-700">
-                          <div className="md:col-span-2">
-                            <label className="block text-xs font-medium text-gray-400 mb-1">
-                              Route Name
-                            </label>
-                            <input
-                              type="text"
-                              value={route.name}
-                              onChange={(e) => handleRouteChange(index, 'name', e.target.value)}
-                              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                              placeholder="e.g. Mountain Drive, Commute to Work"
-                            />
-                          </div>
-                          
-                          <div className="md:col-span-2">
-                            <label className="block text-xs font-medium text-gray-400 mb-1">
-                              Start & End Points
-                            </label>
-                            <input
-                              type="text"
-                              value={route.points}
-                              onChange={(e) => handleRouteChange(index, 'points', e.target.value)}
-                              className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                              placeholder="e.g. Home to Mountain Pass"
-                            />
-                          </div>
-                          
-                          <div className="flex items-end">
-                            <button
-                              onClick={() => removeRoute(index)}
-                              className="px-3 py-2 bg-red-900/30 hover:bg-red-900/50 rounded-md text-red-400 transition-colors flex items-center"
-                            >
-                              <X size={16} className="mr-1" />
-                              <span className="text-sm">Remove</span>
-                            </button>
-                          </div>
-                        </div>
-                      ))}
-                      
-                      <button
-                        onClick={addNewRoute}
-                        className="px-4 py-2 bg-[#1982FC]/20 hover:bg-[#1982FC]/30 rounded-md text-[#1982FC] transition-colors flex items-center"
-                      >
-                        <PlusCircle size={16} className="mr-2" />
-                        <span>Add Another Route</span>
-                      </button>
-                      
-                      <p className="text-sm text-gray-400 mt-2">
-                        Add your favorite routes for quick access to weather conditions and navigation.
-                        You can add more or edit these later.
-                      </p>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Theme & Display Preferences */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
-                    Theme & Display
-                  </h3>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
-                        Dashboard Theme
-                      </label>
-                      <div className="grid grid-cols-2 gap-3">
-                        <div 
-                          className={`cursor-pointer rounded-lg p-3 border ${
-                            dashboardPrefs.theme === 'dark'
-                              ? 'border-[#1982FC] bg-[#1982FC]/10'
-                              : 'border-gray-700 bg-gray-800/50 hover:bg-gray-800'
-                          }`}
-                          onClick={() => handleDashboardThemeChange('dark')}
-                        >
-                          <div className="h-16 rounded bg-gray-800 border border-gray-700 mb-2 flex items-center justify-center">
-                            <span className="text-xs text-gray-400">Dark Carbon</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-300">Dark</span>
-                            {dashboardPrefs.theme === 'dark' && (
-                              <Check size={16} className="text-[#1982FC]" />
-                            )}
-                          </div>
-                        </div>
-                        
-                        <div 
-                          className={`cursor-pointer rounded-lg p-3 border ${
-                            dashboardPrefs.theme === 'darker'
-                              ? 'border-[#1982FC] bg-[#1982FC]/10'
-                              : 'border-gray-700 bg-gray-800/50 hover:bg-gray-800'
-                          }`}
-                          onClick={() => handleDashboardThemeChange('darker')}
-                        >
-                          <div className="h-16 rounded bg-black border border-gray-800 mb-2 flex items-center justify-center">
-                            <span className="text-xs text-gray-500">Deep Black</span>
-                          </div>
-                          <div className="flex items-center justify-between">
-                            <span className="text-sm text-gray-300">Darker</span>
-                            {dashboardPrefs.theme === 'darker' && (
-                              <Check size={16} className="text-[#1982FC]" />
-                            )}
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                    
-                    <div>
-                      <label className="block text-sm font-medium text-gray-300 mb-2">
-                        Temperature Display
-                      </label>
-                      <select
-                        name="tempDisplay"
-                        value={dashboardPrefs.tempDisplay}
-                        onChange={handleDashboardPrefChange}
-                        className="w-full px-3 py-2 bg-gray-800 border border-gray-600 rounded-md text-white focus:ring-[#1982FC] focus:border-[#1982FC]"
-                      >
-                        <option value="standard">Standard (Just Numbers)</option>
-                        <option value="detailed">Detailed (With Description)</option>
-                        <option value="compact">Compact (Minimal)</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
-                
-                {/* Module Visibility */}
-                <div className="space-y-4">
-                  <h3 className="text-lg font-semibold text-[#1982FC] mb-2 font-orbitron">
-                    Dashboard Modules
-                  </h3>
-                  
-                  <div className="space-y-2">
-                    <p className="text-sm text-gray-400 mb-2">
-                      Select which modules to display on your dashboard:
-                    </p>
-                    
-                    <div className="space-y-2">
-                      <div className="flex items-center justify-between p-2 rounded-md hover:bg-gray-800/70">
-                        <div className="flex items-center">
-                          <div className="bg-[#1982FC]/20 p-1 rounded mr-2">
-                            <Cloud size={16} className="text-[#1982FC]" />
-                          </div>
-                          <label htmlFor="showWeather" className="text-sm text-gray-300 cursor-pointer">
-                            Weather Paddock
-                          </label>
-                        </div>
-                        <div className="relative inline-flex items-center">
-                          <input
-                            type="checkbox"
-                            id="showWeather"
-                            name="showWeather"
-                            checked={dashboardPrefs.showWeather}
-                            onChange={handleDashboardPrefChange}
-                            className="sr-only"
-                          />
-                          <div 
-                            className={`w-10 h-5 rounded-full transition-colors ${
-                              dashboardPrefs.showWeather ? 'bg-[#1982FC]' : 'bg-gray-600'
-                            }`}
-                          ></div>
-                          <div 
-                            className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform ${
-                              dashboardPrefs.showWeather ? 'transform translate-x-5' : ''
-                            }`}
-                          ></div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between p-2 rounded-md hover:bg-gray-800/70">
-                        <div className="flex items-center">
-                          <div className="bg-[#1982FC]/20 p-1 rounded mr-2">
-                            <Calendar size={16} className="text-[#1982FC]" />
-                          </div>
-                          <label htmlFor="showEvents" className="text-sm text-gray-300 cursor-pointer">
-                            Events
-                          </label>
-                        </div>
-                        <div className="relative inline-flex items-center">
-                          <input
-                            type="checkbox"
-                            id="showEvents"
-                            name="showEvents"
-                            checked={dashboardPrefs.showEvents}
-                            onChange={handleDashboardPrefChange}
-                            className="sr-only"
-                          />
-                          <div 
-                            className={`w-10 h-5 rounded-full transition-colors ${
-                              dashboardPrefs.showEvents ? 'bg-[#1982FC]' : 'bg-gray-600'
-                            }`}
-                          ></div>
-                          <div 
-                            className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform ${
-                              dashboardPrefs.showEvents ? 'transform translate-x-5' : ''
-                            }`}
-                          ></div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between p-2 rounded-md hover:bg-gray-800/70">
-                        <div className="flex items-center">
-                          <div className="bg-[#1982FC]/20 p-1 rounded mr-2">
-                            <Wrench size={16} className="text-[#1982FC]" />
-                          </div>
-                          <label htmlFor="showMaintenance" className="text-sm text-gray-300 cursor-pointer">
-                            Maintenance Alerts
-                          </label>
-                        </div>
-                        <div className="relative inline-flex items-center">
-                          <input
-                            type="checkbox"
-                            id="showMaintenance"
-                            name="showMaintenance"
-                            checked={dashboardPrefs.showMaintenance}
-                            onChange={handleDashboardPrefChange}
-                            className="sr-only"
-                          />
-                          <div 
-                            className={`w-10 h-5 rounded-full transition-colors ${
-                              dashboardPrefs.showMaintenance ? 'bg-[#1982FC]' : 'bg-gray-600'
-                            }`}
-                          ></div>
-                          <div 
-                            className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform ${
-                              dashboardPrefs.showMaintenance ? 'transform translate-x-5' : ''
-                            }`}
-                          ></div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between p-2 rounded-md hover:bg-gray-800/70">
-                        <div className="flex items-center">
-                          <div className="bg-[#1982FC]/20 p-1 rounded mr-2">
-                            <PaintBucket size={16} className="text-[#1982FC]" />
-                          </div>
-                          <label htmlFor="showJuiceBox" className="text-sm text-gray-300 cursor-pointer">
-                            JuiceBox
-                          </label>
-                        </div>
-                        <div className="relative inline-flex items-center">
-                          <input
-                            type="checkbox"
-                            id="showJuiceBox"
-                            name="showJuiceBox"
-                            checked={dashboardPrefs.showJuiceBox}
-                            onChange={handleDashboardPrefChange}
-                            className="sr-only"
-                          />
-                          <div 
-                            className={`w-10 h-5 rounded-full transition-colors ${
-                              dashboardPrefs.showJuiceBox ? 'bg-[#1982FC]' : 'bg-gray-600'
-                            }`}
-                          ></div>
-                          <div 
-                            className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform ${
-                              dashboardPrefs.showJuiceBox ? 'transform translate-x-5' : ''
-                            }`}
-                          ></div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between p-2 rounded-md hover:bg-gray-800/70">
-                        <div className="flex items-center">
-                          <div className="bg-[#1982FC]/20 p-1 rounded mr-2">
-                            <Shield size={16} className="text-[#1982FC]" />
-                          </div>
-                          <label htmlFor="showGarageVault" className="text-sm text-gray-300 cursor-pointer">
-                            Garage Vault
-                          </label>
-                        </div>
-                        <div className="relative inline-flex items-center">
-                          <input
-                            type="checkbox"
-                            id="showGarageVault"
-                            name="showGarageVault"
-                            checked={dashboardPrefs.showGarageVault}
-                            onChange={handleDashboardPrefChange}
-                            className="sr-only"
-                          />
-                          <div 
-                            className={`w-10 h-5 rounded-full transition-colors ${
-                              dashboardPrefs.showGarageVault ? 'bg-[#1982FC]' : 'bg-gray-600'
-                            }`}
-                          ></div>
-                          <div 
-                            className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform ${
-                              dashboardPrefs.showGarageVault ? 'transform translate-x-5' : ''
-                            }`}
-                          ></div>
-                        </div>
-                      </div>
-                      
-                      <div className="flex items-center justify-between p-2 rounded-md hover:bg-gray-800/70">
-                        <div className="flex items-center">
-                          <div className="bg-[#1982FC]/20 p-1 rounded mr-2">
-                            <Trophy size={16} className="text-[#1982FC]" />
-                          </div>
-                          <label htmlFor="showManifestationStation" className="text-sm text-gray-300 cursor-pointer">
-                            Manifestation Station
-                          </label>
-                        </div>
-                        <div className="relative inline-flex items-center">
-                          <input
-                            type="checkbox"
-                            id="showManifestationStation"
-                            name="showManifestationStation"
-                            checked={dashboardPrefs.showManifestationStation}
-                            onChange={handleDashboardPrefChange}
-                            className="sr-only"
-                          />
-                          <div 
-                            className={`w-10 h-5 rounded-full transition-colors ${
-                              dashboardPrefs.showManifestationStation ? 'bg-[#1982FC]' : 'bg-gray-600'
-                            }`}
-                          ></div>
-                          <div 
-                            className={`absolute left-0.5 top-0.5 bg-white w-4 h-4 rounded-full transition-transform ${
-                              dashboardPrefs.showManifestationStation ? 'transform translate-x-5' : ''
-                            }`}
-                          ></div>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
           )}
         </div>
         
@@ -1697,39 +1613,41 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
           {step > 1 ? (
             <button
               type="button"
-              onClick={prevStep}
-              className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-md text-gray-200 transition-colors flex items-center"
-              disabled={isDeclining}
+              onClick={() => handleStepTransition('prev')}
+              className="px-4 py-2 bg-gray-800 hover:bg-gray-700 rounded-md text-gray-300 transition-colors flex items-center"
             >
-              <X className="mr-2" size={18} />
+              <ChevronRight className="rotate-180 mr-2" size={16} />
               <span>Back</span>
             </button>
           ) : (
             <div></div> // Empty div to maintain flex spacing
           )}
           
-          {/* Decline button only on legal agreements step */}
-          {step === 3 && (
+          <div className="flex items-center space-x-4">
+            {step < 5 && (
+              <button
+                type="button"
+                onClick={handleSkipToComplete}
+                className="text-[#1982FC] hover:text-[#1982FC]/80 text-sm transition-colors"
+              >
+                Skip to Completion
+              </button>
+            )}
+            
             <button
               type="button"
-              onClick={handleDeclineAndDelete}
-              className="px-5 py-2 rounded-md bg-red-600 text-white hover:bg-red-700 transition-colors flex items-center mx-2"
-              disabled={isDeclining}
+              onClick={() => handleStepTransition('next')}
+              className={`px-6 py-2 ${
+                step === 5
+                  ? 'bg-[#08c519] hover:bg-[#08c519]/90'
+                  : 'bg-[#1982FC] hover:bg-[#1982FC]/90'
+              } rounded-md text-white transition-colors flex items-center`}
             >
-              <Trash2 className="mr-2" size={18} />
-              {isDeclining ? 'Processing...' : 'Decline & Delete Account'}
+              <span>{step === 5 ? 'Complete Setup' : 'Continue'}</span>
+              <ChevronRight className={step === 5 ? 'hidden' : 'ml-2'} size={16} />
+              {step === 5 && <Check className="ml-2" size={16} />}
             </button>
-          )}
-          
-          <button
-            type="button"
-            onClick={nextStep}
-            className="px-6 py-2 bg-[#1982FC] hover:bg-[#1982FC]/90 rounded-md text-white transition-colors flex items-center"
-            disabled={isDeclining}
-          >
-            <span>{step === 6 ? 'Complete Setup' : 'Continue'}</span>
-            <ChevronRight className="ml-2" size={18} />
-          </button>
+          </div>
         </div>
       </div>
     </div>
