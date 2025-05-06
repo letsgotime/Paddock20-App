@@ -262,10 +262,10 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({
     // Close the modal
     onClose();
     
-    // Redirect to dashboard after a short delay for the toast to be visible
+    // Redirect to personalized dashboard after a short delay for the toast to be visible
     setTimeout(() => {
-      // Use the exact route "/dashboard" as it appears in App.tsx
-      setLocation('/dashboard');
+      // Redirect to the personalized dashboard page
+      setLocation('/personalized-dashboard');
     }, 1500);
   };
 

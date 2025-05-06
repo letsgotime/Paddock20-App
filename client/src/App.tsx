@@ -220,13 +220,46 @@ function AuthenticatedContent({
             }} 
           />
         
-          {/* Simplified routes for authentication testing */}
+          {/* Core Routes */}
           <Route path="/" component={() => <ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
           <Route path="/dashboard" component={() => <ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+          <Route path="/personalized-dashboard" component={() => <ProtectedRoute><PersonalizedDashboard /></ProtectedRoute>} />
           <Route path="/admin" component={() => <ProtectedRoute><AdminPage /></ProtectedRoute>} />
+          
+          {/* User & Profile Routes */}
+          <Route path="/profile" component={() => <ProtectedRoute><UserProfileHubPage /></ProtectedRoute>} />
+          <Route path="/onboarding-test" component={() => <ProtectedRoute><OnboardingTestPage /></ProtectedRoute>} />
+          <Route path="/settings" component={() => <ProtectedRoute><Settings /></ProtectedRoute>} />
+          
+          {/* Vehicle Management Routes */}
+          <Route path="/garage-vault" component={() => <ProtectedRoute><GarageVaultPage /></ProtectedRoute>} />
+          <Route path="/garage" component={() => <ProtectedRoute><GaragePage /></ProtectedRoute>} />
+          <Route path="/add-vehicle" component={() => <ProtectedRoute><AddVehiclePage /></ProtectedRoute>} />
+          <Route path="/vehicle-mods" component={() => <ProtectedRoute><VehicleModsPage /></ProtectedRoute>} />
+          <Route path="/mod-planner" component={() => <ProtectedRoute><ModPlannerPage /></ProtectedRoute>} />
+          
+          {/* Feature Routes */}
+          <Route path="/weather-paddock" component={() => <ProtectedRoute><WeatherPage /></ProtectedRoute>} />
+          <Route path="/weather" component={() => <ProtectedRoute><Weather /></ProtectedRoute>} />
+          <Route path="/route-planner" component={() => <ProtectedRoute><RoutePlannerPage /></ProtectedRoute>} />
+          <Route path="/drive-journal" component={() => <ProtectedRoute><DriveJournalPage /></ProtectedRoute>} />
+          <Route path="/manifestation-station" component={() => <ProtectedRoute><ManifestationStationPage /></ProtectedRoute>} />
+          <Route path="/juicebox" component={() => <ProtectedRoute><JuiceBox /></ProtectedRoute>} />
+          <Route path="/product-organizer" component={() => <ProtectedRoute><ProductOrganizerPage /></ProtectedRoute>} />
+          <Route path="/tires-timepieces" component={() => <ProtectedRoute><TiresTimepieces /></ProtectedRoute>} />
+          <Route path="/podium-pursuit" component={() => <ProtectedRoute><PodiumPursuitPage /></ProtectedRoute>} />
+          
+          {/* Event & Community Routes */}
+          <Route path="/events" component={() => <ProtectedRoute><EventsPage /></ProtectedRoute>} />
+          <Route path="/motorsports-events" component={() => <ProtectedRoute><MotorsportsEventsPage /></ProtectedRoute>} />
+          <Route path="/motorsports-gallery" component={() => <ProtectedRoute><MotorsportsGalleryPage /></ProtectedRoute>} />
+          <Route path="/membership" component={() => <ProtectedRoute><MembershipPage /></ProtectedRoute>} />
+          <Route path="/chat-feed" component={() => <ProtectedRoute><ChatFeedPage /></ProtectedRoute>} />
+          <Route path="/contact" component={() => <ProtectedRoute><ContactPage /></ProtectedRoute>} />
+          
+          {/* Utility & Spotify Routes */}
           <Route path="/spotify-test" component={() => <ProtectedRoute><SpotifyTestPage /></ProtectedRoute>} />
           <Route path="/spotify-env-check" component={() => <ProtectedRoute><SpotifyEnvCheck /></ProtectedRoute>} />
-          <Route path="/onboarding-test" component={() => <ProtectedRoute><OnboardingTestPage /></ProtectedRoute>} />
           
           {/* Debug Pages */}
           <Route path="/debug" component={() => {
