@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SVG to PNG Converter</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #121212;
+            color: white;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .logo-container {
+            background-color: #1a1a1a;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+        }
+        canvas {
+            background-color: transparent;
+            border: 1px solid #333;
+        }
+        .download-btn {
+            display: inline-block;
+            background-color: #1982FC;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        h1, h2 {
+            color: #1982FC;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Paddock20 Logo Converter</h1>
+        <p>This tool converts the SVG logo to a PNG image for Auth0.</p>
+        
+        <div class="logo-container">
+            <h2>Original SVG</h2>
+            <img id="svgLogo" src="assets/logos/paddock20-header.svg" alt="Paddock20 Logo">
+        </div>
+        
+        <div class="logo-container">
+            <h2>PNG Conversion</h2>
+            <canvas id="canvas" width="500" height="120"></canvas>
+            <br>
+            <a id="download" class="download-btn" download="paddock20-logo.png">Download PNG</a>
+        </div>
+    </div>
+
+    <script>
+        window.onload = function() {
+            // Get the SVG and canvas elements
+            const svgLogo = document.getElementById('svgLogo');
+            const canvas = document.getElementById('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Function to convert SVG to PNG
+            function convertToPNG() {
+                // Clear the canvas
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                
+                // Draw the SVG image onto the canvas
+                ctx.drawImage(svgLogo, 0, 0, 500, 120);
+                
+                // Create the download link
+                const dataURL = canvas.toDataURL('image/png');
+                document.getElementById('download').href = dataURL;
+            }
+            
+            // Wait for the SVG to load before converting
+            svgLogo.onload = convertToPNG;
+            
+            // If the SVG is already loaded, convert it
+            if (svgLogo.complete) {
+                convertToPNG();
+            }
+        };
+    </script>
+</body>
+</html>

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
-<svg xmlns="http://www.w3.org/2000/svg" width="280" height="60" viewBox="0 0 280 60">
+<svg xmlns="http://www.w3.org/2000/svg" width="250" height="60" viewBox="0 0 250 60">
   <style>
     .blue-text { fill: #1982FC; font-family: 'Arial', sans-serif; font-weight: bold; }
     .green-text { fill: #08c519; font-family: 'Arial', sans-serif; font-weight: bold; }
@@ -8,6 +8,6 @@
   <!-- PADDOCK in blue -->
   <text x="10" y="40" class="blue-text" font-size="36">PADDOCK</text>
   
-  <!-- 20 in green -->
-  <text x="210" y="40" class="green-text" font-size="36">20</text>
+  <!-- 20 in green - positioned right after PADDOCK with no space -->
+  <text x="170" y="40" class="green-text" font-size="36">20</text>
 </svg>
