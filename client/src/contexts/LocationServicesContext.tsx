@@ -29,6 +29,34 @@ const TIME_CACHE_TTL_MINUTES = 30;     // How long to cache time data before for
 const EXTENDED_CACHE_TTL_HOURS = 8;    // Secondary cache for offline/error fallback
 const THROTTLE_TIME_MS = 10000;        // Minimum time between API calls (10 seconds)
 
+// Golden Hour calculation constants
+const GOLDEN_HOUR_MINUTES = 60; // Golden hour lasts approximately 60 minutes after sunrise and before sunset
+
+// Time-related interface extensions
+interface TimeZone {
+  countryCode: string;
+  countryName: string;
+  zoneName: string;
+  gmtOffset: number;
+  timestamp: number;
+  formatted: string;
+  abbreviation: string;
+}
+
+interface SunTime {
+  timestamp: number;
+  formatted: string;
+}
+
+interface GoldenHourPeriod {
+  start: number;
+  end: number;
+  formatted: { 
+    start: string; 
+    end: string 
+  };
+}
+
 // Location type for standardized location data format
 export interface LocationData {
   id: string;           // Unique identifier
@@ -203,11 +231,15 @@ export const LocationServicesProvider: React.FC<{ children: React.ReactNode }> =
   // Throttling refs
   const lastWeatherFetchRef = useRef<number>(0);
   const lastAutomotiveFetchRef = useRef<number>(0);
+  const lastTimeFetchRef = useRef<number>(0);
   const weatherRefreshTimerRef = useRef<number | null>(null);
+  const timeRefreshTimerRef = useRef<number | null>(null);
   
   // Cache for stored data
   const weatherCacheRef = useRef<Map<string, any>>(new Map());
   const automotiveCacheRef = useRef<Map<string, any>>(new Map());
+  const timeCacheRef = useRef<Map<string, any>>(new Map());
+  const worldClockCacheRef = useRef<Map<string, any>>(new Map());
   
   // Load favorite locations from localStorage on mount
   useEffect(() => {
@@ -220,6 +252,17 @@ export const LocationServicesProvider: React.FC<{ children: React.ReactNode }> =
       const storedSearchHistory = localStorage.getItem('searchHistory');
       if (storedSearchHistory) {
         setSearchHistory(JSON.parse(storedSearchHistory));
+      }
+      
+      const storedWorldClocks = localStorage.getItem('worldClocks');
+      if (storedWorldClocks) {
+        // We just store the locations for world clocks, not the time data
+        // Time data will be fetched when component loads
+        const locations = JSON.parse(storedWorldClocks) as LocationData[];
+        // We'll fetch the time data for these locations after mount
+        locations.forEach(location => {
+          addWorldClock(location);
+        });
       }
       
       const storedUnits = localStorage.getItem('units');
@@ -250,6 +293,15 @@ export const LocationServicesProvider: React.FC<{ children: React.ReactNode }> =
     }
   }, [searchHistory]);
   
+  // Save world clocks to localStorage when they change
+  useEffect(() => {
+    if (worldClocks.length > 0) {
+      // Just store the locations, not the time data which will be re-fetched later
+      const locations = worldClocks.map(item => item.location);
+      localStorage.setItem('worldClocks', JSON.stringify(locations));
+    }
+  }, [worldClocks]);
+  
   // Save units preferences to localStorage when they change
   useEffect(() => {
     localStorage.setItem('units', JSON.stringify({
@@ -278,7 +330,7 @@ export const LocationServicesProvider: React.FC<{ children: React.ReactNode }> =
   }, []);
   
   // Helper to format last updated times
-  const formatLastUpdated = (type: 'location' | 'weather' | 'automotive' | 'services'): string => {
+  const formatLastUpdated = (type: 'location' | 'weather' | 'automotive' | 'services' | 'time'): string => {
     let lastUpdated: Date | null = null;
     
     switch (type) {
@@ -293,6 +345,9 @@ export const LocationServicesProvider: React.FC<{ children: React.ReactNode }> =
         break;
       case 'services':
         lastUpdated = servicesLastUpdated;
+        break;
+      case 'time':
+        lastUpdated = timeLastUpdated;
         break;
     }
     
@@ -316,7 +371,7 @@ export const LocationServicesProvider: React.FC<{ children: React.ReactNode }> =
   };
   
   // Helper to check if data is stale
-  const isStale = (type: 'location' | 'weather' | 'automotive' | 'services'): boolean => {
+  const isStale = (type: 'location' | 'weather' | 'automotive' | 'services' | 'time'): boolean => {
     let lastUpdated: Date | null = null;
     let staleTreshold = 0;
     
@@ -336,6 +391,10 @@ export const LocationServicesProvider: React.FC<{ children: React.ReactNode }> =
       case 'services':
         lastUpdated = servicesLastUpdated;
         staleTreshold = WEATHER_CACHE_TTL_MINUTES * 60 * 1000;
+        break;
+      case 'time':
+        lastUpdated = timeLastUpdated;
+        staleTreshold = TIME_CACHE_TTL_MINUTES * 60 * 1000;
         break;
     }
     
@@ -745,11 +804,245 @@ export const LocationServicesProvider: React.FC<{ children: React.ReactNode }> =
     }
   }, [currentLocation, units, toast]);
   
+  // Function to refresh time data with throttling and caching
+  const refreshTime = useCallback(async () => {
+    if (!currentLocation) {
+      console.warn('Cannot refresh time: No location selected');
+      return;
+    }
+    
+    // Check if we've made a call too recently (throttling)
+    const now = Date.now();
+    const timeSinceLastCall = now - lastTimeFetchRef.current;
+    
+    if (timeSinceLastCall < THROTTLE_TIME_MS) {
+      console.log(`Throttling time API call. Last call was ${timeSinceLastCall}ms ago.`);
+      
+      // Clear any existing refresh timer
+      if (timeRefreshTimerRef.current !== null) {
+        window.clearTimeout(timeRefreshTimerRef.current);
+      }
+      
+      // Set a timer to make the call later
+      timeRefreshTimerRef.current = window.setTimeout(() => {
+        console.log('Executing delayed time refresh');
+        refreshTime();
+      }, THROTTLE_TIME_MS - timeSinceLastCall);
+      
+      return;
+    }
+    
+    // Update the last fetch time
+    lastTimeFetchRef.current = now;
+    
+    // Check if we can use cached data
+    const cacheKey = getLocationCacheKey(currentLocation, 'time');
+    const cachedData = timeCacheRef.current.get(cacheKey);
+    
+    // Check if our cached data is still valid (less than TIME_CACHE_TTL_MINUTES old)
+    const isCacheValid = cachedData && (now - cachedData.timestamp) < (TIME_CACHE_TTL_MINUTES * 60 * 1000);
+    
+    if (isCacheValid) {
+      console.log('Using cached time data - still valid');
+      const minutesOld = Math.floor((now - cachedData.timestamp) / (60 * 1000));
+      setTimeCacheStatus(`Using primary cache data (${minutesOld} minutes old)`);
+      
+      setTimeData(cachedData.data);
+      setTimeLastUpdated(new Date(cachedData.timestamp));
+      setTimeError(null);
+      return;
+    }
+    
+    // If we reach here, we need to fetch new data
+    setLoadingTime(true);
+    setTimeCacheStatus('Fetching fresh data...');
+    
+    try {
+      console.log(`Fetching time data for location:`, currentLocation);
+      
+      const data = await fetchTimeData({
+        lat: currentLocation.lat,
+        lon: currentLocation.lon,
+        name: currentLocation.name
+      });
+      
+      // Save to cache with timestamp
+      const cacheData = {
+        timestamp: now,
+        data: data
+      };
+      
+      timeCacheRef.current.set(cacheKey, cacheData);
+      setTimeCacheStatus('Fresh data fetched');
+      
+      setTimeData(data);
+      setTimeLastUpdated(new Date());
+      setTimeError(null);
+      
+      console.log('Time data fetched successfully:', data);
+    } catch (error) {
+      console.error('Error fetching time data:', error);
+      
+      if (cachedData) {
+        // Use stale cache data as fallback
+        const minutesOld = Math.floor((now - cachedData.timestamp) / (60 * 1000));
+        setTimeData(cachedData.data);
+        setTimeLastUpdated(new Date(cachedData.timestamp));
+        setTimeCacheStatus(`Using stale cache data (${minutesOld} minutes old)`);
+        
+        toast({
+          title: 'Time Data Error',
+          description: 'Using cached data. Will retry later.',
+          variant: 'destructive',
+        });
+      } else {
+        setTimeData(null);
+        setTimeCacheStatus('No data available');
+        setTimeError(error instanceof Error ? error : new Error(String(error)));
+        
+        toast({
+          title: 'Time Data Error',
+          description: `Could not fetch time data: ${error instanceof Error ? error.message : String(error)}`,
+          variant: 'destructive',
+        });
+      }
+    } finally {
+      setLoadingTime(false);
+    }
+  }, [currentLocation, toast]);
+  
+  // Function to add a world clock
+  const addWorldClock = useCallback(async (location: LocationData) => {
+    // Generate a unique ID if not provided
+    const locationWithId = {
+      ...location,
+      id: location.id || generateLocationId(location.lat, location.lon, location.name),
+      lastUsed: Date.now()
+    };
+    
+    try {
+      // Fetch time data for the location
+      const timeData = await fetchTimeData({
+        lat: locationWithId.lat,
+        lon: locationWithId.lon,
+        name: locationWithId.name
+      });
+      
+      // Add to world clocks
+      setWorldClocks(prevClocks => {
+        // Check if this location already exists
+        const exists = prevClocks.some(clock => clock.location.id === locationWithId.id);
+        
+        if (exists) {
+          // Update existing clock
+          return prevClocks.map(clock => 
+            clock.location.id === locationWithId.id 
+              ? { location: locationWithId, timeData } 
+              : clock
+          );
+        } else {
+          // Add new clock
+          return [...prevClocks, { location: locationWithId, timeData }];
+        }
+      });
+      
+      // Save to cache
+      const cacheKey = getLocationCacheKey(locationWithId, 'worldclock');
+      worldClockCacheRef.current.set(cacheKey, {
+        timestamp: Date.now(),
+        data: timeData
+      });
+      
+      toast({
+        title: 'World Clock Added',
+        description: `Added ${location.name} to world clocks`,
+      });
+    } catch (error) {
+      console.error('Error adding world clock:', error);
+      toast({
+        title: 'World Clock Error',
+        description: `Could not add world clock: ${error instanceof Error ? error.message : String(error)}`,
+        variant: 'destructive',
+      });
+    }
+  }, [toast]);
+  
+  // Function to remove a world clock
+  const removeWorldClock = useCallback((locationId: string) => {
+    setWorldClocks(prevClocks => 
+      prevClocks.filter(clock => clock.location.id !== locationId)
+    );
+    
+    toast({
+      title: 'World Clock Removed',
+      description: 'Location has been removed from world clocks.',
+    });
+  }, [toast]);
+  
+  // Function to check if current time is in golden hour
+  const isGoldenHour = useCallback((): boolean => {
+    if (!timeData || !timeData.goldenHour) return false;
+    
+    // This is a simplified version - the actual implementation would
+    // use the current time and compare it with the golden hour ranges
+    const now = new Date();
+    const currentHour = now.getHours();
+    const currentMinute = now.getMinutes();
+    
+    // Check morning golden hour
+    if (timeData.goldenHour.morning) {
+      const morningStart = timeData.goldenHour.morning.start;
+      const morningEnd = timeData.goldenHour.morning.end;
+      
+      // Parse times and check if current time is within range
+      // This is a simplified implementation
+      if (morningStart && morningEnd) {
+        // Time parsing logic would go here
+        // For now, just return false as placeholder
+      }
+    }
+    
+    // Check evening golden hour
+    if (timeData.goldenHour.evening) {
+      const eveningStart = timeData.goldenHour.evening.start;
+      const eveningEnd = timeData.goldenHour.evening.end;
+      
+      // Parse times and check if current time is within range
+      // This is a simplified implementation
+      if (eveningStart && eveningEnd) {
+        // Time parsing logic would go here
+        // For now, just return false as placeholder
+      }
+    }
+    
+    return false;
+  }, [timeData]);
+  
+  // Function to get optimal drive time
+  const getOptimalDriveTime = useCallback((tripDurationMinutes: number): string | null => {
+    if (!timeData) return null;
+    
+    // This is a simplified placeholder implementation
+    // A real implementation would consider:
+    // - Current time of day
+    // - Sunrise/sunset times
+    // - Weather conditions
+    // - Trip duration
+    
+    // For now, just return a placeholder response
+    if (isGoldenHour()) {
+      return "Now is an ideal time for a scenic drive during golden hour!";
+    }
+    
+    return "Current conditions are acceptable for driving";
+  }, [timeData, isGoldenHour]);
+  
   // Refresh all location-based services
   const refreshAll = useCallback(async () => {
     await refreshLocation();
     // Location refresh will trigger weather refresh
-  }, [refreshLocation]);
+    await refreshTime();
+  }, [refreshLocation, refreshTime]);
   
   // Construct the context value
   const contextValue: LocationServicesContextType = {
@@ -764,18 +1057,24 @@ export const LocationServicesProvider: React.FC<{ children: React.ReactNode }> =
     oneCallData,
     automotiveWeather,
     
+    // Time data
+    timeData,
+    worldClocks,
+    
     // Status information
     loading: {
       location: loadingLocation,
       weather: loadingWeather,
       automotive: loadingAutomotive,
-      services: loadingServices
+      services: loadingServices,
+      time: loadingTime
     },
     errors: {
       location: locationError,
       weather: weatherError,
       automotive: automotiveError,
-      services: servicesError
+      services: servicesError,
+      time: timeError
     },
     
     // Data freshness
@@ -783,13 +1082,15 @@ export const LocationServicesProvider: React.FC<{ children: React.ReactNode }> =
       location: locationLastUpdated,
       weather: weatherLastUpdated,
       automotive: automotiveLastUpdated,
-      services: servicesLastUpdated
+      services: servicesLastUpdated,
+      time: timeLastUpdated
     },
     
     // Cache information
     cacheStatus: {
       weather: weatherCacheStatus,
-      automotive: automotiveCacheStatus
+      automotive: automotiveCacheStatus,
+      time: timeCacheStatus
     },
     
     // User preferences
@@ -809,7 +1110,14 @@ export const LocationServicesProvider: React.FC<{ children: React.ReactNode }> =
     setUnits,
     refreshWeather,
     refreshLocation,
+    refreshTime,
     refreshAll,
+    
+    // Time-related functions
+    addWorldClock,
+    removeWorldClock,
+    getOptimalDriveTime,
+    isGoldenHour,
     
     // Utility methods
     formatLastUpdated,
