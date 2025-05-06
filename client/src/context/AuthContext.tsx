@@ -52,27 +52,8 @@ export function useAuth() {
   return context;
 }
 
-// Auth0 wrapper provider to be used in main.tsx or App.tsx
-export function Auth0ProviderWithRedirectCallback({ children }: { children: ReactNode }) {
-  const domain = import.meta.env.VITE_AUTH0_DOMAIN as string;
-  const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID as string;
-  
-  // Make sure we're using the correct redirect URI for Auth0 callback
-  const redirectUri = `${window.location.origin}/auth/callback`;
-  
-  return (
-    <Auth0Provider
-      domain={domain}
-      clientId={clientId}
-      authorizationParams={{
-        redirect_uri: redirectUri,
-        scope: "openid profile email",
-      }}
-    >
-      {children}
-    </Auth0Provider>
-  );
-}
+// Note: Auth0Provider is now configured directly in main.tsx
+// This wrapper has been removed to prevent conflicts with the main Auth0 configuration
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
