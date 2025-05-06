@@ -501,6 +501,12 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({
                     onClick={async () => {
                       if (vehicleInfo.vin && vehicleInfo.vin.length >= 17) {
                         try {
+                          // Show loading toast
+                          toast({
+                            title: "Decoding VIN",
+                            description: "Fetching vehicle information...",
+                          });
+                          
                           const response = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/${vehicleInfo.vin}?format=json`);
                           const data = await response.json();
                           
