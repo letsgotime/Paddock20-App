@@ -1,5 +1,6 @@
 import { createContext, useState, useEffect, ReactNode } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import supabase from '@/services/supabaseClient';
 
 // User interface matches our database model
 interface User {
@@ -49,49 +50,103 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [error, setError] = useState<string | null>(null);
   const { toast } = useToast();
 
-  // Check authentication status on first render
+  // Check authentication status on first render using Supabase
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
         setLoading(true);
         
-        // Try to get the user from the server
-        const response = await fetch('/api/user', {
-          credentials: 'include' // Send cookies for authentication
-        });
+        // Get the current Supabase session
+        const { data: { session: supabaseSession }, error: sessionError } = await supabase.auth.getSession();
         
-        // If authenticated successfully
-        if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.user) {
-            setUser(data.user);
-            setSession({ user: data.user });
-            console.log('Successfully authenticated user:', data.user.username);
-          } else {
-            console.log('No authenticated user found');
-            setUser(null);
-            setSession(null);
+        if (sessionError) {
+          throw new Error(`Failed to get session: ${sessionError.message}`);
+        }
+        
+        // If we have a valid Supabase session
+        if (supabaseSession) {
+          // First check if we have a valid user in Supabase
+          const { data: { user: supabaseUser }, error: userError } = await supabase.auth.getUser();
+          
+          if (userError || !supabaseUser) {
+            throw new Error(`Failed to get user: ${userError?.message || 'No user found'}`);
           }
-        } 
-        // If not authenticated or error
-        else {
-          console.log('Not authenticated or auth error');
+          
+          console.log('Supabase authentication successful', supabaseUser.email);
+          
+          // Try to get the extended user profile from our API
+          try {
+            const response = await fetch('/api/user-profile', {
+              method: 'GET',
+              headers: {
+                'Authorization': `Bearer ${supabaseSession.access_token}`
+              }
+            });
+            
+            // If we have the extended profile
+            if (response.ok) {
+              const profileData = await response.json();
+              setUser(profileData);
+              setSession({ user: profileData });
+              console.log('Successfully authenticated user with extended profile:', profileData.username);
+            } else {
+              // Fallback to basic Supabase user data if profile not available
+              console.log('Extended profile not found, using basic Supabase data');
+              const basicUser: User = {
+                id: parseInt(supabaseUser.id, 10),
+                username: supabaseUser.user_metadata?.username || supabaseUser.email?.split('@')[0] || '',
+                email: supabaseUser.email || '',
+                firstName: supabaseUser.user_metadata?.firstName || null,
+                lastName: supabaseUser.user_metadata?.lastName || null,
+                fullName: supabaseUser.user_metadata?.fullName || null,
+                profileImage: supabaseUser.user_metadata?.profileImage || null,
+                role: supabaseUser.user_metadata?.role || 'user',
+              };
+              
+              setUser(basicUser);
+              setSession({ user: basicUser });
+            }
+          } catch (profileError) {
+            console.error('Error fetching user profile:', profileError);
+            // Fallback to basic Supabase user data
+            const basicUser: User = {
+              id: parseInt(supabaseUser.id, 10),
+              username: supabaseUser.user_metadata?.username || supabaseUser.email?.split('@')[0] || '',
+              email: supabaseUser.email || '',
+              firstName: supabaseUser.user_metadata?.firstName || null,
+              lastName: supabaseUser.user_metadata?.lastName || null,
+              fullName: supabaseUser.user_metadata?.fullName || null,
+              profileImage: supabaseUser.user_metadata?.profileImage || null,
+              role: supabaseUser.user_metadata?.role || 'user',
+            };
+            
+            setUser(basicUser);
+            setSession({ user: basicUser });
+          }
+        } else {
+          // No Supabase session found
+          console.log('No authenticated session found');
           setUser(null);
           setSession(null);
           
           // Don't create fallback users - authentication must be secure
-          if (window.location.pathname !== '/auth') {
-            console.log('Redirecting to authentication page');
+          if (window.location.pathname !== '/auth' && 
+              !window.location.pathname.includes('/email-verified') && 
+              !window.location.pathname.includes('/reset-password')) {
+            console.log('No authenticated session - should redirect to auth');
           }
         }
       } catch (err) {
         console.error('Error in auth system:', err);
-        setError('Failed to initialize authentication');
+        setError(err instanceof Error ? err.message : 'Failed to initialize authentication');
         setUser(null);
         setSession(null);
         
-        // Redirect to auth page on error if not already there
-        if (window.location.pathname !== '/auth') {
+        // Redirect to auth page on critical error if not already there
+        if (window.location.pathname !== '/auth' && 
+            !window.location.pathname.includes('/email-verified') && 
+            !window.location.pathname.includes('/reset-password')) {
+          console.log('Auth error - redirecting to auth page');
           window.location.href = '/auth';
         }
       } finally {
@@ -99,40 +154,108 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       }
     };
 
+    // Initial auth check
     checkAuthStatus();
+    
+    // Subscribe to auth state changes from Supabase
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(
+      async (event, session) => {
+        console.log('Supabase auth state changed:', event);
+        
+        if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
+          // Re-check auth status when signed in or token refreshed
+          checkAuthStatus();
+        } else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+          // Clear user data when signed out
+          setUser(null);
+          setSession(null);
+          
+          // Redirect to auth page if signed out and not already there
+          if (window.location.pathname !== '/auth') {
+            window.location.href = '/auth';
+          }
+        }
+      }
+    );
+
+    // Clean up subscription on unmount
+    return () => {
+      subscription?.unsubscribe();
+    };
   }, []);
 
-  // Login function
+  // Login function using Supabase
   const login = async (username: string, password: string) => {
     try {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('/api/login', {
-        method: 'POST',
+      // Supabase login with email (using username@domain if email not provided)
+      const email = username.includes('@') ? username : `${username}@paddock20.com`;
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: email,
+        password: password,
+      });
+      
+      if (error) {
+        throw new Error(error.message || 'Login failed');
+      }
+      
+      if (!data.user || !data.session) {
+        throw new Error('No user data returned');
+      }
+      
+      // Get the user profile from our database to merge with Supabase auth data
+      const response = await fetch('/api/user-profile', {
+        method: 'GET',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${data.session.access_token}`
         },
-        body: JSON.stringify({ username, password }),
-        credentials: 'include',
       });
-
-      const data = await response.json();
-
+      
       if (!response.ok) {
-        throw new Error(data.error || 'Login failed');
+        // If profile doesn't exist, we'll use basic Supabase data
+        console.warn('Could not fetch complete user profile, using basic data');
+        
+        // Map Supabase user to our User interface
+        const basicUser: User = {
+          id: parseInt(data.user.id, 10),
+          username: data.user.user_metadata?.username || username,
+          email: data.user.email || email,
+          firstName: data.user.user_metadata?.firstName || null,
+          lastName: data.user.user_metadata?.lastName || null,
+          fullName: data.user.user_metadata?.fullName || null,
+          profileImage: data.user.user_metadata?.profileImage || null,
+          role: data.user.user_metadata?.role || 'user',
+        };
+        
+        setUser(basicUser);
+        setSession({ user: basicUser });
+        
+        toast({
+          title: 'Login Successful',
+          description: `Welcome back, ${basicUser.username}!`,
+          variant: 'default',
+        });
+        
+        return basicUser;
       }
 
-      setUser(data);
-      setSession({ user: data });
+      // If we have a full profile
+      const profileData = await response.json();
+      
+      setUser(profileData);
+      setSession({ user: profileData });
       
       toast({
         title: 'Login Successful',
-        description: `Welcome back, ${data.username}!`,
+        description: `Welcome back, ${profileData.username}!`,
         variant: 'default',
       });
       
-      return data;
+      return profileData;
     } catch (err) {
       console.error('Login error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Login failed';
@@ -150,37 +273,97 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Register function
+  // Register function using Supabase
   const register = async (userData: RegisterData) => {
     try {
       setLoading(true);
       setError(null);
       
-      const response = await fetch('/api/register', {
+      if (userData.password !== userData.confirmPassword) {
+        throw new Error('Passwords do not match');
+      }
+      
+      // Create user in Supabase Auth
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: userData.email,
+        password: userData.password,
+        options: {
+          data: {
+            username: userData.username,
+            firstName: userData.firstName || null,
+            lastName: userData.lastName || null,
+            fullName: userData.firstName && userData.lastName 
+              ? `${userData.firstName} ${userData.lastName}`
+              : null,
+            betaProgram: userData.betaProgram || 'user',
+            hasAgreedToNDA: userData.hasAgreedToNDA || false,
+            feedbackCommitment: userData.feedbackCommitment || false,
+          }
+        }
+      });
+      
+      if (authError) {
+        throw new Error(authError.message || 'Registration failed');
+      }
+      
+      if (!authData.user) {
+        throw new Error('No user data returned from registration');
+      }
+      
+      // Now create the extended user profile in our API
+      const response = await fetch('/api/user-profile', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${authData.session?.access_token || ''}`,
         },
-        body: JSON.stringify(userData),
-        credentials: 'include',
+        body: JSON.stringify({
+          ...userData,
+          id: authData.user.id,
+          // Additional fields required by our system
+          role: 'user',
+          isActive: true,
+          isEmailVerified: false,
+          onboardingCompleted: false
+        }),
       });
-
-      const data = await response.json();
-
+      
+      let profileData: User;
+      
       if (!response.ok) {
-        throw new Error(data.error || 'Registration failed');
+        console.warn('Could not create extended profile, using basic auth data');
+        // Map Supabase user to our User interface
+        profileData = {
+          id: parseInt(authData.user.id, 10),
+          username: userData.username,
+          email: userData.email,
+          firstName: userData.firstName || null,
+          lastName: userData.lastName || null,
+          fullName: userData.firstName && userData.lastName 
+            ? `${userData.firstName} ${userData.lastName}`
+            : null,
+          profileImage: null,
+          role: 'user',
+        };
+      } else {
+        profileData = await response.json();
       }
-
-      setUser(data);
-      setSession({ user: data });
+      
+      setUser(profileData);
+      setSession({ user: profileData });
+      
+      // Determine message based on beta program type
+      const betaMessage = userData.betaProgram === 'tester' 
+        ? 'Your beta tester application has been submitted! Please check your email for verification.'
+        : 'Your account has been created successfully!';
       
       toast({
         title: 'Registration Successful',
-        description: 'Your account has been created successfully!',
+        description: betaMessage,
         variant: 'default',
       });
       
-      return data;
+      return profileData;
     } catch (err) {
       console.error('Registration error:', err);
       const errorMessage = err instanceof Error ? err.message : 'Registration failed';
@@ -198,7 +381,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  // Enhanced Logout function with improved security
+  // Enhanced Logout function with Supabase integration
   const logout = async () => {
     try {
       setLoading(true);
@@ -227,10 +410,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       sessionStorage.removeItem('lastLocation');
       sessionStorage.removeItem('lastSearch');
       
-      // We'll let the server handle cookie clearing to avoid conflicts
-      // Don't manually mess with cookies as it can conflict with the server's session management
+      // Sign out from Supabase
+      const { error } = await supabase.auth.signOut();
       
-      // Now call the logout API (but we've already cleared local state)
+      if (error) {
+        console.warn('Supabase signOut returned an error, but continuing client-side logout:', error.message);
+      }
+      
+      // Call our backend logout API to clear any server-side session state
       try {
         const response = await fetch('/api/logout', {
           method: 'POST',
@@ -253,11 +440,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         variant: 'default',
       });
       
-      // Better handling of redirect with React Router
+      // Better handling of redirect with wouter
       if (window.location.pathname !== redirectPath) {
         // Explicitly redirect to auth page with replace to prevent back button issues
         window.history.replaceState(null, '', redirectPath);
-        // Dispatch an event to make React Router notice the URL change
+        // Dispatch an event to make wouter notice the URL change
         window.dispatchEvent(new PopStateEvent('popstate'));
       }
       
