@@ -8,6 +8,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import PageTitleManager from './components/PageTitleManager';
 import { AuthProvider, Auth0ProviderWithRedirectCallback } from './context/AuthContext';
+import Auth0Callback from './components/Auth0Callback';
 // Import disabled to remove Unsplash API warnings
 // import { initializeImageCache } from "./services/unsplashService";
 import NavigationControls from './components/NavigationControls';
@@ -229,10 +230,8 @@ function App() {
       <TooltipProvider>
         {/* Page Title Manager - Updates browser tab title based on current route */}
         <PageTitleManager />
-        {/* Auth0 Provider - Handles connection to Auth0 */}
-        <Auth0ProviderWithRedirectCallback>
-          {/* Auth Provider - Provides authentication context to all components */}
-          <AuthProvider>
+        {/* Auth Provider - Provides authentication context to all components */}
+        <AuthProvider>
           {/* User Profile Provider - centralized user data warehouse */}
           <UserProfileProvider>
             {/* Sound Provider - Provides F1-inspired sound effects throughout the app */}
@@ -296,6 +295,9 @@ function App() {
                               <Route path="/beta-agreement" component={BetaAgreement} />
                               <Route path="/email-verified" component={EmailVerifiedPage} />
                               
+                              {/* Auth0 callback route - Handles redirection after Auth0 authentication */}
+                              <Route path="/auth/callback" component={Auth0Callback} />
+                              
                               {/* User Onboarding - Requires authentication but not onboarding completion */}
                               <Route 
                                 path="/onboarding" 
@@ -349,7 +351,6 @@ function App() {
             </SoundProvider>
           </UserProfileProvider>
         </AuthProvider>
-        </Auth0ProviderWithRedirectCallback>
       </TooltipProvider>
     </QueryClientProvider>
   );

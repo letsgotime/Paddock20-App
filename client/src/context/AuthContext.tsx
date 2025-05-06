@@ -57,8 +57,8 @@ export function Auth0ProviderWithRedirectCallback({ children }: { children: Reac
   const domain = import.meta.env.VITE_AUTH0_DOMAIN as string;
   const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID as string;
   
-  // Make sure we're using the correct redirect URI
-  const redirectUri = window.location.origin;
+  // Make sure we're using the correct redirect URI for Auth0 callback
+  const redirectUri = `${window.location.origin}/auth/callback`;
   
   return (
     <Auth0Provider
