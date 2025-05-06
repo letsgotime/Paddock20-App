@@ -2,10 +2,140 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Eye, EyeOff, LogIn, UserPlus, AlertTriangle } from 'lucide-react';
 import { useLocation } from 'wouter';
 import LegalDocumentModal from '../components/LegalDocumentModal';
-import { legalDocuments } from '../data/legalDocuments';
+// Import legal documents and define their structure
+interface LegalDocument {
+  title: string;
+  content: string;
+}
+
+// Legal documents repository
+const legalDocuments: Record<string, LegalDocument> = {
+  termsOfService: {
+    title: "Terms of Service",
+    content: `
+      <h2>PADDOCK20 Terms of Service</h2>
+      <p>Last Updated: May 2025</p>
+      
+      <h3>1. Acceptance of Terms</h3>
+      <p>By accessing or using the PADDOCK20 application, you agree to be bound by these Terms of Service.</p>
+      
+      <h3>2. Beta Program</h3>
+      <p>You acknowledge that PADDOCK20 is currently in beta testing. Features, functionality, and content may change without notice.</p>
+      
+      <h3>3. Privacy</h3>
+      <p>Your privacy is important to us. Our Privacy Policy explains how we collect, use, and protect your information.</p>
+      
+      <h3>4. User Accounts</h3>
+      <p>You are responsible for maintaining the confidentiality of your account credentials and for all activities that occur under your account.</p>
+      
+      <h3>5. User-Generated Content</h3>
+      <p>By submitting content to PADDOCK20, you grant us a worldwide, non-exclusive license to use, reproduce, and display such content.</p>
+      
+      <h3>6. Prohibited Conduct</h3>
+      <p>You agree not to use PADDOCK20 for any unlawful purpose or in violation of these Terms.</p>
+      
+      <h3>7. Termination</h3>
+      <p>We reserve the right to terminate or suspend your account at our sole discretion, without notice, for conduct that we believe violates these Terms or is harmful to other users of PADDOCK20, us, or third parties, or for any other reason.</p>
+      
+      <h3>8. Disclaimer of Warranties</h3>
+      <p>PADDOCK20 is provided "as is" without warranties of any kind, either express or implied.</p>
+      
+      <h3>9. Limitation of Liability</h3>
+      <p>In no event shall PADDOCK20 be liable for any indirect, incidental, special, consequential or punitive damages.</p>
+      
+      <h3>10. Changes to Terms</h3>
+      <p>We reserve the right to modify these Terms at any time. Your continued use of PADDOCK20 after any such changes constitutes your acceptance of the new Terms.</p>
+    `
+  },
+  privacyPolicy: {
+    title: "Privacy Policy",
+    content: `
+      <h2>PADDOCK20 Privacy Policy</h2>
+      <p>Last Updated: May 2025</p>
+      
+      <h3>1. Information We Collect</h3>
+      <p>We collect information you provide directly to us, such as when you create an account, update your profile, or use our features.</p>
+      
+      <h3>2. How We Use Your Information</h3>
+      <p>We use the information we collect to provide, maintain, and improve PADDOCK20, and to develop new products and services.</p>
+      
+      <h3>3. Sharing of Information</h3>
+      <p>We do not share your personal information with third parties except as described in this Privacy Policy.</p>
+      
+      <h3>4. Data Security</h3>
+      <p>We take reasonable measures to help protect your personal information from loss, theft, misuse, unauthorized access, disclosure, alteration, and destruction.</p>
+      
+      <h3>5. Your Choices</h3>
+      <p>You can access, update, and delete certain information about you from within your account settings.</p>
+      
+      <h3>6. Changes to Privacy Policy</h3>
+      <p>We may modify this Privacy Policy from time to time. If we make material changes, we will provide notice through PADDOCK20 or by other means.</p>
+      
+      <h3>7. Contact Us</h3>
+      <p>If you have any questions about this Privacy Policy, please contact us at privacy@paddock20.com.</p>
+    `
+  },
+  betaAgreement: {
+    title: "Beta Agreement",
+    content: `
+      <h2>PADDOCK20 Beta Agreement</h2>
+      <p>Last Updated: May 2025</p>
+      
+      <h3>1. Beta Program</h3>
+      <p>PADDOCK20 is currently in beta testing. By participating in our beta program, you agree to the following terms.</p>
+      
+      <h3>2. Beta User vs. Beta Tester</h3>
+      <p><strong>Beta User:</strong> Receives discounted service for life with immediate access post-registration.</p>
+      <p><strong>Beta Tester:</strong> Receives free service for life, requires approval via email verification, and commits to providing regular feedback.</p>
+      
+      <h3>3. Beta Period</h3>
+      <p>The beta period will continue until the official release of PADDOCK20, or as otherwise determined by us.</p>
+      
+      <h3>4. Feedback</h3>
+      <p>We encourage you to provide feedback on your experience with PADDOCK20. Your feedback will help us improve our product.</p>
+      
+      <h3>5. No Warranty</h3>
+      <p>You acknowledge that beta versions of PADDOCK20 may contain bugs, errors, and other issues that may affect performance.</p>
+      
+      <h3>6. Beta Benefits</h3>
+      <p>Benefits offered during the beta period are subject to change upon official release.</p>
+      
+      <h3>7. Termination</h3>
+      <p>We reserve the right to terminate your participation in the beta program at any time and for any reason.</p>
+    `
+  },
+  nonDisclosureAgreement: {
+    title: "Non-Disclosure Agreement",
+    content: `
+      <h2>PADDOCK20 Non-Disclosure Agreement</h2>
+      <p>Last Updated: May 2025</p>
+      
+      <h3>1. Purpose</h3>
+      <p>This Non-Disclosure Agreement ("NDA") is to ensure the protection and preservation of confidential and proprietary information of PADDOCK20.</p>
+      
+      <h3>2. Confidential Information</h3>
+      <p>Confidential Information includes all information or material that has or could have commercial value or other utility in the business in which PADDOCK20 is engaged, including but not limited to unreleased features, technical data, product plans, and marketing strategies.</p>
+      
+      <h3>3. Beta Tester's Obligations</h3>
+      <p>As a Beta Tester, you agree to hold all Confidential Information in strict confidence and not to disclose such Confidential Information to any third parties.</p>
+      
+      <h3>4. Term</h3>
+      <p>This NDA will remain in effect until the information is no longer confidential or until PADDOCK20 sends you written notice releasing you from this NDA, whichever occurs first.</p>
+      
+      <h3>5. No Rights Granted</h3>
+      <p>Nothing in this NDA shall be construed as granting any rights to you, by license or otherwise, to any of PADDOCK20's Confidential Information.</p>
+      
+      <h3>6. Breach</h3>
+      <p>You understand and acknowledge that any breach of this NDA may cause irreparable harm to PADDOCK20, for which monetary damages may be inadequate.</p>
+      
+      <h3>7. Governing Law</h3>
+      <p>This NDA shall be governed by and construed in accordance with the laws of the United States.</p>
+    `
+  }
+};
 
 // Define mapping for document keys to make TypeScript happy
-const documentKeyMapping: Record<string, keyof typeof legalDocuments> = {
+const documentKeyMapping: {[key: string]: keyof typeof legalDocuments} = {
   'terms': 'termsOfService',
   'privacy': 'privacyPolicy',
   'beta': 'betaAgreement',
@@ -13,11 +143,11 @@ const documentKeyMapping: Record<string, keyof typeof legalDocuments> = {
 };
 
 /**
- * ServerAuthPage - A clean implementation focused on server-side authentication
+ * NewAuthPage - A clean implementation focused on server-side authentication
  * This component handles both login and registration with proper error handling
  * and works exclusively with the server API, avoiding any context dependencies.
  */
-const ServerAuthPage = () => {
+const NewAuthPage = () => {
   const [location, setLocation] = useLocation();
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
@@ -682,4 +812,4 @@ const ServerAuthPage = () => {
   );
 };
 
-export default ServerAuthPage;
+export default NewAuthPage;

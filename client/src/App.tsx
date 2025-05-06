@@ -53,7 +53,7 @@ import { UserProfileProvider } from "./contexts/UserProfileContext";
 import SoundControlPanel from "./components/SoundControlPanel";
 import RewardNotification from "./components/RewardNotification";
 import RewardsTracker from "./components/RewardsTracker";
-import SimpleAuthPage from "./pages/SimpleAuthPage";
+import NewAuthPage from "./pages/NewAuthPage";
 import DashboardPage from "./pages/DashboardPage";
 import PersonalizedDashboard from "./pages/PersonalizedDashboard";
 import GarageVaultPage from "./pages/GarageVaultPage";
@@ -209,13 +209,13 @@ function App() {
   const [location] = useLocation();
   const isAuthPage = location === '/auth';
   
-  // If we're on the auth page, render only the SimpleAuthPage component
+  // If we're on the auth page, render only the NewAuthPage component
   if (isAuthPage) {
     return (
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
-          <SimpleAuthPage />
+          <NewAuthPage />
         </TooltipProvider>
       </QueryClientProvider>
     );
