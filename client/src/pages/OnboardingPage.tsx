@@ -40,13 +40,17 @@ const OnboardingPage: React.FC = () => {
     vin: string;
     nickname: string;
     primaryVehicle: boolean;
+    hasVin: boolean; // Whether the user has a VIN to enter
+    vinDecoding: boolean; // Whether VIN decoding is in progress
   }>>([{
     make: '',
     model: '',
     year: '',
     vin: '',
     nickname: '',
-    primaryVehicle: true
+    primaryVehicle: true,
+    hasVin: false, // Default to manual entry
+    vinDecoding: false
   }]);
 
   // Redirect if already completed onboarding or not authenticated
@@ -195,9 +199,82 @@ const OnboardingPage: React.FC = () => {
         year: '',
         vin: '',
         nickname: '',
-        primaryVehicle: false
+        primaryVehicle: false,
+        hasVin: false,
+        vinDecoding: false
       }
     ]);
+  };
+  
+  // Decode VIN and auto-fill vehicle information
+  const decodeVin = async (index: number, vin: string) => {
+    // If VIN is too short, don't attempt to decode
+    if (vin.length < 10) return;
+    
+    // Set the vehicle to decoding state
+    const updatedVehicles = [...vehicles];
+    updatedVehicles[index] = {
+      ...updatedVehicles[index],
+      vinDecoding: true
+    };
+    setVehicles(updatedVehicles);
+    
+    try {
+      // Show temporary "Coming Soon" toast instead of actual API call for now
+      toast({
+        title: "VIN Decoder",
+        description: "VIN decoding feature is coming soon!",
+        variant: "default"
+      });
+      
+      // Simulated response after "decoding"
+      setTimeout(() => {
+        const updatedVehicles = [...vehicles];
+        updatedVehicles[index] = {
+          ...updatedVehicles[index],
+          vinDecoding: false,
+          // For now we won't auto-fill with mock data per policy
+        };
+        setVehicles(updatedVehicles);
+      }, 1000);
+      
+      // In a real implementation, this would be an API call:
+      /*
+      const response = await fetch(`/api/vin/decode?vin=${vin}`);
+      if (!response.ok) {
+        throw new Error('VIN decoding failed');
+      }
+      
+      const vehicleData = await response.json();
+      
+      // Update vehicle with decoded information
+      const updatedVehicles = [...vehicles];
+      updatedVehicles[index] = {
+        ...updatedVehicles[index],
+        make: vehicleData.make || updatedVehicles[index].make,
+        model: vehicleData.model || updatedVehicles[index].model,
+        year: vehicleData.year || updatedVehicles[index].year,
+        vinDecoding: false
+      };
+      setVehicles(updatedVehicles);
+      */
+    } catch (error) {
+      console.error('Error decoding VIN:', error);
+      // Revert decoding state
+      const updatedVehicles = [...vehicles];
+      updatedVehicles[index] = {
+        ...updatedVehicles[index],
+        vinDecoding: false
+      };
+      setVehicles(updatedVehicles);
+      
+      // Show error toast
+      toast({
+        title: 'VIN Decoding Failed',
+        description: 'Unable to decode VIN. Please try again or enter vehicle details manually.',
+        variant: 'destructive'
+      });
+    }
   };
   
   // Remove a vehicle form
@@ -786,17 +863,77 @@ const OnboardingPage: React.FC = () => {
                       </div>
                       
                       <div className="md:col-span-2">
-                        <label htmlFor={`vin-${index}`} className="block text-sm font-medium text-gray-300 mb-1">
-                          VIN (Optional)
-                        </label>
-                        <input
-                          id={`vin-${index}`}
-                          type="text"
-                          className="w-full rounded-md bg-gray-800 border border-gray-700 px-3 py-2 text-white focus:border-[#1982FC] focus:outline-none"
-                          placeholder="Vehicle Identification Number"
-                          value={vehicle.vin}
-                          onChange={(e) => handleVehicleChange(index, 'vin', e.target.value)}
-                        />
+                        <div className="flex items-center justify-between mb-2">
+                          <label htmlFor={`vin-${index}`} className="block text-sm font-medium text-gray-300">
+                            Do you have a VIN?
+                          </label>
+                          <div className="flex items-center space-x-4">
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                id={`vin-yes-${index}`}
+                                name={`has-vin-${index}`}
+                                checked={vehicle.hasVin}
+                                onChange={() => handleVehicleChange(index, 'hasVin', true)}
+                                className="text-[#1982FC] focus:ring-[#1982FC]"
+                              />
+                              <label htmlFor={`vin-yes-${index}`} className="text-sm text-gray-300">Yes</label>
+                            </div>
+                            <div className="flex items-center space-x-2">
+                              <input
+                                type="radio"
+                                id={`vin-no-${index}`}
+                                name={`has-vin-${index}`}
+                                checked={!vehicle.hasVin}
+                                onChange={() => handleVehicleChange(index, 'hasVin', false)}
+                                className="text-[#1982FC] focus:ring-[#1982FC]"
+                              />
+                              <label htmlFor={`vin-no-${index}`} className="text-sm text-gray-300">No</label>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        {vehicle.hasVin && (
+                          <div className="space-y-2">
+                            <input
+                              id={`vin-${index}`}
+                              type="text"
+                              className="w-full rounded-md bg-gray-800 border border-gray-700 px-3 py-2 text-white focus:border-[#1982FC] focus:outline-none"
+                              placeholder="Enter Vehicle Identification Number"
+                              value={vehicle.vin}
+                              onChange={(e) => {
+                                handleVehicleChange(index, 'vin', e.target.value);
+                                // If the VIN is long enough, try to decode it
+                                if (e.target.value.length >= 17) {
+                                  decodeVin(index, e.target.value);
+                                }
+                              }}
+                            />
+                            
+                            {vehicle.vinDecoding && (
+                              <div className="flex items-center space-x-2 text-sm text-[#1982FC] mt-1">
+                                <div className="animate-spin h-4 w-4 border-2 border-[#1982FC] border-t-transparent rounded-full"></div>
+                                <span>Decoding VIN...</span>
+                              </div>
+                            )}
+                            
+                            <button
+                              type="button"
+                              className="mt-2 py-1 px-3 text-xs rounded bg-[#1982FC]/20 border border-[#1982FC]/40 text-[#1982FC] hover:bg-[#1982FC]/30 transition-colors flex items-center space-x-1"
+                              onClick={() => decodeVin(index, vehicle.vin)}
+                              disabled={!vehicle.vin || vehicle.vin.length < 10 || vehicle.vinDecoding}
+                            >
+                              <svg xmlns="http://www.w3.org/2000/svg" className="h-3.5 w-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                              </svg>
+                              <span>Decode VIN</span>
+                            </button>
+                            
+                            <p className="mt-1 text-xs text-gray-400">
+                              The VIN allows us to provide detailed specifications and service records for your vehicle.
+                            </p>
+                          </div>
+                        )}
                         <p className="mt-1 text-xs text-gray-400">
                           The VIN allows us to provide detailed specifications and service records for your vehicle.
                         </p>
