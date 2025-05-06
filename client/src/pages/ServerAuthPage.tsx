@@ -658,7 +658,7 @@ const ServerAuthPage = () => {
                       className="text-[#1982FC] hover:underline"
                       onClick={() => setIsLogin(false)}
                     >
-                      Join the Paddock
+                      Join the Grid
                     </button>
                   </p>
                 ) : (
