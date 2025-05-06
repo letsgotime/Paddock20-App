@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { useWeather } from '@/contexts/WeatherContext';
+import { useLocationServices } from '@/contexts/LocationServicesContext';
 import { CarFront, Droplets, Sun, Wind, Thermometer, AlertTriangle, Gauge, Shield } from 'lucide-react';
 import { toast } from '@/hooks/use-toast';
 import axios from 'axios';
@@ -70,8 +71,15 @@ const AutomotiveWeatherPanel: React.FC = () => {
     };
   }, []);
 
+  // We've moved to using the new LocationServicesContext as the primary 
+  // source of data, including automotive weather data.
+  // The useWeather() hook still works but will eventually be deprecated.
+  
+  // Import and use the LocationServicesContext
+  const locationServices = useLocationServices();
+  
   useEffect(() => {
-    // Don't proceed if we don't have weather data or coordinates
+    // Don't proceed if we don't have weather data
     if (!weatherData || !weatherData.coord) return;
     
     // Create a location key for tracking changes
@@ -79,65 +87,43 @@ const AutomotiveWeatherPanel: React.FC = () => {
     
     // Check if this is the same location we already fetched data for
     if (prevLocationRef.current === locationKey) {
-      // If we already have data for this location, just return
       return;
     }
-    
-    // Check if we've made an API call too recently (throttling)
-    const now = Date.now();
-    const timeSinceLastCall = now - lastApiCallRef.current;
-    
-    if (timeSinceLastCall < 10000) { // 10 seconds throttling
-      // Set a timeout to make the call later, and only if location hasn't changed again
-      if (apiCallTimeoutRef.current) {
-        clearTimeout(apiCallTimeoutRef.current);
-      }
-      
-      apiCallTimeoutRef.current = setTimeout(() => {
-        // Only proceed if the location hasn't changed again
-        if (weatherData && weatherData.coord) {
-          const currentKey = `${weatherData.coord.lat.toFixed(4)},${weatherData.coord.lon.toFixed(4)}`;
-          if (currentKey === locationKey) {
-            fetchAutomotiveData(weatherData);
-          }
-        }
-      }, 10000 - timeSinceLastCall); // Wait for the remainder of the 10 seconds
-      
-      return;
-    }
-    
-    // If we've gotten here, we're good to make an API call
-    fetchAutomotiveData(weatherData);
     
     // Update previous location ref
     prevLocationRef.current = locationKey;
     
-  }, [weatherData, unit, selectedLocation]);
+    // Rather than making a direct API call here, we'll use data from the LocationServicesContext
+    // This prevents the API flooding issue by centralizing all weather data requests
+    if (locationServices.automotiveWeather) {
+      // If we already have data in the context, use it
+      processAutomotiveData(locationServices.automotiveWeather);
+    } else {
+      // If no data is available in the context, trigger a refresh but don't make a direct API call
+      // This will update all components that use the LocationServicesContext when complete
+      console.log('No automotive weather data found in context, requesting refresh');
+      locationServices.refreshWeather()
+        .catch(err => {
+          console.error('Failed to refresh weather data:', err);
+          setError(new Error('Failed to load automotive weather data'));
+        });
+    }
+  }, [weatherData, unit, selectedLocation, locationServices, locationServices.automotiveWeather]);
   
-  const fetchAutomotiveData = async (weatherData: any) => {
+  // This function now processes data from the context rather than making API calls
+  const processAutomotiveData = (automotiveData: any) => {
     try {
       setLoading(true);
       setError(null);
       
-      // Update last API call time
-      lastApiCallRef.current = Date.now();
-      
-      // Get data from our OpenWeather automotive endpoint
-      const response = await axios.get('/api/automotive-weather', {
-        params: {
-          lat: weatherData.coord.lat,
-          lon: weatherData.coord.lon
-        }
-      });
-      
-      if (!response.data) {
-        throw new Error('No data received from OpenWeather API');
+      // Directly use the data from the context
+      // Check if we have valid data structure
+      if (!automotiveData || !automotiveData.current) {
+        throw new Error('Invalid automotive weather data structure');
       }
       
-      // Process the OpenWeather data to match our display format
-      const openWeatherData = response.data;
-      const current = openWeatherData.current;
-      const daily = openWeatherData.daily?.[0];
+      const current = automotiveData.current;
+      const daily = automotiveData.daily?.[0];
       
       // Determine surface conditions based on weather
       const getCondition = () => {
@@ -149,8 +135,9 @@ const AutomotiveWeatherPanel: React.FC = () => {
       
       // Calculate surface temperatures (asphalt heats up more than air)
       const airTemp = current.temp;
-      const isDaytime = current.dt > openWeatherData.current.sunrise && 
-                       current.dt < openWeatherData.current.sunset;
+      // Check for day/night based on data structure
+      const isDaytime = current.dt > (automotiveData.sunrise || 0) && 
+                       current.dt < (automotiveData.sunset || 0);
       const cloudCover = current.clouds;
       const uvIndex = current.uvi;
       
@@ -162,8 +149,13 @@ const AutomotiveWeatherPanel: React.FC = () => {
       
       // Create a synthetic automotive data object using OpenWeather data
       const condition = getCondition();
+      // Create safe location key even if weatherData is null
+      const locationKey = weatherData && weatherData.coord ? 
+        `${weatherData.coord.lat},${weatherData.coord.lon}` : 
+        `${locationServices.currentLocation?.lat || 0},${locationServices.currentLocation?.lon || 0}`;
+        
       const formattedData: AutomotiveWeatherData = {
-        locationKey: `${weatherData.coord.lat},${weatherData.coord.lon}`,
+        locationKey,
         timestamp: current.dt,
         surfaceConditions: {
           asphalt: { temperature: asphaltTemp, condition },

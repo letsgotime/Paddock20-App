@@ -619,13 +619,32 @@ export const LocationServicesProvider: React.FC<{ children: React.ReactNode }> =
     const cacheKey = getLocationCacheKey(currentLocation, 'weather');
     const cachedData = weatherCacheRef.current.get(cacheKey);
     
-    if (cachedData && !isStale('weather')) {
-      console.log('Using cached weather data');
-      setWeatherCacheStatus(`Using cached data from ${formatLastUpdated('weather')}`);
-      return;
+    // Check if our cached data is still valid (less than WEATHER_CACHE_TTL_MINUTES old)
+    const isCacheValid = cachedData && (now - cachedData.timestamp) < (WEATHER_CACHE_TTL_MINUTES * 60 * 1000);
+    
+    if (isCacheValid) {
+      console.log('Using cached weather data - still valid');
+      const minutesOld = Math.floor((now - cachedData.timestamp) / (60 * 1000));
+      setWeatherCacheStatus(`Using primary cache data (${minutesOld} minutes old old)`);
+      console.log(`Using primary cache data (${minutesOld} minutes old old)`);
+      
+      // Use cached data but don't exit - we'll still refresh in the background if it's getting stale
+      // This prevents unnecessary API calls while keeping data fresh
+      if ((now - cachedData.timestamp) < (WEATHER_CACHE_TTL_MINUTES / 2 * 60 * 1000)) {
+        // If our data is less than half the TTL old, just use it and don't refresh
+        return;
+      }
+      
+      // If we get here, our data is valid but getting stale, so we'll refresh in the background
+      // but still use the cached data for this render
+      const { data } = cachedData;
+      setWeatherData(data.weatherData || null);
+      setOneCallData(data.oneCallData || null);
+      setForecastData(data.forecastData || null);
+      setAutomotiveWeather(data.automotiveWeatherData || null);
     }
     
-    // If we've gotten here, we need to fetch fresh data
+    // If we've gotten here, we need to fetch fresh data (either we had no cache or it was stale)
     setLoadingWeather(true);
     setWeatherError(null);
     
@@ -656,6 +675,8 @@ export const LocationServicesProvider: React.FC<{ children: React.ReactNode }> =
       // Update cache status
       setWeatherCacheStatus('Fresh data');
       setAutomotiveCacheStatus('Fresh data');
+      
+      console.log('Successfully fetched and cached fresh weather data');
       
     } catch (err) {
       console.error('Error fetching weather:', err);
