@@ -56,27 +56,22 @@ const Auth0Callback = () => {
           }
           
           // For existing users with Auth0 accounts
-          const hasBetaAccess = user?.app_metadata?.beta_access || false;
+          // IMPORTANT: Always show the beta modal and enrollment for new users
+          // This enforces the critical flow: AuthPage -> Auth0 -> Beta Enrollment -> Onboarding
           
-          // If user has not completed beta enrollment yet, send them there
-          if (!hasBetaAccess && !localStorage.getItem('paddock20_beta_status')) {
-            console.log('Auth0 user without beta access - directing to beta enrollment');
+          // First, check if this is a new user or existing user
+          if (isNewUser) {
+            // Always direct new users to beta enrollment after Auth0 (even if they have an Auth0 account)
+            console.log('New authenticated user - directing to beta enrollment');
             // Redirect to beta enrollment page using React Router
             setLocation('/beta-enrollment');
           }
-          // Handle legacy beta registration flow (if beta status was stored locally)
-          else if (localStorage.getItem('paddock20_beta_status')) {
-            console.log('Beta status detected - directing to onboarding');
-            
-            // Clean up beta registration data
-            localStorage.removeItem('paddock20_beta_status');
-            localStorage.removeItem('paddock20_has_agreed_to_nda');
-            localStorage.removeItem('paddock20_has_agreed_to_terms');
-            localStorage.removeItem('paddock20_feedback_commitment');
-            
-            // Redirect to onboarding flow using React Router
+          else if (!localStorage.getItem(`paddock20_beta_onboarding_complete_${user.sub}`)) {
+            // If the user hasn't completed onboarding yet, send them to onboarding
+            console.log('User without completed onboarding - directing to onboarding process');
             setLocation('/onboarding');
-          } else {
+          } 
+          else {
             // Regular login - redirect to dashboard using React Router
             console.log('Regular login - sending to dashboard');
             setLocation('/dashboard');
