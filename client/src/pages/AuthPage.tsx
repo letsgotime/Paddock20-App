@@ -847,7 +847,10 @@ const AuthPage = () => {
                   Join the movement. Full access to our complete ecosystem during the exclusive beta phase
                 </p>
                 <div className="flex justify-center">
-                  <button className="bg-[#08c519] hover:bg-[#08c519]/80 text-white font-bold py-3 px-6 rounded-md transition-all">
+                  <button 
+                    onClick={() => login()} 
+                    className="bg-[#08c519] hover:bg-[#08c519]/80 text-white font-bold py-3 px-6 rounded-md transition-all"
+                  >
                     Join the Grid!
                   </button>
                 </div>
