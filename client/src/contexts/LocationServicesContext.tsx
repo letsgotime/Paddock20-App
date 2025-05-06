@@ -21,6 +21,8 @@ import { OneCallData, WeatherData, ForecastData, Location } from '@/lib/weather'
 import { AutomotiveWeatherData } from '@/contexts/ConsolidatedWeatherContext';
 import { useToast } from '@/hooks/use-toast';
 import { fetchTimeData, TimeData } from '@/services/time/timeService';
+import { getLocationWithFallback } from '@/services/location/locationService';
+import { ipInfoService } from '@/services/location/ipInfoService';
 
 // Cache configuration constants
 const LOCATION_CACHE_TTL_MINUTES = 30; // How long to cache location data
