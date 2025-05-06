@@ -336,6 +336,17 @@ function App() {
                               <Route path="/" component={() => <ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
                               <Route path="/dashboard" component={() => <ProtectedRoute><DashboardPage /></ProtectedRoute>} />
                               <Route path="/admin" component={() => <ProtectedRoute><AdminPage /></ProtectedRoute>} />
+                              
+                              {/* Simple Debug Page - Accessible at root level */}
+                              <Route path="/debug" component={() => {
+                                const SimpleDebug = React.lazy(() => import('./pages/SimpleDebug'));
+                                return (
+                                  <React.Suspense fallback={<div className="p-8 text-white">Loading debug page...</div>}>
+                                    <SimpleDebug />
+                                  </React.Suspense>
+                                );
+                              }} />
+                              
                               <Route path="*" component={NotFound} />
                               
                               {/* Rewards notification - will show when rewards are earned */}
