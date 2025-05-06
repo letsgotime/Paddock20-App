@@ -215,9 +215,7 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
-          <AuthProvider>
-            <SimpleAuthPage />
-          </AuthProvider>
+          <SimpleAuthPage />
         </TooltipProvider>
       </QueryClientProvider>
     );
