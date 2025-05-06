@@ -287,88 +287,55 @@ const AuthPage = () => {
             </h1>
             <p className="text-gray-300">Your automotive intelligence platform</p>
           </div>
-          <Tabs defaultValue="login" className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-4">
-              <TabsTrigger value="login" className="text-lg">Login</TabsTrigger>
-              <TabsTrigger value="register" className="text-lg">Register</TabsTrigger>
-            </TabsList>
-
-            {/* Login Tab */}
-            <TabsContent value="login">
-              <Card className="border-gray-800 bg-gray-900">
-                <CardHeader>
-                  <CardTitle className="text-2xl text-gray-100">Welcome back</CardTitle>
-                  <CardDescription className="text-gray-400">
-                    Enter your credentials to access your account
-                  </CardDescription>
-                </CardHeader>
-                <form onSubmit={handleLoginSubmit}>
-                  <CardContent className="space-y-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="username">Username</Label>
-                      <Input
-                        id="username"
-                        placeholder="Enter your username"
-                        value={loginData.username}
-                        onChange={(e) => setLoginData({ ...loginData, username: e.target.value })}
-                        className="bg-gray-800 border-gray-700"
-                        required
-                      />
+          {/* Auth0 Login Card */}
+            <Card className="border-gray-800 bg-gray-900">
+              <CardHeader>
+                <CardTitle className="text-2xl text-gray-100">Thanks for visiting!</CardTitle>
+                <CardDescription className="text-gray-400">
+                  Join our community of automotive enthusiasts
+                </CardDescription>
+              </CardHeader>
+              
+              <CardContent className="space-y-6">
+                <div className="bg-[#1982FC]/10 border border-[#1982FC]/30 rounded-lg p-6">
+                  <h3 className="text-xl font-semibold text-[#1982FC] mb-4 text-center">Your Automotive Lifestyle Platform</h3>
+                  
+                  <div className="space-y-4 mb-6">
+                    <div className="flex items-start">
+                      <CheckCircle className="h-5 w-5 text-[#08c519] mr-3 flex-shrink-0 mt-1" />
+                      <p className="text-gray-200">Complete vehicle tracking with F1-inspired dashboards</p>
                     </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="password">Password</Label>
-                      <div className="relative">
-                        <Input
-                          id="password"
-                          type={showLoginPassword ? 'text' : 'password'}
-                          placeholder="Enter your password"
-                          value={loginData.password}
-                          onChange={(e) => setLoginData({ ...loginData, password: e.target.value })}
-                          className="bg-gray-800 border-gray-700 pr-10"
-                          required
-                        />
-                        <button
-                          type="button"
-                          onClick={() => setShowLoginPassword(!showLoginPassword)}
-                          className="absolute inset-y-0 right-0 pr-3 flex items-center text-sm leading-5"
-                        >
-                          {showLoginPassword ? 
-                            <EyeOff className="h-5 w-5 text-gray-400" /> : 
-                            <Eye className="h-5 w-5 text-gray-400" />
-                          }
-                        </button>
-                      </div>
+                    <div className="flex items-start">
+                      <CheckCircle className="h-5 w-5 text-[#08c519] mr-3 flex-shrink-0 mt-1" />
+                      <p className="text-gray-200">Weather intelligence for perfect driving conditions</p>
                     </div>
-                  </CardContent>
-                  <CardFooter className="flex flex-col space-y-4">
-                    {/* NDA agreement is now only visible during registration, not login */}
-                    <Button 
-                      type="submit" 
-                      className="w-full bg-blue-600 hover:bg-blue-700"
-                      disabled={loading}
-                    >
-                      {loading ? 'Processing...' : 'Sign In'}
-                      <LogIn className="ml-2 h-5 w-5" />
-                    </Button>
-                  </CardFooter>
-                </form>
-              </Card>
-            </TabsContent>
-
-            {/* Register Tab */}
-            <TabsContent value="register">
-              <Card className="border-gray-800 bg-gray-900">
-                <CardHeader className="relative">
-                  <div className="absolute -top-1 left-0 w-full flex justify-between items-center px-6 pt-4">
-                    <div className="flex space-x-2">
-                      <div className={`h-1 w-10 rounded-full ${registrationStep >= 1 ? 'bg-blue-500' : 'bg-gray-700'}`}></div>
-                      <div className={`h-1 w-10 rounded-full ${registrationStep >= 2 ? 'bg-blue-500' : 'bg-gray-700'}`}></div>
-                      <div className={`h-1 w-10 rounded-full ${registrationStep >= 3 ? 'bg-blue-500' : 'bg-gray-700'}`}></div>
-                    </div>
-                    <div className="text-gray-400 text-xs">
-                      Step {registrationStep} of 3
+                    <div className="flex items-start">
+                      <CheckCircle className="h-5 w-5 text-[#08c519] mr-3 flex-shrink-0 mt-1" />
+                      <p className="text-gray-200">Premium features with exclusive automotive experiences</p>
                     </div>
                   </div>
+                  
+                  <Button 
+                    onClick={() => login()} 
+                    className="w-full bg-[#08c519] hover:bg-[#08c519]/90 text-white font-bold py-3 px-6 h-14 text-lg"
+                  >
+                    Join the Grid!
+                    <UserPlus className="ml-2 h-5 w-5" />
+                  </Button>
+                </div>
+                
+                <div className="flex flex-col space-y-2">
+                  <div className="flex items-center justify-center text-sm text-gray-400">
+                    <Shield className="h-4 w-4 mr-2" />
+                    <span>Securely powered by Auth0 authentication</span>
+                  </div>
+                  
+                  <p className="text-xs text-center text-gray-500">
+                    By signing up, you agree to our <a href="/terms-of-service" className="text-[#1982FC] hover:underline">Terms of Service</a> and <a href="/privacy-policy" className="text-[#1982FC] hover:underline">Privacy Policy</a>
+                  </p>
+                </div>
+              </CardContent>
+            </Card>
                   
                   <CardTitle className="text-2xl text-gray-100 mt-4">
                     Join the Grid!
