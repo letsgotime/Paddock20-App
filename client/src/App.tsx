@@ -93,7 +93,7 @@ import TermsOfService from './pages/TermsOfServicePage';
 import BetaAgreement from './pages/BetaAgreement';
 import EmailVerifiedPage from './pages/EmailVerifiedPage';
 import AdminPage from './pages/AdminPage';
-// BetaEnrollmentPage removed - now integrated into main auth flow
+import BetaEnrollmentPage from './pages/BetaEnrollmentPage';
 
 // Create an AuthenticatedApp component to handle auth-dependent UI
 function AuthenticatedContent({ 
@@ -188,7 +188,8 @@ function AuthenticatedContent({
           {/* Logout Page - Handles secure logout process */}
           <Route path="/logout" component={LogoutPage} />
           
-          {/* Beta Enrollment Page removed - now integrated into main auth flow */}
+          {/* Beta Enrollment Page - For new users to opt into the beta program */}
+          <Route path="/beta-enrollment" component={() => <ProtectedRoute><BetaEnrollmentPage /></ProtectedRoute>} />
           
           {/* User Onboarding - Explicit URL path that redirects to the proper flow */}
           <Route 
