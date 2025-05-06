@@ -371,17 +371,30 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
         return;
       }
       
-      // User profile validation
-      if (step === 4) {
-        if (!isUserProfileComplete()) {
-          setError('Please complete all required fields in your profile');
-          return;
-        }
+      // Skip step 4 (profile creation) and go directly to step 5 (vehicle details)
+      if (step === 3 && allAgreed) {
+        // Pre-populate minimal profile data to satisfy validation
+        setUserProfile(prev => ({
+          ...prev,
+          fullName: prev.fullName || auth.user?.firstName && auth.user?.lastName ? `${auth.user.firstName} ${auth.user.lastName}` : auth.user?.username || 'User',
+          username: prev.username || auth.user?.username || 'user',
+          email: prev.email || auth.user?.email || 'user@example.com',
+          password: 'password123',  // These will never be used as Auth0 handles auth
+          confirmPassword: 'password123',
+        }));
         
-        if (userProfile.password !== userProfile.confirmPassword) {
-          setError('Passwords do not match');
-          return;
-        }
+        // Animate out
+        setAnimateIn(false);
+        
+        // Short delay for animation then jump to step 5
+        setTimeout(() => {
+          setStep(5);
+          setError(null);
+          setAnimateIn(true);
+          setVisibleStep(5);
+        }, 200);
+        
+        return;
       }
       
       // Vehicle profile validation
@@ -402,15 +415,20 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
     
     // Short delay for animation
     setTimeout(() => {
-      if (direction === 'next') {
+      // Special case for backing up from step 5
+      if (direction === 'prev' && step === 5) {
+        setStep(3); // Skip back to step 3, bypassing step 4
+        setVisibleStep(3);
+      } else if (direction === 'next') {
         setStep(prev => prev + 1);
+        setVisibleStep(step + 1);
       } else {
         setStep(prev => Math.max(1, prev - 1));
+        setVisibleStep(Math.max(1, step - 1));
       }
       
       setError(null);
       setAnimateIn(true);
-      setVisibleStep(direction === 'next' ? step + 1 : Math.max(1, step - 1));
     }, 200);
   };
   
