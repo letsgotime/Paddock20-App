@@ -217,6 +217,9 @@ function AuthenticatedContent({
           <Route path="/" component={() => <ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
           <Route path="/dashboard" component={() => <ProtectedRoute><DashboardPage /></ProtectedRoute>} />
           <Route path="/admin" component={() => <ProtectedRoute><AdminPage /></ProtectedRoute>} />
+          <Route path="/personalized-dashboard" component={() => <ProtectedRoute><PersonalizedDashboard /></ProtectedRoute>} />
+          <Route path="/profile" component={() => <ProtectedRoute><UserProfileHubPage /></ProtectedRoute>} />
+          <Route path="/manifestation-station" component={() => <ProtectedRoute><ManifestationStationPage /></ProtectedRoute>} />
           
           {/* Debug Pages */}
           <Route path="/debug" component={() => {
