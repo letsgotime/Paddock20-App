@@ -34,7 +34,8 @@ import {
   Award,
   Star,
   Medal,
-  ShoppingBag
+  ShoppingBag,
+  Music
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { playMotorsportSound, getSoundSettings, setSoundEnabled } from "../services/soundService";
@@ -318,6 +319,12 @@ const Header: React.FC = () => {
                   <Link to="/drive-journal" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <BookOpen className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Drive Journal</span>
+                  </Link>
+                  
+                  <Link to="/spotify-test" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                    <Music className="h-4 w-4 mr-2 text-green-400" />
+                    <span>Spotify Integration</span>
+                    <span className="ml-2 text-xs text-green-500 font-orbitron">NEW</span>
                   </Link>
                   
                   <Link to="/manifestation-station" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors" onClick={() => {
