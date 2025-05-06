@@ -813,11 +813,7 @@ const AuthPage = () => {
                           className="flex-1 ml-2 bg-emerald-600 hover:bg-emerald-700"
                           disabled={loading}
                         >
-                          {loading ? 'Processing...' : (
-                            registerData.betaProgram === 'user' 
-                              ? 'Complete Registration' 
-                              : 'Submit for Approval'
-                          )}
+                          {loading ? 'Processing...' : 'Join the Grid!'}
                           <UserPlus className="ml-2 h-5 w-5" />
                         </Button>
                       </div>
