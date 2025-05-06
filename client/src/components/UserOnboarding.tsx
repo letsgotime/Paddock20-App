@@ -589,7 +589,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                 <div className="md:w-1/2 space-y-6">
                   <div className="bg-[#1982FC]/10 p-6 rounded-lg">
                     <h3 className="text-xl font-bold text-white mb-3 font-orbitron tracking-wide">
-                      JOIN THE PADDOCK
+                      JOIN THE GRID
                     </h3>
                     <p className="text-gray-300 mb-4">
                       Welcome to the exclusive <span className="text-[#1982FC]">PADDOCK</span><span className="text-[#08c519]">20</span> beta program. You've been selected to be 
