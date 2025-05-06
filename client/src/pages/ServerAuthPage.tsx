@@ -98,11 +98,15 @@ const ServerAuthPage = () => {
   // Opens a legal document modal
   const openDocument = (documentKey: string) => {
     const mappedKey = documentKeyMapping[documentKey];
-    const doc = mappedKey ? legalDocuments[mappedKey] : null;
-    if (doc) {
+    const docContent = mappedKey ? legalDocuments[mappedKey] : null;
+    if (docContent) {
+      // Extract title from the content (assuming it starts with an h1 tag)
+      const titleMatch = docContent.match(/<h1>(.*?)<\/h1>/);
+      const title = titleMatch ? titleMatch[1] : documentKey.charAt(0).toUpperCase() + documentKey.slice(1);
+      
       setCurrentDocument({
-        title: doc.title,
-        content: doc.content
+        title: title,
+        content: docContent
       });
       setDocumentModalOpen(true);
     }
@@ -558,7 +562,7 @@ const ServerAuthPage = () => {
                     <div>
                       <p className="font-bold text-[#1982FC] text-sm tracking-wide mb-2">AGREEMENTS</p>
                       <p className="text-sm text-gray-300">
-                        Please review and accept our terms to join the Paddock20 ecosystem
+                        Please review and accept our terms to join the Grid ecosystem
                       </p>
                     </div>
                     

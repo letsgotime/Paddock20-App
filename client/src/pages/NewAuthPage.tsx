@@ -700,7 +700,7 @@ const NewAuthPage = () => {
                     <div>
                       <p className="font-bold text-[#1982FC] text-sm tracking-wide mb-2">AGREEMENTS</p>
                       <p className="text-sm text-gray-300">
-                        Please review and accept our terms to join the Paddock20 ecosystem
+                        Please review and accept our terms to join the Grid ecosystem
                       </p>
                     </div>
                     
