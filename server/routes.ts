@@ -13,6 +13,7 @@ import { handleGoogleOAuth2Callback, handleAppleOAuth2Callback } from "./oauth";
 import { checkSlackIntegration, initializeSlackClient, shareVehicleToSlack, shareEventToSlack } from "./slack";
 import { setupAuth } from "./auth";
 import twoFactorRoutes from "./routes/twoFactorRoutes";
+import auth0Routes from "./routes/auth0Routes";
 
 // OpenWeather API keys - updated May 1, 2025
 const OPENWEATHER_API_KEYS = {
@@ -239,6 +240,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Then register the Two-Factor Authentication Routes
   app.use(twoFactorRoutes);
+  
+  // Register Auth0 related routes
+  app.use(auth0Routes);
   
   // Using only OpenWeather API for all weather services
   
