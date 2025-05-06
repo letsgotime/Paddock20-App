@@ -7,7 +7,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import PageTitleManager from './components/PageTitleManager';
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import Auth0Callback from './components/Auth0Callback';
 // Import disabled to remove Unsplash API warnings
 // import { initializeImageCache } from "./services/unsplashService";
@@ -95,15 +95,48 @@ import AdminPage from './pages/AdminPage';
 import BetaEnrollmentPage from './pages/BetaEnrollmentPage';
 
 // Create an AuthenticatedApp component to handle auth-dependent UI
-function AuthenticatedContent({ hasCompletedOnboarding, setHasCompletedOnboarding }) {
-  // This component will be rendered inside the AuthProvider
-  // and therefore has access to auth state via useAuth hook
-  // We could use useAuth here to access session and user if needed,
-  // but keeping it simple for now as components deeper in the tree will handle that
+function AuthenticatedContent({ 
+  hasCompletedOnboarding, 
+  setHasCompletedOnboarding 
+}: { 
+  hasCompletedOnboarding: boolean, 
+  setHasCompletedOnboarding: (value: boolean) => void 
+}) {
+  // Access auth state using the useAuth hook since we're inside the AuthProvider
+  const { user, session, loading } = useAuth();
+  const isAuthenticated = !!session; // Session exists when authenticated
   
   // Get current location for routing
   const [location] = useLocation();
   
+  // Show loading state while auth is being determined
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-black">
+        <div className="p-8 text-center">
+          <div className="w-16 h-16 border-t-2 border-carolina-blue border-solid rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-carolina-blue">Loading Paddock20...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Show user onboarding if authenticated and hasn't completed onboarding
+  if (isAuthenticated && !hasCompletedOnboarding && user?.id) {
+    return (
+      <UserOnboarding 
+        onComplete={() => {
+          // Mark onboarding as complete in localStorage
+          const betaOnboardingKey = `paddock20_beta_onboarding_complete_${user.id}`;
+          localStorage.setItem(betaOnboardingKey, 'true');
+          
+          // Update state
+          setHasCompletedOnboarding(true);
+        }} 
+      />
+    );
+  }
+
   return (
     <>
       {/* Skip link for keyboard navigation */}
@@ -118,27 +151,29 @@ function AuthenticatedContent({ hasCompletedOnboarding, setHasCompletedOnboardin
       
         {/* Main navigation header */}
         <header role="banner">
-          {/* Breadcrumbs - only visible when logged in via Header component */}
-          <ContextualBreadcrumbs />
+          {/* Breadcrumbs - only visible when logged in */}
+          {isAuthenticated && <ContextualBreadcrumbs />}
         </header>
         
         {/* GoTime Motorsports logo with navigation and sound controls - always fixed to bottom */}
         <FixedSoundBar />
         
-        {/* AI Support Chatbot - Available globally, visibility managed by component */}
-        <SupportChatbot />
+        {/* AI Support Chatbot - Available globally when authenticated */}
+        {isAuthenticated && <SupportChatbot />}
 
         {/* Main content area - adjusted for fixed header at top and fixed footer at bottom */}
         <main id={MAIN_CONTENT_ID} className="container mx-auto px-4 mt-[60px] pb-[70px]" tabIndex={-1}>
           {/* Toast notifications with ARIA live region built in */}
           <Toaster />
           
-          {/* Global floating weather snapshot - visibility managed by component */}
-          <OneTapWeatherSnapshot 
-            floating={true}
-            // Don't show on weather paddock page where it would be redundant
-            className={location === '/weather-paddock' ? 'hidden' : ''}
-          />
+          {/* Global floating weather snapshot - only when authenticated */}
+          {isAuthenticated && (
+            <OneTapWeatherSnapshot 
+              floating={true}
+              // Don't show on weather paddock page where it would be redundant
+              className={location === '/weather-paddock' ? 'hidden' : ''}
+            />
+          )}
             
           {/* Routes defined here */}
           {/* Legal Document Pages - Publicly accessible */}
@@ -197,11 +232,11 @@ function AuthenticatedContent({ hasCompletedOnboarding, setHasCompletedOnboardin
           
           <Route path="*" component={NotFound} />
           
-          {/* Rewards notification - managed by the component */}
-          <RewardNotification />
+          {/* Rewards notification - only shown when authenticated */}
+          {isAuthenticated && <RewardNotification />}
           
-          {/* Invisible rewards tracker component that monitors user activity */}
-          <RewardsTracker />
+          {/* Invisible rewards tracker component - only active when authenticated */}
+          {isAuthenticated && <RewardsTracker />}
         </main>
 
         {/* Footer with links and information */}
@@ -213,21 +248,46 @@ function AuthenticatedContent({ hasCompletedOnboarding, setHasCompletedOnboardin
 
 function App() {
   // State to track if the user has completed onboarding
-  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(() => {
-    // Check if user has completed the legal agreement flow
-    // In a real app, this would be stored in a database after user authentication
-    const userAgreements = localStorage.getItem('userAgreements');
-    if (userAgreements) {
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(false);
+  
+  // Check for onboarding status when app initializes - this will be updated once auth is ready
+  useEffect(() => {
+    // Get user profile from local storage
+    const userProfileStr = localStorage.getItem('userProfile');
+    
+    if (userProfileStr) {
       try {
-        const agreements = JSON.parse(userAgreements);
-        // Check version to ensure users re-agree when terms change
-        return agreements.accepted && agreements.version === '1.0';
+        const userProfile = JSON.parse(userProfileStr);
+        const userId = userProfile.id;
+        
+        if (userId) {
+          // Check if this user has completed onboarding
+          const betaOnboardingKey = `paddock20_beta_onboarding_complete_${userId}`;
+          const hasCompleted = localStorage.getItem(betaOnboardingKey) === 'true';
+          
+          // Also check for legal agreements
+          const legalAgreementsKey = `paddock20_legal_agreements_${userId}`;
+          const legalAgreements = localStorage.getItem(legalAgreementsKey);
+          
+          let hasAcceptedAgreements = false;
+          if (legalAgreements) {
+            try {
+              const agreements = JSON.parse(legalAgreements);
+              // Check version to ensure users re-agree when terms change
+              hasAcceptedAgreements = agreements.accepted && agreements.version === '1.0';
+            } catch (e) {
+              console.error('Error parsing legal agreements:', e);
+            }
+          }
+          
+          // Both onboarding and legal agreements must be completed
+          setHasCompletedOnboarding(hasCompleted && hasAcceptedAgreements);
+        }
       } catch (e) {
-        return false;
+        console.error('Error checking onboarding status:', e);
       }
     }
-    return false;
-  });
+  }, []);
   
   // Use the scroll-to-top hook to ensure pages always start at the top
   useScrollToTop();
