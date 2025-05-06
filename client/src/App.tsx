@@ -215,7 +215,9 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
-          <SimpleAuthPage />
+          <AuthProvider>
+            <SimpleAuthPage />
+          </AuthProvider>
         </TooltipProvider>
       </QueryClientProvider>
     );
@@ -319,7 +321,7 @@ function App() {
                               />
                             
                               {/* Simplified routes for authentication testing */}
-                              <Route path="/auth" component={SimpleAuthPage} />
+                              {/* Auth route is handled above in the conditional rendering */}
                               <Route path="/" component={() => <ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
                               <Route path="/dashboard" component={() => <ProtectedRoute><DashboardPage /></ProtectedRoute>} />
                               <Route path="*" component={NotFound} />
