@@ -9,8 +9,12 @@ import { Auth0Provider } from '@auth0/auth0-react';
 // Get Auth0 configuration from environment variables
 const domain = import.meta.env.VITE_AUTH0_DOMAIN as string;
 const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID as string;
-// Use the full URL that Auth0 is expecting for the callback
-const redirectUri = "https://b3a4f353-dfcc-4127-ba8c-8d58ee1363a3-00-1h7svyzt8skoi.kirk.replit.dev";
+
+// Dynamically set the redirect URI based on current window location
+const redirectUri = window.location.origin;
+
+// Log the redirect URI for debugging
+console.log("Auth0 Redirect URI:", redirectUri);
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
