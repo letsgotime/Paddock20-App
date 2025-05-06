@@ -152,7 +152,7 @@ router.post('/refresh', async (req, res) => {
  * Requires authentication
  * GET /api/spotify/recommended-playlists
  */
-router.get('/recommended-playlists', isAuthenticated, async (req, res) => {
+router.get('/recommended-playlists', requireAuth, async (req, res) => {
   try {
     // Get recommended playlists from database
     // This is where you would implement your recommendation logic
@@ -171,7 +171,7 @@ router.get('/recommended-playlists', isAuthenticated, async (req, res) => {
  * Requires authentication
  * POST /api/spotify/drive-playlists
  */
-router.post('/drive-playlists', isAuthenticated, async (req, res) => {
+router.post('/drive-playlists', requireAuth, async (req, res) => {
   try {
     // TODO: Save the drive playlist to the database
     // This would typically create an entry in a drive_playlists table
@@ -188,7 +188,7 @@ router.post('/drive-playlists', isAuthenticated, async (req, res) => {
  * Requires authentication
  * PUT /api/spotify/drive-playlists/:id
  */
-router.put('/drive-playlists/:id', isAuthenticated, async (req, res) => {
+router.put('/drive-playlists/:id', requireAuth, async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -207,7 +207,7 @@ router.put('/drive-playlists/:id', isAuthenticated, async (req, res) => {
  * Requires authentication
  * GET /api/spotify/drive-playlists/user
  */
-router.get('/drive-playlists/user', isAuthenticated, async (req, res) => {
+router.get('/drive-playlists/user', requireAuth, async (req, res) => {
   try {
     // Get user's drive playlists from database
     // For now, returning an empty array
@@ -223,7 +223,7 @@ router.get('/drive-playlists/user', isAuthenticated, async (req, res) => {
  * Requires authentication
  * GET /api/spotify/drive-playlists/mood?mood=energetic&mood=chill
  */
-router.get('/drive-playlists/mood', isAuthenticated, async (req, res) => {
+router.get('/drive-playlists/mood', requireAuth, async (req, res) => {
   try {
     const moods = [req.query.mood].flat().filter(Boolean) as string[];
     
@@ -245,7 +245,7 @@ router.get('/drive-playlists/mood', isAuthenticated, async (req, res) => {
  * Requires authentication
  * GET /api/spotify/drive-playlists/weather?weather=sunny&weather=rainy
  */
-router.get('/drive-playlists/weather', isAuthenticated, async (req, res) => {
+router.get('/drive-playlists/weather', requireAuth, async (req, res) => {
   try {
     const conditions = [req.query.weather].flat().filter(Boolean) as string[];
     
