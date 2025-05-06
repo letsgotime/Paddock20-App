@@ -1,6 +1,15 @@
 <?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg xmlns="http://www.w3.org/2000/svg" width="200" height="40" viewBox="0 0 200 40">
-  <!-- Based on exact screenshot of the auth page -->
-  <text x="0" y="30" font-family="Orbitron, sans-serif" font-weight="700" font-size="30" fill="#1982FC">PADDOCK</text>
-  <text x="132" y="30" font-family="Orbitron, sans-serif" font-weight="700" font-size="30" fill="#08c519">2Ø</text>
+  <!-- Based on exact screenshot of the auth page with adjusted letter spacing -->
+  <defs>
+    <style type="text/css">
+      @import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@700&amp;display=swap');
+    </style>
+  </defs>
+  
+  <!-- PADDOCK with even letter spacing -->
+  <text x="0" y="30" font-family="Orbitron, sans-serif" font-weight="700" font-size="30" fill="#1982FC" letter-spacing="1">PADDOCK</text>
+  
+  <!-- 20 with slashed zero, positioned closer to PADDOCK (30% less space) -->
+  <text x="125" y="30" font-family="Orbitron, sans-serif" font-weight="700" font-size="30" fill="#08c519">2Ø</text>
 </svg>
