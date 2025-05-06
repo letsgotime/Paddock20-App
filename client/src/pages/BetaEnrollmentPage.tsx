@@ -123,9 +123,9 @@ const BetaEnrollmentPage = () => {
     <div className="min-h-screen bg-black flex flex-col items-center justify-center p-4">
       <Card className="w-full max-w-2xl bg-gray-900 border-[#1982FC]">
         <div className="p-6">
-          <h1 className="text-2xl font-bold text-[#1982FC] mb-2">Join the Paddock20 Beta Program</h1>
+          <h1 className="text-2xl font-bold text-[#1982FC] mb-2">Join The Grid: Exclusive Beta Access</h1>
           <p className="text-gray-300 mb-6">
-            Be among the first to experience the future of automotive lifestyle technology and help shape its evolution.
+            Take pole position in automotive innovation. As a beta member, you'll get first access to cutting-edge features before they're released to the public. Your feedback will directly influence the evolution of the ultimate driving companion.
           </p>
           
           <Separator className="my-4 bg-gray-700" />
