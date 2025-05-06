@@ -37,7 +37,7 @@ import WeatherPage from "./pages/WeatherPage";
 import NewGTGWeatherPage from "./pages/NewGTGWeatherPage";
 import RedlineReportPage from "./pages/RedlineReportPage";
 import SeasonalChecklistPage from "./pages/SeasonalChecklistPage";
-import EBooksPage from "./pages/eBooksPage";
+import EBooksPage from "./pages/EbooksPage";
 import Paddock20HomePage from "./pages/Paddock20HomePage";
 import ProductOrganizerPage from "./pages/ProductOrganizerPage"; 
 import UserProfileHubPage from "./pages/UserProfileHubPage"; 
