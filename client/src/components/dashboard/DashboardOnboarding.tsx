@@ -979,6 +979,634 @@ const DashboardOnboarding: React.FC<{
   );
   
   // Render preferences form
+  // Render tire management form
+  const renderTireManagementForm = () => (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-[#1982FC] mb-4">Tire Management</h2>
+      <p className="text-gray-300 mb-6">Keep track of your tires and optimize performance for every drive.</p>
+      
+      <Card className="bg-gray-900 border-gray-700 p-5">
+        <h3 className="text-xl font-semibold text-white mb-4">Current Tires</h3>
+        
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <Label htmlFor="tires-brand">Brand</Label>
+            <Input
+              id="tires-brand"
+              name="currentTires.brand"
+              value={tireProfile.currentTires.brand}
+              onChange={handleTireProfileChange}
+              placeholder="e.g., Michelin, Bridgestone"
+              className="bg-gray-800 border-gray-700 text-white"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="tires-model">Model</Label>
+            <Input
+              id="tires-model"
+              name="currentTires.model"
+              value={tireProfile.currentTires.model}
+              onChange={handleTireProfileChange}
+              placeholder="e.g., Pilot Sport 4S, Potenza"
+              className="bg-gray-800 border-gray-700 text-white"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="tires-type">Type</Label>
+            <select
+              id="tires-type"
+              name="currentTires.type"
+              value={tireProfile.currentTires.type}
+              onChange={handleTireProfileChange}
+              className="w-full rounded-md bg-gray-800 border-gray-700 text-white p-2"
+            >
+              <option value="">Select type</option>
+              <option value="Summer">Summer</option>
+              <option value="Winter">Winter</option>
+              <option value="All-Season">All-Season</option>
+              <option value="Track">Track</option>
+              <option value="All-Terrain">All-Terrain</option>
+            </select>
+          </div>
+          
+          <div>
+            <Label htmlFor="tires-size">Size</Label>
+            <Input
+              id="tires-size"
+              name="currentTires.size"
+              value={tireProfile.currentTires.size}
+              onChange={handleTireProfileChange}
+              placeholder="e.g., 245/40R18"
+              className="bg-gray-800 border-gray-700 text-white"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="tires-purchase-date">Date Installed</Label>
+            <Input
+              id="tires-purchase-date"
+              name="currentTires.purchaseDate"
+              type="date"
+              value={tireProfile.currentTires.purchaseDate}
+              onChange={handleTireProfileChange}
+              className="bg-gray-800 border-gray-700 text-white"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="tires-tread-depth">Tread Depth (mm)</Label>
+            <Input
+              id="tires-tread-depth"
+              name="currentTires.treadDepth"
+              value={tireProfile.currentTires.treadDepth}
+              onChange={handleTireProfileChange}
+              placeholder="e.g., 7.5"
+              className="bg-gray-800 border-gray-700 text-white"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="tires-pressure-front">Front Pressure (PSI)</Label>
+            <Input
+              id="tires-pressure-front"
+              name="currentTires.pressureFront"
+              value={tireProfile.currentTires.pressureFront}
+              onChange={handleTireProfileChange}
+              placeholder="e.g., 32"
+              className="bg-gray-800 border-gray-700 text-white"
+            />
+          </div>
+          
+          <div>
+            <Label htmlFor="tires-pressure-rear">Rear Pressure (PSI)</Label>
+            <Input
+              id="tires-pressure-rear"
+              name="currentTires.pressureRear"
+              value={tireProfile.currentTires.pressureRear}
+              onChange={handleTireProfileChange}
+              placeholder="e.g., 30"
+              className="bg-gray-800 border-gray-700 text-white"
+            />
+          </div>
+          
+          <div className="col-span-1 md:col-span-2">
+            <Label htmlFor="tires-notes">Notes</Label>
+            <Textarea
+              id="tires-notes"
+              name="currentTires.notes"
+              value={tireProfile.currentTires.notes}
+              onChange={handleTireProfileChange}
+              placeholder="Any additional notes about your tires"
+              className="bg-gray-800 border-gray-700 text-white h-24"
+            />
+          </div>
+        </div>
+        
+        <div className="mt-6">
+          <h4 className="text-lg font-medium text-white mb-3">Tire Brand Recommendations</h4>
+          <p className="text-gray-400 text-sm mb-3">For future reference, select trusted tire brands for your vehicle.</p>
+          
+          <div className="flex flex-wrap gap-2 mb-4">
+            {tireProfile.preferredBrands.map((brand, index) => (
+              <div 
+                key={index} 
+                className="bg-gray-800 text-white px-3 py-1 rounded-full text-sm flex items-center"
+              >
+                {brand}
+                <button 
+                  type="button" 
+                  onClick={() => handleRemovePreferredBrand(index)}
+                  className="ml-2 text-gray-400 hover:text-white"
+                >
+                  &times;
+                </button>
+              </div>
+            ))}
+          </div>
+          
+          <div className="flex gap-2">
+            <Input
+              id="new-brand"
+              placeholder="Add a preferred brand"
+              className="bg-gray-800 border-gray-700 text-white"
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddPreferredBrand((e.target as HTMLInputElement).value);
+                  (e.target as HTMLInputElement).value = '';
+                }
+              }}
+            />
+            <Button 
+              type="button" 
+              variant="secondary"
+              onClick={() => {
+                const input = document.getElementById('new-brand') as HTMLInputElement;
+                handleAddPreferredBrand(input.value);
+                input.value = '';
+              }}
+              className="bg-gray-700 hover:bg-gray-600"
+            >
+              Add
+            </Button>
+          </div>
+          
+          <div className="mt-4 text-gray-400 text-sm">
+            <p>Popular brands: <button type="button" className="text-[#1982FC] hover:underline" onClick={() => handleAddPreferredBrand('Michelin')}>Michelin</button>, <button type="button" className="text-[#1982FC] hover:underline" onClick={() => handleAddPreferredBrand('Bridgestone')}>Bridgestone</button>, <button type="button" className="text-[#1982FC] hover:underline" onClick={() => handleAddPreferredBrand('Pirelli')}>Pirelli</button>, <button type="button" className="text-[#1982FC] hover:underline" onClick={() => handleAddPreferredBrand('Continental')}>Continental</button></p>
+          </div>
+        </div>
+      </Card>
+      
+      <div className="flex flex-col sm:flex-row gap-4 justify-end mt-8">
+        <Button 
+          variant="outline" 
+          onClick={handlePrevious}
+          className="border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white"
+        >
+          <ChevronLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+        
+        <Button 
+          onClick={handleNext}
+          className="bg-[#1982FC] hover:bg-[#1982FC]/80 text-white"
+        >
+          Next
+          <ChevronRight className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+  
+  // Render dream garage form
+  const renderDreamGarageForm = () => (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-[#1982FC] mb-4">Dream Garage</h2>
+      <p className="text-gray-300 mb-6">Build your dream collection of vehicles you aspire to own.</p>
+      
+      <Card className="bg-gray-900 border-gray-700 p-5">
+        <h3 className="text-xl font-semibold text-white mb-4">Your Dream Cars</h3>
+        <p className="text-gray-400 text-sm mb-5">Add vehicles to your wish list and track their availability and market trends.</p>
+        
+        {dreamGarageProfile.dreamCars.map((car, index) => (
+          <div key={index} className="mb-8 border-b border-gray-800 pb-6">
+            <div className="flex justify-between items-center mb-4">
+              <h4 className="text-lg font-semibold text-white">Dream Car #{index + 1}</h4>
+              {dreamGarageProfile.dreamCars.length > 1 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => handleRemoveDreamCar(index)}
+                  className="text-red-400 hover:text-red-300 hover:bg-red-900/20"
+                >
+                  Remove
+                </Button>
+              )}
+            </div>
+            
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <Label htmlFor={`dream-make-${index}`}>Make</Label>
+                <Input
+                  id={`dream-make-${index}`}
+                  value={car.make}
+                  onChange={(e) => handleDreamCarChange(index, 'make', e.target.value)}
+                  placeholder="e.g., Porsche, Ferrari"
+                  className="bg-gray-800 border-gray-700 text-white"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor={`dream-model-${index}`}>Model</Label>
+                <Input
+                  id={`dream-model-${index}`}
+                  value={car.model}
+                  onChange={(e) => handleDreamCarChange(index, 'model', e.target.value)}
+                  placeholder="e.g., 911 GT3, F8 Tributo"
+                  className="bg-gray-800 border-gray-700 text-white"
+                />
+              </div>
+              
+              <div>
+                <Label htmlFor={`dream-year-${index}`}>Year</Label>
+                <Input
+                  id={`dream-year-${index}`}
+                  value={car.year}
+                  onChange={(e) => handleDreamCarChange(index, 'year', e.target.value)}
+                  placeholder="e.g., 2023"
+                  className="bg-gray-800 border-gray-700 text-white"
+                />
+              </div>
+              
+              <div className="md:col-span-3">
+                <Label htmlFor={`dream-notes-${index}`}>Notes</Label>
+                <Textarea
+                  id={`dream-notes-${index}`}
+                  value={car.notes}
+                  onChange={(e) => handleDreamCarChange(index, 'notes', e.target.value)}
+                  placeholder="Why you want this car, preferred spec, target budget..."
+                  className="bg-gray-800 border-gray-700 text-white h-20"
+                />
+              </div>
+            </div>
+          </div>
+        ))}
+        
+        <Button
+          type="button"
+          onClick={handleAddDreamCar}
+          variant="outline"
+          className="w-full mt-2 border-gray-700 text-[#1982FC] hover:bg-gray-800"
+        >
+          + Add Another Dream Car
+        </Button>
+      </Card>
+      
+      <div className="flex flex-col sm:flex-row gap-4 justify-end mt-8">
+        <Button 
+          variant="outline" 
+          onClick={handlePrevious}
+          className="border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white"
+        >
+          <ChevronLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+        
+        <Button 
+          onClick={handleNext}
+          className="bg-[#1982FC] hover:bg-[#1982FC]/80 text-white"
+        >
+          Next
+          <ChevronRight className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+  
+  // Render locker room form
+  const renderLockerRoomForm = () => (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-[#1982FC] mb-4">Locker Room</h2>
+      <p className="text-gray-300 mb-6">Organize your automotive maintenance and detailing supplies.</p>
+      
+      <Card className="bg-gray-900 border-gray-700 p-5">
+        <h3 className="text-xl font-semibold text-white mb-4">Storage Configuration</h3>
+        
+        <div className="mb-6">
+          <Label className="text-white mb-2 block">Storage Size</Label>
+          <div className="flex flex-wrap gap-3">
+            {['Small', 'Medium', 'Large'].map((size) => (
+              <Button
+                key={size}
+                type="button"
+                variant={lockerRoomProfile.size === size ? "default" : "outline"}
+                className={lockerRoomProfile.size === size 
+                  ? "bg-[#1982FC] hover:bg-[#1982FC]/80" 
+                  : "border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white"}
+                onClick={() => handleLockerRoomSizeChange(size)}
+              >
+                {size}
+              </Button>
+            ))}
+          </div>
+          <p className="text-xs text-gray-400 mt-2">
+            Select the size that best represents your available storage space for automotive supplies.
+          </p>
+        </div>
+        
+        <div className="mb-6">
+          <Label className="text-white mb-3 block">Storage Needs</Label>
+          
+          <div className="flex flex-wrap gap-2 mb-4">
+            {lockerRoomProfile.storageNeeds.map((item, index) => (
+              <div 
+                key={index} 
+                className="bg-gray-800 text-white px-3 py-1 rounded-full text-sm flex items-center"
+              >
+                {item}
+                <button 
+                  type="button" 
+                  onClick={() => handleRemoveStorageItem('storageNeeds', index)}
+                  className="ml-2 text-gray-400 hover:text-white"
+                >
+                  &times;
+                </button>
+              </div>
+            ))}
+          </div>
+          
+          <div className="flex gap-2">
+            <Input
+              id="new-storage-need"
+              placeholder="Add storage need"
+              className="bg-gray-800 border-gray-700 text-white"
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddStorageItem('storageNeeds', (e.target as HTMLInputElement).value);
+                  (e.target as HTMLInputElement).value = '';
+                }
+              }}
+            />
+            <Button 
+              type="button" 
+              variant="secondary"
+              onClick={() => {
+                const input = document.getElementById('new-storage-need') as HTMLInputElement;
+                handleAddStorageItem('storageNeeds', input.value);
+                input.value = '';
+              }}
+              className="bg-gray-700 hover:bg-gray-600"
+            >
+              Add
+            </Button>
+          </div>
+          
+          <div className="mt-2 text-gray-400 text-sm">
+            <p>Common needs: <button type="button" className="text-[#1982FC] hover:underline" onClick={() => handleAddStorageItem('storageNeeds', 'Shelving')}>Shelving</button>, <button type="button" className="text-[#1982FC] hover:underline" onClick={() => handleAddStorageItem('storageNeeds', 'Cabinets')}>Cabinets</button>, <button type="button" className="text-[#1982FC] hover:underline" onClick={() => handleAddStorageItem('storageNeeds', 'Drawers')}>Drawers</button></p>
+          </div>
+        </div>
+        
+        <div className="mb-6">
+          <Label className="text-white mb-3 block">Tools Inventory</Label>
+          
+          <div className="flex flex-wrap gap-2 mb-4">
+            {lockerRoomProfile.tools.map((item, index) => (
+              <div 
+                key={index} 
+                className="bg-gray-800 text-white px-3 py-1 rounded-full text-sm flex items-center"
+              >
+                {item}
+                <button 
+                  type="button" 
+                  onClick={() => handleRemoveStorageItem('tools', index)}
+                  className="ml-2 text-gray-400 hover:text-white"
+                >
+                  &times;
+                </button>
+              </div>
+            ))}
+          </div>
+          
+          <div className="flex gap-2">
+            <Input
+              id="new-tool"
+              placeholder="Add tool"
+              className="bg-gray-800 border-gray-700 text-white"
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddStorageItem('tools', (e.target as HTMLInputElement).value);
+                  (e.target as HTMLInputElement).value = '';
+                }
+              }}
+            />
+            <Button 
+              type="button" 
+              variant="secondary"
+              onClick={() => {
+                const input = document.getElementById('new-tool') as HTMLInputElement;
+                handleAddStorageItem('tools', input.value);
+                input.value = '';
+              }}
+              className="bg-gray-700 hover:bg-gray-600"
+            >
+              Add
+            </Button>
+          </div>
+          
+          <div className="mt-2 text-gray-400 text-sm">
+            <p>Common tools: <button type="button" className="text-[#1982FC] hover:underline" onClick={() => handleAddStorageItem('tools', 'Socket Set')}>Socket Set</button>, <button type="button" className="text-[#1982FC] hover:underline" onClick={() => handleAddStorageItem('tools', 'Jack')}>Jack</button>, <button type="button" className="text-[#1982FC] hover:underline" onClick={() => handleAddStorageItem('tools', 'Torque Wrench')}>Torque Wrench</button></p>
+          </div>
+        </div>
+        
+        <div>
+          <Label className="text-white mb-3 block">Detailing Supplies</Label>
+          
+          <div className="flex flex-wrap gap-2 mb-4">
+            {lockerRoomProfile.detailingSupplies.map((item, index) => (
+              <div 
+                key={index} 
+                className="bg-gray-800 text-white px-3 py-1 rounded-full text-sm flex items-center"
+              >
+                {item}
+                <button 
+                  type="button" 
+                  onClick={() => handleRemoveStorageItem('detailingSupplies', index)}
+                  className="ml-2 text-gray-400 hover:text-white"
+                >
+                  &times;
+                </button>
+              </div>
+            ))}
+          </div>
+          
+          <div className="flex gap-2">
+            <Input
+              id="new-detail-supply"
+              placeholder="Add detailing supply"
+              className="bg-gray-800 border-gray-700 text-white"
+              onKeyPress={(e) => {
+                if (e.key === 'Enter') {
+                  e.preventDefault();
+                  handleAddStorageItem('detailingSupplies', (e.target as HTMLInputElement).value);
+                  (e.target as HTMLInputElement).value = '';
+                }
+              }}
+            />
+            <Button 
+              type="button" 
+              variant="secondary"
+              onClick={() => {
+                const input = document.getElementById('new-detail-supply') as HTMLInputElement;
+                handleAddStorageItem('detailingSupplies', input.value);
+                input.value = '';
+              }}
+              className="bg-gray-700 hover:bg-gray-600"
+            >
+              Add
+            </Button>
+          </div>
+          
+          <div className="mt-2 text-gray-400 text-sm">
+            <p>Common supplies: <button type="button" className="text-[#1982FC] hover:underline" onClick={() => handleAddStorageItem('detailingSupplies', 'Wax')}>Wax</button>, <button type="button" className="text-[#1982FC] hover:underline" onClick={() => handleAddStorageItem('detailingSupplies', 'Microfiber Towels')}>Microfiber Towels</button>, <button type="button" className="text-[#1982FC] hover:underline" onClick={() => handleAddStorageItem('detailingSupplies', 'Polisher')}>Polisher</button></p>
+          </div>
+        </div>
+      </Card>
+      
+      <div className="flex flex-col sm:flex-row gap-4 justify-end mt-8">
+        <Button 
+          variant="outline" 
+          onClick={handlePrevious}
+          className="border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white"
+        >
+          <ChevronLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+        
+        <Button 
+          onClick={handleNext}
+          className="bg-[#1982FC] hover:bg-[#1982FC]/80 text-white"
+        >
+          Next
+          <ChevronRight className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+  
+  // Render Spotify integration form
+  const renderSpotifyIntegrationForm = () => (
+    <div className="space-y-6">
+      <h2 className="text-2xl font-bold text-[#1982FC] mb-4">Spotify Integration</h2>
+      <p className="text-gray-300 mb-6">Connect your Spotify account to enhance your automotive experience with personalized music.</p>
+      
+      <Card className="bg-gray-900 border-gray-700 p-5">
+        <div className="text-center mb-8">
+          {!spotifyProfile.connected ? (
+            <>
+              <div className="w-16 h-16 bg-[#1DB954] rounded-full flex items-center justify-center mx-auto mb-4">
+                <svg viewBox="0 0 24 24" width="36" height="36" fill="white">
+                  <path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.841-.12-.961-.54-.122-.421.119-.842.54-.962 4.56-1.021 8.52-.6 11.64 1.32.42.18.48.66.24 1.021zm1.44-3.3c-.301.42-.841.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.24 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.721-.18-.601.18-1.2.72-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.559.3z"/>
+                </svg>
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">Connect Your Spotify Account</h3>
+              <p className="text-gray-400 mb-6">Link your Spotify account to create custom playlists for driving and detailing.</p>
+              
+              <Button
+                type="button"
+                onClick={handleConnectSpotify}
+                disabled={isConnectingSpotify}
+                className="bg-[#1DB954] hover:bg-[#1DB954]/80 text-white font-bold py-3 px-8 rounded-full"
+              >
+                {isConnectingSpotify ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Connecting...
+                  </>
+                ) : (
+                  "Connect with Spotify"
+                )}
+              </Button>
+            </>
+          ) : (
+            <>
+              <div className="w-16 h-16 bg-[#1DB954] rounded-full flex items-center justify-center mx-auto mb-4">
+                <Check className="h-8 w-8 text-white" />
+              </div>
+              <h3 className="text-xl font-semibold text-white mb-2">Spotify Connected!</h3>
+              <p className="text-gray-400 mb-6">Your account has been successfully linked to Paddock20.</p>
+            </>
+          )}
+        </div>
+        
+        {spotifyProfile.connected && (
+          <div className="space-y-6 mt-6">
+            <div>
+              <Label htmlFor="favorite-playlist">Favorite Playlist URL</Label>
+              <Input
+                id="favorite-playlist"
+                name="favoritePlaylist"
+                value={spotifyProfile.favoritePlaylist}
+                onChange={handleSpotifyProfileChange}
+                placeholder="Paste your favorite playlist URL"
+                className="bg-gray-800 border-gray-700 text-white"
+              />
+              <p className="text-xs text-gray-400 mt-1">This will be your default playlist in the app.</p>
+            </div>
+            
+            <div>
+              <Label htmlFor="driving-playlist">Driving Playlist URL</Label>
+              <Input
+                id="driving-playlist"
+                name="drivingPlaylist"
+                value={spotifyProfile.drivingPlaylist}
+                onChange={handleSpotifyProfileChange}
+                placeholder="Paste a playlist for driving"
+                className="bg-gray-800 border-gray-700 text-white"
+              />
+              <p className="text-xs text-gray-400 mt-1">This will automatically play when you start a drive session.</p>
+            </div>
+            
+            <div>
+              <Label htmlFor="detailing-playlist">Detailing Playlist URL</Label>
+              <Input
+                id="detailing-playlist"
+                name="detailingPlaylist"
+                value={spotifyProfile.detailingPlaylist}
+                onChange={handleSpotifyProfileChange}
+                placeholder="Paste a playlist for detailing sessions"
+                className="bg-gray-800 border-gray-700 text-white"
+              />
+              <p className="text-xs text-gray-400 mt-1">This will be suggested during detailing sessions.</p>
+            </div>
+          </div>
+        )}
+      </Card>
+      
+      <div className="flex flex-col sm:flex-row gap-4 justify-end mt-8">
+        <Button 
+          variant="outline" 
+          onClick={handlePrevious}
+          className="border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white"
+        >
+          <ChevronLeft className="mr-2 h-4 w-4" />
+          Back
+        </Button>
+        
+        <Button 
+          onClick={handleNext}
+          className="bg-[#1982FC] hover:bg-[#1982FC]/80 text-white"
+        >
+          Next
+          <ChevronRight className="ml-2 h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  );
+  
   const renderPreferencesForm = () => (
     <div className="space-y-6">
       <h2 className="text-2xl font-bold text-[#1982FC] mb-4">Preferences</h2>
@@ -1159,6 +1787,10 @@ const DashboardOnboarding: React.FC<{
           <span>Profile</span>
           <span>Vehicle</span>
           <span>Details</span>
+          <span>Tires</span>
+          <span>Dream Garage</span>
+          <span>Locker Room</span>
+          <span>Spotify</span>
           <span>Preferences</span>
         </div>
         <div className="w-full h-2 bg-gray-800 rounded-full overflow-hidden">
