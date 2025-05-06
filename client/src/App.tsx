@@ -35,6 +35,7 @@ import BrokerPortalPage from "./pages/BrokerPortalPage";
 import Weather from "./pages/Weather";
 import WeatherPage from "./pages/WeatherPage";
 import NewGTGWeatherPage from "./pages/NewGTGWeatherPage";
+import TimeServicesPage from "./pages/TimeServicesPage";
 import RedlineReportPage from "./pages/RedlineReportPage";
 import SeasonalChecklistPage from "./pages/SeasonalChecklistPage";
 import EbooksPage from "./pages/EbooksPage";
@@ -242,6 +243,7 @@ function AuthenticatedContent({
           {/* Feature Routes */}
           <Route path="/weather-paddock" component={() => <ProtectedRoute><WeatherPage /></ProtectedRoute>} />
           <Route path="/weather" component={() => <ProtectedRoute><Weather /></ProtectedRoute>} />
+          <Route path="/time-services" component={() => <ProtectedRoute><TimeServicesPage /></ProtectedRoute>} />
           <Route path="/route-planner" component={() => <ProtectedRoute><RoutePlannerPage /></ProtectedRoute>} />
           <Route path="/drive-journal" component={() => <ProtectedRoute><DriveJournalPage /></ProtectedRoute>} />
           <Route path="/manifestation-station" component={() => <ProtectedRoute><ManifestationStationPage /></ProtectedRoute>} />

@@ -979,7 +979,7 @@ export const LocationServicesProvider: React.FC<{ children: React.ReactNode }> =
     });
   }, [toast]);
   
-  // Function to check if current time is in golden hour
+  // Function to check if current time is in GoTime Golden Hour™
   const isGoldenHour = useCallback((): boolean => {
     if (!timeData || !timeData.goldenHour) return false;
     
@@ -989,7 +989,7 @@ export const LocationServicesProvider: React.FC<{ children: React.ReactNode }> =
     const currentHour = now.getHours();
     const currentMinute = now.getMinutes();
     
-    // Check morning golden hour
+    // Check morning GoTime Golden Hour™
     if (timeData.goldenHour.morning) {
       const morningStart = timeData.goldenHour.morning.start;
       const morningEnd = timeData.goldenHour.morning.end;

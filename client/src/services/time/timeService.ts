@@ -390,18 +390,18 @@ export function isGoldenHour(timeData: TimeData | null): boolean {
   const currentTimeString = formatTime(now);
   
   // Check if current time is within morning GoTime Golden Hour™
-  const isMorningGoldenHour = timeData.goldenHour.morning &&
+  const isMorningGoldenHour = timeData.goldenHour.morning ? 
     isTimeBetween(currentTimeString, 
                  timeData.goldenHour.morning.start, 
-                 timeData.goldenHour.morning.end);
+                 timeData.goldenHour.morning.end) : false;
   
   // Check if current time is within evening GoTime Golden Hour™
-  const isEveningGoldenHour = timeData.goldenHour.evening &&
+  const isEveningGoldenHour = timeData.goldenHour.evening ? 
     isTimeBetween(currentTimeString, 
                  timeData.goldenHour.evening.start, 
-                 timeData.goldenHour.evening.end);
+                 timeData.goldenHour.evening.end) : false;
   
-  return (isMorningGoldenHour || isEveningGoldenHour) === true ? true : false;
+  return isMorningGoldenHour || isEveningGoldenHour;
 }
 
 /**
@@ -446,7 +446,7 @@ export function calculateOptimalDepartureTime(
   // - Weather forecast (avoid driving during precipitation)
   // - Daylight (prefer daylight driving)
   // - Traffic conditions (if available)
-  // - Golden hour (scenic driving)
+  // - GoTime Golden Hour™ (scenic driving)
   
   // For now, let's implement a simple heuristic:
   // 1. If there's enough daylight remaining, suggest departing now
@@ -466,7 +466,7 @@ export function calculateOptimalDepartureTime(
     }
   }
   
-  // If evening golden hour is approaching and trip is short
+  // If evening GoTime Golden Hour™ is approaching and trip is short
   if (timeData.goldenHour && timeData.goldenHour.evening) {
     const eveningGoldenHourStart = timeData.goldenHour.evening.start;
     // Parse time like "5:30 PM"
@@ -479,10 +479,10 @@ export function calculateOptimalDepartureTime(
       if (period === 'PM' && hours < 12) hours += 12;
       if (period === 'AM' && hours === 12) hours = 0;
       
-      const goldenHourStartDecimal = hours + minutes / 60;
+      const goTimeGoldenHourStartDecimal = hours + minutes / 60;
       
-      // If golden hour is approaching and trip is short enough
-      if (nowHours < goldenHourStartDecimal && goldenHourStartDecimal - nowHours < 2 && tripDurationMinutes < 120) {
+      // If GoTime Golden Hour™ is approaching and trip is short enough
+      if (nowHours < goTimeGoldenHourStartDecimal && goTimeGoldenHourStartDecimal - nowHours < 2 && tripDurationMinutes < 120) {
         return `Depart at ${timeData.goldenHour.evening.start} for scenic sunset drive`;
       }
     }

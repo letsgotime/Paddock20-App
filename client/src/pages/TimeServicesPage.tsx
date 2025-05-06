@@ -82,7 +82,7 @@ export const TimeServicesPage: React.FC = () => {
           {isGoldenHour() && (
             <Badge variant="secondary" className="ml-2 bg-yellow-500/10 text-yellow-500 border-yellow-500/20">
               <Sun className="mr-1 h-3 w-3" />
-              Golden Hour
+              GoTime Golden Hour™
             </Badge>
           )}
         </div>
@@ -156,7 +156,7 @@ export const TimeServicesPage: React.FC = () => {
                             )}
                             
                             <div className="flex items-center justify-between">
-                              <span className="text-sm text-muted-foreground">Golden Hour:</span>
+                              <span className="text-sm text-muted-foreground">GoTime Golden Hour™:</span>
                               <span className="font-medium">
                                 {isGoldenHour() 
                                   ? <Badge variant="outline" className="bg-yellow-500/10 text-yellow-500 border-yellow-500/20">Active Now</Badge>
@@ -232,7 +232,7 @@ export const TimeServicesPage: React.FC = () => {
                             </div>
                             <p className="text-sm text-muted-foreground">
                               {isGoldenHour() 
-                                ? "Current golden hour conditions provide optimal natural lighting for scenic driving."
+                                ? "Current GoTime Golden Hour™ conditions provide optimal natural lighting for scenic driving."
                                 : "Based on current time and lighting conditions."
                               }
                             </p>
@@ -251,7 +251,7 @@ export const TimeServicesPage: React.FC = () => {
                   <div className="text-center py-12 text-muted-foreground">
                     <Globe className="mx-auto h-12 w-12 mb-4 opacity-50" />
                     <h3 className="text-lg font-medium mb-2">Advanced Drive Planning</h3>
-                    <p>Coming soon - Plan your drives based on golden hour, lighting conditions, and other time-based factors</p>
+                    <p>Coming soon - Plan your drives based on GoTime Golden Hour™, lighting conditions, and other time-based factors</p>
                   </div>
                 </TabsContent>
 
