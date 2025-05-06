@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useLocation } from 'wouter';
 import { Loader2 } from 'lucide-react';
@@ -13,6 +13,7 @@ import { Loader2 } from 'lucide-react';
 const Auth0Callback = () => {
   const [, setLocation] = useLocation();
   const { isAuthenticated, isLoading, error, user } = useAuth0();
+  const [processingRedirect, setProcessingRedirect] = useState(false);
   
   useEffect(() => {
     // Log extensive debugging information
@@ -25,9 +26,12 @@ const Auth0Callback = () => {
     const hasAuthCode = params.has('code');
     console.log('Authorization code present:', hasAuthCode);
     
-    // Only take action when the loading state is complete
-    if (!isLoading) {
+    // Only take action when the loading state is complete and not already processing a redirect
+    if (!isLoading && !processingRedirect) {
       console.log('Auth0 handshake completed (no longer loading)');
+      
+      // Mark that we're processing a redirect to prevent double redirects
+      setProcessingRedirect(true);
       
       // Successfully authenticated
       if (isAuthenticated) {
@@ -41,44 +45,47 @@ const Auth0Callback = () => {
           (user?.created_at && new Date(user.created_at).getTime() > Date.now() - 60000) // created within the last minute
         );
         
-        if (isNewUser) {
-          console.log('🆕 New user detected - directing to beta enrollment');
-          // Redirect to beta enrollment page
-          window.location.href = '/beta-enrollment';
-        }
-        // Handle legacy beta registration flow (if beta status was stored)
-        else if (localStorage.getItem('paddock20_beta_status')) {
-          console.log('Beta status detected - directing to onboarding');
-          
-          // Clean up beta registration data
-          localStorage.removeItem('paddock20_beta_status');
-          localStorage.removeItem('paddock20_has_agreed_to_nda');
-          localStorage.removeItem('paddock20_has_agreed_to_terms');
-          localStorage.removeItem('paddock20_feedback_commitment');
-          
-          // Redirect to onboarding flow
-          window.location.href = '/onboarding';
-        } else {
-          // Regular login - redirect to dashboard
-          console.log('Regular login - sending to dashboard');
-          window.location.href = '/dashboard';
-        }
+        // Set timeout to ensure state updates have time to process
+        setTimeout(() => {
+          if (isNewUser) {
+            console.log('🆕 New user detected - directing to beta enrollment');
+            // Redirect to beta enrollment page using React Router
+            setLocation('/beta-enrollment');
+          }
+          // Handle legacy beta registration flow (if beta status was stored)
+          else if (localStorage.getItem('paddock20_beta_status')) {
+            console.log('Beta status detected - directing to onboarding');
+            
+            // Clean up beta registration data
+            localStorage.removeItem('paddock20_beta_status');
+            localStorage.removeItem('paddock20_has_agreed_to_nda');
+            localStorage.removeItem('paddock20_has_agreed_to_terms');
+            localStorage.removeItem('paddock20_feedback_commitment');
+            
+            // Redirect to onboarding flow using React Router
+            setLocation('/onboarding');
+          } else {
+            // Regular login - redirect to dashboard using React Router
+            console.log('Regular login - sending to dashboard');
+            setLocation('/dashboard');
+          }
+        }, 500);
       } 
       // Authentication error
       else if (error) {
         console.error('❌ Authentication error:', error);
-        window.location.href = '/auth';
+        setTimeout(() => setLocation('/auth'), 500);
       }
       // Not authenticated but no error (unusual state)
       else {
         console.log('⚠️ Not authenticated but no error');
         if (hasAuthCode) {
           console.log('Authorization code present but auth failed silently - directing to auth page');
-          window.location.href = '/auth';
+          setTimeout(() => setLocation('/auth'), 500);
         }
       }
     }
-  }, [isLoading, isAuthenticated, error, user]);
+  }, [isLoading, isAuthenticated, error, user, processingRedirect, setLocation]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-black">
