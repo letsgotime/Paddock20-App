@@ -486,76 +486,61 @@ export const LocationServicesProvider: React.FC<{ children: React.ReactNode }> =
   
   // Refresh current location
   const refreshLocation = useCallback(async () => {
-    console.log('Refreshing location');
+    console.log('Refreshing location with enhanced services');
     
-    if (navigator.geolocation) {
-      setLoadingLocation(true);
+    setLoadingLocation(true);
+    
+    try {
+      // Use our enhanced location service with IPinfo fallback
+      const locationData = await getLocationWithFallback();
       
-      try {
-        // Wrap geolocation in a promise for easier handling
-        const position = await new Promise<GeolocationPosition>((resolve, reject) => {
-          navigator.geolocation.getCurrentPosition(
-            resolve,
-            reject,
-            { 
-              timeout: 10000,
-              maximumAge: 0, // Force fresh location
-              enableHighAccuracy: false // Don't need high accuracy for weather
-            }
-          );
-        });
-        
-        const geoLocation: LocationData = {
-          id: generateLocationId(position.coords.latitude, position.coords.longitude, 'Current Location'),
-          name: 'Current Location',
-          lat: position.coords.latitude,
-          lon: position.coords.longitude,
-          type: 'current',
-          icon: 'map-pin',
-          lastUsed: Date.now()
-        };
-        
-        console.log('Got fresh geolocation:', geoLocation);
-        setCurrentLocationState(geoLocation);
-        setLocationLastUpdated(new Date());
-        setLocationError(null);
-        
-        // After refreshing location, update the weather
-        refreshWeather();
-      } catch (error) {
-        console.warn('Geolocation refresh error:', error);
-        
-        // If we already have a location, keep using it
-        if (!currentLocation) {
-          setCurrentLocationState(DEFAULT_LOCATION);
-        }
-        
-        setLocationError(new Error(`Geolocation failed: ${error}`));
-        
-        // Only show toast if we don't have any location
-        if (!currentLocation) {
-          toast({
-            title: 'Location Not Available',
-            description: 'Using default location. Please check your location permissions.',
-            variant: 'destructive',
-          });
-        }
-      } finally {
-        setLoadingLocation(false);
-      }
-    } else {
-      // No geolocation available, use default
-      console.warn('Geolocation not supported');
-      setCurrentLocationState(DEFAULT_LOCATION);
+      console.log('Got location with enhanced services:', locationData);
+      setCurrentLocationState(locationData);
       setLocationLastUpdated(new Date());
-      setLocationError(new Error('Geolocation not supported in this browser'));
+      setLocationError(null);
+      
+      // After refreshing location, update the weather
+      refreshWeather();
+      
+      // Try to enhance location data with additional IPinfo metadata
+      try {
+        const ipInfoData = await ipInfoService.getLocationByIP();
+        
+        if (ipInfoData && ipInfoData.timezone) {
+          console.log('Enhanced location with IPinfo timezone data:', ipInfoData.timezone);
+          
+          // Update time data
+          refreshTime();
+        }
+      } catch (ipInfoError) {
+        console.warn('Non-critical: Failed to fetch additional IPinfo metadata:', ipInfoError);
+        // This is non-critical, so we don't need to show an error to the user
+      }
+    } catch (error) {
+      console.warn('Location services error:', error);
+      
+      // If we already have a location, keep using it
+      if (!currentLocation) {
+        setCurrentLocationState(DEFAULT_LOCATION);
+      }
+      
+      setLocationError(new Error(`Location services failed: ${error}`));
+      
+      // Only show toast if we don't have any location
+      if (!currentLocation) {
+        toast({
+          title: 'Location Not Available',
+          description: 'Using default location. Please check your location permissions.',
+          variant: 'destructive',
+        });
+      }
+    } finally {
       setLoadingLocation(false);
       
-      toast({
-        title: 'Location Not Supported',
-        description: 'Your browser does not support geolocation. Using default location.',
-        variant: 'destructive',
-      });
+      // Ensure weather refresh happens even if location fails
+      if (!weatherData && currentLocation) {
+        refreshWeather();
+      }
     }
   }, [currentLocation, toast]);
   
