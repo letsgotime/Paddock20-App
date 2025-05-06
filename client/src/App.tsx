@@ -103,8 +103,7 @@ function AuthenticatedContent({
   setHasCompletedOnboarding: (value: boolean) => void 
 }) {
   // Access auth state using the useAuth hook since we're inside the AuthProvider
-  const { user, session, loading } = useAuth();
-  const isAuthenticated = !!session; // Session exists when authenticated
+  const { user, loading, isAuthenticated } = useAuth(); // isAuthenticated computed in useAuth hook
   
   // Get current location for routing
   const [location] = useLocation();
@@ -188,31 +187,26 @@ function AuthenticatedContent({
           {/* Beta Enrollment Page - For new users to opt into the beta program */}
           <Route path="/beta-enrollment" component={() => <ProtectedRoute><BetaEnrollmentPage /></ProtectedRoute>} />
           
-          {/* User Onboarding - Requires authentication but not onboarding completion */}
+          {/* User Onboarding - Explicit URL path that redirects to the proper flow */}
           <Route 
             path="/onboarding" 
-            component={() => (
-              <UserOnboarding 
-                onComplete={(userId) => {
-                  // Mark onboarding as complete
-                  if (userId) {
-                    const betaOnboardingKey = `paddock20_beta_onboarding_complete_${userId}`;
-                    localStorage.setItem(betaOnboardingKey, 'true');
-                    
-                    // Also mark the legal agreements as accepted
-                    const legalAgreementsKey = `paddock20_legal_agreements_${userId}`;
-                    localStorage.setItem(legalAgreementsKey, JSON.stringify({
-                      accepted: true,
-                      version: '1.0',
-                      timestamp: new Date().toISOString()
-                    }));
-                    
-                    // Redirect to dashboard
-                    window.location.href = '/';
-                  }
-                }} 
-              />
-            )} 
+            component={() => {
+              // Check if user is authenticated
+              if (isAuthenticated && user?.id) {
+                // Update local storage directly - this will trigger the onboarding flow
+                // in the AuthenticatedContent component on next render
+                const betaOnboardingKey = `paddock20_beta_onboarding_complete_${user.id}`;
+                localStorage.removeItem(betaOnboardingKey);
+                
+                // Redirect to home, which will then show the onboarding
+                window.location.href = '/';
+                return <div className="p-8 text-white">Redirecting to onboarding...</div>;
+              } else {
+                // Not authenticated, redirect to auth page
+                window.location.href = '/auth';
+                return <div className="p-8 text-white">Please log in to continue onboarding...</div>;
+              }
+            }} 
           />
         
           {/* Simplified routes for authentication testing */}
