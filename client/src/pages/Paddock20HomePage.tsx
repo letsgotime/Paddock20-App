@@ -198,10 +198,10 @@ const Paddock20HomePage: React.FC = () => {
         <div className="mb-4">
           <div className="mb-2">
             <h1 className="text-center text-5xl sm:text-6xl font-bold font-orbitron">
-              <span className="text-[#4B9CD3]">PADDOCK</span>
-              <span className="text-green-500">20</span>
+              <span className="text-[#1982FC]">PADDOCK</span>
+              <span className="text-[#08c519]">20</span>
             </h1>
-            <p className="text-center text-[#4B9CD3] font-orbitron text-lg sm:text-xl mt-2">COMMAND CENTER</p>
+            <p className="text-center text-[#1982FC] font-orbitron text-lg sm:text-xl mt-2">COMMAND CENTER</p>
             
             {/* Beta Tester Request Button */}
             <div className="flex justify-center mt-3">
@@ -354,7 +354,7 @@ const Paddock20HomePage: React.FC = () => {
             <div className="flex items-center z-10">
               <div className="h-2.5 w-2.5 rounded-full bg-[#08c519] animate-pulse mr-3 shadow-[0_0_6px_#08c519]"></div>
               <div className="mr-3 h-6 w-[1px] bg-blue-900/60"></div>
-              <h2 className="text-[#4B9CD3] font-orbitron text-2xl tracking-wider font-bold bg-gradient-to-b from-blue-300 to-[#4B9CD3] bg-clip-text text-transparent drop-shadow-sm">WHY PADDOCK20™? WHY NOW?</h2>
+              <h2 className="text-[#1982FC] font-orbitron text-2xl tracking-wider font-bold bg-gradient-to-b from-blue-300 to-[#1982FC] bg-clip-text text-transparent drop-shadow-sm">WHY PADDOCK20™? WHY NOW?</h2>
             </div>
           </div>
           
@@ -363,7 +363,7 @@ const Paddock20HomePage: React.FC = () => {
             <div className="mb-6 bg-black/30 rounded-lg p-4 border border-blue-900/20">
               <div className="flex items-center mb-3">
                 <div className="h-2 w-2 bg-blue-500 rounded-full mr-2"></div>
-                <h3 className="text-[#4B9CD3] font-orbitron text-xl">THE PADDOCK CONCEPT</h3>
+                <h3 className="text-[#1982FC] font-orbitron text-xl">THE PADDOCK CONCEPT</h3>
                 <div className="ml-auto text-xs text-blue-400/70 font-mono px-2 py-0.5 bg-blue-500/10 rounded border border-blue-500/20">MOTORSPORT ORIGINS</div>
               </div>
               <p className="text-gray-300 pl-4 border-l border-blue-800/50">

@@ -121,8 +121,8 @@ const Header: React.FC = () => {
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         {/* Logo Section */}
         <div className="flex items-center">
-          <Link to="/" className="text-3xl font-extrabold text-blue-400 hover:text-blue-300 transition-colors font-['Orbitron'] tracking-wider">
-            PADDOCK<span style={{ color: '#08c519' }}>20</span>
+          <Link to="/" className="text-3xl font-extrabold hover:opacity-90 transition-colors font-['Orbitron'] tracking-wider">
+            <span style={{ color: '#1982FC' }}>PADDOCK</span><span style={{ color: '#08c519' }}>20</span>
           </Link>
         </div>
 
