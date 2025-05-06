@@ -1,11 +1,13 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useContext } from 'react';
 import { Eye, EyeOff, LogIn, UserPlus, AlertTriangle } from 'lucide-react';
 import { useLocation } from 'wouter';
 import LegalDocumentModal from '../components/LegalDocumentModal';
 import { legalDocuments } from '../data/legalDocuments';
+import { AuthContext, useAuth } from '@/context/AuthContext';
 
 // This is a simplified auth page that should work even if there are issues with other components
 const SimpleAuthPage = () => {
+  const auth = useContext(AuthContext); // Use the auth context directly
   const [location, setLocation] = useLocation();
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
@@ -21,11 +23,15 @@ const SimpleAuthPage = () => {
     content: ""
   });
   
-  // Let's bypass the automatic redirection check to fix the issue
-  // Instead we'll just show the login page regardless of authentication status
+  // If user is already logged in, redirect to dashboard
   useEffect(() => {
-    console.log('SimpleAuthPage loaded - this is the new simplified auth page');
-  }, []);
+    if (auth?.user) {
+      console.log('User already authenticated, redirecting to dashboard');
+      setLocation('/dashboard');
+    } else {
+      console.log('SimpleAuthPage loaded - ready for authentication');
+    }
+  }, [auth?.user, setLocation]);
   
   // Reference to form elements for beta status
   const formRef = useRef<HTMLFormElement>(null);
@@ -51,73 +57,99 @@ const SimpleAuthPage = () => {
       return;
     }
     
+    // Additional validation for beta program
+    let betaStatus = 'beta_user'; // Default
+    let hasAgreedToNDA = false;
+    let hasAgreedToTerms = false;
+    let feedbackCommitment = false;
+    
+    // Get beta program status and agreement flags from the form
+    if (!isLogin && formRef.current) {
+      const form = formRef.current;
+      
+      // Check which beta program option is selected
+      const betaTesterRadio = form.querySelector('#beta-tester') as HTMLInputElement;
+      if (betaTesterRadio && betaTesterRadio.checked) {
+        betaStatus = 'beta_tester';
+        
+        // For beta testers, verify NDA and feedback commitment
+        const ndaCheckbox = form.querySelector('#nda-agreement') as HTMLInputElement;
+        const feedbackCheckbox = form.querySelector('#feedback-commitment') as HTMLInputElement;
+        
+        hasAgreedToNDA = ndaCheckbox?.checked || false;
+        feedbackCommitment = feedbackCheckbox?.checked || false;
+        
+        if (betaStatus === 'beta_tester' && !hasAgreedToNDA) {
+          setErrorMessage('You must agree to the NDA to join as a Beta Tester');
+          return;
+        }
+        
+        if (betaStatus === 'beta_tester' && !feedbackCommitment) {
+          setErrorMessage('You must commit to providing feedback to join as a Beta Tester');
+          return;
+        }
+      }
+      
+      // For all users, verify terms agreement
+      const termsCheckbox = form.querySelector('#terms-agreement') as HTMLInputElement;
+      hasAgreedToTerms = termsCheckbox?.checked || false;
+      
+      if (!hasAgreedToTerms) {
+        setErrorMessage('You must agree to the Terms of Service');
+        return;
+      }
+    }
+    
     setIsSubmitting(true);
     
     try {
-      // Make the actual API call
-      const endpoint = isLogin ? '/api/login' : '/api/register';
-      
-      // Get beta program status for registration
-      let betaStatus = 'beta_user'; // Default
-      if (!isLogin && formRef.current) {
-        const betaTesterRadio = formRef.current.querySelector('#beta-tester') as HTMLInputElement;
-        if (betaTesterRadio && betaTesterRadio.checked) {
-          betaStatus = 'beta_tester';
-        }
+      if (!auth) {
+        throw new Error('Authentication context is not available');
       }
       
-      // Construct user data based on login/register
-      const userData = isLogin 
-        ? { username, password } 
-        : { 
-            username, 
-            password, 
-            confirmPassword,  // Add password confirmation for the server
-            email,
-            betaStatus,
-            agreeToTerms: true // Since the form requires this checkbox to be checked
-          };
-      
-      console.log('Form submitted:', isLogin ? 'Login' : 'Register', userData);
+      if (isLogin) {
+        // Use Supabase login through the auth context
+        await auth.login(username, password);
         
-      const response = await fetch(endpoint, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(userData),
-        credentials: 'include', // Important: Include credentials for cookies
-      });
-      
-      if (response.ok) {
-        // Success! Redirect to onboarding if new registration, dashboard if login
-        if (!isLogin) {
-          setLocation('/onboarding');
-        } else {
-          setLocation('/dashboard');
-        }
+        // If successful, redirect to dashboard
+        setLocation('/dashboard');
       } else {
-        // Handle errors
-        try {
-          const errorData = await response.json();
-          
-          // Check for specific error types
-          if (response.status === 400 && errorData.error && errorData.error.includes('already exists')) {
-            setErrorMessage('This username is already taken. Please choose a different one.');
-          } else if (response.status === 401) {
-            setErrorMessage('Invalid username or password. Please try again.');
-          } else {
-            setErrorMessage(errorData.error || errorData.message || 'Authentication failed. Please try again.');
-          }
-          
-          console.log('Auth error details:', errorData);
-        } catch (parseError) {
-          setErrorMessage('Authentication failed. Please try again.');
-        }
+        // Prepare registration data
+        const userData = {
+          username,
+          email,
+          password,
+          confirmPassword,
+          betaProgram: betaStatus === 'beta_tester' ? 'tester' : 'user' as 'user' | 'tester',
+          hasAgreedToNDA,
+          feedbackCommitment
+        };
+        
+        // Use Supabase registration through the auth context
+        await auth.register(userData);
+        
+        // If successful, redirect to onboarding
+        setLocation('/onboarding');
       }
     } catch (error) {
       console.error('Auth error:', error);
-      setErrorMessage('A network error occurred. Please try again.');
+      
+      // Process specific error types
+      let errorMessage = 'Authentication failed. Please try again.';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('already')) {
+          errorMessage = 'This username or email is already taken. Please choose a different one.';
+        } else if (error.message.includes('password')) {
+          errorMessage = 'Invalid password. Please try again.';
+        } else if (error.message.includes('not found') || error.message.includes('invalid login')) {
+          errorMessage = 'Invalid username or password. Please try again.';
+        } else {
+          errorMessage = error.message;
+        }
+      }
+      
+      setErrorMessage(errorMessage);
     } finally {
       setIsSubmitting(false);
     }
