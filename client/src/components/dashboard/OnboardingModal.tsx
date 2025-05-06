@@ -843,7 +843,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({ isOpen, onClose, onCo
                 <textarea
                   name="currentMods"
                   value={vehicleData.currentMods}
-                  onChange={handleVehicleChange}
+                  onChange={(e) => setVehicleData(prev => ({ ...prev, currentMods: e.target.value }))}
                   className="w-full bg-gray-800/50 border border-gray-700 rounded-md p-2 text-white h-16"
                   placeholder="List any modifications to your vehicle..."
                 />
