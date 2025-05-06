@@ -256,6 +256,9 @@ function AuthenticatedContent({
           <Route path="/membership" component={() => <ProtectedRoute><MembershipPage /></ProtectedRoute>} />
           <Route path="/chat-feed" component={() => <ProtectedRoute><ChatFeedPage /></ProtectedRoute>} />
           <Route path="/contact" component={() => <ProtectedRoute><ContactPage /></ProtectedRoute>} />
+          <Route path="/ebooks" component={() => <ProtectedRoute><EBooksPage /></ProtectedRoute>} />
+          <Route path="/concierge" component={() => <ProtectedRoute><ConciergePage /></ProtectedRoute>} />
+          <Route path="/discounts" component={() => <ProtectedRoute><DiscountsPage /></ProtectedRoute>} />
           
           {/* Utility & Spotify Routes */}
           <Route path="/spotify-test" component={() => <ProtectedRoute><SpotifyTestPage /></ProtectedRoute>} />
