@@ -18,6 +18,7 @@ const OnboardingPage: React.FC = () => {
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
   const [betaAgreed, setBetaAgreed] = useState(false);
+  const [betaTesterRequest, setBetaTesterRequest] = useState(false); // Track if user wants to be a beta tester
   
   // User profile data - pre-populated from authentication
   const [email, setEmail] = useState<string>(user?.email || '');
@@ -360,6 +361,8 @@ const OnboardingPage: React.FC = () => {
             if (activeDocument === 'privacyPolicy') setPrivacyAgreed(true);
             if (activeDocument === 'betaAgreement') setBetaAgreed(true);
           }}
+          isBetaModal={activeDocument === 'betaAgreement'}
+          onBetaTesterRequest={(isTester) => setBetaTesterRequest(isTester)}
         />
       )}
       {/* Dynamic F1 background with overlay */}

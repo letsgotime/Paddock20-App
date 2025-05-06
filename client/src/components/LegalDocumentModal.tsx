@@ -7,6 +7,8 @@ interface LegalDocumentModalProps {
   isOpen: boolean;
   onClose: () => void;
   callback?: () => void;
+  isBetaModal?: boolean;
+  onBetaTesterRequest?: (isTester: boolean) => void;
 }
 
 const LegalDocumentModal: React.FC<LegalDocumentModalProps> = ({
@@ -14,8 +16,12 @@ const LegalDocumentModal: React.FC<LegalDocumentModalProps> = ({
   content,
   isOpen,
   onClose,
-  callback
+  callback,
+  isBetaModal = false,
+  onBetaTesterRequest
 }) => {
+  const [requestTesterAccess, setRequestTesterAccess] = React.useState(false);
+  
   if (!isOpen) return null;
 
   return (
@@ -73,6 +79,27 @@ const LegalDocumentModal: React.FC<LegalDocumentModalProps> = ({
           />
         </div>
         
+        {/* Beta Tester Option - Only shown for beta agreement */}
+        {isBetaModal && (
+          <div className="px-6 py-4 bg-[#1982FC]/10 border-t border-gray-800">
+            <div className="flex items-center space-x-3">
+              <input
+                type="checkbox"
+                id="beta-tester-request"
+                checked={requestTesterAccess}
+                onChange={(e) => setRequestTesterAccess(e.target.checked)}
+                className="w-5 h-5 rounded border-gray-600 text-[#08c519] focus:ring-[#1982FC]"
+              />
+              <label htmlFor="beta-tester-request" className="text-gray-300">
+                <span className="font-semibold text-[#1982FC]">Request Beta Tester status</span>
+                <span className="block text-sm text-gray-400 mt-1">
+                  Beta Users can use Paddock20 while it's in development. Beta Testers help improve the platform by providing structured feedback and participating in testing sessions (requires admin approval).
+                </span>
+              </label>
+            </div>
+          </div>
+        )}
+        
         {/* Footer */}
         <div className="flex justify-between items-center px-6 py-4">
           <button
@@ -85,6 +112,9 @@ const LegalDocumentModal: React.FC<LegalDocumentModalProps> = ({
           <button
             onClick={() => {
               if (callback) callback();
+              if (isBetaModal && onBetaTesterRequest) {
+                onBetaTesterRequest(requestTesterAccess);
+              }
               onClose();
             }}
             className="px-5 py-2 bg-gradient-to-r from-[#1982FC]/80 to-[#08c519]/80 text-white font-medium rounded-md shadow-md hover:shadow-lg transition-all"
