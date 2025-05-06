@@ -476,13 +476,55 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({
                     type="button"
                     variant="secondary"
                     className="bg-[#1982FC] hover:bg-[#1982FC]/80 text-white shrink-0"
-                    onClick={() => {
-                      // This would normally call a VIN decoder API
-                      // For now, we'll just show a notification that it would work
+                    onClick={async () => {
                       if (vehicleInfo.vin && vehicleInfo.vin.length >= 17) {
-                        alert('VIN decoder would populate vehicle details automatically');
+                        try {
+                          const response = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVinValues/${vehicleInfo.vin}?format=json`);
+                          const data = await response.json();
+                          
+                          if (data.Results && data.Results.length > 0) {
+                            const result = data.Results[0];
+                            
+                            // Update vehicle info with API results
+                            setVehicleInfo(prev => ({
+                              ...prev,
+                              make: result.Make || prev.make,
+                              model: result.Model || prev.model,
+                              year: result.ModelYear || prev.year,
+                              trim: result.Trim || prev.trim,
+                              bodyStyle: result.BodyClass || prev.bodyStyle,
+                              engineType: result.EngineConfiguration ? 
+                                `${result.EngineConfiguration} ${result.EngineCylinders || ''} ${result.FuelTypePrimary || ''}` : 
+                                prev.engineType,
+                              transmission: result.TransmissionStyle || prev.transmission
+                            }));
+                            
+                            toast({
+                              title: "VIN Decoded Successfully",
+                              description: `Found ${result.Make} ${result.Model} ${result.ModelYear}`,
+                              variant: "default",
+                            });
+                          } else {
+                            toast({
+                              title: "VIN Decoding Error",
+                              description: "Could not find vehicle details for this VIN",
+                              variant: "destructive",
+                            });
+                          }
+                        } catch (error) {
+                          console.error("VIN decoding error:", error);
+                          toast({
+                            title: "VIN Decoding Failed",
+                            description: "There was a problem connecting to the VIN decoder service",
+                            variant: "destructive",
+                          });
+                        }
                       } else {
-                        alert('Please enter a valid 17-character VIN');
+                        toast({
+                          title: "Invalid VIN",
+                          description: "Please enter a valid 17-character VIN",
+                          variant: "destructive",
+                        });
                       }
                     }}
                   >
