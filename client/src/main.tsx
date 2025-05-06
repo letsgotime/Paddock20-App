@@ -14,7 +14,8 @@ const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID as string;
 // IMPORTANT: Going back to standard redirect pattern - most reliable approach
 const redirectUri = `${window.location.origin}/auth/callback`;
 
-// Log the redirect URI for debugging
+// CRITICAL: Make sure this EXACT redirect URI is added to the Allowed Callback URLs
+// in the Auth0 Dashboard for your Web Application (NOT the Management API)
 console.log("Auth0 Redirect URI:", redirectUri);
 console.log("Auth0 Config:", { domain, clientId });
 
