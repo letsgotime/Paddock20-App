@@ -1,6 +1,5 @@
 import PreDriveChecklistPage from './pages/PreDriveChecklistPage';
-import * as React from 'react';
-import { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Route, Link, useLocation } from 'wouter';
 import Header from './components/Header';
 import { queryClient } from "./lib/queryClient";
@@ -203,8 +202,8 @@ function AuthenticatedContent({
                 const betaOnboardingKey = `paddock20_beta_onboarding_complete_${user.id}`;
                 localStorage.removeItem(betaOnboardingKey);
                 
-                // Redirect to dashboard, which will then show the onboarding
-                window.location.href = '/dashboard';
+                // Redirect to home, which will then show the onboarding
+                window.location.href = '/';
                 return <div className="p-8 text-white">Redirecting to onboarding...</div>;
               } else {
                 // Not authenticated, redirect to auth page
@@ -215,37 +214,9 @@ function AuthenticatedContent({
           />
         
           {/* Simplified routes for authentication testing */}
-          {/* Main pages */}
           <Route path="/" component={() => <ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
           <Route path="/dashboard" component={() => <ProtectedRoute><DashboardPage /></ProtectedRoute>} />
           <Route path="/admin" component={() => <ProtectedRoute><AdminPage /></ProtectedRoute>} />
-          <Route path="/personalized-dashboard" component={() => <ProtectedRoute><PersonalizedDashboard /></ProtectedRoute>} />
-          <Route path="/profile" component={() => <ProtectedRoute><UserProfileHubPage /></ProtectedRoute>} />
-          <Route path="/garage-vault" component={() => <ProtectedRoute><GarageVaultPage /></ProtectedRoute>} />
-          <Route path="/settings" component={() => <ProtectedRoute><Settings /></ProtectedRoute>} />
-          
-          {/* Motorsports & Events */}
-          <Route path="/podium-pursuit" component={() => <ProtectedRoute><PodiumPursuitPage /></ProtectedRoute>} />
-          <Route path="/weather-paddock" component={() => <ProtectedRoute><Weather /></ProtectedRoute>} />
-          <Route path="/route-planner" component={() => <ProtectedRoute><RoutePlannerPage /></ProtectedRoute>} />
-          <Route path="/events" component={() => <ProtectedRoute><Events /></ProtectedRoute>} />
-          <Route path="/motorsports-events" component={() => <ProtectedRoute><MotorsportsEventsPage /></ProtectedRoute>} />
-          <Route path="/motorsports-gallery" component={() => <ProtectedRoute><MotorsportsGalleryPage /></ProtectedRoute>} />
-          
-          {/* Premium Features */}
-          <Route path="/membership" component={() => <ProtectedRoute><MembershipPage /></ProtectedRoute>} />
-          <Route path="/tires-timepieces" component={() => <ProtectedRoute><TiresTimepieces /></ProtectedRoute>} />
-          <Route path="/manifestation-station" component={() => <ProtectedRoute><ManifestationStationPage /></ProtectedRoute>} />
-          <Route path="/drive-journal" component={() => <ProtectedRoute><DriveJournalPage /></ProtectedRoute>} />
-          <Route path="/juicebox" component={() => <ProtectedRoute><JuiceBox /></ProtectedRoute>} />
-          <Route path="/product-organizer" component={() => <ProtectedRoute><ProductOrganizerPage /></ProtectedRoute>} />
-          
-          {/* Support & Resources */}
-          <Route path="/discounts" component={() => <ProtectedRoute><DiscountsPage /></ProtectedRoute>} />
-          <Route path="/concierge" component={() => <ProtectedRoute><ConciergePage /></ProtectedRoute>} />
-          <Route path="/contact" component={() => <ProtectedRoute><ContactPage /></ProtectedRoute>} />
-          <Route path="/ebooks" component={() => <ProtectedRoute><EBooksPage /></ProtectedRoute>} />
-          <Route path="/chat-feed" component={() => <ProtectedRoute><ChatFeedPage /></ProtectedRoute>} />
           
           {/* Debug Pages */}
           <Route path="/debug" component={() => {
