@@ -1,6 +1,16 @@
 import { Router, Request, Response } from 'express';
 import supabase from '../../client/src/services/supabaseClient';
 import { storage } from '../storage';
+import { User as SupabaseUser } from '@supabase/supabase-js';
+
+// Extend Request to include user property
+declare global {
+  namespace Express {
+    interface Request {
+      supabaseUser?: SupabaseUser;
+    }
+  }
+}
 
 // Create router
 const router = Router();
@@ -25,7 +35,7 @@ const verifyToken = async (req: Request, res: Response, next: any) => {
     }
     
     // Add user to request
-    req.user = data.user;
+    req.supabaseUser = data.user;
     next();
   } catch (err) {
     console.error('Token verification error:', err);
@@ -36,15 +46,15 @@ const verifyToken = async (req: Request, res: Response, next: any) => {
 // Route for getting a user profile - either retrieves existing or creates new
 router.get('/api/user-profile', verifyToken, async (req: Request, res: Response) => {
   try {
-    // Get user from verified token
-    const user = req.user;
+    // Get Supabase user from verified token
+    const supabaseUser = req.supabaseUser;
     
-    if (!user) {
+    if (!supabaseUser) {
       return res.status(401).json({ error: 'User not authenticated' });
     }
     
-    // First try to get user from our storage
-    const existingUser = await storage.getUserById(user.id);
+    // First try to get user from our storage using string ID
+    const existingUser = await storage.getUser(Number(supabaseUser.id));
     
     if (existingUser) {
       console.log('Supabase user found, returning profile data');
@@ -53,19 +63,24 @@ router.get('/api/user-profile', verifyToken, async (req: Request, res: Response)
     
     // If user doesn't exist, create basic profile
     console.log('Creating new user profile for Supabase user');
+    
+    // Get user metadata from Supabase
+    const metadata = supabaseUser.user_metadata || {};
+    
+    // Create password hash (random as we're using Supabase auth)
+    const randomPassword = Math.random().toString(36).slice(-12);
+    
     const newUser = {
-      id: parseInt(user.id, 10),
-      username: user.email?.split('@')[0] || 'user',
-      email: user.email || '',
-      firstName: user.user_metadata?.first_name || null,
-      lastName: user.user_metadata?.last_name || null,
-      fullName: user.user_metadata?.full_name || null,
-      profileImage: user.user_metadata?.avatar_url || null,
+      username: supabaseUser.email?.split('@')[0] || 'user',
+      email: supabaseUser.email || '',
+      password: randomPassword, // Required by our schema but not used with Supabase auth
+      firstName: metadata.first_name || null,
+      lastName: metadata.last_name || null,
+      fullName: metadata.full_name || null,
+      profileImage: metadata.avatar_url || null,
       role: 'user',
       isActive: true,
-      isEmailVerified: user.email_confirmed_at ? true : false,
-      createdAt: new Date().toISOString(),
-      updatedAt: new Date().toISOString(),
+      isEmailVerified: supabaseUser.email_confirmed_at ? true : false
     };
     
     // Create user in our storage
@@ -81,14 +96,24 @@ router.get('/api/user-profile', verifyToken, async (req: Request, res: Response)
 router.patch('/api/user-profile', verifyToken, async (req: Request, res: Response) => {
   try {
     // Get user from verified token
-    const user = req.user;
+    const supabaseUser = req.supabaseUser;
     
-    if (!user) {
+    if (!supabaseUser) {
       return res.status(401).json({ error: 'User not authenticated' });
     }
     
+    // Get existing user to verify they exist
+    const existingUser = await storage.getUser(Number(supabaseUser.id));
+    
+    if (!existingUser) {
+      return res.status(404).json({ error: 'User not found' });
+    }
+    
+    // Update user data without changing password or sensitive fields
+    const { password, ...allowedUpdates } = req.body;
+    
     // Update user in our storage
-    const updatedUser = await storage.updateUser(user.id, req.body);
+    const updatedUser = await storage.updateUser(Number(supabaseUser.id), allowedUpdates);
     
     if (!updatedUser) {
       return res.status(404).json({ error: 'User not found' });

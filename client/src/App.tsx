@@ -7,8 +7,8 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import PageTitleManager from './components/PageTitleManager';
-import { AuthProvider, useAuth } from './context/AuthContext';
-import Auth0Callback from './components/Auth0Callback';
+import { useAuth, SupabaseAuthProvider } from './context/SupabaseAuthContext';
+import SupabaseAuthPage from './pages/SupabaseAuthPage';
 import LogoutPage from './pages/LogoutPage';
 // Import disabled to remove Unsplash API warnings
 // import { initializeImageCache } from "./services/unsplashService";
@@ -112,8 +112,8 @@ function AuthenticatedContent({
   hasCompletedOnboarding: boolean, 
   setHasCompletedOnboarding: (value: boolean) => void 
 }) {
-  // Access auth state using the useAuth hook since we're inside the AuthProvider
-  const { user, loading, isAuthenticated } = useAuth(); // isAuthenticated computed in useAuth hook
+  // Access auth state using the useAuth hook
+  const { user, loading, isAuthenticated } = useAuth();
   
   // Get current location for routing
   const [location] = useLocation();
@@ -191,8 +191,8 @@ function AuthenticatedContent({
           <Route path="/beta-agreement" component={BetaAgreement} />
           <Route path="/email-verified" component={EmailVerifiedPage} />
           
-          {/* Auth0 callback route - Handles redirection after Auth0 authentication */}
-          <Route path="/auth/callback" component={Auth0Callback} />
+          {/* Supabase Auth Page */}
+          <Route path="/auth" component={SupabaseAuthPage} />
           
           {/* Spotify callback route - Handles redirection after Spotify authentication */}
           <Route path="/spotify/callback" component={SpotifyCallbackPage} />
@@ -443,15 +443,14 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
-          <AuthProvider>
-            <AuthPage />
-          </AuthProvider>
+          <SupabaseAuthPage />
         </TooltipProvider>
       </QueryClientProvider>
     );
   }
   
   // Otherwise, render the full application
+  // Note: Adding SupabaseAuthProvider explicitly here to ensure the context is available
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
@@ -459,42 +458,42 @@ function App() {
         <PageTitleManager />
         
         {/* Auth Provider - Provides authentication context to all components */}
-        <AuthProvider>
-            {/* User Profile Provider - centralized user data warehouse */}
-            <UserProfileProvider>
-              {/* Sound Provider - Provides F1-inspired sound effects throughout the app */}
-              <SoundProvider>
-                {/* Vehicle Provider - Provides vehicle data to all components */}
-                <VehicleProvider>
-                  {/* Vehicle Data Provider - Provides comprehensive vehicle activity, media, and document data */}
-                  <VehicleDataProvider>
-                    {/* Location Services Provider - Centralized location and weather data management */}
-                    <LocationServicesProvider>
-                      {/* Centralized Weather Provider - Provides weather data to all components */}
-                      <WeatherProvider>
-                        {/* Gallery Provider - For media management */}
-                        <GalleryProvider>
-                          {/* Rewards Provider - for site-wide gamification */}
-                          <RewardsProvider>
-                            {/* Spotify Provider - for Spotify integration */}
-                            <SpotifyProvider>
-                              {/* Use the AuthenticatedContent component to handle all auth-dependent UI */}
-                              <AuthenticatedContent 
-                                hasCompletedOnboarding={hasCompletedOnboarding}
-                                setHasCompletedOnboarding={setHasCompletedOnboarding}
-                              />
+        <SupabaseAuthProvider>
+          {/* User Profile Provider - centralized user data warehouse */}
+          <UserProfileProvider>
+            {/* Sound Provider - Provides F1-inspired sound effects throughout the app */}
+            <SoundProvider>
+              {/* Vehicle Provider - Provides vehicle data to all components */}
+              <VehicleProvider>
+                {/* Vehicle Data Provider - Provides comprehensive vehicle activity, media, and document data */}
+                <VehicleDataProvider>
+                  {/* Location Services Provider - Centralized location and weather data management */}
+                  <LocationServicesProvider>
+                    {/* Centralized Weather Provider - Provides weather data to all components */}
+                    <WeatherProvider>
+                      {/* Gallery Provider - For media management */}
+                      <GalleryProvider>
+                        {/* Rewards Provider - for site-wide gamification */}
+                        <RewardsProvider>
+                          {/* Spotify Provider - for Spotify integration */}
+                          <SpotifyProvider>
+                            {/* Use the AuthenticatedContent component to handle all auth-dependent UI */}
+                            <AuthenticatedContent 
+                              hasCompletedOnboarding={hasCompletedOnboarding}
+                              setHasCompletedOnboarding={setHasCompletedOnboarding}
+                            />
                           </SpotifyProvider>
                         </RewardsProvider>
                       </GalleryProvider>
-                      </WeatherProvider>
-                    </LocationServicesProvider>
-                  </VehicleDataProvider>
-                </VehicleProvider>
-              </SoundProvider>
-            </UserProfileProvider>
-          </AuthProvider>
-        </TooltipProvider>
-      </QueryClientProvider>
+                    </WeatherProvider>
+                  </LocationServicesProvider>
+                </VehicleDataProvider>
+              </VehicleProvider>
+            </SoundProvider>
+          </UserProfileProvider>
+        </SupabaseAuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 }
 
