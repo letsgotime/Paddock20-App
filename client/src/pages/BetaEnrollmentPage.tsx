@@ -63,9 +63,9 @@ const BetaEnrollmentPage = () => {
         variant: 'default',
       });
       
-      // Redirect to onboarding
+      // Redirect to dashboard which will show onboarding
       setTimeout(() => {
-        setLocation('/onboarding');
+        window.location.href = '/dashboard';
       }, 1500);
       
     } catch (error) {
@@ -81,7 +81,7 @@ const BetaEnrollmentPage = () => {
       });
       
       setTimeout(() => {
-        setLocation('/onboarding');
+        window.location.href = '/dashboard';
       }, 1500);
     } finally {
       setIsLoading(false);
@@ -99,8 +99,8 @@ const BetaEnrollmentPage = () => {
       variant: 'default',
     });
     
-    // Continue to onboarding instead of dashboard
-    setLocation('/onboarding');
+    // Continue to dashboard which will show onboarding
+    window.location.href = '/dashboard';
   };
   
   // If the request was submitted successfully, show confirmation
@@ -262,7 +262,7 @@ const BetaEnrollmentPage = () => {
                   Submitting Request
                 </>
               ) : (
-                'Request Beta Access'
+                'The Paddock Awaits'
               )}
             </Button>
           </div>

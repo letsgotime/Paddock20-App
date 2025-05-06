@@ -202,8 +202,8 @@ function AuthenticatedContent({
                 const betaOnboardingKey = `paddock20_beta_onboarding_complete_${user.id}`;
                 localStorage.removeItem(betaOnboardingKey);
                 
-                // Redirect to home, which will then show the onboarding
-                window.location.href = '/';
+                // Redirect to dashboard, which will then show the onboarding
+                window.location.href = '/dashboard';
                 return <div className="p-8 text-white">Redirecting to onboarding...</div>;
               } else {
                 // Not authenticated, redirect to auth page
