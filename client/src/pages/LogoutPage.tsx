@@ -1,26 +1,43 @@
-import { useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { useAuth } from '../context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ArrowLeft } from 'lucide-react';
-import { Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 
 const LogoutPage = () => {
   const { logout, isAuthenticated } = useAuth();
+  const [location] = useLocation();
+  const [logoutInitiated, setLogoutInitiated] = useState(false);
   
   // Clear any local user data
   useEffect(() => {
-    // Only perform logout cleanup if the user was authenticated
-    if (isAuthenticated) {
-      // Clear stored user data from localStorage
+    // Prevent logout loop - only proceed if we haven't initiated logout already
+    if (!logoutInitiated) {
+      // Clear stored user data from localStorage regardless of auth state
       localStorage.removeItem('userProfile');
       localStorage.removeItem('userPreferences');
       localStorage.removeItem('currentVehicle');
+      localStorage.removeItem('auth-session');
+      localStorage.removeItem('auth-token');
+      localStorage.removeItem('returnToPath');
+      localStorage.removeItem('loginShown');
+      localStorage.removeItem('userSettings');
+      localStorage.removeItem('savedVehicles');
       
-      // Perform the Auth0 logout
-      logout();
+      // Clear session storage
+      sessionStorage.removeItem('weatherAppReturnPoint');
+      sessionStorage.removeItem('lastLocation');
+      sessionStorage.removeItem('lastSearch');
+      
+      // Perform the Auth0 logout if user was authenticated 
+      // and we're not already on the logout page from Auth0
+      if (isAuthenticated && !window.location.href.includes('?federated')) {
+        setLogoutInitiated(true);
+        logout();
+      }
     }
-  }, [isAuthenticated, logout]);
+  }, [isAuthenticated, logout, logoutInitiated]);
 
   return (
     <div className="flex flex-col items-center justify-center min-h-screen p-4 bg-black">

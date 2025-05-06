@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { useAuth } from '../hooks/useAuth';
-import { useNavigate } from 'react-router-dom';
+import { useAuth } from '../context/AuthContext';
+import { useLocation } from 'wouter';
 import { CheckCircle, ChevronRight, LogOut, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const AuthPage = () => {
-  const { login, register, user, logout } = useAuth();
-  const navigate = useNavigate();
+  const { login, register, user, logout, isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   
   // Redirect if already logged in, but add a delay to give the logout time to process
@@ -17,11 +17,11 @@ const AuthPage = () => {
       const redirectPath = urlParams.get('redirect') || '/dashboard';
       // Add a small delay to prevent immediate redirect if the user just clicked logout
       const timer = setTimeout(() => {
-        navigate(redirectPath, { replace: true });
+        setLocation(redirectPath);
       }, 500);
       return () => clearTimeout(timer);
     }
-  }, [user, navigate, isLoggingOut]);
+  }, [user, setLocation, isLoggingOut]);
   
   const handleLogout = () => {
     setIsLoggingOut(true);
@@ -49,7 +49,7 @@ const AuthPage = () => {
             </Button>
             
             <Button 
-              onClick={() => navigate('/dashboard')} 
+              onClick={() => setLocation('/dashboard')} 
               className="w-full bg-[#1982FC] hover:bg-[#1982FC]/80 text-white font-bold py-6 h-16 rounded-lg transition-all duration-200"
             >
               Go to Dashboard

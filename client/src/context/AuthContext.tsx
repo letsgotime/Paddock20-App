@@ -216,7 +216,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Enhanced Logout function with Auth0
   const logout = () => {
     // Store the redirect path before clearing everything
-    const redirectPath = '/auth';
+    const redirectPath = '/logout';
     
     // Clear user data first to prevent any auth-dependent components from breaking
     setUser(null);
@@ -255,7 +255,16 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, error, login, register, logout }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      loading, 
+      error, 
+      isAuthenticated: !!user, // Compute isAuthenticated based on user existence
+      login, 
+      register, 
+      logout 
+    }}>
       {children}
     </AuthContext.Provider>
   );
