@@ -45,7 +45,7 @@ const BetaEnrollmentPage = () => {
       const token = await getAccessTokenSilently();
       
       // Submit beta tester request
-      const response = await fetch('/api/auth0/request-beta-status', {
+      const response = await fetch('/api/auth/request-beta-status', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
