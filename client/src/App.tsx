@@ -305,6 +305,16 @@ function App() {
                                 );
                               }} />
                               
+                              {/* Simple Auth Test - Isolated Auth0 testing */}
+                              <Route path="/auth/simple-test" component={() => {
+                                const SimpleAuthTest = React.lazy(() => import('./pages/SimpleAuthTest'));
+                                return (
+                                  <React.Suspense fallback={<div>Loading simple auth test...</div>}>
+                                    <SimpleAuthTest />
+                                  </React.Suspense>
+                                );
+                              }} />
+                              
                               {/* User Onboarding - Requires authentication but not onboarding completion */}
                               <Route 
                                 path="/onboarding" 
