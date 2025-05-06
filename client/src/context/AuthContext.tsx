@@ -24,6 +24,7 @@ interface AuthContextType {
   session: Session | null;
   loading: boolean;
   error: string | null;
+  isAuthenticated?: boolean; // Added computed property
   login: () => void;
   register: () => void; 
   logout: () => void;

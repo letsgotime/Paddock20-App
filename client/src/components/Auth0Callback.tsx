@@ -47,12 +47,24 @@ const Auth0Callback = () => {
         
         // Set timeout to ensure state updates have time to process
         setTimeout(() => {
+          // For any authentication, check if this is a new user
           if (isNewUser) {
-            console.log('🆕 New user detected - directing to beta enrollment');
+            console.log('🆕 New user detected - directing to Auth0 account creation first');
+            // All new users need to go through Auth0 signup first, THEN beta enrollment
+            setLocation('/auth');
+            return;
+          }
+          
+          // For existing users with Auth0 accounts
+          const hasBetaAccess = user?.app_metadata?.beta_access || false;
+          
+          // If user has not completed beta enrollment yet, send them there
+          if (!hasBetaAccess && !localStorage.getItem('paddock20_beta_status')) {
+            console.log('Auth0 user without beta access - directing to beta enrollment');
             // Redirect to beta enrollment page using React Router
             setLocation('/beta-enrollment');
           }
-          // Handle legacy beta registration flow (if beta status was stored)
+          // Handle legacy beta registration flow (if beta status was stored locally)
           else if (localStorage.getItem('paddock20_beta_status')) {
             console.log('Beta status detected - directing to onboarding');
             
