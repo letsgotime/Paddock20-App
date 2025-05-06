@@ -833,43 +833,43 @@ const AuthPage = () => {
         <div className="hidden md:flex flex-col justify-center">
           <div className="p-6 rounded-lg bg-gray-900 border border-gray-800">
             <div className="mb-8 text-center">
-              <h1 className="text-4xl font-bold mb-2">Paddock20</h1>
-              <p className="text-xl text-blue-400">Your Ultimate Automotive Companion</p>
+              <h1 className="text-4xl font-bold mb-2 text-[#1982FC]">PADDOCK20</h1>
+              <p className="text-lg text-gray-200 italic mb-4">
+                The bespoke automotive lifestyle platform with F1-precision intelligence that transforms everyday car care into a curated experience
+              </p>
             </div>
             
             <div className="space-y-6">
-              <div className="border-l-4 border-blue-500 pl-4">
-                <h3 className="text-xl font-semibold mb-1">Drive Intelligence</h3>
-                <p className="text-gray-400">Track weather conditions, plan routes, and log your drives with F1-inspired telemetry displays.</p>
+              <div className="border-l-4 border-[#1982FC] pl-4">
+                <h3 className="text-xl font-semibold mb-1 text-white">Track maintenance, mods, and detailing with precision</h3>
+                <p className="text-gray-400">A comprehensive system for all maintenance, modifications, and detailing records with F1-inspired interfaces</p>
               </div>
               
-              <div className="border-l-4 border-green-500 pl-4">
-                <h3 className="text-xl font-semibold mb-1">Detailing Excellence</h3>
-                <p className="text-gray-400">Manage your detailing schedule, track products, and maintain a complete history of your vehicle's appearance.</p>
+              <div className="border-l-4 border-[#08c519] pl-4">
+                <h3 className="text-xl font-semibold mb-1 text-white">Discover perfect drives with Weather Paddock intelligence</h3>
+                <p className="text-gray-400">Advanced weather telemetry and route planning designed specifically for the automotive enthusiast</p>
               </div>
               
-              <div className="border-l-4 border-purple-500 pl-4">
-                <h3 className="text-xl font-semibold mb-1">Automotive Community</h3>
-                <p className="text-gray-400">Connect with fellow enthusiasts, share your garage, and participate in exclusive automotive events.</p>
+              <div className="border-l-4 border-[#1982FC] pl-4">
+                <h3 className="text-xl font-semibold mb-1 text-white">Level up with premium features for the complete enthusiast</h3>
+                <p className="text-gray-400">Competitive goal tracking, performance analytics, and exclusive automotive experiences</p>
               </div>
               
-              <div className="mt-8">
-                <div className="p-3 bg-gray-800 border border-blue-800 rounded-lg mb-4">
-                  <h4 className="text-sm font-semibold text-blue-400 flex items-center mb-2">
-                    <span className="w-2 h-2 bg-blue-500 rounded-full mr-1.5"></span>
-                    PADDOCK20 CONFIDENTIALITY AGREEMENT
-                  </h4>
-                  <p className="text-xs text-gray-400 mb-2">
-                    All information, data, and intellectual property accessed through this platform is strictly confidential and proprietary to GoTime Motorsports. By proceeding, you agree not to disclose, reproduce, or share any information without explicit written permission.
-                  </p>
-                  <p className="text-xs text-gray-400">
-                    Violation of this confidentiality agreement may result in immediate termination of access privileges and potential legal action under applicable intellectual property and trade secret laws.
-                  </p>
-                </div>
-                <p className="text-xs text-center text-gray-500">
-                  By signing up, you agree to our <a href="/terms-of-service" className="text-blue-400 hover:underline">Terms of Service</a>, <a href="/privacy-policy" className="text-blue-400 hover:underline">Privacy Policy</a>, and the Paddock20 Confidentiality Agreement above.
+              <div className="bg-[#1982FC]/10 border border-[#1982FC]/50 rounded-lg p-4 mt-6">
+                <h4 className="text-xl font-bold text-[#1982FC] mb-2 text-center">BETA ACCESS</h4>
+                <p className="text-gray-300 text-center mb-4">
+                  Join the movement. Full access to our complete ecosystem during the exclusive beta phase
                 </p>
+                <div className="flex justify-center">
+                  <button className="bg-[#08c519] hover:bg-[#08c519]/80 text-white font-bold py-3 px-6 rounded-md transition-all">
+                    Join the Grid!
+                  </button>
+                </div>
               </div>
+              
+              <p className="text-xs text-center text-gray-500 mt-4">
+                By signing up, you agree to our <a href="/terms-of-service" className="text-[#1982FC] hover:underline">Terms of Service</a> and <a href="/privacy-policy" className="text-[#1982FC] hover:underline">Privacy Policy</a>
+              </p>
             </div>
           </div>
         </div>
