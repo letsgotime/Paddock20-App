@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { X, Zap, ClipboardCheck } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
@@ -10,18 +10,50 @@ interface BetaWelcomeModalProps {
 
 const BetaWelcomeModal: React.FC<BetaWelcomeModalProps> = ({ isOpen, onClose }) => {
   const [betaRole, setBetaRole] = useState<'user' | 'tester'>('user');
+  const [isExiting, setIsExiting] = useState(false);
+  
+  // Reset exit animation state when modal opens
+  useEffect(() => {
+    if (isOpen) {
+      setIsExiting(false);
+    }
+  }, [isOpen]);
   
   if (!isOpen) return null;
 
   const handleContinue = () => {
-    onClose(betaRole);
+    // Start exit animation
+    setIsExiting(true);
+    
+    // Delay actual close to allow for animation
+    setTimeout(() => {
+      onClose(betaRole);
+    }, 400); // Match this with the CSS transition duration
   };
   
+  // Base modal classes
+  const modalClasses = `
+    fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 overflow-y-auto
+    transition-opacity duration-300 ease-in-out
+    ${isExiting ? 'opacity-0' : 'opacity-100'}
+  `;
+  
+  // Content animation classes
+  const contentClasses = `
+    bg-gradient-to-b from-gray-900 to-black border border-blue-900/40 rounded-lg 
+    max-w-2xl w-full md:w-3/4 lg:w-2/3 p-6 relative mx-auto my-8
+    transition-all duration-400 ease-in-out
+    ${isExiting ? 'transform translate-y-8 scale-95 opacity-0' : 'transform translate-y-0 scale-100 opacity-100'}
+  `;
+  
   return (
-    <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4 overflow-y-auto">
-      <div className="bg-gradient-to-b from-gray-900 to-black border border-blue-900/40 rounded-lg max-w-2xl w-full md:w-3/4 lg:w-2/3 p-6 relative mx-auto my-8">
+    <div className={modalClasses}>
+      <div className={contentClasses}>
         <button 
-          onClick={() => onClose(betaRole)}
+          onClick={() => {
+            setIsExiting(true);
+            setTimeout(() => onClose(betaRole), 400);
+          }}
           className="absolute top-4 right-4 text-gray-400 hover:text-white" 
           aria-label="Close"
         >
