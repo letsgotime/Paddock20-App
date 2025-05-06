@@ -1,378 +1,464 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
-import {
-  isSpotifyAuthenticated,
-  initiateSpotifyAuth,
-  handleSpotifyRedirect,
-  clearSpotifyAuth,
-  getSpotifyUserProfile,
-  getAccessToken
-} from '../services/spotify/spotifyAuth';
-import {
-  getUserPlaylists,
-  getPlaylist,
-  getPlaylistsByActivity,
-  getPlaylistsByGenre,
-  createPlaylist,
-  saveDrivePlaylist,
-  getDrivePlaylistsByUserId,
-  getDrivePlaylistsByMood,
-  getDrivePlaylistsByWeather,
-  playPlaylist,
-  pausePlayback,
-  resumePlayback,
-  getRecommendedPlaylists
-} from '../services/spotify/spotifyApi';
-import {
-  SpotifyContextType,
+import React, { createContext, useContext, useState, useEffect, ReactNode, useCallback } from 'react';
+import { useAuth0 } from '@auth0/auth0-react';
+import { SpotifyAuth, SpotifyApi } from '../services/spotify/spotifyAuth';
+import { 
+  SpotifyTrack, 
+  SpotifyPlaylist, 
   SpotifyProfile,
-  SpotifyPlaylist,
-  SpotifyTokens,
-  DrivePlaylist
+  PlaylistResponse, 
+  PlaylistTracksResponse 
 } from '../services/spotify/spotifyTypes';
 import { useToast } from '@/hooks/use-toast';
 
-// Create the context with a default undefined value
-const SpotifyContext = createContext<SpotifyContextType | undefined>(undefined);
+// Define context value type
+interface SpotifyContextType {
+  // Authentication state
+  isAuthenticated: boolean;
+  isInitialized: boolean;
+  isLoading: boolean;
+  error: Error | null;
+  
+  // Spotify user data
+  profile: SpotifyProfile | null;
+  
+  // Authentication actions
+  login: () => void;
+  logout: () => void;
+  
+  // Playlist management
+  userPlaylists: SpotifyPlaylist[];
+  refreshPlaylists: () => Promise<void>;
+  getPlaylist: (id: string) => Promise<SpotifyPlaylist>;
+  createPlaylist: (name: string, description?: string, isPublic?: boolean) => Promise<SpotifyPlaylist>;
+  addTracksToPlaylist: (playlistId: string, trackUris: string[]) => Promise<void>;
+  removeTracksFromPlaylist: (playlistId: string, trackUris: string[]) => Promise<void>;
+  
+  // Track searching
+  searchTracks: (query: string) => Promise<SpotifyTrack[]>;
+  
+  // Recommendations
+  getRecommendations: (params: {
+    seed_tracks?: string[];
+    seed_artists?: string[];
+    seed_genres?: string[];
+    limit?: number;
+    target_energy?: number;
+    target_tempo?: number;
+    target_valence?: number;
+  }) => Promise<SpotifyTrack[]>;
+  
+  // Drive playlist management
+  getRecommendedDrivePlaylists: () => Promise<SpotifyPlaylist[]>;
+  getDrivePlaylistsByMood: (moods: string[]) => Promise<SpotifyPlaylist[]>;
+  getDrivePlaylistsByWeather: (conditions: string[]) => Promise<SpotifyPlaylist[]>;
+  saveDrivePlaylist: (playlist: SpotifyPlaylist) => Promise<void>;
+  updateDrivePlaylist: (id: string, updates: Partial<SpotifyPlaylist>) => Promise<void>;
+}
+
+// Create the context with default values
+const SpotifyContext = createContext<SpotifyContextType | null>(null);
 
 // Provider component
-export const SpotifyProvider = ({ children }: { children: ReactNode }) => {
+export function SpotifyProvider({ children }: { children: ReactNode }) {
+  const { getAccessTokenSilently, isAuthenticated: isAuth0Authenticated } = useAuth0();
   const { toast } = useToast();
-  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [isLoading, setIsLoading] = useState<boolean>(true);
-  const [tokens, setTokens] = useState<SpotifyTokens | null>(null);
+  
+  // State
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [isInitialized, setIsInitialized] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<Error | null>(null);
   const [profile, setProfile] = useState<SpotifyProfile | null>(null);
-  const [currentPlaylist, setCurrentPlaylist] = useState<SpotifyPlaylist | null>(null);
   const [userPlaylists, setUserPlaylists] = useState<SpotifyPlaylist[]>([]);
-  const [recommendedPlaylists, setRecommendedPlaylists] = useState<SpotifyPlaylist[]>([]);
-  const [favoritePlaylists, setFavoritePlaylists] = useState<DrivePlaylist[]>([]);
-
-  // Check authentication status on mount
+  
+  // Initialize Spotify API wrapper
+  const spotifyApi = new SpotifyApi();
+  const spotifyAuth = new SpotifyAuth();
+  
+  // Initialize Spotify authentication
   useEffect(() => {
-    const checkAuth = async () => {
+    const initializeSpotify = async () => {
+      if (!isAuth0Authenticated) {
+        setIsAuthenticated(false);
+        setIsLoading(false);
+        setIsInitialized(true);
+        return;
+      }
+      
       try {
-        const authStatus = await isSpotifyAuthenticated();
-        setIsAuthenticated(authStatus);
+        // Get Auth0 token for authenticating with our backend
+        const token = await getAccessTokenSilently();
         
-        if (authStatus) {
-          // Load user profile
-          const userProfile = await getSpotifyUserProfile();
-          setProfile(userProfile);
-          
-          // Load user playlists
-          const playlists = await getUserPlaylists();
-          setUserPlaylists(playlists);
-          
-          // Load favorite drive playlists
-          const drivePlaylists = await getDrivePlaylistsByUserId();
-          setFavoritePlaylists(drivePlaylists);
+        // Check if we have an active Spotify session
+        const isActive = await spotifyAuth.checkSession(token);
+        
+        if (isActive) {
+          setIsAuthenticated(true);
+          await loadUserProfile();
+          await loadUserPlaylists();
+        } else {
+          setIsAuthenticated(false);
         }
       } catch (error) {
-        console.error('Error checking Spotify auth:', error);
+        console.error('Error initializing Spotify context:', error);
+        setError(error instanceof Error ? error : new Error('Failed to initialize Spotify'));
       } finally {
         setIsLoading(false);
+        setIsInitialized(true);
       }
     };
     
-    checkAuth();
-  }, []);
-
-  // Handle authentication
-  const authenticate = async () => {
+    initializeSpotify();
+  }, [isAuth0Authenticated]);
+  
+  // Load user profile
+  const loadUserProfile = async () => {
     try {
-      setIsLoading(true);
-      await initiateSpotifyAuth();
-      // Note: This will redirect away from the current page
+      const profileData = await spotifyApi.getProfile();
+      setProfile(profileData);
     } catch (error) {
-      console.error('Spotify authentication error:', error);
+      console.error('Error loading Spotify user profile:', error);
       toast({
-        title: 'Spotify Authentication Failed',
-        description: 'Unable to connect to Spotify. Please try again.',
-        variant: 'destructive',
+        title: 'Error loading profile',
+        description: 'Could not load your Spotify profile',
+        variant: 'destructive'
       });
+    }
+  };
+  
+  // Load user playlists
+  const loadUserPlaylists = async () => {
+    try {
+      const playlists = await spotifyApi.getUserPlaylists();
+      setUserPlaylists(playlists);
+    } catch (error) {
+      console.error('Error loading Spotify playlists:', error);
+      toast({
+        title: 'Error loading playlists',
+        description: 'Could not load your Spotify playlists',
+        variant: 'destructive'
+      });
+    }
+  };
+  
+  // Refresh playlists
+  const refreshPlaylists = async () => {
+    if (!isAuthenticated) return;
+    
+    setIsLoading(true);
+    try {
+      await loadUserPlaylists();
+    } catch (error) {
+      console.error('Error refreshing playlists:', error);
+    } finally {
       setIsLoading(false);
     }
   };
-
-  // Handle logout
-  const logout = () => {
-    clearSpotifyAuth();
-    setIsAuthenticated(false);
-    setProfile(null);
-    setUserPlaylists([]);
-    setCurrentPlaylist(null);
-    toast({
-      title: 'Spotify Disconnected',
-      description: 'Your Spotify account has been disconnected.',
-    });
-  };
-
-  // Implement playlist methods
-  const refreshUserPlaylists = async () => {
-    if (!isAuthenticated) return [];
-    
+  
+  // Get a specific playlist with track details
+  const getPlaylist = async (id: string): Promise<SpotifyPlaylist> => {
     try {
-      const playlists = await getUserPlaylists();
-      setUserPlaylists(playlists);
-      return playlists;
-    } catch (error) {
-      console.error('Error fetching user playlists:', error);
-      return [];
-    }
-  };
-
-  const fetchPlaylistById = async (id: string) => {
-    if (!isAuthenticated) return null;
-    
-    try {
-      const playlist = await getPlaylist(id);
+      const playlist = await spotifyApi.getPlaylist(id);
       return playlist;
     } catch (error) {
-      console.error(`Error fetching playlist ${id}:`, error);
-      return null;
-    }
-  };
-
-  const fetchPlaylistsByActivity = async (activity: string, limit = 5) => {
-    try {
-      const playlists = await getPlaylistsByActivity(activity, limit);
-      return playlists;
-    } catch (error) {
-      console.error('Error fetching playlists by activity:', error);
-      return [];
-    }
-  };
-
-  const fetchPlaylistsByGenre = async (genre: string, limit = 5) => {
-    try {
-      const playlists = await getPlaylistsByGenre(genre, limit);
-      return playlists;
-    } catch (error) {
-      console.error('Error fetching playlists by genre:', error);
-      return [];
-    }
-  };
-
-  const createNewPlaylist = async (name: string, description = '', isPublic = false) => {
-    if (!isAuthenticated) {
+      console.error(`Error getting playlist ${id}:`, error);
       toast({
-        title: 'Authentication Required',
-        description: 'Please connect your Spotify account first.',
-        variant: 'destructive',
+        title: 'Error fetching playlist',
+        description: 'Could not load the requested playlist',
+        variant: 'destructive'
       });
-      return null;
+      throw error;
+    }
+  };
+  
+  // Create a new playlist
+  const createPlaylist = async (
+    name: string, 
+    description?: string, 
+    isPublic?: boolean
+  ): Promise<SpotifyPlaylist> => {
+    if (!profile) {
+      toast({
+        title: 'Error creating playlist',
+        description: 'You need to connect your Spotify account',
+        variant: 'destructive'
+      });
+      throw new Error('Not connected to Spotify');
     }
     
     try {
-      const playlist = await createPlaylist(name, description, isPublic);
-      // Refresh user playlists after creating a new one
-      refreshUserPlaylists();
+      const playlist = await spotifyApi.createPlaylist(name, description, isPublic);
+      
+      // Refresh the playlists list
+      await refreshPlaylists();
       
       toast({
-        title: 'Playlist Created',
-        description: `Your "${name}" playlist has been created successfully.`,
+        title: 'Playlist created',
+        description: `Your playlist "${name}" was created successfully`,
       });
       
       return playlist;
     } catch (error) {
       console.error('Error creating playlist:', error);
       toast({
-        title: 'Playlist Creation Failed',
-        description: 'Unable to create playlist. Please try again.',
-        variant: 'destructive',
+        title: 'Error creating playlist',
+        description: 'Could not create the playlist on Spotify',
+        variant: 'destructive'
       });
-      return null;
+      throw error;
     }
   };
-
-  // Drive-specific methods
-  const savePlaylistForDrive = async (playlist: DrivePlaylist) => {
+  
+  // Add tracks to a playlist
+  const addTracksToPlaylist = async (playlistId: string, trackUris: string[]): Promise<void> => {
     try {
-      await saveDrivePlaylist(playlist);
+      await spotifyApi.addTracksToPlaylist(playlistId, trackUris);
+      toast({
+        title: 'Tracks added',
+        description: `Added ${trackUris.length} tracks to your playlist`,
+      });
+    } catch (error) {
+      console.error('Error adding tracks to playlist:', error);
+      toast({
+        title: 'Error adding tracks',
+        description: 'Could not add tracks to your playlist',
+        variant: 'destructive'
+      });
+      throw error;
+    }
+  };
+  
+  // Remove tracks from a playlist
+  const removeTracksFromPlaylist = async (playlistId: string, trackUris: string[]): Promise<void> => {
+    try {
+      await spotifyApi.removeTracksFromPlaylist(playlistId, trackUris);
+      toast({
+        title: 'Tracks removed',
+        description: `Removed ${trackUris.length} tracks from your playlist`,
+      });
+    } catch (error) {
+      console.error('Error removing tracks from playlist:', error);
+      toast({
+        title: 'Error removing tracks',
+        description: 'Could not remove tracks from your playlist',
+        variant: 'destructive'
+      });
+      throw error;
+    }
+  };
+  
+  // Search for tracks
+  const searchTracks = async (query: string): Promise<SpotifyTrack[]> => {
+    try {
+      return await spotifyApi.searchTracks(query);
+    } catch (error) {
+      console.error('Error searching tracks:', error);
+      toast({
+        title: 'Error searching tracks',
+        description: 'Could not find tracks matching your search',
+        variant: 'destructive'
+      });
+      return [];
+    }
+  };
+  
+  // Get track recommendations
+  const getRecommendations = async (params: {
+    seed_tracks?: string[];
+    seed_artists?: string[];
+    seed_genres?: string[];
+    limit?: number;
+    target_energy?: number;
+    target_tempo?: number;
+    target_valence?: number;
+  }): Promise<SpotifyTrack[]> => {
+    try {
+      return await spotifyApi.getRecommendations(params);
+    } catch (error) {
+      console.error('Error getting recommendations:', error);
+      toast({
+        title: 'Error getting recommendations',
+        description: 'Could not get track recommendations',
+        variant: 'destructive'
+      });
+      return [];
+    }
+  };
+  
+  // Initiate Spotify login
+  const login = useCallback(() => {
+    spotifyAuth.authorize();
+  }, []);
+  
+  // Logout from Spotify
+  const logout = useCallback(() => {
+    setIsAuthenticated(false);
+    setProfile(null);
+    setUserPlaylists([]);
+    // Note: This doesn't revoke access, just clears the local state
+  }, []);
+  
+  // Drive playlist specific functions
+  const getRecommendedDrivePlaylists = async (): Promise<SpotifyPlaylist[]> => {
+    try {
+      const token = await getAccessTokenSilently();
+      const response = await fetch('/api/spotify/recommended-playlists', {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
       
-      // Refresh favorites
-      const drivePlaylists = await getDrivePlaylistsByUserId();
-      setFavoritePlaylists(drivePlaylists);
+      if (!response.ok) {
+        throw new Error('Failed to fetch recommended playlists');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error getting recommended drive playlists:', error);
+      return [];
+    }
+  };
+  
+  const getDrivePlaylistsByMood = async (moods: string[]): Promise<SpotifyPlaylist[]> => {
+    try {
+      const token = await getAccessTokenSilently();
+      const queryParams = moods.map(mood => `mood=${encodeURIComponent(mood)}`).join('&');
+      const response = await fetch(`/api/spotify/drive-playlists/mood?${queryParams}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch playlists by mood');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error getting drive playlists by mood:', error);
+      return [];
+    }
+  };
+  
+  const getDrivePlaylistsByWeather = async (conditions: string[]): Promise<SpotifyPlaylist[]> => {
+    try {
+      const token = await getAccessTokenSilently();
+      const queryParams = conditions.map(condition => `weather=${encodeURIComponent(condition)}`).join('&');
+      const response = await fetch(`/api/spotify/drive-playlists/weather?${queryParams}`, {
+        headers: {
+          Authorization: `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to fetch playlists by weather');
+      }
+      
+      return await response.json();
+    } catch (error) {
+      console.error('Error getting drive playlists by weather:', error);
+      return [];
+    }
+  };
+  
+  const saveDrivePlaylist = async (playlist: SpotifyPlaylist): Promise<void> => {
+    try {
+      const token = await getAccessTokenSilently();
+      const response = await fetch('/api/spotify/drive-playlists', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(playlist)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to save drive playlist');
+      }
       
       toast({
-        title: 'Playlist Saved',
-        description: 'This playlist has been added to your drive collection.',
+        title: 'Playlist saved',
+        description: 'Your drive playlist has been saved',
       });
     } catch (error) {
       console.error('Error saving drive playlist:', error);
       toast({
-        title: 'Failed to Save Playlist',
-        description: 'Unable to save playlist to your collection.',
-        variant: 'destructive',
+        title: 'Error saving playlist',
+        description: 'Could not save your drive playlist',
+        variant: 'destructive'
       });
     }
   };
-
-  const getPlaylistsByDriveMood = async (moods: string[]) => {
+  
+  const updateDrivePlaylist = async (id: string, updates: Partial<SpotifyPlaylist>): Promise<void> => {
     try {
-      return await getDrivePlaylistsByMood(moods);
-    } catch (error) {
-      console.error('Error fetching playlists by mood:', error);
-      return [];
-    }
-  };
-
-  const getPlaylistsByWeatherCondition = async (conditions: string[]) => {
-    try {
-      return await getDrivePlaylistsByWeather(conditions);
-    } catch (error) {
-      console.error('Error fetching playlists by weather:', error);
-      return [];
-    }
-  };
-
-  // Playback controls
-  const handlePlayPlaylist = async (playlistUri: string) => {
-    if (!isAuthenticated) {
+      const token = await getAccessTokenSilently();
+      const response = await fetch(`/api/spotify/drive-playlists/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify(updates)
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to update drive playlist');
+      }
+      
       toast({
-        title: 'Authentication Required',
-        description: 'Please connect your Spotify account first.',
-        variant: 'destructive',
+        title: 'Playlist updated',
+        description: 'Your drive playlist has been updated',
       });
-      return;
-    }
-    
-    try {
-      await playPlaylist(playlistUri);
     } catch (error) {
+      console.error('Error updating drive playlist:', error);
       toast({
-        title: 'Playback Error',
-        description: 'Spotify Premium is required for playback control.',
-        variant: 'destructive',
+        title: 'Error updating playlist',
+        description: 'Could not update your drive playlist',
+        variant: 'destructive'
       });
     }
   };
-
-  const handlePausePlayback = async () => {
-    if (!isAuthenticated) return;
-    
-    try {
-      await pausePlayback();
-    } catch (error) {
-      console.error('Error pausing playback:', error);
-    }
-  };
-
-  const handleResumePlayback = async () => {
-    if (!isAuthenticated) return;
-    
-    try {
-      await resumePlayback();
-    } catch (error) {
-      console.error('Error resuming playback:', error);
-    }
-  };
-
-  // Provide context value
-  const contextValue: SpotifyContextType = {
+  
+  // Combine all values and functions for the context
+  const value: SpotifyContextType = {
     isAuthenticated,
+    isInitialized,
     isLoading,
-    tokens,
+    error,
     profile,
-    currentPlaylist,
-    userPlaylists,
-    recommendedPlaylists,
-    favoritePlaylists,
-    
-    // Authentication methods
-    authenticate,
+    login,
     logout,
-    
-    // Playlist methods
-    getUserPlaylists: refreshUserPlaylists,
-    getPlaylistById: fetchPlaylistById,
-    getPlaylistsByActivity: fetchPlaylistsByActivity,
-    getPlaylistsByGenre: fetchPlaylistsByGenre,
-    createPlaylist: createNewPlaylist,
-    
-    // Drive-specific methods
-    saveDrivePlaylist: savePlaylistForDrive,
-    getDrivePlaylistsByUserId,
-    getDrivePlaylistsByMood: getPlaylistsByDriveMood,
-    getDrivePlaylistsByWeather: getPlaylistsByWeatherCondition,
-    
-    // Playback methods
-    playPlaylist: handlePlayPlaylist,
-    pausePlayback: handlePausePlayback,
-    resumePlayback: handleResumePlayback,
+    userPlaylists,
+    refreshPlaylists,
+    getPlaylist,
+    createPlaylist,
+    addTracksToPlaylist,
+    removeTracksFromPlaylist,
+    searchTracks,
+    getRecommendations,
+    getRecommendedDrivePlaylists,
+    getDrivePlaylistsByMood,
+    getDrivePlaylistsByWeather,
+    saveDrivePlaylist,
+    updateDrivePlaylist
   };
-
+  
   return (
-    <SpotifyContext.Provider value={contextValue}>
+    <SpotifyContext.Provider value={value}>
       {children}
     </SpotifyContext.Provider>
   );
-};
+}
 
-// Custom hook to use Spotify context
-export const useSpotify = () => {
+// Hook to use the context
+export function useSpotify() {
   const context = useContext(SpotifyContext);
   
-  if (context === undefined) {
+  if (!context) {
     throw new Error('useSpotify must be used within a SpotifyProvider');
   }
   
   return context;
-};
-
-// Spotify callback handler component
-export const SpotifyCallback = () => {
-  const { toast } = useToast();
-  const [isProcessing, setIsProcessing] = useState(true);
-  const [error, setError] = useState<string | null>(null);
-  
-  useEffect(() => {
-    const processCallback = async () => {
-      try {
-        const tokens = await handleSpotifyRedirect();
-        
-        if (tokens) {
-          toast({
-            title: 'Spotify Connected',
-            description: 'Your Spotify account has been connected successfully.',
-          });
-        }
-        
-        // Redirect back to the app after processing
-        window.location.href = '/';
-      } catch (err) {
-        console.error('Error handling Spotify callback:', err);
-        setError('Failed to connect your Spotify account. Please try again.');
-        setIsProcessing(false);
-      }
-    };
-    
-    processCallback();
-  }, [toast]);
-  
-  if (error) {
-    return (
-      <div className="flex flex-col items-center justify-center min-h-screen bg-black">
-        <div className="bg-red-900/20 border border-red-900 p-6 rounded-lg max-w-md text-center">
-          <h1 className="text-xl font-bold text-red-500 mb-4">Connection Error</h1>
-          <p className="text-gray-300 mb-6">{error}</p>
-          <button
-            onClick={() => window.location.href = '/'}
-            className="bg-gray-800 px-4 py-2 rounded text-white hover:bg-gray-700"
-          >
-            Return to App
-          </button>
-        </div>
-      </div>
-    );
-  }
-  
-  return (
-    <div className="flex flex-col items-center justify-center min-h-screen bg-black">
-      <div className="bg-gray-900/60 border border-blue-900/30 p-6 rounded-lg max-w-md text-center">
-        <h1 className="text-xl font-bold text-[#1982FC] mb-4">Connecting to Spotify</h1>
-        <p className="text-gray-300 mb-6">Please wait while we connect your Spotify account...</p>
-        <div className="w-10 h-10 border-t-2 border-b-2 border-[#1982FC] rounded-full animate-spin mx-auto"></div>
-      </div>
-    </div>
-  );
-};
+}
