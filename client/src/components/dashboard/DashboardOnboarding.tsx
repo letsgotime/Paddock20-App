@@ -192,7 +192,7 @@ const DashboardOnboarding: React.FC<{
   
   // Note: All the handlers for the new form components are already implemented below
   
-  // Handle tire profile changes
+  // Handle tire profile changes 
   const handleTireProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     
@@ -227,27 +227,6 @@ const DashboardOnboarding: React.FC<{
       ...prev,
       preferredBrands: prev.preferredBrands.filter((_, i) => i !== index)
     }));
-  };
-  
-  // Handle tire profile changes
-  const handleTireProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value } = e.target;
-    
-    if (name.startsWith('currentTires.')) {
-      const tireProp = name.split('.')[1];
-      setTireProfile(prev => ({
-        ...prev,
-        currentTires: {
-          ...prev.currentTires,
-          [tireProp]: value
-        }
-      }));
-    } else {
-      setTireProfile(prev => ({
-        ...prev,
-        [name]: value
-      }));
-    }
   };
   
   // Handle dream garage changes
