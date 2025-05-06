@@ -7,84 +7,67 @@ import { Loader2 } from 'lucide-react';
  * Auth0Callback - Handles the redirect callback from Auth0 login/signup
  * This component shows a loading spinner while processing Auth0 authentication
  * and redirects to the appropriate page once authentication is complete.
+ * 
+ * IMPORTANT: This is a minimalist implementation focusing only on the core redirect functionality.
  */
 const Auth0Callback = () => {
   const [, setLocation] = useLocation();
-  const { isAuthenticated, isLoading, error } = useAuth0();
+  const { isAuthenticated, isLoading, error, user } = useAuth0();
   
   useEffect(() => {
-    console.log('Auth0Callback triggered');
-    console.log('isLoading:', isLoading);
-    console.log('isAuthenticated:', isAuthenticated);
-    console.log('error:', error);
-    console.log('Current URL:', window.location.href);
-    console.log('URL parameters:', window.location.search);
+    // Log extensive debugging information
+    console.log('🔄 Auth0Callback mounted');
+    console.log('URL:', window.location.href);
+    console.log('Auth State:', { isLoading, isAuthenticated, error: !!error, user: !!user });
     
-    // Extract auth0 code parameter for debugging
-    // Handle both standard and hash-based routing
-    let params = window.location.search;
-    // Check if we're using hash-based routing
-    if (window.location.hash && window.location.hash.includes('code=')) {
-      // Strip the leading hash fragment and /auth/callback part
-      const hashParts = window.location.hash.split('?');
-      if (hashParts.length > 1) {
-        params = '?' + hashParts[1]; 
-      }
-    }
+    // Extract authorization code for verification
+    const params = new URLSearchParams(window.location.search);
+    const hasAuthCode = params.has('code');
+    console.log('Authorization code present:', hasAuthCode);
     
-    const urlParams = new URLSearchParams(params);
-    const authCode = urlParams.get('code');
-    console.log('Auth0 code present:', !!authCode);
-    console.log('Auth params found:', params);
-    
-    // If Auth0 authentication completed successfully
-    if (!isLoading && isAuthenticated && !error) {
-      console.log('✅ Auth0 authentication successful, redirecting to dashboard');
+    // Only take action when the loading state is complete
+    if (!isLoading) {
+      console.log('Auth0 handshake completed (no longer loading)');
       
-      // Get stored beta program status if available (for new registrations)
-      const betaStatus = localStorage.getItem('paddock20_beta_status');
-      console.log('Beta status from localStorage:', betaStatus);
-      
-      // If this was a new registration (beta status exists), redirect to onboarding
-      if (betaStatus) {
-        console.log('Redirecting to onboarding page');
-        setLocation('/onboarding');
+      // Successfully authenticated
+      if (isAuthenticated) {
+        console.log('✅ Authentication successful!');
+        console.log('User:', user);
         
-        // Clean up the stored beta status
-        localStorage.removeItem('paddock20_beta_status');
-        localStorage.removeItem('paddock20_has_agreed_to_nda');
-        localStorage.removeItem('paddock20_has_agreed_to_terms');
-        localStorage.removeItem('paddock20_feedback_commitment');
-      } else {
-        // Otherwise, redirect to the dashboard
-        console.log('Redirecting to dashboard page');
-        setTimeout(() => {
-          setLocation('/dashboard');
-        }, 500); // Small delay to ensure auth state is properly set
+        // Handle new registrations (if beta status was stored)
+        const betaStatus = localStorage.getItem('paddock20_beta_status');
+        if (betaStatus) {
+          console.log('Beta status detected - directing to onboarding');
+          
+          // Clean up beta registration data
+          localStorage.removeItem('paddock20_beta_status');
+          localStorage.removeItem('paddock20_has_agreed_to_nda');
+          localStorage.removeItem('paddock20_has_agreed_to_terms');
+          localStorage.removeItem('paddock20_feedback_commitment');
+          
+          // Redirect to onboarding flow
+          window.location.href = '/onboarding';
+        } else {
+          // Regular login - redirect to dashboard
+          console.log('Regular login - sending to dashboard');
+          window.location.href = '/dashboard';
+        }
+      } 
+      // Authentication error
+      else if (error) {
+        console.error('❌ Authentication error:', error);
+        window.location.href = '/auth';
       }
-    } 
-    // If authentication failed, redirect back to auth page
-    else if (!isLoading && !isAuthenticated && error) {
-      console.error('❌ Auth0 authentication error:', error);
-      console.error('Error details:', JSON.stringify(error, null, 2));
-      setTimeout(() => {
-        setLocation('/auth');
-      }, 1000); // Delay to ensure error is logged
-    }
-    // If still loading, show the loading state
-    else if (isLoading) {
-      console.log('⏳ Auth0 authentication still loading...');
-    }
-    // If not authenticated but no error (initial state or logout)
-    else if (!isAuthenticated && !error) {
-      console.log('⏳ Not authenticated yet, waiting for Auth0 response...');
-      
-      // If we have a code but not authenticated, something might be wrong with token exchange
-      if (authCode) {
-        console.log('⚠️ Auth code present but not authenticated yet. This is expected during token exchange.');
+      // Not authenticated but no error (unusual state)
+      else {
+        console.log('⚠️ Not authenticated but no error');
+        if (hasAuthCode) {
+          console.log('Authorization code present but auth failed silently - directing to auth page');
+          window.location.href = '/auth';
+        }
       }
     }
-  }, [isAuthenticated, isLoading, error, setLocation]);
+  }, [isLoading, isAuthenticated, error, user]);
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-black">

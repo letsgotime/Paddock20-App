@@ -292,9 +292,8 @@ function App() {
                               <Route path="/email-verified" component={EmailVerifiedPage} />
                               
                               {/* Auth0 callback route - Handles redirection after Auth0 authentication */}
-                              {/* Support both standard and hash-based routing for Auth0 callback */}
+                              {/* Simplified Auth0 callback route */}
                               <Route path="/auth/callback" component={Auth0Callback} />
-                              <Route path="/#/auth/callback" component={Auth0Callback} />
                               
                               {/* Auth Debug Page - For troubleshooting Auth0 integration */}
                               <Route path="/auth/debug" component={() => {
@@ -339,12 +338,20 @@ function App() {
                               <Route path="/dashboard" component={() => <ProtectedRoute><DashboardPage /></ProtectedRoute>} />
                               <Route path="/admin" component={() => <ProtectedRoute><AdminPage /></ProtectedRoute>} />
                               
-                              {/* Simple Debug Page - Accessible at root level */}
+                              {/* Debug Pages - Multiple diagnostic tools */}
                               <Route path="/debug" component={() => {
                                 const SimpleDebug = React.lazy(() => import('./pages/SimpleDebug'));
                                 return (
                                   <React.Suspense fallback={<div className="p-8 text-white">Loading debug page...</div>}>
                                     <SimpleDebug />
+                                  </React.Suspense>
+                                );
+                              }} />
+                              <Route path="/auth/test" component={() => {
+                                const FullAuthDebug = React.lazy(() => import('./pages/FullAuthDebug'));
+                                return (
+                                  <React.Suspense fallback={<div className="p-8 text-white">Loading auth diagnostic...</div>}>
+                                    <FullAuthDebug />
                                   </React.Suspense>
                                 );
                               }} />
