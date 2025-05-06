@@ -5,7 +5,7 @@ import { CheckCircle, ChevronRight, LogOut, RefreshCw } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const AuthPage = () => {
-  const { login, user, logout } = useAuth();
+  const { login, register, user, logout } = useAuth();
   const navigate = useNavigate();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
   
@@ -136,7 +136,7 @@ const AuthPage = () => {
               </div>
               
               <Button 
-                onClick={() => login()} 
+                onClick={() => register()} 
                 className="w-full bg-[#08c519] hover:bg-[#08c519]/80 text-white font-bold text-xl py-6 h-16 rounded-lg transition-all duration-200 shadow-lg shadow-[#08c519]/20"
               >
                 Join the Grid
