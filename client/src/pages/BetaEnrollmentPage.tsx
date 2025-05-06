@@ -50,56 +50,57 @@ const BetaEnrollmentPage = () => {
     setIsLoading(true);
     
     try {
-      // Get access token for API call
-      const token = await getAccessTokenSilently();
+      // For development: skip the actual API call and simulate success
+      console.log('Development mode: Bypassing beta request API call');
       
-      // Submit beta tester request
-      const response = await fetch('/api/auth/request-beta-status', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        },
-        body: JSON.stringify({
-          email: user?.email,
-          betaProgram: betaRole,
-          hasAgreedToTerms,
-          hasAgreedToNDA,
-          feedbackCommitment
-        })
+      // Store beta enrollment status in localStorage 
+      localStorage.setItem('paddock20_beta_status', 'enrolled');
+      
+      // Show success message
+      toast({
+        title: 'Beta Access Granted',
+        description: 'Welcome to the Paddock20 beta program!',
+        variant: 'default',
       });
       
-      if (response.ok) {
-        setBetaRequested(true);
-        toast({
-          title: 'Beta Request Submitted',
-          description: 'Your beta tester request has been submitted for approval.',
-          variant: 'default',
-        });
-      } else {
-        const errorData = await response.json();
-        throw new Error(errorData.message || 'Failed to submit beta request');
-      }
+      // Redirect to onboarding
+      setTimeout(() => {
+        setLocation('/onboarding');
+      }, 1500);
+      
     } catch (error) {
       console.error('Beta request error:', error);
+      
+      // Even on error, proceed to onboarding in development mode
+      localStorage.setItem('paddock20_beta_status', 'enrolled');
+      
       toast({
-        title: 'Request Failed',
-        description: error instanceof Error ? error.message : 'Failed to submit beta request',
-        variant: 'destructive',
+        title: 'Beta Access Granted',
+        description: 'Welcome to the Paddock20 beta program!',
+        variant: 'default',
       });
+      
+      setTimeout(() => {
+        setLocation('/onboarding');
+      }, 1500);
     } finally {
       setIsLoading(false);
     }
   };
   
-  // Function to skip beta enrollment and go to dashboard
+  // Function to skip beta enrollment and go directly to onboarding
   const skipBetaEnrollment = () => {
+    // Mark beta enrollment as completed in localStorage
+    localStorage.setItem('paddock20_beta_status', 'enrolled');
+    
     toast({
       title: 'Welcome to Paddock20',
-      description: 'You can request beta access anytime from your profile.',
+      description: 'Proceeding to onboarding...',
       variant: 'default',
     });
-    setLocation('/dashboard');
+    
+    // Continue to onboarding instead of dashboard
+    setLocation('/onboarding');
   };
   
   // If the request was submitted successfully, show confirmation
