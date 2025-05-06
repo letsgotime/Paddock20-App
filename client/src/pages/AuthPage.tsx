@@ -133,7 +133,7 @@ const AuthPage = () => {
     }
   };
 
-  // Handle Register - now multi-step
+  // Handle Register - simplified for direct Auth0 redirect
   const handleRegisterSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     
@@ -181,16 +181,14 @@ const AuthPage = () => {
         return;
       }
       
-      // NDA agreement required
-      if (!registerData.hasAgreedToNDA) {
-        toast({
-          title: 'Agreement Required',
-          description: 'You must agree to the confidentiality terms to continue.',
-          variant: 'destructive',
-        });
-        return;
-      }
+      // Setting default values for simplified flow
+      setRegisterData({
+        ...registerData,
+        hasAgreedToNDA: true,  // Will be asked in beta modal later
+        betaProgram: 'user'    // Default to user type
+      });
       
+      // Proceed with Auth0 signup
       // Move to beta program selection
       setRegistrationStep(2);
       return;
@@ -373,14 +371,10 @@ const AuthPage = () => {
                   </div>
                   
                   <CardTitle className="text-2xl text-gray-100 mt-4">
-                    {registrationStep === 1 && "Create your account"}
-                    {registrationStep === 2 && "Choose your Beta Program"}
-                    {registrationStep === 3 && "Confirm your details"}
+                    Join the Grid!
                   </CardTitle>
                   <CardDescription className="text-gray-400">
-                    {registrationStep === 1 && "Join the Grid community"}
-                    {registrationStep === 2 && "Select your preferred Beta involvement level"}
-                    {registrationStep === 3 && "Review and complete your registration"}
+                    Thanks for visiting! Click next to setup your account, once completed you'll be invited to walkthrough our beta program to access the application.
                   </CardDescription>
                 </CardHeader>
                 <form onSubmit={handleRegisterSubmit}>
@@ -766,25 +760,14 @@ const AuthPage = () => {
                   <CardFooter className="flex flex-col space-y-4">
                     {registrationStep === 1 && (
                       <>
-                        <div className="flex items-start space-x-2">
-                          <Checkbox 
-                            id="register-confidentiality" 
-                            className="mt-1 data-[state=checked]:bg-emerald-600"
-                            checked={registerData.hasAgreedToNDA}
-                            onCheckedChange={(checked) => 
-                              setRegisterData({ ...registerData, hasAgreedToNDA: !!checked })
-                            }
-                            required 
-                          />
-                          <label htmlFor="register-confidentiality" className="text-xs text-gray-400">
-                            I confirm that I have read and agree to the <span className="text-blue-400">Confidentiality Agreement</span> and will not disclose any information from this platform without authorization.
-                          </label>
-                        </div>
+                        <p className="text-xs text-gray-400 mb-4">
+                          By continuing, you agree to our terms and will have a chance to review our beta program agreements after signup.
+                        </p>
                         
                         <Button 
                           type="submit" 
                           className="w-full bg-emerald-600 hover:bg-emerald-700"
-                          disabled={loading || !registerData.hasAgreedToNDA}
+                          disabled={loading}
                         >
                           Continue to Beta Program Selection
                           <ArrowRight className="ml-2 h-5 w-5" />
