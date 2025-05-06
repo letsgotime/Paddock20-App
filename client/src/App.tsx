@@ -243,6 +243,7 @@ function App() {
                     <GalleryProvider>
                       {/* Rewards Provider - for site-wide gamification */}
                       <RewardsProvider>
+                        {/* Disable Supabase authentication to prevent conflicts with server auth */}
                           {/* Skip link for keyboard navigation */}
                           <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
                             Skip to main content
