@@ -588,16 +588,16 @@ const BetaTermsAndAgreements: React.FC<BetaTermsAndAgreementsProps> = ({ onCompl
           <h2 className="text-2xl font-bold" style={{ fontFamily: 'Orbitron, sans-serif' }}>
             {step === 1 && (
               <span style={{ color: CAROLINA_BLUE }}>
-                WELCOME TO PADDOCK20 <span style={{ color: GOTIME_GREEN }}>BETA</span>
+                WELCOME TO <span style={{ color: CAROLINA_BLUE }}>PADDOCK</span><span style={{ color: GOTIME_GREEN }}>20</span> <span style={{ color: GOTIME_GREEN }}>BETA</span>
               </span>
             )}
             {step === 2 && (
               <span style={{ color: CAROLINA_BLUE }}>
-                ABOUT PADDOCK20 <span style={{ color: GOTIME_GREEN }}>BETA</span>
+                ABOUT <span style={{ color: CAROLINA_BLUE }}>PADDOCK</span><span style={{ color: GOTIME_GREEN }}>20</span> <span style={{ color: GOTIME_GREEN }}>BETA</span>
               </span>
             )}
             {step === 3 && <span style={{ color: CAROLINA_BLUE }}>LEGAL AGREEMENTS REQUIRED</span>}
-            {step === 4 && <span style={{ color: CAROLINA_BLUE }}>YOUR PADDOCK20 PROFILE</span>}
+            {step === 4 && <span style={{ color: CAROLINA_BLUE }}>YOUR <span style={{ color: CAROLINA_BLUE }}>PADDOCK</span><span style={{ color: GOTIME_GREEN }}>20</span> PROFILE</span>}
             {step === 5 && <span style={{ color: CAROLINA_BLUE }}>CHOOSE YOUR BETA ROLE</span>}
           </h2>
 
@@ -686,7 +686,7 @@ const BetaTermsAndAgreements: React.FC<BetaTermsAndAgreementsProps> = ({ onCompl
             <div className="space-y-6 animate-fadeIn">
               <div className="text-center mb-8">
                 <h3 className="text-2xl font-orbitron" style={{ color: CAROLINA_BLUE }}>
-                  THE PADDOCK20 EXPERIENCE
+                  THE <span style={{ color: CAROLINA_BLUE }}>PADDOCK</span><span style={{ color: GOTIME_GREEN }}>20</span> EXPERIENCE
                 </h3>
                 
                 <p className="text-xl text-white mt-2 font-orbitron tracking-wide">
