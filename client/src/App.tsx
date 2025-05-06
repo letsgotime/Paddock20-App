@@ -81,6 +81,7 @@ import PodiumPursuitPage from "./pages/PodiumPursuitPage";
 import SoundLibraryPage from "./pages/SoundLibraryPage";
 import SpotifyTestPage from "./pages/SpotifyTestPage";
 import SpotifyEnvCheck from "./pages/SpotifyEnvCheck";
+import OnboardingTestPage from "./pages/OnboardingTestPage";
 import SupportChatbot from "./components/SupportChatbot";
 import HomePage from "./pages/Home";
 import OneTapWeatherSnapshot from "./components/OneTapWeatherSnapshot";
