@@ -650,10 +650,20 @@ const AuthPage = () => {
                               <p className="text-sm text-gray-400">
                                 As a Beta Tester, you'll receive free access for life in exchange for your valuable feedback on features, usability, and bug reports.
                               </p>
-                              {/* Auto-set commitment to true for beta testers */}
-                              <p className="text-sm text-gray-300 mt-2">
-                                Beta Testers commit to providing detailed feedback on features, reporting bugs, and participating in scheduled testing sessions when requested.
-                              </p>
+                              <div className="flex items-start space-x-2">
+                                <Checkbox 
+                                  id="beta-tester-commitment" 
+                                  className="mt-1 data-[state=checked]:bg-blue-600"
+                                  checked={registerData.feedbackCommitment}
+                                  onCheckedChange={(checked) => 
+                                    setRegisterData({ ...registerData, feedbackCommitment: !!checked })
+                                  }
+                                  required={registerData.betaProgram === 'tester'}
+                                />
+                                <label htmlFor="beta-tester-commitment" className="text-sm text-gray-300">
+                                  I commit to providing detailed feedback on features, reporting bugs, and participating in scheduled testing sessions when requested.
+                                </label>
+                              </div>
                             </div>
                           )}
                         </div>
@@ -779,7 +789,7 @@ const AuthPage = () => {
                         <Button 
                           type="submit" 
                           className="flex-1 ml-2 bg-emerald-600 hover:bg-emerald-700"
-                          disabled={loading || !registerData.betaProgram}
+                          disabled={loading || !registerData.betaProgram || (registerData.betaProgram === 'tester' && !registerData.feedbackCommitment)}
                         >
                           Continue to Review
                           <ArrowRight className="ml-2 h-5 w-5" />
