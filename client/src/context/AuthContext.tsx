@@ -1,4 +1,4 @@
-import { createContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, ReactNode } from 'react';
 import { useToast } from '@/hooks/use-toast';
 import supabase from '@/services/supabaseClient';
 
@@ -42,6 +42,15 @@ export interface RegisterData {
 }
 
 export const AuthContext = createContext<AuthContextType | null>(null);
+
+// Custom hook to use AuthContext
+export function useAuth() {
+  const context = React.useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within an AuthProvider');
+  }
+  return context;
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -165,7 +174,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (event === 'SIGNED_IN' || event === 'TOKEN_REFRESHED') {
           // Re-check auth status when signed in or token refreshed
           checkAuthStatus();
-        } else if (event === 'SIGNED_OUT' || event === 'USER_DELETED') {
+        } else if (event === 'SIGNED_OUT') {
           // Clear user data when signed out
           setUser(null);
           setSession(null);
