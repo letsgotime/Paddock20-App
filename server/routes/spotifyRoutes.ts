@@ -1,264 +1,242 @@
-/**
- * Spotify API Routes
- * 
- * Handles Spotify API token exchange and other server-side Spotify interactions
- */
 import express from 'express';
-import axios from 'axios';
-import { z } from 'zod';
 import { requireAuth } from '../middleware/auth';
-import { storage } from '../storage';
+import axios from 'axios';
 
+// Create a new router
 const router = express.Router();
 
-// Environment variables for Spotify API
+// Spotify API configuration
 const SPOTIFY_CLIENT_ID = process.env.SPOTIFY_CLIENT_ID;
 const SPOTIFY_CLIENT_SECRET = process.env.SPOTIFY_CLIENT_SECRET;
+const SPOTIFY_API_BASE = 'https://api.spotify.com/v1';
+const SPOTIFY_AUTH_BASE = 'https://accounts.spotify.com/api';
 
-// Schema for token exchange request
-const tokenExchangeSchema = z.object({
-  code: z.string(),
-  redirect_uri: z.string().url(),
-});
-
-// Schema for token refresh request
-const refreshTokenSchema = z.object({
-  refresh_token: z.string(),
-});
+// Middleware to check if Spotify credentials are configured
+const checkSpotifyConfig = (req: express.Request, res: express.Response, next: express.NextFunction) => {
+  if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
+    return res.status(503).json({
+      error: 'Spotify API not configured',
+      message: 'Spotify client credentials are not set'
+    });
+  }
+  next();
+};
 
 /**
- * Exchange authorization code for access and refresh tokens
- * POST /api/spotify/token
+ * Exchange Spotify authorization code for tokens
+ * 
+ * Route: POST /api/spotify/token
+ * Auth required: Yes
+ * 
+ * Request body:
+ * - code: Spotify authorization code
+ * - redirect_uri: Redirect URI used in the authorization request
+ * 
+ * Response:
+ * - access_token: Spotify access token
+ * - refresh_token: Spotify refresh token
+ * - expires_in: Token expiration time in seconds
+ * - token_type: Token type (Bearer)
  */
-router.post('/token', async (req, res) => {
+router.post('/token', requireAuth, checkSpotifyConfig, async (req, res) => {
   try {
-    // Validate request body
-    const result = tokenExchangeSchema.safeParse(req.body);
-    if (!result.success) {
+    const { code, redirect_uri } = req.body;
+    
+    if (!code || !redirect_uri) {
       return res.status(400).json({
-        error: 'Invalid request parameters',
-        details: result.error.format(),
+        error: 'Bad Request',
+        message: 'Missing required parameters: code and redirect_uri'
       });
     }
-
-    const { code, redirect_uri } = result.data;
-
-    // Check if Spotify credentials are configured
-    if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
-      return res.status(500).json({
-        error: 'Spotify API credentials not configured',
-      });
-    }
-
-    // Exchange code for tokens with Spotify API
+    
+    // Exchange code for tokens using the authorization code flow
     const tokenResponse = await axios({
       method: 'post',
-      url: 'https://accounts.spotify.com/api/token',
+      url: `${SPOTIFY_AUTH_BASE}/token`,
       params: {
         grant_type: 'authorization_code',
         code,
         redirect_uri,
+        client_id: SPOTIFY_CLIENT_ID,
+        client_secret: SPOTIFY_CLIENT_SECRET
       },
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Authorization: `Basic ${Buffer.from(
-          `${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`
-        ).toString('base64')}`,
-      },
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
     });
-
-    // Return tokens to client
-    res.json(tokenResponse.data);
-  } catch (error: any) {
-    console.error('Error exchanging Spotify authorization code:', error);
     
-    // Return more detailed error info for debugging
-    if (error.response) {
-      console.error('Spotify API error response:', error.response.data);
+    res.json(tokenResponse.data);
+  } catch (error) {
+    console.error('Error exchanging Spotify code for tokens:', error);
+    
+    if (axios.isAxiosError(error) && error.response) {
       return res.status(error.response.status).json({
-        error: 'Error exchanging authorization code',
-        details: error.response.data,
+        error: error.response.data?.error || 'Spotify API Error',
+        message: error.response.data?.error_description || 'Failed to exchange authorization code'
       });
     }
     
     res.status(500).json({
-      error: 'Failed to exchange authorization code',
+      error: 'Internal Server Error',
+      message: 'An unexpected error occurred during Spotify authentication'
     });
   }
 });
 
 /**
  * Refresh Spotify access token
- * POST /api/spotify/refresh
+ * 
+ * Route: POST /api/spotify/refresh
+ * Auth required: Yes
+ * 
+ * Request body:
+ * - refresh_token: Spotify refresh token
+ * 
+ * Response:
+ * - access_token: New Spotify access token
+ * - expires_in: Token expiration time in seconds
+ * - token_type: Token type (Bearer)
  */
-router.post('/refresh', async (req, res) => {
+router.post('/refresh', requireAuth, checkSpotifyConfig, async (req, res) => {
   try {
-    // Validate request body
-    const result = refreshTokenSchema.safeParse(req.body);
-    if (!result.success) {
+    const { refresh_token } = req.body;
+    
+    if (!refresh_token) {
       return res.status(400).json({
-        error: 'Invalid refresh token',
-        details: result.error.format(),
+        error: 'Bad Request',
+        message: 'Missing required parameter: refresh_token'
       });
     }
-
-    const { refresh_token } = result.data;
-
-    // Check if Spotify credentials are configured
-    if (!SPOTIFY_CLIENT_ID || !SPOTIFY_CLIENT_SECRET) {
-      return res.status(500).json({
-        error: 'Spotify API credentials not configured',
-      });
-    }
-
-    // Exchange refresh token for new access token
+    
+    // Refresh the access token
     const tokenResponse = await axios({
       method: 'post',
-      url: 'https://accounts.spotify.com/api/token',
+      url: `${SPOTIFY_AUTH_BASE}/token`,
       params: {
         grant_type: 'refresh_token',
         refresh_token,
+        client_id: SPOTIFY_CLIENT_ID,
+        client_secret: SPOTIFY_CLIENT_SECRET
       },
       headers: {
-        'Content-Type': 'application/x-www-form-urlencoded',
-        Authorization: `Basic ${Buffer.from(
-          `${SPOTIFY_CLIENT_ID}:${SPOTIFY_CLIENT_SECRET}`
-        ).toString('base64')}`,
-      },
+        'Content-Type': 'application/x-www-form-urlencoded'
+      }
     });
-
-    // Return new tokens to client
+    
     res.json(tokenResponse.data);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Error refreshing Spotify token:', error);
     
-    // Return more detailed error info for debugging
-    if (error.response) {
-      console.error('Spotify API error response:', error.response.data);
+    if (axios.isAxiosError(error) && error.response) {
       return res.status(error.response.status).json({
-        error: 'Error refreshing token',
-        details: error.response.data,
+        error: error.response.data?.error || 'Spotify API Error',
+        message: error.response.data?.error_description || 'Failed to refresh token'
       });
     }
     
     res.status(500).json({
-      error: 'Failed to refresh token',
+      error: 'Internal Server Error',
+      message: 'An unexpected error occurred during token refresh'
     });
   }
 });
 
 /**
- * Get recommended playlists
- * Requires authentication
- * GET /api/spotify/recommended-playlists
+ * Check if Spotify authentication is valid
+ * 
+ * Route: GET /api/spotify/check-auth
+ * Auth required: Yes
  */
-router.get('/recommended-playlists', requireAuth, async (req, res) => {
+router.get('/check-auth', requireAuth, async (req, res) => {
   try {
-    // Get recommended playlists from database
-    // This is where you would implement your recommendation logic
-    // or retrieve curated playlists from your database
+    // The auth token should be provided in the Authorization header
+    const spotifyToken = req.headers['x-spotify-token'];
     
-    // For now, returning a placeholder response
-    res.json([]);
-  } catch (error) {
-    console.error('Error getting recommended playlists:', error);
-    res.status(500).json({ error: 'Failed to get recommended playlists' });
-  }
-});
-
-/**
- * Save a drive playlist
- * Requires authentication
- * POST /api/spotify/drive-playlists
- */
-router.post('/drive-playlists', requireAuth, async (req, res) => {
-  try {
-    // TODO: Save the drive playlist to the database
-    // This would typically create an entry in a drive_playlists table
-    
-    res.status(201).json({ success: true });
-  } catch (error) {
-    console.error('Error saving drive playlist:', error);
-    res.status(500).json({ error: 'Failed to save drive playlist' });
-  }
-});
-
-/**
- * Update a drive playlist
- * Requires authentication
- * PUT /api/spotify/drive-playlists/:id
- */
-router.put('/drive-playlists/:id', requireAuth, async (req, res) => {
-  try {
-    const { id } = req.params;
-    
-    // TODO: Update the drive playlist in the database
-    // This would typically update an entry in a drive_playlists table
-    
-    res.json({ success: true });
-  } catch (error) {
-    console.error('Error updating drive playlist:', error);
-    res.status(500).json({ error: 'Failed to update drive playlist' });
-  }
-});
-
-/**
- * Get drive playlists for the current user
- * Requires authentication
- * GET /api/spotify/drive-playlists/user
- */
-router.get('/drive-playlists/user', requireAuth, async (req, res) => {
-  try {
-    // Get user's drive playlists from database
-    // For now, returning an empty array
-    res.json([]);
-  } catch (error) {
-    console.error('Error getting drive playlists:', error);
-    res.status(500).json({ error: 'Failed to get drive playlists' });
-  }
-});
-
-/**
- * Get drive playlists by mood
- * Requires authentication
- * GET /api/spotify/drive-playlists/mood?mood=energetic&mood=chill
- */
-router.get('/drive-playlists/mood', requireAuth, async (req, res) => {
-  try {
-    const moods = [req.query.mood].flat().filter(Boolean) as string[];
-    
-    if (!moods.length) {
-      return res.status(400).json({ error: 'At least one mood is required' });
+    if (!spotifyToken || typeof spotifyToken !== 'string') {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Spotify token not provided'
+      });
     }
     
-    // Get drive playlists by mood from database
-    // For now, returning an empty array
-    res.json([]);
+    // Check token by making a simple request to the Spotify API
+    await axios({
+      method: 'get',
+      url: `${SPOTIFY_API_BASE}/me`,
+      headers: {
+        'Authorization': `Bearer ${spotifyToken}`
+      }
+    });
+    
+    // If the request didn't throw an error, the token is valid
+    res.status(200).json({ valid: true });
   } catch (error) {
-    console.error('Error getting drive playlists by mood:', error);
-    res.status(500).json({ error: 'Failed to get drive playlists by mood' });
+    console.error('Error checking Spotify authentication:', error);
+    
+    if (axios.isAxiosError(error) && error.response?.status === 401) {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Spotify token is invalid or expired'
+      });
+    }
+    
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'An unexpected error occurred during authentication check'
+    });
   }
 });
 
 /**
- * Get drive playlists by weather condition
- * Requires authentication
- * GET /api/spotify/drive-playlists/weather?weather=sunny&weather=rainy
+ * Generic proxy for Spotify API requests
+ * 
+ * This middleware handles any Spotify API request by proxying it to the Spotify API.
+ * The path after /api/spotify/ is appended to the Spotify API base URL.
+ * 
+ * Route: * (All other routes)
+ * Auth required: Yes
  */
-router.get('/drive-playlists/weather', requireAuth, async (req, res) => {
+router.all('*', requireAuth, async (req, res) => {
   try {
-    const conditions = [req.query.weather].flat().filter(Boolean) as string[];
+    // Extract the path from the original URL
+    // Remove the '/api/spotify' prefix
+    const path = req.path;
     
-    if (!conditions.length) {
-      return res.status(400).json({ error: 'At least one weather condition is required' });
+    // Get the Spotify token from the header
+    const spotifyToken = req.headers['x-spotify-token'] as string;
+    
+    if (!spotifyToken) {
+      return res.status(401).json({
+        error: 'Unauthorized',
+        message: 'Spotify token not provided'
+      });
     }
     
-    // Get drive playlists by weather condition from database
-    // For now, returning an empty array
-    res.json([]);
+    // Forward the request to Spotify API
+    const response = await axios({
+      method: req.method,
+      url: `${SPOTIFY_API_BASE}${path}`,
+      headers: {
+        'Authorization': `Bearer ${spotifyToken}`,
+        'Content-Type': 'application/json'
+      },
+      params: req.method === 'GET' ? req.query : undefined,
+      data: req.method !== 'GET' ? req.body : undefined
+    });
+    
+    // Return the Spotify API response
+    res.status(response.status).json(response.data);
   } catch (error) {
-    console.error('Error getting drive playlists by weather:', error);
-    res.status(500).json({ error: 'Failed to get drive playlists by weather' });
+    console.error('Error proxying Spotify API request:', error);
+    
+    if (axios.isAxiosError(error) && error.response) {
+      return res.status(error.response.status).json(error.response.data);
+    }
+    
+    res.status(500).json({
+      error: 'Internal Server Error',
+      message: 'An unexpected error occurred during Spotify API request'
+    });
   }
 });
 
