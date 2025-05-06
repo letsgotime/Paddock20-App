@@ -1,10 +1,10 @@
 import { createRoot } from "react-dom/client";
-import { BrowserRouter } from 'react-router-dom';
-import App from "./App";
 import "./index.css";
 import "./bts.css";
 import "./utils/storageManager"; // Initialize enhanced storage management
 import { SupabaseAuthProvider } from './context/SupabaseAuthContext';
+import { Router } from 'wouter';
+import App from "./App";
 
 // Check if Supabase environment variables are set
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -16,10 +16,11 @@ console.log("Supabase config status:", {
   hasAnonKey: !!supabaseAnonKey
 });
 
+// Use Router as the outermost component to provide routing context to the entire app
 createRoot(document.getElementById("root")!).render(
-  <BrowserRouter>
+  <Router>
     <SupabaseAuthProvider>
       <App />
     </SupabaseAuthProvider>
-  </BrowserRouter>
+  </Router>
 );

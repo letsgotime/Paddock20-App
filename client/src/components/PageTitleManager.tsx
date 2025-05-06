@@ -1,5 +1,5 @@
 import { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'wouter';
 import { updatePageTitleFromPath } from '../utils/pageTitle';
 
 /**
@@ -9,15 +9,16 @@ import { updatePageTitleFromPath } from '../utils/pageTitle';
  * title whenever the route changes.
  */
 const PageTitleManager: React.FC = () => {
-  const location = useLocation();
+  // In wouter, useLocation returns [pathname, navigate]
+  const [pathname] = useLocation();
   
   useEffect(() => {
     // Update the page title when the route changes
-    updatePageTitleFromPath(location.pathname);
+    updatePageTitleFromPath(pathname);
     
     // Debug log
-    console.log(`Page title updated for route: ${location.pathname}`);
-  }, [location.pathname]);
+    console.log(`Page title updated for route: ${pathname}`);
+  }, [pathname]);
   
   // This component doesn't render anything
   return null;

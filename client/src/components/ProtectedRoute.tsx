@@ -1,38 +1,33 @@
-import React from 'react';
-import { Redirect, Route } from 'wouter';
+import React, { ReactNode } from 'react';
+import { Redirect, useLocation } from 'wouter';
 import { useAuth } from '@/context/SupabaseAuthContext';
 import { Loader2 } from 'lucide-react';
 
 interface ProtectedRouteProps {
-  path: string;
-  component: React.ComponentType;
+  children: ReactNode;
 }
 
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ path, component: Component }) => {
+// Updated component to accept children instead of path and component props
+const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
   const { isAuthenticated, loading } = useAuth();
+  const [location] = useLocation();
 
   // While checking authentication status, show a loading spinner
   if (loading) {
     return (
-      <Route path={path}>
-        <div className="flex items-center justify-center min-h-screen">
-          <Loader2 className="h-8 w-8 animate-spin text-blue-500" />
-        </div>
-      </Route>
+      <div className="flex items-center justify-center min-h-screen">
+        <Loader2 className="h-8 w-8 animate-spin text-carolina-blue" />
+      </div>
     );
   }
 
   // If not authenticated, redirect to auth page
   if (!isAuthenticated) {
-    return (
-      <Route path={path}>
-        <Redirect to="/auth" />
-      </Route>
-    );
+    return <Redirect to="/auth" />;
   }
 
   // If authenticated, render the protected component
-  return <Route path={path} component={Component} />;
+  return <>{children}</>;
 };
 
 export default ProtectedRoute;

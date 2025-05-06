@@ -25,7 +25,7 @@ const createMockClient = () => {
     auth: {
       getSession: async () => ({ data: { session: null }, error: null }),
       getUser: async () => ({ data: { user: null }, error: null }),
-      onAuthStateChange: (callback) => {
+      onAuthStateChange: (callback: (event: string, session: any) => void) => {
         // Simulate a signed-in user for demo purposes
         setTimeout(() => {
           callback('SIGNED_IN', {
