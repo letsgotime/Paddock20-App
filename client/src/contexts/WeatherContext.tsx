@@ -228,38 +228,7 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
   // We'll update this info manually when we get new data
   }, []);
 
-  // Setup auto-refresh of weather data every 60 minutes instead of 15
-  // to reduce API calls and avoid rate limiting
-  useEffect(() => {
-    if (!selectedLocation) return;
-    
-    const refreshInterval = setInterval(() => {
-      console.log('Auto-refreshing weather data (hourly)...');
-      // Use refetchConsolidatedWeather directly instead of refreshWeather to avoid dependency cycle
-      if (selectedLocation) {
-        refetchConsolidatedWeather()
-          .then(() => {
-            const now = new Date();
-            setFailureCount(0);
-            setLastUpdated(now);
-            setIsUsingFallbackData(false);
-            
-            // Update cache tracking
-            setNextRefreshTime(new Date(now.getTime() + 60 * 60 * 1000));
-            setCacheExpiryTime(new Date(now.getTime() + 8 * 60 * 60 * 1000));
-            setCacheAge("Just updated");
-            
-            console.log('Weather data refreshed successfully (auto)');
-          })
-          .catch(error => {
-            console.error('Error in auto-refresh of weather data:', error);
-            setFailureCount(prev => prev + 1);
-          });
-      }
-    }, 60 * 60 * 1000); // 60 minutes (was 15 minutes)
-    
-    return () => clearInterval(refreshInterval);
-  }, [selectedLocation, refetchConsolidatedWeather]);
+  // Auto-refresh setup will be moved below after refetchConsolidatedWeather is defined
 
   // Get ALL weather data in a single consolidated API call
   // This drastically reduces API usage and helps avoid rate limiting
@@ -311,12 +280,25 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
     }
   });
   
-  // Extract individual data pieces from the consolidated response
-  // Handle type conversions for component compatibility
-  const weatherData = consolidatedData?.oneCallData?.current as unknown as WeatherData | null;
+  // Extract individual data pieces from the consolidated response and ensure proper type casting
+  // The key is to properly cast the types to maintain compatibility with existing components
+  const weatherData = consolidatedData?.weatherData as unknown as WeatherData | null;
   const oneCallData = consolidatedData?.oneCallData || null;
   const forecastData = consolidatedData?.forecastData || null;
-  const automotiveWeatherData = consolidatedData?.automotiveWeatherData || null;
+  
+  // Convert automotive weather data to the expected interface format
+  const automotiveWeatherData = consolidatedData?.automotiveWeatherData ? {
+    // Ensure all expected properties are present by providing fallbacks
+    location: consolidatedData?.weatherData?.name || "Unknown",
+    current_time: new Date().toISOString(),
+    sunrise_time: new Date(consolidatedData?.oneCallData?.current?.sunrise * 1000).toISOString(),
+    sunset_time: new Date(consolidatedData?.oneCallData?.current?.sunset * 1000).toISOString(),
+    temperature: consolidatedData?.oneCallData?.current?.temp,
+    conditions: consolidatedData?.oneCallData?.current?.weather?.[0]?.main || "Unknown",
+    icon: consolidatedData?.oneCallData?.current?.weather?.[0]?.icon || "01d",
+    humidity: consolidatedData?.oneCallData?.current?.humidity || 0,
+    ...consolidatedData.automotiveWeatherData
+  } : null;
   
   // Unified loading and error states
   const isLoading = isConsolidatedLoading;
@@ -415,6 +397,39 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
         console.error('Error refreshing consolidated weather data:', error);
         setFailureCount(prev => prev + 1);
       });
+  }, [selectedLocation, refetchConsolidatedWeather]);
+
+  // Setup auto-refresh of weather data every 60 minutes instead of 15
+  // to reduce API calls and avoid rate limiting
+  useEffect(() => {
+    if (!selectedLocation) return;
+    
+    const refreshInterval = setInterval(() => {
+      console.log('Auto-refreshing weather data (hourly)...');
+      // Now refetchConsolidatedWeather is defined and we can use it safely
+      if (selectedLocation) {
+        refetchConsolidatedWeather()
+          .then(() => {
+            const now = new Date();
+            setFailureCount(0);
+            setLastUpdated(now);
+            setIsUsingFallbackData(false);
+            
+            // Update cache tracking
+            setNextRefreshTime(new Date(now.getTime() + 60 * 60 * 1000));
+            setCacheExpiryTime(new Date(now.getTime() + 8 * 60 * 60 * 1000));
+            setCacheAge("Just updated");
+            
+            console.log('Weather data refreshed successfully (auto)');
+          })
+          .catch(error => {
+            console.error('Error in auto-refresh of weather data:', error);
+            setFailureCount(prev => prev + 1);
+          });
+      }
+    }, 60 * 60 * 1000); // 60 minutes (was 15 minutes)
+    
+    return () => clearInterval(refreshInterval);
   }, [selectedLocation, refetchConsolidatedWeather]);
 
   const value: WeatherContextType = {
