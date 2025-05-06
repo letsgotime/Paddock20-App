@@ -1,113 +1,159 @@
-import { useAuth0 } from "@auth0/auth0-react";
+/**
+ * Auth0Management service
+ * 
+ * This service handles interactions with the Auth0 Management API through our backend routes.
+ * It provides methods for managing beta tester status and other Auth0 user management tasks.
+ */
 
 /**
- * Service for Auth0 Management API operations
- * Provides functions to check and manage beta tester status
+ * Request beta tester status for the current user
+ * @param token JWT access token from Auth0
+ * @returns Promise resolving to success status
  */
-export const useAuth0Management = () => {
-  const { user, getAccessTokenSilently } = useAuth0();
-
-  /**
-   * Check if the current user is a beta tester and their approval status
-   * @returns Beta tester status (none, pending, approved)
-   */
-  const checkBetaTesterStatus = (): string => {
-    if (!user) return "not_authenticated";
+export const requestBetaAccess = async (token: string): Promise<boolean> => {
+  try {
+    const response = await fetch('/api/auth0/request-beta', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
     
-    // Access user metadata - Auth0 stores custom data here
-    const metadata = user.user_metadata || {};
-    return metadata.betaTesterStatus || "none";
-  };
+    if (!response.ok) {
+      throw new Error('Failed to request beta access');
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Beta request error:', error);
+    return false;
+  }
+};
 
-  /**
-   * Request beta tester status for the current user
-   */
-  const requestBetaTesterStatus = async (): Promise<boolean> => {
-    try {
-      // Get access token with appropriate permissions
-      const token = await getAccessTokenSilently({
-        authorizationParams: {
-          audience: import.meta.env.VITE_AUTH0_AUDIENCE,
-          scope: "update:current_user_metadata"
-        }
-      });
+/**
+ * Fetch users with pending beta tester status
+ * @param token JWT access token from Auth0 with read:users scope
+ * @returns Promise resolving to array of user objects
+ */
+export const fetchPendingBetaTesters = async (token: string) => {
+  try {
+    const response = await fetch('/api/auth0/beta-testers/pending', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch pending beta testers');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching pending beta testers:', error);
+    throw error;
+  }
+};
 
-      // Call our server API to update user metadata
-      const response = await fetch("/api/auth/request-beta-status", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        }
-      });
+/**
+ * Fetch users with approved beta tester status
+ * @param token JWT access token from Auth0 with read:users scope
+ * @returns Promise resolving to array of user objects
+ */
+export const fetchApprovedBetaTesters = async (token: string) => {
+  try {
+    const response = await fetch('/api/auth0/beta-testers/approved', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to fetch approved beta testers');
+    }
+    
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching approved beta testers:', error);
+    throw error;
+  }
+};
 
-      const data = await response.json();
-      return data.success;
-    } catch (error) {
-      console.error("Failed to request beta tester status:", error);
+/**
+ * Approve a beta tester
+ * @param token JWT access token from Auth0 with update:users scope
+ * @param userId The Auth0 user ID to approve
+ * @returns Promise resolving to success status
+ */
+export const approveBetaTester = async (token: string, userId: string): Promise<boolean> => {
+  try {
+    const response = await fetch(`/api/auth0/approve-beta-tester/${userId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to approve beta tester');
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error approving beta tester:', error);
+    return false;
+  }
+};
+
+/**
+ * Reject a beta tester
+ * @param token JWT access token from Auth0 with update:users scope
+ * @param userId The Auth0 user ID to reject
+ * @returns Promise resolving to success status
+ */
+export const rejectBetaTester = async (token: string, userId: string): Promise<boolean> => {
+  try {
+    const response = await fetch(`/api/auth0/reject-beta-tester/${userId}`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
+      throw new Error('Failed to reject beta tester');
+    }
+    
+    return true;
+  } catch (error) {
+    console.error('Error rejecting beta tester:', error);
+    return false;
+  }
+};
+
+/**
+ * Check if a user has the admin role
+ * @param token JWT access token from Auth0
+ * @returns Promise resolving to boolean indicating if user is an admin
+ */
+export const checkUserIsAdmin = async (token: string): Promise<boolean> => {
+  try {
+    const response = await fetch('/api/auth0/check-admin', {
+      headers: {
+        'Authorization': `Bearer ${token}`
+      }
+    });
+    
+    if (!response.ok) {
       return false;
     }
-  };
-
-  /**
-   * Admin function to get all pending beta testers
-   */
-  const getPendingBetaTesters = async () => {
-    try {
-      // Get access token with admin permissions
-      const token = await getAccessTokenSilently({
-        authorizationParams: {
-          audience: import.meta.env.VITE_AUTH0_AUDIENCE,
-          scope: "read:users"
-        }
-      });
-
-      // Call admin API
-      const response = await fetch("/api/admin/pending-beta-testers", {
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      return await response.json();
-    } catch (error) {
-      console.error("Failed to get pending beta testers:", error);
-      throw error;
-    }
-  };
-
-  /**
-   * Admin function to approve a beta tester
-   */
-  const approveBetaTester = async (userId: string) => {
-    try {
-      // Get access token with admin permissions
-      const token = await getAccessTokenSilently({
-        authorizationParams: {
-          audience: import.meta.env.VITE_AUTH0_AUDIENCE,
-          scope: "update:users"
-        }
-      });
-
-      // Call admin API
-      const response = await fetch(`/api/admin/approve-beta-tester/${userId}`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`
-        }
-      });
-
-      return await response.json();
-    } catch (error) {
-      console.error("Failed to approve beta tester:", error);
-      throw error;
-    }
-  };
-
-  return {
-    checkBetaTesterStatus,
-    requestBetaTesterStatus,
-    getPendingBetaTesters,
-    approveBetaTester
-  };
+    
+    const data = await response.json();
+    return data.isAdmin || false;
+  } catch (error) {
+    console.error('Error checking admin status:', error);
+    return false;
+  }
 };
