@@ -4,7 +4,8 @@ import {
   initiateSpotifyAuth,
   handleSpotifyRedirect,
   clearSpotifyAuth,
-  getSpotifyUserProfile
+  getSpotifyUserProfile,
+  getAccessToken
 } from '../services/spotify/spotifyAuth';
 import {
   getUserPlaylists,

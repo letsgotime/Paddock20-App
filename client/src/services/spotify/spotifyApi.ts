@@ -1,349 +1,375 @@
 /**
  * Spotify API Service
- * Handles all Spotify API requests
+ * Handles interactions with the Spotify Web API
  */
-import { getStoredTokens, refreshSpotifyToken, needsTokenRefresh } from './spotifyAuth';
-import { SpotifyPlaylist, SpotifyProfile, DrivePlaylist } from './spotifyTypes';
+import { getAccessToken } from './spotifyAuth';
+import {
+  SpotifyPlaylist,
+  SpotifyProfile,
+  SpotifyTrack,
+  DrivePlaylist
+} from './spotifyTypes';
+
+// Constants
+const SPOTIFY_API_BASE = 'https://api.spotify.com/v1';
+const API_BASE = '/api/spotify';  // Our backend proxy endpoint
 
 /**
- * Base fetch function that handles authorization and refreshing tokens
+ * Makes an authenticated request to the Spotify API
  */
-const fetchWithAuth = async (
-  url: string,
-  options: RequestInit = {}
-) => {
-  // Get tokens
-  let tokens = getStoredTokens();
+const spotifyApiRequest = async <T>(
+  endpoint: string,
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
+  body?: any
+): Promise<T> => {
+  const accessToken = await getAccessToken();
   
-  if (!tokens) {
-    throw new Error('No Spotify authentication tokens found');
+  if (!accessToken) {
+    throw new Error('Not authenticated with Spotify');
   }
   
-  // Check if token needs refresh
-  if (needsTokenRefresh()) {
-    tokens = await refreshSpotifyToken();
-    if (!tokens) {
-      throw new Error('Failed to refresh Spotify token');
-    }
-  }
+  const url = endpoint.startsWith('https://') ? 
+    endpoint : 
+    `${SPOTIFY_API_BASE}${endpoint}`;
   
-  // Set up headers with auth token
-  const headers = new Headers(options.headers);
-  headers.set('Authorization', `Bearer ${tokens.accessToken}`);
-  
-  // Make the API request
   const response = await fetch(url, {
-    ...options,
-    headers
+    method,
+    headers: {
+      'Authorization': `Bearer ${accessToken}`,
+      'Content-Type': 'application/json',
+    },
+    ...(body ? { body: JSON.stringify(body) } : {}),
   });
   
-  // Handle unauthorized (expired token)
-  if (response.status === 401) {
-    tokens = await refreshSpotifyToken();
-    if (!tokens) {
-      throw new Error('Failed to refresh Spotify token after 401');
+  if (!response.ok) {
+    if (response.status === 401) {
+      // Token is invalid, user needs to re-authenticate
+      throw new Error('Spotify session expired. Please reconnect your account.');
     }
     
-    // Retry with new token
-    headers.set('Authorization', `Bearer ${tokens.accessToken}`);
-    return fetch(url, {
-      ...options,
-      headers
-    });
+    if (response.status === 429) {
+      // Rate limited
+      throw new Error('Too many requests to Spotify. Please try again later.');
+    }
+    
+    try {
+      const errorData = await response.json();
+      throw new Error(`Spotify API error: ${errorData.error?.message || response.statusText}`);
+    } catch (e) {
+      throw new Error(`Spotify API error: ${response.statusText}`);
+    }
   }
   
-  // Handle other errors
+  return response.json();
+};
+
+/**
+ * Makes a request to our backend Spotify API proxy
+ */
+const spotifyBackendRequest = async <T>(
+  endpoint: string,
+  method: 'GET' | 'POST' | 'PUT' | 'DELETE' = 'GET',
+  body?: any
+): Promise<T> => {
+  const response = await fetch(`${API_BASE}${endpoint}`, {
+    method,
+    headers: {
+      'Content-Type': 'application/json',
+    },
+    ...(body ? { body: JSON.stringify(body) } : {}),
+  });
+  
   if (!response.ok) {
-    const errorData = await response.json().catch(() => ({}));
-    throw new Error(`Spotify API error (${response.status}): ${errorData.error?.message || response.statusText}`);
+    try {
+      const errorData = await response.json();
+      throw new Error(`API error: ${errorData.error || response.statusText}`);
+    } catch (e) {
+      throw new Error(`API error: ${response.statusText}`);
+    }
   }
   
-  return response;
-};
-
-/**
- * Get current user profile
- */
-export const getCurrentUser = async (): Promise<SpotifyProfile> => {
-  const response = await fetchWithAuth('https://api.spotify.com/v1/me');
   return response.json();
 };
 
 /**
- * Get user's playlists
+ * Fetches the user's Spotify playlists
  */
-export const getUserPlaylists = async (limit = 50, offset = 0): Promise<SpotifyPlaylist[]> => {
-  const response = await fetchWithAuth(
-    `https://api.spotify.com/v1/me/playlists?limit=${limit}&offset=${offset}`
-  );
-  const data = await response.json();
-  return data.items;
-};
-
-/**
- * Get a specific playlist by ID
- */
-export const getPlaylist = async (playlistId: string): Promise<SpotifyPlaylist> => {
-  const response = await fetchWithAuth(
-    `https://api.spotify.com/v1/playlists/${playlistId}`
-  );
-  return response.json();
-};
-
-/**
- * Search for playlists by term
- */
-export const searchPlaylists = async (
-  term: string,
-  limit = 10
-): Promise<SpotifyPlaylist[]> => {
-  // URL encode the search term
-  const encodedTerm = encodeURIComponent(term);
-  
-  const response = await fetchWithAuth(
-    `https://api.spotify.com/v1/search?q=${encodedTerm}&type=playlist&limit=${limit}`
-  );
-  const data = await response.json();
-  return data.playlists.items;
-};
-
-/**
- * Get playlists by genre
- */
-export const getPlaylistsByGenre = async (
-  genre: string,
-  limit = 10
-): Promise<SpotifyPlaylist[]> => {
-  // Search for playlists with the genre
-  return searchPlaylists(`genre:${genre} driving`, limit);
-};
-
-/**
- * Get playlists by activity
- */
-export const getPlaylistsByActivity = async (
-  activity: string,
-  limit = 10
-): Promise<SpotifyPlaylist[]> => {
-  // Customize search query based on activity
-  let searchTerm = '';
-  
-  // Map driving activities to appropriate search terms
-  switch (activity.toLowerCase()) {
-    case 'track driving':
-    case 'track days':
-      searchTerm = 'racing driving track day speed';
-      break;
-    case 'autocross':
-      searchTerm = 'autocross racing competition driving';
-      break;
-    case 'drifting':
-    case 'drift racing':
-      searchTerm = 'drift drifting racing';
-      break;
-    case 'rally':
-    case 'rally racing':
-      searchTerm = 'rally racing driving';
-      break;
-    case 'off-roading':
-    case 'offroad':
-      searchTerm = 'offroad adventure driving';
-      break;
-    case 'car shows':
-      searchTerm = 'car show cruising driving';
-      break;
-    case 'commuting':
-      searchTerm = 'commute driving chill';
-      break;
-    case 'cruising':
-      searchTerm = 'cruise driving relaxing road trip';
-      break;
-    default:
-      // Use the activity as the search term
-      searchTerm = `${activity} driving`;
+export const getUserPlaylists = async (): Promise<SpotifyPlaylist[]> => {
+  try {
+    const response = await spotifyApiRequest<{
+      items: SpotifyPlaylist[],
+      next: string | null
+    }>('/me/playlists?limit=50');
+    
+    let playlists = response.items;
+    let nextUrl = response.next;
+    
+    // Fetch additional playlists if there are more
+    while (nextUrl) {
+      const moreData = await spotifyApiRequest<{
+        items: SpotifyPlaylist[],
+        next: string | null
+      }>(nextUrl);
+      
+      playlists = [...playlists, ...moreData.items];
+      nextUrl = moreData.next;
+    }
+    
+    return playlists;
+  } catch (error) {
+    console.error('Error fetching user playlists:', error);
+    return [];
   }
-  
-  return searchPlaylists(searchTerm, limit);
 };
 
 /**
- * Create a new playlist for the user
+ * Fetches a specific Spotify playlist by ID
+ */
+export const getPlaylist = async (id: string): Promise<SpotifyPlaylist | null> => {
+  try {
+    const playlist = await spotifyApiRequest<SpotifyPlaylist>(`/playlists/${id}?market=from_token`);
+    return playlist;
+  } catch (error) {
+    console.error(`Error fetching playlist ${id}:`, error);
+    return null;
+  }
+};
+
+/**
+ * Searches for Spotify playlists by activity
+ */
+export const getPlaylistsByActivity = async (activity: string, limit = 6): Promise<SpotifyPlaylist[]> => {
+  try {
+    const { playlists } = await spotifyApiRequest<{
+      playlists: {
+        items: SpotifyPlaylist[]
+      }
+    }>(`/search?q=${encodeURIComponent(activity)}&type=playlist&limit=${limit}&market=from_token`);
+    
+    return playlists.items;
+  } catch (error) {
+    console.error(`Error searching playlists for activity ${activity}:`, error);
+    return [];
+  }
+};
+
+/**
+ * Searches for Spotify playlists by genre
+ */
+export const getPlaylistsByGenre = async (genre: string, limit = 6): Promise<SpotifyPlaylist[]> => {
+  try {
+    const { playlists } = await spotifyApiRequest<{
+      playlists: {
+        items: SpotifyPlaylist[]
+      }
+    }>(`/search?q=genre:${encodeURIComponent(genre)}&type=playlist&limit=${limit}&market=from_token`);
+    
+    return playlists.items;
+  } catch (error) {
+    console.error(`Error searching playlists for genre ${genre}:`, error);
+    return [];
+  }
+};
+
+/**
+ * Creates a new Spotify playlist
  */
 export const createPlaylist = async (
   name: string,
   description = '',
   isPublic = false
-): Promise<SpotifyPlaylist> => {
-  const user = await getCurrentUser();
-  
-  const response = await fetchWithAuth(
-    `https://api.spotify.com/v1/users/${user.id}/playlists`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
+): Promise<SpotifyPlaylist | null> => {
+  try {
+    // First, get the user's Spotify ID
+    const userProfile = await spotifyApiRequest<SpotifyProfile>('/me');
+    
+    // Create the playlist
+    const playlist = await spotifyApiRequest<SpotifyPlaylist>(
+      `/users/${userProfile.id}/playlists`,
+      'POST',
+      {
         name,
         description,
         public: isPublic
-      })
-    }
-  );
-  
-  return response.json();
+      }
+    );
+    
+    return playlist;
+  } catch (error) {
+    console.error('Error creating playlist:', error);
+    return null;
+  }
 };
 
 /**
- * Add tracks to a playlist
+ * Adds tracks to a Spotify playlist
  */
 export const addTracksToPlaylist = async (
   playlistId: string,
   trackUris: string[]
-): Promise<void> => {
-  await fetchWithAuth(
-    `https://api.spotify.com/v1/playlists/${playlistId}/tracks`,
-    {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        uris: trackUris
-      })
-    }
-  );
-};
-
-/**
- * Get playlist recommendations based on seed genres
- */
-export const getRecommendedPlaylists = async (
-  seedGenres: string[],
-  limit = 5
-): Promise<SpotifyPlaylist[]> => {
-  // For each seed genre, get playlists
-  const playlistPromises = seedGenres.map(genre => getPlaylistsByGenre(genre, limit));
-  const genrePlaylists = await Promise.all(playlistPromises);
-  
-  // Flatten and deduplicate
-  const uniqueIds = new Set<string>();
-  const dedupedPlaylists: SpotifyPlaylist[] = [];
-  
-  genrePlaylists.flat().forEach(playlist => {
-    if (!uniqueIds.has(playlist.id)) {
-      uniqueIds.add(playlist.id);
-      dedupedPlaylists.push(playlist);
-    }
-  });
-  
-  // Return up to the limit
-  return dedupedPlaylists.slice(0, limit);
-};
-
-// Local storage for drive playlists
-const DRIVE_PLAYLISTS_KEY = 'paddock20_drive_playlists';
-
-/**
- * Save a drive playlist association
- */
-export const saveDrivePlaylist = async (playlist: DrivePlaylist): Promise<void> => {
-  // Get existing drive playlists
-  const existingData = localStorage.getItem(DRIVE_PLAYLISTS_KEY);
-  const drivePlaylists: DrivePlaylist[] = existingData ? JSON.parse(existingData) : [];
-  
-  // Add new playlist or update existing
-  const existingIndex = drivePlaylists.findIndex(p => p.playlistId === playlist.playlistId);
-  
-  if (existingIndex >= 0) {
-    drivePlaylists[existingIndex] = playlist;
-  } else {
-    drivePlaylists.push(playlist);
-  }
-  
-  // Save back to storage
-  localStorage.setItem(DRIVE_PLAYLISTS_KEY, JSON.stringify(drivePlaylists));
-};
-
-/**
- * Get drive playlists by user ID
- */
-export const getDrivePlaylistsByUserId = async (): Promise<DrivePlaylist[]> => {
-  const existingData = localStorage.getItem(DRIVE_PLAYLISTS_KEY);
-  return existingData ? JSON.parse(existingData) : [];
-};
-
-/**
- * Get drive playlists filtered by mood
- */
-export const getDrivePlaylistsByMood = async (moods: string[]): Promise<DrivePlaylist[]> => {
-  const allPlaylists = await getDrivePlaylistsByUserId();
-  
-  return allPlaylists.filter(playlist => 
-    playlist.mood.some(m => moods.includes(m.toLowerCase()))
-  );
-};
-
-/**
- * Get drive playlists filtered by weather conditions
- */
-export const getDrivePlaylistsByWeather = async (conditions: string[]): Promise<DrivePlaylist[]> => {
-  const allPlaylists = await getDrivePlaylistsByUserId();
-  
-  return allPlaylists.filter(playlist => 
-    playlist.weather.some(w => conditions.includes(w.toLowerCase()))
-  );
-};
-
-/**
- * Control playback - requires Spotify Premium
- */
-export const playPlaylist = async (playlistUri: string): Promise<void> => {
+): Promise<boolean> => {
   try {
-    await fetchWithAuth(
-      'https://api.spotify.com/v1/me/player/play',
+    await spotifyApiRequest(
+      `/playlists/${playlistId}/tracks`,
+      'POST',
       {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({
-          context_uri: playlistUri
-        })
+        uris: trackUris
       }
     );
+    
+    return true;
   } catch (error) {
-    console.error('Error starting playback:', error);
-    throw new Error('Playback control requires Spotify Premium');
+    console.error(`Error adding tracks to playlist ${playlistId}:`, error);
+    return false;
   }
+};
+
+/**
+ * Gets recommendations based on provided seed data
+ */
+export const getRecommendedTracks = async (
+  seedArtists: string[] = [],
+  seedTracks: string[] = [],
+  seedGenres: string[] = [],
+  limit = 20
+): Promise<SpotifyTrack[]> => {
+  try {
+    const params = new URLSearchParams();
+    
+    if (seedArtists.length) {
+      params.append('seed_artists', seedArtists.join(','));
+    }
+    
+    if (seedTracks.length) {
+      params.append('seed_tracks', seedTracks.join(','));
+    }
+    
+    if (seedGenres.length) {
+      params.append('seed_genres', seedGenres.join(','));
+    }
+    
+    params.append('limit', limit.toString());
+    params.append('market', 'from_token');
+    
+    const response = await spotifyApiRequest<{ tracks: SpotifyTrack[] }>(
+      `/recommendations?${params.toString()}`
+    );
+    
+    return response.tracks;
+  } catch (error) {
+    console.error('Error getting recommendations:', error);
+    return [];
+  }
+};
+
+/**
+ * Gets recommended playlists from our backend
+ */
+export const getRecommendedPlaylists = async (): Promise<SpotifyPlaylist[]> => {
+  try {
+    return await spotifyBackendRequest<SpotifyPlaylist[]>('/recommended-playlists');
+  } catch (error) {
+    console.error('Error fetching recommended playlists:', error);
+    return [];
+  }
+};
+
+// Drive Journal specific playlist functions
+
+/**
+ * Save a Drive Journal playlist to our backend
+ */
+export const saveDrivePlaylist = async (playlist: DrivePlaylist): Promise<void> => {
+  await spotifyBackendRequest('/drive-playlists', 'POST', playlist);
+};
+
+/**
+ * Update an existing Drive Journal playlist in our backend
+ */
+export const updateDrivePlaylist = async (playlistId: string, updates: Partial<DrivePlaylist>): Promise<void> => {
+  await spotifyBackendRequest(`/drive-playlists/${playlistId}`, 'PUT', updates);
+};
+
+/**
+ * Get all Drive Journal playlists for the current user
+ */
+export const getDrivePlaylistsByUserId = async (): Promise<DrivePlaylist[]> => {
+  try {
+    return await spotifyBackendRequest<DrivePlaylist[]>('/drive-playlists/user');
+  } catch (error) {
+    console.error('Error fetching drive playlists:', error);
+    return [];
+  }
+};
+
+/**
+ * Get Drive Journal playlists filtered by mood
+ */
+export const getDrivePlaylistsByMood = async (moods: string[]): Promise<DrivePlaylist[]> => {
+  try {
+    const moodParams = moods.map(mood => `mood=${encodeURIComponent(mood)}`).join('&');
+    return await spotifyBackendRequest<DrivePlaylist[]>(`/drive-playlists/mood?${moodParams}`);
+  } catch (error) {
+    console.error('Error fetching playlists by mood:', error);
+    return [];
+  }
+};
+
+/**
+ * Get Drive Journal playlists filtered by weather condition
+ */
+export const getDrivePlaylistsByWeather = async (conditions: string[]): Promise<DrivePlaylist[]> => {
+  try {
+    const weatherParams = conditions.map(condition => `weather=${encodeURIComponent(condition)}`).join('&');
+    return await spotifyBackendRequest<DrivePlaylist[]>(`/drive-playlists/weather?${weatherParams}`);
+  } catch (error) {
+    console.error('Error fetching playlists by weather:', error);
+    return [];
+  }
+};
+
+// Playback control functions
+
+/**
+ * Start playing a specific playlist
+ */
+export const playPlaylist = async (playlistUri: string): Promise<void> => {
+  await spotifyApiRequest(
+    '/me/player/play',
+    'PUT',
+    {
+      context_uri: playlistUri
+    }
+  );
 };
 
 /**
  * Pause playback
  */
 export const pausePlayback = async (): Promise<void> => {
-  try {
-    await fetchWithAuth(
-      'https://api.spotify.com/v1/me/player/pause',
-      { method: 'PUT' }
-    );
-  } catch (error) {
-    console.error('Error pausing playback:', error);
-    throw new Error('Playback control requires Spotify Premium');
-  }
+  await spotifyApiRequest('/me/player/pause', 'PUT');
 };
 
 /**
  * Resume playback
  */
 export const resumePlayback = async (): Promise<void> => {
+  await spotifyApiRequest('/me/player/play', 'PUT');
+};
+
+/**
+ * Get the user's currently playing track
+ */
+export const getCurrentlyPlaying = async (): Promise<{
+  is_playing: boolean;
+  item: SpotifyTrack | null;
+  progress_ms: number | null;
+  context: { uri: string; type: string } | null;
+} | null> => {
   try {
-    await fetchWithAuth(
-      'https://api.spotify.com/v1/me/player/play',
-      { method: 'PUT' }
-    );
+    return await spotifyApiRequest('/me/player/currently-playing');
   } catch (error) {
-    console.error('Error resuming playback:', error);
-    throw new Error('Playback control requires Spotify Premium');
+    console.error('Error getting currently playing track:', error);
+    return null;
   }
 };

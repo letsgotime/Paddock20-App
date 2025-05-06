@@ -1,132 +1,128 @@
 /**
- * Spotify Service Types
- * Defines all types for the Spotify integration
+ * Spotify Types
+ * Contains type definitions for Spotify API integrations
  */
 
-// Authentication types
+// Spotify Authentication Tokens
 export interface SpotifyTokens {
-  accessToken: string;
-  refreshToken: string;
-  expiresAt: number; // timestamp when token expires
+  access_token: string;
+  refresh_token: string;
+  expires_in: number;
+  expires_at: number;
+  scope: string;
 }
 
+// Spotify User Profile
 export interface SpotifyProfile {
   id: string;
   display_name: string;
   email: string;
-  images: Array<{ url: string }>;
-  product: string; // 'premium', 'free', etc.
+  images: { url: string }[];
+  external_urls: {
+    spotify: string;
+  };
   country: string;
-  uri: string;
+  product: string;
+  profileUrl: string;
 }
 
-// Playlist types
+// Spotify Track
+export interface SpotifyTrack {
+  id: string;
+  name: string;
+  uri: string;
+  artists: {
+    id: string;
+    name: string;
+  }[];
+  album: {
+    id: string;
+    name: string;
+    images: { url: string; height: number; width: number }[];
+  };
+  duration_ms: number;
+  explicit: boolean;
+  preview_url: string | null;
+}
+
+// Spotify Playlist
 export interface SpotifyPlaylist {
   id: string;
   name: string;
   description: string;
-  images: Array<{ url: string, height: number | null, width: number | null }>;
   uri: string;
-  external_urls: {
-    spotify: string;
-  };
-  tracks: {
-    total: number;
-    items?: SpotifyPlaylistTrack[];
-  };
+  images: { url: string; height: number; width: number }[];
   owner: {
     id: string;
     display_name: string;
   };
   public: boolean;
-}
-
-export interface SpotifyPlaylistTrack {
-  added_at: string;
-  track: SpotifyTrack;
-}
-
-export interface SpotifyTrack {
-  id: string;
-  name: string;
-  duration_ms: number;
-  artists: Array<{
-    id: string;
-    name: string;
-  }>;
-  album: {
-    id: string;
-    name: string;
-    images: Array<{ url: string, height: number | null, width: number | null }>;
+  collaborative: boolean;
+  tracks: {
+    total: number;
+    items?: {
+      track: SpotifyTrack;
+      added_at: string;
+      added_by: {
+        id: string;
+        display_name: string;
+      };
+    }[];
   };
-  preview_url: string | null;
-  uri: string;
   external_urls: {
     spotify: string;
   };
 }
 
-// Drive association types
+// Drive Journal specific playlist with additional metadata
 export interface DrivePlaylist {
-  playlistId: string;
-  playlistName: string;
-  playlistImageUrl: string;
-  driveId: string; // Associated drive ID
-  createdAt: string;
-  mood: string[]; // Array of moods like ['energetic', 'focused']
-  weather: string[]; // Array of weather conditions ['sunny', 'rainy']
-  tags: string[]; // Custom tags
-}
-
-// Activity types
-export interface SpotifyActivity {
-  id: string;
-  type: 'drive' | 'detailing' | 'maintenance' | 'mod' | 'general';
-  playlistId: string;
-  timestamp: string;
-  duration: number; // In seconds
-  contextId: string; // ID of the drive, maintenance session, etc.
-}
-
-// Paddock20 specific types
-export interface DrivingPlaylistPreference {
+  spotifyId: string;
   userId: string;
-  activityType: 'cruising' | 'performance' | 'commuting' | 'offroad' | 'track';
-  mood: string[];
-  preferredGenres: string[];
-  favoritePlaylistIds: string[];
-  customSettings: Record<string, any>;
+  name: string;
+  description?: string;
+  imageUrl?: string;
+  uri: string;
+  dateAdded: string;
+  mood?: string[];
+  weather?: string[];
+  activity?: string[];
+  vehicle?: string; // Vehicle ID associated with this playlist
+  driveMoment?: string; // Time of day: morning, afternoon, evening, night
+  isFavorite: boolean;
 }
 
-// Context type for React context
+// SpotifyContext type containing all the properties and methods available in the context
 export interface SpotifyContextType {
+  // Authentication state
   isAuthenticated: boolean;
   isLoading: boolean;
   tokens: SpotifyTokens | null;
   profile: SpotifyProfile | null;
+
+  // Playlists
   currentPlaylist: SpotifyPlaylist | null;
   userPlaylists: SpotifyPlaylist[];
   recommendedPlaylists: SpotifyPlaylist[];
   favoritePlaylists: DrivePlaylist[];
-  
+
   // Authentication methods
   authenticate: () => Promise<void>;
   logout: () => void;
-  
+
   // Playlist methods
   getUserPlaylists: () => Promise<SpotifyPlaylist[]>;
   getPlaylistById: (id: string) => Promise<SpotifyPlaylist>;
   getPlaylistsByActivity: (activity: string, limit?: number) => Promise<SpotifyPlaylist[]>;
   getPlaylistsByGenre: (genre: string, limit?: number) => Promise<SpotifyPlaylist[]>;
   createPlaylist: (name: string, description?: string, isPublic?: boolean) => Promise<SpotifyPlaylist>;
-  
+
   // Drive-specific methods
   saveDrivePlaylist: (playlist: DrivePlaylist) => Promise<void>;
-  getDrivePlaylistsByUserId: (userId: string) => Promise<DrivePlaylist[]>;
+  getDrivePlaylistsByUserId: () => Promise<DrivePlaylist[]>;
   getDrivePlaylistsByMood: (moods: string[]) => Promise<DrivePlaylist[]>;
   getDrivePlaylistsByWeather: (conditions: string[]) => Promise<DrivePlaylist[]>;
-  
-  // Current playback methods
+
+  // Playback methods
   playPlaylist: (playlistUri: string) => Promise<void>;
   pausePlayback: () => Promise<void>;
   resumePlayback: () => Promise<void>;
