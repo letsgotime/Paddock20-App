@@ -109,7 +109,7 @@ export const TimeDisplay: React.FC<TimeDisplayProps> = ({
             </CardTitle>
             {isGoldenHour() && (
               <Badge variant="outline" className="border-yellow-500 text-yellow-500">
-                <Sparkles className="mr-1 h-3 w-3" /> Golden Hour
+                <Sparkles className="mr-1 h-3 w-3" /> GoTime Golden Hour™
               </Badge>
             )}
           </div>
@@ -147,7 +147,7 @@ export const TimeDisplay: React.FC<TimeDisplayProps> = ({
           </CardTitle>
           {isGoldenHour() && (
             <Badge variant="outline" className="border-yellow-500 text-yellow-500">
-              <Sparkles className="mr-1 h-3 w-3" /> Golden Hour
+              <Sparkles className="mr-1 h-3 w-3" /> GoTime Golden Hour™
             </Badge>
           )}
         </div>
@@ -204,7 +204,7 @@ export const TimeDisplay: React.FC<TimeDisplayProps> = ({
             <div className="border rounded-md p-2 bg-muted/50">
               <h4 className="text-xs font-medium flex items-center mb-1">
                 <Sparkles className="h-3 w-3 mr-1 text-yellow-500" />
-                Golden Hours (Best for drives & photos)
+                GoTime Golden Hour™ (Best for drives & photos)
               </h4>
               <div className="grid grid-cols-2 gap-2 text-xs">
                 {timeData.goldenHour.morning && (

@@ -205,7 +205,7 @@ function processTimeData(timeZoneData: TimeZoneResponse, location: Location): Ti
   const now = new Date(timeZoneData.timestamp * 1000);
   const daylightInfo = calculateDaylightInfo(now, sunrise, sunset);
   
-  // Calculate golden hours (ideal photography/driving times)
+  // Calculate GoTime Golden Hour™ (ideal photography/driving times)
   const goldenHourInfo = calculateGoldenHours(sunrise, sunset);
   
   return {
@@ -306,8 +306,8 @@ function calculateDaylightInfo(now: Date, sunrise: Date, sunset: Date) {
 }
 
 /**
- * Calculate golden hours - ideal times for photography and scenic drives
- * Golden hour is typically the hour after sunrise and the hour before sunset
+ * Calculate GoTime Golden Hour™ - ideal times for photography and scenic drives
+ * GoTime Golden Hour™ is typically the hour after sunrise and the hour before sunset
  */
 function calculateGoldenHours(sunrise: Date, sunset: Date) {
   // Morning golden hour = sunrise to sunrise + 1 hour
