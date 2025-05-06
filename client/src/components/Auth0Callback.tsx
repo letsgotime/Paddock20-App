@@ -21,9 +21,21 @@ const Auth0Callback = () => {
     console.log('URL parameters:', window.location.search);
     
     // Extract auth0 code parameter for debugging
-    const urlParams = new URLSearchParams(window.location.search);
+    // Handle both standard and hash-based routing
+    let params = window.location.search;
+    // Check if we're using hash-based routing
+    if (window.location.hash && window.location.hash.includes('code=')) {
+      // Strip the leading hash fragment and /auth/callback part
+      const hashParts = window.location.hash.split('?');
+      if (hashParts.length > 1) {
+        params = '?' + hashParts[1]; 
+      }
+    }
+    
+    const urlParams = new URLSearchParams(params);
     const authCode = urlParams.get('code');
     console.log('Auth0 code present:', !!authCode);
+    console.log('Auth params found:', params);
     
     // If Auth0 authentication completed successfully
     if (!isLoading && isAuthenticated && !error) {

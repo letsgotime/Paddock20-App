@@ -292,7 +292,9 @@ function App() {
                               <Route path="/email-verified" component={EmailVerifiedPage} />
                               
                               {/* Auth0 callback route - Handles redirection after Auth0 authentication */}
+                              {/* Support both standard and hash-based routing for Auth0 callback */}
                               <Route path="/auth/callback" component={Auth0Callback} />
+                              <Route path="/#/auth/callback" component={Auth0Callback} />
                               
                               {/* Auth Debug Page - For troubleshooting Auth0 integration */}
                               <Route path="/auth/debug" component={() => {
