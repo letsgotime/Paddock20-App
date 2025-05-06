@@ -4,6 +4,8 @@ import {
   Loader2, Music, Shield, FileText, Info, Check, Zap, Award, Gauge, Map,
   Sparkles, Github, Settings, Upload, Camera, BarChart3, Clock
 } from 'lucide-react';
+import { useLocation } from 'wouter';
+import { useToast } from '@/hooks/use-toast';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -83,6 +85,9 @@ interface VehicleInfo {
   tireModel: string;
   tireSize: string;
   modifications: string;
+  bodyStyle: string;
+  engineType: string;
+  transmission: string;
 }
 
 const OnboardingModal: React.FC<OnboardingModalProps> = ({ 
@@ -93,6 +98,8 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({
   const [activeTab, setActiveTab] = useState('user');
   const [step, setStep] = useState(1);
   const [progress, setProgress] = useState(33);
+  const [, setLocation] = useLocation();
+  const { toast } = useToast();
   
   const currentYear = new Date().getFullYear();
   const years = Array.from({ length: 50 }, (_, i) => (currentYear - i).toString());
@@ -124,7 +131,10 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({
     tireManufacturer: '',
     tireModel: '',
     tireSize: '',
-    modifications: ''
+    modifications: '',
+    bodyStyle: '',
+    engineType: '',
+    transmission: ''
   });
   
   // States for VIN decoding and Spotify integration
@@ -242,8 +252,20 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({
     localStorage.setItem('paddock20_vehicle', JSON.stringify(vehicleInfo));
     localStorage.setItem('paddock20_onboarding_completed', 'true');
     
-    // Close the modal and continue to dashboard
+    // Show success toast notification
+    toast({
+      title: "Profile Setup Complete",
+      description: "Welcome to Paddock20! Redirecting to your dashboard...",
+      variant: "default",
+    });
+    
+    // Close the modal
     onClose();
+    
+    // Redirect to dashboard after a short delay for the toast to be visible
+    setTimeout(() => {
+      setLocation('/dashboard');
+    }, 1500);
   };
 
   return (
