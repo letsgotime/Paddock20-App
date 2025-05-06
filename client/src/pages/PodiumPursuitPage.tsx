@@ -127,7 +127,7 @@ const ACHIEVEMENT_CATEGORIES = [
       { id: 'forum_posts', title: 'Voice in the Community', points: 50, completed: true, description: 'Make 10+ posts in the community forums', icon: '💬' },
       { id: 'photo_share', title: 'Photographer', points: 40, completed: true, description: 'Share 5+ photos of your vehicle', icon: '📸' },
       { id: 'tech_advice', title: 'Knowledge Sharer', points: 60, completed: false, description: 'Help 5+ members with technical advice', icon: '🧠' },
-      { id: 'new_member', title: 'Recruiter', points: 75, completed: false, description: 'Refer a new member who joins Paddock20', icon: '👋' },
+      { id: 'new_member', title: 'Recruiter', points: 75, completed: false, description: 'Refer a new member who joins The Grid', icon: '👋' },
       { id: 'meet_organizer', title: 'Event Organizer', points: 100, completed: false, description: 'Organize a community meet or drive', icon: '📅' },
       { id: 'tutorial_share', title: 'Mentor', points: 80, completed: false, description: 'Create and share a tutorial or guide', icon: '📚' },
       { id: 'featured_member', title: 'Community Star', points: 150, completed: false, description: 'Be featured as Member of the Month', icon: '⭐' }

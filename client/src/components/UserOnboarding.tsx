@@ -653,7 +653,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                   className="h-12 mb-4 mx-auto opacity-90" 
                 />
                 <p className="text-gray-300">
-                  By proceeding, you're joining an exclusive group of automotive enthusiasts shaping the future of Paddock20. 
+                  By proceeding, you're joining an exclusive group of automotive enthusiasts shaping the future of The Grid. 
                   <span className="block mt-1 font-medium" style={{ color: CAROLINA_BLUE }}>
                     Your feedback will be invaluable in creating the ultimate automotive enthusiast platform.
                   </span>

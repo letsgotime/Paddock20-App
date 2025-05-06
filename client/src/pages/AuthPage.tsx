@@ -378,7 +378,7 @@ const AuthPage = () => {
                     {registrationStep === 3 && "Confirm your details"}
                   </CardTitle>
                   <CardDescription className="text-gray-400">
-                    {registrationStep === 1 && "Join the Paddock20 community"}
+                    {registrationStep === 1 && "Join the Grid community"}
                     {registrationStep === 2 && "Select your preferred Beta involvement level"}
                     {registrationStep === 3 && "Review and complete your registration"}
                   </CardDescription>
