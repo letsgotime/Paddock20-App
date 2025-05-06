@@ -37,7 +37,7 @@ import WeatherPage from "./pages/WeatherPage";
 import NewGTGWeatherPage from "./pages/NewGTGWeatherPage";
 import RedlineReportPage from "./pages/RedlineReportPage";
 import SeasonalChecklistPage from "./pages/SeasonalChecklistPage";
-import EBooksPage from "./pages/EbooksPage";
+import EbooksPage from "./pages/EbooksPage";
 import Paddock20HomePage from "./pages/Paddock20HomePage";
 import ProductOrganizerPage from "./pages/ProductOrganizerPage"; 
 import UserProfileHubPage from "./pages/UserProfileHubPage"; 
@@ -256,7 +256,7 @@ function AuthenticatedContent({
           <Route path="/membership" component={() => <ProtectedRoute><MembershipPage /></ProtectedRoute>} />
           <Route path="/chat-feed" component={() => <ProtectedRoute><ChatFeedPage /></ProtectedRoute>} />
           <Route path="/contact" component={() => <ProtectedRoute><ContactPage /></ProtectedRoute>} />
-          <Route path="/ebooks" component={() => <ProtectedRoute><EBooksPage /></ProtectedRoute>} />
+          <Route path="/ebooks" component={() => <ProtectedRoute><EbooksPage /></ProtectedRoute>} />
           <Route path="/concierge" component={() => <ProtectedRoute><ConciergePage /></ProtectedRoute>} />
           <Route path="/discounts" component={() => <ProtectedRoute><DiscountsPage /></ProtectedRoute>} />
           
