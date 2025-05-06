@@ -264,6 +264,7 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({
     
     // Redirect to dashboard after a short delay for the toast to be visible
     setTimeout(() => {
+      // Use the exact route "/dashboard" as it appears in App.tsx
       setLocation('/dashboard');
     }, 1500);
   };
