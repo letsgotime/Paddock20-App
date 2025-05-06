@@ -501,3 +501,13 @@ class GoogleSearchService {
 
 // Export singleton instance
 export const googleSearchService = new GoogleSearchService();
+
+// Export a simpler search function for the explorer component
+export async function searchGoogle(query: string): Promise<any> {
+  try {
+    return await googleSearchService.search({ q: query });
+  } catch (error) {
+    console.error('Error in searchGoogle:', error);
+    throw error;
+  }
+}
