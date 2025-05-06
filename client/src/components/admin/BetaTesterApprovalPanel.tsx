@@ -106,7 +106,7 @@ const BetaTesterApprovalPanel: React.FC = () => {
         scope: "update:users"
       });
 
-      const response = await fetch(`/api/auth0/approve-beta-tester/${userId}`, {
+      const response = await fetch(`/api/admin/approve-beta-tester/${userId}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -154,7 +154,7 @@ const BetaTesterApprovalPanel: React.FC = () => {
         scope: "update:users"
       });
 
-      const response = await fetch(`/api/auth0/reject-beta-tester/${userId}`, {
+      const response = await fetch(`/api/admin/reject-beta-tester/${userId}`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,

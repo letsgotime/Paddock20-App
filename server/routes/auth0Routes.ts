@@ -223,6 +223,43 @@ router.post('/api/admin/approve-beta-tester/:userId', checkJwt, checkAdmin, asyn
   }
 });
 
+// Admin route to reject a beta tester
+router.post('/api/admin/reject-beta-tester/:userId', checkJwt, checkAdmin, async (req: Request, res: Response) => {
+  try {
+    const { userId } = req.params;
+    console.log(`Rejecting beta tester with ID: ${userId}`);
+    
+    // Get management client
+    const management = await getManagementClient();
+    
+    // Get the current user metadata to preserve existing data like betaProgram
+    const user = await management.getUser({ id: userId });
+    const existingMetadata = user.user_metadata || {};
+    
+    console.log(`Rejecting user with beta program: ${existingMetadata.betaProgram || 'user'}`);
+    
+    // Update user metadata to rejected status but keep other metadata values
+    await management.updateUserMetadata({ id: userId }, {
+      ...existingMetadata,
+      betaTesterStatus: 'rejected',
+      rejectionDate: new Date().toISOString()
+    });
+    
+    console.log(`User rejected: ${user.email}`);
+    
+    // Invalidate cache since we've made a change
+    betaTestersCache.lastFetched = 0;
+    
+    return res.json({ success: true });
+  } catch (error: any) {
+    console.error('Error rejecting beta tester:', error);
+    return res.status(500).json({ 
+      error: 'Failed to reject beta tester',
+      message: error.message
+    });
+  }
+});
+
 // Configuration test endpoint
 router.get('/api/auth/config-test', (req: Request, res: Response) => {
   // Log all environment variables for debugging
