@@ -7,11 +7,13 @@ import {
   CircleDashed, Upload, Camera, FileText, PaintBucket, Cloud, PlusCircle,
   Trash2
 } from 'lucide-react';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+import { Label } from '@/components/ui/label';
 import { handleDeclineTerms } from '../utils/accountUtils';
 import { useAuth } from '../hooks/useAuth';
 
-interface UserOnboardingProps {
-  onComplete: (userId: number | string) => void;
+interface BetaTermsAndAgreementsProps {
+  onComplete: (userId: number | string, betaRole: 'user' | 'tester') => void;
 }
 
 // Carolina blue color code for consistent branding
@@ -105,23 +107,26 @@ const moduleOptions = [
 ];
 
 /**
- * UserOnboarding Component
+ * BetaTermsAndAgreements Component
  * 
- * Complete onboarding flow including legal terms, user profile creation, vehicle setup,
- * and dashboard preferences.
+ * Complete beta enrollment flow including welcome, about, legal terms,
+ * and beta role selection.
  * 
  * Uses brand-consistent styling with Orbitron for headings and Open Sans for body text.
  * Color scheme follows the dark carbon-fiber theme with Carolina blue accents.
  */
-const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
+const BetaTermsAndAgreements: React.FC<BetaTermsAndAgreementsProps> = ({ onComplete }) => {
   // Access authenticated user context
   const auth = useAuth();
   
-  // Current step state (1-6)
+  // Current step state (1-5)
   const [step, setStep] = useState(1);
   const [visibleStep, setVisibleStep] = useState(1);
   const [animateIn, setAnimateIn] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  
+  // Beta role selection
+  const [betaRole, setBetaRole] = useState<'user' | 'tester'>('user');
   
   // Track if profile and vehicle images have been uploaded
   const [hasUploadedProfilePic, setHasUploadedProfilePic] = useState(false);
@@ -371,7 +376,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
         return;
       }
       
-      // Skip step 4 (profile creation) and go directly to step 6 (dashboard customization)
+      // Skip step 4 (profile creation) and go directly to step 5 (beta role selection)
       if (step === 3 && allAgreed) {
         // Pre-populate minimal profile data to satisfy validation
         setUserProfile(prev => ({
@@ -394,19 +399,19 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
         // Animate out
         setAnimateIn(false);
         
-        // Short delay for animation then jump to step 6 (dashboard customization)
+        // Short delay for animation then jump to step 5 (beta role selection)
         setTimeout(() => {
-          setStep(6);
+          setStep(5);
           setError(null);
           setAnimateIn(true);
-          setVisibleStep(6);
+          setVisibleStep(5);
         }, 200);
         
         return;
       }
       
       // Final step - complete onboarding
-      if (step === 6) {
+      if (step === 5) {
         completeOnboarding();
         return;
       }
@@ -593,14 +598,9 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
             )}
             {step === 3 && <span style={{ color: CAROLINA_BLUE }}>LEGAL AGREEMENTS REQUIRED</span>}
             {step === 4 && <span style={{ color: CAROLINA_BLUE }}>YOUR PADDOCK20 PROFILE</span>}
-            {step === 5 && <span style={{ color: CAROLINA_BLUE }}>YOUR VEHICLE DETAILS</span>}
-            {step === 6 && <span style={{ color: CAROLINA_BLUE }}>CUSTOMIZE YOUR DASHBOARD</span>}
+            {step === 5 && <span style={{ color: CAROLINA_BLUE }}>CHOOSE YOUR BETA ROLE</span>}
           </h2>
-          <div className="flex items-center bg-gray-800/70 px-3 py-1 rounded-full">
-            <div className="text-sm text-gray-400 tracking-wide font-medium">
-              <span className="text-[#1982FC]">{step}</span> / 6
-            </div>
-          </div>
+
         </div>
         
         {/* Step content */}
