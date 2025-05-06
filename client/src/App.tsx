@@ -48,6 +48,8 @@ import Footer from "./components/Footer";
 import { WeatherProvider } from "./contexts/ConsolidatedWeatherContext";
 import { GalleryProvider } from "./contexts/GalleryContext";
 import { RewardsProvider } from "./contexts/RewardsContext";
+import { SpotifyProvider } from "./contexts/SpotifyContext";
+import SpotifyCallbackPage from "./pages/SpotifyCallbackPage";
 import { VehicleProvider } from "./contexts/VehicleContext";
 import { VehicleDataProvider } from "./contexts/VehicleDataContext";
 import { SoundProvider } from "./contexts/SoundContext";
@@ -184,6 +186,9 @@ function AuthenticatedContent({
           
           {/* Auth0 callback route - Handles redirection after Auth0 authentication */}
           <Route path="/auth/callback" component={Auth0Callback} />
+          
+          {/* Spotify callback route - Handles redirection after Spotify authentication */}
+          <Route path="/spotify/callback" component={SpotifyCallbackPage} />
           
           {/* Logout Page - Handles secure logout process */}
           <Route path="/logout" component={LogoutPage} />
