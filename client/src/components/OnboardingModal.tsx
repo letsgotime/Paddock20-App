@@ -1,5 +1,5 @@
-import React, { useState } from 'react';
-import { X, Car, User, Wrench, Calendar, ChevronRight, ChevronLeft } from 'lucide-react';
+import React, { useState, useEffect } from 'react';
+import { X, Car, User, Wrench, Calendar, ChevronRight, ChevronLeft, AlertCircle, Loader2, Music } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -7,6 +7,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
+import { decodeVIN } from '@/services/vinDecoderService';
+import { getPlaylistsByActivity } from '@/services/spotifyService';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 // Car brands for dropdown
 const carBrands = [
@@ -116,8 +119,75 @@ const OnboardingModal: React.FC<OnboardingModalProps> = ({
     tireSize: '',
     modifications: ''
   });
+  
+  // States for VIN decoding and Spotify integration
+  const [isDecodingVin, setIsDecodingVin] = useState(false);
+  const [vinError, setVinError] = useState<string | null>(null);
+  const [spotifyPlaylists, setSpotifyPlaylists] = useState<any[]>([]);
+  const [isLoadingPlaylists, setIsLoadingPlaylists] = useState(false);
+  const [spotifyError, setSpotifyError] = useState<string | null>(null);
 
   if (!isOpen) return null;
+  
+  // Handle VIN decoding
+  const handleDecodeVin = async () => {
+    if (!vehicleInfo.vin || vehicleInfo.vin.length !== 17) {
+      setVinError('Please enter a valid 17-character VIN');
+      return;
+    }
+    
+    setIsDecodingVin(true);
+    setVinError(null);
+    
+    try {
+      const decodedInfo = await decodeVIN(vehicleInfo.vin);
+      
+      if (decodedInfo.error) {
+        setVinError(decodedInfo.error);
+      } else {
+        // Update vehicle info with decoded data
+        setVehicleInfo(prev => ({
+          ...prev,
+          make: decodedInfo.make || prev.make,
+          model: decodedInfo.model || prev.model,
+          year: decodedInfo.year || prev.year,
+          trim: decodedInfo.trim || prev.trim
+        }));
+      }
+    } catch (error) {
+      setVinError('Error connecting to the VIN decoder service. Please try again.');
+      console.error('VIN decoding error:', error);
+    } finally {
+      setIsDecodingVin(false);
+    }
+  };
+  
+  // Load Spotify playlists based on selected interests
+  const handleLoadDrivingPlaylists = async () => {
+    if (userInfo.interests.length === 0) {
+      setSpotifyError('Select at least one driving interest to get playlist recommendations');
+      return;
+    }
+    
+    setIsLoadingPlaylists(true);
+    setSpotifyError(null);
+    
+    try {
+      // Use first interest as seed for recommendations
+      const activity = interests.find(i => i.id === userInfo.interests[0])?.label || 'Driving';
+      const playlists = await getPlaylistsByActivity(activity, 5);
+      setSpotifyPlaylists(playlists);
+      
+      if (playlists.length === 0) {
+        setSpotifyError('No driving playlists found. Try another interest or enter a URL manually.');
+      }
+    } catch (error) {
+      setSpotifyError('Unable to connect to Spotify. You can still enter a playlist URL manually.');
+      console.error('Spotify API error:', error);
+    } finally {
+      setIsLoadingPlaylists(false);
+    }
+  };
 
   const updateUserInfo = (field: keyof UserInfo, value: any) => {
     setUserInfo(prev => ({ ...prev, [field]: value }));
