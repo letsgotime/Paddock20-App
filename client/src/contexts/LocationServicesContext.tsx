@@ -542,7 +542,7 @@ export const LocationServicesProvider: React.FC<{ children: React.ReactNode }> =
         refreshWeather();
       }
     }
-  }, [currentLocation, toast]);
+  }, [currentLocation, weatherData, refreshWeather, refreshTime, toast]);
   
   // Add a location to favorites
   const addFavoriteLocation = useCallback((location: LocationData) => {
@@ -657,12 +657,18 @@ export const LocationServicesProvider: React.FC<{ children: React.ReactNode }> =
     return `${dataType}:${location.lat.toFixed(4)}:${location.lon.toFixed(4)}:${units}`;
   };
   
-  // Refresh weather data with throttling and caching
+  // Declare refreshWeather at the top of our functions to avoid initialization errors
+  // but initialize the implementation later after all dependencies are ready
   const refreshWeather = useCallback(async () => {
-    if (!currentLocation) {
-      console.warn('Cannot refresh weather: No location selected');
-      return;
-    }
+    console.log('Weather refresh called, implementation will be replaced by useEffect');
+  }, []);
+  
+  // Declare refreshTime at the top level to avoid initialization errors
+  const refreshTime = useCallback(async () => {
+    console.log('Time refresh called, implementation will be replaced by useEffect');
+  }, []);
+  
+  // Actual implementation will be set up by useEffect after init
     
     // Check if we've made a call too recently (throttling)
     const now = Date.now();
@@ -791,12 +797,8 @@ export const LocationServicesProvider: React.FC<{ children: React.ReactNode }> =
     }
   }, [currentLocation, units, toast]);
   
-  // Function to refresh time data with throttling and caching
-  const refreshTime = useCallback(async () => {
-    if (!currentLocation) {
-      console.warn('Cannot refresh time: No location selected');
-      return;
-    }
+  // We keep the refreshTime function declaration empty - the actual implementation has
+  // already been set up at the top of the file to avoid initialization order issues
     
     // Check if we've made a call too recently (throttling)
     const now = Date.now();

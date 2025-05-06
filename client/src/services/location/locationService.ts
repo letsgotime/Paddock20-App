@@ -12,7 +12,9 @@
 
 import { v4 as uuidv4 } from 'uuid';
 import { ipInfoService, IPInfoResponse } from './ipInfoService';
+import { openCageService } from './openCageService';
 import { LocationData } from '@/contexts/LocationServicesContext';
+import { createLocalStorageWithExpiry } from '@/utils/storageUtils';
 
 // Default fallback coordinates if geolocation fails (Atlanta)
 const DEFAULT_COORDINATES = {
