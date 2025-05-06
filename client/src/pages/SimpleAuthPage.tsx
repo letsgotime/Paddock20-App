@@ -3,11 +3,9 @@ import { Eye, EyeOff, LogIn, UserPlus, AlertTriangle } from 'lucide-react';
 import { useLocation } from 'wouter';
 import LegalDocumentModal from '../components/LegalDocumentModal';
 import { legalDocuments } from '../data/legalDocuments';
-import { useAuth } from '@/context/AuthContext';
 
 // This is a simplified auth page that should work even if there are issues with other components
 const SimpleAuthPage = () => {
-  const auth = useAuth(); // Use the useAuth hook instead of context directly
   const [location, setLocation] = useLocation();
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
@@ -25,13 +23,23 @@ const SimpleAuthPage = () => {
   
   // If user is already logged in, redirect to dashboard
   useEffect(() => {
-    if (auth?.user) {
-      console.log('User already authenticated, redirecting to dashboard');
-      setLocation('/dashboard');
-    } else {
-      console.log('SimpleAuthPage loaded - ready for authentication');
-    }
-  }, [auth?.user, setLocation]);
+    // Check authentication status directly from the server
+    fetch('/api/user')
+      .then(async response => {
+        if (response.ok) {
+          // User is already authenticated, redirect to dashboard
+          const data = await response.json();
+          console.log('User already authenticated:', data.user?.username);
+          setLocation('/dashboard');
+        } else {
+          // Not authenticated, stay on login page
+          console.log('SimpleAuthPage loaded - ready for authentication');
+        }
+      })
+      .catch(error => {
+        console.error('Auth check failed:', error);
+      });
+  }, [setLocation]);
   
   // Reference to form elements for beta status
   const formRef = useRef<HTMLFormElement>(null);
@@ -103,13 +111,28 @@ const SimpleAuthPage = () => {
     setIsSubmitting(true);
     
     try {
-      if (!auth) {
-        throw new Error('Authentication context is not available');
-      }
-      
       if (isLogin) {
-        // Use Supabase login through the auth context
-        await auth.login(username, password);
+        // Direct login through the server API
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            username,
+            password,
+          }),
+          credentials: 'include', // Important for cookies
+        });
+        
+        if (!response.ok) {
+          // Handle specific error responses
+          if (response.status === 401) {
+            throw new Error('Invalid username or password');
+          } else {
+            throw new Error('Login failed. Please try again.');
+          }
+        }
         
         // If successful, redirect to dashboard
         setLocation('/dashboard');
@@ -120,13 +143,25 @@ const SimpleAuthPage = () => {
           email,
           password,
           confirmPassword,
-          betaProgram: betaStatus === 'beta_tester' ? 'tester' : 'user' as 'user' | 'tester',
+          betaProgram: betaStatus === 'beta_tester' ? 'tester' : 'user',
           hasAgreedToNDA,
           feedbackCommitment
         };
         
-        // Use Supabase registration through the auth context
-        await auth.register(userData);
+        // Register through the server API
+        const response = await fetch('/api/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(userData),
+          credentials: 'include', // Important for cookies
+        });
+        
+        if (!response.ok) {
+          const errorData = await response.json().catch(() => ({}));
+          throw new Error(errorData.message || 'Registration failed. Please try again.');
+        }
         
         // If successful, redirect to onboarding
         setLocation('/onboarding');
