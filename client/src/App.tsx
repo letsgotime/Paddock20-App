@@ -296,6 +296,9 @@ function App() {
                               {/* Simplified Auth0 callback route */}
                               <Route path="/auth/callback" component={Auth0Callback} />
                               
+                              {/* Beta Enrollment Page - For new users to opt into the beta program */}
+                              <Route path="/beta-enrollment" component={() => <ProtectedRoute><BetaEnrollmentPage /></ProtectedRoute>} />
+                              
                               {/* Auth Debug Page - For troubleshooting Auth0 integration */}
                               <Route path="/auth/debug" component={() => {
                                 const AuthDebugPage = React.lazy(() => import('./pages/AuthDebugPage'));
