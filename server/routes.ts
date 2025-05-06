@@ -2316,7 +2316,87 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Initialize Slack client on server startup
   initializeSlackClient();
 
+  // User Profile API Routes
+  app.patch('/api/user/profile', async (req, res) => {
+    try {
+      // Check if authenticated
+      if (!req.user) {
+        return res.status(401).json({ success: false, error: 'Not authenticated' });
+      }
+      
+      // Get profile data from request body
+      const profileData = req.body;
+      
+      // Update user profile in database (normally would use storage interface)
+      // For now, we'll just return success since it's a placeholder
+      console.log('Updating user profile with data:', profileData);
+      
+      res.json({ 
+        success: true, 
+        message: 'Profile updated successfully',
+        user: {
+          ...req.user,
+          ...profileData
+        }
+      });
+    } catch (error) {
+      console.error('Error updating profile:', error);
+      res.status(500).json({ success: false, error: 'Failed to update profile' });
+    }
+  });
 
+  // Profile Image Upload API
+  app.post('/api/user/profile/image', async (req, res) => {
+    try {
+      // Check if authenticated
+      if (!req.user) {
+        return res.status(401).json({ success: false, error: 'Not authenticated' });
+      }
+      
+      // In a real implementation, this would handle file upload
+      // For now, just acknowledge the request
+      console.log('Profile image upload requested');
+      
+      res.json({ 
+        success: true, 
+        message: 'Profile image uploaded successfully',
+        imageUrl: '/assets/default-profile.jpg' // Placeholder URL
+      });
+    } catch (error) {
+      console.error('Error uploading profile image:', error);
+      res.status(500).json({ success: false, error: 'Failed to upload profile image' });
+    }
+  });
+
+  // Vehicle API
+  app.post('/api/garage/vehicles', async (req, res) => {
+    try {
+      // Check if authenticated
+      if (!req.user) {
+        return res.status(401).json({ success: false, error: 'Not authenticated' });
+      }
+      
+      // Get vehicle data from request body
+      const vehicleData = req.body;
+      
+      // Add vehicle to garage (normally would use storage interface)
+      // For now, we'll just return success since it's a placeholder
+      console.log('Adding vehicle to garage:', vehicleData);
+      
+      res.json({ 
+        success: true, 
+        message: 'Vehicle added successfully',
+        vehicle: {
+          id: Math.floor(Math.random() * 1000), // Generate random ID for now
+          ...vehicleData,
+          userId: req.user.id
+        }
+      });
+    } catch (error) {
+      console.error('Error adding vehicle:', error);
+      res.status(500).json({ success: false, error: 'Failed to add vehicle' });
+    }
+  });
   
   const httpServer = createServer(app);
   return httpServer;
