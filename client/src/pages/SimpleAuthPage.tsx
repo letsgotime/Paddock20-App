@@ -29,8 +29,12 @@ const SimpleAuthPage = () => {
         if (response.ok) {
           // User is already authenticated, redirect to dashboard
           const data = await response.json();
-          console.log('User already authenticated:', data.user?.username);
-          setLocation('/dashboard');
+          if (data.success && data.user) {
+            console.log('User already authenticated:', data.user.username);
+            setLocation('/dashboard');
+          } else {
+            console.log('Response OK but no valid user data, staying on login page');
+          }
         } else {
           // Not authenticated, stay on login page
           console.log('SimpleAuthPage loaded - ready for authentication');
@@ -125,14 +129,28 @@ const SimpleAuthPage = () => {
           credentials: 'include', // Important for cookies
         });
         
+        const data = await response.json();
+        
         if (!response.ok) {
           // Handle specific error responses
           if (response.status === 401) {
             throw new Error('Invalid username or password');
           } else {
-            throw new Error('Login failed. Please try again.');
+            throw new Error(data.error || 'Login failed. Please try again.');
           }
         }
+        
+        // Check for 2FA requirement
+        if (data.requireTwoFactor) {
+          throw new Error('Two-factor authentication is required. This is not yet supported in the simple auth flow.');
+        }
+        
+        // Verify success and user data
+        if (!data.success || !data.user) {
+          throw new Error('Login succeeded but user data is missing. Please try again.');
+        }
+        
+        console.log('Login successful:', data.user.username);
         
         // If successful, redirect to dashboard
         setLocation('/dashboard');
@@ -158,10 +176,18 @@ const SimpleAuthPage = () => {
           credentials: 'include', // Important for cookies
         });
         
+        const data = await response.json().catch(() => ({ success: false }));
+        
         if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.message || 'Registration failed. Please try again.');
+          throw new Error(data.error || 'Registration failed. Please try again.');
         }
+        
+        // Verify success and user data
+        if (!data.success || !data.user) {
+          throw new Error('Registration succeeded but user data is missing. Please try again.');
+        }
+        
+        console.log('Registration successful:', data.user.username);
         
         // If successful, redirect to onboarding
         setLocation('/onboarding');
