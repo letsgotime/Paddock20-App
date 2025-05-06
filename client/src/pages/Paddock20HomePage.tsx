@@ -1512,7 +1512,7 @@ const Paddock20HomePage: React.FC = () => {
         </p>
         <div className="mt-8">
           <Link to="/membership" className="bg-gradient-to-r from-green-600 to-blue-600 text-white px-8 py-3 rounded-lg font-bold text-lg hover:from-green-700 hover:to-blue-700 transition duration-300 shadow-lg">
-            Join Paddock20™ Today
+            Join The Grid Today
           </Link>
         </div>
       </section>
