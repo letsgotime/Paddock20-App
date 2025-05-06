@@ -381,7 +381,7 @@ export function formatHourDecimal(hourDecimal: number, use24Hour = false): strin
 }
 
 /**
- * Check if current time is within golden hour
+ * Check if current time is within GoTime Golden Hour™
  */
 export function isGoldenHour(timeData: TimeData | null): boolean {
   if (!timeData || !timeData.goldenHour) return false;
@@ -389,19 +389,19 @@ export function isGoldenHour(timeData: TimeData | null): boolean {
   const now = new Date();
   const currentTimeString = formatTime(now);
   
-  // Check if current time is within morning golden hour
+  // Check if current time is within morning GoTime Golden Hour™
   const isMorningGoldenHour = timeData.goldenHour.morning &&
     isTimeBetween(currentTimeString, 
                  timeData.goldenHour.morning.start, 
                  timeData.goldenHour.morning.end);
   
-  // Check if current time is within evening golden hour
+  // Check if current time is within evening GoTime Golden Hour™
   const isEveningGoldenHour = timeData.goldenHour.evening &&
     isTimeBetween(currentTimeString, 
                  timeData.goldenHour.evening.start, 
                  timeData.goldenHour.evening.end);
   
-  return isMorningGoldenHour || isEveningGoldenHour;
+  return (isMorningGoldenHour || isEveningGoldenHour) === true ? true : false;
 }
 
 /**
