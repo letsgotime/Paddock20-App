@@ -1,49 +1,50 @@
 /**
- * Storage utilities for persistent caching
+ * Enhanced local storage utilities with expiration support
  * 
- * Provides:
- * - Local storage with expiry
+ * Provides a wrapper around browser's localStorage with:
+ * - Automatic expiration of stored items
+ * - JSON serialization/deserialization
+ * - Type safety
+ * - Error handling for storage limits
  */
 
+export interface LocalStorageWithExpiry {
+  /**
+   * Get an item from localStorage, respecting expiration
+   * Returns null if item is expired or doesn't exist
+   */
+  getItem<T>(key: string): T | null;
+  
+  /**
+   * Store an item in localStorage with optional expiration
+   * @param expiry Optional expiration time in milliseconds
+   */
+  setItem<T>(key: string, value: T, expiry?: number): void;
+  
+  /**
+   * Remove an item from localStorage
+   */
+  removeItem(key: string): void;
+  
+  /**
+   * Clear all items in localStorage
+   */
+  clear(): void;
+}
+
 /**
- * Create a local storage wrapper with expiry functionality
+ * Creates a localStorage wrapper with automatic expiration
  */
-export const createLocalStorageWithExpiry = () => {
+export function createLocalStorageWithExpiry(): LocalStorageWithExpiry {
   return {
-    /**
-     * Set item in local storage with optional expiry
-     * @param key - Storage key
-     * @param value - Value to store (will be JSON stringified)
-     * @param ttl - Optional time to live in milliseconds
-     */
-    setItem: (key: string, value: any, ttl?: number): void => {
-      const item = {
-        value,
-        expiry: ttl ? Date.now() + ttl : null,
-      };
-      
-      try {
-        localStorage.setItem(key, JSON.stringify(item));
-      } catch (e) {
-        console.error('Error saving to localStorage:', e);
-      }
-    },
-    
-    /**
-     * Get item from local storage, respecting expiry
-     * @param key - Storage key
-     * @returns The stored value or null if expired or not found
-     */
-    getItem: (key: string): any => {
+    getItem<T>(key: string): T | null {
       try {
         const itemStr = localStorage.getItem(key);
-        
-        // Return null if no item found
         if (!itemStr) return null;
         
         const item = JSON.parse(itemStr);
         
-        // Check for expiry
+        // Check if item has expiration
         if (item.expiry && Date.now() > item.expiry) {
           // Item has expired, remove it
           localStorage.removeItem(key);
@@ -51,128 +52,90 @@ export const createLocalStorageWithExpiry = () => {
         }
         
         return item.value;
-      } catch (e) {
-        console.error('Error reading from localStorage:', e);
+      } catch (error) {
+        console.error(`Error getting item ${key} from localStorage:`, error);
         return null;
       }
     },
     
-    /**
-     * Remove item from local storage
-     * @param key - Storage key
-     */
-    removeItem: (key: string): void => {
+    setItem<T>(key: string, value: T, expiry?: number): void {
       try {
-        localStorage.removeItem(key);
-      } catch (e) {
-        console.error('Error removing from localStorage:', e);
-      }
-    },
-    
-    /**
-     * Get the expiry timestamp for an item if it exists
-     * @param key - Storage key
-     * @returns Expiry timestamp in milliseconds since epoch, or null if no expiry
-     */
-    getExpiry: (key: string): number | null => {
-      try {
-        const itemStr = localStorage.getItem(key);
-        if (!itemStr) return null;
+        const item = {
+          value,
+          expiry: expiry ? Date.now() + expiry : null
+        };
         
-        const item = JSON.parse(itemStr);
-        return item.expiry;
-      } catch (e) {
-        console.error('Error getting expiry:', e);
-        return null;
-      }
-    },
-    
-    /**
-     * Check if an item exists and is not expired
-     * @param key - Storage key
-     * @returns boolean indicating if item exists and is valid
-     */
-    hasValidItem: (key: string): boolean => {
-      try {
-        const itemStr = localStorage.getItem(key);
-        if (!itemStr) return false;
-        
-        const item = JSON.parse(itemStr);
-        if (item.expiry && Date.now() > item.expiry) {
-          return false;
-        }
-        
-        return true;
-      } catch (e) {
-        console.error('Error checking item validity:', e);
-        return false;
-      }
-    }
-  };
-};
-
-/**
- * Get the size of localStorage in bytes
- * @returns Size in bytes
- */
-export const getLocalStorageSize = (): number => {
-  let totalSize = 0;
-  
-  try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key) {
-        const value = localStorage.getItem(key);
-        if (value) {
-          totalSize += (key.length + value.length) * 2; // UTF-16 characters are 2 bytes each
-        }
-      }
-    }
-  } catch (e) {
-    console.error('Error calculating localStorage size:', e);
-  }
-  
-  return totalSize;
-};
-
-/**
- * Get all items in localStorage with their expiry status
- * @returns Map of key to {value, isExpired, expiry}
- */
-export const getAllLocalStorageItems = (): Map<string, { value: any; isExpired: boolean; expiry: number | null }> => {
-  const items = new Map();
-  const now = Date.now();
-  
-  try {
-    for (let i = 0; i < localStorage.length; i++) {
-      const key = localStorage.key(i);
-      if (key) {
-        const itemStr = localStorage.getItem(key);
-        if (itemStr) {
+        localStorage.setItem(key, JSON.stringify(item));
+      } catch (error) {
+        console.error(`Error setting item ${key} in localStorage:`, error);
+        // If storage is full, clear non-critical items (could implement priorities)
+        if (error instanceof DOMException && error.name === 'QuotaExceededError') {
+          console.warn('localStorage quota exceeded, attempting to clear space');
+          clearOldItems();
+          
+          // Try again after clearing space
           try {
-            const parsedItem = JSON.parse(itemStr);
-            const expiry = parsedItem.expiry;
-            const isExpired = expiry && now > expiry;
-            
-            items.set(key, {
-              value: parsedItem.value,
-              isExpired,
-              expiry
-            });
-          } catch (e) {
-            // Handle non-JSON items
-            items.set(key, {
-              value: itemStr,
-              isExpired: false,
-              expiry: null
-            });
+            const item = {
+              value,
+              expiry: expiry ? Date.now() + expiry : null
+            };
+            localStorage.setItem(key, JSON.stringify(item));
+          } catch (retryError) {
+            console.error('Still unable to save to localStorage after cleanup:', retryError);
           }
         }
       }
+    },
+    
+    removeItem(key: string): void {
+      try {
+        localStorage.removeItem(key);
+      } catch (error) {
+        console.error(`Error removing item ${key} from localStorage:`, error);
+      }
+    },
+    
+    clear(): void {
+      try {
+        localStorage.clear();
+      } catch (error) {
+        console.error('Error clearing localStorage:', error);
+      }
     }
-  } catch (e) {
-    console.error('Error getting all localStorage items:', e);
+  };
+}
+
+/**
+ * Clear old and potentially less important items when storage is full
+ */
+function clearOldItems(): void {
+  try {
+    // Strategy: clear all expired items first
+    const keys = Object.keys(localStorage);
+    let cleared = 0;
+    
+    for (const key of keys) {
+      try {
+        const itemStr = localStorage.getItem(key);
+        if (!itemStr) continue;
+        
+        const item = JSON.parse(itemStr);
+        
+        // Remove expired items
+        if (item.expiry && Date.now() > item.expiry) {
+          localStorage.removeItem(key);
+          cleared++;
+        }
+      } catch (e) {
+        // Skip if we can't parse this item
+        continue;
+      }
+    }
+    
+    console.log(`Cleared ${cleared} expired items from localStorage`);
+    
+    // If still running out of space, could implement a priority or LRU system
+  } catch (error) {
+    console.error('Error while cleaning localStorage:', error);
   }
-  
-  return items;
-};
+}
