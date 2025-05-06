@@ -46,6 +46,7 @@ import AddVehiclePage from "./pages/AddVehiclePage";
 import FixedSoundBar from "./components/FixedSoundBar";
 import Footer from "./components/Footer";
 import { WeatherProvider } from "./contexts/ConsolidatedWeatherContext";
+import { LocationServicesProvider } from "./contexts/LocationServicesContext";
 import { GalleryProvider } from "./contexts/GalleryContext";
 import { RewardsProvider } from "./contexts/RewardsContext";
 import { SpotifyProvider } from "./contexts/SpotifyContext";
@@ -431,23 +432,26 @@ function App() {
                 <VehicleProvider>
                   {/* Vehicle Data Provider - Provides comprehensive vehicle activity, media, and document data */}
                   <VehicleDataProvider>
-                    {/* Centralized Weather Provider - Provides weather data to all components */}
-                    <WeatherProvider>
-                      {/* Gallery Provider - For media management */}
-                      <GalleryProvider>
-                        {/* Rewards Provider - for site-wide gamification */}
-                        <RewardsProvider>
-                          {/* Spotify Provider - for Spotify integration */}
-                          <SpotifyProvider>
-                            {/* Use the AuthenticatedContent component to handle all auth-dependent UI */}
-                            <AuthenticatedContent 
-                              hasCompletedOnboarding={hasCompletedOnboarding}
-                              setHasCompletedOnboarding={setHasCompletedOnboarding}
-                            />
+                    {/* Location Services Provider - Centralized location and weather data management */}
+                    <LocationServicesProvider>
+                      {/* Centralized Weather Provider - Provides weather data to all components */}
+                      <WeatherProvider>
+                        {/* Gallery Provider - For media management */}
+                        <GalleryProvider>
+                          {/* Rewards Provider - for site-wide gamification */}
+                          <RewardsProvider>
+                            {/* Spotify Provider - for Spotify integration */}
+                            <SpotifyProvider>
+                              {/* Use the AuthenticatedContent component to handle all auth-dependent UI */}
+                              <AuthenticatedContent 
+                                hasCompletedOnboarding={hasCompletedOnboarding}
+                                setHasCompletedOnboarding={setHasCompletedOnboarding}
+                              />
                           </SpotifyProvider>
                         </RewardsProvider>
                       </GalleryProvider>
-                    </WeatherProvider>
+                      </WeatherProvider>
+                    </LocationServicesProvider>
                   </VehicleDataProvider>
                 </VehicleProvider>
               </SoundProvider>
