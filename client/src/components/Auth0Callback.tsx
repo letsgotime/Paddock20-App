@@ -13,11 +13,21 @@ const Auth0Callback = () => {
   const { isAuthenticated, isLoading, error } = useAuth0();
   
   useEffect(() => {
-    console.log('Auth0Callback state:', { isLoading, isAuthenticated, hasError: !!error });
-
+    console.log('Auth0Callback triggered');
+    console.log('isLoading:', isLoading);
+    console.log('isAuthenticated:', isAuthenticated);
+    console.log('error:', error);
+    console.log('Current URL:', window.location.href);
+    console.log('URL parameters:', window.location.search);
+    
+    // Extract auth0 code parameter for debugging
+    const urlParams = new URLSearchParams(window.location.search);
+    const authCode = urlParams.get('code');
+    console.log('Auth0 code present:', !!authCode);
+    
     // If Auth0 authentication completed successfully
     if (!isLoading && isAuthenticated && !error) {
-      console.log('Auth0 authentication successful, redirecting to dashboard');
+      console.log('✅ Auth0 authentication successful, redirecting to dashboard');
       
       // Get stored beta program status if available (for new registrations)
       const betaStatus = localStorage.getItem('paddock20_beta_status');
@@ -36,21 +46,31 @@ const Auth0Callback = () => {
       } else {
         // Otherwise, redirect to the dashboard
         console.log('Redirecting to dashboard page');
-        setLocation('/dashboard');
+        setTimeout(() => {
+          setLocation('/dashboard');
+        }, 500); // Small delay to ensure auth state is properly set
       }
     } 
     // If authentication failed, redirect back to auth page
     else if (!isLoading && !isAuthenticated && error) {
-      console.error('Auth0 authentication error:', error);
-      setLocation('/auth');
+      console.error('❌ Auth0 authentication error:', error);
+      console.error('Error details:', JSON.stringify(error, null, 2));
+      setTimeout(() => {
+        setLocation('/auth');
+      }, 1000); // Delay to ensure error is logged
     }
     // If still loading, show the loading state
     else if (isLoading) {
-      console.log('Auth0 authentication still loading...');
+      console.log('⏳ Auth0 authentication still loading...');
     }
     // If not authenticated but no error (initial state or logout)
     else if (!isAuthenticated && !error) {
-      console.log('Not authenticated yet, waiting for Auth0 response...');
+      console.log('⏳ Not authenticated yet, waiting for Auth0 response...');
+      
+      // If we have a code but not authenticated, something might be wrong with token exchange
+      if (authCode) {
+        console.log('⚠️ Auth code present but not authenticated yet. This is expected during token exchange.');
+      }
     }
   }, [isAuthenticated, isLoading, error, setLocation]);
 
