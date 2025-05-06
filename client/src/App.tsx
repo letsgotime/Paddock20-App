@@ -79,6 +79,7 @@ import MoodEnergyTrackerPage from "./pages/MoodEnergyTrackerPage";
 import MotorsportsGalleryPage from "./pages/MotorsportsGalleryPage";
 import PodiumPursuitPage from "./pages/PodiumPursuitPage";
 import SoundLibraryPage from "./pages/SoundLibraryPage";
+import SpotifyTestPage from "./pages/SpotifyTestPage";
 import SupportChatbot from "./components/SupportChatbot";
 import HomePage from "./pages/Home";
 import OneTapWeatherSnapshot from "./components/OneTapWeatherSnapshot";
@@ -221,6 +222,7 @@ function AuthenticatedContent({
           <Route path="/" component={() => <ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
           <Route path="/dashboard" component={() => <ProtectedRoute><DashboardPage /></ProtectedRoute>} />
           <Route path="/admin" component={() => <ProtectedRoute><AdminPage /></ProtectedRoute>} />
+          <Route path="/spotify-test" component={() => <ProtectedRoute><SpotifyTestPage /></ProtectedRoute>} />
           
           {/* Debug Pages */}
           <Route path="/debug" component={() => {
