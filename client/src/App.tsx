@@ -9,6 +9,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import PageTitleManager from './components/PageTitleManager';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Auth0Callback from './components/Auth0Callback';
+import LogoutPage from './pages/LogoutPage';
 // Import disabled to remove Unsplash API warnings
 // import { initializeImageCache } from "./services/unsplashService";
 import NavigationControls from './components/NavigationControls';
@@ -183,6 +184,9 @@ function AuthenticatedContent({
           
           {/* Auth0 callback route - Handles redirection after Auth0 authentication */}
           <Route path="/auth/callback" component={Auth0Callback} />
+          
+          {/* Logout Page - Handles secure logout process */}
+          <Route path="/logout" component={LogoutPage} />
           
           {/* Beta Enrollment Page - For new users to opt into the beta program */}
           <Route path="/beta-enrollment" component={() => <ProtectedRoute><BetaEnrollmentPage /></ProtectedRoute>} />
