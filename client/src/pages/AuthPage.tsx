@@ -1,7 +1,7 @@
 import React from 'react';
 import { useAuth } from '../hooks/useAuth';
 import { useNavigate } from 'react-router-dom';
-import { CheckCircle, UserPlus } from 'lucide-react';
+import { CheckCircle, ChevronRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const AuthPage = () => {
@@ -18,82 +18,74 @@ const AuthPage = () => {
   }, [user, navigate]);
   
   return (
-    <div className="flex min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
-      {/* Left side: Branding and marketing information */}
-      <div className="hidden md:flex md:w-1/2 flex-col p-8 justify-center border-r border-gray-800">
-        <div className="space-y-8 max-w-xl mx-auto">
-          <div className="text-center mb-10">
-            <h1 className="text-5xl font-bold text-[#1982FC] mb-4">PADDOCK20</h1>
-            <p className="text-lg text-gray-200 italic">
-              The bespoke automotive lifestyle platform with F1-precision intelligence that transforms everyday car care into a curated experience
-            </p>
-          </div>
-          
-          <div className="space-y-6">
-            <div className="border-l-4 border-[#1982FC] pl-4">
-              <h3 className="text-xl font-semibold mb-1 text-white">Track maintenance, mods, and detailing with precision</h3>
-              <p className="text-gray-400">A comprehensive system for all maintenance, modifications, and detailing records with F1-inspired interfaces</p>
-            </div>
-            
-            <div className="border-l-4 border-[#08c519] pl-4">
-              <h3 className="text-xl font-semibold mb-1 text-white">Discover perfect drives with Weather Paddock intelligence</h3>
-              <p className="text-gray-400">Advanced weather telemetry and route planning designed specifically for the automotive enthusiast</p>
-            </div>
-            
-            <div className="border-l-4 border-[#1982FC] pl-4">
-              <h3 className="text-xl font-semibold mb-1 text-white">Level up with premium features for the complete enthusiast</h3>
-              <p className="text-gray-400">Competitive goal tracking, performance analytics, and exclusive automotive experiences</p>
-            </div>
-          </div>
-          
-          <div className="bg-[#1982FC]/10 border border-[#1982FC]/50 rounded-lg p-6 mt-8">
-            <h4 className="text-xl font-bold text-[#1982FC] mb-2 text-center">BETA ACCESS</h4>
-            <p className="text-gray-300 text-center mb-4">
-              Join the movement. Full access to our complete ecosystem during the exclusive beta phase
-            </p>
-          </div>
+    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
+      <div className="container mx-auto px-4 py-16 max-w-6xl">
+        {/* Header */}
+        <div className="text-center mb-16">
+          <h1 className="text-5xl md:text-6xl font-bold text-[#1982FC] mb-4">PADDOCK<span className="text-[#08c519]">20</span></h1>
+          <p className="text-xl text-gray-200 italic max-w-3xl mx-auto">
+            The bespoke automotive lifestyle platform with F1-precision intelligence that transforms everyday car care into a curated experience
+          </p>
         </div>
-      </div>
-      
-      {/* Right side: Auth form */}
-      <div className="w-full md:w-1/2 flex items-center justify-center p-8">
-        <div className="w-full max-w-md">
-          <div className="md:hidden text-center mb-8">
-            <h1 className="text-4xl font-bold text-[#1982FC] mb-2">PADDOCK20</h1>
-            <p className="text-gray-300">Your automotive intelligence platform</p>
+        
+        {/* Main content */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+          {/* Left column: Features */}
+          <div className="space-y-10">
+            <div className="border-l-4 border-[#1982FC] pl-6 py-2">
+              <h3 className="text-2xl font-semibold mb-2 text-white">Track maintenance, mods, and detailing with precision</h3>
+              <p className="text-gray-300">A comprehensive system for all maintenance, modifications, and detailing records with F1-inspired interfaces</p>
+            </div>
+            
+            <div className="border-l-4 border-[#08c519] pl-6 py-2">
+              <h3 className="text-2xl font-semibold mb-2 text-white">Discover perfect drives with Weather Paddock intelligence</h3>
+              <p className="text-gray-300">Advanced weather telemetry and route planning designed specifically for the automotive enthusiast</p>
+            </div>
+            
+            <div className="border-l-4 border-[#1982FC] pl-6 py-2">
+              <h3 className="text-2xl font-semibold mb-2 text-white">Level up with premium features for the complete enthusiast</h3>
+              <p className="text-gray-300">Competitive goal tracking, performance analytics, and exclusive automotive experiences</p>
+            </div>
+            
+            <div className="bg-[#1982FC]/10 border border-[#1982FC]/40 rounded-lg p-8 mt-10">
+              <h4 className="text-2xl font-bold text-[#1982FC] mb-3 text-center">BETA ACCESS</h4>
+              <p className="text-lg text-gray-200 text-center mb-4">
+                Join the movement. Full access to our complete ecosystem during the exclusive beta phase
+              </p>
+            </div>
           </div>
           
-          <div className="bg-gray-900 border border-gray-800 rounded-lg p-8">
-            <div className="flex flex-col space-y-6">
-              <div className="text-center">
-                <h2 className="text-2xl font-bold text-white mb-1">Welcome to Paddock20</h2>
-                <p className="text-gray-400">Your automotive lifestyle platform awaits</p>
+          {/* Right column: Auth card */}
+          <div className="flex items-center justify-center">
+            <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-xl p-8 w-full max-w-md shadow-xl">
+              <div className="text-center mb-8">
+                <h2 className="text-2xl font-bold text-white">Thanks for visiting!</h2>
               </div>
               
-              <div className="space-y-4">
+              <div className="space-y-5 mb-8">
                 <div className="flex items-start">
-                  <CheckCircle className="h-5 w-5 text-[#08c519] mr-3 flex-shrink-0 mt-1" />
-                  <p className="text-gray-200">Complete vehicle tracking with F1-inspired dashboards</p>
+                  <CheckCircle className="h-6 w-6 text-[#08c519] mr-3 flex-shrink-0 mt-1" />
+                  <p className="text-gray-200 text-lg">Advanced vehicle management dashboard</p>
                 </div>
                 <div className="flex items-start">
-                  <CheckCircle className="h-5 w-5 text-[#08c519] mr-3 flex-shrink-0 mt-1" />
-                  <p className="text-gray-200">Weather intelligence for perfect driving conditions</p>
+                  <CheckCircle className="h-6 w-6 text-[#08c519] mr-3 flex-shrink-0 mt-1" />
+                  <p className="text-gray-200 text-lg">Intelligent weather-based drive planning</p>
                 </div>
                 <div className="flex items-start">
-                  <CheckCircle className="h-5 w-5 text-[#08c519] mr-3 flex-shrink-0 mt-1" />
-                  <p className="text-gray-200">Premium features with exclusive automotive experiences</p>
+                  <CheckCircle className="h-6 w-6 text-[#08c519] mr-3 flex-shrink-0 mt-1" />
+                  <p className="text-gray-200 text-lg">Exclusive automotive community features</p>
                 </div>
               </div>
               
               <Button 
                 onClick={() => login()} 
-                className="w-full bg-[#08c519] hover:bg-[#08c519]/90 text-white font-bold py-3 px-6 h-14 text-lg"
+                className="w-full bg-[#08c519] hover:bg-[#08c519]/80 text-white font-bold text-xl py-6 h-16 rounded-lg transition-all duration-200 shadow-lg shadow-[#08c519]/20"
               >
-                Join the Grid!
-                <UserPlus className="ml-2 h-5 w-5" />
+                Join the Grid
+                <ChevronRight className="ml-2 h-6 w-6" />
               </Button>
               
-              <p className="text-xs text-center text-gray-500">
+              <p className="text-sm text-center text-gray-400 mt-4">
                 By signing up, you agree to our <a href="/terms-of-service" className="text-[#1982FC] hover:underline">Terms of Service</a> and <a href="/privacy-policy" className="text-[#1982FC] hover:underline">Privacy Policy</a>
               </p>
             </div>
