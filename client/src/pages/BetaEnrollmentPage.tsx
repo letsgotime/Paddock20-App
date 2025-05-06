@@ -252,17 +252,9 @@ const BetaEnrollmentPage = () => {
           
           <div className="flex flex-col sm:flex-row gap-4 justify-end">
             <Button 
-              variant="outline" 
-              onClick={skipBetaEnrollment}
-              className="border-gray-700 text-gray-300 hover:bg-gray-800 hover:text-white"
-            >
-              Skip for Now
-            </Button>
-            
-            <Button 
               onClick={handleBetaRequest}
               disabled={isLoading || !hasAgreedToTerms || !hasAgreedToNDA || !feedbackCommitment}
-              className="bg-[#1982FC] hover:bg-[#1982FC]/80 text-white"
+              className="bg-[#1982FC] hover:bg-[#1982FC]/80 text-white w-full"
             >
               {isLoading ? (
                 <>
