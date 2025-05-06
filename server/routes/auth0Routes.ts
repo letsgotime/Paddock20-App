@@ -17,23 +17,23 @@ const router = Router();
 
 // Initialize Auth0 Management API client
 const management = new ManagementClient({
-  domain: process.env.VITE_AUTH0_DOMAIN || '',
-  clientId: process.env.AUTH0_MANAGEMENT_CLIENT_ID || '',
-  clientSecret: process.env.AUTH0_MANAGEMENT_CLIENT_SECRET || '',
+  domain: process.env.AUTH0_DOMAIN || '',
+  clientId: process.env.AUTH0_CLIENT_ID || '',
+  clientSecret: process.env.AUTH0_CLIENT_SECRET || '',
 });
 
 // Middleware to verify JWT token from Auth0
 // Only initialize if we have required values
 const initializeAuth = () => {
-  if (!process.env.VITE_AUTH0_AUDIENCE || !process.env.VITE_AUTH0_DOMAIN) {
+  if (!process.env.AUTH0_AUDIENCE || !process.env.AUTH0_DOMAIN) {
     console.warn('Auth0 credentials not fully configured - routes will be unavailable');
     // Return a middleware that just passes through for now
     return (req: Request, res: Response, next: NextFunction) => next();
   }
   
   return auth({
-    audience: process.env.VITE_AUTH0_AUDIENCE,
-    issuerBaseURL: `https://${process.env.VITE_AUTH0_DOMAIN}/`,
+    audience: process.env.AUTH0_AUDIENCE,
+    issuerBaseURL: `https://${process.env.AUTH0_DOMAIN}/`,
   });
 };
 
@@ -41,10 +41,10 @@ const checkJwt = initializeAuth();
 
 // Log configuration for debug purposes
 console.log('Auth0 Config:', {
-  domain: process.env.VITE_AUTH0_DOMAIN,
-  audience: process.env.VITE_AUTH0_AUDIENCE,
-  clientId: process.env.AUTH0_MANAGEMENT_CLIENT_ID ? 'Set' : 'Not Set',
-  clientSecret: process.env.AUTH0_MANAGEMENT_CLIENT_SECRET ? 'Set' : 'Not Set'
+  domain: process.env.AUTH0_DOMAIN,
+  audience: process.env.AUTH0_AUDIENCE,
+  clientId: process.env.AUTH0_CLIENT_ID ? 'Set' : 'Not Set',
+  clientSecret: process.env.AUTH0_CLIENT_SECRET ? 'Set' : 'Not Set'
 });
 
 // Middleware to check if user has admin role
@@ -158,10 +158,10 @@ router.post('/api/admin/approve-beta-tester/:userId', checkJwt, checkAdmin, asyn
 router.get('/api/auth/config-test', (req: Request, res: Response) => {
   res.json({
     message: 'Auth0 routes configured',
-    hasDomain: !!process.env.VITE_AUTH0_DOMAIN,
-    hasAudience: !!process.env.VITE_AUTH0_AUDIENCE,
-    hasClientId: !!process.env.AUTH0_MANAGEMENT_CLIENT_ID,
-    hasClientSecret: !!process.env.AUTH0_MANAGEMENT_CLIENT_SECRET
+    hasDomain: !!process.env.AUTH0_DOMAIN,
+    hasAudience: !!process.env.AUTH0_AUDIENCE,
+    hasClientId: !!process.env.AUTH0_CLIENT_ID,
+    hasClientSecret: !!process.env.AUTH0_CLIENT_SECRET
   });
 });
 
