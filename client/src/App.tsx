@@ -394,11 +394,14 @@ function App() {
                       <GalleryProvider>
                         {/* Rewards Provider - for site-wide gamification */}
                         <RewardsProvider>
-                          {/* Use the AuthenticatedContent component to handle all auth-dependent UI */}
-                          <AuthenticatedContent 
-                            hasCompletedOnboarding={hasCompletedOnboarding}
-                            setHasCompletedOnboarding={setHasCompletedOnboarding}
-                          />
+                          {/* Spotify Provider - for Spotify integration */}
+                          <SpotifyProvider>
+                            {/* Use the AuthenticatedContent component to handle all auth-dependent UI */}
+                            <AuthenticatedContent 
+                              hasCompletedOnboarding={hasCompletedOnboarding}
+                              setHasCompletedOnboarding={setHasCompletedOnboarding}
+                            />
+                          </SpotifyProvider>
                         </RewardsProvider>
                       </GalleryProvider>
                     </WeatherProvider>

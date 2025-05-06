@@ -1,27 +1,28 @@
 /**
- * Spotify API Type Definitions
+ * Spotify API TypeScript Interfaces
  * 
- * This file contains TypeScript interfaces for Spotify API responses and entities.
- * These types help maintain type safety when interacting with Spotify's API.
+ * This file contains all TypeScript interfaces for the Spotify API.
+ * Reference: https://developer.spotify.com/documentation/web-api/reference
  */
 
 /**
- * SpotifyTokenResponse
+ * Spotify Authentication Response
  * 
- * Response from Spotify token endpoint
+ * Returned from the /api/token endpoint when exchanging an authorization code 
+ * or refreshing a token
  */
 export interface SpotifyTokenResponse {
   access_token: string;
-  token_type: string;
-  expires_in: number;
+  token_type: string; // Always "Bearer"
+  expires_in: number; // Token lifetime in seconds
   refresh_token: string;
-  scope: string;
+  scope: string; // Space-separated list of scopes
 }
 
 /**
- * SpotifyProfile
+ * Spotify User Profile
  * 
- * Spotify user profile information
+ * Returned from the /me endpoint
  */
 export interface SpotifyProfile {
   id: string;
@@ -31,187 +32,258 @@ export interface SpotifyProfile {
     spotify: string;
   };
   href: string;
-  images: Array<{
-    url: string;
-    height: number | null;
-    width: number | null;
-  }>;
+  images: SpotifyImage[];
+  product: string; // "premium", "free", etc.
+  uri: string;
   country: string;
-  product: string;
-  uri: string;
-  // Additional specific fields we need
-  profileImageUrl?: string;
-}
-
-/**
- * SpotifyArtist
- * 
- * Information about a Spotify artist
- */
-export interface SpotifyArtist {
-  id: string;
-  name: string;
-  type: string;
-  uri: string;
-  href: string;
-  external_urls: {
-    spotify: string;
+  followers: {
+    href: string | null;
+    total: number;
   };
 }
 
 /**
- * SpotifyAlbum
+ * Spotify Image
  * 
- * Information about a Spotify album
+ * Used in various API responses to represent images
  */
-export interface SpotifyAlbum {
-  id: string;
-  name: string;
-  album_type: string;
-  artists: SpotifyArtist[];
-  images: Array<{
-    url: string;
-    height: number | null;
-    width: number | null;
-  }>;
-  release_date: string;
-  total_tracks: number;
-  uri: string;
-  href: string;
-  external_urls: {
-    spotify: string;
-  };
+export interface SpotifyImage {
+  url: string;
+  height: number | null;
+  width: number | null;
 }
 
 /**
- * SpotifyTrack
+ * Spotify Playlist Object
  * 
- * Information about a Spotify track
- */
-export interface SpotifyTrack {
-  id: string;
-  name: string;
-  album: SpotifyAlbum;
-  artists: SpotifyArtist[];
-  duration_ms: number;
-  explicit: boolean;
-  popularity: number;
-  preview_url: string | null;
-  track_number: number;
-  uri: string;
-  href: string;
-  external_urls: {
-    spotify: string;
-  };
-  // We might add additional custom fields
-  added_at?: string;
-  is_playable?: boolean;
-  // Audio features that might be included when getting track details
-  audio_features?: {
-    danceability: number;
-    energy: number;
-    key: number;
-    loudness: number;
-    mode: number;
-    speechiness: number;
-    acousticness: number;
-    instrumentalness: number;
-    liveness: number;
-    valence: number;
-    tempo: number;
-    time_signature: number;
-  }
-}
-
-/**
- * SpotifyPlaylist
- * 
- * Information about a Spotify playlist
+ * Represents a Spotify playlist
  */
 export interface SpotifyPlaylist {
   id: string;
   name: string;
   description: string;
-  public: boolean;
+  href: string;
+  uri: string;
   collaborative: boolean;
+  public: boolean;
+  images: SpotifyImage[];
   owner: {
     id: string;
     display_name: string;
     uri: string;
     href: string;
-    external_urls: {
-      spotify: string;
-    };
   };
-  images: Array<{
-    url: string;
-    height: number | null;
-    width: number | null;
-  }>;
   tracks: {
     href: string;
     total: number;
-    items?: Array<{
-      added_at: string;
-      track: SpotifyTrack;
-    }>;
+    items?: SpotifyPlaylistTrack[];
   };
-  uri: string;
-  href: string;
+  snapshot_id: string;
+  followers: {
+    href: string | null;
+    total: number;
+  };
   external_urls: {
     spotify: string;
   };
-  snapshot_id: string;
-  
-  // Additional drive platform specific fields
-  weather_conditions?: string[];
-  drive_moods?: string[];
-  is_featured?: boolean;
-  energy_level?: number;
-  drive_duration_range?: {
-    min_minutes: number;
-    max_minutes: number;
-  };
-  added_by_user_id?: string;
-  vehicle_id?: string;
-  last_used_at?: string;
-  custom_tags?: string[];
 }
 
 /**
- * SpotifyRecommendationSeed
+ * Spotify Playlist Track Object
  * 
- * Seed criteria for Spotify recommendations
+ * Represents a track in a playlist, including additional metadata
  */
-export interface SpotifyRecommendationSeed {
+export interface SpotifyPlaylistTrack {
+  added_at: string;
+  added_by: {
+    id: string;
+    uri: string;
+    href: string;
+  };
+  is_local: boolean;
+  track: SpotifyTrack;
+}
+
+/**
+ * Spotify Track Object
+ * 
+ * Represents a Spotify track
+ */
+export interface SpotifyTrack {
+  id: string;
+  name: string;
+  uri: string;
+  href: string;
+  duration_ms: number;
+  explicit: boolean;
+  preview_url: string | null;
+  popularity: number;
+  track_number: number;
+  disc_number: number;
+  is_playable?: boolean;
+  artists: SpotifyArtist[];
+  album: SpotifyAlbum;
+  external_urls: {
+    spotify: string;
+  };
+  external_ids?: {
+    isrc?: string;
+    ean?: string;
+    upc?: string;
+  };
+}
+
+/**
+ * Spotify Artist Object
+ * 
+ * Represents a Spotify artist
+ */
+export interface SpotifyArtist {
+  id: string;
+  name: string;
+  uri: string;
+  href: string;
+  genres?: string[];
+  popularity?: number;
+  images?: SpotifyImage[];
+  external_urls: {
+    spotify: string;
+  };
+  followers?: {
+    href: string | null;
+    total: number;
+  };
+}
+
+/**
+ * Spotify Album Object
+ * 
+ * Represents a Spotify album
+ */
+export interface SpotifyAlbum {
+  id: string;
+  name: string;
+  uri: string;
+  href: string;
+  album_type: 'album' | 'single' | 'compilation';
+  release_date: string;
+  release_date_precision: 'year' | 'month' | 'day';
+  images: SpotifyImage[];
+  artists: SpotifyArtist[];
+  total_tracks: number;
+  external_urls: {
+    spotify: string;
+  };
+}
+
+/**
+ * Spotify Playlist Response
+ * 
+ * Paginated response containing playlists
+ */
+export interface PlaylistResponse {
+  href: string;
+  items: SpotifyPlaylist[];
+  limit: number;
+  next: string | null;
+  offset: number;
+  previous: string | null;
+  total: number;
+}
+
+/**
+ * Spotify Playlist Tracks Response
+ * 
+ * Paginated response containing tracks in a playlist
+ */
+export interface PlaylistTracksResponse {
+  href: string;
+  items: SpotifyPlaylistTrack[];
+  limit: number;
+  next: string | null;
+  offset: number;
+  previous: string | null;
+  total: number;
+}
+
+/**
+ * Spotify Recommendations Response
+ * 
+ * Response from recommendations endpoint
+ */
+export interface RecommendationsResponse {
+  tracks: SpotifyTrack[];
+  seeds: RecommendationSeed[];
+}
+
+/**
+ * Spotify Recommendation Seed
+ * 
+ * Information about seeds used for recommendations
+ */
+export interface RecommendationSeed {
   id: string;
   href: string;
-  type: string;
+  type: 'ARTIST' | 'TRACK' | 'GENRE';
   initialPoolSize: number;
   afterFilteringSize: number;
   afterRelinkingSize: number;
 }
 
 /**
- * SpotifyRecommendationResponse
+ * Spotify Search Response
  * 
- * Response from Spotify recommendations API
+ * Response from search endpoint
  */
-export interface SpotifyRecommendationResponse {
-  seeds: SpotifyRecommendationSeed[];
-  tracks: SpotifyTrack[];
+export interface SearchResponse {
+  tracks?: {
+    href: string;
+    items: SpotifyTrack[];
+    limit: number;
+    next: string | null;
+    offset: number;
+    previous: string | null;
+    total: number;
+  };
+  artists?: {
+    href: string;
+    items: SpotifyArtist[];
+    limit: number;
+    next: string | null;
+    offset: number;
+    previous: string | null;
+    total: number;
+  };
+  albums?: {
+    href: string;
+    items: SpotifyAlbum[];
+    limit: number;
+    next: string | null;
+    offset: number;
+    previous: string | null;
+    total: number;
+  };
+  playlists?: {
+    href: string;
+    items: SpotifyPlaylist[];
+    limit: number;
+    next: string | null;
+    offset: number;
+    previous: string | null;
+    total: number;
+  };
 }
 
 /**
- * SpotifyError
+ * Spotify Drive Playlist
  * 
- * Standard error format from Spotify API
+ * Custom interface for drive-specific playlists
  */
-export interface SpotifyError {
-  status: number;
-  message: string;
-  error: {
-    status: number;
-    message: string;
-  };
+export interface DrivePlaylist extends SpotifyPlaylist {
+  driveId?: string;      // ID of the drive this playlist is associated with
+  driveName?: string;    // Name of the drive
+  driveDate?: string;    // Date of the drive
+  driveRoute?: string;   // Route information
+  driveDistance?: number; // Distance of the drive in miles/km
+  driveDuration?: number; // Duration of the drive in minutes
 }
