@@ -7,6 +7,7 @@ import { useWeather } from '../contexts/FixedWeatherContext';
 import ProfileDataCollector from '../services/ProfileDataCollector';
 import SmartOnboardingJourneyVisualizer from '../components/SmartOnboardingJourneyVisualizer';
 import EngagementRewardsPanel from '../components/EngagementRewardsPanel';
+import BetaTesterRequestButton from '../components/dashboard/BetaTesterRequestButton';
 import { Thermometer, Droplets, Wind, Sun, Leaf, Gauge, Cloud, ArrowUp, Compass, Timer, Clock, Zap, Map, Shield, Calendar, Trophy, Flame, Sunrise, Sunset, Moon, User } from 'lucide-react';
 
 // Array of driving insights to rotate through - based on weather patterns
@@ -201,6 +202,11 @@ const Paddock20HomePage: React.FC = () => {
               <span className="text-green-500">20</span>
             </h1>
             <p className="text-center text-[#4B9CD3] font-orbitron text-lg sm:text-xl mt-2">COMMAND CENTER</p>
+            
+            {/* Beta Tester Request Button */}
+            <div className="flex justify-center mt-3">
+              <BetaTesterRequestButton />
+            </div>
           </div>
           
           <div className="text-center text-white mb-2 flex flex-col items-center">

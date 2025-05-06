@@ -1,95 +1,150 @@
 import React, { useState } from 'react';
-import { Button } from '@/components/ui/button';
+import { useAuth0 } from '@auth0/auth0-react';
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Loader2, CheckCircle, XCircle, AlertTriangle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { useAuth0Management } from '@/services/auth0Management';
-import { Loader2 } from 'lucide-react';
 
 /**
- * Button component that allows users to request beta tester status
+ * A button that allows users to request beta tester status.
+ * The component displays different states based on current beta status.
  */
-const BetaTesterRequestButton = () => {
-  const [isRequesting, setIsRequesting] = useState(false);
+const BetaTesterRequestButton: React.FC = () => {
+  const { user, getAccessTokenSilently, isAuthenticated, isLoading } = useAuth0();
+  const [requesting, setRequesting] = useState(false);
   const { toast } = useToast();
-  const { checkBetaTesterStatus, requestBetaTesterStatus } = useAuth0Management();
   
-  const betaStatus = checkBetaTesterStatus();
+  // Get beta status from user metadata if available
+  const betaStatus = user?.['https://paddock20.app/beta_status'] || 'none';
   
-  const handleRequestBetaStatus = async () => {
-    setIsRequesting(true);
+  const requestBetaAccess = async () => {
+    if (!isAuthenticated) {
+      toast({
+        title: "Authentication Required",
+        description: "Please sign in to request beta access.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setRequesting(true);
     
     try {
-      const success = await requestBetaTesterStatus();
+      // Get the access token for making authenticated requests
+      const token = await getAccessTokenSilently({
+        audience: import.meta.env.VITE_AUTH0_AUDIENCE,
+        scope: "update:current_user_metadata"
+      });
       
-      if (success) {
-        toast({
-          title: 'Beta Tester Request Submitted',
-          description: 'Your application for beta tester status has been submitted. You will receive an email when approved.',
-          variant: 'default',
-        });
-      } else {
-        toast({
-          title: 'Request Failed',
-          description: 'There was an error submitting your beta tester request. Please try again later.',
-          variant: 'destructive',
-        });
+      // Send request to the backend to update user metadata
+      const response = await fetch('/api/auth0/request-beta', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+      
+      if (!response.ok) {
+        throw new Error('Failed to request beta access');
       }
-    } catch (error) {
-      console.error('Failed to request beta status:', error);
+      
+      // Success! Show toast notification
       toast({
-        title: 'Request Failed',
-        description: 'There was an error submitting your beta tester request. Please try again later.',
-        variant: 'destructive',
+        title: "Beta Request Submitted",
+        description: "Your beta tester request has been submitted for approval.",
+        variant: "default"
+      });
+      
+      // Force reload user data to update UI
+      setTimeout(() => {
+        window.location.reload();
+      }, 1500);
+      
+    } catch (error) {
+      console.error('Beta request error:', error);
+      toast({
+        title: "Request Failed",
+        description: "There was an error submitting your beta access request. Please try again later.",
+        variant: "destructive"
       });
     } finally {
-      setIsRequesting(false);
+      setRequesting(false);
     }
   };
   
-  // Already a beta tester
-  if (betaStatus === 'approved') {
+  // Handle loading state
+  if (isLoading) {
     return (
-      <div className="flex items-center gap-2 p-3 bg-emerald-900/20 border border-emerald-600/30 rounded-md">
-        <div className="h-3 w-3 rounded-full bg-emerald-500"></div>
-        <span className="text-sm text-emerald-400 font-medium">
-          Beta Tester Status: Active
-        </span>
-      </div>
+      <Button variant="outline" disabled className="mt-2 bg-black text-[#4B9CD3] border-[#4B9CD3]/30 hover:bg-black/90">
+        <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+        Loading...
+      </Button>
     );
   }
   
-  // Pending approval
-  if (betaStatus === 'pending') {
-    return (
-      <div className="flex items-center gap-2 p-3 bg-amber-900/20 border border-amber-600/30 rounded-md">
-        <div className="h-3 w-3 rounded-full bg-amber-500 animate-pulse"></div>
-        <span className="text-sm text-amber-400 font-medium">
-          Beta Tester Status: Awaiting Approval
-        </span>
-      </div>
-    );
-  }
+  // Render button based on beta status
+  const renderButtonByStatus = () => {
+    switch (betaStatus) {
+      case 'approved':
+        return (
+          <div className="flex flex-col items-center">
+            <Badge variant="outline" className="bg-black/30 border-green-500 text-green-400 flex items-center mb-1 py-1.5">
+              <CheckCircle className="h-3.5 w-3.5 mr-1" />
+              Beta Access Approved
+            </Badge>
+            <p className="text-xs text-gray-400">You have full beta testing access</p>
+          </div>
+        );
+        
+      case 'pending':
+        return (
+          <div className="flex flex-col items-center">
+            <Badge variant="outline" className="bg-black/30 border-yellow-500 text-yellow-400 flex items-center mb-1 py-1.5">
+              <AlertTriangle className="h-3.5 w-3.5 mr-1" />
+              Beta Request Pending
+            </Badge>
+            <p className="text-xs text-gray-400">Your request is awaiting approval</p>
+          </div>
+        );
+        
+      case 'rejected':
+        return (
+          <div className="flex flex-col items-center">
+            <Badge variant="outline" className="bg-black/30 border-red-500 text-red-400 flex items-center mb-1 py-1.5">
+              <XCircle className="h-3.5 w-3.5 mr-1" />
+              Beta Request Declined
+            </Badge>
+            <p className="text-xs text-gray-400">Please try again later</p>
+          </div>
+        );
+        
+      case 'none':
+      default:
+        return (
+          <Button 
+            variant="outline" 
+            className="mt-1 bg-black text-[#4B9CD3] border-[#4B9CD3]/30 hover:bg-black/90 hover:text-[#4B9CD3] hover:border-[#4B9CD3]/50"
+            onClick={requestBetaAccess}
+            disabled={requesting}
+          >
+            {requesting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Requesting...
+              </>
+            ) : (
+              <>Request Beta Access</>
+            )}
+          </Button>
+        );
+    }
+  };
   
-  // Not authenticated
-  if (betaStatus === 'not_authenticated') {
-    return null;
-  }
-  
-  // Default: user can request beta access
   return (
-    <Button
-      onClick={handleRequestBetaStatus}
-      disabled={isRequesting}
-      className="bg-gradient-to-r from-[#1982FC] to-[#08c519] hover:bg-gradient-to-r hover:from-[#1982FC]/90 hover:to-[#08c519]/90 text-white"
-    >
-      {isRequesting ? (
-        <>
-          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-          Processing...
-        </>
-      ) : (
-        'Request Beta Tester Access'
-      )}
-    </Button>
+    <div className="flex justify-center pb-1 pt-2">
+      {renderButtonByStatus()}
+    </div>
   );
 };
 

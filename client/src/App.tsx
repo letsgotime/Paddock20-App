@@ -91,6 +91,7 @@ import PrivacyPolicy from './pages/PrivacyPolicyPage';
 import TermsOfService from './pages/TermsOfServicePage';
 import BetaAgreement from './pages/BetaAgreement';
 import EmailVerifiedPage from './pages/EmailVerifiedPage';
+import AdminPage from './pages/AdminPage';
 
 function App() {
   // State to track if the user has completed onboarding
@@ -324,6 +325,7 @@ function App() {
                               {/* Auth route is handled above in the conditional rendering */}
                               <Route path="/" component={() => <ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
                               <Route path="/dashboard" component={() => <ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+                              <Route path="/admin" component={() => <ProtectedRoute><AdminPage /></ProtectedRoute>} />
                               <Route path="*" component={NotFound} />
                               
                               {/* Rewards notification - will show when rewards are earned */}
