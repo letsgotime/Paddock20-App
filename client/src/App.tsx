@@ -274,7 +274,14 @@ function AuthenticatedContent({
             );
           }} />
           
-          <Route path="*" component={NotFound} />
+          {/* Create a special component for the 404 route */}
+          <Route path="*">
+            {(params) => {
+              // Only render the NotFound component if none of the other routes matched
+              // This ensures we don't show 404 at the bottom of existing pages
+              return <NotFound />;
+            }}
+          </Route>
           
           {/* Rewards notification - only shown when authenticated */}
           {isAuthenticated && <RewardNotification />}
