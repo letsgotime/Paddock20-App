@@ -299,25 +299,7 @@ function App() {
                               {/* Beta Enrollment Page - For new users to opt into the beta program */}
                               <Route path="/beta-enrollment" component={() => <ProtectedRoute><BetaEnrollmentPage /></ProtectedRoute>} />
                               
-                              {/* Auth Debug Page - For troubleshooting Auth0 integration */}
-                              <Route path="/auth/debug" component={() => {
-                                const AuthDebugPage = React.lazy(() => import('./pages/AuthDebugPage'));
-                                return (
-                                  <React.Suspense fallback={<div>Loading debug tool...</div>}>
-                                    <AuthDebugPage />
-                                  </React.Suspense>
-                                );
-                              }} />
-                              
-                              {/* Simple Auth Test - Isolated Auth0 testing */}
-                              <Route path="/auth/simple-test" component={() => {
-                                const SimpleAuthTest = React.lazy(() => import('./pages/SimpleAuthTest'));
-                                return (
-                                  <React.Suspense fallback={<div>Loading simple auth test...</div>}>
-                                    <SimpleAuthTest />
-                                  </React.Suspense>
-                                );
-                              }} />
+                              {/* Auth debug routes removed */}
                               
                               {/* User Onboarding - Requires authentication but not onboarding completion */}
                               <Route 
@@ -361,14 +343,7 @@ function App() {
                                   </React.Suspense>
                                 );
                               }} />
-                              <Route path="/auth/test" component={() => {
-                                const FullAuthDebug = React.lazy(() => import('./pages/FullAuthDebug'));
-                                return (
-                                  <React.Suspense fallback={<div className="p-8 text-white">Loading auth diagnostic...</div>}>
-                                    <FullAuthDebug />
-                                  </React.Suspense>
-                                );
-                              }} />
+                              {/* Auth test route removed */}
                               
                               <Route path="*" component={NotFound} />
                               
