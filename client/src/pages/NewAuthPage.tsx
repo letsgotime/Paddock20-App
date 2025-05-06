@@ -538,7 +538,7 @@ const NewAuthPage = () => {
                     }`}
                     onClick={() => setIsLogin(false)}
                   >
-                    JOIN THE GRID
+                    JOIN THE PADDOCK
                   </button>
                 </div>
               </div>
