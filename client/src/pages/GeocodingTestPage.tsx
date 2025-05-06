@@ -4,6 +4,7 @@ import GeocodeExplorer from '@/components/GeocodeExplorer';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import MapboxExplorer from '@/components/MapboxExplorer';
+import NominatimExplorer from '@/components/NominatimExplorer';
 
 const GeocodingTestPage: React.FC = () => {
   return (
@@ -13,16 +14,17 @@ const GeocodingTestPage: React.FC = () => {
           <div>
             <h1 className="text-3xl font-bold tracking-tight">Location Services Explorer</h1>
             <p className="text-muted-foreground mt-2">
-              Testing environment for geocoding services with aggressive caching
+              Multi-provider geocoding system with aggressive caching and rate limiting
             </p>
           </div>
           
           <div className="border-b pb-2" />
           
           <Tabs defaultValue="opencage">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="opencage">OpenCage Geocoding</TabsTrigger>
-              <TabsTrigger value="mapbox">Mapbox Services</TabsTrigger>
+            <TabsList className="grid w-full grid-cols-3">
+              <TabsTrigger value="opencage">OpenCage</TabsTrigger>
+              <TabsTrigger value="mapbox">Mapbox</TabsTrigger>
+              <TabsTrigger value="nominatim">OSM Nominatim</TabsTrigger>
             </TabsList>
             
             <TabsContent value="opencage" className="mt-4">
@@ -49,6 +51,20 @@ const GeocodingTestPage: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <MapboxExplorer />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="nominatim" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>OpenStreetMap Nominatim</CardTitle>
+                  <CardDescription>
+                    OSM-based geocoding with strict adherence to usage policy
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <NominatimExplorer />
                 </CardContent>
               </Card>
             </TabsContent>
