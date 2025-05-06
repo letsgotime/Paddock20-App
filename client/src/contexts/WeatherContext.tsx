@@ -196,32 +196,37 @@ export function WeatherProvider({ children }: { children: React.ReactNode }) {
 
   // Initialize cache-related information when consolidatedData changes
   useEffect(() => {
-    // Initialize an empty dependency array to prevent the error
-    // This ensures we don't access consolidatedData before it's defined
-    
-    const now = new Date();
-    
-    // Only proceed if consolidatedData is defined
-    if (!consolidatedData) return;
-    
-    // When we receive cache data, calculate and update all the cache-related state
-    if (consolidatedData.cacheTimestamp) {
-      // Calculate cache age
-      const cacheAgeMinutes = Math.round((now.getTime() - consolidatedData.cacheTimestamp) / 60000);
-      if (cacheAgeMinutes < 1) {
-        setCacheAge("Just updated");
-      } else if (cacheAgeMinutes < 60) {
-        setCacheAge(`${cacheAgeMinutes} minutes old`);
-      } else {
-        const cacheAgeHours = Math.round(cacheAgeMinutes / 60);
-        setCacheAge(`${cacheAgeHours} hour${cacheAgeHours > 1 ? 's' : ''} old`);
-      }
+    const updateCacheInfo = () => {
+      // Only proceed if consolidatedData is defined
+      if (!consolidatedData) return;
       
-      // Set next refresh and expiry times
-      setNextRefreshTime(new Date(now.getTime() + 60 * 60 * 1000)); // 60 minutes from now
-      setCacheExpiryTime(new Date(now.getTime() + 8 * 60 * 60 * 1000)); // 8 hours from now
-    }
-  }, [consolidatedData]);
+      const now = new Date();
+      
+      // When we receive cache data, calculate and update all the cache-related state
+      if (consolidatedData.cacheTimestamp) {
+        // Calculate cache age
+        const cacheAgeMinutes = Math.round((now.getTime() - consolidatedData.cacheTimestamp) / 60000);
+        if (cacheAgeMinutes < 1) {
+          setCacheAge("Just updated");
+        } else if (cacheAgeMinutes < 60) {
+          setCacheAge(`${cacheAgeMinutes} minutes old`);
+        } else {
+          const cacheAgeHours = Math.round(cacheAgeMinutes / 60);
+          setCacheAge(`${cacheAgeHours} hour${cacheAgeHours > 1 ? 's' : ''} old`);
+        }
+        
+        // Set next refresh and expiry times
+        setNextRefreshTime(new Date(now.getTime() + 60 * 60 * 1000)); // 60 minutes from now
+        setCacheExpiryTime(new Date(now.getTime() + 8 * 60 * 60 * 1000)); // 8 hours from now
+      }
+    };
+    
+    // Run the update function
+    updateCacheInfo();
+    
+  // Empty dependency array to run only once on mount
+  // We'll update this info manually when we get new data
+  }, []);
 
   // Setup auto-refresh of weather data every 60 minutes instead of 15
   // to reduce API calls and avoid rate limiting
