@@ -173,42 +173,25 @@ const NewAuthPage = () => {
   
   // If user is already logged in, redirect to dashboard
   useEffect(() => {
-    console.log('Checking authentication status...');
+    console.log('Checking authentication status with Auth0...');
     
-    // Check authentication status directly from the server
-    fetch('/api/user', {
-      credentials: 'include' // Important for cookies/session
-    })
-      .then(async response => {
-        if (response.ok) {
-          try {
-            const data = await response.json();
-            if (data.success && data.user) {
-              console.log('User already authenticated:', data.user.username);
-              // Set a flag in localStorage to prevent redirect loops
-              const currentTime = new Date().getTime();
-              localStorage.setItem('lastRedirectTime', currentTime.toString());
-              
-              // Only redirect if we haven't redirected in the last 5 seconds
-              const lastRedirect = parseInt(localStorage.getItem('lastRedirectTime') || '0', 10);
-              if ((currentTime - lastRedirect) > 5000) {
-                window.location.href = '/dashboard';
-              }
-            } else {
-              console.log('Response OK but no valid user data, staying on login page');
-            }
-          } catch (e) {
-            console.error('Failed to parse user data', e);
-          }
-        } else {
-          // Not authenticated, stay on login page
-          console.log('Not authenticated, ready for login');
-        }
-      })
-      .catch(error => {
-        console.error('Auth check failed:', error);
-      });
-  }, []);
+    // Check if user is authenticated with Auth0
+    if (auth.user) {
+      console.log('User already authenticated:', auth.user.username);
+      
+      // Set a flag in localStorage to prevent redirect loops
+      const currentTime = new Date().getTime();
+      localStorage.setItem('lastRedirectTime', currentTime.toString());
+      
+      // Only redirect if we haven't redirected in the last 5 seconds
+      const lastRedirect = parseInt(localStorage.getItem('lastRedirectTime') || '0', 10);
+      if ((currentTime - lastRedirect) > 5000) {
+        window.location.href = '/dashboard';
+      }
+    } else if (!auth.loading) {
+      console.log('Not authenticated, ready for login');
+    }
+  }, [auth.user, auth.loading]);
   
   // Add code to toggle beta tester specific fields
   useEffect(() => {
@@ -333,49 +316,18 @@ const NewAuthPage = () => {
         
         return; // Early return as Auth0 will handle the redirect
       } else {
-        // Registration through server API
-        console.log('Attempting registration for:', username);
+        // Registration through Auth0
+        console.log('Redirecting to Auth0 registration...');
+        setSuccessMessage('Redirecting to Auth0 registration...');
         
-        // Prepare registration data
-        const userData = {
-          username,
-          email,
-          password,
-          confirmPassword,
-          userType: betaStatus === 'beta_tester' ? 'beta_tester' : 'beta_user',
-          hasAgreedToNDA,
-          hasAgreedToTerms,
-          feedbackCommitment
-        };
+        // Store beta program preferences in localStorage for later use
+        localStorage.setItem('paddock20_beta_status', betaStatus);
+        localStorage.setItem('paddock20_has_agreed_to_nda', hasAgreedToNDA.toString());
+        localStorage.setItem('paddock20_has_agreed_to_terms', hasAgreedToTerms.toString());
+        localStorage.setItem('paddock20_feedback_commitment', feedbackCommitment.toString());
         
-        const response = await fetch('/api/register', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify(userData),
-          credentials: 'include', // Important for cookies
-        });
-        
-        const data = await response.json().catch(() => ({ success: false }));
-        
-        if (!response.ok) {
-          console.error('Registration failed with status:', response.status);
-          throw new Error(data.error || 'Registration failed. Please try again.');
-        }
-        
-        // Verify success and user data
-        if (!data.success || !data.user) {
-          throw new Error('Registration succeeded but user data is missing');
-        }
-        
-        console.log('Registration successful:', data.user.username);
-        setSuccessMessage('Registration successful! Redirecting to onboarding...');
-        
-        // Wait a moment before redirecting
-        setTimeout(() => {
-          setLocation('/onboarding');
-        }, 1000);
+        // Use Auth0 register function from context
+        auth.register();
       }
     } catch (error) {
       console.error('Authentication error:', error);

@@ -215,11 +215,9 @@ function App() {
       <QueryClientProvider client={queryClient}>
         <TooltipProvider>
           <Toaster />
-          <Auth0ProviderWithRedirectCallback>
-            <AuthProvider>
-              <NewAuthPage />
-            </AuthProvider>
-          </Auth0ProviderWithRedirectCallback>
+          <AuthProvider>
+            <NewAuthPage />
+          </AuthProvider>
         </TooltipProvider>
       </QueryClientProvider>
     );
