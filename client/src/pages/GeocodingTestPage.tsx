@@ -5,6 +5,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import MapboxExplorer from '@/components/MapboxExplorer';
 import NominatimExplorer from '@/components/NominatimExplorer';
+import PositionstackExplorer from '@/components/PositionstackExplorer';
 
 const GeocodingTestPage: React.FC = () => {
   return (
@@ -21,10 +22,11 @@ const GeocodingTestPage: React.FC = () => {
           <div className="border-b pb-2" />
           
           <Tabs defaultValue="opencage">
-            <TabsList className="grid w-full grid-cols-3">
+            <TabsList className="grid w-full grid-cols-4">
               <TabsTrigger value="opencage">OpenCage</TabsTrigger>
               <TabsTrigger value="mapbox">Mapbox</TabsTrigger>
               <TabsTrigger value="nominatim">OSM Nominatim</TabsTrigger>
+              <TabsTrigger value="positionstack">Positionstack</TabsTrigger>
             </TabsList>
             
             <TabsContent value="opencage" className="mt-4">
@@ -65,6 +67,20 @@ const GeocodingTestPage: React.FC = () => {
                 </CardHeader>
                 <CardContent>
                   <NominatimExplorer />
+                </CardContent>
+              </Card>
+            </TabsContent>
+            
+            <TabsContent value="positionstack" className="mt-4">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Positionstack</CardTitle>
+                  <CardDescription>
+                    APILayer geocoding service with 100,000 requests/month
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <PositionstackExplorer />
                 </CardContent>
               </Card>
             </TabsContent>
