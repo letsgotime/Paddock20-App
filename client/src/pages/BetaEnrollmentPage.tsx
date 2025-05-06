@@ -63,9 +63,9 @@ const BetaEnrollmentPage = () => {
         variant: 'default',
       });
       
-      // Redirect to dashboard which will show onboarding
+      // Redirect to onboarding
       setTimeout(() => {
-        window.location.href = '/dashboard';
+        setLocation('/onboarding');
       }, 1500);
       
     } catch (error) {
@@ -81,7 +81,7 @@ const BetaEnrollmentPage = () => {
       });
       
       setTimeout(() => {
-        window.location.href = '/dashboard';
+        setLocation('/onboarding');
       }, 1500);
     } finally {
       setIsLoading(false);
@@ -99,8 +99,8 @@ const BetaEnrollmentPage = () => {
       variant: 'default',
     });
     
-    // Continue to dashboard which will show onboarding
-    window.location.href = '/dashboard';
+    // Continue to onboarding instead of dashboard
+    setLocation('/onboarding');
   };
   
   // If the request was submitted successfully, show confirmation
@@ -138,11 +138,6 @@ const BetaEnrollmentPage = () => {
           setShowBetaWelcomeModal(false);
           // Store that the user has seen the beta welcome modal
           localStorage.setItem('paddock20_beta_status', 'seen_welcome');
-        }}
-        onProceedToOnboarding={() => {
-          // No need to navigate directly to onboarding from beta enrollment page
-          // This is just a stub to satisfy the prop requirement
-          console.log('User completed beta welcome in beta enrollment page'); 
         }}
       />
       
@@ -267,7 +262,7 @@ const BetaEnrollmentPage = () => {
                   Submitting Request
                 </>
               ) : (
-                'The Paddock Awaits'
+                'Request Beta Access'
               )}
             </Button>
           </div>
