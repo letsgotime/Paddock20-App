@@ -38,10 +38,10 @@ import RedlineReportPage from "./pages/RedlineReportPage";
 import SeasonalChecklistPage from "./pages/SeasonalChecklistPage";
 import EBooksPage from "./pages/eBooksPage";
 import Paddock20HomePage from "./pages/Paddock20HomePage";
-import ProductOrganizerPage from "./pages/ProductOrganizerPage"; // Import the new page
-import UserProfileHubPage from "./pages/UserProfileHubPage"; // Import our new User Profile Hub
-import GaragePage from "./pages/GaragePage"; // Import our new Garage Page
-import AddVehiclePage from "./pages/AddVehiclePage"; // Import our new Add Vehicle Page
+import ProductOrganizerPage from "./pages/ProductOrganizerPage"; 
+import UserProfileHubPage from "./pages/UserProfileHubPage"; 
+import GaragePage from "./pages/GaragePage"; 
+import AddVehiclePage from "./pages/AddVehiclePage"; 
 import FixedSoundBar from "./components/FixedSoundBar";
 import Footer from "./components/Footer";
 import { WeatherProvider } from "./contexts/ConsolidatedWeatherContext";
@@ -232,21 +232,20 @@ function App() {
         <PageTitleManager />
         {/* Auth Provider - Provides authentication context to all components */}
         <AuthProvider>
-          {/* User Profile Provider - centralized user data warehouse */}
-          <UserProfileProvider>
-            {/* Sound Provider - Provides F1-inspired sound effects throughout the app */}
-            <SoundProvider>
-              {/* Vehicle Provider - Provides vehicle data to all components */}
-              <VehicleProvider>
-                {/* Vehicle Data Provider - Provides comprehensive vehicle activity, media, and document data */}
-                <VehicleDataProvider>
-                  {/* Centralized Weather Provider - Provides weather data to all components */}
-                  <WeatherProvider>
-                    {/* Gallery Provider - For media management */}
-                    <GalleryProvider>
-                      {/* Rewards Provider - for site-wide gamification */}
-                      <RewardsProvider>
-                        {/* Disable Supabase authentication to prevent conflicts with server auth */}
+            {/* User Profile Provider - centralized user data warehouse */}
+            <UserProfileProvider>
+              {/* Sound Provider - Provides F1-inspired sound effects throughout the app */}
+              <SoundProvider>
+                {/* Vehicle Provider - Provides vehicle data to all components */}
+                <VehicleProvider>
+                  {/* Vehicle Data Provider - Provides comprehensive vehicle activity, media, and document data */}
+                  <VehicleDataProvider>
+                    {/* Centralized Weather Provider - Provides weather data to all components */}
+                    <WeatherProvider>
+                      {/* Gallery Provider - For media management */}
+                      <GalleryProvider>
+                        {/* Rewards Provider - for site-wide gamification */}
+                        <RewardsProvider>
                           {/* Skip link for keyboard navigation */}
                           <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
                             Skip to main content
@@ -331,8 +330,6 @@ function App() {
                               <Route path="/dashboard" component={() => <ProtectedRoute><DashboardPage /></ProtectedRoute>} />
                               <Route path="*" component={NotFound} />
                               
-                              {/* Removed duplicate SupportChatbot component */}
-                              
                               {/* Rewards notification - will show when rewards are earned */}
                               {authSession && <RewardNotification />}
                               
@@ -343,14 +340,14 @@ function App() {
                             {/* Footer with links and information */}
                             <Footer />
                           </div>
-                      </RewardsProvider>
-                    </GalleryProvider>
-                  </WeatherProvider>
-                </VehicleDataProvider>
-              </VehicleProvider>
-            </SoundProvider>
-          </UserProfileProvider>
-        </AuthProvider>
+                        </RewardsProvider>
+                      </GalleryProvider>
+                    </WeatherProvider>
+                  </VehicleDataProvider>
+                </VehicleProvider>
+              </SoundProvider>
+            </UserProfileProvider>
+          </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
