@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useLocation } from 'wouter';
-import { Loader2, CheckCircle2, X } from 'lucide-react';
+import { Loader2, CheckCircle2, ClipboardCheck, Zap } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Checkbox } from '@/components/ui/checkbox';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
+import { Label } from '@/components/ui/label';
 
 /**
  * Beta Enrollment Page
@@ -20,6 +22,7 @@ const BetaEnrollmentPage = () => {
   // Form state
   const [isLoading, setIsLoading] = useState(false);
   const [betaRequested, setBetaRequested] = useState(false);
+  const [betaRole, setBetaRole] = useState<'user' | 'tester'>('user');
   const [hasAgreedToTerms, setHasAgreedToTerms] = useState(false);
   const [hasAgreedToNDA, setHasAgreedToNDA] = useState(false);
   const [feedbackCommitment, setFeedbackCommitment] = useState(false);
@@ -50,6 +53,7 @@ const BetaEnrollmentPage = () => {
         },
         body: JSON.stringify({
           email: user?.email,
+          betaProgram: betaRole,
           hasAgreedToTerms,
           hasAgreedToNDA,
           feedbackCommitment
@@ -127,6 +131,51 @@ const BetaEnrollmentPage = () => {
           <Separator className="my-4 bg-gray-700" />
           
           <div className="space-y-6">
+            {/* Beta Role Selection */}
+            <div className="bg-gray-800 p-4 rounded-lg">
+              <h3 className="text-white font-medium mb-3">Choose Your Beta Program Level</h3>
+              
+              <RadioGroup 
+                value={betaRole} 
+                onValueChange={(value) => setBetaRole(value as 'user' | 'tester')}
+                className="gap-4"
+              >
+                <div className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-700">
+                  <RadioGroupItem 
+                    value="user" 
+                    id="role-user" 
+                    className="mt-1 data-[state=checked]:bg-[#1982FC] data-[state=checked]:border-[#1982FC]"
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor="role-user" className="text-white font-medium flex items-center cursor-pointer">
+                      <Zap className="h-4 w-4 mr-2 text-[#1982FC]" />
+                      Beta User
+                    </Label>
+                    <p className="text-gray-400 text-sm mt-1">
+                      Access the beta program with basic feedback options. Ideal for users who want to try new features without additional commitments.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-700">
+                  <RadioGroupItem 
+                    value="tester" 
+                    id="role-tester"
+                    className="mt-1 data-[state=checked]:bg-[#08c519] data-[state=checked]:border-[#08c519]"
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor="role-tester" className="text-white font-medium flex items-center cursor-pointer">
+                      <ClipboardCheck className="h-4 w-4 mr-2 text-[#08c519]" />
+                      Beta Tester
+                    </Label>
+                    <p className="text-gray-400 text-sm mt-1">
+                      Enhanced program with priority access to features and direct input on product development. Includes additional feedback responsibilities.
+                    </p>
+                  </div>
+                </div>
+              </RadioGroup>
+            </div>
+            
             <div className="flex items-start space-x-3">
               <Checkbox 
                 id="terms" 
