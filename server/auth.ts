@@ -9,6 +9,7 @@ import { db } from "./db";
 import { eq } from "drizzle-orm";
 import { users, type User, type InsertUser, type InsertAuthLog, type InsertSession } from "@shared/schema";
 import { storage } from "./storage";
+import { sendVerificationEmail, sendWelcomeEmail } from "./services/emailService";
 
 // Extend Express.User with our User type
 declare global {
@@ -306,15 +307,19 @@ export function setupAuth(app: Express) {
       
       // Send verification email for beta testers 
       try {
-        const { sendVerificationEmail } = require('./services/emailService');
         // Only send verification emails to beta testers
         if (isBetaTester) {
-          await sendVerificationEmail(
-            newUser.email, 
-            newUser.verificationToken, 
-            newUser.username, 
-            true // isBetaTester = true
-          );
+          // Make sure verificationToken is not null
+          if (newUser.verificationToken) {
+            await sendVerificationEmail(
+              newUser.email, 
+              newUser.verificationToken, 
+              newUser.username, 
+              true // isBetaTester = true
+            );
+          } else {
+            console.error('Verification token is null for user:', newUser.username);
+          }
           console.log(`Beta tester verification email sent to ${newUser.email}`);
         }
       } catch (emailError) {
@@ -653,7 +658,6 @@ export function setupAuth(app: Express) {
       
       // Send welcome email for verified users
       try {
-        const { sendWelcomeEmail } = require('./services/emailService');
         // Check if the user is a premium user (beta tester)
         const isBetaTester = updatedUser.role === 'premium';
         await sendWelcomeEmail(
