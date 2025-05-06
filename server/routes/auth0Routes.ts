@@ -112,20 +112,35 @@ router.post('/api/auth/request-beta-status', checkJwt, async (req: Request, res:
     }
     
     const userId = auth.payload.sub;
-    console.log(`Updating beta tester status for user ${userId} to 'pending'`);
+    const { betaProgram, hasAgreedToTerms, hasAgreedToNDA, feedbackCommitment } = req.body;
+    
+    // Log detailed beta request information
+    console.log(`Updating beta status for user ${userId}:`);
+    console.log(`- Program Type: ${betaProgram || 'user'}`);
+    console.log(`- Agreements: Terms: ${hasAgreedToTerms}, NDA: ${hasAgreedToNDA}, Feedback: ${feedbackCommitment}`);
     
     // Get management client
     const management = await getManagementClient();
     
-    // Update user metadata
+    // Update user metadata with all the beta enrollment information
     await management.updateUserMetadata({ id: userId }, {
-      betaTesterStatus: 'pending'
+      betaTesterStatus: 'pending',
+      betaProgram: betaProgram || 'user', // 'user' or 'tester'
+      betaAgreements: {
+        terms: hasAgreedToTerms,
+        nda: hasAgreedToNDA,
+        feedback: feedbackCommitment
+      },
+      betaRequestDate: new Date().toISOString()
     });
     
     // Invalidate cache since we've made a change
     betaTestersCache.lastFetched = 0;
     
-    return res.json({ success: true });
+    return res.json({ 
+      success: true,
+      betaProgram: betaProgram || 'user'
+    });
   } catch (error: any) {
     console.error('Error requesting beta status:', error);
     return res.status(500).json({ 
