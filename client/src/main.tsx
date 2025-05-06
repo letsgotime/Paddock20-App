@@ -11,10 +11,11 @@ const domain = import.meta.env.VITE_AUTH0_DOMAIN as string;
 const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID as string;
 
 // Dynamically set the redirect URI based on current window location
-const redirectUri = window.location.origin;
+const redirectUri = `${window.location.origin}/auth/callback`;
 
 // Log the redirect URI for debugging
 console.log("Auth0 Redirect URI:", redirectUri);
+console.log("Auth0 Config:", { domain, clientId });
 
 createRoot(document.getElementById("root")!).render(
   <BrowserRouter>
