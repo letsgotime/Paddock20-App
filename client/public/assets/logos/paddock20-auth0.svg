@@ -6,7 +6,7 @@
     </style>
   </defs>
   
-  <!-- Paddock in blue and 20 in green with Orbitron font -->
-  <text x="10" y="40" font-family="'Orbitron', sans-serif" font-weight="700" font-size="30" fill="#1982FC">Paddock</text>
+  <!-- PADDOCK in blue and 20 in green with Orbitron font -->
+  <text x="10" y="40" font-family="'Orbitron', sans-serif" font-weight="700" font-size="30" fill="#1982FC">PADDOCK</text>
   <text x="140" y="40" font-family="'Orbitron', sans-serif" font-weight="700" font-size="30" fill="#08c519">20</text>
 </svg>
