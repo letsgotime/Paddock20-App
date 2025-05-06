@@ -1,5 +1,6 @@
 import PreDriveChecklistPage from './pages/PreDriveChecklistPage';
-import React, { useEffect, useState } from 'react';
+import * as React from 'react';
+import { useEffect, useState } from 'react';
 import { Route, Link, useLocation } from 'wouter';
 import Header from './components/Header';
 import { queryClient } from "./lib/queryClient";
