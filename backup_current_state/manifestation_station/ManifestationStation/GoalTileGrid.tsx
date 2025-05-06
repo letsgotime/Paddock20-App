@@ -1,8 +1,3 @@
-/**
- * @PROTECTED_FILE - DO NOT MODIFY OR OVERWRITE
- * This file contains critical Manifestation Station functionality and must remain intact.
- * Any modifications must be explicitly approved by the owner.
- */
 import React from 'react';
 import { Calendar, Clock, DollarSign, Layers, Target, Trophy } from 'lucide-react';
 import { Goal } from '../../types/manifestation';

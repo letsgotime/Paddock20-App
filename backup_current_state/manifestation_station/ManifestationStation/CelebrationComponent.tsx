@@ -1,8 +1,3 @@
-/**
- * @PROTECTED_FILE - DO NOT MODIFY OR OVERWRITE
- * This file contains critical Manifestation Station functionality and must remain intact.
- * Any modifications must be explicitly approved by the owner.
- */
 import React, { useState } from 'react';
 import { Goal, HustlePillar } from '../../types/manifestation';
 import { 
