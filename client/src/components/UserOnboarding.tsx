@@ -127,6 +127,9 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
   const [hasUploadedProfilePic, setHasUploadedProfilePic] = useState(false);
   const [hasUploadedVehicleImage, setHasUploadedVehicleImage] = useState(false);
   
+  // Beta role selection
+  const [betaRole, setBetaRole] = useState<'user' | 'tester'>('user');
+  
   // Legal agreement tracking
   const [agreements, setAgreements] = useState({
     termsOfService: false,
@@ -593,14 +596,9 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
             )}
             {step === 3 && <span style={{ color: CAROLINA_BLUE }}>LEGAL AGREEMENTS REQUIRED</span>}
             {step === 4 && <span style={{ color: CAROLINA_BLUE }}>YOUR PADDOCK20 PROFILE</span>}
-            {step === 5 && <span style={{ color: CAROLINA_BLUE }}>YOUR VEHICLE DETAILS</span>}
-            {step === 6 && <span style={{ color: CAROLINA_BLUE }}>CUSTOMIZE YOUR DASHBOARD</span>}
+            {step === 5 && <span style={{ color: CAROLINA_BLUE }}>CHOOSE YOUR BETA ROLE</span>}
           </h2>
-          <div className="flex items-center bg-gray-800/70 px-3 py-1 rounded-full">
-            <div className="text-sm text-gray-400 tracking-wide font-medium">
-              <span className="text-[#1982FC]">{step}</span> / 6
-            </div>
-          </div>
+
         </div>
         
         {/* Step content */}
