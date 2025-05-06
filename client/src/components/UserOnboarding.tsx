@@ -592,8 +592,8 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                       JOIN THE GRID
                     </h3>
                     <p className="text-gray-300 mb-4">
-                      Welcome to the exclusive <span className="text-[#1982FC]">PADDOCK</span><span className="text-[#08c519]">20</span> beta program. You've been selected to be 
-                      among the first to experience this revolutionary automotive lifestyle platform.
+                      Experience our bespoke, F1-inspired automotive app <span className="text-[#1982FC]">PADDOCK</span><span className="text-[#08c519]">20</span>. 
+                      Thoughtfully curated by each user for a personalized motorsport lifestyle experience.
                     </p>
                     <div className="flex items-center space-x-2 text-[#1982FC]">
                       <Trophy size={20} />
@@ -704,8 +704,8 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
                     </div>
                     
                     <p className="text-gray-300 mb-4">
-                      <span className="text-[#1982FC]">PADDOCK</span><span className="text-[#08c519]">20</span> is an exclusive automotive lifestyle platform designed to revolutionize 
-                      how enthusiasts track, manage, and enjoy their vehicles.
+                      <span className="text-[#1982FC]">PADDOCK</span><span className="text-[#08c519]">20</span> is a bespoke, F1-inspired automotive platform 
+                      featuring personalized tools to elevate your motorsport lifestyle.
                     </p>
                     
                     <p className="text-gray-300 mb-4">
