@@ -152,6 +152,38 @@ const OnboardingPage: React.FC = () => {
           throw new Error('Failed to update profile information');
         }
         
+        // If user requested beta tester status, submit that request
+        if (betaTesterRequest) {
+          try {
+            const betaResponse = await fetch('/api/auth/request-beta-status', {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+              },
+              body: JSON.stringify({
+                betaProgram: 'tester',
+                hasAgreedToTerms: true,
+                hasAgreedToNDA: true,
+                feedbackCommitment: true
+              }),
+            });
+            
+            if (!betaResponse.ok) {
+              console.warn('Beta tester request not completed, but continuing onboarding');
+            } else {
+              console.log('Beta tester request submitted successfully');
+              // Show success toast
+              toast({
+                title: "Beta Tester Request Submitted",
+                description: "Your beta tester request has been submitted for review.",
+                variant: "default"
+              });
+            }
+          } catch (error) {
+            console.warn('Beta tester request failed, but continuing onboarding', error);
+          }
+        }
+        
         // Step 2: Add vehicles to garage
         for (const vehicle of vehicles) {
           if (!vehicle.make || !vehicle.model || !vehicle.year) {
