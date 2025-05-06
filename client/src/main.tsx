@@ -7,8 +7,9 @@ import "./utils/storageManager"; // Initialize enhanced storage management
 import { Auth0Provider } from '@auth0/auth0-react';
 
 // Get Auth0 configuration from environment variables
-const domain = import.meta.env.VITE_AUTH0_DOMAIN as string;
-const clientId = import.meta.env.VITE_AUTH0_CLIENT_ID as string;
+const domain = import.meta.env.VITE_AUTH0_DOMAIN as string || "dev-6cy64kyz8f0nju5n.us.auth0.com";
+// Force the use of the new client ID
+const clientId = "4Zl1dcwCPeKiQVePWytPZqzqWk1BPQYH";
 
 // Dynamically set the redirect URI based on current window location
 // IMPORTANT: Going back to standard redirect pattern - most reliable approach
