@@ -1,13 +1,13 @@
-import React, { useState, useEffect, useRef, useContext } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Eye, EyeOff, LogIn, UserPlus, AlertTriangle } from 'lucide-react';
 import { useLocation } from 'wouter';
 import LegalDocumentModal from '../components/LegalDocumentModal';
 import { legalDocuments } from '../data/legalDocuments';
-import { AuthContext, useAuth } from '@/context/AuthContext';
+import { useAuth } from '@/context/AuthContext';
 
 // This is a simplified auth page that should work even if there are issues with other components
 const SimpleAuthPage = () => {
-  const auth = useContext(AuthContext); // Use the auth context directly
+  const auth = useAuth(); // Use the useAuth hook instead of context directly
   const [location, setLocation] = useLocation();
   const [isLogin, setIsLogin] = useState(true);
   const [username, setUsername] = useState('');
