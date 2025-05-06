@@ -94,6 +94,123 @@ import EmailVerifiedPage from './pages/EmailVerifiedPage';
 import AdminPage from './pages/AdminPage';
 import BetaEnrollmentPage from './pages/BetaEnrollmentPage';
 
+// Create an AuthenticatedApp component to handle auth-dependent UI
+function AuthenticatedContent({ hasCompletedOnboarding, setHasCompletedOnboarding }) {
+  // This component will be rendered inside the AuthProvider
+  // and therefore has access to auth state via useAuth hook
+  // We could use useAuth here to access session and user if needed,
+  // but keeping it simple for now as components deeper in the tree will handle that
+  
+  // Get current location for routing
+  const [location] = useLocation();
+  
+  return (
+    <>
+      {/* Skip link for keyboard navigation */}
+      <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
+        Skip to main content
+      </a>
+    
+      {/* Components that depend on auth state would check that here */}
+      <div className="min-h-screen bg-black font-openSans text-white">
+        {/* Authentication Header - always visible */}
+        <Header />
+      
+        {/* Main navigation header */}
+        <header role="banner">
+          {/* Breadcrumbs - only visible when logged in via Header component */}
+          <ContextualBreadcrumbs />
+        </header>
+        
+        {/* GoTime Motorsports logo with navigation and sound controls - always fixed to bottom */}
+        <FixedSoundBar />
+        
+        {/* AI Support Chatbot - Available globally, visibility managed by component */}
+        <SupportChatbot />
+
+        {/* Main content area - adjusted for fixed header at top and fixed footer at bottom */}
+        <main id={MAIN_CONTENT_ID} className="container mx-auto px-4 mt-[60px] pb-[70px]" tabIndex={-1}>
+          {/* Toast notifications with ARIA live region built in */}
+          <Toaster />
+          
+          {/* Global floating weather snapshot - visibility managed by component */}
+          <OneTapWeatherSnapshot 
+            floating={true}
+            // Don't show on weather paddock page where it would be redundant
+            className={location === '/weather-paddock' ? 'hidden' : ''}
+          />
+            
+          {/* Routes defined here */}
+          {/* Legal Document Pages - Publicly accessible */}
+          <Route path="/privacy-policy" component={PrivacyPolicy} />
+          <Route path="/terms-of-service" component={TermsOfService} />
+          <Route path="/beta-agreement" component={BetaAgreement} />
+          <Route path="/email-verified" component={EmailVerifiedPage} />
+          
+          {/* Auth0 callback route - Handles redirection after Auth0 authentication */}
+          <Route path="/auth/callback" component={Auth0Callback} />
+          
+          {/* Beta Enrollment Page - For new users to opt into the beta program */}
+          <Route path="/beta-enrollment" component={() => <ProtectedRoute><BetaEnrollmentPage /></ProtectedRoute>} />
+          
+          {/* User Onboarding - Requires authentication but not onboarding completion */}
+          <Route 
+            path="/onboarding" 
+            component={() => (
+              <UserOnboarding 
+                onComplete={(userId) => {
+                  // Mark onboarding as complete
+                  if (userId) {
+                    const betaOnboardingKey = `paddock20_beta_onboarding_complete_${userId}`;
+                    localStorage.setItem(betaOnboardingKey, 'true');
+                    
+                    // Also mark the legal agreements as accepted
+                    const legalAgreementsKey = `paddock20_legal_agreements_${userId}`;
+                    localStorage.setItem(legalAgreementsKey, JSON.stringify({
+                      accepted: true,
+                      version: '1.0',
+                      timestamp: new Date().toISOString()
+                    }));
+                    
+                    // Redirect to dashboard
+                    window.location.href = '/';
+                  }
+                }} 
+              />
+            )} 
+          />
+        
+          {/* Simplified routes for authentication testing */}
+          <Route path="/" component={() => <ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
+          <Route path="/dashboard" component={() => <ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+          <Route path="/admin" component={() => <ProtectedRoute><AdminPage /></ProtectedRoute>} />
+          
+          {/* Debug Pages */}
+          <Route path="/debug" component={() => {
+            const SimpleDebug = React.lazy(() => import('./pages/SimpleDebug'));
+            return (
+              <React.Suspense fallback={<div className="p-8 text-white">Loading debug page...</div>}>
+                <SimpleDebug />
+              </React.Suspense>
+            );
+          }} />
+          
+          <Route path="*" component={NotFound} />
+          
+          {/* Rewards notification - managed by the component */}
+          <RewardNotification />
+          
+          {/* Invisible rewards tracker component that monitors user activity */}
+          <RewardsTracker />
+        </main>
+
+        {/* Footer with links and information */}
+        <Footer />
+      </div>
+    </>
+  );
+}
+
 function App() {
   // State to track if the user has completed onboarding
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(() => {
@@ -115,10 +232,7 @@ function App() {
   // Use the scroll-to-top hook to ensure pages always start at the top
   useScrollToTop();
   
-  // Initialize session state (will be overridden by auth hook if authenticated)
-  const [authUser, setAuthUser] = useState<any>(null);
-  const [authSession, setAuthSession] = useState<any>(null);
-  const [authLoading, setAuthLoading] = useState<boolean>(false);
+  // Authentication state is now managed through AuthContext with Auth0
   
   // Function to mark onboarding as complete
   const completeOnboarding = () => {
@@ -174,34 +288,8 @@ function App() {
     };
   }, []);
   
-  // Initialize authentication status from server
-  useEffect(() => {
-    setAuthLoading(true);
-    
-    // Call our server-side auth endpoint
-    fetch('/api/user')
-      .then(async response => {
-        if (response.ok) {
-          const userData = await response.json();
-          setAuthUser(userData);
-          setAuthSession({ user: userData });
-          console.log('User authenticated:', userData.username);
-        } else {
-          // Not authenticated
-          setAuthUser(null);
-          setAuthSession(null);
-          console.log('User not authenticated');
-        }
-      })
-      .catch(error => {
-        console.error('Auth check failed:', error);
-        setAuthUser(null);
-        setAuthSession(null);
-      })
-      .finally(() => {
-        setAuthLoading(false);
-      });
-  }, []);
+  // Authentication status is now handled by AuthContext from Auth0
+  // This redundant effect has been removed to prevent conflicts
   
   // Check if the current path is /auth
   const [location] = useLocation();
@@ -244,119 +332,11 @@ function App() {
                       <GalleryProvider>
                         {/* Rewards Provider - for site-wide gamification */}
                         <RewardsProvider>
-                          {/* Skip link for keyboard navigation */}
-                          <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
-                            Skip to main content
-                          </a>
-                        
-                          {/* User Onboarding - Show for first time users or when terms update */}
-                          {authSession && !hasCompletedOnboarding && (
-                            <UserOnboarding onComplete={completeOnboarding} />
-                          )}
-                        
-                          <div className="min-h-screen bg-black font-openSans text-white">
-                            {/* Authentication Header - always visible */}
-                            <Header />
-                          
-                            {/* Main navigation header - only visible when logged in */}
-                            <header role="banner">
-                              {/* Breadcrumbs - only visible when logged in */}
-                              {authSession && (
-                                <ContextualBreadcrumbs />
-                              )}
-                            </header>
-                            
-                            {/* GoTime Motorsports logo with navigation and sound controls - always fixed to bottom */}
-                            <FixedSoundBar />
-                            
-                            {/* AI Support Chatbot - Available globally */}
-                            {authSession && <SupportChatbot />}
-
-                            {/* Main content area - adjusted for fixed header at top and fixed footer at bottom */}
-                            <main id={MAIN_CONTENT_ID} className="container mx-auto px-4 mt-[60px] pb-[70px]" tabIndex={-1}>
-                              {/* Toast notifications with ARIA live region built in */}
-                              <Toaster />
-                              
-                              {/* Global floating weather snapshot - will be available on all pages */}
-                              {authSession && (
-                                <OneTapWeatherSnapshot 
-                                  floating={true}
-                                  // Don't show on weather paddock page where it would be redundant
-                                  className={location === '/weather-paddock' ? 'hidden' : ''}
-                                />
-                              )}
-                                
-                              {/* Legal Document Pages - Publicly accessible */}
-                              <Route path="/privacy-policy" component={PrivacyPolicy} />
-                              <Route path="/terms-of-service" component={TermsOfService} />
-                              <Route path="/beta-agreement" component={BetaAgreement} />
-                              <Route path="/email-verified" component={EmailVerifiedPage} />
-                              
-                              {/* Auth0 callback route - Handles redirection after Auth0 authentication */}
-                              {/* Simplified Auth0 callback route */}
-                              <Route path="/auth/callback" component={Auth0Callback} />
-                              
-                              {/* Beta Enrollment Page - For new users to opt into the beta program */}
-                              <Route path="/beta-enrollment" component={() => <ProtectedRoute><BetaEnrollmentPage /></ProtectedRoute>} />
-                              
-                              {/* Auth debug routes removed */}
-                              
-                              {/* User Onboarding - Requires authentication but not onboarding completion */}
-                              <Route 
-                                path="/onboarding" 
-                                component={() => (
-                                  <UserOnboarding 
-                                    onComplete={(userId) => {
-                                      // Mark onboarding as complete
-                                      if (userId) {
-                                        const betaOnboardingKey = `paddock20_beta_onboarding_complete_${userId}`;
-                                        localStorage.setItem(betaOnboardingKey, 'true');
-                                        
-                                        // Also mark the legal agreements as accepted
-                                        const legalAgreementsKey = `paddock20_legal_agreements_${userId}`;
-                                        localStorage.setItem(legalAgreementsKey, JSON.stringify({
-                                          accepted: true,
-                                          version: '1.0',
-                                          timestamp: new Date().toISOString()
-                                        }));
-                                        
-                                        // Redirect to dashboard
-                                        window.location.href = '/';
-                                      }
-                                    }} 
-                                  />
-                                )} 
-                              />
-                            
-                              {/* Simplified routes for authentication testing */}
-                              {/* Auth route is handled above in the conditional rendering */}
-                              <Route path="/" component={() => <ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
-                              <Route path="/dashboard" component={() => <ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-                              <Route path="/admin" component={() => <ProtectedRoute><AdminPage /></ProtectedRoute>} />
-                              
-                              {/* Debug Pages - Multiple diagnostic tools */}
-                              <Route path="/debug" component={() => {
-                                const SimpleDebug = React.lazy(() => import('./pages/SimpleDebug'));
-                                return (
-                                  <React.Suspense fallback={<div className="p-8 text-white">Loading debug page...</div>}>
-                                    <SimpleDebug />
-                                  </React.Suspense>
-                                );
-                              }} />
-                              {/* Auth test route removed */}
-                              
-                              <Route path="*" component={NotFound} />
-                              
-                              {/* Rewards notification - will show when rewards are earned */}
-                              {authSession && <RewardNotification />}
-                              
-                              {/* Invisible rewards tracker component that monitors user activity */}
-                              {authSession && <RewardsTracker />}
-                            </main>
-
-                            {/* Footer with links and information */}
-                            <Footer />
-                          </div>
+                          {/* Use the AuthenticatedContent component to handle all auth-dependent UI */}
+                          <AuthenticatedContent 
+                            hasCompletedOnboarding={hasCompletedOnboarding}
+                            setHasCompletedOnboarding={setHasCompletedOnboarding}
+                          />
                         </RewardsProvider>
                       </GalleryProvider>
                     </WeatherProvider>
