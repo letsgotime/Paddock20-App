@@ -32,7 +32,7 @@ export async function sendVerificationEmail(
     // Create email message
     const msg = {
       to: email,
-      from: process.env.EMAIL_FROM || 'info@gotimemotorsports.app',
+      from: process.env.EMAIL_FROM || 'noreply@sendgrid.net', // Using generic SendGrid email for testing
       subject: isBetaTester 
         ? 'PADDOCK20 Beta Tester Verification - Action Required' 
         : 'PADDOCK20 Account Verification',
@@ -176,7 +176,7 @@ export async function sendWelcomeEmail(
     // Create email message
     const msg = {
       to: email,
-      from: process.env.EMAIL_FROM || 'info@gotimemotorsports.app',
+      from: process.env.EMAIL_FROM || 'noreply@sendgrid.net', // Using generic SendGrid email for testing
       subject: isBetaTester 
         ? 'Welcome to the PADDOCK20 Beta Testing Program!' 
         : 'Welcome to PADDOCK20!',
