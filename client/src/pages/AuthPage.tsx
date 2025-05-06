@@ -576,7 +576,7 @@ const AuthPage = () => {
                                     ? 'border-emerald-600 bg-gray-800' 
                                     : 'border-gray-700 bg-gray-900'
                                 } cursor-pointer transition-colors`}
-                                onClick={() => setRegisterData({ ...registerData, betaProgram: 'user' })}
+                                onClick={() => setRegisterData({ ...registerData, betaProgram: 'user', feedbackCommitment: false })}
                               >
                                 <div className="flex items-start space-x-3">
                                   <div className={`p-2 rounded-full ${
@@ -612,7 +612,7 @@ const AuthPage = () => {
                                     ? 'border-blue-600 bg-gray-800' 
                                     : 'border-gray-700 bg-gray-900'
                                 } cursor-pointer transition-colors`}
-                                onClick={() => setRegisterData({ ...registerData, betaProgram: 'tester' })}
+                                onClick={() => setRegisterData({ ...registerData, betaProgram: 'tester', feedbackCommitment: true })}
                               >
                                 <div className="flex items-start space-x-3">
                                   <div className={`p-2 rounded-full ${
@@ -650,20 +650,10 @@ const AuthPage = () => {
                               <p className="text-sm text-gray-400">
                                 As a Beta Tester, you'll receive free access for life in exchange for your valuable feedback on features, usability, and bug reports.
                               </p>
-                              <div className="flex items-start space-x-2">
-                                <Checkbox 
-                                  id="beta-tester-commitment" 
-                                  className="mt-1 data-[state=checked]:bg-blue-600"
-                                  checked={registerData.feedbackCommitment}
-                                  onCheckedChange={(checked) => 
-                                    setRegisterData({ ...registerData, feedbackCommitment: !!checked })
-                                  }
-                                  required={registerData.betaProgram === 'tester'}
-                                />
-                                <label htmlFor="beta-tester-commitment" className="text-sm text-gray-300">
-                                  I commit to providing detailed feedback on features, reporting bugs, and participating in scheduled testing sessions when requested.
-                                </label>
-                              </div>
+                              {/* Auto-set commitment to true for beta testers */}
+                              <p className="text-sm text-gray-300 mt-2">
+                                Beta Testers commit to providing detailed feedback on features, reporting bugs, and participating in scheduled testing sessions when requested.
+                              </p>
                             </div>
                           )}
                         </div>
@@ -789,7 +779,7 @@ const AuthPage = () => {
                         <Button 
                           type="submit" 
                           className="flex-1 ml-2 bg-emerald-600 hover:bg-emerald-700"
-                          disabled={loading || !registerData.betaProgram || (registerData.betaProgram === 'tester' && !registerData.feedbackCommitment)}
+                          disabled={loading || !registerData.betaProgram}
                         >
                           Continue to Review
                           <ArrowRight className="ml-2 h-5 w-5" />
