@@ -227,6 +227,27 @@ const DashboardOnboarding: React.FC<{
     }));
   };
   
+  // Handle tire profile changes
+  const handleTireProfileChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
+    const { name, value } = e.target;
+    
+    if (name.startsWith('currentTires.')) {
+      const tireProp = name.split('.')[1];
+      setTireProfile(prev => ({
+        ...prev,
+        currentTires: {
+          ...prev.currentTires,
+          [tireProp]: value
+        }
+      }));
+    } else {
+      setTireProfile(prev => ({
+        ...prev,
+        [name]: value
+      }));
+    }
+  };
+  
   // Handle dream garage changes
   const handleDreamCarChange = (index: number, field: string, value: string) => {
     setDreamGarageProfile(prev => {
@@ -476,6 +497,11 @@ const DashboardOnboarding: React.FC<{
         body: JSON.stringify({
           prefersDarkMode: userProfile.prefersDarkMode,
           allowNotifications: userProfile.allowNotifications,
+          // Add Spotify preferences
+          spotifyConnected: spotifyProfile.connected,
+          spotifyFavoritePlaylist: spotifyProfile.favoritePlaylist,
+          spotifyDrivingPlaylist: spotifyProfile.drivingPlaylist,
+          spotifyDetailingPlaylist: spotifyProfile.detailingPlaylist,
         }),
       });
       
@@ -510,6 +536,89 @@ const DashboardOnboarding: React.FC<{
       
       const vehicleData = await vehicleResponse.json();
       
+      // Save tire data for the vehicle
+      try {
+        const tireResponse = await fetch('/api/tires', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            vehicleId: vehicleData.id,
+            brand: tireProfile.currentTires.brand,
+            model: tireProfile.currentTires.model,
+            type: tireProfile.currentTires.type,
+            size: tireProfile.currentTires.size,
+            date_installed: tireProfile.currentTires.purchaseDate,
+            tread_depth: parseFloat(tireProfile.currentTires.treadDepth) || null,
+            pressure_front: parseFloat(tireProfile.currentTires.pressureFront) || null,
+            pressure_rear: parseFloat(tireProfile.currentTires.pressureRear) || null,
+            notes: tireProfile.currentTires.notes,
+            preferred_brands: tireProfile.preferredBrands,
+          }),
+        });
+        
+        if (!tireResponse.ok) {
+          console.warn('Failed to save tire data, but continuing');
+        }
+      } catch (err) {
+        console.warn('Error saving tire data:', err);
+        // Continue even if this fails
+      }
+      
+      // Save dream garage data
+      try {
+        const dreamGarageResponse = await fetch('/api/dream-garage', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            userId: user?.sub,
+            dreamCars: dreamGarageProfile.dreamCars.map(car => ({
+              make: car.make,
+              model: car.model,
+              year: car.year ? parseInt(car.year, 10) : null,
+              notes: car.notes,
+            }))
+          }),
+        });
+        
+        if (!dreamGarageResponse.ok) {
+          console.warn('Failed to save dream garage data, but continuing');
+        }
+      } catch (err) {
+        console.warn('Error saving dream garage data:', err);
+        // Continue even if this fails
+      }
+      
+      // Save locker room data
+      try {
+        const lockerRoomResponse = await fetch('/api/locker-room', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          },
+          body: JSON.stringify({
+            userId: user?.sub,
+            size: lockerRoomProfile.size,
+            storageNeeds: lockerRoomProfile.storageNeeds,
+            tools: lockerRoomProfile.tools,
+            detailingSupplies: lockerRoomProfile.detailingSupplies,
+          }),
+        });
+        
+        if (!lockerRoomResponse.ok) {
+          console.warn('Failed to save locker room data, but continuing');
+        }
+      } catch (err) {
+        console.warn('Error saving locker room data:', err);
+        // Continue even if this fails
+      }
+      
       // Save successful
       toast({
         title: 'Setup Complete',
@@ -521,6 +630,7 @@ const DashboardOnboarding: React.FC<{
       localStorage.setItem('userPreferences', JSON.stringify({
         prefersDarkMode: userProfile.prefersDarkMode,
         allowNotifications: userProfile.allowNotifications,
+        spotifyConnected: spotifyProfile.connected,
       }));
       
       localStorage.setItem('currentVehicle', JSON.stringify({
@@ -529,6 +639,17 @@ const DashboardOnboarding: React.FC<{
         model: vehicleProfile.model,
         year: vehicleProfile.year,
         nickname: vehicleProfile.nickname,
+      }));
+      
+      // Save additional data to localStorage as backup
+      localStorage.setItem('tirePreferences', JSON.stringify({
+        preferredBrands: tireProfile.preferredBrands,
+      }));
+      
+      localStorage.setItem('spotifyPreferences', JSON.stringify({
+        connected: spotifyProfile.connected,
+        favoritePlaylist: spotifyProfile.favoritePlaylist,
+        drivingPlaylist: spotifyProfile.drivingPlaylist,
       }));
       
       // Mark onboarding as complete
