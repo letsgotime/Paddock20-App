@@ -14,6 +14,7 @@ import { checkSlackIntegration, initializeSlackClient, shareVehicleToSlack, shar
 import { setupAuth } from "./auth";
 import twoFactorRoutes from "./routes/twoFactorRoutes";
 import auth0Routes from "./routes/auth0Routes";
+import spotifyRoutes from "./routes/spotifyRoutes";
 
 // OpenWeather API keys - updated May 1, 2025
 const OPENWEATHER_API_KEYS = {
