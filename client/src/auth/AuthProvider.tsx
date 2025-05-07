@@ -9,7 +9,8 @@ import {
   User, 
   LoginCredentials, 
   RegisterData,
-  ApiResponse 
+  ApiResponse,
+  AuthRole
 } from './types';
 import { 
   saveUserToStorage, 
@@ -96,14 +97,21 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       if (response.success && response.data) {
         paddockLog('Driver authenticated with pit wall');
         
+        // Ensure the user has a proper role assigned
+        const userWithDefaults = {
+          ...response.data,
+          role: response.data.role || AuthRole.DRIVER,
+          subscriptionTier: response.data.subscriptionTier || 'free'
+        };
+        
         // Update with latest user data from server
-        setUser(response.data);
+        setUser(userWithDefaults);
         setIsAuthenticated(true);
-        saveUserToStorage(response.data);
+        saveUserToStorage(userWithDefaults);
         
         // Refresh onboarding status
-        if (response.data.id) {
-          refreshOnboardingStatus(response.data.id);
+        if (userWithDefaults.id) {
+          refreshOnboardingStatus(userWithDefaults.id);
         }
       } else {
         // Clear local auth state if server reports not authenticated
@@ -133,18 +141,29 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       const response = await loginUser(credentials);
       
       if (response.success && response.data) {
-        setUser(response.data);
-        setIsAuthenticated(true);
-        saveUserToStorage(response.data);
+        // Ensure the user has a proper role assigned
+        const userWithDefaults = {
+          ...response.data,
+          role: response.data.role || AuthRole.DRIVER,
+          subscriptionTier: response.data.subscriptionTier || 'free'
+        };
         
-        paddockLog('Driver successfully checked in at the paddock', response.data.username);
+        setUser(userWithDefaults);
+        setIsAuthenticated(true);
+        saveUserToStorage(userWithDefaults);
+        
+        paddockLog('Driver successfully checked in at the paddock', userWithDefaults.username);
+        paddockLog('Driver role', userWithDefaults.role);
         
         // Check and refresh onboarding status
-        if (response.data.id) {
-          refreshOnboardingStatus(response.data.id);
+        if (userWithDefaults.id) {
+          refreshOnboardingStatus(userWithDefaults.id);
         }
         
-        return response;
+        return {
+          ...response,
+          data: userWithDefaults
+        };
       } else {
         setError(response.message || 'Login failed');
         return response;
@@ -169,16 +188,36 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setLoading(true);
 
     try {
-      const response = await registerUser(data);
+      // Set default role for new users to beta tester during beta period
+      const enrichedData = { 
+        ...data, 
+        role: AuthRole.BETA_TESTER, 
+        subscriptionTier: 'free',
+        onboardingCompleted: false
+      };
+      
+      const response = await registerUser(enrichedData);
       
       if (response.success && response.data) {
-        setUser(response.data);
+        // Ensure the returned user has proper role and defaults
+        const userWithDefaults = {
+          ...response.data,
+          role: response.data.role || AuthRole.BETA_TESTER,
+          subscriptionTier: response.data.subscriptionTier || 'free',
+          onboardingCompleted: response.data.onboardingCompleted || false
+        };
+        
+        setUser(userWithDefaults);
         setIsAuthenticated(true);
-        saveUserToStorage(response.data);
+        saveUserToStorage(userWithDefaults);
         
-        paddockLog('New driver joined the grid', response.data.username);
+        paddockLog('New driver joined the grid', userWithDefaults.username);
+        paddockLog('Driver assigned role', userWithDefaults.role);
         
-        return response;
+        return {
+          ...response,
+          data: userWithDefaults
+        };
       } else {
         setError(response.message || 'Registration failed');
         return response;
