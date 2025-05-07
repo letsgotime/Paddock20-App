@@ -1,865 +1,943 @@
 /**
- * Weather API Providers
+ * PADDOCK20 Weather API Providers
  * 
- * Implements API providers for weather-related services:
- * - Current weather
- * - Weather forecasts
- * - Weather alerts
- * - Historical weather data
+ * This module contains weather data providers for the API Data Warehouse.
  */
 
-import { APIDataWarehouseCore } from '../core';
 import { 
   APICategory, 
   APIProvider, 
   APIRequest, 
-  APIResponse, 
-  WeatherData 
-} from '../types';
+  APIResponse,
+  HealthStatusType 
+} from '../types/core';
 
-// OpenWeather API Provider
+/**
+ * OpenWeather API Provider
+ * Provider for OpenWeatherMap API (https://openweathermap.org/api)
+ * 
+ * Capabilities:
+ * - Current weather
+ * - Forecast (5 day / 3 hour)
+ * - Historical weather
+ */
 export class OpenWeatherProvider implements APIProvider {
-  name: string = 'OpenWeather';
-  category: APICategory;
-  priority: number = 0;
-  defaultCacheTTL: number = 30 * 60 * 1000; // 30 minutes
-  timeout: number = 10000; // 10 seconds
+  name = 'OpenWeatherMap';
+  category = APICategory.WEATHER;
+  priority = 10; // Highest priority weather provider
   
-  // Rate limiting properties
-  rateLimitPerMinute: number = 60; // Default for free tier
-  private lastRequestTime: number = 0;
-  private requestsThisMinute: number = 0;
+  private apiKey: string;
+  private baseUrl = 'https://api.openweathermap.org/data/2.5';
   
-  constructor(category: APICategory, priority: number = 10) {
-    this.category = category;
-    this.priority = priority;
+  constructor(apiKey?: string) {
+    this.apiKey = apiKey || import.meta.env.VITE_OPENWEATHER_API_KEY || '';
   }
   
+  /**
+   * Execute a weather API request
+   */
   async execute<T>(request: APIRequest): Promise<APIResponse<T>> {
-    // Get API key from core
-    const apiKey = (request.params?.apiKey as string) || 
-                   this.getAPIKey('OPENWEATHER');
+    const { endpoint, params } = request;
     
-    if (!apiKey) {
-      throw new Error('OpenWeather API key is required');
+    // Check if we have an API key
+    if (!this.apiKey) {
+      return {
+        success: false,
+        error: {
+          code: 'no_api_key',
+          message: 'No OpenWeather API key available',
+          reason: 'AUTH_ERROR',
+        },
+        fromCache: false,
+        provider: this.name,
+      };
     }
-    
-    // Check rate limiting
-    if (this.shouldThrottle()) {
-      throw new Error(`Rate limit exceeded for ${this.name}`);
-    }
-    
-    // Track this request for rate limiting
-    this.trackRequest();
     
     try {
-      // Build URL based on category and endpoint
-      let endpoint = request.endpoint;
-      if (!endpoint) {
-        switch (this.category) {
-          case APICategory.WEATHER:
-            endpoint = 'weather';
-            break;
-          case APICategory.WEATHER_FORECAST:
-            endpoint = 'forecast';
-            break;
-          case APICategory.WEATHER_ALERTS:
-            endpoint = 'onecall';
-            break;
-          case APICategory.WEATHER_HISTORICAL:
-            endpoint = 'onecall/timemachine';
-            break;
-          default:
-            throw new Error(`Unsupported API category: ${this.category}`);
-        }
+      // Determine which endpoint to use
+      let url = '';
+      let queryParams: Record<string, any> = {
+        ...params,
+        appid: this.apiKey,
+      };
+      
+      switch (endpoint) {
+        case 'current':
+          url = `${this.baseUrl}/weather`;
+          break;
+        case 'forecast':
+          url = `${this.baseUrl}/forecast`;
+          break;
+        case 'onecall':
+          url = `${this.baseUrl}/onecall`;
+          break;
+        default:
+          url = `${this.baseUrl}/weather`; // Default to current weather
       }
       
-      // Build full URL with base and query params
-      const baseUrl = 'https://api.openweathermap.org/data/2.5';
-      const url = new URL(`${baseUrl}/${endpoint}`);
-      
-      // Add API key
-      url.searchParams.append('appid', apiKey);
-      
-      // Add imperial/metric units (default to imperial)
-      url.searchParams.append('units', request.params?.units || 'imperial');
-      
-      // Add all other parameters
-      if (request.params) {
-        Object.entries(request.params).forEach(([key, value]) => {
-          if (key !== 'apiKey' && key !== 'units') {
-            url.searchParams.append(key, String(value));
-          }
-        });
+      // Convert from internal format to OpenWeather format
+      if (params?.lat !== undefined && params?.lon !== undefined) {
+        queryParams.lat = params.lat;
+        queryParams.lon = params.lon;
+      } else if (params?.city) {
+        queryParams.q = params.city;
       }
       
-      // Execute the request
-      const response = await fetch(url.toString(), {
-        headers: request.headers || {},
-        signal: AbortSignal.timeout(
-          request.timeout || this.timeout
-        ),
+      if (params?.units) {
+        queryParams.units = params.units; // 'metric', 'imperial'
+      }
+      
+      // Build URL with query parameters
+      const queryString = Object.entries(queryParams)
+        .map(([key, value]) => `${key}=${encodeURIComponent(String(value))}`)
+        .join('&');
+      
+      const fullUrl = `${url}?${queryString}`;
+      
+      // Execute request
+      const response = await fetch(fullUrl, {
+        method: 'GET',
+        headers: {
+          'Accept': 'application/json',
+          'Content-Type': 'application/json',
+        },
       });
       
-      // Check for HTTP errors
+      // Handle errors
       if (!response.ok) {
-        throw new Error(`OpenWeather API error: ${response.status} - ${response.statusText}`);
+        const errorText = await response.text();
+        let reason = 'API_ERROR';
+        
+        if (response.status === 401) {
+          reason = 'AUTH_ERROR';
+        } else if (response.status === 429) {
+          reason = 'RATE_LIMIT';
+        } else if (response.status >= 500) {
+          reason = 'API_ERROR';
+        }
+        
+        return {
+          success: false,
+          error: {
+            code: `openweather_${response.status}`,
+            message: `OpenWeather API error: ${errorText}`,
+            reason: reason as any,
+          },
+          fromCache: false,
+          provider: this.name,
+        };
       }
       
-      // Parse the response
+      // Parse response
       const data = await response.json();
       
-      // Transform the response to our standard format
-      const transformedData = this.transformWeatherData(data);
+      // Transform to standard format if needed
+      let transformedData: any;
       
+      if (endpoint === 'current') {
+        transformedData = this.transformCurrentWeather(data);
+      } else if (endpoint === 'forecast') {
+        transformedData = this.transformForecast(data);
+      } else {
+        transformedData = data; // Use as-is
+      }
+      
+      // Return success response
       return {
-        data: transformedData as any as T,
+        success: true,
+        data: transformedData as T,
+        fromCache: false,
+        provider: this.name,
         timestamp: Date.now(),
       };
     } catch (error) {
-      console.error(`OpenWeather API error:`, error);
-      throw error;
+      console.error('OpenWeatherMap provider error:', error);
+      
+      return {
+        success: false,
+        error: {
+          code: 'openweather_error',
+          message: `OpenWeather API error: ${error instanceof Error ? error.message : String(error)}`,
+          reason: 'UNKNOWN_ERROR',
+        },
+        fromCache: false,
+        provider: this.name,
+      };
     }
   }
   
-  // Transform OpenWeather data to our standardized WeatherData format
-  private transformWeatherData(data: any): WeatherData {
-    // Current weather endpoint
-    if (data.main && data.weather) {
-      return {
-        location: {
-          name: data.name || 'Unknown',
-          lat: data.coord?.lat || 0,
-          lon: data.coord?.lon || 0,
-          country: data.sys?.country || '',
-          timezone: 'UTC', // OpenWeather doesn't provide timezone in current weather endpoint
-        },
-        current: {
-          temp: data.main.temp,
-          feels_like: data.main.feels_like,
-          humidity: data.main.humidity,
-          pressure: data.main.pressure,
-          wind_speed: data.wind?.speed || 0,
-          wind_direction: data.wind?.deg || 0,
-          weather_description: data.weather[0]?.description || '',
-          weather_icon: data.weather[0]?.icon || '',
-          cloud_cover: data.clouds?.all || 0,
-          visibility: data.visibility ? data.visibility / 1000 : 0, // Convert to km
-          uv_index: 0, // Not provided in this endpoint
-          precipitation: data.rain?.['1h'] || data.snow?.['1h'] || 0,
-          timestamp: data.dt ? data.dt * 1000 : Date.now(),
-        },
-        source: this.name,
-      };
+  /**
+   * Check the health status of the OpenWeather API
+   */
+  async getHealthStatus(): Promise<HealthStatusType> {
+    try {
+      // Use a simple API call to check health
+      const response = await fetch(`${this.baseUrl}/weather?q=London&appid=${this.apiKey}`);
+      
+      if (response.ok) {
+        return 'healthy';
+      } else if (response.status === 429) {
+        return 'degraded'; // Rate limited
+      } else if (response.status === 401) {
+        return 'unavailable'; // Authentication issues
+      } else {
+        return 'degraded'; // Other issues
+      }
+    } catch (error) {
+      console.error('OpenWeather health check error:', error);
+      return 'unavailable';
     }
+  }
+  
+  /**
+   * Transform OpenWeather current weather to standardized format
+   */
+  private transformCurrentWeather(data: any): any {
+    if (!data) return null;
     
-    // Forecast endpoint
-    if (data.list && Array.isArray(data.list)) {
-      // Extract location from city
-      const location = {
-        name: data.city?.name || 'Unknown',
-        lat: data.city?.coord?.lat || 0,
-        lon: data.city?.coord?.lon || 0,
-        country: data.city?.country || '',
-        timezone: 'UTC', // OpenWeather doesn't provide timezone in forecast endpoint
-      };
-      
-      // Use first item for current conditions
-      const current = data.list[0] || {};
-      
-      // Create standardized daily forecast
-      const daily = data.list
-        .filter((item: any, index: number) => index % 8 === 0) // One item per day (3-hour intervals)
-        .map((item: any) => ({
-          date: new Date(item.dt * 1000).toISOString(),
-          temp_min: item.main?.temp_min || 0,
-          temp_max: item.main?.temp_max || 0,
-          weather_description: item.weather?.[0]?.description || '',
-          weather_icon: item.weather?.[0]?.icon || '',
-          precipitation_chance: item.pop ? item.pop * 100 : 0,
-          sunrise: data.city?.sunrise ? data.city.sunrise * 1000 : 0,
-          sunset: data.city?.sunset ? data.city.sunset * 1000 : 0,
-        }));
-      
-      // Create standardized hourly forecast
-      const hourly = data.list.slice(0, 24).map((item: any) => ({
-        timestamp: item.dt * 1000,
-        temp: item.main?.temp || 0,
-        feels_like: item.main?.feels_like || 0,
-        weather_description: item.weather?.[0]?.description || '',
-        weather_icon: item.weather?.[0]?.icon || '',
-        precipitation_chance: item.pop ? item.pop * 100 : 0,
-        humidity: item.main?.humidity || 0,
-        wind_speed: item.wind?.speed || 0,
-      }));
-      
-      return {
-        location,
-        current: {
-          temp: current.main?.temp || 0,
-          feels_like: current.main?.feels_like || 0,
-          humidity: current.main?.humidity || 0,
-          pressure: current.main?.pressure || 0,
-          wind_speed: current.wind?.speed || 0,
-          wind_direction: current.wind?.deg || 0,
-          weather_description: current.weather?.[0]?.description || '',
-          weather_icon: current.weather?.[0]?.icon || '',
-          cloud_cover: current.clouds?.all || 0,
-          visibility: current.visibility ? current.visibility / 1000 : 0,
-          uv_index: 0, // Not provided in this endpoint
-          precipitation: current.rain?.['3h'] ? current.rain['3h'] / 3 : 0, // Convert 3h to 1h
-          timestamp: current.dt ? current.dt * 1000 : Date.now(),
-        },
-        daily,
-        hourly,
-        source: this.name,
-      };
-    }
-    
-    // OneCall endpoint (for alerts and more complete data)
-    if (data.current && data.lat && data.lon) {
-      // Extract alerts if present
-      const alerts = data.alerts ? data.alerts.map((alert: any) => ({
-        title: alert.event || 'Weather Alert',
-        description: alert.description || '',
-        severity: this.mapAlertSeverity(alert.event),
-        start: alert.start * 1000,
-        end: alert.end * 1000,
-        source: alert.sender_name || this.name,
-      })) : undefined;
-      
-      // Create standardized daily forecast
-      const daily = data.daily ? data.daily.map((day: any) => ({
-        date: new Date(day.dt * 1000).toISOString(),
-        temp_min: day.temp?.min || 0,
-        temp_max: day.temp?.max || 0,
-        weather_description: day.weather?.[0]?.description || '',
-        weather_icon: day.weather?.[0]?.icon || '',
-        precipitation_chance: day.pop ? day.pop * 100 : 0,
-        sunrise: day.sunrise ? day.sunrise * 1000 : 0,
-        sunset: day.sunset ? day.sunset * 1000 : 0,
-      })) : undefined;
-      
-      // Create standardized hourly forecast
-      const hourly = data.hourly ? data.hourly.map((hour: any) => ({
-        timestamp: hour.dt * 1000,
-        temp: hour.temp || 0,
-        feels_like: hour.feels_like || 0,
-        weather_description: hour.weather?.[0]?.description || '',
-        weather_icon: hour.weather?.[0]?.icon || '',
-        precipitation_chance: hour.pop ? hour.pop * 100 : 0,
-        humidity: hour.humidity || 0,
-        wind_speed: hour.wind_speed || 0,
-      })) : undefined;
-      
-      return {
-        location: {
-          name: '', // OneCall doesn't provide location name
-          lat: data.lat,
-          lon: data.lon,
-          country: '', // Not provided
-          timezone: data.timezone || 'UTC',
-        },
-        current: {
-          temp: data.current.temp,
-          feels_like: data.current.feels_like,
-          humidity: data.current.humidity,
-          pressure: data.current.pressure,
-          wind_speed: data.current.wind_speed,
-          wind_direction: data.current.wind_deg,
-          weather_description: data.current.weather?.[0]?.description || '',
-          weather_icon: data.current.weather?.[0]?.icon || '',
-          cloud_cover: data.current.clouds || 0,
-          visibility: data.current.visibility ? data.current.visibility / 1000 : 0,
-          uv_index: data.current.uvi || 0,
-          precipitation: data.current.rain?.['1h'] || data.current.snow?.['1h'] || 0,
-          timestamp: data.current.dt * 1000,
-        },
-        daily,
-        hourly,
-        alerts,
-        source: this.name,
-      };
-    }
-    
-    // If data didn't match any expected format
-    console.warn('Unknown OpenWeather API response format:', data);
-    
-    // Return minimal default data structure
     return {
       location: {
-        name: 'Unknown',
-        lat: 0,
-        lon: 0,
-        country: '',
-        timezone: 'UTC',
+        lat: data.coord?.lat,
+        lon: data.coord?.lon,
+        name: data.name,
+        timezone: null, // Not provided in current weather
       },
       current: {
-        temp: 0,
-        feels_like: 0,
-        humidity: 0,
-        pressure: 0,
-        wind_speed: 0,
-        wind_direction: 0,
-        weather_description: 'Unknown',
-        weather_icon: '',
-        cloud_cover: 0,
-        visibility: 0,
-        uv_index: 0,
-        precipitation: 0,
-        timestamp: Date.now(),
-      },
-      source: this.name,
+        timestamp: data.dt * 1000,
+        temp: data.main?.temp,
+        feels_like: data.main?.feels_like,
+        humidity: data.main?.humidity,
+        pressure: data.main?.pressure,
+        weather_description: data.weather?.[0]?.description || 'Unknown',
+        weather_icon: data.weather?.[0]?.icon || '01d',
+        cloud_cover: data.clouds?.all || 0,
+        wind_speed: data.wind?.speed || 0,
+        wind_direction: data.wind?.deg || 0,
+        visibility: (data.visibility || 10000) / 1000, // Convert m to km
+        uv_index: 0, // Not provided in current weather
+        precipitation: data.rain?.['1h'] || data.rain?.['3h'] || 0,
+      }
     };
   }
   
-  // Helper to map alert event to severity
-  private mapAlertSeverity(event: string): string {
-    const event_lower = event.toLowerCase();
+  /**
+   * Transform OpenWeather forecast to standardized format
+   */
+  private transformForecast(data: any): any {
+    if (!data || !data.list) return null;
     
-    if (event_lower.includes('extreme') || 
-        event_lower.includes('severe') || 
-        event_lower.includes('tornado') ||
-        event_lower.includes('hurricane')) {
-      return 'extreme';
-    }
+    // Organize forecast data by day
+    const forecastsByDay = new Map<string, any[]>();
     
-    if (event_lower.includes('warning')) {
-      return 'warning';
-    }
-    
-    if (event_lower.includes('watch')) {
-      return 'watch';
-    }
-    
-    if (event_lower.includes('advisory')) {
-      return 'advisory';
-    }
-    
-    return 'notice';
-  }
-  
-  // Get API key with proper fallbacks
-  private getAPIKey(service: string): string | null {
-    // Check environment variables
-    // @ts-ignore: Environment variable access
-    const envKey = (import.meta.env as any)[`VITE_${service}_API_KEY`];
-    if (envKey) return envKey;
-    
-    // Check localStorage
-    try {
-      const storageKey = localStorage.getItem(`${service.toLowerCase()}_api_key`);
-      if (storageKey) return storageKey;
-    } catch (e) {
-      // Ignore localStorage errors
-    }
-    
-    return null;
-  }
-  
-  // Rate limiting: check if we should throttle this request
-  private shouldThrottle(): boolean {
-    const now = Date.now();
-    const minuteElapsed = (now - this.lastRequestTime) > 60000;
-    
-    if (minuteElapsed) {
-      // Reset counter after a minute has passed
-      this.requestsThisMinute = 0;
-      return false;
-    }
-    
-    return this.requestsThisMinute >= this.rateLimitPerMinute;
-  }
-  
-  // Rate limiting: track this request
-  private trackRequest(): void {
-    const now = Date.now();
-    const minuteElapsed = (now - this.lastRequestTime) > 60000;
-    
-    if (minuteElapsed) {
-      this.requestsThisMinute = 1;
-    } else {
-      this.requestsThisMinute++;
-    }
-    
-    this.lastRequestTime = now;
-  }
-  
-  // Health check
-  async getHealthStatus(): Promise<'healthy' | 'degraded' | 'unavailable' | 'unknown'> {
-    const apiKey = this.getAPIKey('OPENWEATHER');
-    
-    if (!apiKey) {
-      return 'unavailable';
-    }
-    
-    try {
-      // Make a lightweight test request
-      const response = await fetch(
-        `https://api.openweathermap.org/data/2.5/weather?lat=40.7128&lon=-74.006&appid=${apiKey}`,
-        { signal: AbortSignal.timeout(5000) }
-      );
+    data.list.forEach((item: any) => {
+      const date = new Date(item.dt * 1000);
+      const dayKey = date.toISOString().split('T')[0];
       
-      if (response.ok) {
-        return 'healthy';
-      } else if (response.status === 429) {
-        return 'degraded'; // Rate limited
-      } else {
-        return 'unavailable';
-      }
-    } catch (error) {
-      return 'unavailable';
-    }
-  }
-}
-
-// Weather.gov (National Weather Service) Provider - Free, no API key required
-export class WeatherGovProvider implements APIProvider {
-  name: string = 'Weather.gov (NWS)';
-  category: APICategory;
-  priority: number = 0;
-  defaultCacheTTL: number = 60 * 60 * 1000; // 1 hour (NWS data updates less frequently)
-  timeout: number = 15000; // 15 seconds (NWS API can be slower)
-  
-  // Rate limiting properties - NWS recommends no more than 2 requests/second
-  rateLimitPerMinute: number = 120;
-  private lastRequestTime: number = 0;
-  private requestsThisMinute: number = 0;
-  
-  constructor(category: APICategory, priority: number = 5) {
-    this.category = category;
-    this.priority = priority;
-  }
-  
-  async execute<T>(request: APIRequest): Promise<APIResponse<T>> {
-    // Check rate limiting
-    if (this.shouldThrottle()) {
-      throw new Error(`Rate limit exceeded for ${this.name}`);
-    }
-    
-    // Track this request for rate limiting
-    this.trackRequest();
-    
-    // For Weather.gov, we need geographical coordinates
-    const lat = request.params?.lat;
-    const lon = request.params?.lon;
-    
-    if (!lat || !lon) {
-      throw new Error('Latitude and longitude are required for Weather.gov API');
-    }
-    
-    try {
-      // Weather.gov requires a two-step process:
-      // 1. Get the forecast grid point from coordinates
-      // 2. Use the grid point to get actual forecast/data
-      
-      // Step 1: Get grid point
-      const gridpointResponse = await fetch(
-        `https://api.weather.gov/points/${lat},${lon}`,
-        {
-          headers: {
-            "User-Agent": "PADDOCK20 Weather (paddock20@example.com)",
-            ...request.headers
-          },
-          signal: AbortSignal.timeout(
-            request.timeout || this.timeout
-          ),
-        }
-      );
-      
-      if (!gridpointResponse.ok) {
-        throw new Error(`Weather.gov API error: ${gridpointResponse.status} - ${gridpointResponse.statusText}`);
+      if (!forecastsByDay.has(dayKey)) {
+        forecastsByDay.set(dayKey, []);
       }
       
-      const gridpointData = await gridpointResponse.json();
+      forecastsByDay.get(dayKey)!.push(item);
+    });
+    
+    // Create daily summary for each day
+    const dailyForecasts = Array.from(forecastsByDay.entries()).map(([date, items]) => {
+      // Find min/max temperatures
+      const temps = items.map(item => item.main.temp);
+      const minTemp = Math.min(...temps);
+      const maxTemp = Math.max(...temps);
       
-      // Get the various endpoint URLs from the response
-      const forecastUrl = gridpointData.properties.forecast;
-      const forecastHourlyUrl = gridpointData.properties.forecastHourly;
-      const stationUrl = gridpointData.properties.observationStations;
-      
-      // Step 2: Get the appropriate data based on the category
-      let url;
-      
-      switch (this.category) {
-        case APICategory.WEATHER:
-          // For current weather, we need to get the nearest observation station
-          // and then get its latest observation
-          const stationsResponse = await fetch(stationUrl, {
-            headers: {
-              "User-Agent": "PADDOCK20 Weather (paddock20@example.com)",
-              ...request.headers
-            }
-          });
-          
-          if (!stationsResponse.ok) {
-            throw new Error(`Weather.gov Stations API error: ${stationsResponse.status}`);
-          }
-          
-          const stationsData = await stationsResponse.json();
-          
-          // Get the first/nearest station
-          if (!stationsData.features || !stationsData.features.length) {
-            throw new Error('No observation stations found');
-          }
-          
-          const nearestStation = stationsData.features[0].id;
-          url = `${nearestStation}/observations/latest`;
-          break;
-          
-        case APICategory.WEATHER_FORECAST:
-          url = forecastUrl;
-          break;
-          
-        case APICategory.WEATHER_ALERTS:
-          url = `https://api.weather.gov/alerts/active?point=${lat},${lon}`;
-          break;
-          
-        default:
-          throw new Error(`Unsupported API category: ${this.category}`);
-      }
-      
-      // Make the final request
-      const dataResponse = await fetch(url, {
-        headers: {
-          "User-Agent": "PADDOCK20 Weather (paddock20@example.com)",
-          ...request.headers
-        },
-        signal: AbortSignal.timeout(
-          request.timeout || this.timeout
-        ),
+      // Get primary weather condition for the day (most frequent)
+      const weatherCounts = new Map<string, number>();
+      items.forEach(item => {
+        const weather = item.weather[0]?.main || 'Unknown';
+        weatherCounts.set(weather, (weatherCounts.get(weather) || 0) + 1);
       });
       
-      if (!dataResponse.ok) {
-        throw new Error(`Weather.gov Data API error: ${dataResponse.status}`);
-      }
+      let primaryWeather = items[0].weather[0];
+      let maxCount = 0;
       
-      const data = await dataResponse.json();
-      
-      // Transform the response to our standard format
-      const transformedData = this.transformWeatherData(data, gridpointData);
-      
-      return {
-        data: transformedData as any as T,
-        timestamp: Date.now(),
-      };
-    } catch (error) {
-      console.error(`Weather.gov API error:`, error);
-      throw error;
-    }
-  }
-  
-  // Transform Weather.gov data to our standardized WeatherData format
-  private transformWeatherData(data: any, gridData: any): WeatherData {
-    // Location data from grid point data
-    const location = {
-      name: gridData.properties?.relativeLocation?.properties?.city || 'Unknown',
-      lat: gridData.geometry?.coordinates?.[1] || 0,
-      lon: gridData.geometry?.coordinates?.[0] || 0,
-      country: 'US', // Weather.gov only covers US
-      timezone: gridData.properties?.timeZone || 'America/New_York',
-    };
-    
-    // For observation data (current weather)
-    if (data.properties?.temperature) {
-      const props = data.properties;
-      
-      // Convert temperature from C to F if units are imperial
-      const tempC = props.temperature.value || 0;
-      const temp = this.celsiusToFahrenheit(tempC);
-      
-      // Convert feels like from C to F
-      const feelsLikeC = props.windChill?.value !== null ? props.windChill.value : 
-                         props.heatIndex?.value !== null ? props.heatIndex.value : tempC;
-      const feelsLike = this.celsiusToFahrenheit(feelsLikeC);
-      
-      // Convert wind speed from m/s to mph
-      const windSpeedMps = props.windSpeed?.value || 0;
-      const windSpeed = windSpeedMps * 2.237;
-      
-      return {
-        location,
-        current: {
-          temp,
-          feels_like: feelsLike,
-          humidity: props.relativeHumidity?.value || 0,
-          pressure: props.barometricPressure?.value ? props.barometricPressure.value / 100 : 1013.25, // Convert Pa to hPa
-          wind_speed: windSpeed,
-          wind_direction: props.windDirection?.value || 0,
-          weather_description: props.textDescription || '',
-          weather_icon: this.mapIconFromWeatherGov(props.icon),
-          cloud_cover: props.cloudLayers?.[0]?.amount === 'OVC' ? 100 : 
-                      props.cloudLayers?.[0]?.amount === 'BKN' ? 75 :
-                      props.cloudLayers?.[0]?.amount === 'SCT' ? 50 :
-                      props.cloudLayers?.[0]?.amount === 'FEW' ? 25 : 0,
-          visibility: props.visibility?.value ? props.visibility.value / 1000 : 10, // Convert m to km
-          uv_index: 0, // Not provided
-          precipitation: props.precipitationLastHour?.value || 0,
-          timestamp: new Date(props.timestamp).getTime(),
-        },
-        source: this.name,
-      };
-    }
-    
-    // For forecast data
-    if (data.properties?.periods && Array.isArray(data.properties.periods)) {
-      const periods = data.properties.periods;
-      const currentPeriod = periods[0] || {};
-      
-      // Create daily forecast
-      const daily = periods.map(period => ({
-        date: new Date(period.startTime).toISOString(),
-        temp_min: period.isDaytime ? null : period.temperature,
-        temp_max: period.isDaytime ? period.temperature : null,
-        weather_description: period.shortForecast,
-        weather_icon: this.mapIconFromWeatherGov(period.icon),
-        precipitation_chance: period.probabilityOfPrecipitation?.value || 0,
-        sunrise: 0, // Not provided
-        sunset: 0, // Not provided
-      }));
-      
-      // Fill in missing min/max temps by pairing day/night
-      for (let i = 0; i < daily.length - 1; i++) {
-        if (daily[i].temp_max && !daily[i].temp_min && daily[i+1]?.temp_min) {
-          daily[i].temp_min = daily[i+1].temp_min;
-        }
-        if (!daily[i].temp_max && daily[i].temp_min && daily[i-1]?.temp_max) {
-          daily[i].temp_max = daily[i-1].temp_max;
+      for (const [weather, count] of weatherCounts.entries()) {
+        if (count > maxCount) {
+          const matchingItem = items.find(item => item.weather[0]?.main === weather);
+          if (matchingItem) {
+            primaryWeather = matchingItem.weather[0];
+            maxCount = count;
+          }
         }
       }
       
-      return {
-        location,
-        current: {
-          temp: currentPeriod.temperature || 0,
-          feels_like: currentPeriod.temperature || 0, // Not provided in forecast
-          humidity: 0, // Not provided in forecast
-          pressure: 0, // Not provided in forecast
-          wind_speed: currentPeriod.windSpeed ? this.parseWindSpeed(currentPeriod.windSpeed) : 0,
-          wind_direction: currentPeriod.windDirection ? this.parseWindDirection(currentPeriod.windDirection) : 0,
-          weather_description: currentPeriod.shortForecast || '',
-          weather_icon: this.mapIconFromWeatherGov(currentPeriod.icon),
-          cloud_cover: 0, // Not provided in forecast
-          visibility: 0, // Not provided in forecast
-          uv_index: 0, // Not provided in forecast
-          precipitation: 0, // Not provided in forecast
-          timestamp: new Date(currentPeriod.startTime).getTime(),
-        },
-        daily,
-        source: this.name,
-      };
-    }
-    
-    // For alerts data
-    if (data.features && Array.isArray(data.features)) {
-      // Create alerts array
-      const alerts = data.features.map((feature: any) => ({
-        title: feature.properties?.headline || 'Weather Alert',
-        description: feature.properties?.description || '',
-        severity: feature.properties?.severity?.toLowerCase() || 'notice',
-        start: new Date(feature.properties?.effective).getTime(),
-        end: new Date(feature.properties?.expires).getTime(),
-        source: feature.properties?.senderName || this.name,
-      }));
+      // Calculate average values
+      const avgHumidity = items.reduce((sum, item) => sum + item.main.humidity, 0) / items.length;
+      const avgWindSpeed = items.reduce((sum, item) => sum + item.wind.speed, 0) / items.length;
+      const avgWindDirection = items.reduce((sum, item) => sum + item.wind.deg, 0) / items.length;
       
-      // For alerts only, we need minimal weather data
+      // Calculate precipitation chance and amount
+      const precipitationItems = items.filter(item => item.pop > 0 || item.rain);
+      const precipitationChance = precipitationItems.length > 0
+        ? items.reduce((sum, item) => sum + (item.pop || 0), 0) / items.length * 100
+        : 0;
+      
+      const precipitationAmount = precipitationItems.reduce((sum, item) => {
+        return sum + (item.rain?.['3h'] || 0);
+      }, 0);
+      
+      // Use sunrise/sunset if available (from city data)
+      let sunrise = null;
+      let sunset = null;
+      
+      if (data.city && date === new Date().toISOString().split('T')[0]) {
+        sunrise = data.city.sunrise * 1000;
+        sunset = data.city.sunset * 1000;
+      }
+      
       return {
-        location,
-        current: {
-          temp: 0,
-          feels_like: 0,
-          humidity: 0,
-          pressure: 0,
-          wind_speed: 0,
-          wind_direction: 0,
-          weather_description: alerts.length > 0 ? alerts[0].title : 'Unknown',
-          weather_icon: '',
-          cloud_cover: 0,
-          visibility: 0,
-          uv_index: 0,
-          precipitation: 0,
-          timestamp: Date.now(),
-        },
-        alerts,
-        source: this.name,
+        date,
+        weather_description: primaryWeather?.description || 'Unknown',
+        weather_icon: primaryWeather?.icon || '01d',
+        temp_min: minTemp,
+        temp_max: maxTemp,
+        precipitation_chance: precipitationChance,
+        precipitation_amount: precipitationAmount,
+        humidity: avgHumidity,
+        wind_speed: avgWindSpeed,
+        wind_direction: avgWindDirection,
+        uv_index: 0, // Not provided in forecast
+        sunrise,
+        sunset,
       };
-    }
+    });
     
-    // If data didn't match any expected format
-    console.warn('Unknown Weather.gov API response format:', data);
-    
-    // Return minimal default data structure
     return {
-      location,
-      current: {
-        temp: 0,
-        feels_like: 0,
-        humidity: 0,
-        pressure: 0,
-        wind_speed: 0,
-        wind_direction: 0,
-        weather_description: 'Unknown',
-        weather_icon: '',
-        cloud_cover: 0,
-        visibility: 0,
-        uv_index: 0,
-        precipitation: 0,
-        timestamp: Date.now(),
+      location: {
+        lat: data.city?.coord?.lat,
+        lon: data.city?.coord?.lon,
+        name: data.city?.name,
+        timezone: null, // Not directly provided
       },
-      source: this.name,
+      daily: dailyForecasts,
+      hourly: data.list.map((item: any) => ({
+        timestamp: item.dt * 1000,
+        temp: item.main.temp,
+        feels_like: item.main.feels_like,
+        weather_description: item.weather[0]?.description || 'Unknown',
+        weather_icon: item.weather[0]?.icon || '01d',
+        precipitation_chance: (item.pop || 0) * 100,
+        precipitation_amount: item.rain?.['3h'] || 0,
+        humidity: item.main.humidity,
+        wind_speed: item.wind.speed,
+        visibility: (item.visibility || 10000) / 1000, // Convert m to km
+      })),
     };
-  }
-  
-  // Helper: Convert Celsius to Fahrenheit
-  private celsiusToFahrenheit(celsius: number): number {
-    return (celsius * 9/5) + 32;
-  }
-  
-  // Helper: Extract wind speed from string like "10 mph"
-  private parseWindSpeed(windSpeedStr: string): number {
-    const match = windSpeedStr.match(/(\d+)/);
-    if (match && match[1]) {
-      return parseInt(match[1], 10);
-    }
-    return 0;
-  }
-  
-  // Helper: Convert cardinal direction to degrees
-  private parseWindDirection(direction: string): number {
-    const directions: Record<string, number> = {
-      'N': 0, 'NNE': 22.5, 'NE': 45, 'ENE': 67.5,
-      'E': 90, 'ESE': 112.5, 'SE': 135, 'SSE': 157.5,
-      'S': 180, 'SSW': 202.5, 'SW': 225, 'WSW': 247.5,
-      'W': 270, 'WNW': 292.5, 'NW': 315, 'NNW': 337.5
-    };
-    
-    return directions[direction] || 0;
-  }
-  
-  // Helper: Map Weather.gov icon URL to standardized icon code
-  private mapIconFromWeatherGov(iconUrl: string = ''): string {
-    if (!iconUrl) return '';
-    
-    // Extract time of day from URL
-    const isDay = !iconUrl.includes('/night/');
-    const daySuffix = isDay ? 'd' : 'n';
-    
-    // Map icon based on URL patterns
-    if (iconUrl.includes('skc')) return `01${daySuffix}`; // Clear sky
-    if (iconUrl.includes('few')) return `02${daySuffix}`; // Few clouds
-    if (iconUrl.includes('sct')) return `03${daySuffix}`; // Scattered clouds
-    if (iconUrl.includes('bkn')) return `04${daySuffix}`; // Broken clouds
-    if (iconUrl.includes('ovc')) return `04${daySuffix}`; // Overcast
-    
-    if (iconUrl.includes('rain_showers')) return `09${daySuffix}`; // Showers
-    if (iconUrl.includes('rain')) return `10${daySuffix}`; // Rain
-    
-    if (iconUrl.includes('tsra')) return `11${daySuffix}`; // Thunderstorm
-    
-    if (iconUrl.includes('snow')) return `13${daySuffix}`; // Snow
-    if (iconUrl.includes('sleet')) return `13${daySuffix}`; // Sleet
-    if (iconUrl.includes('fzra')) return `13${daySuffix}`; // Freezing rain
-    
-    if (iconUrl.includes('fog')) return `50${daySuffix}`; // Fog
-    
-    // Default
-    return isDay ? '01d' : '01n';
-  }
-  
-  // Rate limiting: check if we should throttle this request
-  private shouldThrottle(): boolean {
-    const now = Date.now();
-    const minuteElapsed = (now - this.lastRequestTime) > 60000;
-    
-    if (minuteElapsed) {
-      // Reset counter after a minute has passed
-      this.requestsThisMinute = 0;
-      return false;
-    }
-    
-    return this.requestsThisMinute >= this.rateLimitPerMinute;
-  }
-  
-  // Rate limiting: track this request
-  private trackRequest(): void {
-    const now = Date.now();
-    const minuteElapsed = (now - this.lastRequestTime) > 60000;
-    
-    if (minuteElapsed) {
-      this.requestsThisMinute = 1;
-    } else {
-      this.requestsThisMinute++;
-    }
-    
-    this.lastRequestTime = now;
-  }
-  
-  // Health check
-  async getHealthStatus(): Promise<'healthy' | 'degraded' | 'unavailable' | 'unknown'> {
-    try {
-      // Make a lightweight test request
-      const response = await fetch(
-        'https://api.weather.gov/points/40.7128,-74.006',
-        { 
-          headers: { "User-Agent": "PADDOCK20 Weather (paddock20@example.com)" },
-          signal: AbortSignal.timeout(5000) 
-        }
-      );
-      
-      if (response.ok) {
-        return 'healthy';
-      } else if (response.status === 429) {
-        return 'degraded'; // Rate limited
-      } else {
-        return 'unavailable';
-      }
-    } catch (error) {
-      return 'unavailable';
-    }
   }
 }
 
 /**
- * Register all weather-related providers with the API Data Warehouse
- * @param core API Data Warehouse core instance
+ * Weather.gov (NWS) API Provider
+ * Provider for the National Weather Service API (https://weather.gov)
+ * 
+ * Capabilities:
+ * - Current weather
+ * - Forecast (7 day)
+ * - Weather alerts
  */
-export function registerWeatherProviders(core: APIDataWarehouseCore): void {
-  // Register providers for current weather
-  core.registerProvider(
-    APICategory.WEATHER,
-    new OpenWeatherProvider(APICategory.WEATHER, 10) // Primary provider
-  );
+export class WeatherGovProvider implements APIProvider {
+  name = 'Weather.gov';
+  category = APICategory.WEATHER;
+  priority = 5; // Lower priority than OpenWeather
   
-  core.registerProvider(
-    APICategory.WEATHER,
-    new WeatherGovProvider(APICategory.WEATHER, 5) // Secondary provider
-  );
+  private baseUrl = 'https://api.weather.gov';
+  private userAgent = 'PADDOCK20-Weather-App';
   
-  // Register providers for weather forecasts
-  core.registerProvider(
-    APICategory.WEATHER_FORECAST,
-    new OpenWeatherProvider(APICategory.WEATHER_FORECAST, 10) // Primary provider
-  );
+  /**
+   * Execute a Weather.gov API request
+   */
+  async execute<T>(request: APIRequest): Promise<APIResponse<T>> {
+    const { endpoint, params } = request;
+    
+    try {
+      // Weather.gov requires a point request first to get grid coordinates
+      const { lat, lon } = params || {};
+      
+      if (!lat || !lon) {
+        return {
+          success: false,
+          error: {
+            code: 'missing_coordinates',
+            message: 'Latitude and longitude are required for Weather.gov API',
+            reason: 'VALIDATION_ERROR',
+          },
+          fromCache: false,
+          provider: this.name,
+        };
+      }
+      
+      // First get the grid point for the coordinates
+      const pointResponse = await fetch(`${this.baseUrl}/points/${lat},${lon}`, {
+        headers: {
+          'User-Agent': this.userAgent,
+          'Accept': 'application/geo+json',
+        },
+      });
+      
+      if (!pointResponse.ok) {
+        return {
+          success: false,
+          error: {
+            code: `weathergov_point_${pointResponse.status}`,
+            message: `Weather.gov point API error: ${await pointResponse.text()}`,
+            reason: 'API_ERROR',
+          },
+          fromCache: false,
+          provider: this.name,
+        };
+      }
+      
+      const pointData = await pointResponse.json();
+      const { office, gridX, gridY } = pointData.properties;
+      
+      if (!office || gridX === undefined || gridY === undefined) {
+        return {
+          success: false,
+          error: {
+            code: 'invalid_grid',
+            message: 'Weather.gov did not return valid grid coordinates',
+            reason: 'API_ERROR',
+          },
+          fromCache: false,
+          provider: this.name,
+        };
+      }
+      
+      // Now get the requested data
+      let data: any;
+      
+      switch (endpoint) {
+        case 'current':
+          data = await this.fetchCurrentConditions(office, gridX, gridY);
+          break;
+        case 'forecast':
+          data = await this.fetchForecast(office, gridX, gridY, params?.hourly);
+          break;
+        case 'alerts':
+          data = await this.fetchAlerts(lat, lon);
+          break;
+        default:
+          data = await this.fetchCurrentConditions(office, gridX, gridY);
+      }
+      
+      if (!data.success) {
+        return data; // Return error response
+      }
+      
+      // Transform to standard format
+      let transformedData: any;
+      
+      if (endpoint === 'current') {
+        transformedData = this.transformCurrentWeather(data.data, lat, lon);
+      } else if (endpoint === 'forecast') {
+        transformedData = this.transformForecast(data.data, lat, lon);
+      } else if (endpoint === 'alerts') {
+        transformedData = this.transformAlerts(data.data);
+      } else {
+        transformedData = data.data;
+      }
+      
+      return {
+        success: true,
+        data: transformedData as T,
+        fromCache: false,
+        provider: this.name,
+        timestamp: Date.now(),
+      };
+    } catch (error) {
+      console.error('Weather.gov provider error:', error);
+      
+      return {
+        success: false,
+        error: {
+          code: 'weathergov_error',
+          message: `Weather.gov API error: ${error instanceof Error ? error.message : String(error)}`,
+          reason: 'UNKNOWN_ERROR',
+        },
+        fromCache: false,
+        provider: this.name,
+      };
+    }
+  }
   
-  core.registerProvider(
-    APICategory.WEATHER_FORECAST,
-    new WeatherGovProvider(APICategory.WEATHER_FORECAST, 5) // Secondary provider
-  );
+  /**
+   * Check the health status of the Weather.gov API
+   */
+  async getHealthStatus(): Promise<HealthStatusType> {
+    try {
+      // Use a simple API call to check health
+      const response = await fetch(`${this.baseUrl}/points/39.7456,-97.0892`, {
+        headers: {
+          'User-Agent': this.userAgent,
+          'Accept': 'application/geo+json',
+        },
+      });
+      
+      if (response.ok) {
+        return 'healthy';
+      } else if (response.status === 429) {
+        return 'degraded'; // Rate limited
+      } else if (response.status >= 500) {
+        return 'unavailable'; // Server error
+      } else {
+        return 'degraded'; // Other issues
+      }
+    } catch (error) {
+      console.error('Weather.gov health check error:', error);
+      return 'unavailable';
+    }
+  }
   
-  // Register provider for weather alerts
-  core.registerProvider(
-    APICategory.WEATHER_ALERTS,
-    new OpenWeatherProvider(APICategory.WEATHER_ALERTS, 10) // Primary provider
-  );
+  /**
+   * Fetch current conditions from Weather.gov
+   */
+  private async fetchCurrentConditions(office: string, gridX: number, gridY: number): Promise<any> {
+    try {
+      // Get current observations
+      const stationsResponse = await fetch(`${this.baseUrl}/gridpoints/${office}/${gridX},${gridY}/stations`, {
+        headers: {
+          'User-Agent': this.userAgent,
+          'Accept': 'application/geo+json',
+        },
+      });
+      
+      if (!stationsResponse.ok) {
+        return {
+          success: false,
+          error: {
+            code: `weathergov_stations_${stationsResponse.status}`,
+            message: `Weather.gov stations API error: ${await stationsResponse.text()}`,
+            reason: 'API_ERROR',
+          },
+        };
+      }
+      
+      const stationsData = await stationsResponse.json();
+      const stations = stationsData.features.slice(0, 3).map((s: any) => s.properties.stationIdentifier);
+      
+      if (!stations || stations.length === 0) {
+        return {
+          success: false,
+          error: {
+            code: 'no_stations',
+            message: 'No weather stations found for this location',
+            reason: 'API_ERROR',
+          },
+        };
+      }
+      
+      // Get observations from the nearest station
+      const observationsResponse = await fetch(`${this.baseUrl}/stations/${stations[0]}/observations/latest`, {
+        headers: {
+          'User-Agent': this.userAgent,
+          'Accept': 'application/geo+json',
+        },
+      });
+      
+      if (!observationsResponse.ok) {
+        return {
+          success: false,
+          error: {
+            code: `weathergov_observations_${observationsResponse.status}`,
+            message: `Weather.gov observations API error: ${await observationsResponse.text()}`,
+            reason: 'API_ERROR',
+          },
+        };
+      }
+      
+      return {
+        success: true,
+        data: await observationsResponse.json(),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: {
+          code: 'weathergov_current_error',
+          message: `Weather.gov current conditions error: ${error instanceof Error ? error.message : String(error)}`,
+          reason: 'UNKNOWN_ERROR',
+        },
+      };
+    }
+  }
   
-  core.registerProvider(
-    APICategory.WEATHER_ALERTS,
-    new WeatherGovProvider(APICategory.WEATHER_ALERTS, 5) // Secondary provider
-  );
+  /**
+   * Fetch forecast from Weather.gov
+   */
+  private async fetchForecast(office: string, gridX: number, gridY: number, hourly?: boolean): Promise<any> {
+    try {
+      // Get forecast
+      const endpoint = hourly ? 'forecast/hourly' : 'forecast';
+      const forecastResponse = await fetch(`${this.baseUrl}/gridpoints/${office}/${gridX},${gridY}/${endpoint}`, {
+        headers: {
+          'User-Agent': this.userAgent,
+          'Accept': 'application/geo+json',
+        },
+      });
+      
+      if (!forecastResponse.ok) {
+        return {
+          success: false,
+          error: {
+            code: `weathergov_forecast_${forecastResponse.status}`,
+            message: `Weather.gov forecast API error: ${await forecastResponse.text()}`,
+            reason: 'API_ERROR',
+          },
+        };
+      }
+      
+      return {
+        success: true,
+        data: await forecastResponse.json(),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: {
+          code: 'weathergov_forecast_error',
+          message: `Weather.gov forecast error: ${error instanceof Error ? error.message : String(error)}`,
+          reason: 'UNKNOWN_ERROR',
+        },
+      };
+    }
+  }
   
-  // Register provider for historical weather data
-  core.registerProvider(
-    APICategory.WEATHER_HISTORICAL,
-    new OpenWeatherProvider(APICategory.WEATHER_HISTORICAL, 10) // Only OpenWeather supports historical
-  );
+  /**
+   * Fetch alerts from Weather.gov
+   */
+  private async fetchAlerts(lat: number, lon: number): Promise<any> {
+    try {
+      // Get zone for the coordinates
+      const zoneResponse = await fetch(`${this.baseUrl}/points/${lat},${lon}/zone`, {
+        headers: {
+          'User-Agent': this.userAgent,
+          'Accept': 'application/geo+json',
+        },
+      });
+      
+      if (!zoneResponse.ok) {
+        return {
+          success: false,
+          error: {
+            code: `weathergov_zone_${zoneResponse.status}`,
+            message: `Weather.gov zone API error: ${await zoneResponse.text()}`,
+            reason: 'API_ERROR',
+          },
+        };
+      }
+      
+      const zoneData = await zoneResponse.json();
+      const zoneId = zoneData.id;
+      
+      if (!zoneId) {
+        return {
+          success: false,
+          error: {
+            code: 'no_zone',
+            message: 'No weather zone found for this location',
+            reason: 'API_ERROR',
+          },
+        };
+      }
+      
+      // Get alerts for the zone
+      const alertsResponse = await fetch(`${this.baseUrl}/alerts/active/zone/${zoneId}`, {
+        headers: {
+          'User-Agent': this.userAgent,
+          'Accept': 'application/geo+json',
+        },
+      });
+      
+      if (!alertsResponse.ok) {
+        return {
+          success: false,
+          error: {
+            code: `weathergov_alerts_${alertsResponse.status}`,
+            message: `Weather.gov alerts API error: ${await alertsResponse.text()}`,
+            reason: 'API_ERROR',
+          },
+        };
+      }
+      
+      return {
+        success: true,
+        data: await alertsResponse.json(),
+      };
+    } catch (error) {
+      return {
+        success: false,
+        error: {
+          code: 'weathergov_alerts_error',
+          message: `Weather.gov alerts error: ${error instanceof Error ? error.message : String(error)}`,
+          reason: 'UNKNOWN_ERROR',
+        },
+      };
+    }
+  }
+  
+  /**
+   * Transform Weather.gov current weather to standardized format
+   */
+  private transformCurrentWeather(data: any, lat: number, lon: number): any {
+    if (!data || !data.properties) return null;
+    
+    const props = data.properties;
+    
+    // Convert temperature from C to F if needed
+    const tempC = props.temperature.value;
+    const tempF = tempC !== null ? (tempC * 9/5) + 32 : null;
+    
+    // Convert wind speed from km/h to mph if needed
+    const windSpeedKph = props.windSpeed.value;
+    const windSpeedMph = windSpeedKph !== null ? windSpeedKph * 0.621371 : null;
+    
+    return {
+      location: {
+        lat,
+        lon,
+        name: props.station || 'Unknown',
+        timezone: null, // Not provided directly
+      },
+      current: {
+        timestamp: new Date(props.timestamp).getTime(),
+        temp: tempF,
+        feels_like: null, // Not provided directly
+        humidity: props.relativeHumidity.value,
+        pressure: props.barometricPressure.value / 100, // Convert Pa to hPa
+        weather_description: props.textDescription || 'Unknown',
+        weather_icon: this.getWeatherIcon(props.icon, props.textDescription),
+        cloud_cover: null, // Not provided directly
+        wind_speed: windSpeedMph,
+        wind_direction: props.windDirection.value,
+        visibility: props.visibility.value / 1000, // Convert m to km
+        uv_index: null, // Not provided
+        precipitation: props.precipitationLastHour.value || 0,
+      }
+    };
+  }
+  
+  /**
+   * Transform Weather.gov forecast to standardized format
+   */
+  private transformForecast(data: any, lat: number, lon: number): any {
+    if (!data || !data.properties || !data.properties.periods) return null;
+    
+    // Group forecast periods by date
+    const periodsByDate = new Map<string, any[]>();
+    
+    data.properties.periods.forEach((period: any) => {
+      const date = new Date(period.startTime).toISOString().split('T')[0];
+      
+      if (!periodsByDate.has(date)) {
+        periodsByDate.set(date, []);
+      }
+      
+      periodsByDate.get(date)!.push(period);
+    });
+    
+    // Create daily forecasts
+    const dailyForecasts = Array.from(periodsByDate.entries()).map(([date, periods]) => {
+      // Find daytime and nighttime periods
+      const dayPeriod = periods.find(p => p.isDaytime);
+      const nightPeriod = periods.find(p => !p.isDaytime);
+      
+      // Use appropriate periods for min/max temps
+      const maxTemp = dayPeriod?.temperature;
+      const minTemp = nightPeriod?.temperature;
+      
+      // Use daytime description and icon if available
+      const description = dayPeriod?.shortForecast || periods[0]?.shortForecast || 'Unknown';
+      const icon = this.getWeatherIcon(dayPeriod?.icon || periods[0]?.icon, description);
+      
+      // Calculate precipitation chance (look for phrases like "30 percent chance")
+      let precipChance = 0;
+      const detailedForecast = (dayPeriod?.detailedForecast || '') + (nightPeriod?.detailedForecast || '');
+      const percentMatch = detailedForecast.match(/(\d+)\s*percent\s*chance/i);
+      if (percentMatch && percentMatch[1]) {
+        precipChance = parseInt(percentMatch[1], 10);
+      }
+      
+      return {
+        date,
+        weather_description: description,
+        weather_icon: icon,
+        temp_min: minTemp || null,
+        temp_max: maxTemp || null,
+        precipitation_chance: precipChance,
+        precipitation_amount: null, // Not provided directly
+        humidity: null, // Not provided directly
+        wind_speed: dayPeriod?.windSpeed ? this.parseWindSpeed(dayPeriod.windSpeed) : null,
+        wind_direction: null, // Only provided as text
+        uv_index: null, // Not provided
+        sunrise: null, // Not provided
+        sunset: null, // Not provided
+      };
+    });
+    
+    // Create hourly forecasts if available
+    const hourlyForecasts = data.properties.periods.map((period: any) => {
+      const startTime = new Date(period.startTime).getTime();
+      
+      return {
+        timestamp: startTime,
+        temp: period.temperature,
+        feels_like: null, // Not provided
+        weather_description: period.shortForecast,
+        weather_icon: this.getWeatherIcon(period.icon, period.shortForecast),
+        precipitation_chance: 0, // Not provided directly
+        precipitation_amount: 0, // Not provided directly
+        humidity: null, // Not provided
+        wind_speed: this.parseWindSpeed(period.windSpeed),
+        visibility: null, // Not provided
+      };
+    });
+    
+    return {
+      location: {
+        lat,
+        lon,
+        name: null, // Not provided directly
+        timezone: null, // Not provided directly
+      },
+      daily: dailyForecasts,
+      hourly: hourlyForecasts,
+    };
+  }
+  
+  /**
+   * Transform Weather.gov alerts to standardized format
+   */
+  private transformAlerts(data: any): any[] {
+    if (!data || !data.features) return [];
+    
+    return data.features.map((feature: any) => {
+      const props = feature.properties;
+      
+      return {
+        title: props.event,
+        description: props.description,
+        start: new Date(props.effective).getTime(),
+        end: new Date(props.expires).getTime(),
+        severity: props.severity.toLowerCase(),
+        source: 'NWS',
+      };
+    });
+  }
+  
+  /**
+   * Map Weather.gov icon URL or description to standardized icon code
+   */
+  private getWeatherIcon(iconUrl?: string, description?: string): string {
+    // Default icon for clear conditions
+    let icon = '01d';
+    
+    // If no iconUrl or description, return default
+    if (!iconUrl && !description) {
+      return icon;
+    }
+    
+    // Try to extract time of day from icon URL
+    const isDay = !iconUrl || !iconUrl.includes('night');
+    const timeOfDay = isDay ? 'd' : 'n';
+    
+    // Map description to icon code
+    const desc = (description || '').toLowerCase();
+    
+    if (desc.includes('thunderstorm')) {
+      icon = '11';
+    } else if (desc.includes('rain') && desc.includes('snow')) {
+      icon = '13';
+    } else if (desc.includes('freezing') && desc.includes('rain')) {
+      icon = '13';
+    } else if (desc.includes('rain') || desc.includes('shower')) {
+      if (desc.includes('light')) {
+        icon = '10';
+      } else {
+        icon = '09';
+      }
+    } else if (desc.includes('snow') || desc.includes('flurr')) {
+      icon = '13';
+    } else if (desc.includes('fog') || desc.includes('mist')) {
+      icon = '50';
+    } else if (desc.includes('cloud')) {
+      if (desc.includes('scattered') || desc.includes('partly')) {
+        icon = '03';
+      } else if (desc.includes('broken') || desc.includes('mostly')) {
+        icon = '04';
+      } else {
+        icon = '02';
+      }
+    } else if (desc.includes('clear') || desc.includes('sunny')) {
+      icon = '01';
+    } else if (desc.includes('overcast')) {
+      icon = '04';
+    } else {
+      // Try to extract from icon URL
+      if (iconUrl) {
+        if (iconUrl.includes('thunderstorm')) {
+          icon = '11';
+        } else if (iconUrl.includes('rain_snow')) {
+          icon = '13';
+        } else if (iconUrl.includes('rain') || iconUrl.includes('shower')) {
+          icon = '09';
+        } else if (iconUrl.includes('snow')) {
+          icon = '13';
+        } else if (iconUrl.includes('fog') || iconUrl.includes('mist')) {
+          icon = '50';
+        } else if (iconUrl.includes('sct')) {
+          icon = '03';
+        } else if (iconUrl.includes('bkn')) {
+          icon = '04';
+        } else if (iconUrl.includes('ovc')) {
+          icon = '04';
+        } else if (iconUrl.includes('few')) {
+          icon = '02';
+        } else if (iconUrl.includes('skc') || iconUrl.includes('clear')) {
+          icon = '01';
+        }
+      }
+    }
+    
+    return icon + timeOfDay;
+  }
+  
+  /**
+   * Parse wind speed from text (e.g. "10 to 15 mph" -> 12.5)
+   */
+  private parseWindSpeed(text: string): number | null {
+    if (!text) return null;
+    
+    // Try to extract numeric values
+    const numbers = text.match(/\d+/g);
+    if (!numbers || numbers.length === 0) return null;
+    
+    // If range ("10 to 15 mph"), use average
+    if (numbers.length >= 2) {
+      return (parseInt(numbers[0], 10) + parseInt(numbers[1], 10)) / 2;
+    }
+    
+    // Single value
+    return parseInt(numbers[0], 10);
+  }
+}
+
+/**
+ * Register all weather providers with the API Data Warehouse
+ */
+export function registerWeatherProviders(warehouse: any): void {
+  // Register OpenWeather provider
+  const openWeatherProvider = new OpenWeatherProvider();
+  warehouse.registerProvider(APICategory.WEATHER, openWeatherProvider, 10);
+  
+  // Register Weather.gov provider
+  const weatherGovProvider = new WeatherGovProvider();
+  warehouse.registerProvider(APICategory.WEATHER, weatherGovProvider, 5);
+  
+  console.log(`Registered weather providers: ${openWeatherProvider.name}, ${weatherGovProvider.name}`);
 }

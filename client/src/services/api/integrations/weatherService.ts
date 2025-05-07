@@ -1,450 +1,300 @@
 /**
  * Weather Service Integration
  * 
- * Bridges the API Data Warehouse with the existing WeatherContext and ConsolidatedWeatherContext.
- * Provides standardized methods for weather-related operations using the warehouse system.
+ * This module provides integration between the API Data Warehouse
+ * and the existing weather systems in the application.
  */
 
-import { apiWarehouse } from '../core';
-import { 
-  APICategory, 
-  WeatherData, 
-  AutomotiveWeatherMetrics 
-} from '../types';
+import { APICategory } from '../types/core';
+import { fetchAPI } from '../index';
+import { Location } from '@/contexts/EnhancedWeatherContext';
 
-// Initialize flag to track if providers are registered
-let providersInitialized = false;
+// Standard interfaces for weather data
+export interface StandardWeatherData {
+  location: {
+    name: string;
+    lat: number;
+    lon: number;
+  };
+  current: {
+    timestamp: number;
+    temp: number;
+    feels_like: number;
+    humidity: number;
+    pressure: number;
+    weather_description: string;
+    weather_icon: string;
+    cloud_cover: number;
+    wind_speed: number;
+    wind_direction: number;
+    visibility: number;
+    uv_index: number;
+    precipitation: number;
+  };
+}
 
-/**
- * Ensure weather providers are initialized
- */
-function ensureProvidersInitialized() {
-  if (providersInitialized) return;
-  
-  // Import and register providers dynamically
-  import('../providers/weather').then(module => {
-    module.registerWeatherProviders(apiWarehouse);
-    console.info('🏎️ PADDOCK20: Weather API providers registered');
-    providersInitialized = true;
-  }).catch(err => {
-    console.error('Failed to initialize weather providers:', err);
-  });
+export interface StandardForecastData {
+  location: {
+    name: string;
+    lat: number;
+    lon: number;
+  };
+  daily: Array<{
+    date: string;
+    weather_description: string;
+    weather_icon: string;
+    temp_min: number;
+    temp_max: number;
+    precipitation_chance: number;
+    precipitation_amount: number;
+    humidity: number;
+    wind_speed: number;
+    wind_direction: number;
+    uv_index: number;
+    sunrise?: number;
+    sunset?: number;
+  }>;
+  hourly?: Array<{
+    timestamp: number;
+    temp: number;
+    feels_like?: number;
+    weather_description: string;
+    weather_icon: string;
+    precipitation_chance: number;
+    precipitation_amount: number;
+    humidity: number;
+    wind_speed: number;
+    visibility?: number;
+  }>;
+}
+
+export interface StandardAlertData {
+  title: string;
+  description: string;
+  start: number;
+  end: number;
+  severity: string;
 }
 
 /**
- * Convert temperature between units
+ * Fetch consolidated weather data for a location
  */
-function convertTemperature(value: number, fromUnit: 'imperial' | 'metric', toUnit: 'imperial' | 'metric'): number {
-  if (fromUnit === toUnit) return value;
+export async function fetchConsolidatedWeatherData(
+  location: Location,
+  unit: 'metric' | 'imperial' = 'imperial'
+): Promise<{
+  weatherData: any;
+  forecastData: any;
+  oneCallData: any;
+  automotiveWeatherData: any;
+  alerts: StandardAlertData[];
+}> {
+  console.log('Starting weather fetch process...');
   
-  if (fromUnit === 'imperial' && toUnit === 'metric') {
-    // F to C
-    return (value - 32) * 5/9;
-  } else {
-    // C to F
-    return (value * 9/5) + 32;
+  try {
+    // Fetch current weather
+    const currentWeatherResponse = await fetchAPI<StandardWeatherData>({
+      category: APICategory.WEATHER,
+      endpoint: 'current',
+      params: {
+        lat: location.lat,
+        lon: location.lon,
+        units: unit,
+      },
+      cacheTTL: 10 * 60 * 1000, // 10 minutes
+    });
+    
+    // Fetch forecast
+    const forecastResponse = await fetchAPI<StandardForecastData>({
+      category: APICategory.WEATHER,
+      endpoint: 'forecast',
+      params: {
+        lat: location.lat,
+        lon: location.lon,
+        units: unit,
+      },
+      cacheTTL: 60 * 60 * 1000, // 1 hour
+    });
+    
+    // Fetch alerts (if available)
+    let alerts: StandardAlertData[] = [];
+    try {
+      const alertsResponse = await fetchAPI<StandardAlertData[]>({
+        category: APICategory.WEATHER,
+        endpoint: 'alerts',
+        params: {
+          lat: location.lat,
+          lon: location.lon,
+        },
+        cacheTTL: 10 * 60 * 1000, // 10 minutes
+      });
+      
+      if (alertsResponse.success) {
+        alerts = alertsResponse.data || [];
+      }
+    } catch (error) {
+      console.warn('Failed to fetch weather alerts:', error);
+    }
+    
+    // Process and combine the data
+    const weatherData = currentWeatherResponse.success ? currentWeatherResponse.data : null;
+    const forecastData = forecastResponse.success ? forecastResponse.data : null;
+    
+    // Calculate automotive weather metrics
+    const automotiveWeatherData = calculateAutomotiveWeatherData(weatherData, forecastData, alerts);
+    
+    if (currentWeatherResponse.fromCache) {
+      console.log('Using cached weather data from', 
+        currentWeatherResponse.stale ? 'stale cache' : 'primary');
+    } else {
+      console.log('Using fresh weather data from provider:', currentWeatherResponse.provider);
+    }
+    
+    // Return all data
+    return {
+      weatherData,
+      forecastData,
+      oneCallData: null, // For compatibility with existing code
+      automotiveWeatherData,
+      alerts,
+    };
+  } catch (error) {
+    console.error('Error fetching weather data:', error);
+    throw error;
   }
 }
 
 /**
  * Calculate automotive-specific weather metrics
  */
-function calculateAutomotiveMetrics(weatherData: WeatherData, unit: 'imperial' | 'metric'): AutomotiveWeatherMetrics {
-  // Extract values from weather data
-  const temp = unit === 'imperial' ? weatherData.current.temp : convertTemperature(weatherData.current.temp, 'imperial', 'metric');
-  const humidity = weatherData.current.humidity;
-  const precipitation = weatherData.current.precipitation;
-  const windSpeed = weatherData.current.wind_speed;
-  const weatherDesc = weatherData.current.weather_description.toLowerCase();
-  
-  // Track surface temperature estimation (typically 10-30°F higher than air temp in sunlight)
-  const isRainy = weatherDesc.includes('rain') || weatherDesc.includes('drizzle') || precipitation > 0.1;
-  const isSnowy = weatherDesc.includes('snow') || weatherDesc.includes('ice');
-  const isCloudy = weatherDesc.includes('cloud') || weatherData.current.cloud_cover > 50;
-  const isSunny = !isCloudy && !isRainy && !isSnowy;
-  
-  // Track temperature adjustment based on conditions
-  let trackTempAdjustment = 0;
-  if (isSunny) trackTempAdjustment = 20; // Track much hotter in full sun
-  else if (isCloudy) trackTempAdjustment = 10; // Track somewhat hotter in clouds
-  else if (isRainy) trackTempAdjustment = 0; // Track same temp in rain
-  else if (isSnowy) trackTempAdjustment = -5; // Track colder in snow
-  
-  // Track temperature in Fahrenheit
-  const trackTemp = unit === 'imperial' 
-    ? Math.round(temp + trackTempAdjustment)
-    : Math.round(convertTemperature(temp, 'metric', 'imperial') + trackTempAdjustment);
-  
-  // Determine track condition
-  let trackCondition = 'Dry';
-  let gripLevel = 'Optimal';
-  
-  if (isSnowy) {
-    trackCondition = 'Snow-covered';
-    gripLevel = 'Very Poor';
-  } else if (isRainy) {
-    trackCondition = 'Wet';
-    gripLevel = precipitation > 0.3 ? 'Poor' : 'Reduced';
-  } else if (humidity > 90) {
-    trackCondition = 'Damp';
-    gripLevel = 'Good';
-  }
-  
-  // Tire compound recommendation based on conditions
-  let compound = 'Medium';
-  if (trackTemp > 100) compound = 'Hard';
-  else if (trackTemp < 70) compound = 'Soft';
-  
-  if (isRainy || isSnowy) compound = 'Wet';
-  
-  // Tire pressure recommendations (simplified)
-  const frontPsi = Math.round(30 + (trackTemp > 90 ? -2 : trackTemp < 50 ? 2 : 0));
-  const rearPsi = Math.round(32 + (trackTemp > 90 ? -2 : trackTemp < 50 ? 2 : 0));
-  
-  // Tire warmup time
-  const warmupTimeMinutes = trackTemp < 50 ? 10 : trackTemp < 70 ? 7 : 5;
-  
-  // Visibility assessment
-  let visibilityLevel = 'Excellent';
-  if (isRainy && precipitation > 0.5) visibilityLevel = 'Poor';
-  else if (isRainy) visibilityLevel = 'Reduced';
-  else if (isSnowy) visibilityLevel = 'Poor';
-  else if (weatherDesc.includes('fog') || weatherDesc.includes('mist')) visibilityLevel = 'Poor';
-  else if (isCloudy && humidity > 80) visibilityLevel = 'Moderate';
-  
-  // Wind impact
-  let windImpact = 'Negligible';
-  if (windSpeed > 25) windImpact = 'High';
-  else if (windSpeed > 15) windImpact = 'Moderate';
-  else if (windSpeed > 10) windImpact = 'Low';
-  
-  // Sunglare risk
-  let sunglareRisk = 'Low';
-  const hour = new Date().getHours();
-  if (isSunny && (hour < 10 || hour > 16)) sunglareRisk = 'High';
-  else if (isSunny) sunglareRisk = 'Moderate';
-  
-  // Hydroplaning risk
-  let hydroplaningRisk = 'Low';
-  if (isRainy && precipitation > 0.5) hydroplaningRisk = 'High';
-  else if (isRainy) hydroplaningRisk = 'Moderate';
-  
-  // Braking distance
-  const brakingDistancePercent = 
-    isSnowy ? 200 : // 200% of normal
-    isRainy && precipitation > 0.3 ? 150 : // 150% of normal
-    isRainy ? 130 : // 130% of normal
-    humidity > 90 ? 110 : // 110% of normal
-    100; // Normal
-  
-  let brakingDescription = 'Normal';
-  if (brakingDistancePercent >= 200) brakingDescription = 'Extremely Extended';
-  else if (brakingDistancePercent >= 150) brakingDescription = 'Significantly Extended';
-  else if (brakingDistancePercent >= 120) brakingDescription = 'Extended';
-  else if (brakingDistancePercent >= 110) brakingDescription = 'Slightly Extended';
-  
-  // Power delivery recommendation
-  let powerDeliveryRec = 'Normal';
-  let tractionControlSetting = 'Normal';
-  
-  if (isSnowy) {
-    powerDeliveryRec = 'Extremely Gentle';
-    tractionControlSetting = 'Maximum';
-  } else if (isRainy && precipitation > 0.3) {
-    powerDeliveryRec = 'Very Gentle';
-    tractionControlSetting = 'High';
-  } else if (isRainy) {
-    powerDeliveryRec = 'Gentle';
-    tractionControlSetting = 'Medium';
-  } else if (trackTemp < 50) {
-    powerDeliveryRec = 'Cautious';
-    tractionControlSetting = 'Medium';
-  }
-  
-  return {
-    trackSurface: {
-      temperature: trackTemp,
-      condition: trackCondition,
-      gripLevel,
-    },
-    tireRecommendations: {
-      compound,
-      pressure: {
-        frontPsi,
-        rearPsi,
-      },
-      warmupTimeMinutes,
-    },
-    drivingConditions: {
-      visibilityLevel,
-      windImpact,
-      sunglareRisk,
-      hydroplaningRisk,
-      brakingDistance: {
-        percent: brakingDistancePercent,
-        description: brakingDescription,
-      },
-      powerDelivery: {
-        recommendation: powerDeliveryRec,
-        tractionControlSetting,
-      },
-    },
-  };
-}
-
-/**
- * Get current weather for a location
- */
-export async function getCurrentWeather(
-  lat: number,
-  lon: number,
-  unit: 'imperial' | 'metric' = 'imperial'
-): Promise<{ weatherData: WeatherData, automotiveMetrics: AutomotiveWeatherMetrics }> {
-  // Ensure providers are initialized
-  ensureProvidersInitialized();
-  
-  try {
-    // Get weather data from the warehouse
-    const response = await apiWarehouse.request<WeatherData>(APICategory.WEATHER, {
-      params: {
-        lat,
-        lon,
-        units: unit,
-      },
-    });
-    
-    // Calculate automotive metrics
-    const automotiveMetrics = calculateAutomotiveMetrics(response.data, unit);
-    
-    // Log source of data
-    if (response.fromCache) {
-      console.log(`Using cached weather data from ${response.cacheLevel} cache`);
-    } else {
-      console.log(`Using fresh weather data from ${response.data.source}`);
-    }
-    
+function calculateAutomotiveWeatherData(
+  weatherData: StandardWeatherData | null,
+  forecastData: StandardForecastData | null,
+  alerts: StandardAlertData[]
+): any {
+  if (!weatherData || !weatherData.current) {
     return {
-      weatherData: response.data,
-      automotiveMetrics,
-    };
-  } catch (error) {
-    console.error('Error fetching current weather:', error);
-    throw error;
-  }
-}
-
-/**
- * Get weather forecast for a location
- */
-export async function getWeatherForecast(
-  lat: number,
-  lon: number,
-  unit: 'imperial' | 'metric' = 'imperial'
-): Promise<WeatherData> {
-  // Ensure providers are initialized
-  ensureProvidersInitialized();
-  
-  try {
-    // Get forecast data from the warehouse
-    const response = await apiWarehouse.request<WeatherData>(APICategory.WEATHER_FORECAST, {
-      params: {
-        lat,
-        lon,
-        units: unit,
+      driving: {
+        quality: 3,
+        risks: [],
+        recommendedSettings: {}
       },
-    });
-    
-    // Log source of data
-    if (response.fromCache) {
-      console.log(`Using cached forecast data from ${response.cacheLevel} cache`);
-    } else {
-      console.log(`Using fresh forecast data from ${response.data.source}`);
-    }
-    
-    return response.data;
-  } catch (error) {
-    console.error('Error fetching weather forecast:', error);
-    throw error;
-  }
-}
-
-/**
- * Get weather alerts for a location
- */
-export async function getWeatherAlerts(
-  lat: number,
-  lon: number
-): Promise<Array<{
-  title: string;
-  description: string;
-  severity: string;
-  start: number;
-  end: number;
-  source?: string;
-}>> {
-  // Ensure providers are initialized
-  ensureProvidersInitialized();
-  
-  try {
-    // Get alerts data from the warehouse
-    const response = await apiWarehouse.request<WeatherData>(APICategory.WEATHER_ALERTS, {
-      params: {
-        lat,
-        lon,
-        units: 'imperial',
-      },
-    });
-    
-    // Extract alerts
-    return response.data.alerts || [];
-  } catch (error) {
-    console.error('Error fetching weather alerts:', error);
-    // Return empty array instead of throwing
-    return [];
-  }
-}
-
-/**
- * Convert weather data to format expected by the legacy WeatherContext
- */
-export function convertToLegacyWeatherData(weatherData: WeatherData): any {
-  // Basic mapping to legacy format
-  return {
-    coord: {
-      lon: weatherData.location.lon,
-      lat: weatherData.location.lat
-    },
-    weather: [
-      {
-        id: 800, // Placeholder ID
-        main: weatherData.current.weather_description.split(' ')[0],
-        description: weatherData.current.weather_description,
-        icon: weatherData.current.weather_icon
+      detailing: {
+        quality: 3,
+        recommendations: []
       }
-    ],
-    base: "stations",
-    main: {
-      temp: weatherData.current.temp,
-      feels_like: weatherData.current.feels_like,
-      temp_min: weatherData.daily?.[0]?.temp_min || weatherData.current.temp,
-      temp_max: weatherData.daily?.[0]?.temp_max || weatherData.current.temp,
-      pressure: weatherData.current.pressure,
-      humidity: weatherData.current.humidity,
-      sea_level: weatherData.current.pressure,
-      grnd_level: weatherData.current.pressure
-    },
-    visibility: weatherData.current.visibility * 1000, // Convert from km to m
-    wind: {
-      speed: weatherData.current.wind_speed,
-      deg: weatherData.current.wind_direction
-    },
-    clouds: {
-      all: weatherData.current.cloud_cover
-    },
-    dt: Math.floor(weatherData.current.timestamp / 1000),
-    sys: {
-      country: weatherData.location.country,
-      sunrise: weatherData.daily?.[0]?.sunrise ? Math.floor(weatherData.daily[0].sunrise / 1000) : undefined,
-      sunset: weatherData.daily?.[0]?.sunset ? Math.floor(weatherData.daily[0].sunset / 1000) : undefined,
-    },
-    timezone: 0, // To be filled by caller
-    id: 0, // To be filled by caller
-    name: weatherData.location.name,
-    cod: 200
-  };
-}
-
-/**
- * Convert weather forecast data to format expected by the legacy ForecastContext
- */
-export function convertToLegacyForecastData(weatherData: WeatherData): any {
-  if (!weatherData.daily || weatherData.daily.length === 0) {
-    return null;
+    };
   }
   
-  // Basic mapping to legacy format
+  const current = weatherData.current;
+  const today = forecastData?.daily?.[0];
+  
+  // Driving quality assessment (1-5, 5 is best)
+  let drivingQuality = 5; // Start with perfect
+  const drivingRisks: string[] = [];
+  const recommendedSettings: Record<string, any> = {};
+  
+  // Assess precipitation
+  if (current.precipitation > 0) {
+    if (current.precipitation > 10) {
+      drivingQuality -= 2; // Heavy rain
+      drivingRisks.push('Heavy precipitation reducing visibility and traction');
+      recommendedSettings.wipers = 'high';
+      recommendedSettings.headlights = 'on';
+      recommendedSettings.drivingMode = 'rain';
+    } else {
+      drivingQuality -= 1; // Light rain
+      drivingRisks.push('Light precipitation may reduce traction');
+      recommendedSettings.wipers = 'low';
+      recommendedSettings.headlights = 'on';
+    }
+  }
+  
+  // Assess visibility
+  if (current.visibility < 5) {
+    drivingQuality -= 2;
+    drivingRisks.push('Reduced visibility conditions');
+    recommendedSettings.headlights = 'on';
+    recommendedSettings.fogLights = current.visibility < 1 ? 'on' : 'off';
+  } else if (current.visibility < 8) {
+    drivingQuality -= 1;
+    drivingRisks.push('Slightly reduced visibility');
+    recommendedSettings.headlights = 'on';
+  }
+  
+  // Assess wind
+  if (current.wind_speed > 30) {
+    drivingQuality -= 2;
+    drivingRisks.push('High winds may affect vehicle stability');
+  } else if (current.wind_speed > 20) {
+    drivingQuality -= 1;
+    drivingRisks.push('Moderate winds may be noticeable while driving');
+  }
+  
+  // Consider alerts
+  if (alerts && alerts.length > 0) {
+    // Check for severe alerts
+    const severeAlerts = alerts.filter(alert => 
+      alert.severity === 'severe' || 
+      alert.severity === 'extreme' ||
+      alert.title.toLowerCase().includes('warning')
+    );
+    
+    if (severeAlerts.length > 0) {
+      drivingQuality = Math.min(drivingQuality, 2); // Cap at 2 for severe alerts
+      severeAlerts.forEach(alert => {
+        drivingRisks.push(`Weather alert: ${alert.title}`);
+      });
+    }
+  }
+  
+  // Ensure quality is within bounds
+  drivingQuality = Math.max(1, Math.min(5, drivingQuality));
+  
+  // Detailing quality assessment (1-5, 5 is best)
+  let detailingQuality = 5;
+  const detailingRecommendations: string[] = [];
+  
+  // Check precipitation
+  if (current.precipitation > 0 || (today && today.precipitation_chance > 30)) {
+    detailingQuality = 1;
+    detailingRecommendations.push('Precipitation present or likely - detailing not recommended');
+  } else if (today && today.precipitation_chance > 10) {
+    detailingQuality = 3;
+    detailingRecommendations.push('Chance of precipitation later - consider quick detailing only');
+  }
+  
+  // Check humidity and temperature for optimal detailing
+  if (current.humidity > 80) {
+    detailingQuality = Math.min(detailingQuality, 3);
+    detailingRecommendations.push('High humidity may affect product drying time');
+  }
+  
+  // Check temperature
+  if (current.temp > 90) {
+    detailingQuality = Math.min(detailingQuality, 2);
+    detailingRecommendations.push('High temperature may cause products to dry too quickly');
+  } else if (current.temp < 40) {
+    detailingQuality = Math.min(detailingQuality, 2);
+    detailingRecommendations.push('Low temperature may affect product application');
+  }
+  
+  // Check wind for dust and debris
+  if (current.wind_speed > 15) {
+    detailingQuality = Math.min(detailingQuality, 2);
+    detailingRecommendations.push('Windy conditions may introduce dust and debris');
+  }
+  
+  // Return combined automotive weather data
   return {
-    cod: "200",
-    message: 0,
-    cnt: weatherData.daily.length,
-    list: weatherData.daily.map(day => ({
-      dt: new Date(day.date).getTime() / 1000,
-      main: {
-        temp: (day.temp_min + day.temp_max) / 2,
-        feels_like: (day.temp_min + day.temp_max) / 2,
-        temp_min: day.temp_min,
-        temp_max: day.temp_max,
-        pressure: weatherData.current.pressure,
-        humidity: weatherData.current.humidity,
-        sea_level: weatherData.current.pressure,
-        grnd_level: weatherData.current.pressure,
-        temp_kf: 0
-      },
-      weather: [
-        {
-          id: 800, // Placeholder ID
-          main: day.weather_description.split(' ')[0],
-          description: day.weather_description,
-          icon: day.weather_icon
-        }
-      ],
-      clouds: {
-        all: weatherData.current.cloud_cover
-      },
-      wind: {
-        speed: weatherData.current.wind_speed,
-        deg: weatherData.current.wind_direction,
-        gust: weatherData.current.wind_speed * 1.5 // Estimate gust
-      },
-      visibility: weatherData.current.visibility * 1000,
-      pop: day.precipitation_chance / 100,
-      sys: {
-        pod: "d" // Day part
-      },
-      dt_txt: day.date
-    })),
-    city: {
-      id: 0,
-      name: weatherData.location.name,
-      coord: {
-        lat: weatherData.location.lat,
-        lon: weatherData.location.lon
-      },
-      country: weatherData.location.country,
-      population: 0,
-      timezone: 0,
-      sunrise: weatherData.daily[0]?.sunrise ? Math.floor(weatherData.daily[0].sunrise / 1000) : 0,
-      sunset: weatherData.daily[0]?.sunset ? Math.floor(weatherData.daily[0].sunset / 1000) : 0
+    driving: {
+      quality: drivingQuality,
+      risks: drivingRisks,
+      recommendedSettings
+    },
+    detailing: {
+      quality: detailingQuality,
+      recommendations: detailingRecommendations
     }
   };
-}
-
-/**
- * Check health of weather-related API providers
- */
-export async function checkWeatherServicesHealth(): Promise<{
-  weather: 'healthy' | 'degraded' | 'unavailable';
-  forecast: 'healthy' | 'degraded' | 'unavailable';
-  alerts: 'healthy' | 'degraded' | 'unavailable';
-}> {
-  // Ensure providers are initialized
-  ensureProvidersInitialized();
-  
-  try {
-    // Get health status from warehouse
-    const health = await apiWarehouse.getHealthStatus();
-    
-    return {
-      weather: health[APICategory.WEATHER]?.status || 'unavailable',
-      forecast: health[APICategory.WEATHER_FORECAST]?.status || 'unavailable',
-      alerts: health[APICategory.WEATHER_ALERTS]?.status || 'unavailable',
-    };
-  } catch (error) {
-    console.error('Error checking weather services health:', error);
-    return {
-      weather: 'unavailable',
-      forecast: 'unavailable',
-      alerts: 'unavailable',
-    };
-  }
 }
