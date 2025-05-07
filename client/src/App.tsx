@@ -22,6 +22,7 @@ import OneTapWeatherSnapshot from "./components/OneTapWeatherSnapshot";
 import RewardNotification from "./components/RewardNotification";
 import RewardsTracker from "./components/RewardsTracker";
 import AuthPage from './pages/AuthPage';
+import StandaloneAuthPage from './pages/StandaloneAuthPage';
 import AuthCallback from './pages/AuthCallback';
 import ResetPassword from './pages/ResetPassword';
 import LoginRedirect from './pages/LoginRedirect';
@@ -238,11 +239,7 @@ function AppContent({
                           <Route path="/beta-agreement" component={BetaAgreement} />
                           <Route path="/email-verified" component={EmailVerifiedPage} />
                           <Route path="/auth" component={SupabaseAuthPage} />
-                          <Route path="/auth/native" component={() => (
-                            <div className="min-h-screen bg-black font-openSans text-white">
-                              <AuthPage />
-                            </div>
-                          )} />
+                          <Route path="/auth/native" component={StandaloneAuthPage} />
                           <Route path="/auth/callback" component={AuthCallback} />
                           <Route path="/auth/reset-password" component={ResetPassword} />
                           <Route path="/auth/error" component={AuthError} />
