@@ -62,7 +62,7 @@ export default function OnboardingModal({ isOpen = true, onClose }: OnboardingMo
     const profile = userProfileWarehouse.getProfile();
     if (profile) {
       // Get first vehicle if it exists
-      const vehicle = profile.garage && profile.garage.vehicles && profile.garage.vehicles[0];
+      const vehicle = profile.vehicles && profile.vehicles.length > 0 ? profile.vehicles[0] : null;
       
       if (vehicle) {
         setFormData(prev => ({
@@ -114,7 +114,7 @@ export default function OnboardingModal({ isOpen = true, onClose }: OnboardingMo
       if (data.vehicle) {
         // Check if we need to add a new vehicle or update existing
         const profile = userProfileWarehouse.getProfile();
-        const vehicles = profile?.garage?.vehicles || [];
+        const vehicles = profile?.vehicles || [];
         
         if (vehicles.length === 0) {
           // Add new vehicle
@@ -166,14 +166,14 @@ export default function OnboardingModal({ isOpen = true, onClose }: OnboardingMo
       }
       
       if (data.region) {
-        userProfileWarehouse.updatePreferences({
-          weatherPreferences: {
-            defaultLocation: {
-              name: data.region.name,
-              lat: data.region.lat,
-              lon: data.region.lon
-            }
-          }
+        // Use updateWeatherPreferences which handles proper structure
+        userProfileWarehouse.updateWeatherPreferences({
+          defaultLocation: {
+            name: data.region.name,
+            lat: data.region.lat,
+            lon: data.region.lon
+          },
+          units: 'imperial' // Default to imperial units
         });
       }
       
