@@ -27,6 +27,7 @@ import ThePaddockPage from './pages/ThePaddockPage';
 import EnhancedLogoutPage from './pages/EnhancedLogoutPage';
 import JoinTheGrid from './pages/JoinTheGrid';
 import OptimizedOnboardingPage from './pages/OptimizedOnboardingPage';
+import BetaEnrollmentPage from './pages/BetaEnrollmentPage';
 import PaddockPage from './pages/PaddockPage';
 
 // Page imports
@@ -186,21 +187,21 @@ function AppContent({
     );
   }
   
-  // Show user onboarding if authenticated and hasn't completed onboarding
-  if (isAuthenticated && !hasCompletedOnboarding && user?.id) {
-    return (
-      <UserOnboarding 
-        user={user}
-        onComplete={() => {
-          // Mark onboarding as complete in localStorage
-          const betaOnboardingKey = `paddock20_beta_onboarding_complete_${user.id}`;
-          localStorage.setItem(betaOnboardingKey, 'true');
-          // Update state
-          setHasCompletedOnboarding(true);
-        }} 
-      />
-    );
-  }
+  // Redirect user to onboarding if authenticated and hasn't completed onboarding
+  useEffect(() => {
+    // Only redirect if user is authenticated, hasn't completed onboarding, 
+    // and isn't already on an onboarding-related page
+    if (isAuthenticated && !hasCompletedOnboarding && user?.id && 
+        location !== '/onboarding' && location !== '/beta-enrollment') {
+      // Use a setTimeout to avoid React state updates during render
+      const redirectTimer = setTimeout(() => {
+        window.location.href = '/onboarding';
+      }, 100);
+      
+      // Cleanup timer if component unmounts
+      return () => clearTimeout(redirectTimer);
+    }
+  }, [isAuthenticated, hasCompletedOnboarding, user?.id, location]);
 
   // Wrap the application with required context providers
   return (
@@ -261,6 +262,7 @@ function AppContent({
                           <Route path="/onboarding" component={OnboardingPage} />
                           <Route path="/onboarding/optimized" component={() => <ProtectedRoute><OptimizedOnboardingPage /></ProtectedRoute>} />
                           <Route path="/onboarding/all" component={() => <ProtectedRoute><OptimizedOnboardingPage showAllFeatures={true} /></ProtectedRoute>} />
+                          <Route path="/beta-enrollment" component={BetaEnrollmentPage} />
                           
                           {/* Protected routes */}
                           <Route path="/" component={() => <ProtectedRoute><ThePaddockPage /></ProtectedRoute>} />

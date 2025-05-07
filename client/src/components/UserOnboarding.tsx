@@ -658,7 +658,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete, user }) => 
                   >
                     <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/70 to-transparent" />
                     <div className="absolute bottom-0 left-0 p-4">
-                      <h3 className="text-white font-bold text-lg">Revolutionary Design</h3>
+                      <h3 className="text-white font-bold text-lg">Bespoke Design</h3>
                       <p className="text-gray-200 text-sm">
                         Inspired by F1 telemetry and supercar aesthetics
                       </p>
@@ -795,7 +795,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete, user }) => 
                           <User size={18} />
                         </div>
                         <div>
-                          <h5 className="text-white font-medium mb-1">Basic Beta User</h5>
+                          <h5 className="text-white font-medium mb-1">Paddock Beta User</h5>
                           <p className="text-gray-400 text-sm mb-2">
                             Experience the platform with minimal commitment. Perfect for casual users.
                           </p>
@@ -827,7 +827,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete, user }) => 
                           <ul className="text-sm text-gray-400 space-y-1">
                             <li className="flex items-center">
                               <Check size={14} className="text-[#08c519] mr-2 flex-shrink-0" />
-                              <span>Everything in Basic Beta User</span>
+                              <span>Everything in Paddock Beta User</span>
                             </li>
                             <li className="flex items-center">
                               <Check size={14} className="text-[#08c519] mr-2 flex-shrink-0" />
