@@ -112,13 +112,16 @@ export default function StandaloneAuthPage() {
   };
 
   return (
-    <div className="flex min-h-screen">
+    <div className="flex min-h-screen bg-black font-['Open_Sans']">
       {/* Left side - Auth form */}
       <div className="flex-1 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md mx-auto">
-          <CardHeader className="space-y-1 text-center">
-            <CardTitle className="text-2xl font-bold tracking-tight">Welcome to Paddock20</CardTitle>
-            <CardDescription>
+        <Card className="w-full max-w-md mx-auto border border-[#1982FC] bg-black/90">
+          <CardHeader className="space-y-3 text-center">
+            <div className="mx-auto w-full mb-4">
+              <h1 className="text-4xl md:text-5xl font-bold text-[#1982FC] tracking-widest uppercase font-['Orbitron']">Welcome to PADDOCK<span className="text-[#08c519]">20</span></h1>
+              <h2 className="text-4xl font-bold text-[#08c519] tracking-wider uppercase font-['Orbitron']">BETA</h2>
+            </div>
+            <CardDescription className="text-gray-300 text-lg">
               Your gateway to the ultimate car enthusiast experience
             </CardDescription>
           </CardHeader>
@@ -127,7 +130,7 @@ export default function StandaloneAuthPage() {
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
               <TabsList className="grid w-full grid-cols-2 mb-6">
                 <TabsTrigger value="login">Log In</TabsTrigger>
-                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+                <TabsTrigger value="signup">Join the Grid</TabsTrigger>
               </TabsList>
               
               <TabsContent value="login">
@@ -163,7 +166,7 @@ export default function StandaloneAuthPage() {
                     
                     <Button 
                       type="submit" 
-                      className="w-full bg-carolina-blue hover:bg-blue-700"
+                      className="w-full bg-[#1982FC] hover:bg-blue-700"
                       disabled={loading}
                     >
                       {loading ? (
@@ -240,16 +243,16 @@ export default function StandaloneAuthPage() {
                     
                     <Button 
                       type="submit" 
-                      className="w-full bg-carolina-blue hover:bg-blue-700"
+                      className="w-full bg-[#1982FC] hover:bg-blue-700"
                       disabled={loading}
                     >
                       {loading ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Creating account...
+                          Joining the Grid...
                         </>
                       ) : (
-                        "Create Account"
+                        "Join the Grid"
                       )}
                     </Button>
                   </form>
@@ -263,11 +266,11 @@ export default function StandaloneAuthPage() {
               <p className="mb-2">This is a preview of the new authentication system</p>
               <p>
                 By continuing, you agree to our{" "}
-                <a href="/terms-of-service" className="underline text-carolina-blue hover:text-blue-700">
+                <a href="/terms-of-service" className="underline text-[#1982FC] hover:text-blue-700">
                   Terms of Service
                 </a>{" "}
                 and{" "}
-                <a href="/privacy-policy" className="underline text-carolina-blue hover:text-blue-700">
+                <a href="/privacy-policy" className="underline text-[#1982FC] hover:text-blue-700">
                   Privacy Policy
                 </a>
               </p>
@@ -280,25 +283,25 @@ export default function StandaloneAuthPage() {
       <div className="hidden lg:flex flex-1 bg-[url('/carbon-fiber-bg-dark.jpg')] bg-cover">
         <div className="flex flex-col justify-center items-center w-full p-8 bg-black/70">
           <div className="max-w-md text-center">
-            <h1 className="text-4xl font-bold text-white mb-4">Experience F1-Grade Analytics</h1>
-            <p className="text-xl text-gray-200 mb-6">
-              Paddock20 transforms your driving insights with Formula 1 level technology for everyday drivers
+            <h1 className="text-4xl font-bold text-[#1982FC] mb-4 font-['Orbitron']">Experience F1-Grade Analytics</h1>
+            <p className="text-xl mb-6 font-['Orbitron']">
+              <span className="text-[#1982FC]">Paddock</span><span className="text-[#08c519]">20</span> <span className="text-gray-200">transforms your driving insights with Formula 1 level technology for everyday drivers</span>
             </p>
             <div className="grid grid-cols-2 gap-4 mb-8">
-              <div className="bg-black/50 p-4 rounded border border-carolina-blue">
-                <h3 className="text-carolina-blue font-bold mb-2">Weather Paddock</h3>
+              <div className="bg-black/50 p-4 rounded border border-[#1982FC]">
+                <h3 className="text-[#1982FC] font-bold mb-2 font-['Orbitron']">Weather Paddock</h3>
                 <p className="text-gray-300">Get F1-grade weather insights for your drive</p>
               </div>
-              <div className="bg-black/50 p-4 rounded border border-carolina-blue">
-                <h3 className="text-carolina-blue font-bold mb-2">Garage Vault</h3>
+              <div className="bg-black/50 p-4 rounded border border-[#1982FC]">
+                <h3 className="text-[#1982FC] font-bold mb-2 font-['Orbitron']">Garage Vault</h3>
                 <p className="text-gray-300">Manage your vehicles with comprehensive details</p>
               </div>
-              <div className="bg-black/50 p-4 rounded border border-carolina-blue">
-                <h3 className="text-carolina-blue font-bold mb-2">Drive Journal</h3>
+              <div className="bg-black/50 p-4 rounded border border-[#1982FC]">
+                <h3 className="text-[#1982FC] font-bold mb-2 font-['Orbitron']">Drive Journal</h3>
                 <p className="text-gray-300">Record and analyze your driving experiences</p>
               </div>
-              <div className="bg-black/50 p-4 rounded border border-carolina-blue">
-                <h3 className="text-carolina-blue font-bold mb-2">Podium Pursuit</h3>
+              <div className="bg-black/50 p-4 rounded border border-[#1982FC]">
+                <h3 className="text-[#1982FC] font-bold mb-2 font-['Orbitron']">Podium Pursuit</h3>
                 <p className="text-gray-300">Track your achievements and set new goals</p>
               </div>
             </div>
