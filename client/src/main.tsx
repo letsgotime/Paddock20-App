@@ -4,7 +4,7 @@ import "./bts.css";
 import "./utils/storageManager"; // Initialize enhanced storage management
 import { Router } from 'wouter';
 import App from "./App";
-import { SupabaseAuthProvider } from './context/SupabaseAuthContext';
+// Removing SupabaseAuthProvider reference - it causes conflicts with our auth providers in App.tsx
 
 // Check if Supabase environment variables are set
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
@@ -17,11 +17,9 @@ console.log("Supabase config status:", {
 });
 
 // Use Router as the outermost component to provide routing context to the entire app
-// Also wrap the entire app with SupabaseAuthProvider to make auth context available globally
+// We've moved all auth providers inside App.tsx for better organization
 createRoot(document.getElementById("root")!).render(
   <Router>
-    <SupabaseAuthProvider>
-      <App />
-    </SupabaseAuthProvider>
+    <App />
   </Router>
 );
