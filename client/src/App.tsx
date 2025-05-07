@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Route, useLocation } from 'wouter';
 import { SupabaseAuthProvider } from './context/SupabaseAuthContext';
+import { useAuth } from './hooks/useAuth';
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -145,22 +146,15 @@ function AppContent({
   // Get location without using auth
   const [location] = useLocation();
   
-  // Import the auth hook here - this is now structured so the hook is used
-  // within a component that's a child of the provider
-  const { user, loading, isAuthenticated } = (window as any).useAuthHook?.() || { 
-    user: null, 
-    loading: true, 
-    isAuthenticated: false 
-  };
+  // Use the auth hook with try/catch to handle potential errors
+  let authState = { user: null, loading: true, isAuthenticated: false };
+  try {
+    authState = useAuth();
+  } catch (error) {
+    console.error('Auth hook error:', error);
+  }
   
-  // Track when hook is available
-  useEffect(() => {
-    // Make the useAuth hook available globally for testing
-    // This is just a temporary solution for debugging
-    import('./hooks/useAuth').then((module) => {
-      (window as any).useAuthHook = module.useAuth;
-    });
-  }, []);
+  const { user, loading, isAuthenticated } = authState;
   
   // Show loading state while auth is being determined
   if (loading) {
@@ -240,8 +234,13 @@ function AppContent({
                           <Route path="/beta-agreement" component={BetaAgreement} />
                           <Route path="/email-verified" component={EmailVerifiedPage} />
                           <Route path="/auth" component={SupabaseAuthPage} />
+                          <Route path="/auth/callback" component={AuthCallback} />
+                          <Route path="/auth/reset-password" component={ResetPassword} />
+                          <Route path="/auth/error" component={AuthError} />
+                          <Route path="/login" component={LoginRedirect} />
                           <Route path="/spotify/callback" component={SpotifyCallbackPage} />
                           <Route path="/logout" component={LogoutPage} />
+                          <Route path="/logout/confirm" component={Logout} />
                           
                           {/* User onboarding redirect */}
                           <Route 
