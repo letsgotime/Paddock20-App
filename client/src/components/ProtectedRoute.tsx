@@ -1,33 +1,52 @@
-import React, { ReactNode } from 'react';
-import { Redirect, useLocation } from 'wouter';
+/**
+ * Protected Route Component
+ * 
+ * Protects routes that require authentication.
+ * Redirects to login page if not authenticated.
+ */
+
 import { useAuth } from '@/hooks/useAuth';
+import { useLocation } from 'wouter';
 import { Loader2 } from 'lucide-react';
+import { useEffect } from 'react';
 
 interface ProtectedRouteProps {
-  children: ReactNode;
+  children: React.ReactNode;
+  adminOnly?: boolean;
 }
 
-// Updated component to accept children instead of path and component props
-const ProtectedRoute: React.FC<ProtectedRouteProps> = ({ children }) => {
-  const { isAuthenticated, loading } = useAuth();
-  const [location] = useLocation();
+export default function ProtectedRoute({ 
+  children, 
+  adminOnly = false
+}: ProtectedRouteProps) {
+  const { user, loading, isAuthenticated } = useAuth();
+  const [, setLocation] = useLocation();
 
-  // While checking authentication status, show a loading spinner
+  // Redirect if not authenticated or not admin when required
+  useEffect(() => {
+    if (!loading) {
+      if (!isAuthenticated) {
+        setLocation('/auth');
+      } else if (adminOnly && user?.role !== 'admin') {
+        setLocation('/dashboard');
+      }
+    }
+  }, [loading, isAuthenticated, user, adminOnly, setLocation]);
+
+  // Show loading spinner while authentication state is being determined
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-8 w-8 animate-spin text-carolina-blue" />
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
     );
   }
 
-  // If not authenticated, redirect to auth page
-  if (!isAuthenticated) {
-    return <Redirect to="/auth" />;
+  // If authenticated and role check passes, render children
+  if (isAuthenticated && (!adminOnly || user?.role === 'admin')) {
+    return <>{children}</>;
   }
 
-  // If authenticated, render the protected component
-  return <>{children}</>;
-};
-
-export default ProtectedRoute;
+  // Return null during redirect
+  return null;
+}
