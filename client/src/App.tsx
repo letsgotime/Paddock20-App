@@ -180,8 +180,22 @@ function AppContent({
   
   // Redirect user to onboarding if authenticated and hasn't completed onboarding
   useEffect(() => {
+    // Log current state to debug redirection issues
+    console.log('[Redirection Debug]', { 
+      isAuthenticated, 
+      hasCompletedOnboarding, 
+      userId: user?.id, 
+      location,
+      shouldRedirect: isAuthenticated && !hasCompletedOnboarding && user?.id && 
+                     location !== '/onboarding' && location !== '/beta-enrollment'
+    });
+    
+    // Disable redirection temporarily for debugging
+    // This way we can navigate manually and test pages without getting stuck in redirect loops
+    
     // Only redirect if user is authenticated, hasn't completed onboarding, 
     // and isn't already on an onboarding-related page
+    /*
     if (isAuthenticated && !hasCompletedOnboarding && user?.id && 
         location !== '/onboarding' && location !== '/beta-enrollment') {
       // Use a setTimeout to avoid React state updates during render
@@ -192,6 +206,7 @@ function AppContent({
       // Cleanup timer if component unmounts
       return () => clearTimeout(redirectTimer);
     }
+    */
   }, [isAuthenticated, hasCompletedOnboarding, user?.id, location, navigate]);
   
   // Show loading state while auth is being determined
