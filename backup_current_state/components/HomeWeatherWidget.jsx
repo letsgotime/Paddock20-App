@@ -69,8 +69,8 @@ const HomeWeatherWidget = () => {
     
     fetchWeatherData();
     
-    // Refresh weather data every 15 minutes
-    const refreshInterval = setInterval(fetchWeatherData, 15 * 60 * 1000);
+    // Refresh weather data every 60 minutes instead of 15 to reduce API calls
+    const refreshInterval = setInterval(fetchWeatherData, 60 * 60 * 1000);
     
     return () => clearInterval(refreshInterval);
   }, [location, unit]);

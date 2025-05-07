@@ -193,12 +193,12 @@ export async function fetchAllWeatherData(lat, lon, units = 'imperial') {
   }
 }
 
-// Default Charlotte, NC coordinates
+// Default Roswell, GA (zip 30076) coordinates
 export const defaultLocation = {
   id: '1',
-  name: 'Charlotte',
-  lat: 35.2271,
-  lon: -80.8431
+  name: 'Roswell',
+  lat: 34.0232,
+  lon: -84.3616
 };
 
 // Format temperature for display with unit

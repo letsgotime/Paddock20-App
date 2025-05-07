@@ -34,7 +34,7 @@ function JuiceBoxCodexViewer({ onAddProduct }: JuiceBoxCodexViewerProps) {
               ? 'bg-green-500 text-black' 
               : 'bg-gray-800 text-white hover:bg-gray-700'}`}
         >
-          Product Codex
+          Detailing Arsenal
         </button>
         <button
           onClick={() => setActiveSection('loadouts')}
@@ -70,7 +70,7 @@ function JuiceBoxCodexViewer({ onAddProduct }: JuiceBoxCodexViewerProps) {
         <div className="bg-gradient-to-r from-[#111111] to-[#1a1a1a] p-6 rounded-lg border border-gray-800 mb-8">
           <div className="text-center mb-6">
             <h2 className="text-3xl font-orbitron text-blue-400 mb-2">🧃 GoTime Juice Box™</h2>
-            <p className="text-white text-lg italic mb-4">The curated, real-world-tested, gloss-backed, Gavin-approved detailing arsenal.</p>
+            <p className="text-white text-lg italic mb-4">The curated, real-world-tested, gloss-backed, expert-approved detailing arsenal.</p>
             <p className="text-gray-300">No hype. No noise. Just what works—again and again.</p>
           </div>
 
@@ -108,7 +108,7 @@ function JuiceBoxCodexViewer({ onAddProduct }: JuiceBoxCodexViewerProps) {
                 onClick={() => setActiveSection('products')}
                 className="bg-green-500 hover:bg-green-400 text-black px-4 py-2 rounded-md font-orbitron"
               >
-                Product Codex
+                Detailing Arsenal
               </button>
               <button
                 onClick={() => setActiveSection('reset')}
@@ -125,7 +125,7 @@ function JuiceBoxCodexViewer({ onAddProduct }: JuiceBoxCodexViewerProps) {
       {activeSection === 'products' && (
         <div className="bg-gradient-to-r from-[#111111] to-[#1a1a1a] p-6 rounded-lg border border-gray-800 mb-8">
           <div className="text-center mb-6">
-            <h2 className="text-3xl font-orbitron text-blue-400 mb-2">The Product Codex</h2>
+            <h2 className="text-3xl font-orbitron text-blue-400 mb-2">Detailing Arsenal</h2>
             <p className="text-white italic">What We Use. Why We Use It. How It Got In the Juice Box™.</p>
           </div>
 
@@ -433,7 +433,7 @@ function JuiceBoxCodexViewer({ onAddProduct }: JuiceBoxCodexViewerProps) {
             <div>
               <h3 className="text-xl font-orbitron text-blue-400 mb-4">Swirl Removal & Correction</h3>
               <div className="space-y-4">
-                {trainingVideos.correction.map((video, index) => (
+                {videoCategories.find(cat => cat.category === "Swirl Removal & Correction")?.videos?.map((video, index) => (
                   <div key={index} className="bg-black p-4 rounded-lg">
                     <h4 className="text-blue-400 font-orbitron text-md mb-2">{video.title}</h4>
                     <div className="relative aspect-video bg-gray-900 mb-3 flex items-center justify-center">

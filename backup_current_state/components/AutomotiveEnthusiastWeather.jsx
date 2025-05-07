@@ -33,27 +33,47 @@ const AutomotiveEnthusiastWeather = () => {
         setIsLoading(true);
         setError(null);
         
-        // Fetch weather data in parallel
-        const [current, oneCall, automotive] = await Promise.all([
-          getWeatherData(selectedLocation, unit),
-          getOneCallData(selectedLocation, unit),
-          getAutomotiveWeatherData(selectedLocation, unit)
-        ]);
-        
+        // Step 1: First try to get current weather data (most reliable endpoint)
+        const current = await getWeatherData(selectedLocation, unit);
         setWeatherData(current);
-        setOneCallData(oneCall);
-        setAutomotiveData(automotive);
+        
+        // Step 2: Try to get automotive data (also reliable)
+        try {
+          const automotive = await getAutomotiveWeatherData(selectedLocation, unit);
+          setAutomotiveData(automotive);
+        } catch (autoErr) {
+          console.error('Error fetching automotive weather data:', autoErr);
+        }
+        
+        // Step 3: Try to get OneCall data (often rate limited)
+        try {
+          const oneCall = await getOneCallData(selectedLocation, unit);
+          setOneCallData(oneCall);
+        } catch (oneCallErr) {
+          console.error('Error fetching OneCall data:', oneCallErr);
+          // OneCall errors are common due to rate limits, don't fail the entire component
+        }
         
         setIsLoading(false);
       } catch (err) {
-        console.error('Error fetching automotive weather data:', err);
-        setError('Failed to load advanced weather data. Please try again.');
+        console.error('Error fetching weather data:', err);
+        setError('Unable to load weather data. Please check your connection and try again.');
         setIsLoading(false);
       }
     }
     
     fetchAllWeatherData();
-  }, [selectedLocation, unit]);
+    
+    // Add a fallback timer to ensure component displays even if APIs are slow
+    const fallbackTimer = setTimeout(() => {
+      if (isLoading) {
+        console.log("Auto-cancelling weather data loading after timeout");
+        setIsLoading(false);
+      }
+    }, 5000); // 5 second timeout
+    
+    return () => clearTimeout(fallbackTimer);
+  }, [selectedLocation, unit, isLoading]);
 
   // Toggle between metric and imperial units
   const toggleUnit = () => {

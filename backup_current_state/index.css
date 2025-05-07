@@ -1,10 +1,51 @@
+/* Import Orbitron font from Google Fonts */
+@import url('https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;600;700;800;900&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
+/* Custom animations for onboarding */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fadeIn {
+  animation: fadeIn 0.6s ease-out forwards;
+}
+
 /* Dropdown Menu Custom Styles */
 .menu-open .menu-content {
   display: block !important;
+}
+
+/* Header dropdown fixes */
+.user-dropdown-group:hover .user-dropdown-menu,
+.user-dropdown-menu:hover {
+  opacity: 1 !important;
+  visibility: visible !important;
+  pointer-events: auto !important;
+  display: block !important;
+}
+
+.user-dropdown-menu {
+  transition: opacity 0.3s, visibility 0.3s;
+  transition-delay: 0.15s;
+}
+
+.user-dropdown-group {
+  position: relative;
+}
+
+.user-dropdown-group::after {
+  content: '';
+  position: absolute;
+  height: 20px;
+  width: 100%;
+  bottom: -10px;
+  left: 0;
+  z-index: 49;
 }
 
 :root {
@@ -64,5 +105,14 @@
   }
 }
 
+/* Custom animations */
+@keyframes fadein {
+  from { opacity: 0; }
+  to   { opacity: 1; }
+}
+
+.animate-fadein {
+  animation: fadein 0.4s ease-in forwards;
+}
 
 

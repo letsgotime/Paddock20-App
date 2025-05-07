@@ -267,7 +267,7 @@ const MotorsportsEventsPage: React.FC = () => {
                   <span className="text-gray-300">Pit lane tours and driver meet-and-greets</span>
                 </li>
               </ul>
-              <button className="apex-button-small w-full mt-4">Join Paddock20</button>
+              <button className="apex-button-small w-full mt-4">Join The Grid</button>
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import HomeWeatherWidget from '../components/HomeWeatherWidget';
+import ConsolidatedWeatherDashboard from '../components/ConsolidatedWeatherDashboard';
 
 function Home() {
   return (
@@ -11,13 +12,18 @@ function Home() {
       </div>
       
       <div className="space-y-10">
-        {/* Featured section - Weather Intelligence */}
+        {/* Featured section - Weather Intelligence using Consolidated API */}
         <section aria-labelledby="weather-heading">
-          <h2 id="weather-heading" className="sr-only">Weather Intelligence</h2>
-          <HomeWeatherWidget />
+          <h2 id="weather-heading" className="text-green-500 font-orbitron text-2xl mb-5 text-center">
+            <span className="bg-green-500 text-black px-2 rounded-md text-xs align-middle mr-2">BETA</span>
+            Weather Intelligence Center
+          </h2>
+          <div className="mb-6">
+            <ConsolidatedWeatherDashboard />
+          </div>
           <div className="mt-3 text-center">
-            <Link to="/weather" className="inline-flex items-center justify-center bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 py-2 px-4 rounded-md text-sm transition-colors">
-              <span>Visit the full Weather Center</span>
+            <Link to="/weather-paddock" className="inline-flex items-center justify-center bg-blue-900/30 hover:bg-blue-900/50 text-blue-400 py-2 px-4 rounded-md text-sm transition-colors">
+              <span>Visit the full Weather Paddock</span>
               <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 ml-1" viewBox="0 0 20 20" fill="currentColor">
                 <path fillRule="evenodd" d="M10.293 5.293a1 1 0 011.414 0l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414-1.414L12.586 11H5a1 1 0 110-2h7.586l-2.293-2.293a1 1 0 010-1.414z" clipRule="evenodd" />
               </svg>

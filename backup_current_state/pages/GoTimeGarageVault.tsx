@@ -1,10 +1,9 @@
-import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Link, useLocation } from 'wouter';
-import supabase from '../services/supabaseClient';
+import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { exportToPdf, exportToCsv, printElement } from '../utils/exportUtils';
 
-// Components
-import TireTracker from '../components/TireTracker';
+// Import component dependencies
+import WeatherStation from '../components/WeatherStation';
 import VehicleTelemetry from '../components/VehicleTelemetry';
 import EnhancedVehicleTelemetry from '../components/EnhancedVehicleTelemetry';
 import VehicleGallery from '../components/VehicleGallery';
@@ -17,1258 +16,1197 @@ import AddVehicleForm from '../components/AddVehicleForm';
 import AddModificationForm from '../components/AddModificationForm';
 import AddMaintenanceForm from '../components/AddMaintenanceForm';
 import EnhancedVehicleDetail from '../components/EnhancedVehicleDetail';
-import OBDLiveDashboard from '../components/OBDLiveDashboard';
 
-// Data services
-import vehicleDataService from '../services/vehicleDataService';
-import { searchImage } from '../services/unsplashService';
+// Import icons and services
+import { Plus, Car, Download, Filter, LayoutGrid, List, Activity, Settings, Clock, Timer, Gauge, Target, 
+         Sun, Shield, Smartphone, Calendar, BarChart3, Share2, Wrench, PaintBucket, User, Camera, Check } from 'lucide-react';
+// Import utility to get vehicle data
+// import { getAllVehicles } from "../services/vehicleDataService";
+import unsplashService from '../services/unsplashService';
 
-// Icons
-import { 
-  Activity, BarChart2, Wind, Thermometer, FileDown, RefreshCw,
-  Clock, Calendar, PieChart as PieChartIcon, AlertTriangle, TrendingUp, 
-  ChevronRight, ChevronDown, ChevronUp, Gauge, Info, Fuel, Droplets, Battery, 
-  Car, Upload, Maximize2, Zap, MapPin, Mountain, Filter, PlusCircle, 
-  Wrench, Shield, Camera, Clipboard, MoreHorizontal, Eye, Trash2, Download, X, Plus,
-  CloudSnow, Sun, Leaf, Settings, Printer, ExternalLink, Pencil
-} from 'lucide-react';
-
-// Types
+// Define vehicle type
 interface Vehicle {
   id: string;
   make: string;
   model: string;
   year: number;
-  trim: string;
-  vin: string;
-  license_plate: string;
-  color: string;
-  image_url: string;
-  purchase_date: string;
-  notes: string;
-  status: string;
-  type: string;
+  trim?: string;
+  vin?: string;
+  license_plate?: string;
+  color?: string;
+  purchase_date?: string;
+  notes?: string;
+  status: 'Active' | 'Storage' | 'Project' | 'Sold';
+  type: 'Car' | 'Truck' | 'SUV' | 'Motorcycle' | 'Other';
+  image_url?: string;
+  last_update?: string;
+  statistics?: {
+    maintenance_count: number;
+    modification_count: number;
+    total_investments: number;
+    drive_count: number;
+    avg_drive_duration: number;
+    mileage: number;
+  }
 }
 
-interface TirePressure {
-  frontLeft: number;
-  frontRight: number;
-  rearLeft: number;
-  rearRight: number;
-}
+// Define initial mock data
+const initialVehicles: Vehicle[] = [
+  {
+    id: 'v1',
+    make: 'BMW',
+    model: 'M3',
+    year: 2022,
+    trim: 'Competition',
+    color: 'Isle of Man Green',
+    status: 'Active',
+    type: 'Car',
+    last_update: '2025-04-24',
+    statistics: {
+      maintenance_count: 6,
+      modification_count: 4,
+      total_investments: 14500,
+      drive_count: 34,
+      avg_drive_duration: 52,
+      mileage: 12350
+    }
+  },
+  {
+    id: 'v2',
+    make: 'Porsche',
+    model: '911',
+    year: 2021,
+    trim: 'GT3',
+    color: 'Guards Red',
+    status: 'Active',
+    type: 'Car',
+    last_update: '2025-04-15',
+    statistics: {
+      maintenance_count: 3,
+      modification_count: 2,
+      total_investments: 9800,
+      drive_count: 22,
+      avg_drive_duration: 45,
+      mileage: 8760
+    }
+  }
+];
 
-interface CarMetrics {
-  mileage: number;
-  lastService: string;
-  nextService: string;
-  fuelLevel: number;
-  carStatus: 'Ready' | 'Service Due' | 'Maintenance Required';
-  oilLevel: number;
-  oilHealth: number;
-  oilTemp: number;
-  coolantTemp: number;
-  batteryHealth: number;
-  engineHealth: number;
-  brakeHealth: number;
-  transmissionHealth: number;
-  tirePressure: TirePressure;
-  glossIndex: number;
-}
-
-interface OBDData {
-  connected: boolean;
-  engineTemp: number;
-  rpm: number;
-  speed: number;
-  throttlePosition: number;
-  fuelPressure: number;
-  intakeTemp: number;
-  maf: number;
-  timingAdvance: number;
-  o2Sensor: number;
-  dtcCodes: string[];
-}
-
-/**
- * GoTime Garage Vault - The brain of the application
- * Core Features:
- * 1. Vehicle Management & Telemetry
- * 2. Maintenance & Modification Tracking
- * 3. OBD2 Integration
- * 4. JuiceBox™ & Detailing Tools
- * 5. Document & Media Management
- */
 const GoTimeGarageVault: React.FC = () => {
   // State management
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [activeVehicle, setActiveVehicle] = useState<Vehicle | null>(null);
-  const [activeSection, setActiveSection] = useState('dashboard');
-  const [activeView, setActiveView] = useState('grid');
-  const [expandedTelemetry, setExpandedTelemetry] = useState(false);
-  const [showExportMenu, setShowExportMenu] = useState(false);
-  const [showAddVehicleForm, setShowAddVehicleForm] = useState(false);
-  const [showAddMaintenanceForm, setShowAddMaintenanceForm] = useState(false);
-  const [showAddModificationForm, setShowAddModificationForm] = useState(false);
-  
-  // OBD2 connection state
-  const [obdConnected, setObdConnected] = useState(false);
-  const [obdData, setObdData] = useState<OBDData>({
-    connected: false,
-    engineTemp: 0,
-    rpm: 0,
-    speed: 0,
-    throttlePosition: 0,
-    fuelPressure: 0,
-    intakeTemp: 0,
-    maf: 0,
-    timingAdvance: 0,
-    o2Sensor: 0,
-    dtcCodes: []
-  });
+  const [loading, setLoading] = useState<boolean>(true);
+  const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
+  const [activeTab, setActiveTab] = useState<string>('overview');
+  const [showAddVehicleForm, setShowAddVehicleForm] = useState<boolean>(false);
+  const [showAddModForm, setShowAddModForm] = useState<boolean>(false);
+  const [showAddMaintenanceForm, setShowAddMaintenanceForm] = useState<boolean>(false);
+  const [view, setView] = useState<'grid' | 'list'>('grid');
+  const [searchQuery, setSearchQuery] = useState<string>('');
+  const [sortField, setSortField] = useState<string>('last_update');
+  const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>('desc');
+  const [filterStatus, setFilterStatus] = useState<string>('all');
+  const [imageCache, setImageCache] = useState<{[key: string]: string}>({});
 
-  // Placeholder empty state for CarMetrics
-  const [carMetrics, setCarMetrics] = useState<CarMetrics>({
-    mileage: 0,
-    lastService: '',
-    nextService: '',
-    fuelLevel: 0,
-    carStatus: 'Ready',
-    oilLevel: 0,
-    oilHealth: 0,
-    oilTemp: 0,
-    coolantTemp: 0,
-    batteryHealth: 0,
-    engineHealth: 0,
-    brakeHealth: 0,
-    transmissionHealth: 0,
-    tirePressure: {
-      frontLeft: 0,
-      frontRight: 0,
-      rearLeft: 0,
-      rearRight: 0
-    },
-    glossIndex: 0
-  });
-
-  // Refs
-  const exportMenuRef = useRef<HTMLDivElement>(null);
-  
-  // Load vehicles from Supabase
+  // Fetch vehicles on component mount
   useEffect(() => {
-    const fetchVehicles = async () => {
-      setLoading(true);
+    const fetchData = async () => {
       try {
-        const { data, error } = await supabase
-          .from('vehicles')
-          .select('*')
-          .order('created_at', { ascending: false });
+        setLoading(true);
+        // In a real implementation, we'd use the fetched data
+        // For now, we'll use our initialVehicles and add a slight delay to simulate API call
+        setTimeout(() => {
+          setVehicles(initialVehicles);
+          if (initialVehicles.length > 0) {
+            setSelectedVehicle(initialVehicles[0]);
+          }
+          setLoading(false);
+        }, 800);
         
-        if (error) throw error;
-        
-        if (data && data.length > 0) {
-          setVehicles(data);
-          setActiveVehicle(data[0]);
-        }
+        // Fetch vehicle images from Unsplash
+        vehicles.forEach(async (vehicle) => {
+          if (!vehicle.image_url) {
+            try {
+              const query = `${vehicle.make} ${vehicle.model} car`;
+              // In a real implementation, we'd use the actual API
+              // But for empty states it's better to use placeholders that encourage interaction
+              // rather than displaying synthetic data
+            } catch (error) {
+              console.error('Error fetching vehicle image:', error);
+            }
+          }
+        });
       } catch (error) {
         console.error('Error fetching vehicles:', error);
-      } finally {
         setLoading(false);
       }
     };
 
-    fetchVehicles();
+    fetchData();
   }, []);
-
-  // Close export menu when clicking outside
+  
+  // Add event listeners for vehicle data updates for two-way integration
   useEffect(() => {
-    const handleClickOutside = (event: MouseEvent) => {
-      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target as Node)) {
-        setShowExportMenu(false);
+    // Handler for receiving vehicle updates from other components
+    const handleVehicleUpdate = (event: any) => {
+      console.log('GarageVault received vehicle update:', event.detail);
+      
+      if (!event.detail || !event.detail.vehicle) return;
+      
+      const { vehicle, action } = event.detail;
+      
+      // Handle different action types
+      switch (action) {
+        case 'add':
+          // Add new vehicle
+          const newVehicle: Vehicle = {
+            id: vehicle.id || `v${vehicles.length + 1}`,
+            make: vehicle.make,
+            model: vehicle.model,
+            year: typeof vehicle.year === 'string' ? parseInt(vehicle.year) : vehicle.year,
+            color: vehicle.color,
+            status: 'Active',
+            type: 'Car',
+            last_update: new Date().toISOString().split('T')[0],
+            image_url: vehicle.vehicle_image || vehicle.image,
+            statistics: {
+              maintenance_count: 0,
+              modification_count: 0,
+              total_investments: 0,
+              drive_count: 0,
+              avg_drive_duration: 0,
+              mileage: vehicle.mileage ? parseInt(vehicle.mileage) : 0
+            }
+          };
+          setVehicles(prev => [...prev, newVehicle]);
+          break;
+          
+        case 'update':
+          // Update existing vehicle
+          setVehicles(prev => prev.map(v => {
+            if (v.id === vehicle.id) {
+              return {
+                ...v,
+                make: vehicle.make || v.make,
+                model: vehicle.model || v.model,
+                year: vehicle.year ? (typeof vehicle.year === 'string' ? parseInt(vehicle.year) : vehicle.year) : v.year,
+                color: vehicle.color || v.color,
+                image_url: vehicle.vehicle_image || vehicle.image || v.image_url,
+                last_update: new Date().toISOString().split('T')[0],
+                statistics: {
+                  ...v.statistics,
+                  mileage: vehicle.mileage ? parseInt(vehicle.mileage) : v.statistics?.mileage
+                }
+              };
+            }
+            return v;
+          }));
+          
+          // If this is the selected vehicle, update it too
+          if (selectedVehicle && selectedVehicle.id === vehicle.id) {
+            setSelectedVehicle(prev => {
+              if (!prev) return null;
+              return {
+                ...prev,
+                make: vehicle.make || prev.make,
+                model: vehicle.model || prev.model,
+                year: vehicle.year ? (typeof vehicle.year === 'string' ? parseInt(vehicle.year) : vehicle.year) : prev.year,
+                color: vehicle.color || prev.color,
+                image_url: vehicle.vehicle_image || vehicle.image || prev.image_url,
+                last_update: new Date().toISOString().split('T')[0],
+                statistics: {
+                  ...prev.statistics,
+                  mileage: vehicle.mileage ? parseInt(vehicle.mileage) : prev.statistics?.mileage
+                }
+              };
+            });
+          }
+          break;
+          
+        case 'delete':
+          // Delete vehicle
+          setVehicles(prev => prev.filter(v => v.id !== event.detail.vehicleId));
+          
+          // If this was the selected vehicle, select the first vehicle or null
+          if (selectedVehicle && selectedVehicle.id === event.detail.vehicleId) {
+            setSelectedVehicle(vehicles.length > 1 ? vehicles[0] : null);
+          }
+          break;
       }
     };
-
-    document.addEventListener('mousedown', handleClickOutside);
+    
+    // Listen for vehicle update events
+    window.addEventListener('vehicle-data-update', handleVehicleUpdate);
+    window.addEventListener('garage-vault-vehicle-update', handleVehicleUpdate);
+    
+    // Cleanup listener on component unmount
     return () => {
-      document.removeEventListener('mousedown', handleClickOutside);
+      window.removeEventListener('vehicle-data-update', handleVehicleUpdate);
+      window.removeEventListener('garage-vault-vehicle-update', handleVehicleUpdate);
     };
-  }, []);
+  }, [vehicles, selectedVehicle]);
 
-  // Handle adding a new vehicle
-  const handleAddVehicle = async (vehicleData: any) => {
-    try {
-      const { data, error } = await supabase
-        .from('vehicles')
-        .insert([vehicleData])
-        .select();
-      
-      if (error) throw error;
-      
-      if (data) {
-        setVehicles([...vehicles, data[0]]);
-        setActiveVehicle(data[0]);
-        setShowAddVehicleForm(false);
+  // Filter and sort vehicles
+  const filteredVehicles = vehicles
+    .filter(vehicle => {
+      // Apply status filter
+      if (filterStatus !== 'all' && vehicle.status !== filterStatus) {
+        return false;
       }
-    } catch (error) {
-      console.error('Error adding vehicle:', error);
-    }
-  };
-
-  // Handle adding a new maintenance record
-  const handleAddMaintenance = async (maintenanceData: any) => {
-    try {
-      const { data, error } = await supabase
-        .from('maintenance_records')
-        .insert([{
-          ...maintenanceData,
-          vehicle_id: activeVehicle?.id
-        }])
-        .select();
       
-      if (error) throw error;
+      // Apply search
+      if (searchQuery) {
+        const query = searchQuery.toLowerCase();
+        return (
+          vehicle.make.toLowerCase().includes(query) ||
+          vehicle.model.toLowerCase().includes(query) ||
+          vehicle.year.toString().includes(query) ||
+          (vehicle.vin && vehicle.vin.toLowerCase().includes(query)) ||
+          (vehicle.color && vehicle.color.toLowerCase().includes(query))
+        );
+      }
       
-      setShowAddMaintenanceForm(false);
-      // Reload vehicle data to reflect new maintenance record
-      // This would be better implemented with a proper state management solution
-    } catch (error) {
-      console.error('Error adding maintenance record:', error);
-    }
-  };
-
-  // Handle adding a new modification
-  const handleAddModification = async (modificationData: any) => {
-    try {
-      const { data, error } = await supabase
-        .from('modifications')
-        .insert([{
-          ...modificationData,
-          vehicle_id: activeVehicle?.id
-        }])
-        .select();
+      return true;
+    })
+    .sort((a, b) => {
+      // Apply sorting
+      let comparison = 0;
+      switch (sortField) {
+        case 'make':
+          comparison = a.make.localeCompare(b.make);
+          break;
+        case 'model':
+          comparison = a.model.localeCompare(b.model);
+          break;
+        case 'year':
+          comparison = a.year - b.year;
+          break;
+        case 'last_update':
+          if (a.last_update && b.last_update) {
+            comparison = new Date(a.last_update).getTime() - new Date(b.last_update).getTime();
+          }
+          break;
+        default:
+          comparison = 0;
+      }
       
-      if (error) throw error;
-      
-      setShowAddModificationForm(false);
-      // Reload vehicle data to reflect new modification
-    } catch (error) {
-      console.error('Error adding modification:', error);
-    }
-  };
-
-  // Export functions
-  const handleExportToPDF = () => {
-    if (!activeVehicle) return;
+      return sortDirection === 'asc' ? comparison : -comparison;
+    });
     
-    const element = document.getElementById('vehicleData');
-    if (element) {
-      exportToPdf(element, `${activeVehicle.year}_${activeVehicle.make}_${activeVehicle.model}_Report.pdf`);
-    }
-    setShowExportMenu(false);
-  };
-
-  const handleExportToCSV = () => {
-    if (!activeVehicle) return;
+  // Handle adding a new vehicle
+  const handleAddVehicle = (vehicleData: any) => {
+    const newVehicle: Vehicle = {
+      id: `v${vehicles.length + 1}`,
+      make: vehicleData.make,
+      model: vehicleData.model,
+      year: vehicleData.year,
+      trim: vehicleData.trim,
+      vin: vehicleData.vin,
+      license_plate: vehicleData.license_plate,
+      color: vehicleData.color,
+      purchase_date: vehicleData.purchase_date,
+      notes: vehicleData.notes,
+      status: vehicleData.status as Vehicle['status'],
+      type: vehicleData.type as Vehicle['type'],
+      image_url: vehicleData.image_url,
+      last_update: new Date().toISOString().split('T')[0],
+      statistics: {
+        maintenance_count: 0,
+        modification_count: 0,
+        total_investments: 0,
+        drive_count: 0,
+        avg_drive_duration: 0,
+        mileage: 0
+      }
+    };
     
-    // Convert vehicle data to CSV
-    const csvData = [
-      ['Property', 'Value'],
-      ['Make', activeVehicle.make],
-      ['Model', activeVehicle.model],
-      ['Year', activeVehicle.year.toString()],
-      ['VIN', activeVehicle.vin],
-      ['Mileage', carMetrics.mileage.toString()],
-      ['Last Service', carMetrics.lastService],
-      ['Next Service', carMetrics.nextService]
-    ];
+    setVehicles([...vehicles, newVehicle]);
+    setSelectedVehicle(newVehicle);
+    setShowAddVehicleForm(false);
+  };
+  
+  // Handle adding a modification
+  const handleAddModification = (modData: any) => {
+    // In a real implementation, this would add the modification to the database
+    console.log('Adding modification:', modData);
     
-    exportToCsv(csvData, `${activeVehicle.year}_${activeVehicle.make}_${activeVehicle.model}_Report.csv`);
-    setShowExportMenu(false);
-  };
-
-  const handlePrint = () => {
-    const element = document.getElementById('vehicleData');
-    if (element) {
-      printElement(element);
+    // Update the statistics for the selected vehicle
+    if (selectedVehicle) {
+      const updatedVehicle: Vehicle = {
+        ...selectedVehicle,
+        statistics: {
+          maintenance_count: selectedVehicle.statistics?.maintenance_count || 0,
+          modification_count: (selectedVehicle.statistics?.modification_count || 0) + 1,
+          total_investments: (selectedVehicle.statistics?.total_investments || 0) + (modData.cost || 0),
+          drive_count: selectedVehicle.statistics?.drive_count || 0,
+          avg_drive_duration: selectedVehicle.statistics?.avg_drive_duration || 0,
+          mileage: selectedVehicle.statistics?.mileage || 0
+        },
+        last_update: new Date().toISOString().split('T')[0]
+      };
+      
+      setSelectedVehicle(updatedVehicle);
+      
+      // Update the vehicle in the list
+      setVehicles(vehicles.map(v => v.id === updatedVehicle.id ? updatedVehicle : v));
     }
-    setShowExportMenu(false);
+    
+    setShowAddModForm(false);
   };
-
-  // Get vehicle image
-  const getVehicleImageQuery = (vehicle: Vehicle) => {
-    if (vehicle.image_url) return vehicle.image_url;
-    return `https://source.unsplash.com/featured/?${vehicle.make},${vehicle.model},car`;
+  
+  // Handle adding maintenance
+  const handleAddMaintenance = (maintenanceData: any) => {
+    // In a real implementation, this would add the maintenance to the database
+    console.log('Adding maintenance:', maintenanceData);
+    
+    // Update the statistics for the selected vehicle
+    if (selectedVehicle) {
+      const updatedVehicle: Vehicle = {
+        ...selectedVehicle,
+        statistics: {
+          maintenance_count: (selectedVehicle.statistics?.maintenance_count || 0) + 1,
+          modification_count: selectedVehicle.statistics?.modification_count || 0,
+          total_investments: (selectedVehicle.statistics?.total_investments || 0) + (maintenanceData.cost || 0),
+          drive_count: selectedVehicle.statistics?.drive_count || 0,
+          avg_drive_duration: selectedVehicle.statistics?.avg_drive_duration || 0,
+          mileage: selectedVehicle.statistics?.mileage || 0
+        },
+        last_update: new Date().toISOString().split('T')[0]
+      };
+      
+      setSelectedVehicle(updatedVehicle);
+      
+      // Update the vehicle in the list
+      setVehicles(vehicles.map(v => v.id === updatedVehicle.id ? updatedVehicle : v));
+    }
+    
+    setShowAddMaintenanceForm(false);
   };
-
-  // Empty state content - display when no data is available
-  const EmptyVehicleState = () => (
-    <div className="flex flex-col items-center justify-center h-64 p-6 bg-gray-900/50 rounded-xl border border-gray-800">
-      <Car className="h-16 w-16 text-gray-600 mb-4" />
-      <h3 className="text-xl text-gray-300 mb-2">No Vehicles Added Yet</h3>
-      <p className="text-gray-400 text-center mb-4">Add your first vehicle to start tracking maintenance, modifications, and telemetry.</p>
-      <button 
-        onClick={() => setShowAddVehicleForm(true)}
-        className="bg-green-600 hover:bg-green-700 text-white font-medium px-4 py-2 rounded-md flex items-center"
-      >
-        <Plus className="h-4 w-4 mr-2" />
-        Add Your First Vehicle
-      </button>
-    </div>
-  );
-
-  const EmptyMaintenanceState = () => (
-    <div className="flex flex-col items-center justify-center h-64 p-6 bg-gray-900/50 rounded-xl border border-gray-800">
-      <Wrench className="h-16 w-16 text-gray-600 mb-4" />
-      <h3 className="text-xl text-gray-300 mb-2">No Maintenance Records</h3>
-      <p className="text-gray-400 text-center mb-4">Keep track of all service, repairs, and maintenance for this vehicle.</p>
-      <button 
-        onClick={() => setShowAddMaintenanceForm(true)}
-        className="bg-blue-600 hover:bg-blue-700 text-white font-medium px-4 py-2 rounded-md flex items-center"
-      >
-        <Plus className="h-4 w-4 mr-2" />
-        Add Maintenance Record
-      </button>
-    </div>
-  );
-
-  const EmptyModificationState = () => (
-    <div className="flex flex-col items-center justify-center h-64 p-6 bg-gray-900/50 rounded-xl border border-gray-800">
-      <Settings className="h-16 w-16 text-gray-600 mb-4" />
-      <h3 className="text-xl text-gray-300 mb-2">No Modifications Added</h3>
-      <p className="text-gray-400 text-center mb-4">Document upgrades, aftermarket parts, and customizations for your vehicle.</p>
-      <button 
-        onClick={() => setShowAddModificationForm(true)}
-        className="bg-yellow-600 hover:bg-yellow-700 text-white font-medium px-4 py-2 rounded-md flex items-center"
-      >
-        <Plus className="h-4 w-4 mr-2" />
-        Add Modification
-      </button>
-    </div>
-  );
-
-  return (
-    <div className="min-h-screen bg-black text-white">
-      {/* Header & Navigation */}
-      <div className="p-4 md:p-6 border-b border-gray-800">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center">
-          <div className="flex items-center">
-            <h2 
-              id="garageVaultHeading" 
-              className="text-blue-400 font-orbitron text-2xl md:text-3xl"
+  
+  // Handle exporting data
+  const handleExport = (format: string) => {
+    const exportElement = document.getElementById('vehicle-export');
+    if (!exportElement) return;
+    
+    switch (format) {
+      case 'pdf':
+        exportToPdf(exportElement, `${selectedVehicle?.make}_${selectedVehicle?.model}_${selectedVehicle?.year}.pdf`);
+        break;
+      case 'csv':
+        if (selectedVehicle) {
+          const headers = ['Make', 'Model', 'Year', 'VIN', 'License Plate', 'Color', 'Status', 'Type'];
+          const data = [
+            headers,
+            [
+              selectedVehicle.make,
+              selectedVehicle.model,
+              selectedVehicle.year.toString(),
+              selectedVehicle.vin || '',
+              selectedVehicle.license_plate || '',
+              selectedVehicle.color || '',
+              selectedVehicle.status,
+              selectedVehicle.type
+            ]
+          ];
+          exportToCsv(data, `${selectedVehicle.make}_${selectedVehicle.model}_${selectedVehicle.year}.csv`);
+        }
+        break;
+      case 'print':
+        printElement(exportElement);
+        break;
+      default:
+        break;
+    }
+  };
+  
+  // Render the main inventory grid/list view
+  const renderVehicleInventory = () => {
+    if (vehicles.length === 0) {
+      return (
+        <div className="flex flex-col items-center justify-center py-12 px-4 text-center">
+          <Car className="h-16 w-16 text-gray-700 mb-4" />
+          <h3 className="text-lg font-semibold text-gray-300 mb-2">No Vehicles Found</h3>
+          <p className="text-gray-500 max-w-md mb-6">
+            Your GoTime Garage Vault is empty. Add your first vehicle to start tracking maintenance, mods, and telemetry.
+          </p>
+          <button
+            onClick={() => setShowAddVehicleForm(true)}
+            className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="h-4 w-4 mr-2" />
+            Add First Vehicle
+          </button>
+        </div>
+      );
+    }
+    
+    return (
+      <div className="mb-6">
+        {/* Filters and view controls */}
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-4 gap-4">
+          <div className="flex items-center space-x-2">
+            <span className="text-gray-400">View:</span>
+            <button
+              onClick={() => setView('grid')}
+              className={`p-1.5 rounded ${view === 'grid' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700'}`}
             >
-              GoTime Garage Vault<span className="text-white"> | Digital Pit Wall</span>
-            </h2>
-            
-            {/* F1-style Navigation Ribbon */}
-            <div className="hidden md:flex items-center ml-6 overflow-x-auto">
-              <div className="flex gap-1 bg-gray-900/60 backdrop-blur-sm rounded-md p-1 border border-blue-900/30">
-                <button 
-                  onClick={() => setActiveSection('dashboard')}
-                  className={`px-3 py-1.5 text-sm rounded transition-all duration-200 ${
-                    activeSection === 'dashboard' 
-                      ? 'bg-green-500 text-black font-bold shadow-lg shadow-green-500/20' 
-                      : 'text-white hover:bg-gray-800 hover:text-blue-400'
-                  }`}
-                >
-                  Dashboard
-                </button>
-                <button 
-                  onClick={() => setActiveSection('garage')}
-                  className={`px-3 py-1.5 text-sm rounded transition-all duration-200 ${
-                    activeSection === 'garage' 
-                      ? 'bg-green-500 text-black font-bold shadow-lg shadow-green-500/20' 
-                      : 'text-white hover:bg-gray-800 hover:text-blue-400'
-                  }`}
-                >
-                  Garage
-                </button>
-                <button 
-                  onClick={() => setActiveSection('telemetry')}
-                  className={`px-3 py-1.5 text-sm rounded transition-all duration-200 ${
-                    activeSection === 'telemetry' 
-                      ? 'bg-green-500 text-black font-bold shadow-lg shadow-green-500/20' 
-                      : 'text-white hover:bg-gray-800 hover:text-blue-400'
-                  }`}
-                >
-                  Telemetry
-                </button>
-                <button 
-                  onClick={() => setActiveSection('maintenance')}
-                  className={`px-3 py-1.5 text-sm rounded transition-all duration-200 ${
-                    activeSection === 'maintenance' 
-                      ? 'bg-green-500 text-black font-bold shadow-lg shadow-green-500/20' 
-                      : 'text-white hover:bg-gray-800 hover:text-blue-400'
-                  }`}
-                >
-                  Maintenance
-                </button>
-                <button 
-                  onClick={() => setActiveSection('modifications')}
-                  className={`px-3 py-1.5 text-sm rounded transition-all duration-200 ${
-                    activeSection === 'modifications' 
-                      ? 'bg-green-500 text-black font-bold shadow-lg shadow-green-500/20' 
-                      : 'text-white hover:bg-gray-800 hover:text-blue-400'
-                  }`}
-                >
-                  Modifications
-                </button>
-                <button 
-                  onClick={() => setActiveSection('juicebox')}
-                  className={`px-3 py-1.5 text-sm rounded transition-all duration-200 ${
-                    activeSection === 'juicebox' 
-                      ? 'bg-green-500 text-black font-bold shadow-lg shadow-green-500/20' 
-                      : 'text-white hover:bg-gray-800 hover:text-blue-400'
-                  }`}
-                >
-                  JuiceBox™
-                </button>
-                <button 
-                  onClick={() => setActiveSection('seasonal')}
-                  className={`px-3 py-1.5 text-sm rounded transition-all duration-200 ${
-                    activeSection === 'seasonal' 
-                      ? 'bg-green-500 text-black font-bold shadow-lg shadow-green-500/20' 
-                      : 'text-white hover:bg-gray-800 hover:text-blue-400'
-                  }`}
-                >
-                  Seasonal
-                </button>
-                <button 
-                  onClick={() => setActiveSection('gloss')}
-                  className={`px-3 py-1.5 text-sm rounded transition-all duration-200 ${
-                    activeSection === 'gloss' 
-                      ? 'bg-green-500 text-black font-bold shadow-lg shadow-green-500/20' 
-                      : 'text-white hover:bg-gray-800 hover:text-blue-400'
-                  }`}
-                >
-                  Gloss
-                </button>
-              </div>
-            </div>
+              <LayoutGrid className="h-4 w-4" />
+            </button>
+            <button
+              onClick={() => setView('list')}
+              className={`p-1.5 rounded ${view === 'list' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white hover:bg-gray-700'}`}
+            >
+              <List className="h-4 w-4" />
+            </button>
+            <span className="text-gray-400 ml-4">Sort by:</span>
+            <select
+              value={sortField}
+              onChange={(e) => setSortField(e.target.value)}
+              className="bg-gray-800 border border-gray-700 text-gray-300 rounded-md text-sm p-1.5"
+            >
+              <option value="last_update">Last Updated</option>
+              <option value="make">Make</option>
+              <option value="model">Model</option>
+              <option value="year">Year</option>
+            </select>
+            <button
+              onClick={() => setSortDirection(sortDirection === 'asc' ? 'desc' : 'asc')}
+              className="p-1.5 text-gray-400 hover:text-white hover:bg-gray-700 rounded"
+            >
+              {sortDirection === 'asc' ? '↑' : '↓'}
+            </button>
           </div>
           
-          <div className="flex mt-4 md:mt-0 gap-3">
-            <button 
-              onClick={() => window.open('/obd-connection', '_blank')}
-              className="apex-button-sm flex items-center"
-            >
-              <Gauge size={16} className="mr-2" />
-              OBD2 Connect
-            </button>
+          <div className="flex items-center space-x-2 w-full sm:w-auto">
+            <input
+              type="text"
+              placeholder="Search vehicles..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="bg-gray-800 border border-gray-700 text-gray-300 rounded-md text-sm p-2 w-full"
+            />
             
-            <div ref={exportMenuRef} className="relative">
-              <button 
-                onClick={() => setShowExportMenu(!showExportMenu)}
-                className="apex-button-sm flex items-center"
-                aria-expanded={showExportMenu}
-              >
-                <FileDown size={16} className="mr-2" />
-                Export
-              </button>
-              
-              {showExportMenu && (
-                <div className="absolute right-0 mt-2 w-60 bg-gray-900 border border-green-500 rounded-md shadow-lg z-50">
-                  <div className="py-1">
-                    <button
-                      onClick={handleExportToPDF}
-                      className="flex items-center px-4 py-2 text-sm text-gray-100 hover:bg-gray-800 w-full text-left"
-                    >
-                      <Download size={16} className="mr-2" /> Export to PDF
-                    </button>
-                    <button
-                      onClick={handleExportToCSV}
-                      className="flex items-center px-4 py-2 text-sm text-gray-100 hover:bg-gray-800 w-full text-left"
-                    >
-                      <Download size={16} className="mr-2" /> Export to CSV
-                    </button>
-                    <button
-                      onClick={handlePrint}
-                      className="flex items-center px-4 py-2 text-sm text-gray-100 hover:bg-gray-800 w-full text-left"
-                    >
-                      <Printer size={16} className="mr-2" /> Print
-                    </button>
-                  </div>
-                </div>
-              )}
-            </div>
-            
-            <button 
-              onClick={() => setShowAddVehicleForm(true)}
-              className="apex-button-sm flex items-center bg-green-600 hover:bg-green-700"
+            <select
+              value={filterStatus}
+              onChange={(e) => setFilterStatus(e.target.value)}
+              className="bg-gray-800 border border-gray-700 text-gray-300 rounded-md text-sm p-1.5"
             >
-              <Plus size={16} className="mr-2" />
-              Add Vehicle
-            </button>
+              <option value="all">All Status</option>
+              <option value="Active">Active</option>
+              <option value="Storage">In Storage</option>
+              <option value="Project">Project</option>
+              <option value="Sold">Sold</option>
+            </select>
           </div>
         </div>
         
-        {/* Mobile Navigation */}
-        <div className="flex md:hidden overflow-x-auto py-3 mt-4">
-          <div className="flex gap-1.5 bg-gray-900/60 backdrop-blur-sm rounded-md p-1.5 border border-blue-900/30">
-            <button 
-              onClick={() => setActiveSection('dashboard')}
-              className={`px-3 py-1.5 text-xs whitespace-nowrap rounded transition-all duration-200 ${
-                activeSection === 'dashboard' 
-                  ? 'bg-green-500 text-black font-bold shadow-md shadow-green-500/20' 
-                  : 'text-white bg-gray-800/50 hover:bg-gray-800'
-              }`}
+        {/* Vehicle grid/list */}
+        {view === 'grid' ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredVehicles.map((vehicle) => (
+              <div
+                key={vehicle.id}
+                onClick={() => setSelectedVehicle(vehicle)}
+                className={`border rounded-lg overflow-hidden transition-colors cursor-pointer ${
+                  selectedVehicle?.id === vehicle.id
+                    ? 'border-blue-500 bg-blue-900/10'
+                    : 'border-gray-700 bg-gray-800/50 hover:bg-gray-800'
+                }`}
+              >
+                <div className="h-40 bg-gray-900 relative">
+                  {vehicle.image_url ? (
+                    <img 
+                      src={vehicle.image_url} 
+                      alt={`${vehicle.make} ${vehicle.model}`} 
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-full text-center p-4">
+                      <Car className="h-12 w-12 text-gray-700 mb-2" />
+                      <span className="text-gray-500">Add photo</span>
+                    </div>
+                  )}
+                  
+                  <div className="absolute top-2 right-2 bg-black/70 rounded-full px-2 py-1 text-xs font-semibold">
+                    {vehicle.status}
+                  </div>
+                </div>
+                
+                <div className="p-4">
+                  <h3 className="text-lg font-semibold text-gray-100">{vehicle.year} {vehicle.make} {vehicle.model}</h3>
+                  {vehicle.trim && <p className="text-gray-400 text-sm">{vehicle.trim}</p>}
+                  
+                  <div className="mt-3 grid grid-cols-2 gap-2 text-sm">
+                    <div className="text-gray-400">
+                      <span className="block text-gray-500">Mileage</span>
+                      {vehicle.statistics?.mileage?.toLocaleString() || 'Unknown'}
+                    </div>
+                    <div className="text-gray-400">
+                      <span className="block text-gray-500">Last Update</span>
+                      {vehicle.last_update || 'Never'}
+                    </div>
+                  </div>
+                  
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-900/30 text-blue-400">
+                      <Activity className="h-3 w-3 mr-1" />
+                      {vehicle.statistics?.drive_count || 0} Drives
+                    </span>
+                    <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-900/30 text-green-400">
+                      <Wrench className="h-3 w-3 mr-1" />
+                      {vehicle.statistics?.maintenance_count || 0} Services
+                    </span>
+                    <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-purple-900/30 text-purple-400">
+                      <PaintBucket className="h-3 w-3 mr-1" />
+                      {vehicle.statistics?.modification_count || 0} Mods
+                    </span>
+                  </div>
+                </div>
+              </div>
+            ))}
+            
+            {/* Add Vehicle Card */}
+            <div
+              onClick={() => setShowAddVehicleForm(true)}
+              className="border border-dashed border-gray-700 rounded-lg bg-transparent hover:bg-gray-900/30 transition-colors cursor-pointer flex flex-col items-center justify-center h-full min-h-[250px] p-4"
             >
-              Dashboard
-            </button>
-            <button 
-              onClick={() => setActiveSection('garage')}
-              className={`px-3 py-1.5 text-xs whitespace-nowrap rounded transition-all duration-200 ${
-                activeSection === 'garage' 
-                  ? 'bg-green-500 text-black font-bold shadow-md shadow-green-500/20' 
-                  : 'text-white bg-gray-800/50 hover:bg-gray-800'
-              }`}
-            >
-              Garage
-            </button>
-            <button 
-              onClick={() => setActiveSection('telemetry')}
-              className={`px-3 py-1.5 text-xs whitespace-nowrap rounded transition-all duration-200 ${
-                activeSection === 'telemetry' 
-                  ? 'bg-green-500 text-black font-bold shadow-md shadow-green-500/20' 
-                  : 'text-white bg-gray-800/50 hover:bg-gray-800'
-              }`}
-            >
-              Telemetry
-            </button>
-            <button 
-              onClick={() => setActiveSection('maintenance')}
-              className={`px-3 py-1.5 text-xs whitespace-nowrap rounded transition-all duration-200 ${
-                activeSection === 'maintenance' 
-                  ? 'bg-green-500 text-black font-bold shadow-md shadow-green-500/20' 
-                  : 'text-white bg-gray-800/50 hover:bg-gray-800'
-              }`}
-            >
-              Maintain
-            </button>
-            <button 
-              onClick={() => setActiveSection('modifications')}
-              className={`px-3 py-1.5 text-xs whitespace-nowrap rounded transition-all duration-200 ${
-                activeSection === 'modifications' 
-                  ? 'bg-green-500 text-black font-bold shadow-md shadow-green-500/20' 
-                  : 'text-white bg-gray-800/50 hover:bg-gray-800'
-              }`}
-            >
-              Mods
-            </button>
-            <button 
-              onClick={() => setActiveSection('juicebox')}
-              className={`px-3 py-1.5 text-xs whitespace-nowrap rounded transition-all duration-200 ${
-                activeSection === 'juicebox' 
-                  ? 'bg-green-500 text-black font-bold shadow-md shadow-green-500/20' 
-                  : 'text-white bg-gray-800/50 hover:bg-gray-800'
-              }`}
-            >
-              Juice™
-            </button>
-            <button 
-              onClick={() => setActiveSection('seasonal')}
-              className={`px-3 py-1.5 text-xs whitespace-nowrap rounded transition-all duration-200 ${
-                activeSection === 'seasonal' 
-                  ? 'bg-green-500 text-black font-bold shadow-md shadow-green-500/20' 
-                  : 'text-white bg-gray-800/50 hover:bg-gray-800'
-              }`}
-            >
-              Season
-            </button>
-            <button 
-              onClick={() => setActiveSection('gloss')}
-              className={`px-3 py-1.5 text-xs whitespace-nowrap rounded transition-all duration-200 ${
-                activeSection === 'gloss' 
-                  ? 'bg-green-500 text-black font-bold shadow-md shadow-green-500/20' 
-                  : 'text-white bg-gray-800/50 hover:bg-gray-800'
-              }`}
-            >
-              Gloss
-            </button>
-          </div>
-        </div>
-      </div>
-      
-      {/* Main Content Area */}
-      <div className="p-4 md:p-6">
-        {loading ? (
-          <div className="flex items-center justify-center h-64">
-            <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-green-500"></div>
+              <Plus className="h-12 w-12 text-gray-500 mb-2" />
+              <p className="text-gray-400 font-medium">Add New Vehicle</p>
+              <p className="text-gray-600 text-sm text-center mt-2">Track maintenance, mods, and performance</p>
+            </div>
           </div>
         ) : (
-          <div id="vehicleData">
-            {/* Dashboard View */}
-            {activeSection === 'dashboard' && (
-              <div className="dashboard-view">
-                {vehicles.length === 0 ? (
-                  <EmptyVehicleState />
-                ) : (
-                  <>
-                    {/* Current Vehicle Spotlight */}
-                    {activeVehicle && (
-                      <div className="vehicle-spotlight mb-8 grid grid-cols-1 lg:grid-cols-3 gap-6">
-                        <div className="lg:col-span-2 bg-gray-900 rounded-xl overflow-hidden border border-blue-500/20 relative">
-                          <div className="h-64 md:h-80 relative">
-                            <img 
-                              src={activeVehicle.image_url || getVehicleImageQuery(activeVehicle)}
-                              alt={`${activeVehicle.year} ${activeVehicle.make} ${activeVehicle.model}`}
-                              className="w-full h-full object-cover"
-                            />
-                            <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent"></div>
-                            <div className="absolute bottom-0 left-0 p-6">
-                              <div className="flex items-center mb-2">
-                                <span className={`inline-block w-3 h-3 rounded-full mr-2 ${
-                                  carMetrics.carStatus === 'Ready' ? 'bg-green-500' : 
-                                  carMetrics.carStatus === 'Service Due' ? 'bg-yellow-500' : 'bg-red-500'
-                                }`}></span>
-                                <span className="text-sm text-gray-300">{carMetrics.carStatus}</span>
-                              </div>
-                              <h2 className="text-white font-orbitron text-2xl md:text-3xl">
-                                {activeVehicle.year} {activeVehicle.make} {activeVehicle.model}
-                              </h2>
-                              <p className="text-gray-300">{activeVehicle.trim} • {carMetrics.mileage > 0 ? `${carMetrics.mileage} miles` : 'Mileage not recorded'}</p>
-                            </div>
-                            <div className="absolute top-4 right-4 bg-black/70 px-3 py-1 rounded-full flex items-center">
-                              <Clock className="h-4 w-4 text-green-500 mr-2" />
-                              <span className="text-white text-sm">{new Date().toLocaleTimeString()}</span>
-                            </div>
-                          </div>
-                          <div className="p-4 grid grid-cols-2 lg:grid-cols-4 gap-4">
-                            <div className="bg-black rounded-lg p-3">
-                              <div className="text-sm text-gray-400 mb-1">Last Service</div>
-                              <div className="text-white font-medium">{carMetrics.lastService || 'Not recorded'}</div>
-                            </div>
-                            <div className="bg-black rounded-lg p-3">
-                              <div className="text-sm text-gray-400 mb-1">Next Service Due</div>
-                              <div className="text-white font-medium">{carMetrics.nextService || 'Not scheduled'}</div>
-                            </div>
-                            <div className="bg-black rounded-lg p-3">
-                              <div className="text-sm text-gray-400 mb-1">Engine Health</div>
-                              <div className={`text-white font-medium ${
-                                carMetrics.engineHealth >= 80 ? 'text-green-500' : 
-                                carMetrics.engineHealth >= 60 ? 'text-yellow-500' : 'text-red-500'
-                              }`}>
-                                {carMetrics.engineHealth > 0 ? `${carMetrics.engineHealth}%` : 'Not recorded'}
-                              </div>
-                            </div>
-                            <div className="bg-black rounded-lg p-3">
-                              <div className="text-sm text-gray-400 mb-1">Gloss Index</div>
-                              <div className={`text-white font-medium ${
-                                carMetrics.glossIndex >= 80 ? 'text-green-500' : 
-                                carMetrics.glossIndex >= 60 ? 'text-yellow-500' : 'text-red-500'
-                              }`}>
-                                {carMetrics.glossIndex > 0 ? `${carMetrics.glossIndex}%` : 'Not measured'}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                        
-                        <div className="flex flex-col gap-4">
-                          {/* Vehicle Vitals - F1-style Layout */}
-                          <div className="bg-gray-900 rounded-xl p-4 border border-blue-500/20">
-                            <div className="flex items-center justify-between mb-3">
-                              <h3 className="text-blue-400 font-orbitron text-lg">Vehicle Vitals</h3>
-                              <span className="text-xs text-gray-500 bg-gray-800 px-2 py-1 rounded">Real-time telemetry</span>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-4">
-                              {/* Left Column - Fuel & Battery */}
-                              <div className="space-y-3">
-                                <div>
-                                  <div className="flex justify-between items-center mb-1">
-                                    <div className="flex items-center">
-                                      <Fuel className="h-4 w-4 text-green-500 mr-2" />
-                                      <span className="text-gray-300 text-sm">Fuel Level</span>
-                                    </div>
-                                    <span className="text-white font-medium text-sm">
-                                      {carMetrics.fuelLevel > 0 ? `${carMetrics.fuelLevel}%` : '--'}
-                                    </span>
-                                  </div>
-                                  <div className="w-full bg-gray-800 rounded-full h-2.5 overflow-hidden border border-gray-700">
-                                    <div 
-                                      className={`h-full rounded-full ${
-                                        carMetrics.fuelLevel > 60 ? 'bg-green-500' : 
-                                        carMetrics.fuelLevel > 30 ? 'bg-yellow-500' : 'bg-red-500'
-                                      }`}
-                                      style={{ width: `${carMetrics.fuelLevel || 0}%` }}
-                                    ></div>
-                                  </div>
-                                </div>
-                                
-                                <div>
-                                  <div className="flex justify-between items-center mb-1">
-                                    <div className="flex items-center">
-                                      <Battery className="h-4 w-4 text-green-500 mr-2" />
-                                      <span className="text-gray-300 text-sm">Battery Health</span>
-                                    </div>
-                                    <span className="text-white font-medium text-sm">
-                                      {carMetrics.batteryHealth > 0 ? `${carMetrics.batteryHealth}%` : '--'}
-                                    </span>
-                                  </div>
-                                  <div className="w-full bg-gray-800 rounded-full h-2.5 overflow-hidden border border-gray-700">
-                                    <div 
-                                      className={`h-full rounded-full ${
-                                        carMetrics.batteryHealth > 80 ? 'bg-green-500' : 
-                                        carMetrics.batteryHealth > 50 ? 'bg-yellow-500' : 'bg-red-500'
-                                      }`}
-                                      style={{ width: `${carMetrics.batteryHealth || 0}%` }}
-                                    ></div>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              {/* Right Column - Temperatures */}
-                              <div className="space-y-3">
-                                <div className="rounded-lg bg-black/60 p-2.5 flex justify-between items-center">
-                                  <div className="flex items-center">
-                                    <Thermometer className="h-4 w-4 text-green-500 mr-2" />
-                                    <span className="text-gray-300 text-sm">Oil Temp</span>
-                                  </div>
-                                  <span className={`text-sm font-mono font-medium ${
-                                    carMetrics.oilTemp < 220 ? 'text-green-400' : 
-                                    carMetrics.oilTemp < 250 ? 'text-yellow-400' : 'text-red-400'
-                                  }`}>
-                                    {carMetrics.oilTemp > 0 ? `${carMetrics.oilTemp}°F` : '--'}
-                                  </span>
-                                </div>
-                                
-                                <div className="rounded-lg bg-black/60 p-2.5 flex justify-between items-center">
-                                  <div className="flex items-center">
-                                    <Thermometer className="h-4 w-4 text-green-500 mr-2" />
-                                    <span className="text-gray-300 text-sm">Coolant Temp</span>
-                                  </div>
-                                  <span className={`text-sm font-mono font-medium ${
-                                    carMetrics.coolantTemp < 200 ? 'text-green-400' : 
-                                    carMetrics.coolantTemp < 230 ? 'text-yellow-400' : 'text-red-400'
-                                  }`}>
-                                    {carMetrics.coolantTemp > 0 ? `${carMetrics.coolantTemp}°F` : '--'}
-                                  </span>
-                                </div>
-                              </div>
-                            </div>
-                          </div>
-                          
-                          {/* Tire Pressure - F1-style Layout */}
-                          <div className="bg-gray-900 rounded-xl p-4 border border-blue-500/20">
-                            <div className="flex items-center justify-between mb-3">
-                              <h3 className="text-blue-400 font-orbitron text-lg">Tire Pressure (PSI)</h3>
-                              <div className="flex items-center gap-2">
-                                <span className="h-3 w-3 bg-green-500 rounded-full"></span>
-                                <span className="text-xs text-gray-400">Optimal</span>
-                                <span className="h-3 w-3 bg-yellow-500 rounded-full ml-2"></span>
-                                <span className="text-xs text-gray-400">Attention</span>
-                              </div>
-                            </div>
-                            
-                            <div className="grid grid-cols-2 gap-4">
-                              {/* Tire Diagram */}
-                              <div className="flex items-center justify-center">
-                                <div className="relative w-48 h-32">
-                                  <div className="absolute inset-0 border-2 border-gray-700 rounded-lg"></div>
-                                  
-                                  {/* Car outline */}
-                                  <div className="absolute inset-x-10 inset-y-6 bg-gray-800/70 rounded"></div>
-                                  
-                                  {/* Tire indicators with larger, more visible styling */}
-                                  <div className="absolute top-1 left-1 bg-gray-800 p-1.5 rounded-lg text-center shadow-md">
-                                    <div className={`font-bold text-lg ${
-                                      carMetrics.tirePressure.frontLeft > 33 && carMetrics.tirePressure.frontLeft < 37 
-                                        ? 'text-green-500' : carMetrics.tirePressure.frontLeft > 0 ? 'text-yellow-500' : 'text-gray-500'
-                                    }`}>
-                                      {carMetrics.tirePressure.frontLeft > 0 ? carMetrics.tirePressure.frontLeft : '--'}
-                                    </div>
-                                    <div className="text-xs text-gray-400 font-semibold">FL</div>
-                                  </div>
-                                  
-                                  <div className="absolute top-1 right-1 bg-gray-800 p-1.5 rounded-lg text-center shadow-md">
-                                    <div className={`font-bold text-lg ${
-                                      carMetrics.tirePressure.frontRight > 33 && carMetrics.tirePressure.frontRight < 37 
-                                        ? 'text-green-500' : carMetrics.tirePressure.frontRight > 0 ? 'text-yellow-500' : 'text-gray-500'
-                                    }`}>
-                                      {carMetrics.tirePressure.frontRight > 0 ? carMetrics.tirePressure.frontRight : '--'}
-                                    </div>
-                                    <div className="text-xs text-gray-400 font-semibold">FR</div>
-                                  </div>
-                                  
-                                  <div className="absolute bottom-1 left-1 bg-gray-800 p-1.5 rounded-lg text-center shadow-md">
-                                    <div className={`font-bold text-lg ${
-                                      carMetrics.tirePressure.rearLeft > 33 && carMetrics.tirePressure.rearLeft < 37 
-                                        ? 'text-green-500' : carMetrics.tirePressure.rearLeft > 0 ? 'text-yellow-500' : 'text-gray-500'
-                                    }`}>
-                                      {carMetrics.tirePressure.rearLeft > 0 ? carMetrics.tirePressure.rearLeft : '--'}
-                                    </div>
-                                    <div className="text-xs text-gray-400 font-semibold">RL</div>
-                                  </div>
-                                  
-                                  <div className="absolute bottom-1 right-1 bg-gray-800 p-1.5 rounded-lg text-center shadow-md">
-                                    <div className={`font-bold text-lg ${
-                                      carMetrics.tirePressure.rearRight > 33 && carMetrics.tirePressure.rearRight < 37 
-                                        ? 'text-green-500' : carMetrics.tirePressure.rearRight > 0 ? 'text-yellow-500' : 'text-gray-500'
-                                    }`}>
-                                      {carMetrics.tirePressure.rearRight > 0 ? carMetrics.tirePressure.rearRight : '--'}
-                                    </div>
-                                    <div className="text-xs text-gray-400 font-semibold">RR</div>
-                                  </div>
-                                </div>
-                              </div>
-                              
-                              {/* Tire Data */}
-                              <div className="space-y-2">
-                                {carMetrics.tirePressure.frontLeft > 0 ? (
-                                  <>
-                                    <div className="grid grid-cols-2 gap-2">
-                                      <div className="bg-black/50 rounded p-2">
-                                        <div className="text-xs text-gray-400">Avg Pressure</div>
-                                        <div className="text-white text-lg font-medium">
-                                          {Math.round((
-                                            carMetrics.tirePressure.frontLeft + 
-                                            carMetrics.tirePressure.frontRight + 
-                                            carMetrics.tirePressure.rearLeft + 
-                                            carMetrics.tirePressure.rearRight
-                                          ) / 4)} PSI
-                                        </div>
-                                      </div>
-                                      <div className="bg-black/50 rounded p-2">
-                                        <div className="text-xs text-gray-400">Rec. Pressure</div>
-                                        <div className="text-green-400 text-lg font-medium">35 PSI</div>
-                                      </div>
-                                    </div>
-                                    <div className="bg-black/50 rounded p-2">
-                                      <div className="text-xs text-gray-400">Last Checked</div>
-                                      <div className="text-white">2 days ago</div>
-                                    </div>
-                                  </>
-                                ) : (
-                                  <div className="flex flex-col items-center justify-center h-full">
-                                    <p className="text-gray-400 text-sm">Connect to OBD2 or manually enter tire pressure data</p>
-                                    <button className="mt-2 text-blue-400 text-sm underline">
-                                      Enter Manually
-                                    </button>
-                                  </div>
-                                )}
-                              </div>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Statistics Overview */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-                      <div className="bg-gray-900 rounded-xl p-4 border border-blue-500/20">
-                        <div className="flex items-center justify-between mb-3">
-                          <h3 className="text-gray-400 text-sm">Maintenance Records</h3>
-                          <Activity className="h-5 w-5 text-blue-400" />
-                        </div>
-                        <div className="text-white text-2xl font-bold">0</div>
-                        <div className="text-gray-400 text-sm mt-2">No records added yet</div>
-                      </div>
-                      
-                      <div className="bg-gray-900 rounded-xl p-4 border border-blue-500/20">
-                        <div className="flex items-center justify-between mb-3">
-                          <h3 className="text-gray-400 text-sm">Modifications</h3>
-                          <Settings className="h-5 w-5 text-green-400" />
-                        </div>
-                        <div className="text-white text-2xl font-bold">0</div>
-                        <div className="text-gray-400 text-sm mt-2">No modifications recorded</div>
-                      </div>
-                      
-                      <div className="bg-gray-900 rounded-xl p-4 border border-blue-500/20">
-                        <div className="flex items-center justify-between mb-3">
-                          <h3 className="text-gray-400 text-sm">Scheduled Services</h3>
-                          <Calendar className="h-5 w-5 text-yellow-400" />
-                        </div>
-                        <div className="text-white text-2xl font-bold">0</div>
-                        <div className="text-gray-400 text-sm mt-2">No upcoming services</div>
-                      </div>
-                      
-                      <div className="bg-gray-900 rounded-xl p-4 border border-blue-500/20">
-                        <div className="flex items-center justify-between mb-3">
-                          <h3 className="text-gray-400 text-sm">OBD2 Status</h3>
-                          <Gauge className="h-5 w-5 text-red-400" />
-                        </div>
-                        <div className="text-white text-2xl font-bold">Not Connected</div>
-                        <button className="text-blue-400 text-sm mt-2 flex items-center">
-                          <Plus className="h-3 w-3 mr-1" /> Connect Device
-                        </button>
-                      </div>
-                    </div>
-                    
-                    {/* OBD Live Dashboard */}
-                    <div className="mb-8">
-                      <div className="flex items-center justify-between mb-4">
-                        <h2 className="text-blue-400 font-orbitron text-xl">OBD2 Telemetry</h2>
-                        <button className="text-sm bg-blue-900/30 text-blue-400 py-1 px-3 rounded">
-                          Connect Device
-                        </button>
-                      </div>
-                      <OBDLiveDashboard />
-                    </div>
-                  </>
-                )}
-              </div>
-            )}
-            
-            {/* Telemetry View */}
-            {activeSection === 'telemetry' && (
-              <div className="telemetry-view">
-                <div className="flex flex-col lg:flex-row justify-between items-start mb-6">
-                  <div>
-                    <h2 className="text-blue-400 font-orbitron text-2xl mb-2">Vehicle Telemetry</h2>
-                    <p className="text-gray-400">
-                      View real-time and historical performance data for {activeVehicle ? `${activeVehicle.year} ${activeVehicle.make} ${activeVehicle.model}` : 'your vehicle'}
-                    </p>
-                  </div>
-                  
-                  <div className="flex items-center mt-4 lg:mt-0 gap-3">
-                    <button 
-                      onClick={() => setExpandedTelemetry(!expandedTelemetry)}
-                      className="apex-button-sm flex items-center"
-                    >
-                      {expandedTelemetry ? (
-                        <>
-                          <Maximize2 size={16} className="mr-2" />
-                          Compact View
-                        </>
-                      ) : (
-                        <>
-                          <Maximize2 size={16} className="mr-2" />
-                          Expanded View
-                        </>
-                      )}
-                    </button>
-                    
-                    <button 
-                      onClick={() => window.open('/obd-connection', '_blank')}
-                      className="apex-button-sm flex items-center"
-                    >
-                      <Gauge size={16} className="mr-2" />
-                      OBD2 Connect
-                    </button>
-                  </div>
-                </div>
-                
-                {/* Telemetry Dashboard */}
-                <div className="grid grid-cols-1 gap-6">
-                  {expandedTelemetry ? (
-                    <EnhancedVehicleTelemetry vehicle={activeVehicle} />
-                  ) : (
-                    <VehicleTelemetry vehicle={activeVehicle} />
-                  )}
-                </div>
-              </div>
-            )}
-            
-            {/* Maintenance Records */}
-            {activeSection === 'maintenance' && (
-              <div className="maintenance-records-view">
-                <div className="flex flex-col lg:flex-row justify-between items-start mb-6">
-                  <div>
-                    <h2 className="text-blue-400 font-orbitron text-2xl mb-2">Maintenance Records</h2>
-                    <p className="text-gray-400">
-                      Track service history, repairs, and preventative maintenance for your vehicle
-                    </p>
-                  </div>
-                  
-                  <div className="flex items-center mt-4 lg:mt-0 gap-3">
-                    <button 
-                      onClick={() => setShowAddMaintenanceForm(true)}
-                      className="apex-button-sm flex items-center bg-blue-600 hover:bg-blue-700"
-                    >
-                      <Plus size={16} className="mr-2" />
-                      Add Record
-                    </button>
-                  </div>
-                </div>
-                
-                <EmptyMaintenanceState />
-              </div>
-            )}
-            
-            {/* Modifications */}
-            {activeSection === 'modifications' && (
-              <div className="modifications-view">
-                <div className="flex flex-col lg:flex-row justify-between items-start mb-6">
-                  <div>
-                    <h2 className="text-blue-400 font-orbitron text-2xl mb-2">Vehicle Modifications</h2>
-                    <p className="text-gray-400">
-                      Track all upgrades, performance parts, and customizations for your vehicle
-                    </p>
-                  </div>
-                  
-                  <div className="flex items-center mt-4 lg:mt-0 gap-3">
-                    <button 
-                      onClick={() => setShowAddModificationForm(true)}
-                      className="apex-button-sm flex items-center bg-yellow-600 hover:bg-yellow-700"
-                    >
-                      <Plus size={16} className="mr-2" />
-                      Add Modification
-                    </button>
-                  </div>
-                </div>
-                
-                <EmptyModificationState />
-              </div>
-            )}
-            
-            {/* JuiceBox Section */}
-            {activeSection === 'juicebox' && activeVehicle && (
-              <div className="juice-box-section">
-                <div className="flex flex-col lg:flex-row justify-between items-start mb-6">
-                  <div>
-                    <h2 className="text-blue-400 font-orbitron text-2xl mb-2">JuiceBox™ Checklists</h2>
-                    <p className="text-gray-400">
-                      The curated, real-world tested, gloss-backed, Gavin-approved detailing and maintenance checklists
-                    </p>
-                  </div>
-                  
-                  <div className="flex items-center mt-4 lg:mt-0 gap-3">
-                    <button 
-                      onClick={() => {
-                        const checklistElement = document.getElementById('juiceBoxChecklists');
-                        if (checklistElement) {
-                          exportToPdf(checklistElement, 'GoTime Motorsports - JuiceBox Checklists.pdf');
-                        }
-                      }}
-                      className="apex-button-sm flex items-center"
-                    >
-                      <FileDown size={16} className="mr-2" />
-                      Export PDF
-                    </button>
-                    <button 
-                      onClick={() => {
-                        // Open customization modal
-                        // This would be implemented with a state variable and modal component
-                        alert("Customize checklists feature coming soon!");
-                      }}
-                      className="apex-button-sm flex items-center"
-                    >
-                      <Wrench size={16} className="mr-2" />
-                      Customize
-                    </button>
-                  </div>
-                </div>
-                
-                <div id="juiceBoxChecklists" className="bg-black rounded-xl p-6 border border-green-500/20">
-                  <JuiceBoxChecklists vehicle={activeVehicle} />
-                </div>
-              </div>
-            )}
-            
-            {/* Seasonal Checklist Section */}
-            {activeSection === 'seasonal' && activeVehicle && (
-              <div className="seasonal-checklists-section">
-                <div className="flex flex-col lg:flex-row justify-between items-start mb-6">
-                  <div>
-                    <h2 className="text-blue-400 font-orbitron text-2xl mb-2">Seasonal Maintenance</h2>
-                    <p className="text-gray-400">
-                      Season-specific maintenance checklists customized to your climate and vehicle needs
-                    </p>
-                  </div>
-                  
-                  <div className="flex items-center mt-4 lg:mt-0 gap-3">
-                    <button 
-                      onClick={() => {
-                        const checklistElement = document.getElementById('seasonalChecklists');
-                        if (checklistElement) {
-                          exportToPdf(checklistElement, 'GoTime Motorsports - Seasonal Checklists.pdf');
-                        }
-                      }}
-                      className="apex-button-sm flex items-center"
-                    >
-                      <FileDown size={16} className="mr-2" />
-                      Export PDF
-                    </button>
-                    <div className="flex items-center space-x-2">
-                      <span className="text-gray-400 text-sm">Current Season:</span>
-                      <div className="flex border border-gray-700 rounded overflow-hidden">
-                        <button className="p-1.5 bg-green-600 text-white">
-                          <Leaf size={16} />
-                        </button>
-                        <button className="p-1.5 text-gray-400 hover:text-white">
-                          <Sun size={16} />
-                        </button>
-                        <button className="p-1.5 text-gray-400 hover:text-white">
-                          <Wind size={16} />
-                        </button>
-                        <button className="p-1.5 text-gray-400 hover:text-white">
-                          <CloudSnow size={16} />
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div id="seasonalChecklists" className="bg-black rounded-xl p-6 border border-green-500/20">
-                  <SeasonalChecklists 
-                    vehicle={activeVehicle} 
-                    onExport={(data: any) => {
-                      if (data.format === 'pdf') {
-                        const checklistElement = document.getElementById('seasonalChecklists');
-                        if (checklistElement) {
-                          exportToPdf(checklistElement, `GoTime Motorsports - ${data.checklist.name}.pdf`);
-                        }
-                      }
-                    }}
-                    onSave={(data: any) => {
-                      console.log('Saving checklist data:', data);
-                      // In a real implementation, this would save to Supabase
-                    }}
-                  />
-                </div>
-              </div>
-            )}
-            
-            {/* Gloss Section */}
-            {activeSection === 'gloss' && activeVehicle && (
-              <div className="gloss-view">
-                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-                  <div className="bg-gray-900 rounded-xl p-5 border border-blue-500/20 lg:col-span-2">
-                    <div className="flex justify-between items-center mb-4">
-                      <h3 className="text-blue-400 font-orbitron text-lg">Gloss Index History</h3>
+          <div className="border border-gray-700 rounded-lg overflow-hidden">
+            <table className="min-w-full divide-y divide-gray-700">
+              <thead className="bg-gray-800">
+                <tr>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                    Vehicle
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                    Status
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                    Mileage
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                    Last Updated
+                  </th>
+                  <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-400 uppercase tracking-wider">
+                    Stats
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="bg-gray-900 divide-y divide-gray-800">
+                {filteredVehicles.map((vehicle) => (
+                  <tr
+                    key={vehicle.id}
+                    onClick={() => setSelectedVehicle(vehicle)}
+                    className={`cursor-pointer transition-colors ${
+                      selectedVehicle?.id === vehicle.id
+                        ? 'bg-blue-900/10'
+                        : 'hover:bg-gray-800/70'
+                    }`}
+                  >
+                    <td className="px-6 py-4">
                       <div className="flex items-center">
-                        <span className="text-gray-400 text-sm mr-3">Current: {carMetrics.glossIndex || 0}%</span>
-                        <div className={`px-2 py-1 rounded text-xs ${
-                          carMetrics.glossIndex > 80 ? 'bg-green-500/10 text-green-400' : 
-                          carMetrics.glossIndex > 50 ? 'bg-yellow-500/10 text-yellow-400' : 
-                          'bg-red-500/10 text-red-400'
-                        }`}>
-                          {carMetrics.glossIndex > 80 ? 'Excellent' : 
-                           carMetrics.glossIndex > 50 ? 'Good' : 
-                           carMetrics.glossIndex > 0 ? 'Needs Attention' : 'Not Recorded'}
+                        <div className="h-10 w-10 rounded-full bg-gray-800 flex-shrink-0 overflow-hidden">
+                          {vehicle.image_url ? (
+                            <img 
+                              src={vehicle.image_url} 
+                              alt={`${vehicle.make} ${vehicle.model}`} 
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <div className="flex items-center justify-center h-full">
+                              <Car className="h-5 w-5 text-gray-500" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="ml-4">
+                          <div className="text-sm font-medium text-gray-200">
+                            {vehicle.year} {vehicle.make} {vehicle.model}
+                          </div>
+                          <div className="text-sm text-gray-500">
+                            {vehicle.trim}
+                          </div>
                         </div>
                       </div>
-                    </div>
-                    
-                    {carMetrics.glossIndex > 0 ? (
-                      <div className="h-64 bg-black/50 rounded-lg p-3 flex items-center justify-center">
-                        <div className="text-gray-400 text-lg">Gloss History Graph (Data-Driven)</div>
+                    </td>
+                    <td className="px-6 py-4">
+                      <span className={`px-2 py-1 inline-flex text-xs leading-5 font-semibold rounded-full ${
+                        vehicle.status === 'Active' ? 'bg-green-900/30 text-green-400' :
+                        vehicle.status === 'Storage' ? 'bg-yellow-900/30 text-yellow-400' :
+                        vehicle.status === 'Project' ? 'bg-blue-900/30 text-blue-400' :
+                        'bg-gray-900/30 text-gray-400'
+                      }`}>
+                        {vehicle.status}
+                      </span>
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-300">
+                      {vehicle.statistics?.mileage?.toLocaleString() || 'Unknown'}
+                    </td>
+                    <td className="px-6 py-4 text-sm text-gray-300">
+                      {vehicle.last_update || 'Never'}
+                    </td>
+                    <td className="px-6 py-4 text-sm">
+                      <div className="flex space-x-2">
+                        <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-blue-900/30 text-blue-400">
+                          {vehicle.statistics?.drive_count || 0} Drives
+                        </span>
+                        <span className="inline-flex items-center px-2 py-1 rounded-md text-xs font-medium bg-green-900/30 text-green-400">
+                          {vehicle.statistics?.maintenance_count || 0} Services
+                        </span>
                       </div>
-                    ) : (
-                      <div className="h-64 bg-black/50 rounded-lg p-3 flex flex-col items-center justify-center">
-                        <div className="text-gray-400 text-lg mb-2">No Gloss Measurements Recorded</div>
-                        <p className="text-gray-500 text-sm text-center mb-4">Track your vehicle's gloss levels over time to maintain that showroom shine</p>
-                        <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded">
-                          Record First Measurement
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                  
-                  <div className="bg-gray-900 rounded-xl p-5 border border-blue-500/20">
-                    <h3 className="text-blue-400 font-orbitron text-lg mb-4">Gloss Index Scanner</h3>
-                    
-                    <div className="space-y-4">
-                      <div className="bg-black/50 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-gray-300">Front Hood</span>
-                          <span className="text-white font-medium">{carMetrics.glossIndex ? Math.round(carMetrics.glossIndex * 0.95) + '%' : '--'}</span>
-                        </div>
-                        <div className="w-full bg-gray-800 rounded-full h-1.5">
-                          <div className="bg-green-500 h-1.5 rounded-full" style={{ width: carMetrics.glossIndex ? `${Math.round(carMetrics.glossIndex * 0.95)}%` : '0%' }}></div>
-                        </div>
-                      </div>
-                      
-                      <div className="bg-black/50 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-gray-300">Driver Door</span>
-                          <span className="text-white font-medium">{carMetrics.glossIndex ? Math.round(carMetrics.glossIndex * 1.05) + '%' : '--'}</span>
-                        </div>
-                        <div className="w-full bg-gray-800 rounded-full h-1.5">
-                          <div className="bg-green-500 h-1.5 rounded-full" style={{ width: carMetrics.glossIndex ? `${Math.round(carMetrics.glossIndex * 1.05)}%` : '0%' }}></div>
-                        </div>
-                      </div>
-                      
-                      <div className="bg-black/50 rounded-lg p-4">
-                        <div className="flex items-center justify-between mb-2">
-                          <span className="text-gray-300">Trunk</span>
-                          <span className="text-white font-medium">{carMetrics.glossIndex ? Math.round(carMetrics.glossIndex * 0.9) + '%' : '--'}</span>
-                        </div>
-                        <div className="w-full bg-gray-800 rounded-full h-1.5">
-                          <div className="bg-yellow-500 h-1.5 rounded-full" style={{ width: carMetrics.glossIndex ? `${Math.round(carMetrics.glossIndex * 0.9)}%` : '0%' }}></div>
-                        </div>
-                      </div>
-                      
-                      <div className="mt-6">
-                        <button className="w-full bg-gradient-to-r from-blue-600 to-blue-500 text-white py-2 rounded-md flex items-center justify-center">
-                          <Camera className="h-4 w-4 mr-2" />
-                          Scan Gloss Index
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="bg-gray-900 rounded-xl p-5 border border-blue-500/20">
-                  <GlossTracker vehicle={activeVehicle} />
-                </div>
-              </div>
-            )}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+            <div className="p-4 border-t border-gray-700">
+              <button
+                onClick={() => setShowAddVehicleForm(true)}
+                className="inline-flex items-center px-3 py-1.5 border border-transparent rounded-md shadow-sm text-xs font-medium text-white bg-blue-600 hover:bg-blue-700"
+              >
+                <Plus className="h-3.5 w-3.5 mr-1.5" />
+                Add New Vehicle
+              </button>
+            </div>
           </div>
         )}
       </div>
+    );
+  };
+  
+  // Render vehicle detail tabs
+  const renderVehicleDetailsTabs = () => {
+    if (!selectedVehicle) return null;
+    
+    return (
+      <div className="tabs overflow-x-auto whitespace-nowrap border-b border-gray-700 mb-6">
+        <div className="flex space-x-1">
+          <button
+            onClick={() => setActiveTab('overview')}
+            className={`px-4 py-2 text-sm font-medium ${
+              activeTab === 'overview'
+                ? 'border-b-2 border-blue-500 text-blue-400'
+                : 'text-gray-400 hover:text-gray-300 hover:border-b-2 hover:border-gray-500'
+            }`}
+          >
+            Overview
+          </button>
+          <button
+            onClick={() => setActiveTab('telemetry')}
+            className={`px-4 py-2 text-sm font-medium ${
+              activeTab === 'telemetry'
+                ? 'border-b-2 border-blue-500 text-blue-400'
+                : 'text-gray-400 hover:text-gray-300 hover:border-b-2 hover:border-gray-500'
+            }`}
+          >
+            Telemetry
+          </button>
+          <button
+            onClick={() => setActiveTab('enhanced-telemetry')}
+            className={`px-4 py-2 text-sm font-medium ${
+              activeTab === 'enhanced-telemetry'
+                ? 'border-b-2 border-blue-500 text-blue-400'
+                : 'text-gray-400 hover:text-gray-300 hover:border-b-2 hover:border-gray-500'
+            }`}
+          >
+            Enhanced Telemetry
+          </button>
+          <button
+            onClick={() => setActiveTab('gloss')}
+            className={`px-4 py-2 text-sm font-medium ${
+              activeTab === 'gloss'
+                ? 'border-b-2 border-blue-500 text-blue-400'
+                : 'text-gray-400 hover:text-gray-300 hover:border-b-2 hover:border-gray-500'
+            }`}
+          >
+            Gloss Tracking
+          </button>
+          <button
+            onClick={() => setActiveTab('juice-box')}
+            className={`px-4 py-2 text-sm font-medium ${
+              activeTab === 'juice-box'
+                ? 'border-b-2 border-blue-500 text-blue-400'
+                : 'text-gray-400 hover:text-gray-300 hover:border-b-2 hover:border-gray-500'
+            }`}
+          >
+            JuiceBox™ Details
+          </button>
+          <button
+            onClick={() => setActiveTab('seasonal')}
+            className={`px-4 py-2 text-sm font-medium ${
+              activeTab === 'seasonal'
+                ? 'border-b-2 border-blue-500 text-blue-400'
+                : 'text-gray-400 hover:text-gray-300 hover:border-b-2 hover:border-gray-500'
+            }`}
+          >
+            Seasonal Checklists
+          </button>
+          <button
+            onClick={() => setActiveTab('gallery')}
+            className={`px-4 py-2 text-sm font-medium ${
+              activeTab === 'gallery'
+                ? 'border-b-2 border-blue-500 text-blue-400'
+                : 'text-gray-400 hover:text-gray-300 hover:border-b-2 hover:border-gray-500'
+            }`}
+          >
+            Gallery
+          </button>
+          <button
+            onClick={() => setActiveTab('vault')}
+            className={`px-4 py-2 text-sm font-medium ${
+              activeTab === 'vault'
+                ? 'border-b-2 border-blue-500 text-blue-400'
+                : 'text-gray-400 hover:text-gray-300 hover:border-b-2 hover:border-gray-500'
+            }`}
+          >
+            Document Vault
+          </button>
+        </div>
+      </div>
+    );
+  };
+  
+  // Render the active tab content
+  const renderTabContent = () => {
+    if (!selectedVehicle) return null;
+    
+    switch (activeTab) {
+      case 'overview':
+        return (
+          <div className="space-y-6" id="vehicle-export">
+            {/* Vehicle Header */}
+            <div className="flex flex-col md:flex-row justify-between">
+              <div className="mb-4 md:mb-0">
+                <h2 className="text-2xl font-bold text-gray-100">
+                  {selectedVehicle.year} {selectedVehicle.make} {selectedVehicle.model}
+                  {selectedVehicle.trim && ` ${selectedVehicle.trim}`}
+                </h2>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                    selectedVehicle.status === 'Active' ? 'bg-green-900/30 text-green-400' :
+                    selectedVehicle.status === 'Storage' ? 'bg-yellow-900/30 text-yellow-400' :
+                    selectedVehicle.status === 'Project' ? 'bg-blue-900/30 text-blue-400' :
+                    'bg-gray-900/30 text-gray-400'
+                  }`}>
+                    {selectedVehicle.status}
+                  </span>
+                  {selectedVehicle.type && (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-700 text-gray-300">
+                      {selectedVehicle.type}
+                    </span>
+                  )}
+                  {selectedVehicle.color && (
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-700 text-gray-300">
+                      {selectedVehicle.color}
+                    </span>
+                  )}
+                </div>
+              </div>
+              
+              <div className="flex gap-2">
+                <div className="relative inline-block text-left">
+                  <button
+                    onClick={() => handleExport('pdf')}
+                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-300 bg-gray-800 hover:bg-gray-700"
+                  >
+                    <Download className="h-4 w-4 mr-1" />
+                    Export
+                  </button>
+                </div>
+                
+                <button
+                  onClick={() => {/* Would open settings/edit modal */}}
+                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-300 bg-gray-800 hover:bg-gray-700"
+                >
+                  <Settings className="h-4 w-4 mr-1" />
+                  Settings
+                </button>
+              </div>
+            </div>
+            
+            {/* Vehicle Stats Overview */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Left column: Vehicle Image & Details */}
+              <div className="md:col-span-1">
+                <div className="bg-gray-800 rounded-lg overflow-hidden">
+                  {selectedVehicle.image_url ? (
+                    <img 
+                      src={selectedVehicle.image_url} 
+                      alt={`${selectedVehicle.make} ${selectedVehicle.model}`} 
+                      className="w-full h-64 object-cover"
+                    />
+                  ) : (
+                    <div className="flex flex-col items-center justify-center h-64 text-center p-4 bg-gray-900">
+                      <Car className="h-16 w-16 text-gray-700 mb-2" />
+                      <span className="text-gray-500">No photo available</span>
+                      <button className="mt-4 px-3 py-1.5 text-xs bg-gray-800 text-gray-300 rounded hover:bg-gray-700">
+                        Add Photo
+                      </button>
+                    </div>
+                  )}
+                  
+                  <div className="p-4 border-t border-gray-700">
+                    <h3 className="text-lg font-medium text-gray-200 mb-2">Vehicle Details</h3>
+                    
+                    <div className="grid grid-cols-2 gap-y-2 text-sm">
+                      <div className="text-gray-400">VIN:</div>
+                      <div className="text-gray-200">{selectedVehicle.vin || 'Not provided'}</div>
+                      
+                      <div className="text-gray-400">License:</div>
+                      <div className="text-gray-200">{selectedVehicle.license_plate || 'Not provided'}</div>
+                      
+                      <div className="text-gray-400">Purchase Date:</div>
+                      <div className="text-gray-200">{selectedVehicle.purchase_date || 'Not provided'}</div>
+                      
+                      <div className="text-gray-400">Last Updated:</div>
+                      <div className="text-gray-200">{selectedVehicle.last_update || 'Never'}</div>
+                    </div>
+                    
+                    {selectedVehicle.notes && (
+                      <div className="mt-4 border-t border-gray-700 pt-4">
+                        <div className="text-gray-400 text-sm mb-1">Notes:</div>
+                        <p className="text-gray-300 text-sm">{selectedVehicle.notes}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+                
+                {/* Weather Widget */}
+                <div className="mt-4">
+                  <WeatherStation />
+                </div>
+              </div>
+              
+              {/* Middle & Right columns: Stats & Actions */}
+              <div className="md:col-span-2 space-y-4">
+                {/* Stats Grid */}
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+                  <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                    <div className="text-gray-400 text-sm mb-1">Total Drives</div>
+                    <div className="flex items-end justify-between">
+                      <div className="text-2xl font-semibold text-blue-400">
+                        {selectedVehicle.statistics?.drive_count || 0}
+                      </div>
+                      <Activity className="h-8 w-8 text-blue-500 opacity-70" />
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                    <div className="text-gray-400 text-sm mb-1">Mileage</div>
+                    <div className="flex items-end justify-between">
+                      <div className="text-2xl font-semibold text-green-400">
+                        {selectedVehicle.statistics?.mileage?.toLocaleString() || 0}
+                      </div>
+                      <Target className="h-8 w-8 text-green-500 opacity-70" />
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                    <div className="text-gray-400 text-sm mb-1">Avg. Drive Time</div>
+                    <div className="flex items-end justify-between">
+                      <div className="text-2xl font-semibold text-purple-400">
+                        {selectedVehicle.statistics?.avg_drive_duration || 0} min
+                      </div>
+                      <Timer className="h-8 w-8 text-purple-500 opacity-70" />
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                    <div className="text-gray-400 text-sm mb-1">Maintenance</div>
+                    <div className="flex items-end justify-between">
+                      <div className="text-2xl font-semibold text-yellow-400">
+                        {selectedVehicle.statistics?.maintenance_count || 0}
+                      </div>
+                      <Wrench className="h-8 w-8 text-yellow-500 opacity-70" />
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                    <div className="text-gray-400 text-sm mb-1">Modifications</div>
+                    <div className="flex items-end justify-between">
+                      <div className="text-2xl font-semibold text-orange-400">
+                        {selectedVehicle.statistics?.modification_count || 0}
+                      </div>
+                      <PaintBucket className="h-8 w-8 text-orange-500 opacity-70" />
+                    </div>
+                  </div>
+                  
+                  <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                    <div className="text-gray-400 text-sm mb-1">Investment</div>
+                    <div className="flex items-end justify-between">
+                      <div className="text-2xl font-semibold text-red-400">
+                        ${selectedVehicle.statistics?.total_investments?.toLocaleString() || 0}
+                      </div>
+                      <BarChart3 className="h-8 w-8 text-red-500 opacity-70" />
+                    </div>
+                  </div>
+                </div>
+                
+                {/* Quick Actions */}
+                <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                  <h3 className="text-lg font-medium text-gray-200 mb-3">Quick Actions</h3>
+                  
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <button
+                      onClick={() => setShowAddMaintenanceForm(true)}
+                      className="flex flex-col items-center justify-center p-3 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors"
+                    >
+                      <Wrench className="h-8 w-8 text-yellow-500 mb-2" />
+                      <span className="text-sm text-gray-300">Add Maintenance</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => setShowAddModForm(true)}
+                      className="flex flex-col items-center justify-center p-3 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors"
+                    >
+                      <PaintBucket className="h-8 w-8 text-orange-500 mb-2" />
+                      <span className="text-sm text-gray-300">Add Modification</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => setActiveTab('telemetry')}
+                      className="flex flex-col items-center justify-center p-3 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors"
+                    >
+                      <Gauge className="h-8 w-8 text-blue-500 mb-2" />
+                      <span className="text-sm text-gray-300">View Telemetry</span>
+                    </button>
+                    
+                    <button
+                      onClick={() => setActiveTab('gallery')}
+                      className="flex flex-col items-center justify-center p-3 rounded-lg bg-gray-700 hover:bg-gray-600 transition-colors"
+                    >
+                      <Camera className="h-8 w-8 text-purple-500 mb-2" />
+                      <span className="text-sm text-gray-300">Add Photos</span>
+                    </button>
+                  </div>
+                </div>
+                
+                {/* Drive Journal */}
+                <div className="bg-gray-800 rounded-lg p-4 border border-gray-700">
+                  <div className="flex justify-between items-center mb-3">
+                    <h3 className="text-lg font-medium text-gray-200">Recent Drives</h3>
+                    <Link to="/drive-journal" className="text-sm text-blue-400 hover:text-blue-300">
+                      View All
+                    </Link>
+                  </div>
+                  
+                  <div className="border border-gray-700 rounded-lg overflow-hidden divide-y divide-gray-700">
+                    {selectedVehicle.statistics?.drive_count ? (
+                      <div className="p-4 text-center">
+                        <p className="text-gray-400">
+                          Drive journal data will be displayed here. Visit the Drive Journal page to log your drives.
+                        </p>
+                        <Link 
+                          to="/drive-journal" 
+                          className="inline-block mt-2 text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                        >
+                          Open Drive Journal
+                        </Link>
+                      </div>
+                    ) : (
+                      <div className="p-4 text-center">
+                        <Clock className="h-10 w-10 text-gray-600 mx-auto mb-2" />
+                        <p className="text-gray-400">No drives recorded yet</p>
+                        <Link 
+                          to="/drive-journal" 
+                          className="inline-block mt-2 text-sm bg-blue-600 text-white px-3 py-1 rounded hover:bg-blue-700"
+                        >
+                          Log First Drive
+                        </Link>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        );
       
-      {/* Add Vehicle Form Modal */}
+      case 'telemetry':
+        return (
+          <div>
+            <VehicleTelemetry vehicle={selectedVehicle} />
+          </div>
+        );
+      
+      case 'enhanced-telemetry':
+        return (
+          <div>
+            <EnhancedVehicleTelemetry vehicle={selectedVehicle} />
+          </div>
+        );
+      
+      case 'gloss':
+        return (
+          <div>
+            <GlossTracker vehicle={selectedVehicle} />
+          </div>
+        );
+      
+      case 'juice-box':
+        return (
+          <div>
+            <JuiceBoxChecklists vehicle={selectedVehicle} />
+          </div>
+        );
+      
+      case 'seasonal':
+        return (
+          <div>
+            <SeasonalChecklists 
+              vehicle={selectedVehicle} 
+              onExport={(data) => console.log('Export seasonal checklist:', data)} 
+              onSave={(data) => console.log('Save seasonal checklist:', data)}
+            />
+          </div>
+        );
+      
+      case 'gallery':
+        return (
+          <div className="text-center py-10">
+            <Camera className="h-16 w-16 text-gray-700 mx-auto mb-3" />
+            <h3 className="text-lg font-medium text-gray-300 mb-2">Vehicle Gallery Coming Soon</h3>
+            <p className="text-gray-500 max-w-md mx-auto mb-6">
+              The gallery feature will allow you to upload, organize, and showcase photos of your vehicle, mods, and maintenance.
+            </p>
+          </div>
+        );
+      
+      case 'vault':
+        return (
+          <div className="text-center py-10">
+            <Shield className="h-16 w-16 text-gray-700 mx-auto mb-3" />
+            <h3 className="text-lg font-medium text-gray-300 mb-2">Document Vault Coming Soon</h3>
+            <p className="text-gray-500 max-w-md mx-auto mb-6">
+              The vault feature will allow you to securely store and organize important documents related to your vehicle.
+            </p>
+          </div>
+        );
+      
+      default:
+        return null;
+    }
+  };
+  
+  // Main render
+  return (
+    <div className="pb-12">
+      {/* Header */}
+      <div className="mb-6">
+        <div className="flex justify-between items-center">
+          <h1 className="text-3xl font-bold text-gray-100">GoTime Garage Vault</h1>
+          <button
+            onClick={() => setShowAddVehicleForm(true)}
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+          >
+            <Plus className="h-5 w-5 mr-2" />
+            Add Vehicle
+          </button>
+        </div>
+        <p className="text-gray-400 mt-1">
+          Comprehensive vehicle management with F1-inspired telemetry, maintenance tracking, and detailed history
+        </p>
+      </div>
+      
+      {/* Loading State */}
+      {loading ? (
+        <div className="flex justify-center items-center h-64">
+          <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+        </div>
+      ) : (
+        <>
+          {/* Vehicle Inventory */}
+          {renderVehicleInventory()}
+          
+          {/* Selected Vehicle Details */}
+          {selectedVehicle && (
+            <>
+              {renderVehicleDetailsTabs()}
+              {renderTabContent()}
+            </>
+          )}
+        </>
+      )}
+      
+      {/* Add Vehicle Modal */}
       {showAddVehicleForm && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-xl border border-blue-500/20 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-4 border-b border-gray-800">
-              <h2 className="text-xl text-blue-400 font-orbitron">Add New Vehicle</h2>
-              <button 
-                onClick={() => setShowAddVehicleForm(false)}
-                className="text-gray-400 hover:text-white"
-              >
-                <X size={24} />
-              </button>
+        <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/70 transition-opacity" onClick={() => setShowAddVehicleForm(false)}></div>
+          <div className="relative bg-gray-900 rounded-lg max-w-4xl w-full mx-4 max-h-[90vh] overflow-y-auto z-10">
+            <div className="border-b border-gray-800 px-6 py-4">
+              <h2 className="text-xl font-semibold text-blue-400">Add New Vehicle</h2>
             </div>
-            <div className="p-4">
-              <AddVehicleForm onSubmit={handleAddVehicle} onCancel={() => setShowAddVehicleForm(false)} />
+            <div className="p-6">
+              <AddVehicleForm 
+                onSubmit={handleAddVehicle} 
+                onCancel={() => setShowAddVehicleForm(false)}
+              />
             </div>
           </div>
         </div>
       )}
       
-      {/* Add Maintenance Form Modal */}
+      {/* Add Modification Modal */}
+      {showAddModForm && (
+        <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/70 transition-opacity" onClick={() => setShowAddModForm(false)}></div>
+          <div className="relative bg-gray-900 rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto z-10">
+            <div className="border-b border-gray-800 px-6 py-4">
+              <h2 className="text-xl font-semibold text-blue-400">Add Modification</h2>
+              <p className="text-gray-400 text-sm mt-1">Record a new modification for your {selectedVehicle?.year} {selectedVehicle?.make} {selectedVehicle?.model}</p>
+            </div>
+            <div className="p-6">
+              <p className="text-center text-gray-400 py-4">Modification form will be loaded here</p>
+              <div className="flex justify-end space-x-4 pt-4">
+                <button
+                  onClick={() => setShowAddModForm(false)}
+                  className="px-4 py-2 text-gray-300 hover:text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleAddModification({ cost: 250 })}
+                  className="bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-2 rounded-md flex items-center"
+                >
+                  <Check className="h-4 w-4 mr-2" />
+                  Add Modification
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Add Maintenance Modal */}
       {showAddMaintenanceForm && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-xl border border-blue-500/20 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-4 border-b border-gray-800">
-              <h2 className="text-xl text-blue-400 font-orbitron">Add Maintenance Record</h2>
-              <button 
-                onClick={() => setShowAddMaintenanceForm(false)}
-                className="text-gray-400 hover:text-white"
-              >
-                <X size={24} />
-              </button>
+        <div className="fixed inset-0 overflow-y-auto z-50 flex items-center justify-center">
+          <div className="fixed inset-0 bg-black/70 transition-opacity" onClick={() => setShowAddMaintenanceForm(false)}></div>
+          <div className="relative bg-gray-900 rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto z-10">
+            <div className="border-b border-gray-800 px-6 py-4">
+              <h2 className="text-xl font-semibold text-blue-400">Add Maintenance</h2>
+              <p className="text-gray-400 text-sm mt-1">Record a new maintenance service for your {selectedVehicle?.year} {selectedVehicle?.make} {selectedVehicle?.model}</p>
             </div>
-            <div className="p-4">
-              <AddMaintenanceForm 
-                onSubmit={handleAddMaintenance} 
-                onCancel={() => setShowAddMaintenanceForm(false)} 
-                vehicleId={activeVehicle?.id || ''} 
-              />
-            </div>
-          </div>
-        </div>
-      )}
-      
-      {/* Add Modification Form Modal */}
-      {showAddModificationForm && (
-        <div className="fixed inset-0 bg-black/80 flex items-center justify-center z-50 p-4">
-          <div className="bg-gray-900 rounded-xl border border-blue-500/20 max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-            <div className="flex justify-between items-center p-4 border-b border-gray-800">
-              <h2 className="text-xl text-blue-400 font-orbitron">Add Modification</h2>
-              <button 
-                onClick={() => setShowAddModificationForm(false)}
-                className="text-gray-400 hover:text-white"
-              >
-                <X size={24} />
-              </button>
-            </div>
-            <div className="p-4">
-              <AddModificationForm 
-                onSubmit={handleAddModification} 
-                onCancel={() => setShowAddModificationForm(false)} 
-                vehicleId={activeVehicle?.id || ''} 
-              />
+            <div className="p-6">
+              <p className="text-center text-gray-400 py-4">Maintenance form will be loaded here</p>
+              <div className="flex justify-end space-x-4 pt-4">
+                <button
+                  onClick={() => setShowAddMaintenanceForm(false)}
+                  className="px-4 py-2 text-gray-300 hover:text-white"
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={() => handleAddMaintenance({ cost: 150 })}
+                  className="bg-green-600 hover:bg-green-700 text-white font-medium px-6 py-2 rounded-md flex items-center"
+                >
+                  <Check className="h-4 w-4 mr-2" />
+                  Add Maintenance
+                </button>
+              </div>
             </div>
           </div>
         </div>

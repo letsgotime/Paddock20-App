@@ -1,5 +1,5 @@
 import React from 'react';
-import { useWeather } from '@/contexts/WeatherContext';
+import { useWeather } from '@/contexts/ConsolidatedWeatherContext';
 
 const HourlyForecast: React.FC = () => {
   const { forecastData, unit } = useWeather();
