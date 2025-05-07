@@ -9,6 +9,7 @@ export interface Vehicle {
   vin?: string;
   licensePlate?: string;
   nickname?: string;
+  name?: string; // Added name property which might be used in some components
   description?: string;
   modifications?: string;
   primaryImage?: string;

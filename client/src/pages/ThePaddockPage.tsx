@@ -51,7 +51,7 @@ const ThePaddockPage = () => {
   const { currentWeather, forecastWeather, isLoading: weatherLoading } = useWeather();
 
   // Vehicle data
-  const { vehicles, isLoading: vehicleLoading } = useVehicle();
+  const { vehicles, loading: vehicleLoading } = useVehicle();
 
   // Stats from data stores
   const [stats, setStats] = useState({

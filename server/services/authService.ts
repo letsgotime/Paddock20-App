@@ -74,15 +74,8 @@ export const authService = {
       // Check if it's a bcrypt hash (starts with $2b$)
       if (user.password.startsWith('$2b$')) {
         isPasswordValid = await bcrypt.compare(password, user.password);
-      } else {
-        // Legacy password format (SHA-256 hash.salt)
-        // For testing, if the password is literally "password", log them in
-        if (password === 'password' && 
-            (user.email === 'admin@example.com' || user.email === 'test@example.com')) {
-          console.log('Using temporary access for development - OVERRIDE AUTH');
-          isPasswordValid = true;
-        }
-      }
+      } 
+      // Remove test user shortcut for production security
       
       if (!isPasswordValid) {
         console.log('Password validation failed');
