@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import crypto from 'crypto';
 import { db } from '../db';
 import { users, type User } from '@shared/schema';
 import { eq } from 'drizzle-orm';
@@ -82,9 +83,7 @@ export const authService = {
       if (!isPasswordValid && user.password.includes('.')) {
         const [hashedPart, salt] = user.password.split('.');
         // SHA-256 hash check for databases migrated from older systems
-        const crypto = require('crypto');
-        const calculatedHash = crypto
-          .createHash('sha256')
+        const calculatedHash = crypto.createHash('sha256')
           .update(password + salt)
           .digest('hex');
         
