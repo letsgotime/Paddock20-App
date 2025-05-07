@@ -66,7 +66,7 @@ export default function OptimizedOnboardingJourney({
   showAllSteps = false
 }: OptimizedOnboardingJourneyProps) {
   const { profile } = useUserProfileStore();
-  const { vehicle, vehicles } = useVehicle();
+  const { vehicles, selectedVehicle } = useVehicle();
   const { toast } = useToast();
   const [steps, setSteps] = useState<OnboardingStep[]>([]);
   const [essentialStepsCompleted, setEssentialStepsCompleted] = useState(0);
@@ -217,7 +217,7 @@ export default function OptimizedOnboardingJourney({
     
     setSteps(stepsToShow);
     
-  }, [profile, vehicles, vehicle, showAllSteps]);
+  }, [profile, vehicles, selectedVehicle, showAllSteps]);
   
   const handleTipToggle = () => {
     setShowTip(!showTip);
