@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 
 export default function AuthStatus() {
   const { user, loading, logout, isAuthenticated } = useAuth();
-  const [, navigate] = useLocation();
+  const [location, navigate] = useLocation();
   const { toast } = useToast();
 
   const handleLogout = async () => {
@@ -53,6 +53,11 @@ export default function AuthStatus() {
         </Button>
       </div>
     );
+  }
+
+  // Don't show login button if we're already on the auth page
+  if (location === '/auth') {
+    return null;
   }
 
   return (
