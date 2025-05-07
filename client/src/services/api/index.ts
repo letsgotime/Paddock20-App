@@ -1,116 +1,124 @@
 /**
- * PADDOCK20 API Data Warehouse
+ * API Data Warehouse - Main Export
  * 
- * The central hub for all API interactions in the PADDOCK20 application.
- * Provides a unified interface for accessing various API services while
- * handling caching, error recovery, and provider fallbacks.
+ * This file exports all the necessary components of the API Data Warehouse
+ * for easy consumption by other parts of the application.
  */
 
-// Export the core API Data Warehouse
-export { apiWarehouse, APIDataWarehouseCore } from './core';
-
-// Export types
-export * from './types';
-
-// Initialize function to set up the API Data Warehouse
 import { apiWarehouse } from './core';
+import { APICategory, APIRequest, APIResponse, HealthStatusType } from './types/core';
+import { registerWeatherProviders } from './providers/weather';
+import { registerGeocodingProviders } from './providers/geocoding';
 
 /**
- * Initialize the API Data Warehouse with the available providers
- * This should be called early in the application bootstrap process
+ * Initialize the API Data Warehouse with specified providers
  */
-export function initializeAPIWarehouse(config?: {
+export function initializeAPIWarehouse(options: {
+  logLevel?: 'debug' | 'info' | 'warn' | 'error';
   providersList?: string[];
-  logLevel?: 'error' | 'warn' | 'info' | 'debug';
 }): void {
   console.info('🏎️ PADDOCK20: Initializing API Data Warehouse');
   
-  // Currently available providers
-  const availableProviders = [
-    'weather',
-    'geocoding'
-  ];
+  // Set up logging level
+  const logLevel = options.logLevel || 'info';
   
-  // Determine which providers to load (intersection of requested and available)
-  const requested = config?.providersList || availableProviders;
-  const providersToLoad = requested.filter(p => availableProviders.includes(p));
+  // Register requested providers
+  const requestedProviders = options.providersList || ['weather', 'geocoding'];
   
-  // Report on any requested providers that aren't available
-  const unavailableProviders = requested.filter(p => !availableProviders.includes(p));
-  if (unavailableProviders.length > 0) {
-    console.warn('Some requested API providers are not yet implemented:', unavailableProviders);
+  // Register available providers
+  if (requestedProviders.includes('weather')) {
+    registerWeatherProviders(apiWarehouse);
+    console.info('🏎️ PADDOCK20: Weather API providers registered');
   }
   
-  // Load core weather providers
-  if (providersToLoad.includes('weather')) {
-    import('./providers/weather').then(module => {
-      module.registerWeatherProviders(apiWarehouse);
-      console.info('🏎️ PADDOCK20: Weather API providers registered');
-    }).catch(err => {
-      console.warn('Failed to load Weather API providers:', err);
-    });
+  if (requestedProviders.includes('geocoding')) {
+    registerGeocodingProviders(apiWarehouse);
+    console.info('🏎️ PADDOCK20: Geocoding API providers registered');
   }
   
-  // Load geocoding providers
-  if (providersToLoad.includes('geocoding')) {
-    import('./providers/geocoding').then(module => {
-      module.registerGeocodingProviders(apiWarehouse);
-      console.info('🏎️ PADDOCK20: Geocoding API providers registered');
-    }).catch(err => {
-      console.warn('Failed to load Geocoding API providers:', err);
-    });
+  // Log unimplemented providers
+  const implementedProviders = ['weather', 'geocoding'];
+  const unimplementedProviders = requestedProviders.filter(
+    provider => !implementedProviders.includes(provider)
+  );
+  
+  if (unimplementedProviders.length > 0) {
+    console.warn('Some requested API providers are not yet implemented:', unimplementedProviders);
   }
   
-  console.info(`🏎️ PADDOCK20: API Data Warehouse initialized with providers: ${providersToLoad.join(', ')}`);
+  console.info('🏎️ PADDOCK20: API Data Warehouse initialized with providers: weather, geocoding');
+}
+
+// Initialize by default with basic providers
+if (typeof window !== 'undefined') {
+  // Only auto-initialize in browser environment
+  setTimeout(() => {
+    if (!window.__apiWarehouseInitialized) {
+      initializeAPIWarehouse({
+        logLevel: 'warn',
+        providersList: ['weather', 'geocoding']
+      });
+      window.__apiWarehouseInitialized = true;
+    }
+  }, 0);
 }
 
 /**
- * API Health check function
+ * Fetch data from the API Warehouse
+ * 
+ * This is the main function to use for getting data from any API.
+ * It handles caching, failover, and error handling automatically.
+ */
+export async function fetchAPI<T>(request: APIRequest): Promise<APIResponse<T>> {
+  return await apiWarehouse.fetch<T>(request);
+}
+
+/**
+ * Check the health of all API services
+ * 
+ * Useful for displaying service status to users and monitoring.
  */
 export async function checkAPIHealth(): Promise<{
-  status: 'healthy' | 'degraded' | 'unavailable';
-  providers: Record<string, 'healthy' | 'degraded' | 'unavailable' | 'unknown'>;
-  details: any;
+  status: HealthStatusType;
+  providers: Record<string, HealthStatusType>;
 }> {
   try {
-    const health = await apiWarehouse.getHealthStatus();
+    const healthStatus = await apiWarehouse.getHealthStatus();
+    let worstStatus: HealthStatusType = 'healthy';
     
-    // Calculate overall status
-    let overallStatus: 'healthy' | 'degraded' | 'unavailable' = 'healthy';
-    const providers: Record<string, 'healthy' | 'degraded' | 'unavailable' | 'unknown'> = {};
+    // Determine overall status from individual provider statuses
+    const providers: Record<string, HealthStatusType> = {};
     
-    // Check each category
-    for (const [category, status] of Object.entries(health)) {
-      providers[category] = status.status;
+    for (const [category, health] of Object.entries(healthStatus)) {
+      providers[category] = health.status;
       
-      // Update overall status (degraded if any category is degraded, unavailable if all are unavailable)
-      if (status.status === 'degraded' && overallStatus === 'healthy') {
-        overallStatus = 'degraded';
-      } else if (status.status === 'unavailable' && overallStatus !== 'unavailable') {
-        // Only mark as unavailable if all checked so far are unavailable
-        const checkedSoFar = Object.values(providers);
-        if (checkedSoFar.every(s => s === 'unavailable')) {
-          overallStatus = 'unavailable';
-        } else {
-          overallStatus = 'degraded';
-        }
+      // Track worst status (unavailable > degraded > healthy)
+      if (health.status === 'unavailable') {
+        worstStatus = 'unavailable';
+      } else if (health.status === 'degraded' && worstStatus !== 'unavailable') {
+        worstStatus = 'degraded';
       }
     }
     
     return {
-      status: overallStatus,
+      status: worstStatus,
       providers,
-      details: health,
     };
   } catch (error) {
-    console.error('API health check failed:', error);
+    console.error('Error checking API health:', error);
     return {
       status: 'unavailable',
-      providers: {},
-      details: { error: error.message },
+      providers: {}
     };
   }
 }
 
-// Export default for convenience
-export default apiWarehouse;
+// Add TypeScript declaration for window
+declare global {
+  interface Window {
+    __apiWarehouseInitialized?: boolean;
+  }
+}
+
+// Export everything for direct access
+export { apiWarehouse, APICategory };
