@@ -380,10 +380,10 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete, user }) => 
         // Pre-populate minimal profile data to satisfy validation
         setUserProfile(prev => ({
           ...prev,
-          fullName: prev.fullName || auth.user?.firstName && auth.user?.lastName ? `${auth.user.firstName} ${auth.user.lastName}` : auth.user?.username || 'User',
-          username: prev.username || auth.user?.username || 'user',
-          email: prev.email || auth.user?.email || 'user@example.com',
-          password: 'password123',  // These will never be used as Auth0 handles auth
+          fullName: prev.fullName || user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username || 'User',
+          username: prev.username || user?.username || 'user',
+          email: prev.email || user?.email || 'user@example.com',
+          password: 'password123',  // These will never be used as Supabase handles auth
           confirmPassword: 'password123',
         }));
         
@@ -467,8 +467,8 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete, user }) => 
       
       // Simulate successful completion with a delay
       setTimeout(() => {
-        // Call the onComplete callback with the user ID
-        onComplete(auth.user?.id || 1);
+        // Call the onComplete callback
+        onComplete();
       }, 800);
     } catch (error) {
       console.error('Error submitting onboarding data:', error);
@@ -484,10 +484,10 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete, user }) => 
       // Pre-populate minimal data to satisfy any validation
       setUserProfile(prev => ({
         ...prev,
-        fullName: prev.fullName || auth.user?.username || 'User',
-        username: prev.username || auth.user?.username || 'user',
-        email: prev.email || auth.user?.email || 'user@example.com',
-        password: 'password123',  // These will never be used as Auth0 handles auth
+        fullName: prev.fullName || user?.username || 'User',
+        username: prev.username || user?.username || 'user',
+        email: prev.email || user?.email || 'user@example.com',
+        password: 'password123',  // These will never be used as Supabase handles auth
         confirmPassword: 'password123',
       }));
       
@@ -501,8 +501,8 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete, user }) => 
       
       // Simulate successful completion with a delay
       setTimeout(() => {
-        // Call the onComplete callback with the user ID
-        onComplete(auth.user?.id || 1);
+        // Call the onComplete callback
+        onComplete();
       }, 800);
     } catch (error) {
       console.error('Error skipping onboarding:', error);
