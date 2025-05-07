@@ -80,12 +80,20 @@ export default function OnboardingModal({ isOpen = true, onClose }: OnboardingMo
       // Get preferences
       const preferences = profile.preferences;
       if (preferences) {
+        // Map UI theme based on preferences.theme
+        let uiTheme = 'carbon';
+        if (preferences.theme === 'dark') uiTheme = 'carbon';
+        else if (preferences.theme === 'light') uiTheme = 'light';
+        
+        // Driving interests can be stored in a custom field, use empty array as default
+        const drivingInterests = preferences.customFields?.drivingInterests || [];
+        
         setFormData(prev => ({
           ...prev,
-          theme: preferences.garageTheme || 'carbon',
+          theme: uiTheme,
           goals: {
             ...prev.goals,
-            interests: preferences.drivingInterests || [],
+            interests: drivingInterests,
           }
         }));
       }
@@ -124,7 +132,10 @@ export default function OnboardingModal({ isOpen = true, onClose }: OnboardingMo
             model: data.vehicle.model,
             year: parseInt(data.vehicle.year),
             nickname: data.vehicle.nickname || `${data.vehicle.make} ${data.vehicle.model}`,
-            color: data.vehicle.color,
+            // Add vehicle metadata to store color since it's not in the VehicleReference interface
+            metadata: {
+              color: data.vehicle.color || 'Unknown'
+            },
             status: 'active' as const
           };
           
@@ -135,8 +146,7 @@ export default function OnboardingModal({ isOpen = true, onClose }: OnboardingMo
             make: data.vehicle.make,
             model: data.vehicle.model,
             year: parseInt(data.vehicle.year),
-            nickname: data.vehicle.nickname,
-            color: data.vehicle.color
+            nickname: data.vehicle.nickname
           });
         }
       }
@@ -145,14 +155,18 @@ export default function OnboardingModal({ isOpen = true, onClose }: OnboardingMo
         // Add to goals collection instead of preferences
         userProfileWarehouse.addGoal({
           id: Date.now().toString(),
-          title: "Driving Goals",
+          type: 'experience',
           description: data.goals.drivingGoals,
-          tags: data.goals.interests,
-          priority: "medium",
-          status: "active",
-          date: new Date().toISOString().split('T')[0],
-          dueDate: null,
-          completed: false
+          targetDate: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 90 days from now
+          createdAt: new Date().toISOString().split('T')[0],
+          status: 'pending',
+          priority: 'medium',
+          category: 'driving',
+          steps: data.goals.interests.map((interest: string) => ({
+            id: `step-${interest}`,
+            title: interest,
+            completed: false
+          }))
         });
       }
       
@@ -161,7 +175,11 @@ export default function OnboardingModal({ isOpen = true, onClose }: OnboardingMo
         userProfileWarehouse.updatePreferences({
           theme: data.theme === 'carbon' ? 'dark' : 'light',
           colorAccent: data.theme === 'neon' ? '#ff00ff' : 
-                       data.theme === 'track' ? '#ff3300' : '#1982FC'
+                      data.theme === 'track' ? '#ff3300' : '#1982FC',
+          notifications: true, // Default to enabled
+          customFields: {
+            drivingInterests: data.goals?.interests || []
+          }
         });
       }
       
