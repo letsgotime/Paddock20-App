@@ -141,7 +141,7 @@ class TwoFactorService {
       throw new Error('User not found');
     }
     
-    if (!user.twoFactorEnabled) {
+    if (!user.isTwoFactorEnabled) {
       throw new Error('Two-factor authentication is not enabled for this user');
     }
     
@@ -174,7 +174,7 @@ class TwoFactorService {
       throw new Error('User not found');
     }
     
-    if (!user.twoFactorEnabled) {
+    if (!user.isTwoFactorEnabled) {
       throw new Error('Two-factor authentication is not enabled for this user');
     }
     
