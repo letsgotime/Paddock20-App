@@ -1,4 +1,5 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
+import { useAuth } from '@/hooks/useAuth';
 // Define Vehicle interface here to avoid circular dependency
 export interface Vehicle {
   id: string;
@@ -64,8 +65,9 @@ export const VehicleProvider: React.FC<VehicleProviderProps> = ({ children }) =>
   const [vehicles, setVehicles] = useState<Vehicle[]>([]);
   const [selectedVehicle, setSelectedVehicle] = useState<Vehicle | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
-  // Temporarily using a mock user for testing authentication issue
-  const user = null; // Will be fixed when auth issue is resolved
+  
+  // Import auth user
+  const { user } = useAuth();
 
   // Initialize vehicles from storage on component mount
   useEffect(() => {

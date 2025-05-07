@@ -463,13 +463,12 @@ const ThePaddockPage = () => {
                         
                         <Progress 
                           value={driveQuality.rating} 
-                          className="h-2 bg-gray-800"
-                          indicatorClassName={`
-                            ${driveQuality.rating >= 90 ? 'bg-green-500' : 
-                              driveQuality.rating >= 75 ? 'bg-emerald-500' : 
-                              driveQuality.rating >= 60 ? 'bg-blue-500' : 
-                              driveQuality.rating >= 45 ? 'bg-yellow-500' : 'bg-red-500'}
-                          `}
+                          className={`h-2 bg-gray-800 [&>div]:${
+                            driveQuality.rating >= 90 ? 'bg-green-500' : 
+                            driveQuality.rating >= 75 ? 'bg-emerald-500' : 
+                            driveQuality.rating >= 60 ? 'bg-blue-500' : 
+                            driveQuality.rating >= 45 ? 'bg-yellow-500' : 'bg-red-500'
+                          }`}
                         />
                         
                         <div className="mt-2 text-sm space-y-1">
@@ -664,7 +663,7 @@ const ThePaddockPage = () => {
                               {goal.progress}%
                             </Badge>
                           </div>
-                          <Progress value={goal.progress} className="h-1 bg-gray-800" />
+                          <Progress value={goal.progress} className={`h-1 bg-gray-800 [&>div]:${goal.progress === 100 ? 'bg-[#08c519]' : 'bg-[#1982FC]'}`} />
                         </div>
                       ))}
                     </div>
