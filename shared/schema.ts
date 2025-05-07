@@ -41,7 +41,8 @@ export const users = pgTable("users", {
   lastLogin: timestamp("last_login"),
   lastPasswordChange: timestamp("last_password_change"),
   // 2FA temporarily disabled
-  isTwoFactorEnabled: boolean("is_two_factor_enabled").default(false),
+  // Changed column name to match actual database column
+  isTwoFactorEnabled: boolean("two_factor_enabled").default(false),
   twoFactorSecret: text("two_factor_secret"),
   twoFactorBackupCodes: json("two_factor_backup_codes").$type<string[]>(),
   securityQuestions: json("security_questions").$type<Record<string, string>>(),
