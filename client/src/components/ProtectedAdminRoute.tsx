@@ -1,5 +1,6 @@
 import { Redirect } from 'wouter';
 import { useAuth } from '@/auth/useAuth';
+import { AuthRole } from '@/auth/types';
 import { Loader2 } from 'lucide-react';
 
 interface ProtectedAdminRouteProps {
@@ -12,7 +13,7 @@ interface ProtectedAdminRouteProps {
  */
 export const ProtectedAdminRoute: React.FC<ProtectedAdminRouteProps> = ({ children }) => {
   const { user, loading } = useAuth();
-  const isAdmin = user?.role === 'admin';
+  const isAdmin = user && (user.role === AuthRole.TEAM_PRINCIPAL || user.role === AuthRole.RACE_ENGINEER);
 
   if (loading) {
     return (

@@ -23,8 +23,8 @@ export const BetaWelcomeProvider: React.FC<{ children: React.ReactNode }> = ({ c
     const hasSeenWelcome = localStorage.getItem(`paddock20_welcome_seen_${user?.id}`);
     
     if (user && profile && !isLoading && !hasSeenWelcome && !hasShownWelcome) {
-      // Only show welcome once the profile is available and we have beta status
-      if (profile.identity?.betaStatus) {
+      // Only show welcome once the profile is available - assume beta status for all users now
+      if (profile.identity) {
         setShowWelcomeModal(true);
         setHasShownWelcome(true);
       }
