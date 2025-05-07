@@ -1,21 +1,18 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Supabase credentials - hardcoded for now until environment variables are fixed
-// NOTE: Typically we would use environment variables, but for troubleshooting we're temporarily hardcoding
-const SUPABASE_URL = 'https://zpakosjpizkxiwsuzvrb.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpwYWtvc2pwaXpreGl3c3V6dnJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY1Nzc0MjcsImV4cCI6MjA2MjE1MzQyN30.2Z-o9NRlZqvGLVwQMC1cRd_Ai0Qkb8KdENeKZeLUK7s';
+// Hardcoded Supabase credentials since environment variables aren't working properly in Vite
+// These should normally come from environment variables but we're hardcoding them for now
+const supabaseUrl = 'https://zpakosjpizkxiwsuzvrb.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpwYWtvc2pwaXpreGl3c3V6dnJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY1Nzc0MjcsImV4cCI6MjA2MjE1MzQyN30.2Z-o9NRlZqvGLVwQMC1cRd_Ai0Qkb8KdENeKZeLUK7s';
 
-// Safely check environment variables
-const env = import.meta.env || {};
-
-// Debug: Log environment variable status without exposing full values
+// Debug: Log Supabase configuration status
 console.log('Supabase configuration:', {
   usingHardcodedValues: true,
-  urlFirstChars: SUPABASE_URL.substring(0, 15) + '...',
-  keyFirstChars: SUPABASE_ANON_KEY.substring(0, 15) + '...'
+  urlFirstChars: supabaseUrl.substring(0, 15) + '...',
+  keyFirstChars: supabaseAnonKey.substring(0, 15) + '...'
 });
 
-// We're no longer in demo mode since we're using hardcoded credentials
+// We're using hardcoded credentials, so we're not in demo mode
 const isDemoMode = false;
 
 // Log demo mode status
@@ -59,8 +56,8 @@ const createMockClient = () => {
 const supabase = isDemoMode 
   ? createMockClient() as any
   : createClient(
-      SUPABASE_URL,
-      SUPABASE_ANON_KEY
+      supabaseUrl,
+      supabaseAnonKey
     );
 
 export default supabase;
