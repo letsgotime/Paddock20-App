@@ -34,13 +34,12 @@ const ChatFeedPage = () => {
   const [newMessage, setNewMessage] = useState("");
   const [activeRoom, setActiveRoom] = useState<string>("general");
   const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
-  const { session } = useAuth();
+  const { user } = useAuth();
   
   // Get current user information
-  const currentUser = session?.user;
-  const userEmail = currentUser?.email || "paddock20@member.com";
-  const userId = currentUser?.id || "anonymous";
-  const displayName = userEmail.split('@')[0] || "Paddock20 Member";
+  const userEmail = user?.email || "paddock20@member.com";
+  const userId = user?.id || "anonymous";
+  const displayName = user?.username || userEmail.split('@')[0] || "Paddock20 Member";
 
   // Initialize chat rooms
   useEffect(() => {
