@@ -121,7 +121,21 @@ function App() {
     }
   }, []);
 
-  // Note: Using StandaloneAuthPage as the main auth page
+  // Special case for auth page to provide auth context
+  if (location === '/auth') {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <PageTitleManager />
+          <NativeAuthProvider>
+            <SupabaseAuthProvider>
+              <StandaloneAuthPage />
+            </SupabaseAuthProvider>
+          </NativeAuthProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    );
+  }
 
   // Default App setup with query client and other global providers
   return (
@@ -243,8 +257,8 @@ function AppContent({
                           <Route path="/terms-of-service" component={TermsOfService} />
                           <Route path="/beta-agreement" component={BetaAgreement} />
                           <Route path="/email-verified" component={EmailVerifiedPage} />
-                          {/* Main auth page with updated branding */}
-                          <Route path="/auth" component={StandaloneAuthPage} />
+                          {/* Main auth page with updated branding - already handled with special case above */}
+                          <Route path="/auth" component={() => null} />
                           <Route path="/auth/callback" component={AuthCallback} />
                           <Route path="/auth/reset-password" component={ResetPassword} />
                           <Route path="/auth/error" component={AuthError} />
