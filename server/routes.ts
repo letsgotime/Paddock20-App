@@ -9,6 +9,8 @@ import { setupAuth } from "./auth";
 import twoFactorRoutes from "./routes/twoFactorRoutes";
 import supabaseAuthRoutes from "./routes/supabaseAuthRoutes";
 import spotifyRoutes from "./routes/spotifyRoutes";
+import adminRoutes from "./routes/adminRoutes";
+import adminAuditRoutes from "./routes/adminAuditRoutes";
 
 // OpenWeather API keys - updated May 1, 2025
 const OPENWEATHER_API_KEYS = {
