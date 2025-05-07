@@ -10,7 +10,8 @@ const pgSession = connectPgSimple(session);
 export const authMiddleware = session({
   store: new pgSession({
     pool: new pg.Pool({ connectionString: process.env.DATABASE_URL }),
-    tableName: 'session'
+    tableName: 'pg_sessions',
+    createTableIfMissing: true
   }),
   secret: process.env.SESSION_SECRET || 'paddock20_default_secret',
   resave: false,
@@ -36,10 +37,22 @@ export function setupAuth(app: Express) {
     done(null, user.id);
   });
   
-  passport.deserializeUser(async (id: string, done) => {
+  passport.deserializeUser(async (id: number, done) => {
     try {
-      // This should be replaced with a database lookup in production
-      done(null, { id });
+      // Look up the user in the database
+      const { db } = await import('./db');
+      const { users } = await import('@shared/schema');
+      const { eq } = await import('drizzle-orm');
+      
+      const [user] = await db.select().from(users).where(eq(users.id, id));
+      
+      if (!user) {
+        return done(null, null);
+      }
+      
+      // Return user without password
+      const { password, ...userWithoutPassword } = user;
+      done(null, userWithoutPassword);
     } catch (error) {
       done(error, null);
     }
