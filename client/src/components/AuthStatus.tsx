@@ -2,29 +2,21 @@ import { Button } from '@/components/ui/button';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, LogIn, LogOut, User } from 'lucide-react';
-import { useNativeAuth } from '@/hooks/useNativeAuth';
+import { useAuth } from '@/hooks/useAuth';
 
 export default function AuthStatus() {
-  const { user, loading, logout, isAuthenticated } = useNativeAuth();
+  const { user, loading, logout, isAuthenticated } = useAuth();
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
   const handleLogout = async () => {
     try {
-      const result = await logout();
-      if (!result.success) {
-        toast({
-          title: "Logout Failed",
-          description: result.error || "An error occurred during logout",
-          variant: "destructive",
-        });
-      } else {
-        toast({
-          title: "Logged Out",
-          description: "You have been successfully logged out",
-        });
-        navigate('/auth');
-      }
+      await logout();
+      toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out",
+      });
+      navigate('/auth');
     } catch (err: any) {
       toast({
         title: "Logout Failed",

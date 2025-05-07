@@ -1,19 +1,20 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { apiRequest } from '@/lib/queryClient';
 
 // Define user type
-export interface User {
-  id: number;
-  username: string;
+export type User = {
+  id: string | number;
   email: string;
-  role?: string;
+  username: string;
   firstName?: string | null;
   lastName?: string | null;
-  profileImageUrl?: string | null;
-}
+  createdAt?: Date | string;
+  role?: string;
+  [key: string]: any; // For additional properties
+};
 
-// Auth context type
-interface NativeAuthContextType {
+// Auth state interface
+interface AuthState {
   user: User | null;
   loading: boolean;
   isAuthenticated: boolean;
@@ -23,146 +24,161 @@ interface NativeAuthContextType {
   logout: () => Promise<{ success: boolean; error?: string }>;
 }
 
-// Create context
-const NativeAuthContext = createContext<NativeAuthContextType | null>(null);
+// Create context with default values
+export const NativeAuthContext = createContext<AuthState>({
+  user: null,
+  loading: true,
+  isAuthenticated: false,
+  error: null,
+  login: async () => ({ success: false, error: 'Context not initialized' }),
+  register: async () => ({ success: false, error: 'Context not initialized' }),
+  logout: async () => ({ success: false, error: 'Context not initialized' }),
+});
 
-// Provider component
-export function NativeAuthProvider({ children }: { children: ReactNode }) {
+// Auth provider component
+export const NativeAuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
 
-  // Check if user is authenticated on mount
+  // Check authentication status on load
   useEffect(() => {
-    const checkAuth = async () => {
+    const checkAuthStatus = async () => {
       try {
-        const response = await apiRequest('GET', '/api/auth/me');
-        
+        const response = await fetch('/api/auth/me', {
+          method: 'GET',
+          credentials: 'include',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+        });
+
         if (response.ok) {
-          const data = await response.json();
-          if (data.success && data.user) {
-            setUser(data.user);
-          } else {
-            setUser(null);
-          }
+          const userData = await response.json();
+          setUser(userData);
+          setIsAuthenticated(true);
         } else {
           setUser(null);
+          setIsAuthenticated(false);
         }
       } catch (err) {
         console.error('Auth check error:', err);
         setUser(null);
+        setIsAuthenticated(false);
       } finally {
         setLoading(false);
       }
     };
 
-    checkAuth();
+    checkAuthStatus();
   }, []);
 
   // Login function
-  const login = async (email: string, password: string) => {
-    setLoading(true);
+  const login = async (email: string, password: string): Promise<{ success: boolean; error?: string }> => {
     setError(null);
     
     try {
       const response = await apiRequest('POST', '/api/auth/login', { email, password });
-      const data = await response.json();
       
-      if (response.ok && data.success) {
-        setUser(data.user);
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+        setIsAuthenticated(true);
         return { success: true };
       } else {
-        setError(data.message || 'Login failed');
-        return { success: false, error: data.message || 'Login failed' };
+        const errorData = await response.json();
+        setError(errorData.message || 'Login failed');
+        return { success: false, error: errorData.message || 'Login failed' };
       }
     } catch (err: any) {
-      const errorMessage = err.message || 'An unexpected error occurred during login';
+      const errorMessage = err.message || 'An error occurred during login';
       setError(errorMessage);
       return { success: false, error: errorMessage };
-    } finally {
-      setLoading(false);
     }
   };
 
   // Register function
-  const register = async (email: string, password: string, username: string) => {
-    setLoading(true);
+  const register = async (
+    email: string, 
+    password: string, 
+    username: string
+  ): Promise<{ success: boolean; error?: string }> => {
     setError(null);
     
     try {
-      const response = await apiRequest('POST', '/api/auth/register', { 
-        email, 
+      const response = await apiRequest('POST', '/api/auth/register', {
+        email,
         password,
-        username
+        username,
+        // Additional fields can be added here
       });
       
-      const data = await response.json();
-      
-      if (response.ok && data.success) {
-        setUser(data.user);
+      if (response.ok) {
+        const userData = await response.json();
+        setUser(userData);
+        setIsAuthenticated(true);
         return { success: true };
       } else {
-        setError(data.message || 'Registration failed');
-        return { success: false, error: data.message || 'Registration failed' };
+        const errorData = await response.json();
+        setError(errorData.message || 'Registration failed');
+        return { success: false, error: errorData.message || 'Registration failed' };
       }
     } catch (err: any) {
-      const errorMessage = err.message || 'An unexpected error occurred during registration';
+      const errorMessage = err.message || 'An error occurred during registration';
       setError(errorMessage);
       return { success: false, error: errorMessage };
-    } finally {
-      setLoading(false);
     }
   };
 
   // Logout function
-  const logout = async () => {
-    setLoading(true);
+  const logout = async (): Promise<{ success: boolean; error?: string }> => {
     setError(null);
     
     try {
       const response = await apiRequest('POST', '/api/auth/logout');
-      const data = await response.json();
       
-      if (response.ok && data.success) {
+      if (response.ok) {
         setUser(null);
+        setIsAuthenticated(false);
         return { success: true };
       } else {
-        setError(data.message || 'Logout failed');
-        return { success: false, error: data.message || 'Logout failed' };
+        const errorData = await response.json();
+        setError(errorData.message || 'Logout failed');
+        return { success: false, error: errorData.message || 'Logout failed' };
       }
     } catch (err: any) {
-      const errorMessage = err.message || 'An unexpected error occurred during logout';
+      const errorMessage = err.message || 'An error occurred during logout';
       setError(errorMessage);
       return { success: false, error: errorMessage };
-    } finally {
-      setLoading(false);
     }
   };
 
+  // Provide auth context to children
   return (
     <NativeAuthContext.Provider
       value={{
         user,
         loading,
-        isAuthenticated: !!user,
+        isAuthenticated,
         error,
         login,
         register,
-        logout
+        logout,
       }}
     >
       {children}
     </NativeAuthContext.Provider>
   );
-}
+};
 
-// Hook to use the auth context
-export function useNativeAuth() {
+// Custom hook to use auth context
+export const useNativeAuth = (): AuthState => {
   const context = useContext(NativeAuthContext);
   
-  if (!context) {
+  if (context === undefined) {
     throw new Error('useNativeAuth must be used within a NativeAuthProvider');
   }
   
   return context;
-}
+};
