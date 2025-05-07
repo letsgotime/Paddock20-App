@@ -7,7 +7,7 @@ interface F1TelemetryWidgetProps {
 }
 
 const F1TelemetryWidget: React.FC<F1TelemetryWidgetProps> = ({ compact = false }) => {
-  const { activeVehicle } = useVehicle();
+  const { selectedVehicle } = useVehicle();
   
   // State for simulated telemetry data
   const [telemetry, setTelemetry] = useState({
@@ -34,8 +34,8 @@ const F1TelemetryWidget: React.FC<F1TelemetryWidgetProps> = ({ compact = false }
   
   // Animate telemetry data as if car is in motion
   useEffect(() => {
-    // Only animate if we have an active vehicle
-    if (!activeVehicle) return;
+    // Only animate if we have a selected vehicle
+    if (!selectedVehicle) return;
     
     // Simulation values
     let rpmValue = 800;
@@ -104,7 +104,7 @@ const F1TelemetryWidget: React.FC<F1TelemetryWidgetProps> = ({ compact = false }
     }, 100);
     
     return () => clearInterval(interval);
-  }, [activeVehicle]);
+  }, [selectedVehicle]);
   
   // Helper to get color for RPM gauge
   const getRpmColor = (rpm: number) => {
@@ -373,7 +373,7 @@ const F1TelemetryWidget: React.FC<F1TelemetryWidgetProps> = ({ compact = false }
   // Render component with appropriate layout
   return (
     <div className="h-full">
-      {activeVehicle ? (
+      {selectedVehicle ? (
         compact ? renderCompactTelemetry() : renderFullTelemetry()
       ) : (
         <div className="h-full flex flex-col items-center justify-center text-center">
