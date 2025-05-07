@@ -2203,6 +2203,34 @@ class UserProfileWarehouseService {
   }
   
   /**
+   * Updates a vehicle reference
+   */
+  updateVehicleReference(id: string, updates: Partial<VehicleReference>): void {
+    this.store.getState().updateVehicleReference(id, updates);
+  }
+  
+  /**
+   * Adds a goal
+   */
+  addGoal(goal: GoalRecord): void {
+    this.store.getState().addGoal(goal);
+  }
+  
+  /**
+   * Updates a goal
+   */
+  updateGoal(id: string, updates: Partial<GoalRecord>): void {
+    this.store.getState().updateGoal(id, updates);
+  }
+  
+  /**
+   * Updates the user profile
+   */
+  updateProfile(updates: Partial<UserProfileData>): void {
+    this.store.getState().updateProfile(updates);
+  }
+  
+  /**
    * Resets the user profile
    * USE WITH CAUTION - this will clear all profile data
    */
