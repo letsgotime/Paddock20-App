@@ -79,11 +79,16 @@ export const authService = {
       console.log('Password validated successfully');
   
       // Update lastLogin time
-      await db.update(users)
-        .set({ 
-          lastLogin: new Date()
-        })
-        .where(eq(users.id, user.id));
+      try {
+        await db.update(users)
+          .set({ 
+            lastLogin: new Date()
+          })
+          .where(eq(users.id, user.id));
+      } catch (updateError) {
+        console.warn("Could not update lastLogin time:", updateError);
+        // Continue anyway - this is not critical
+      }
   
       // Return safe user object (without password)
       return {
