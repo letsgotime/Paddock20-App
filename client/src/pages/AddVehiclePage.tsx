@@ -268,9 +268,33 @@ export default function AddVehiclePage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>VIN (Optional)</FormLabel>
-                        <FormControl>
-                          <Input placeholder="Vehicle Identification Number" {...field} />
-                        </FormControl>
+                        <div className="flex gap-2">
+                          <FormControl>
+                            <Input placeholder="Vehicle Identification Number" {...field} />
+                          </FormControl>
+                          <Button 
+                            type="button" 
+                            onClick={handleVinLookup}
+                            variant="outline" 
+                            className="min-w-[90px]"
+                            disabled={isSearchingVin}
+                          >
+                            {isSearchingVin ? (
+                              <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                              <Search className="h-4 w-4 mr-1" />
+                            )}
+                            {isSearchingVin ? '' : 'Lookup'}
+                          </Button>
+                        </div>
+                        {vinError && (
+                          <div className="mt-2">
+                            <Alert variant="destructive" className="py-2 text-sm">
+                              <AlertCircle className="h-4 w-4" />
+                              <AlertTitle className="ml-2">{vinError}</AlertTitle>
+                            </Alert>
+                          </div>
+                        )}
                         <FormDescription>
                           Used for accurate part lookups and service history
                         </FormDescription>
