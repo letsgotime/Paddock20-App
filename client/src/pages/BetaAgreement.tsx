@@ -7,9 +7,25 @@ const BetaAgreement: React.FC = () => {
   const currentYear = new Date().getFullYear();
 
   const handleAgree = () => {
-    // Store acceptance in localStorage or use an API call to record this
+    // Store acceptance in localStorage with timestamps
     localStorage.setItem('betaAgreementAccepted', 'true');
     localStorage.setItem('betaAgreementDate', new Date().toISOString());
+    
+    // Get the current user ID from session to mark the beta agreement as accepted for this user
+    const userProfileStr = localStorage.getItem('userProfile');
+    if (userProfileStr) {
+      try {
+        const userProfile = JSON.parse(userProfileStr);
+        if (userProfile && userProfile.id) {
+          localStorage.setItem(`betaAgreement_accepted_${userProfile.id}`, 'true');
+        }
+      } catch (err) {
+        console.error('Failed to get user profile from localStorage:', err);
+      }
+    }
+    
+    // After accepting beta agreement, redirect to home page where onboarding will be shown
+    // based on the onboarding completion check in App.tsx
     setLocation('/');
   };
   
