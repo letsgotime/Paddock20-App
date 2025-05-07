@@ -5,6 +5,9 @@ export default {
   content: ["./client/index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
+      fontSize: {
+        'xxs': '0.65rem',
+      },
       fontFamily: {
         'orbitron': ['Orbitron', 'sans-serif'],
       },
