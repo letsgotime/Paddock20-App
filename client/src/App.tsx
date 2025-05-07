@@ -26,6 +26,8 @@ import OnboardingPage from './pages/OnboardingPage';
 import ThePaddockPage from './pages/ThePaddockPage';
 import EnhancedLogoutPage from './pages/EnhancedLogoutPage';
 import JoinTheGrid from './pages/JoinTheGrid';
+import OptimizedOnboardingPage from './pages/OptimizedOnboardingPage';
+import PaddockPage from './pages/PaddockPage';
 
 // Page imports
 import Paddock20HomePage from "./pages/Paddock20HomePage";
@@ -255,12 +257,15 @@ function AppContent({
                           <Route path="/spotify/callback" component={SpotifyCallbackPage} />
                           <Route path="/logout" component={EnhancedLogoutPage} />
                           
-                          {/* User onboarding page */}
+                          {/* User onboarding pages */}
                           <Route path="/onboarding" component={OnboardingPage} />
-                        
+                          <Route path="/onboarding/optimized" component={() => <ProtectedRoute><OptimizedOnboardingPage /></ProtectedRoute>} />
+                          <Route path="/onboarding/all" component={() => <ProtectedRoute><OptimizedOnboardingPage showAllFeatures={true} /></ProtectedRoute>} />
+                          
                           {/* Protected routes */}
                           <Route path="/" component={() => <ProtectedRoute><ThePaddockPage /></ProtectedRoute>} />
                           <Route path="/the-paddock" component={() => <ProtectedRoute><ThePaddockPage /></ProtectedRoute>} />
+                          <Route path="/paddock" component={() => <ProtectedRoute><PaddockPage /></ProtectedRoute>} />
                           <Route path="/admin" component={() => <ProtectedRoute><AdminPage /></ProtectedRoute>} />
                           <Route path="/onboarding-test" component={() => <ProtectedRoute><OnboardingTestPage /></ProtectedRoute>} />
                           <Route path="/settings" component={() => <ProtectedRoute><Settings /></ProtectedRoute>} />
