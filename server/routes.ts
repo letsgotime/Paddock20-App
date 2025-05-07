@@ -6,7 +6,8 @@ import { users } from "@shared/schema";
 import { handleGoogleOAuth2Callback, handleAppleOAuth2Callback } from "./oauth";
 import { checkSlackIntegration, initializeSlackClient, shareVehicleToSlack, shareEventToSlack } from "./slack";
 import { setupAuth } from "./auth";
-import twoFactorRoutes from "./routes/twoFactorRoutes";
+// Temporarily disabled 2FA
+// import twoFactorRoutes from "./routes/twoFactorRoutes";
 import supabaseAuthRoutes from "./routes/supabaseAuthRoutes";
 import authRegisterRoutes from "./routes/authRegisterRoutes";
 import spotifyRoutes from "./routes/spotifyRoutes";
@@ -240,8 +241,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup user authentication system first
   setupAuth(app);
   
-  // Then register the Two-Factor Authentication Routes
-  app.use(twoFactorRoutes);
+  // Two-Factor Authentication temporarily disabled
+  // app.use(twoFactorRoutes);
   
   // Register Supabase auth related routes
   app.use(supabaseAuthRoutes);
