@@ -230,7 +230,8 @@ async function checkWeatherApiHealth(): Promise<boolean> {
   return await checkServiceHealth('OpenWeather API');
 }
 
-// Already imported at the top of the file
+// Import the user profile routes
+import userProfileRoutes from './routes/userProfileRoutes';
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup user authentication system first
@@ -241,6 +242,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register Supabase auth related routes
   app.use(supabaseAuthRoutes);
+  
+  // Register User Profile routes
+  app.use('/api/user-profile', userProfileRoutes);
   
   // Register Spotify API routes
   app.use('/api/spotify', spotifyRoutes);
