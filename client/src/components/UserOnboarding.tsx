@@ -1465,7 +1465,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete, user }) => 
                     Select Your Beta Participation Level
                   </h3>
                   <p className="text-gray-300 max-w-2xl mx-auto">
-                    Choose how you'd like to contribute to the Paddock20 beta program. You can change this selection later.
+                    Choose how you'd like to contribute to the Paddock20 beta program. Beta Tester spots are limited and require consistent participation.
                   </p>
                 </div>
                 
