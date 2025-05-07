@@ -47,10 +47,10 @@ const ThePaddockPage = () => {
   // Format date in F1-style
   const formattedDate = format(new Date(), 'MMMM d, yyyy');
   
-  // Weather context - safely get properties which may not exist in certain context versions
+  // Weather context - safely get properties from the consolidated context 
   const weatherContext = useWeather();
-  const currentWeather = weatherContext?.currentWeather || null;
-  const forecastWeather = weatherContext?.forecastWeather || null;
+  const currentWeather = weatherContext?.weatherData || null;
+  const forecastWeather = weatherContext?.forecastData || null;
   const weatherLoading = weatherContext?.isLoading || false;
 
   // Vehicle data
@@ -217,7 +217,7 @@ const ThePaddockPage = () => {
   }, [currentWeather]);
 
   // Weather icon based on weather code
-  const getWeatherIcon = (weatherData) => {
+  const getWeatherIcon = (weatherData: any) => {
     if (!weatherData || !weatherData.weather || !weatherData.weather[0]) return <Cloud className="h-8 w-8 text-blue-400" />;
     
     const code = weatherData.weather[0].id;
@@ -237,14 +237,14 @@ const ThePaddockPage = () => {
   };
 
   // Function to get maintenance status for vehicles
-  const getMaintenanceStatus = (vehicle) => {
+  const getMaintenanceStatus = (vehicle: any) => {
     // This would come from real vehicle data
     const statuses = ["Due Soon", "Up to Date", "Overdue", "Scheduled"];
     return statuses[Math.floor(Math.random() * statuses.length)];
   };
 
   // Get badge color for maintenance status
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case "Due Soon": return "bg-yellow-600 hover:bg-yellow-700";
       case "Up to Date": return "bg-green-600 hover:bg-green-700";
