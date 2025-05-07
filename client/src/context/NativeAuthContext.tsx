@@ -1,7 +1,8 @@
-import React, { createContext, useEffect, useState } from 'react';
+import { createContext, useState, useEffect, ReactNode } from 'react';
 import axios from 'axios';
+import { useToast } from '@/hooks/use-toast';
 
-// Define user type
+// Auth user type
 export interface AuthUser {
   id: number;
   username: string;
@@ -11,52 +12,52 @@ export interface AuthUser {
   fullName?: string | null;
   profileImage?: string | null;
   role?: string;
-  createdAt?: string;
 }
 
-// Define auth context type
+// Auth context type
 interface AuthContextType {
   user: AuthUser | null;
   loading: boolean;
   error: Error | null;
   isAuthenticated: boolean;
-  login: (email: string, password: string) => Promise<{ success: boolean; error?: string }>;
-  register: (userData: any) => Promise<{ success: boolean; error?: string }>;
+  login: (email: string, password: string) => Promise<boolean>;
+  register: (email: string, password: string, username: string) => Promise<boolean>;
   logout: () => Promise<void>;
-  updateProfile: (data: Partial<AuthUser>) => Promise<{ success: boolean; error?: string }>;
 }
 
-// Create context with a default value
-export const AuthContext = createContext<AuthContextType>({
-  user: null,
-  loading: true,
-  error: null,
-  isAuthenticated: false,
-  login: async () => ({ success: false, error: 'Auth context not initialized' }),
-  register: async () => ({ success: false, error: 'Auth context not initialized' }),
-  logout: async () => {},
-  updateProfile: async () => ({ success: false, error: 'Auth context not initialized' }),
-});
+// Create auth context and export it
+export const NativeAuthContext = createContext<AuthContextType | null>(null);
 
-export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
+// Auth provider props
+interface AuthProviderProps {
+  children: ReactNode;
+}
+
+// Auth provider component
+export const NativeAuthProvider = ({ children }: AuthProviderProps) => {
   const [user, setUser] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<Error | null>(null);
+  const { toast } = useToast();
 
-  // Fetch current user on component mount
+  // Fetch current user on mount
   useEffect(() => {
     const fetchCurrentUser = async () => {
       try {
         setLoading(true);
-        const response = await axios.get('/api/user');
-        if (response.status === 200) {
+        const response = await axios.get('/api/auth/user');
+        
+        if (response.data) {
           setUser(response.data);
+        } else {
+          // Not authenticated, clear user
+          setUser(null);
         }
       } catch (err) {
-        console.log('No authenticated user found');
-        // Not setting error for 401 as it's expected when not logged in
+        // Only set error if it's not a 401 (not authenticated)
         if (axios.isAxiosError(err) && err.response?.status !== 401) {
-          setError(err);
+          setError(err as Error);
+          console.error("Error fetching user data:", err);
         }
       } finally {
         setLoading(false);
@@ -67,98 +68,116 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   // Login function
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setLoading(true);
-      const response = await axios.post('/api/login', { email, password });
+      const response = await axios.post('/api/auth/login', { email, password });
       
-      if (response.status === 200) {
+      if (response.data) {
         setUser(response.data);
-        return { success: true };
+        toast({
+          title: 'Success',
+          description: 'Logged in successfully',
+        });
+        return true;
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Login failed',
+          variant: 'destructive',
+        });
+        return false;
       }
-      
-      return { success: false, error: 'Unknown error occurred' };
     } catch (err) {
-      let errorMessage = 'Failed to login';
+      let errorMessage = 'Login failed';
       
-      if (axios.isAxiosError(err) && err.response?.data?.error) {
-        errorMessage = err.response.data.error;
+      if (axios.isAxiosError(err) && err.response?.data?.message) {
+        errorMessage = err.response.data.message;
       }
       
       setError(err as Error);
-      return { success: false, error: errorMessage };
+      toast({
+        title: 'Error',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+      return false;
     } finally {
       setLoading(false);
     }
   };
 
   // Register function
-  const register = async (userData: any) => {
+  const register = async (email: string, password: string, username: string): Promise<boolean> => {
     try {
       setLoading(true);
-      const response = await axios.post('/api/register', userData);
+      const response = await axios.post('/api/auth/register', { email, password, username });
       
-      if (response.status === 201) {
+      if (response.data) {
         setUser(response.data);
-        return { success: true };
+        toast({
+          title: 'Success',
+          description: 'Account created successfully',
+        });
+        return true;
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Registration failed',
+          variant: 'destructive',
+        });
+        return false;
       }
-      
-      return { success: false, error: 'Unknown error occurred' };
     } catch (err) {
-      let errorMessage = 'Failed to register';
+      let errorMessage = 'Registration failed';
       
-      if (axios.isAxiosError(err) && err.response?.data?.error) {
-        errorMessage = err.response.data.error;
+      if (axios.isAxiosError(err) && err.response?.data?.message) {
+        errorMessage = err.response.data.message;
       }
       
       setError(err as Error);
-      return { success: false, error: errorMessage };
+      toast({
+        title: 'Error',
+        description: errorMessage,
+        variant: 'destructive',
+      });
+      return false;
     } finally {
       setLoading(false);
     }
   };
 
   // Logout function
-  const logout = async () => {
+  const logout = async (): Promise<void> => {
     try {
       setLoading(true);
-      await axios.post('/api/logout');
+      const response = await axios.post('/api/auth/logout');
+      
+      // Always clear the user on logout attempt, regardless of response
       setUser(null);
+      
+      toast({
+        title: 'Success',
+        description: 'Logged out successfully',
+      });
     } catch (err) {
-      setError(err as Error);
-      console.error('Logout error:', err);
+      // Even if logout fails, clear the user from context
+      setUser(null);
+      
+      if (axios.isAxiosError(err) && err.response?.status !== 401) {
+        setError(err as Error);
+        toast({
+          title: 'Error',
+          description: 'Error during logout',
+          variant: 'destructive',
+        });
+      }
     } finally {
       setLoading(false);
     }
   };
 
-  // Update profile function
-  const updateProfile = async (data: Partial<AuthUser>) => {
-    try {
-      setLoading(true);
-      const response = await axios.post('/api/profile/update', data);
-      
-      if (response.status === 200) {
-        setUser(response.data);
-        return { success: true };
-      }
-      
-      return { success: false, error: 'Unknown error occurred' };
-    } catch (err) {
-      let errorMessage = 'Failed to update profile';
-      
-      if (axios.isAxiosError(err) && err.response?.data?.error) {
-        errorMessage = err.response.data.error;
-      }
-      
-      setError(err as Error);
-      return { success: false, error: errorMessage };
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Create context value
+  // Context value
   const value = {
     user,
     loading,
@@ -166,9 +185,12 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     isAuthenticated: !!user,
     login,
     register,
-    logout,
-    updateProfile,
+    logout
   };
 
-  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+  return (
+    <NativeAuthContext.Provider value={value}>
+      {children}
+    </NativeAuthContext.Provider>
+  );
 };
