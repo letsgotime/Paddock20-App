@@ -247,6 +247,7 @@ export default function OnboardingModal({ isOpen = true, onClose, betaRole = 'us
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   onboardingCompleted: true,
+                  betaRole: betaRole,
                   userPreferences: profile.preferences,
                   vehicles: profile.vehicles,
                   interests: profile.goals.map(goal => goal.category)
