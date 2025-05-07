@@ -118,8 +118,15 @@ export default function NativeAuthPage() {
           description: "Your account has been created successfully!",
         });
         
-        // Switch to login tab or redirect home (depending on if auto-login is implemented on the backend)
-        if (!isAuthenticated) {
+        // After successful registration, always redirect to beta agreement page
+        // This ensures proper flow: Registration > Beta Agreement > Onboarding > Main App
+        if (result.success) {
+          // Short delay to allow the toast to be visible
+          setTimeout(() => {
+            setLocation('/beta-agreement');
+          }, 1500);
+        } else if (!isAuthenticated) {
+          // Fallback to login tab if something went wrong with auth
           setActiveTab('login');
         }
       }
