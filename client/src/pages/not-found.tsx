@@ -31,22 +31,18 @@ export default function NotFound() {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <Button asChild variant="outline" className="bg-gray-800 border-gray-700 text-white hover:bg-gray-700">
-            <Link href="/">
-              <a className="flex items-center">
-                <Home className="h-4 w-4 mr-2" />
-                Homepage
-              </a>
-            </Link>
-          </Button>
-          <Button asChild variant="outline" className="bg-gray-800 border-gray-700 text-white hover:bg-gray-700">
-            <Link href="/dashboard">
-              <a className="flex items-center">
-                <ArrowLeft className="h-4 w-4 mr-2" />
-                Dashboard
-              </a>
-            </Link>
-          </Button>
+          <Link href="/">
+            <Button variant="outline" className="bg-gray-800 border-gray-700 text-white hover:bg-gray-700 w-full">
+              <Home className="h-4 w-4" />
+              Homepage
+            </Button>
+          </Link>
+          <Link href="/dashboard">
+            <Button variant="outline" className="bg-gray-800 border-gray-700 text-white hover:bg-gray-700 w-full">
+              <ArrowLeft className="h-4 w-4" />
+              Dashboard
+            </Button>
+          </Link>
         </div>
       </div>
     </div>
