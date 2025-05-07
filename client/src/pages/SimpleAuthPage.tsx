@@ -100,6 +100,9 @@ export default function SimpleAuthPage() {
     setErrorMessage(null);
     
     try {
+      // Log the credentials being sent
+      console.log('Login attempt with:', values.email);
+      
       const response = await fetch('/api/auth/login', {
         method: 'POST',
         headers: {
