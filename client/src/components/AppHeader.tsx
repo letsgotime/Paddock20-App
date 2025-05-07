@@ -2,13 +2,14 @@ import { Link, useLocation } from 'wouter';
 import { cn } from '@/lib/utils';
 import AuthStatus from './AuthStatus';
 import { useNativeAuth } from '@/hooks/useNativeAuth';
+import { Menu } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useState } from 'react';
 
 export default function AppHeader({ className }: { className?: string }) {
   const [location] = useLocation();
   const { isAuthenticated } = useNativeAuth();
-  
-  // Don't show navigation links on auth page or when not authenticated
-  const showNavigation = location !== '/auth' && isAuthenticated;
+  const [menuOpen, setMenuOpen] = useState(false);
   
   return (
     <header className={cn("bg-black/90 text-white border-b border-[#1982FC]/50 px-4 py-3", className)}>
@@ -21,30 +22,26 @@ export default function AppHeader({ className }: { className?: string }) {
             </div>
           </Link>
           
-          {/* Main navigation - only show on larger screens when authenticated and not on auth page */}
-          {showNavigation && (
-            <nav className="hidden md:flex items-center gap-6">
-              <Link href="/the-paddock">
-                <span className="text-white/80 hover:text-white transition-colors">The Paddock</span>
-              </Link>
-              <Link href="/weather-paddock">
-                <span className="text-white/80 hover:text-white transition-colors">Weather Paddock</span>
-              </Link>
-              <Link href="/drive-journal">
-                <span className="text-white/80 hover:text-white transition-colors">Drive Journal</span>
-              </Link>
-              <Link href="/podium-pursuit">
-                <span className="text-white/80 hover:text-white transition-colors">Podium Pursuit</span>
-              </Link>
-            </nav>
-          )}
+          {/* Removed the horizontal navigation links as requested */}
         </div>
         
-        {/* Auth status and user menu */}
+        {/* Auth status and menu button */}
         <div className="flex items-center gap-2">
+          {isAuthenticated && location !== '/auth' && (
+            <Button 
+              variant="ghost" 
+              size="sm"
+              className="text-[#1982FC] hover:text-white hover:bg-[#1982FC]/20"
+              onClick={() => setMenuOpen(!menuOpen)}
+            >
+              <Menu className="h-5 w-5" />
+            </Button>
+          )}
           <AuthStatus />
         </div>
       </div>
+      
+      {/* We can implement the mobile menu later if needed */}
     </header>
   );
 }
