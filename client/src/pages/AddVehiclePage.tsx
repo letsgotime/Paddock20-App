@@ -3,12 +3,22 @@ import { useLocation } from 'wouter';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { AlertCircle, Loader2, PlusCircle, SaveIcon, Search } from 'lucide-react';
+import { 
+  AlertCircle, 
+  Car, 
+  Info, 
+  Loader2, 
+  PlusCircle, 
+  Save as SaveIcon, 
+  Search
+} from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+import { decodeVIN, validateVIN } from '@/services/vinDecoderService';
 
 import { Button } from '@/components/ui/button';
+import { Alert, AlertTitle } from '@/components/ui/alert';
 import {
   Form,
   FormControl,
@@ -22,10 +32,9 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Badge } from '@/components/ui/badge';
 import PageTitle from '@/components/PageTitle';
 import { useVehicle } from '../hooks/useVehicle';
-import { decodeVIN } from '../services/vinDecoderService';
 
 // Form validation schema
 const vehicleFormSchema = z.object({
@@ -50,6 +59,7 @@ export default function AddVehiclePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSearchingVin, setIsSearchingVin] = useState(false);
   const [vinError, setVinError] = useState<string | null>(null);
+  const [vinDetails, setVinDetails] = useState<{make?: string; model?: string; year?: string; trim?: string;}>();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
@@ -72,38 +82,50 @@ export default function AddVehiclePage() {
     }
   });
 
-  // Handle VIN lookup
+  // Handle form submission
+  // Function to handle VIN lookup
   const handleVinLookup = async () => {
     const vin = form.getValues("vin");
-    if (!vin || vin.length < 17) {
-      setVinError("Please enter a valid 17-character VIN");
+    if (!vin) {
+      setVinError("Please enter a VIN first");
       return;
     }
     
-    setIsSearchingVin(true);
+    // Reset previous errors
     setVinError(null);
+    setIsSearchingVin(true);
     
     try {
-      const vehicleInfo = await decodeVIN(vin);
+      const result = await decodeVIN(vin);
       
-      if (vehicleInfo.error) {
-        setVinError(vehicleInfo.error);
+      if (result.error) {
+        setVinError(result.error);
         return;
       }
       
-      // Update form fields with decoded VIN data
-      form.setValue("make", vehicleInfo.make || "");
-      form.setValue("model", vehicleInfo.model || "");
-      form.setValue("year", vehicleInfo.year || "");
+      // Store the resulting vehicle details
+      setVinDetails({
+        make: result.make,
+        model: result.model,
+        year: result.year,
+        trim: result.trim
+      });
       
+      // Update the form with the VIN results
+      form.setValue("make", result.make);
+      form.setValue("model", result.model);
+      form.setValue("year", result.year);
+      
+      // Show success notification
       toast({
-        title: "VIN Decoded",
-        description: `Successfully found: ${vehicleInfo.year} ${vehicleInfo.make} ${vehicleInfo.model}`,
+        title: "VIN Decoded Successfully",
+        description: `Found ${result.year} ${result.make} ${result.model}`,
         variant: "default",
       });
+      
     } catch (error) {
       console.error("Error decoding VIN:", error);
-      setVinError("Could not decode VIN. Please try again or enter details manually.");
+      setVinError("Failed to decode VIN. Please check the number and try again.");
     } finally {
       setIsSearchingVin(false);
     }
@@ -113,14 +135,14 @@ export default function AddVehiclePage() {
   const onSubmit = async (data: VehicleFormValues) => {
     setIsSubmitting(true);
     try {
-      // Convert year from string to number if needed
-      const formattedData = {
+      // Convert year to number if the API expects it
+      const vehicleData = {
         ...data,
         year: parseInt(data.year)
       };
       
       // If using the vehicle context
-      await addVehicle(formattedData);
+      await addVehicle(vehicleData);
       
       toast({
         title: "Vehicle Added",
@@ -268,33 +290,9 @@ export default function AddVehiclePage() {
                     render={({ field }) => (
                       <FormItem>
                         <FormLabel>VIN (Optional)</FormLabel>
-                        <div className="flex gap-2">
-                          <FormControl>
-                            <Input placeholder="Vehicle Identification Number" {...field} />
-                          </FormControl>
-                          <Button 
-                            type="button" 
-                            onClick={handleVinLookup}
-                            variant="outline" 
-                            className="min-w-[90px]"
-                            disabled={isSearchingVin}
-                          >
-                            {isSearchingVin ? (
-                              <Loader2 className="h-4 w-4 animate-spin" />
-                            ) : (
-                              <Search className="h-4 w-4 mr-1" />
-                            )}
-                            {isSearchingVin ? '' : 'Lookup'}
-                          </Button>
-                        </div>
-                        {vinError && (
-                          <div className="mt-2">
-                            <Alert variant="destructive" className="py-2 text-sm">
-                              <AlertCircle className="h-4 w-4" />
-                              <AlertTitle className="ml-2">{vinError}</AlertTitle>
-                            </Alert>
-                          </div>
-                        )}
+                        <FormControl>
+                          <Input placeholder="Vehicle Identification Number" {...field} />
+                        </FormControl>
                         <FormDescription>
                           Used for accurate part lookups and service history
                         </FormDescription>
