@@ -98,7 +98,10 @@ const ThePaddockPage: React.FC = () => {
                   <li>Access your personal automotive dashboard</li>
                 </ul>
                 <div className="mt-4">
-                  <Button className="bg-[#1982FC] hover:bg-[#1982FC]/90">
+                  <Button 
+                    className="bg-[#1982FC] hover:bg-[#1982FC]/90"
+                    onClick={() => window.location.href = '/add-vehicle'}
+                  >
                     <Car className="mr-2 h-4 w-4" /> Add Vehicle
                   </Button>
                 </div>
@@ -119,7 +122,10 @@ const ThePaddockPage: React.FC = () => {
                     <Car className="w-16 h-16 mx-auto text-gray-500 mb-4" />
                     <h3 className="text-xl font-medium mb-2">No Vehicles Added Yet</h3>
                     <p className="text-gray-400 mb-4">Get started by adding your first vehicle</p>
-                    <Button className="bg-[#1982FC] hover:bg-[#1982FC]/90">
+                    <Button 
+                      className="bg-[#1982FC] hover:bg-[#1982FC]/90"
+                      onClick={() => window.location.href = '/add-vehicle'}
+                    >
                       <Car className="mr-2 h-4 w-4" /> Add Vehicle
                     </Button>
                   </div>
@@ -174,7 +180,11 @@ const ThePaddockPage: React.FC = () => {
                       </div>
                     </div>
                     
-                    <Button variant="outline" className="mt-4">
+                    <Button 
+                      variant="outline" 
+                      className="mt-4"
+                      onClick={() => window.location.href = '/settings'}
+                    >
                       Edit Profile
                     </Button>
                   </div>
