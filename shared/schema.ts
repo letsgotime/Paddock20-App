@@ -35,7 +35,7 @@ export const users = pgTable("users", {
   bio: text("bio"),
   role: varchar("role", { length: 20 }).notNull().default("user"),
   isEmailVerified: boolean("is_email_verified").default(false),
-  emailVerificationToken: text("email_verification_token"),
+  emailVerificationToken: text("verification_token"),
   resetToken: text("reset_token"),
   resetTokenExpires: timestamp("reset_token_expires"),
   lastLogin: timestamp("last_login"),
