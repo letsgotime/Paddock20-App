@@ -8,6 +8,7 @@ import {
   hasCompletedOnboarding
 } from '@/utils/authFlowUtils';
 import UserOnboarding from '@/components/UserOnboarding';
+import BetaWelcomeModal from '@/components/dashboard/BetaWelcomeModal';
 
 export default function OnboardingPage() {
   const { isAuthenticated, user } = useNativeAuth();
