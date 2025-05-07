@@ -40,7 +40,7 @@ import {
 import { useToast } from '@/hooks/use-toast';
 import { playSound } from "../services/SoundService";
 // Using the consolidated auth context
-import { useAuth } from '../hooks/useAuth';
+import { useAuth } from '@/auth/useAuth';
 
 /**
  * Header component with complete menu dropdown and ambient sounds control

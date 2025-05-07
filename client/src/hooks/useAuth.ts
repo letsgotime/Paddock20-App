@@ -1,2 +1,2 @@
-// Re-export all authentication functionality from the tsx file
-export * from './useAuth.tsx';
+// Re-export all authentication functionality from the centralized auth directory
+export * from '@/auth/useAuth';
