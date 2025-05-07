@@ -1,3 +1,13 @@
+/**
+ * ⚠️ BETA FILE PROTECTION ⚠️
+ * 
+ * WARNING: This file is part of the Beta Program core implementation.
+ * DO NOT MODIFY this file without proper authorization.
+ * Any unauthorized changes may break the beta enrollment process.
+ * 
+ * Last verified: May 07, 2025
+ */
+
 import React, { useState, useEffect } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useLocation } from 'wouter';

@@ -1,4 +1,12 @@
 /**
+ * ⚠️ PREMIUM CONTENT PROTECTION ⚠️
+ * 
+ * WARNING: This file is part of the PDF Explorer core implementation.
+ * DO NOT MODIFY this file without proper authorization.
+ * Any unauthorized changes may break the PDF functionality.
+ * 
+ * Last verified: May 07, 2025
+ * 
  * PDF API Explorer Component
  * 
  * This component provides a user interface to explore the Web page to PDF API functionality:
