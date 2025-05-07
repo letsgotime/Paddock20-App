@@ -222,10 +222,10 @@ const PodiumPursuitPage: React.FC = () => {
   // Safety wrapper to handle any unexpected data issues
   if (!userRewards) {
     return (
-      <div className="manifestation-station-page pb-12">
+      <div className="podium-pursuit-page pb-12">
         <PageTitle 
-          title="Manifestation Station™" 
-          subtitle="Transform your automotive goals into achievements with our proprietary system"
+          title="Podium Pursuit™" 
+          subtitle="Your performance journey through achievements, rewards, and milestones"
           icon={<Medal className="text-blue-400 h-7 w-7" />}
         />
         <div className="flex flex-col items-center justify-center py-12">
@@ -239,10 +239,10 @@ const PodiumPursuitPage: React.FC = () => {
   }
 
   return (
-    <div className="manifestation-station-page pb-12">
+    <div className="podium-pursuit-page pb-12">
       <PageTitle 
-        title="Manifestation Station™" 
-        subtitle="Transform your automotive goals into achievements with our proprietary system"
+        title="Podium Pursuit™" 
+        subtitle="Your performance journey through achievements, rewards, and milestones"
         icon={<Medal className="text-blue-400 h-7 w-7" />}
       />
 
