@@ -14,7 +14,7 @@ import JuiceBoxFeaturedWidget from '../components/dashboard/JuiceBoxFeaturedWidg
 import DreamAssetWidget from '../components/dashboard/DreamAssetWidget';
 
 const UserDashboardPage = () => {
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
   const [greeting, setGreeting] = useState('');
 
   useEffect(() => {
@@ -32,7 +32,7 @@ const UserDashboardPage = () => {
     setGreeting(greetingText);
   }, []);
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-border" />
