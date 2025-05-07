@@ -1,618 +1,651 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { Eye, EyeOff, LogIn, UserPlus, AlertTriangle } from 'lucide-react';
 import { useLocation } from 'wouter';
-import { useToast } from '@/hooks/use-toast';
-import { z } from 'zod';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { cn } from "@/lib/utils";
-import { Card, CardContent, CardDescription, CardFooter, CardHeader } from '@/components/ui/card';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Loader2 } from 'lucide-react';
-import { 
-  saveUserProfileToLocalStorage, 
-  getNextAuthFlowPath, 
-  markBetaAgreementComplete 
-} from '@/utils/authFlowUtils';
-import userProfileWarehouse from '@/services/UserProfileWarehouse';
+import LegalDocumentModal from '../components/LegalDocumentModal';
+import { legalDocuments } from '../data/legalDocuments';
 
-// Login form schema
-const loginSchema = z.object({
-  email: z.string().min(3, { message: 'Please enter a valid email address or username' }),
-  password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
-});
-
-// Signup form schema
-const signupSchema = z.object({
-  username: z.string().min(3, { message: 'Username must be at least 3 characters' }),
-  email: z.string().email({ message: 'Please enter a valid email address' }),
-  phone: z.string().optional(),
-  password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
-  confirmPassword: z.string().min(6, { message: 'Password must be at least 6 characters' }),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: "Passwords don't match",
-  path: ['confirmPassword'],
-});
-
-// Form types
-type LoginFormValues = z.infer<typeof loginSchema>;
-type SignupFormValues = z.infer<typeof signupSchema>;
-
-export default function SimpleAuthPage() {
-  const [activeTab, setActiveTab] = useState<string>('login');
-  const [loading, setLoading] = useState(false);
-  const [loginStatus, setLoginStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [signupStatus, setSignupStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
-  const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [, navigate] = useLocation();
-  const { toast } = useToast();
-  
-  // Setup form for login
-  const loginForm = useForm<LoginFormValues>({
-    resolver: zodResolver(loginSchema),
-    defaultValues: {
-      email: '',
-      password: '',
-    },
-  });
-
-  // Setup form for signup
-  const signupForm = useForm<SignupFormValues>({
-    resolver: zodResolver(signupSchema),
-    defaultValues: {
-      username: '',
-      email: '',
-      phone: '',
-      password: '',
-      confirmPassword: '',
-    },
+// This is a simplified auth page that should work even if there are issues with other components
+const SimpleAuthPage = () => {
+  const [location, setLocation] = useLocation();
+  const [isLogin, setIsLogin] = useState(true);
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [errorMessage, setErrorMessage] = useState('');
+  const [documentModalOpen, setDocumentModalOpen] = useState(false);
+  const [currentDocument, setCurrentDocument] = useState<{title: string, content: string, callback?: () => void}>({
+    title: "",
+    content: ""
   });
   
-  // Reset form and state when switching tabs
+  // If user is already logged in, redirect to dashboard
   useEffect(() => {
-    // Reset error message and statuses
-    setErrorMessage(null);
-    
-    // Reset form states based on active tab
-    if (activeTab === 'login') {
-      setLoginStatus('idle');
-      // Only reset if not in success state (to avoid flickering during transition)
-      if (signupStatus !== 'success') {
-        signupForm.reset();
-        setSignupStatus('idle');
-      }
-    } else {
-      setSignupStatus('idle');
-      // Only reset if not in success state (to avoid flickering during transition)
-      if (loginStatus !== 'success') {
-        loginForm.reset();
-        setLoginStatus('idle');
-      }
-    }
-  }, [activeTab, loginForm, signupForm, loginStatus, signupStatus]);
-
-  // Handle login form submission
-  const onLoginSubmit = async (values: LoginFormValues) => {
-    setLoading(true);
-    setLoginStatus('loading');
-    setErrorMessage(null);
-    
-    try {
-      // Log the credentials being sent
-      console.log('Login attempt with:', values.email);
-      
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          email: values.email,
-          password: values.password,
-        }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        // Update error state
-        setLoginStatus('error');
-        setErrorMessage(data.message || "Failed to log in with the provided credentials");
-        
-        toast({
-          title: "Login Failed",
-          description: data.message || "Failed to log in with the provided credentials",
-          variant: "destructive",
-        });
-      } else {
-        // Update success state
-        setLoginStatus('success');
-        
-        toast({
-          title: "Login Successful",
-          description: "Welcome to Paddock20!",
-        });
-        
-        if (data.user) {
-          // Store user profile in localStorage for auth flow
-          saveUserProfileToLocalStorage(data.user);
-          
-          // Create default user profile for the Warehouse if the user is logging in for the first time
-          // Set timestamp for all operations
-          const currentTime = new Date().toISOString();
-          
-          // Check if there's already a profile
-          if (!userProfileWarehouse.getProfile()) {
-            // If there's no profile, we need to initialize it with identity data which will create it
-            userProfileWarehouse.updateIdentity({
-              id: String(data.user.id),
-              username: data.user.username || "driver",
-              displayName: data.user.username || "New Driver",
-              email: data.user.email,
-              phone: data.user.phone,
-              memberSince: currentTime,
-              lastActive: currentTime,
-              membershipLevel: 'free',
-              onboardingCompleted: false
-            });
-            
-            // Now update preferences
-            userProfileWarehouse.updatePreferences({
-              theme: 'dark',
-              notifications: true,
-              timeFormat: '12h',
-              dateFormat: 'mdy',
-              units: 'imperial',
-              soundEnabled: true,
-              weatherPreferences: {
-                defaultLocation: {
-                  lat: 33.7490,
-                  lon: -84.3880,
-                  name: 'Atlanta, GA'
-                },
-                units: 'imperial'
-              }
-            });
-            
-            console.log('Created initial user profile in warehouse');
+    // Check authentication status directly from the server
+    fetch('/api/user')
+      .then(async response => {
+        if (response.ok) {
+          // User is already authenticated, redirect to dashboard
+          const data = await response.json();
+          if (data.success && data.user) {
+            console.log('User already authenticated:', data.user.username);
+            setLocation('/dashboard');
           } else {
-            // Just update the last active time
-            userProfileWarehouse.updateIdentity({
-              lastActive: currentTime
-            });
-            console.log('Updated existing user profile in warehouse');
+            console.log('Response OK but no valid user data, staying on login page');
           }
-          
-          // Determine next path based on user's progress in the auth flow
-          const nextPath = getNextAuthFlowPath(String(data.user.id));
-          
-          // Show success message before redirect
-          // We'll add a visual feedback component to show this state
-          
-          // Redirect to the appropriate page with a slight delay
-          setTimeout(() => {
-            navigate(nextPath);
-          }, 1500); // Slightly longer delay to show success state
         } else {
-          // If no user data, go to home page after a short delay
-          setTimeout(() => {
-            navigate('/');
-          }, 1500);
+          // Not authenticated, stay on login page
+          console.log('SimpleAuthPage loaded - ready for authentication');
+        }
+      })
+      .catch(error => {
+        console.error('Auth check failed:', error);
+      });
+  }, [setLocation]);
+  
+  // Reference to form elements for beta status
+  const formRef = useRef<HTMLFormElement>(null);
+  
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMessage('');
+    
+    // Basic validation
+    if (!username || !password) {
+      setErrorMessage('Please enter both username and password');
+      return;
+    }
+    
+    if (!isLogin && !email) {
+      setErrorMessage('Please enter an email address for registration');
+      return;
+    }
+    
+    // Check if passwords match for registration
+    if (!isLogin && password !== confirmPassword) {
+      setErrorMessage('Passwords do not match. Please try again.');
+      return;
+    }
+    
+    // Additional validation for beta program
+    let betaStatus = 'beta_user'; // Default
+    let hasAgreedToNDA = false;
+    let hasAgreedToTerms = false;
+    let feedbackCommitment = false;
+    
+    // Get beta program status and agreement flags from the form
+    if (!isLogin && formRef.current) {
+      const form = formRef.current;
+      
+      // Check which beta program option is selected
+      const betaTesterRadio = form.querySelector('#beta-tester') as HTMLInputElement;
+      if (betaTesterRadio && betaTesterRadio.checked) {
+        betaStatus = 'beta_tester';
+        
+        // For beta testers, verify NDA and feedback commitment
+        const ndaCheckbox = form.querySelector('#nda-agreement') as HTMLInputElement;
+        const feedbackCheckbox = form.querySelector('#feedback-commitment') as HTMLInputElement;
+        
+        hasAgreedToNDA = ndaCheckbox?.checked || false;
+        feedbackCommitment = feedbackCheckbox?.checked || false;
+        
+        if (betaStatus === 'beta_tester' && !hasAgreedToNDA) {
+          setErrorMessage('You must agree to the NDA to join as a Beta Tester');
+          return;
+        }
+        
+        if (betaStatus === 'beta_tester' && !feedbackCommitment) {
+          setErrorMessage('You must commit to providing feedback to join as a Beta Tester');
+          return;
         }
       }
-    } catch (error: any) {
-      console.error("Login error:", error);
       
-      // Update error state
-      setLoginStatus('error');
-      setErrorMessage(error.message || "An error occurred while trying to log in");
+      // For all users, verify terms agreement
+      const termsCheckbox = form.querySelector('#terms-agreement') as HTMLInputElement;
+      hasAgreedToTerms = termsCheckbox?.checked || false;
       
-      toast({
-        title: "Login Failed",
-        description: error.message || "An error occurred while trying to log in.",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
+      if (!hasAgreedToTerms) {
+        setErrorMessage('You must agree to the Terms of Service');
+        return;
+      }
     }
-  };
-
-  // Handle signup form submission
-  const onSignupSubmit = async (values: SignupFormValues) => {
-    setLoading(true);
-    setSignupStatus('loading');
-    setErrorMessage(null);
+    
+    setIsSubmitting(true);
     
     try {
-      const response = await fetch('/api/auth/register', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
-          username: values.username,
-          email: values.email,
-          phone: values.phone,
-          password: values.password,
-        }),
-      });
-      
-      const data = await response.json();
-      
-      if (!response.ok) {
-        // Update error state
-        setSignupStatus('error');
-        setErrorMessage(data.message || "Failed to create an account with the provided details");
-        
-        toast({
-          title: "Registration Failed",
-          description: data.message || "Failed to create an account with the provided details",
-          variant: "destructive",
+      if (isLogin) {
+        // Direct login through the server API
+        const response = await fetch('/api/login', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            username,
+            password,
+          }),
+          credentials: 'include', // Important for cookies
         });
+        
+        const data = await response.json();
+        
+        if (!response.ok) {
+          // Handle specific error responses
+          if (response.status === 401) {
+            throw new Error('Invalid username or password');
+          } else {
+            throw new Error(data.error || 'Login failed. Please try again.');
+          }
+        }
+        
+        // Check for 2FA requirement
+        if (data.requireTwoFactor) {
+          throw new Error('Two-factor authentication is required. This is not yet supported in the simple auth flow.');
+        }
+        
+        // Verify success and user data
+        if (!data.success || !data.user) {
+          throw new Error('Login succeeded but user data is missing. Please try again.');
+        }
+        
+        console.log('Login successful:', data.user.username);
+        
+        // If successful, redirect to dashboard
+        setLocation('/dashboard');
       } else {
-        // Update success state
-        setSignupStatus('success');
+        // Prepare registration data
+        const userData = {
+          username,
+          email,
+          password,
+          confirmPassword,
+          betaProgram: betaStatus === 'beta_tester' ? 'tester' : 'user',
+          hasAgreedToNDA,
+          feedbackCommitment
+        };
         
-        toast({
-          title: "Registration Successful", 
-          description: "Your account has been created successfully!",
+        // Register through the server API
+        const response = await fetch('/api/register', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(userData),
+          credentials: 'include', // Important for cookies
         });
         
-        // If registration succeeded and we have user data
-        if (data.user) {
-          // Store user data in localStorage for auth flow
-          saveUserProfileToLocalStorage(data.user);
-          
-          // Mark beta agreement as pending (will redirect to beta agreement)
-          // Note: We don't modify the beta modal functionality
-          
-          // Clear form fields
-          signupForm.reset();
-          
-          // Short delay to allow the toast to be visible
-          setTimeout(() => {
-            // Switch to login tab - we need the user to login after registering 
-            // to establish the authenticated session properly
-            setActiveTab('login');
-            
-            // Reset signup status after the tab switch for the next time
-            setSignupStatus('idle');
-            
-            // You could alternatively automatically log them in and redirect to beta agreement
-            // but that depends on how backend sessions are established
-          }, 2000);
+        const data = await response.json().catch(() => ({ success: false }));
+        
+        if (!response.ok) {
+          throw new Error(data.error || 'Registration failed. Please try again.');
+        }
+        
+        // Verify success and user data
+        if (!data.success || !data.user) {
+          throw new Error('Registration succeeded but user data is missing. Please try again.');
+        }
+        
+        console.log('Registration successful:', data.user.username);
+        
+        // If successful, redirect to onboarding
+        setLocation('/onboarding');
+      }
+    } catch (error) {
+      console.error('Auth error:', error);
+      
+      // Process specific error types
+      let errorMessage = 'Authentication failed. Please try again.';
+      
+      if (error instanceof Error) {
+        if (error.message.includes('already')) {
+          errorMessage = 'This username or email is already taken. Please choose a different one.';
+        } else if (error.message.includes('password')) {
+          errorMessage = 'Invalid password. Please try again.';
+        } else if (error.message.includes('not found') || error.message.includes('invalid login')) {
+          errorMessage = 'Invalid username or password. Please try again.';
+        } else {
+          errorMessage = error.message;
         }
       }
-    } catch (error: any) {
-      console.error("Signup error:", error);
       
-      // Update error state
-      setSignupStatus('error');
-      setErrorMessage(error.message || "An error occurred while trying to create an account");
-      
-      toast({
-        title: "Registration Failed",
-        description: error.message || "An error occurred while trying to create an account.",
-        variant: "destructive",
-      });
+      setErrorMessage(errorMessage);
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
-
+  
   return (
-    <div className="flex min-h-screen bg-black font-['Open_Sans']">
-      {/* Left side - Auth form */}
-      <div className="flex-1 flex items-center justify-center p-4">
-        <Card className="w-full max-w-md mx-auto border border-[#1982FC] bg-black/90">
-          <CardHeader className="space-y-3 text-center">
-            <div className="mx-auto w-full mb-4">
-              <h1 className="text-4xl md:text-5xl font-bold text-[#1982FC] tracking-widest uppercase font-['Orbitron']">
-                PADDOCK<span className="text-[#08c519]">20</span>
-              </h1>
-              <h2 className="text-4xl font-bold text-[#08c519] tracking-wider uppercase font-['Orbitron']">BETA</h2>
-            </div>
-            <CardDescription className="text-gray-300 text-lg">
-              Your gateway to the ultimate car enthusiast experience
-            </CardDescription>
-          </CardHeader>
-          
-          <CardContent>
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6 bg-[#797979]">
-                <TabsTrigger 
-                  value="login" 
-                  className="text-white data-[state=active]:bg-[#08c519] data-[state=active]:text-white"
-                >
-                  Log In
-                </TabsTrigger>
-                <TabsTrigger 
-                  value="signup" 
-                  className="text-white data-[state=active]:bg-[#08c519] data-[state=active]:text-white"
-                >
-                  Join the Grid
-                </TabsTrigger>
-              </TabsList>
-              
-              <TabsContent value="login">
-                <Form {...loginForm}>
-                  <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
-                    <FormField
-                      control={loginForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-[#1982FC]">Email or Username</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="you@example.com or username" 
-                              className={cn("bg-gray-700 text-white border-gray-600 focus:border-[#1982FC]")} 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={loginForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-[#1982FC]">Password</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="password" 
-                              placeholder="••••••••" 
-                              className={cn("bg-gray-700 text-white border-gray-600 focus:border-[#1982FC]")} 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    {/* Error message display */}
-                    {loginStatus === 'error' && errorMessage && (
-                      <div className="p-3 mb-2 border border-red-500 bg-red-500/20 rounded-md text-red-200 text-sm">
-                        <p className="font-medium">{errorMessage}</p>
-                      </div>
-                    )}
-                    
-                    {/* Success message display */}
-                    {loginStatus === 'success' && (
-                      <div className="p-3 mb-2 border border-[#08c519] bg-[#08c519]/20 rounded-md text-[#08c519] text-sm">
-                        <p className="font-medium flex items-center">
-                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          Login successful! Redirecting you...
-                        </p>
-                      </div>
-                    )}
-                    
-                    <Button 
-                      type="submit" 
-                      className={cn(
-                        "w-full font-medium mt-2",
-                        loginStatus === 'success' 
-                          ? "bg-[#08c519] hover:bg-[#08c519]/80 text-white" 
-                          : "bg-[#1982FC] hover:bg-blue-600 text-white"
-                      )}
-                      disabled={loading || loginStatus === 'success'}
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Logging in...
-                        </>
-                      ) : loginStatus === 'success' ? (
-                        <>
-                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          Success
-                        </>
-                      ) : (
-                        "Log In"
-                      )}
-                    </Button>
-                  </form>
-                </Form>
-              </TabsContent>
-              
-              <TabsContent value="signup">
-                <Form {...signupForm}>
-                  <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-4">
-                    <FormField
-                      control={signupForm.control}
-                      name="username"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-[#1982FC]">Username</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="cooldriver99" 
-                              className={cn("bg-gray-700 text-white border-gray-600 focus:border-[#1982FC]")} 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={signupForm.control}
-                      name="email"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-[#1982FC]">Email</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="you@example.com" 
-                              className={cn("bg-gray-700 text-white border-gray-600 focus:border-[#1982FC]")} 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={signupForm.control}
-                      name="phone"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-[#1982FC]">Phone Number (Optional)</FormLabel>
-                          <FormControl>
-                            <Input 
-                              placeholder="(555) 123-4567" 
-                              className={cn("bg-gray-700 text-white border-gray-600 focus:border-[#1982FC]")} 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={signupForm.control}
-                      name="password"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-[#1982FC]">Password</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="password" 
-                              placeholder="••••••••" 
-                              className={cn("bg-gray-700 text-white border-gray-600 focus:border-[#1982FC]")} 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    <FormField
-                      control={signupForm.control}
-                      name="confirmPassword"
-                      render={({ field }) => (
-                        <FormItem>
-                          <FormLabel className="text-[#1982FC]">Confirm Password</FormLabel>
-                          <FormControl>
-                            <Input 
-                              type="password" 
-                              placeholder="••••••••" 
-                              className={cn("bg-gray-700 text-white border-gray-600 focus:border-[#1982FC]")} 
-                              {...field} 
-                            />
-                          </FormControl>
-                          <FormMessage />
-                        </FormItem>
-                      )}
-                    />
-                    
-                    {/* Error message display */}
-                    {signupStatus === 'error' && errorMessage && (
-                      <div className="p-3 mb-2 border border-red-500 bg-red-500/20 rounded-md text-red-200 text-sm">
-                        <p className="font-medium">{errorMessage}</p>
-                      </div>
-                    )}
-                    
-                    {/* Success message display */}
-                    {signupStatus === 'success' && (
-                      <div className="p-3 mb-2 border border-[#08c519] bg-[#08c519]/20 rounded-md text-[#08c519] text-sm">
-                        <p className="font-medium flex items-center">
-                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          Account created successfully! Please log in.
-                        </p>
-                      </div>
-                    )}
-                    
-                    <Button 
-                      type="submit" 
-                      className={cn(
-                        "w-full font-medium mt-2",
-                        signupStatus === 'success' 
-                          ? "bg-[#08c519] hover:bg-[#08c519]/80 text-white" 
-                          : "bg-[#08c519] hover:bg-green-600 text-white"
-                      )}
-                      disabled={loading || signupStatus === 'success'}
-                    >
-                      {loading ? (
-                        <>
-                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Creating account...
-                        </>
-                      ) : signupStatus === 'success' ? (
-                        <>
-                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                          </svg>
-                          Account Created
-                        </>
-                      ) : (
-                        "Join the Grid"
-                      )}
-                    </Button>
-                  </form>
-                </Form>
-              </TabsContent>
-            </Tabs>
-          </CardContent>
-          
-          <CardFooter className="flex flex-col text-center text-sm text-gray-400">
-            <p>
-              By using PADDOCK20, you agree to our <a href="/terms-of-service" className="text-[#1982FC] hover:underline">Terms of Service</a> and <a href="/privacy-policy" className="text-[#1982FC] hover:underline">Privacy Policy</a>.
-            </p>
-          </CardFooter>
-        </Card>
-      </div>
+    <div className="flex min-h-screen overflow-hidden relative">
+      {/* Legal Document Modal */}
+      <LegalDocumentModal
+        title={currentDocument.title}
+        content={currentDocument.content}
+        isOpen={documentModalOpen}
+        onClose={() => setDocumentModalOpen(false)}
+        callback={currentDocument.callback}
+      />
       
-      {/* Right side - Hero image with overlay */}
-      <div className="hidden md:block flex-1 bg-[url('/assets/auth-bg.jpg')] bg-cover bg-center relative">
-        <div className="absolute inset-0 bg-gradient-to-l from-black/70 to-black/30 flex items-center p-12">
-          <div className="max-w-lg">
-            <h2 className="text-4xl font-bold text-white mb-4 font-['Orbitron']">Your Ultimate Automotive Companion</h2>
-            <ul className="space-y-3 text-gray-200">
-              <li className="flex items-start">
-                <span className="bg-[#08c519] rounded-full p-1 mr-3 mt-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                </span>
-                <span>Intelligent weather insights for optimal driving conditions</span>
-              </li>
-              <li className="flex items-start">
-                <span className="bg-[#08c519] rounded-full p-1 mr-3 mt-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                </span>
-                <span>Track your vehicles, maintenance history, and driving habits</span>
-              </li>
-              <li className="flex items-start">
-                <span className="bg-[#08c519] rounded-full p-1 mr-3 mt-1">
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
-                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-                  </svg>
-                </span>
-                <span>Connect with like-minded automotive enthusiasts</span>
-              </li>
-            </ul>
+      {/* Dynamic F1 background with overlay */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center"
+        style={{ 
+          backgroundImage: `url('/assets/Stock Photos/F1/redbull-sparks-night.png')`,
+          filter: 'brightness(0.3) contrast(1.1)',
+        }}
+      />
+      
+      {/* Carbon fiber texture overlay */}
+      <div 
+        className="absolute inset-0 bg-cover bg-center opacity-70 mix-blend-multiply"
+        style={{ 
+          backgroundImage: `url('/assets/Stock Photos/F1/carbon-fiber-texture-dark.png')`,
+        }}
+      />
+      
+      {/* F1-inspired blue and green racing stripes */}
+      <div className="absolute top-0 left-0 right-0 h-1 bg-[#08c519] z-10"></div>
+      <div className="absolute bottom-0 left-0 right-0 h-1 bg-[#1982FC] z-10"></div>
+      <div className="absolute top-0 bottom-0 left-0 w-1 bg-[#1982FC] z-10"></div>
+      <div className="absolute top-0 bottom-0 right-0 w-1 bg-[#08c519] z-10"></div>
+      
+      {/* Blue diagonal racing stripes */}
+      <div className="absolute -top-20 -left-20 w-40 h-[150vh] bg-[#1982FC] opacity-20 rotate-45 z-10"></div>
+      <div className="absolute -bottom-20 -right-20 w-40 h-[150vh] bg-[#08c519] opacity-20 rotate-45 z-10"></div>
+      
+      {/* Content container with glassmorphism */}
+      <div className="flex w-full min-h-screen items-center justify-center p-6 z-20">
+        <div className="flex flex-col lg:flex-row items-start justify-center w-full max-w-6xl lg:space-x-8">
+          {/* Left column - Brand messaging */}
+          <div className="hidden lg:block flex-none w-1/2 max-w-md">
+            <div className="space-y-6 sticky top-20">
+              <div>
+                <h1 className="text-5xl font-bold" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                  <span className="text-[#1982FC]">PADDOCK</span>
+                  <span className="text-[#08c519]">20</span>
+                </h1>
+                <div className="h-1 w-32 bg-[#1982FC] mt-3"></div>
+              </div>
+              
+              <p className="text-xl text-white font-light leading-relaxed">
+                The bespoke automotive lifestyle platform with F1-precision intelligence that transforms everyday car care into a curated experience
+              </p>
+              
+              <div className="space-y-4 mt-8">
+                <div className="flex items-center">
+                  <div className="h-8 w-1 bg-[#08c519] mr-4"></div>
+                  <p className="text-white text-lg">Track maintenance, mods, and detailing with precision</p>
+                </div>
+                <div className="flex items-center">
+                  <div className="h-8 w-1 bg-[#1982FC] mr-4"></div>
+                  <p className="text-white text-lg">Discover perfect drives with Weather Paddock intelligence</p>
+                </div>
+                <div className="flex items-center">
+                  <div className="h-8 w-1 bg-[#08c519] mr-4"></div>
+                  <p className="text-white text-lg">Level up with premium features for the complete enthusiast</p>
+                </div>
+              </div>
+              
+              <div className="mt-4 p-4 rounded-lg bg-black/30 border border-gray-800">
+                <p className="text-[#08c519] font-semibold">BETA ACCESS</p>
+                <p className="text-gray-300 mt-1">
+                  Join the movement. Full access to our complete ecosystem during the exclusive beta phase
+                </p>
+              </div>
+            </div>
+          </div>
+          
+          {/* Right column - Authentication form */}
+          <div className="w-full lg:w-1/2 max-w-md mt-8 lg:mt-0">
+            <div className="backdrop-blur-md bg-black/60 rounded-2xl border border-gray-800 p-8 shadow-2xl"
+              style={{
+                boxShadow: `0 0 40px rgba(8, 197, 25, 0.15), 
+                            0 0 20px rgba(25, 130, 252, 0.15)`,
+                maxHeight: 'calc(100vh - 80px)',
+                overflowY: 'auto'
+              }}
+            >
+              {/* Small brand logo on mobile */}
+              <div className="mb-8 text-center block lg:hidden">
+                <h1 className="text-3xl font-bold" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                  <span className="text-[#1982FC]">PADDOCK</span>
+                  <span className="text-[#08c519]">20</span>
+                </h1>
+              </div>
+              
+              {/* Toggle buttons */}
+              <div className="mb-8">
+                <div className="flex justify-center space-x-0 rounded-lg p-1 bg-gray-900/70 border border-gray-800">
+                  <button
+                    type="button"
+                    className={`flex-1 py-3 text-sm tracking-wider font-medium rounded-l-md transition-all duration-200 ${
+                      isLogin 
+                        ? 'bg-gradient-to-r from-[#1982FC]/80 to-[#08c519]/80 text-white shadow-lg' 
+                        : 'bg-transparent text-gray-400 hover:text-white'
+                    }`}
+                    onClick={() => setIsLogin(true)}
+                  >
+                    SIGN IN
+                  </button>
+                  <button
+                    type="button"
+                    className={`flex-1 py-3 text-sm tracking-wider font-medium rounded-r-md transition-all duration-200 ${
+                      !isLogin 
+                        ? 'bg-gradient-to-r from-[#08c519]/80 to-[#1982FC]/80 text-white shadow-lg' 
+                        : 'bg-transparent text-gray-400 hover:text-white'
+                    }`}
+                    onClick={() => setIsLogin(false)}
+                  >
+                    JOIN THE GRID
+                  </button>
+                </div>
+              </div>
+              
+              <h2 className="mb-6 text-2xl font-bold text-white tracking-wide" style={{ fontFamily: 'Orbitron, sans-serif' }}>
+                {isLogin ? 'WELCOME BACK' : 'CREATE YOUR PROFILE'}
+              </h2>
+            
+              <form ref={formRef} onSubmit={handleSubmit}>
+                <div className="mb-4">
+                  <label htmlFor="username" className="mb-2 block text-sm font-medium text-gray-300">
+                    Username
+                  </label>
+                  <input
+                    id="username"
+                    type="text"
+                    className="w-full rounded-md bg-gray-800 border border-gray-700 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                    placeholder="Enter your username"
+                    value={username}
+                    onChange={(e) => setUsername(e.target.value)}
+                    required
+                  />
+                </div>
+                
+                {!isLogin && (
+                  <>
+                    <div className="mb-4">
+                      <label htmlFor="email" className="mb-2 block text-sm font-medium text-gray-300">
+                        Email
+                      </label>
+                      <input
+                        id="email"
+                        type="email"
+                        className="w-full rounded-md bg-gray-800 border border-gray-700 px-3 py-2 text-white focus:border-blue-500 focus:outline-none"
+                        placeholder="Enter your email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        required={!isLogin}
+                      />
+                    </div>
+                    
+                    <div className="mb-4">
+                      <p className="mb-2 text-sm font-medium text-gray-300">
+                        Beta Program
+                      </p>
+                      <div className="flex items-start space-x-2">
+                        <div className="flex items-center bg-gray-800 border border-gray-700 rounded-md px-3 py-2">
+                          <input
+                            id="beta-user"
+                            type="radio"
+                            name="beta-status"
+                            value="beta_user"
+                            defaultChecked
+                            className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500"
+                          />
+                          <label htmlFor="beta-user" className="ml-2 text-sm font-medium text-gray-300">
+                            Beta User
+                          </label>
+                        </div>
+                        <div className="flex items-center bg-gray-800 border border-gray-700 rounded-md px-3 py-2">
+                          <input
+                            id="beta-tester"
+                            type="radio"
+                            name="beta-status"
+                            value="beta_tester"
+                            className="w-4 h-4 text-blue-600 bg-gray-700 border-gray-600 focus:ring-blue-500"
+                          />
+                          <label htmlFor="beta-tester" className="ml-2 text-sm font-medium text-gray-300">
+                            Beta Tester
+                          </label>
+                        </div>
+                      </div>
+                      <p className="mt-1 text-xs text-gray-400">
+                        Beta Users get discounted service for life. Beta Testers get free service for life but require approval.
+                      </p>
+                    </div>
+                    
+                    <div className="mb-6">
+                      <div className="flex flex-col space-y-5 p-5 bg-[#1982FC]/10 rounded-lg border border-[#1982FC]/30">
+                        <div>
+                          <p className="font-bold text-[#1982FC] text-sm tracking-wide mb-2">PADDOCK20 BETA PROGRAM AGREEMENTS</p>
+                          <p className="text-sm text-gray-300">
+                            Before proceeding, you must review and agree to the following legal documents. These agreements protect both you and Paddock20 throughout your beta experience.
+                          </p>
+                        </div>
+                        
+                        <div className="space-y-4">
+                          {/* Terms of Service */}
+                          <div className="flex items-start">
+                            <div className="flex items-center h-5 mt-0.5">
+                              <input
+                                id="terms"
+                                type="checkbox"
+                                required
+                                className="w-4 h-4 text-[#08c519] bg-gray-700 border-gray-600 rounded focus:ring-[#1982FC]"
+                              />
+                            </div>
+                            <label htmlFor="terms" className="ml-2 text-sm">
+                              <span className="font-semibold text-white">I have read and agree to the </span> 
+                              <button 
+                                type="button"
+                                onClick={() => {
+                                  // Create reference to the terms checkbox
+                                  const termsCheckbox = document.getElementById('terms') as HTMLInputElement;
+                                  
+                                  setCurrentDocument({
+                                    title: "Terms of Service",
+                                    content: legalDocuments.termsOfService,
+                                    callback: () => {
+                                      // Auto-check the checkbox when user clicks "I Understand"
+                                      if (termsCheckbox) {
+                                        termsCheckbox.checked = true;
+                                      }
+                                    }
+                                  });
+                                  setDocumentModalOpen(true);
+                                }}
+                                className="text-[#1982FC] hover:underline font-semibold"
+                              >
+                                Terms of Service
+                              </button>
+                              <p className="text-xs text-gray-300 mt-1">
+                                The Terms of Service outline your rights and obligations when using Paddock20, including acceptable use policies, intellectual property rights, and liability limitations.
+                              </p>
+                            </label>
+                          </div>
+                          
+                          {/* Privacy Policy */}
+                          <div className="flex items-start">
+                            <div className="flex items-center h-5 mt-0.5">
+                              <input
+                                id="privacy"
+                                type="checkbox"
+                                required
+                                className="w-4 h-4 text-[#08c519] bg-gray-700 border-gray-600 rounded focus:ring-[#1982FC]"
+                              />
+                            </div>
+                            <label htmlFor="privacy" className="ml-2 text-sm">
+                              <span className="font-semibold text-white">I have read and agree to the </span>
+                              <button 
+                                type="button"
+                                onClick={() => {
+                                  setCurrentDocument({
+                                    title: "Privacy Policy",
+                                    content: legalDocuments.privacyPolicy
+                                  });
+                                  setDocumentModalOpen(true);
+                                }}
+                                className="text-[#1982FC] hover:underline font-semibold"
+                              >
+                                Privacy Policy
+                              </button>
+                              <p className="text-xs text-gray-300 mt-1">
+                                Our Privacy Policy explains how we collect, use, store, and protect your personal information, including your rights regarding your data and our data retention practices.
+                              </p>
+                            </label>
+                          </div>
+                          
+                          {/* Beta Agreement */}
+                          <div className="flex items-start">
+                            <div className="flex items-center h-5 mt-0.5">
+                              <input
+                                id="beta-agreement"
+                                type="checkbox"
+                                required
+                                className="w-4 h-4 text-[#08c519] bg-gray-700 border-gray-600 rounded focus:ring-[#1982FC]"
+                              />
+                            </div>
+                            <label htmlFor="beta-agreement" className="ml-2 text-sm">
+                              <span className="font-semibold text-white">I have read and agree to the </span>
+                              <button 
+                                type="button"
+                                onClick={() => {
+                                  // Create reference to the beta-agreement checkbox
+                                  const betaCheckbox = document.getElementById('beta-agreement') as HTMLInputElement;
+                                  
+                                  setCurrentDocument({
+                                    title: "Beta Agreement",
+                                    content: legalDocuments.betaAgreement,
+                                    callback: () => {
+                                      // Auto-check the checkbox when user clicks "I Understand"
+                                      if (betaCheckbox) {
+                                        betaCheckbox.checked = true;
+                                      }
+                                    }
+                                  });
+                                  setDocumentModalOpen(true);
+                                }}
+                                className="text-[#1982FC] hover:underline font-semibold"
+                              >
+                                Beta Agreement
+                              </button>
+                              <p className="text-xs text-gray-300 mt-1">
+                                The Beta Agreement covers special considerations for beta testers, including feature limitations, feedback expectations, reporting bugs, and confidentiality requirements.
+                              </p>
+                            </label>
+                          </div>
+                        </div>
+                        
+                        <div className="pt-2 border-t border-gray-800">
+                          <p className="text-xs text-[#08c519] font-semibold">BETA PROGRAM BENEFITS</p>
+                          <p className="text-xs text-gray-300 mt-1">
+                            Beta Users get discounted service for life. Beta Testers get free service for life, but require approval.
+                            Thank you for supporting our Beta Program and Automotive Enthusiast community.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  </>
+                )}
+                
+                <div className="mb-4">
+                  <label htmlFor="password" className="mb-2 block text-sm font-medium text-gray-300">
+                    Password
+                  </label>
+                  <div className="relative">
+                    <input
+                      id="password"
+                      type={showPassword ? "text" : "password"}
+                      className="w-full rounded-md bg-gray-800 border border-gray-700 px-3 py-2 text-white focus:border-blue-500 focus:outline-none pr-10"
+                      placeholder="Enter your password"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white"
+                    >
+                      {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                    </button>
+                  </div>
+                </div>
+                
+                {!isLogin && (
+                  <div className="mb-6">
+                    <label htmlFor="confirmPassword" className="mb-2 block text-sm font-medium text-gray-300">
+                      Confirm Password
+                    </label>
+                    <div className="relative">
+                      <input
+                        id="confirmPassword"
+                        type={showPassword ? "text" : "password"}
+                        className="w-full rounded-md bg-gray-800 border border-gray-700 px-3 py-2 text-white focus:border-blue-500 focus:outline-none pr-10"
+                        placeholder="Confirm your password"
+                        value={confirmPassword}
+                        onChange={(e) => setConfirmPassword(e.target.value)}
+                        required={!isLogin}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPassword(!showPassword)}
+                        className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-white"
+                      >
+                        {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
+                      </button>
+                    </div>
+                  </div>
+                )}
+                
+                {/* Error message */}
+                {errorMessage && (
+                  <div className="mb-4 p-3 rounded-md bg-red-900/50 border border-red-800 text-white flex items-center space-x-2">
+                    <AlertTriangle size={18} className="text-red-400 flex-shrink-0" />
+                    <span>{errorMessage}</span>
+                  </div>
+                )}
+                
+                {/* Submit button */}
+                <button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="w-full flex items-center justify-center py-3 px-4 rounded-md bg-gradient-to-r from-[#1982FC] to-[#08c519] text-white font-medium tracking-wide hover:from-[#1671e0] hover:to-[#07b016] focus:outline-none transition-all duration-200 disabled:opacity-70"
+                >
+                  {isSubmitting ? (
+                    <>
+                      <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                      </svg>
+                      Processing...
+                    </>
+                  ) : isLogin ? (
+                    <>
+                      <LogIn size={18} className="mr-2" />
+                      SIGN IN
+                    </>
+                  ) : (
+                    <>
+                      <UserPlus size={18} className="mr-2" />
+                      JOIN THE GRID
+                    </>
+                  )}
+                </button>
+                
+                {/* Divider with F1-style blue to green gradient accent */}
+                <div className="mt-8 text-center">
+                  <p className="text-sm text-gray-400 mb-2">PADDOCK20 — AUTOMOTIVE INTELLIGENCE</p>
+                  <div className="h-1 w-20 bg-gradient-to-r from-[#1982FC] via-[#1982FC] to-[#08c519]"></div>
+                </div>
+              </form>
+            </div>
           </div>
         </div>
       </div>
     </div>
   );
-}
+};
+
+export { SimpleAuthPage as default };
