@@ -125,24 +125,13 @@ export default function OnboardingModal({ isOpen = true, onClose }: OnboardingMo
             year: parseInt(data.vehicle.year),
             nickname: data.vehicle.nickname || `${data.vehicle.make} ${data.vehicle.model}`,
             color: data.vehicle.color,
-            purchaseDate: new Date().toISOString().split('T')[0],
-            tires: {
-              manufacturer: '',
-              model: '',
-              size: ''
-            },
-            modifications: '',
-            details: {
-              bodyStyle: '',
-              engineType: '',
-              transmission: ''
-            }
+            status: 'active' as const
           };
           
-          userProfileWarehouse.addVehicle(vehicleData);
+          userProfileWarehouse.addVehicleReference(vehicleData);
         } else {
           // Update first vehicle
-          userProfileWarehouse.updateVehicle(vehicles[0].id, {
+          userProfileWarehouse.updateVehicleReference(vehicles[0].id, {
             make: data.vehicle.make,
             model: data.vehicle.model,
             year: parseInt(data.vehicle.year),
@@ -153,19 +142,26 @@ export default function OnboardingModal({ isOpen = true, onClose }: OnboardingMo
       }
       
       if (data.goals) {
-        userProfileWarehouse.updatePreferences({
-          drivingInterests: data.goals.interests
-        });
-        
-        // Also update profile
-        userProfileWarehouse.updateProfile({
-          drivingGoals: data.goals.drivingGoals
+        // Add to goals collection instead of preferences
+        userProfileWarehouse.addGoal({
+          id: Date.now().toString(),
+          title: "Driving Goals",
+          description: data.goals.drivingGoals,
+          tags: data.goals.interests,
+          priority: "medium",
+          status: "active",
+          date: new Date().toISOString().split('T')[0],
+          dueDate: null,
+          completed: false
         });
       }
       
       if (data.theme) {
+        // Update UI preferences
         userProfileWarehouse.updatePreferences({
-          garageTheme: data.theme
+          theme: data.theme === 'carbon' ? 'dark' : 'light',
+          colorAccent: data.theme === 'neon' ? '#ff00ff' : 
+                       data.theme === 'track' ? '#ff3300' : '#1982FC'
         });
       }
       
