@@ -1,190 +1,357 @@
-import PreDriveChecklistPage from './pages/PreDriveChecklistPage';
-import React, { useEffect } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import React, { useEffect, useState } from 'react';
+import { Route, useLocation } from 'wouter';
+import { NativeAuthProvider, useNativeAuth } from '@/hooks/useNativeAuth';
+import { AuthProvider } from '@/hooks/useAuth';
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { initializeImageCache } from "./services/unsplashService";
-import NotFound from "@/pages/not-found";
-import Home from "@/pages/Home";
-import Garage from "@/pages/Garage";
-import Journal from "@/pages/Journal";
-import Marketplace from "@/pages/Marketplace";
-import Motorsports from "@/pages/Motorsports";
-import Settings from "@/pages/Settings";
-import Events from "./pages/Events";
-import EventsPage from "./pages/EventsPage";
-import MotorsportsEventsPage from "./pages/MotorsportsEventsPage";
-import JuiceBox from "./pages/JuiceBox";
-import GlossResetPage from "./pages/GlossResetPage";
-import LoadoutsPage from "./pages/LoadoutsPage";
-import GlossGrowthPage from "./pages/GlossGrowthPage";
-import VideoLibraryPage from "./pages/VideoLibraryPage";
-import BrokerPortalPage from "./pages/BrokerPortalPage";
-import Weather from "./pages/Weather";
-import WeatherPage from "./pages/WeatherPage";
-import RedlineReportPage from "./pages/RedlineReportPage";
-import SeasonalChecklistPage from "./pages/SeasonalChecklistPage";
-import EBooksPage from "./pages/eBooksPage";
-import Paddock20HomePage from "./pages/Paddock20HomePage";
-import DropdownNavbar from "./components/DropdownNavbar";
+import { Toaster } from "@/components/ui/toaster";
+import PageTitleManager from './components/PageTitleManager';
+import Header from './components/Header';
+import AppHeader from './components/AppHeader';
+import ContextualBreadcrumbs from './components/ContextualBreadcrumbs';
+import FixedSoundBar from "./components/FixedSoundBar";
 import Footer from "./components/Footer";
-// WeatherProvider has been temporarily removed
-import AuthPage from "./pages/AuthPage";
-import DashboardPage from "./pages/DashboardPage";
-import PersonalizedDashboard from "./pages/PersonalizedDashboard";
+import NotFound from "@/pages/not-found";
+import { ProtectedRoute } from './components/ProtectedRoute';
+import UserOnboarding from "./components/UserOnboarding";
+import SupportChatbot from "./components/SupportChatbot";
+import OneTapWeatherSnapshot from "./components/OneTapWeatherSnapshot";
+import RewardNotification from "./components/RewardNotification";
+import RewardsTracker from "./components/RewardsTracker";
+import NativeAuthPage from './pages/NativeAuthPage';
+import OnboardingPage from './pages/OnboardingPage';
+
+// New Pages
+import ThePaddockPage from './pages/ThePaddockPage';
+import EnhancedLogoutPage from './pages/EnhancedLogoutPage';
+import JoinTheGrid from './pages/JoinTheGrid';
+
+// Page imports
+import Paddock20HomePage from "./pages/Paddock20HomePage";
+import AdminPage from './pages/AdminPage';
+import UserProfileHubPage from "./pages/UserProfileHubPage";
+import OnboardingTestPage from "./pages/OnboardingTestPage";
+import Settings from "@/pages/Settings";
 import GarageVaultPage from "./pages/GarageVaultPage";
+import GaragePage from "./pages/GaragePage";
+import AddVehiclePage from "./pages/AddVehiclePage";
 import VehicleModsPage from "./pages/VehicleModsPage";
-import MembershipPage from "./pages/MembershipPage";
-import TiresTimepieces from "./pages/TiresTimepieces";
-import ManifestationStationPage from "./pages/ManifestationStationPage";
 import ModPlannerPage from "./pages/ModPlannerPage";
-import ConciergePage from "./pages/ConciergePage";
-import HustlePlannerPage from "./pages/HustlePlannerPage";
+import WeatherPage from "./pages/WeatherPage";
+import Weather from "./pages/Weather";
+import TimeServicesPage from "./pages/TimeServicesPage";
 import RoutePlannerPage from "./pages/RoutePlannerPage";
 import DriveJournalPage from "./pages/DriveJournalPage";
-import DiscountsPage from "./pages/DiscountsPage";
-import ContactPage from "./pages/ContactPage";
+import ManifestationStationPage from "./pages/ManifestationStationPage";
+import JuiceBox from "./pages/JuiceBox";
+import ProductOrganizerPage from "./pages/ProductOrganizerPage";
+import TiresTimepieces from "./pages/TiresTimepieces";
+import PodiumPursuitPage from "./pages/PodiumPursuitPage";
+import EventsPage from "./pages/EventsPage";
+import MotorsportsEventsPage from "./pages/MotorsportsEventsPage";
+import MotorsportsGalleryPage from "./pages/MotorsportsGalleryPage";
+import MembershipPage from "./pages/MembershipPage";
 import ChatFeedPage from "./pages/ChatFeedPage";
-import ShareDemoPage from "./pages/ShareDemoPage";
-import MoodEnergyTrackerPage from "./pages/MoodEnergyTrackerPage";
-import SupportChatbot from "./components/SupportChatbot";
-import HomePage from "./pages/Home";
-import { useAuth } from "./hooks/useAuth";
-import { MAIN_CONTENT_ID, LiveRegion } from './lib/accessibility';
-import './paddock20.css';
+import ContactPage from "./pages/ContactPage";
+import EbooksPage from "./pages/EbooksPage";
+import ConciergePage from "./pages/ConciergePage";
+import DiscountsPage from "./pages/DiscountsPage";
+import SpotifyTestPage from "./pages/SpotifyTestPage";
+import SpotifyEnvCheck from "./pages/SpotifyEnvCheck";
+import SpotifyCallbackPage from "./pages/SpotifyCallbackPage";
+import ApiExplorerPage from "./pages/api-explorer-page";
+import PrivacyPolicy from './pages/PrivacyPolicyPage';
+import TermsOfService from './pages/TermsOfServicePage';
+import BetaAgreement from './pages/BetaAgreement';
+import EmailVerifiedPage from './pages/EmailVerifiedPage';
+import AuthTestPage from './pages/AuthTestPage';
 
+// Context providers
+import { UserProfileProvider } from "./contexts/UserProfileContext";
+import { SoundProvider } from "./contexts/SoundContext";
+import { VehicleProvider } from "./contexts/VehicleContext";
+import { VehicleDataProvider } from "./contexts/VehicleDataContext";
+import { LocationServicesProvider } from "./contexts/LocationServicesContext";
+import { WeatherProvider } from "./contexts/ConsolidatedWeatherContext";
+import { GalleryProvider } from "./contexts/GalleryContext";
+import { RewardsProvider } from "./contexts/RewardsContext";
+import { SpotifyProvider } from "./contexts/SpotifyContext";
+
+// Accessibility
+import { MAIN_CONTENT_ID } from './lib/accessibility';
+import { useScrollToTop } from './hooks/useScrollToTop';
+
+// Wrapper component for the scrollToTop hook to avoid React Node type errors
+function ScrollToTopWrapper() {
+  useScrollToTop();
+  return null;
+}
+
+// Function to process onboarding status
 function App() {
-  // TEMPORARY: Force preview mode to bypass auth
-  const previewMode = true;
-  const { session, loading } = useAuth();
+  // State to track if the user has completed onboarding
+  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(false);
   
-  // For preview purposes, we'll create a mock session
-  const effectiveSession = previewMode ? { user: { id: 'preview-user' } } : session;
-
-  // Protected route component
-  const ProtectedRoute = ({ children }: { children: React.ReactNode }) => {
-    if (loading && !previewMode) {
-      return (
-        <div className="min-h-screen bg-black flex items-center justify-center">
-          <p className="text-white">Loading...</p>
-        </div>
-      );
-    }
-    
-    if (!effectiveSession && !previewMode) {
-      return <Navigate to="/auth" replace />;
-    }
-    
-    return <>{children}</>;
-  };
-
-  // Create a global screen reader notification system
+  // Get the current location
+  const [location] = useLocation();
+  
+  // Check for onboarding status when app initializes
   useEffect(() => {
-    // Create a live region for screen reader announcements
-    const announcer = new LiveRegion('polite');
+    const userProfileStr = localStorage.getItem('userProfile');
     
-    // Clean up when component unmounts
-    return () => {
-      announcer.remove();
-    };
+    if (userProfileStr) {
+      try {
+        const userProfile = JSON.parse(userProfileStr);
+        const userId = userProfile.id;
+        
+        if (userId) {
+          // Check if this user has completed onboarding
+          const betaOnboardingKey = `paddock20_beta_onboarding_complete_${userId}`;
+          const hasCompleted = localStorage.getItem(betaOnboardingKey) === 'true';
+          setHasCompletedOnboarding(hasCompleted);
+        }
+      } catch (error) {
+        console.error('Error parsing user profile:', error);
+      }
+    }
   }, []);
-  
-  // Initialize Unsplash image cache for marketplace listings
-  useEffect(() => {
-    // Pre-fetch images for marketplace listings to avoid rate limiting
-    if (previewMode || effectiveSession) {
-      console.log('Initializing image cache for marketplace listings...');
-      initializeImageCache()
-        .then(() => console.log('Image cache initialized successfully'))
-        .catch((error) => console.error('Failed to initialize image cache:', error));
-    }
-  }, [previewMode, effectiveSession]);
 
+  // Special case for auth page to provide auth context
+  if (location === '/auth') {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <PageTitleManager />
+          <NativeAuthProvider>
+            <AuthProvider>
+              <>
+                <AppHeader />
+                <NativeAuthPage />
+              </>
+            </AuthProvider>
+          </NativeAuthProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    );
+  }
+
+  // Default App setup with query client and other global providers
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        {/* Skip link for keyboard navigation */}
-        <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
-          Skip to main content
-        </a>
+        <PageTitleManager />
+        {/* Custom scroll-to-top behavior */}
+        <ScrollToTopWrapper />
         
-        <div className="min-h-screen bg-black font-openSans text-white">
-          {/* Header with navigation */}
-          <header role="banner">
-            {(effectiveSession || previewMode) && (
-              <>
-                <DropdownNavbar />
-              </>
-            )}
-          </header>
-
-          {/* Main content area */}
-          <main id={MAIN_CONTENT_ID} className="container mx-auto px-4" tabIndex={-1}>
-            {/* Toast notifications with ARIA live region built in */}
-            <Toaster />
-            
-            <Routes>
-              {/* Public authentication route */}
-              <Route path="/auth" element={!session && !previewMode ? <AuthPage /> : <Navigate to="/dashboard" replace />} />
-              
-              {/* Protected routes */}
-              <Route path="/" element={<ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
-              <Route path="/home" element={<ProtectedRoute><Home /></ProtectedRoute>} />
-              <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-              <Route path="/personalized-dashboard" element={<ProtectedRoute><PersonalizedDashboard /></ProtectedRoute>} />
-              {/* Main Garage Vault Hub - Central repository for all vehicle data */}
-              <Route path="/garage-vault" element={<ProtectedRoute><GarageVaultPage /></ProtectedRoute>} />
-              {/* Legacy garage route redirects to new Garage Vault structure */}
-              <Route path="/garage" element={<Navigate to="/garage-vault" replace />} />
-              
-              <Route path="/journal" element={<ProtectedRoute><Journal /></ProtectedRoute>} />
-              <Route path="/marketplace" element={<ProtectedRoute><Marketplace /></ProtectedRoute>} />
-              <Route path="/motorsports" element={<ProtectedRoute><Motorsports /></ProtectedRoute>} />
-              <Route path="/events" element={<ProtectedRoute><Events /></ProtectedRoute>} />
-              <Route path="/events-page" element={<ProtectedRoute><EventsPage /></ProtectedRoute>} />
-              <Route path="/motorsports-events" element={<ProtectedRoute><MotorsportsEventsPage /></ProtectedRoute>} />
-              <Route path="/juicebox" element={<ProtectedRoute><JuiceBox /></ProtectedRoute>} />
-              <Route path="/gloss-reset" element={<ProtectedRoute><GlossResetPage /></ProtectedRoute>} />
-              <Route path="/juice-loadouts" element={<ProtectedRoute><LoadoutsPage /></ProtectedRoute>} />
-              <Route path="/gloss-growth" element={<ProtectedRoute><GlossGrowthPage /></ProtectedRoute>} />
-              <Route path="/juicebox-videos" element={<ProtectedRoute><VideoLibraryPage /></ProtectedRoute>} />
-              <Route path="/broker-portal" element={<ProtectedRoute><BrokerPortalPage /></ProtectedRoute>} />
-              <Route path="/weather" element={<ProtectedRoute><Weather /></ProtectedRoute>} />
-              <Route path="/redline" element={<ProtectedRoute><RedlineReportPage /></ProtectedRoute>} />
-              <Route path="/seasonal-checklist" element={<ProtectedRoute><SeasonalChecklistPage /></ProtectedRoute>} />
-              <Route path="/pre-drive-checklist" element={<ProtectedRoute><PreDriveChecklistPage /></ProtectedRoute>} />
-              <Route path="/settings" element={<ProtectedRoute><Settings /></ProtectedRoute>} />
-              <Route path="/vehicle-mods/:id" element={<ProtectedRoute><VehicleModsPage /></ProtectedRoute>} />
-              <Route path="/membership" element={<ProtectedRoute><MembershipPage /></ProtectedRoute>} />
-              <Route path="/paddock20-vault" element={<Navigate to="/membership" replace />} />
-              <Route path="/tires-timepieces" element={<ProtectedRoute><TiresTimepieces /></ProtectedRoute>} />
-              <Route path="/manifestation-station" element={<ProtectedRoute><ManifestationStationPage /></ProtectedRoute>} />
-              <Route path="/mod-planner" element={<ProtectedRoute><ModPlannerPage /></ProtectedRoute>} />
-              <Route path="/concierge" element={<ProtectedRoute><ConciergePage /></ProtectedRoute>} />
-              <Route path="/hustle-planner" element={<ProtectedRoute><HustlePlannerPage /></ProtectedRoute>} />
-              <Route path="/route-planner" element={<ProtectedRoute><RoutePlannerPage /></ProtectedRoute>} />
-              <Route path="/drive-journal" element={<ProtectedRoute><DriveJournalPage /></ProtectedRoute>} />
-              <Route path="/ebooks" element={<ProtectedRoute><EBooksPage /></ProtectedRoute>} />
-              <Route path="/discounts" element={<ProtectedRoute><DiscountsPage /></ProtectedRoute>} />
-              <Route path="/contact" element={<ProtectedRoute><ContactPage /></ProtectedRoute>} />
-              <Route path="/chat-feed" element={<ProtectedRoute><ChatFeedPage /></ProtectedRoute>} />
-              <Route path="/share" element={<ProtectedRoute><ShareDemoPage /></ProtectedRoute>} />
-              <Route path="/mood-energy-tracker" element={<ProtectedRoute><MoodEnergyTrackerPage /></ProtectedRoute>} />
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-            
-            {/* AI Support Chatbot - Available globally */}
-            {(effectiveSession || previewMode) && <SupportChatbot />}
-          </main>
-
-          {/* Footer with links and information */}
-          <Footer />
-        </div>
+        {/* Wrap with native auth provider first, then the compatibility AuthProvider */}
+        <NativeAuthProvider>
+          <AuthProvider>
+            <AppContent 
+              hasCompletedOnboarding={hasCompletedOnboarding}
+              setHasCompletedOnboarding={setHasCompletedOnboarding}
+            />
+          </AuthProvider>
+        </NativeAuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
 }
 
-export default App;
+// Separate component to access auth context
+function AppContent({ 
+  hasCompletedOnboarding, 
+  setHasCompletedOnboarding 
+}: { 
+  hasCompletedOnboarding: boolean, 
+  setHasCompletedOnboarding: (value: boolean) => void 
+}) {
+  // Get location without using auth
+  const [location] = useLocation();
+  
+  // Use the native auth hook directly in AppContent
+  const { user, loading, isAuthenticated } = useNativeAuth();
+  
+  // Show loading state while auth is being determined
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-black">
+        <div className="p-8 text-center">
+          <div className="w-16 h-16 border-t-2 border-carolina-blue border-solid rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-carolina-blue">Loading Paddock20...</p>
+        </div>
+      </div>
+    );
+  }
+  
+  // Show user onboarding if authenticated and hasn't completed onboarding
+  if (isAuthenticated && !hasCompletedOnboarding && user?.id) {
+    return (
+      <UserOnboarding 
+        user={user}
+        onComplete={() => {
+          // Mark onboarding as complete in localStorage
+          const betaOnboardingKey = `paddock20_beta_onboarding_complete_${user.id}`;
+          localStorage.setItem(betaOnboardingKey, 'true');
+          // Update state
+          setHasCompletedOnboarding(true);
+        }} 
+      />
+    );
+  }
+
+  // Wrap the application with required context providers
+  return (
+    <UserProfileProvider>
+      <SoundProvider>
+        <VehicleProvider>
+          <VehicleDataProvider>
+            <LocationServicesProvider>
+              <WeatherProvider>
+                <GalleryProvider>
+                  <RewardsProvider>
+                    <SpotifyProvider>
+                      {/* Skip link for keyboard navigation */}
+                      <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
+                        Skip to main content
+                      </a>
+                    
+                      {/* Main application container */}
+                      <div className="min-h-screen bg-black font-openSans text-white">
+                        {/* Header with auth controls */}
+                        <AppHeader />
+                      
+                        {/* Main navigation header */}
+                        <header role="banner">
+                          {/* Breadcrumbs - only visible when logged in */}
+                          {isAuthenticated && <ContextualBreadcrumbs />}
+                        </header>
+                        
+                        {/* Fixed components */}
+                        <FixedSoundBar />
+                        {isAuthenticated && <SupportChatbot />}
+                
+                        {/* Main content area */}
+                        <main id={MAIN_CONTENT_ID} className="container mx-auto px-4 mt-[60px] pb-[70px]" tabIndex={-1}>
+                          <Toaster />
+                          
+                          {/* Floating weather widget */}
+                          {isAuthenticated && (
+                            <OneTapWeatherSnapshot 
+                              floating={true}
+                              className={location === '/weather-paddock' ? 'hidden' : ''}
+                            />
+                          )}
+                          
+                          {/* Routes defined here */}
+                          {/* Publicly accessible routes */}
+                          <Route path="/privacy-policy" component={PrivacyPolicy} />
+                          <Route path="/terms-of-service" component={TermsOfService} />
+                          <Route path="/beta-agreement" component={BetaAgreement} />
+                          <Route path="/email-verified" component={EmailVerifiedPage} />
+                          {/* Main auth page with updated branding - already handled with special case above */}
+                          <Route path="/auth" component={() => null} />
+                          <Route path="/join-the-grid" component={JoinTheGrid} />
+                          <Route path="/spotify/callback" component={SpotifyCallbackPage} />
+                          <Route path="/logout" component={EnhancedLogoutPage} />
+                          
+                          {/* User onboarding page */}
+                          <Route path="/onboarding" component={OnboardingPage} />
+                        
+                          {/* Protected routes */}
+                          <Route path="/" component={() => <ProtectedRoute><ThePaddockPage /></ProtectedRoute>} />
+                          <Route path="/the-paddock" component={() => <ProtectedRoute><ThePaddockPage /></ProtectedRoute>} />
+                          <Route path="/admin" component={() => <ProtectedRoute><AdminPage /></ProtectedRoute>} />
+                          <Route path="/onboarding-test" component={() => <ProtectedRoute><OnboardingTestPage /></ProtectedRoute>} />
+                          <Route path="/settings" component={() => <ProtectedRoute><Settings /></ProtectedRoute>} />
+                          <Route path="/garage" component={() => <ProtectedRoute><GaragePage /></ProtectedRoute>} />
+                          <Route path="/add-vehicle" component={() => <ProtectedRoute><AddVehiclePage /></ProtectedRoute>} />
+                          <Route path="/vehicle-mods" component={() => <ProtectedRoute><VehicleModsPage /></ProtectedRoute>} />
+                          <Route path="/mod-planner" component={() => <ProtectedRoute><ModPlannerPage /></ProtectedRoute>} />
+                          <Route path="/weather-paddock" component={() => <ProtectedRoute><WeatherPage /></ProtectedRoute>} />
+                          <Route path="/weather" component={() => <ProtectedRoute><Weather /></ProtectedRoute>} />
+                          <Route path="/time-services" component={() => <ProtectedRoute><TimeServicesPage /></ProtectedRoute>} />
+                          <Route path="/route-planner" component={() => <ProtectedRoute><RoutePlannerPage /></ProtectedRoute>} />
+                          <Route path="/drive-journal" component={() => <ProtectedRoute><DriveJournalPage /></ProtectedRoute>} />
+                          <Route path="/manifestation-station" component={() => <ProtectedRoute><ManifestationStationPage /></ProtectedRoute>} />
+                          <Route path="/juicebox" component={() => <ProtectedRoute><JuiceBox /></ProtectedRoute>} />
+                          <Route path="/product-organizer" component={() => <ProtectedRoute><ProductOrganizerPage /></ProtectedRoute>} />
+                          <Route path="/tires-timepieces" component={() => <ProtectedRoute><TiresTimepieces /></ProtectedRoute>} />
+                          <Route path="/podium-pursuit" component={() => <ProtectedRoute><PodiumPursuitPage /></ProtectedRoute>} />
+                          <Route path="/events" component={() => <ProtectedRoute><EventsPage /></ProtectedRoute>} />
+                          <Route path="/motorsports-events" component={() => <ProtectedRoute><MotorsportsEventsPage /></ProtectedRoute>} />
+                          <Route path="/motorsports-gallery" component={() => <ProtectedRoute><MotorsportsGalleryPage /></ProtectedRoute>} />
+                          <Route path="/membership" component={() => <ProtectedRoute><MembershipPage /></ProtectedRoute>} />
+                          <Route path="/chat-feed" component={() => <ProtectedRoute><ChatFeedPage /></ProtectedRoute>} />
+                          <Route path="/contact" component={() => <ProtectedRoute><ContactPage /></ProtectedRoute>} />
+                          <Route path="/ebooks" component={() => <ProtectedRoute><EbooksPage /></ProtectedRoute>} />
+                          <Route path="/concierge" component={() => <ProtectedRoute><ConciergePage /></ProtectedRoute>} />
+                          <Route path="/discounts" component={() => <ProtectedRoute><DiscountsPage /></ProtectedRoute>} />
+                          <Route path="/spotify-test" component={() => <ProtectedRoute><SpotifyTestPage /></ProtectedRoute>} />
+                          <Route path="/spotify-env-check" component={() => <ProtectedRoute><SpotifyEnvCheck /></ProtectedRoute>} />
+                          <Route path="/api-explorer" component={() => <ProtectedRoute><ApiExplorerPage /></ProtectedRoute>} />
+                          <Route path="/auth-test" component={AuthTestPage} />
+                          
+                          {/* Special debug route */}
+                          <Route path="/debug" component={() => {
+                            const SimpleDebug = React.lazy(() => import('./pages/SimpleDebug'));
+                            return (
+                              <React.Suspense fallback={<div className="p-8 text-white">Loading debug page...</div>}>
+                                <SimpleDebug />
+                              </React.Suspense>
+                            );
+                          }} />
+                          
+                          {/* Special geocoding test route */}
+                          <Route path="/geocoding-test" component={() => (
+                            <div className="container mx-auto py-6 px-4">
+                              <div className="space-y-6">
+                                <div>
+                                  <h1 className="text-3xl font-bold tracking-tight">OpenCage Geocoding Explorer</h1>
+                                  <p className="text-muted-foreground mt-2">
+                                    Ultra-conservative implementation with 1 request/day limit and permanent caching
+                                  </p>
+                                </div>
+                                
+                                <div className="border-b pb-2" />
+                                
+                                <div className="flex items-center justify-center min-h-[50vh]">
+                                  <div className="bg-muted rounded-lg p-8 text-center max-w-md">
+                                    <h2 className="text-2xl font-bold mb-4">Geocoding Test</h2>
+                                    <p className="mb-4">
+                                      An ultra-conservative geocoding solution has been implemented to work with OpenCage's 1 request/day limit. 
+                                      The solution includes 30-day caching, request limiting, and coordinate grid approximation.
+                                    </p>
+                                    <p className="text-sm mt-4 text-muted-foreground">
+                                      Note: We can't display the full test UI currently due to some dependencies in the main LocationServicesContext that need to be fixed.
+                                    </p>
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          )} />
+                          
+                          {/* 404 fallback */}
+                          <Route path="*" component={NotFound} />
+                          
+                          {/* Interactive elements */}
+                          {isAuthenticated && <RewardNotification />}
+                          {isAuthenticated && <RewardsTracker />}
+                        </main>
+
+                        {/* Footer */}
+                        <Footer />
+                      </div>
+                    </SpotifyProvider>
+                  </RewardsProvider>
+                </GalleryProvider>
+              </WeatherProvider>
+            </LocationServicesProvider>
+          </VehicleDataProvider>
+        </VehicleProvider>
+      </SoundProvider>
+    </UserProfileProvider>
+  );
+}
+
+export { App as default };

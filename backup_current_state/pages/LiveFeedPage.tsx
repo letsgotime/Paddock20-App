@@ -5,6 +5,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Separator } from "@/components/ui/separator";
 import { Car, Award, Calendar, Heart, Clock, MapPin, MessageSquare, UserCircle, Share2, ThumbsUp, Bookmark, AlertCircle, Calendar as CalendarIcon } from "lucide-react";
+import { getUserDisplayName } from "../utils/DataIntegrityVerifier";
 
 interface FeedItem {
   id: string;
@@ -299,7 +300,7 @@ const LiveFeedPage: React.FC = () => {
             <h3 className="font-bold text-lg text-blue-400 mb-4">Top Contributors</h3>
             <div className="space-y-3">
               <Contributor 
-                name="Alex Morgan"
+                name={getUserDisplayName()}
                 level="Apex Legend"
                 avatar="https://randomuser.me/api/portraits/men/32.jpg"
                 contributions={247}
@@ -904,10 +905,15 @@ const getImageQuery = (type: FeedItem['type']): string => {
 };
 
 const getRandomName = (): string => {
-  const firstNames = ['Alex', 'Jordan', 'Casey', 'Taylor', 'Morgan', 'Jamie', 'Riley', 'Avery', 'Kendall', 'Parker', 'Michael', 'Sarah', 'David', 'Emma', 'James', 'Sophia', 'Robert', 'Olivia', 'John', 'Isabella'];
+  // Using the first name from the user's display name to personalize the community experience
+  const userFirstName = getUserDisplayName().split(' ')[0];
+  
+  const firstNames = ['Jordan', 'Casey', 'Taylor', 'Morgan', 'Jamie', 'Riley', 'Avery', 'Kendall', 'Parker', 'Michael', 'Sarah', 'David', 'Emma', 'James', 'Sophia', 'Robert', 'Olivia', 'John', 'Isabella'];
   const lastNames = ['Smith', 'Johnson', 'Williams', 'Brown', 'Jones', 'Miller', 'Davis', 'Garcia', 'Rodriguez', 'Wilson', 'Martinez', 'Anderson', 'Taylor', 'Thomas', 'Hernandez', 'Moore', 'Martin', 'Jackson', 'Thompson', 'White'];
   
-  return `${firstNames[Math.floor(Math.random() * firstNames.length)]} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;
+  // Add the current user's first name to the set of potential names to create a more personalized experience
+  const nameToUse = Math.random() > 0.8 ? userFirstName : firstNames[Math.floor(Math.random() * firstNames.length)];
+  return `${nameToUse} ${lastNames[Math.floor(Math.random() * lastNames.length)]}`;
 };
 
 const getRandomVehicleName = (): string => {

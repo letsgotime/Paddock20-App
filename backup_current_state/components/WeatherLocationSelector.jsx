@@ -60,27 +60,27 @@ const WeatherLocationSelector = ({ onLocationChange, className = "" }) => {
           console.error('Geolocation error:', error);
           setError('Unable to get your location. Please enable location services.');
           
-          // Default to Charlotte, NC if location access is denied
+          // Default to Roswell, GA (zip 30076) if location access is denied
           setCurrentLocation({
-            lat: 35.2271,
-            lon: -80.8431,
-            name: 'Charlotte, NC (Default)'
+            lat: 34.0232,
+            lon: -84.3616,
+            name: 'Roswell, GA (Default)'
           });
           
-          onLocationChange({ lat: 35.2271, lon: -80.8431, name: 'Charlotte, NC (Default)' });
+          onLocationChange({ lat: 34.0232, lon: -84.3616, name: 'Roswell, GA (Default)' });
         }
       );
     } else {
       setError('Geolocation is not supported by your browser.');
       
-      // Default to Charlotte, NC if geolocation is not supported
+      // Default to Roswell, GA (zip 30076) if geolocation is not supported
       setCurrentLocation({
-        lat: 35.2271,
-        lon: -80.8431,
-        name: 'Charlotte, NC (Default)'
+        lat: 34.0232,
+        lon: -84.3616,
+        name: 'Roswell, GA (Default)'
       });
       
-      onLocationChange({ lat: 35.2271, lon: -80.8431, name: 'Charlotte, NC (Default)' });
+      onLocationChange({ lat: 34.0232, lon: -84.3616, name: 'Roswell, GA (Default)' });
     }
   };
 

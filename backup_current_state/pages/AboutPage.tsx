@@ -243,7 +243,7 @@ const AboutPage: React.FC = () => {
             </p>
             <div className="flex flex-col sm:flex-row justify-center gap-4">
               <Button className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-6 text-lg">
-                Join Paddock20
+                Join The Grid
               </Button>
               <Button variant="outline" className="border-blue-600 text-blue-400 hover:bg-blue-900/20 px-8 py-6 text-lg">
                 Explore Features

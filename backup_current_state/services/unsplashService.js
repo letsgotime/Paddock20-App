@@ -1,15 +1,19 @@
 /**
  * Unsplash API Service
  * Handles image fetching and caching for marketplace listings
+ * 
+ * NOTE: DORMANT MODE - As of April 30, 2025
+ * Unsplash API connectivity is currently disabled
+ * All requests will use fallback images from local assets
  */
 
 // In-memory image cache to avoid excessive API calls
 const imageCache = new Map();
 
-// Access key from environment variables
-const accessKey = import.meta.env.VITE_UNSPLASH_ACCESS_KEY || import.meta.env.UNSPLASH_ACCESS_KEY || "2JgRSbUMLc1H5x1-PH_apKjy8jzGF4KLluer_xCO9kk";
+// DORMANT MODE: Force accessKey to null to prevent API calls
+const accessKey = null; // API marked as dormant until further notice
 
-// Fallback images for when API fails
+// Fallback images to use instead of API calls
 import ferrariImg from '@assets/Ferrari-458-With-HRE-P101-Wheels-By-TAG-Motorsports-2.jpg';
 import patekImg from '@assets/5711_1A_014_1@2x.jpg';
 
@@ -23,8 +27,7 @@ const PRECISE_IMAGE_MAPPING = {
  * Initialize cache with common search terms to avoid rate limiting during browsing
  */
 export const initializeImageCache = async () => {
-  console.log('Unsplash access key available:', !!accessKey);
-  console.log('Access key value:', import.meta.env.VITE_UNSPLASH_ACCESS_KEY);
+  console.log('Image cache initialization started');
   
   if (!accessKey) {
     console.warn('Unsplash API key not found. Image fetching will use fallback images.');

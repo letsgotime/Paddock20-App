@@ -1,18 +1,298 @@
-import React from 'react';
-import AuthForm from '../components/AuthForm';
+import React, { useState, useEffect } from 'react';
+import { useLocation } from 'wouter';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from '../hooks/useAuth';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Loader2 } from "lucide-react";
 
-function AuthPage() {
+// Form validation schemas
+const loginSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+});
+
+const signupSchema = z.object({
+  username: z.string().min(3, { message: "Username must be at least 3 characters" }),
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  confirmPassword: z.string(),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
+type SignupFormValues = z.infer<typeof signupSchema>;
+
+export default function AuthPage() {
+  const [activeTab, setActiveTab] = useState<string>('login');
+  const [, navigate] = useLocation();
+  const { toast } = useToast();
+  
+  // Use try/catch to handle potential errors with auth context
+  let auth = {
+    user: null,
+    loading: false,
+    isAuthenticated: false,
+    error: null,
+    login: async (email: string, password: string) => {},
+    register: async (email: string, password: string, username: string) => {},
+    logout: async () => {},
+  };
+  
+  try {
+    auth = useAuth();
+  } catch (error) {
+    console.error("Auth hook error:", error);
+  }
+
+  // If already logged in, redirect to home
+  useEffect(() => {
+    if (auth.isAuthenticated) {
+      navigate("/");
+    }
+  }, [auth.isAuthenticated, navigate]);
+
+  // Form for login
+  const loginForm = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  // Form for signup
+  const signupForm = useForm<SignupFormValues>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  // Handle login form submission
+  const onLoginSubmit = async (values: LoginFormValues) => {
+    try {
+      // The login function will handle the toast messages
+      await auth.login(values.email, values.password);
+    } catch (error) {
+      console.error("Login error:", error);
+    }
+  };
+
+  // Handle signup form submission
+  const onSignupSubmit = async (values: SignupFormValues) => {
+    try {
+      // The register function will handle the toast messages
+      await auth.register(values.email, values.password, values.username);
+      setActiveTab('login');
+    } catch (error) {
+      console.error("Signup error:", error);
+    }
+  };
+
   return (
-    <div className="p-10 bg-black min-h-screen flex items-center justify-center">
-      <div className="w-full max-w-md">
-        <h1 className="apex-header text-3xl mb-6 text-center">Bespoke Technology Syndicate™</h1>
-        <p className="text-gray-400 text-center mb-8">
-          Your automotive enthusiast command center.
-        </p>
-        <AuthForm />
+    <div className="flex min-h-screen">
+      {/* Left side - Auth form */}
+      <div className="flex-1 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md mx-auto">
+          <CardHeader className="space-y-1 text-center">
+            <CardTitle className="text-2xl font-bold tracking-tight">Welcome to Paddock20</CardTitle>
+            <CardDescription>
+              Your gateway to the ultimate car enthusiast experience
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="login">Log In</TabsTrigger>
+                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="login">
+                <Form {...loginForm}>
+                  <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                    <FormField
+                      control={loginForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="you@example.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={loginForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="••••••••" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-carolina-blue hover:bg-blue-700"
+                      disabled={auth.loading}
+                    >
+                      {auth.loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Logging in...
+                        </>
+                      ) : (
+                        "Log In"
+                      )}
+                    </Button>
+                  </form>
+                </Form>
+              </TabsContent>
+              
+              <TabsContent value="signup">
+                <Form {...signupForm}>
+                  <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-4">
+                    <FormField
+                      control={signupForm.control}
+                      name="username"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Username</FormLabel>
+                          <FormControl>
+                            <Input placeholder="username" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={signupForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="you@example.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={signupForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="••••••••" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={signupForm.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirm Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="••••••••" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-carolina-blue hover:bg-blue-700"
+                      disabled={auth.loading}
+                    >
+                      {auth.loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creating account...
+                        </>
+                      ) : (
+                        "Create Account"
+                      )}
+                    </Button>
+                  </form>
+                </Form>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+          
+          <CardFooter className="flex flex-col space-y-4">
+            <div className="text-center text-sm">
+              By continuing, you agree to our{" "}
+              <a href="/terms-of-service" className="underline text-carolina-blue hover:text-blue-700">
+                Terms of Service
+              </a>{" "}
+              and{" "}
+              <a href="/privacy-policy" className="underline text-carolina-blue hover:text-blue-700">
+                Privacy Policy
+              </a>
+            </div>
+          </CardFooter>
+        </Card>
+      </div>
+      
+      {/* Right side - Hero section */}
+      <div className="hidden lg:flex flex-1 bg-[url('/carbon-fiber-bg-dark.jpg')] bg-cover">
+        <div className="flex flex-col justify-center items-center w-full p-8 bg-black/70">
+          <div className="max-w-md text-center">
+            <h1 className="text-4xl font-bold text-white mb-4">Experience F1-Grade Analytics</h1>
+            <p className="text-xl text-gray-200 mb-6">
+              Paddock20 transforms your driving insights with Formula 1 level technology for everyday drivers
+            </p>
+            <div className="grid grid-cols-2 gap-4 mb-8">
+              <div className="bg-black/50 p-4 rounded border border-carolina-blue">
+                <h3 className="text-carolina-blue font-bold mb-2">Weather Paddock</h3>
+                <p className="text-gray-300">Get F1-grade weather insights for your drive</p>
+              </div>
+              <div className="bg-black/50 p-4 rounded border border-carolina-blue">
+                <h3 className="text-carolina-blue font-bold mb-2">Garage Vault</h3>
+                <p className="text-gray-300">Manage your vehicles with comprehensive details</p>
+              </div>
+              <div className="bg-black/50 p-4 rounded border border-carolina-blue">
+                <h3 className="text-carolina-blue font-bold mb-2">Drive Journal</h3>
+                <p className="text-gray-300">Record and analyze your driving experiences</p>
+              </div>
+              <div className="bg-black/50 p-4 rounded border border-carolina-blue">
+                <h3 className="text-carolina-blue font-bold mb-2">Podium Pursuit</h3>
+                <p className="text-gray-300">Your performance journey through achievements, rewards, and milestones</p>
+              </div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
-
-export default AuthPage;

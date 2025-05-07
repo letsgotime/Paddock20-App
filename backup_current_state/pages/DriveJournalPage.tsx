@@ -293,6 +293,15 @@ const DriveJournalPage: React.FC = () => {
   
   // Load data on component mount
   useEffect(() => {
+    // Check if we're on the new entry route
+    const currentPath = window.location.pathname;
+    if (currentPath === '/drive-journal/new') {
+      // If we're on the new entry page, start with a new drive entry form
+      setIsAddingNew(true);
+      initializeNewDriveForm(false);
+      return;
+    }
+    
     // Check for any pending drive from the Route Planner
     const pendingDrive = localStorage.getItem('pendingDriveJournal');
     

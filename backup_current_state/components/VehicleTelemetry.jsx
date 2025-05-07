@@ -1,606 +1,197 @@
-import React, { useState, useEffect } from 'react';
-import { useMarketplaceStore } from '../services/marketplaceService';
+import React from 'react';
 import { 
-  Activity, 
-  AlertCircle, 
-  Maximize2, 
-  BarChart2, 
-  Clock, 
-  Gauge, 
-  Wind, 
-  TrendingUp, 
-  DollarSign, 
-  Award, 
-  ChevronDown,
-  ChevronRight,
-  Calendar,
-  Wrench, // Changed from Tool which is missing
-  MapPin,
-  Hash,
-  Info,
-  Flag,
-  Zap,
-  Layers,
-  CornerUpRight
+  BarChart2 as Gauge, Thermometer, Droplets, Battery, 
+  Wind, Timer, RotateCw, Wrench, PaintBucket, Car, 
+  Calendar, Droplet as Fuel, Ruler, Activity, Map, Zap, SunMoon 
 } from 'lucide-react';
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 
-// This component displays detailed telemetry for a vehicle
-function VehicleTelemetry({ listingId }) {
-  const [expanded, setExpanded] = useState({
-    specs: true,
-    performance: true,
-    market: false,
-    history: false,
-    track: false
-  });
-  
-  const getListingById = useMarketplaceStore(state => state.getListingById);
-  const vehicle = getListingById(listingId);
-  
-  if (!vehicle) {
+/**
+ * VehicleTelemetry Component
+ * Displays F1-inspired technical data for a vehicle
+ */
+const VehicleTelemetry = ({ vehicle }) => {
+  // Placeholder data for telemetry
+  const telemetryData = {
+    performance: {
+      acceleration: { value: '4.1', unit: 'sec', label: '0-60 mph' },
+      topSpeed: { value: '155', unit: 'mph', label: 'Top Speed' },
+      brakingDistance: { value: '108', unit: 'ft', label: '60-0 mph' },
+      quarterMile: { value: '12.2', unit: 'sec', label: '1/4 Mile' },
+      lateralG: { value: '0.98', unit: 'g', label: 'Lateral G' }
+    },
+    engine: {
+      rpm: { value: '0', unit: 'RPM', label: 'Tachometer', max: 7000 },
+      temperature: { value: '194', unit: '°F', label: 'Engine Temp', warning: 220, critical: 240 },
+      oilPressure: { value: '42', unit: 'psi', label: 'Oil Pressure', warning: 20, critical: 10 },
+      coolantLevel: { value: '92', unit: '%', label: 'Coolant', warning: 30, critical: 15 },
+      airIntake: { value: '68', unit: '°F', label: 'Intake Temp' }
+    },
+    fuel: {
+      level: { value: '78', unit: '%', label: 'Fuel Level', warning: 20, critical: 10 },
+      economy: { value: '24.3', unit: 'mpg', label: 'Fuel Economy' },
+      range: { value: '348', unit: 'mi', label: 'Range' },
+      consumption: { value: '4.1', unit: 'gal/hr', label: 'Consumption' }
+    },
+    tires: {
+      pressureFR: { value: '36.1', unit: 'psi', label: 'Front Right', warning: [34, 38], critical: [32, 40] },
+      pressureFL: { value: '35.9', unit: 'psi', label: 'Front Left', warning: [34, 38], critical: [32, 40] },
+      pressureRR: { value: '38.2', unit: 'psi', label: 'Rear Right', warning: [34, 38], critical: [32, 40] },
+      pressureRL: { value: '38.4', unit: 'psi', label: 'Rear Left', warning: [34, 38], critical: [32, 40] },
+      tempFR: { value: '89', unit: '°F', label: 'FR Temp', warning: 130, critical: 150 },
+      tempFL: { value: '90', unit: '°F', label: 'FL Temp', warning: 130, critical: 150 },
+      tempRR: { value: '93', unit: '°F', label: 'RR Temp', warning: 130, critical: 150 },
+      tempRL: { value: '92', unit: '°F', label: 'RL Temp', warning: 130, critical: 150 }
+    },
+    electrical: {
+      batteryVoltage: { value: '12.8', unit: 'V', label: 'Battery', warning: 12.2, critical: 11.8 },
+      alternatorOutput: { value: '13.9', unit: 'V', label: 'Alternator', warning: 13.0, critical: 12.5 },
+      batteryCurrent: { value: '2.1', unit: 'A', label: 'Current' },
+      batteryHealth: { value: '92', unit: '%', label: 'Battery Health', warning: 50, critical: 30 }
+    },
+    environment: {
+      outsideTemp: { value: '72', unit: '°F', label: 'Outside Temp' },
+      cabinTemp: { value: '68', unit: '°F', label: 'Cabin Temp' },
+      humidity: { value: '45', unit: '%', label: 'Humidity' },
+      altitude: { value: '412', unit: 'ft', label: 'Altitude' },
+      barometer: { value: '29.92', unit: 'inHg', label: 'Pressure' }
+    }
+  };
+
+  // Helper function to determine color based on warning thresholds
+  const getStatusColor = (item) => {
+    if (!item.warning && !item.critical) return "text-blue-400";
+    
+    const value = parseFloat(item.value);
+    
+    if (item.critical) {
+      if (Array.isArray(item.critical)) {
+        if (value < item.critical[0] || value > item.critical[1]) return "text-red-500";
+      } else if (item.critical > item.warning) {
+        if (value >= item.critical) return "text-red-500";
+      } else {
+        if (value <= item.critical) return "text-red-500";
+      }
+    }
+    
+    if (item.warning) {
+      if (Array.isArray(item.warning)) {
+        if (value < item.warning[0] || value > item.warning[1]) return "text-yellow-500";
+      } else if (item.warning > item.critical) {
+        if (value >= item.warning) return "text-yellow-500";
+      } else {
+        if (value <= item.warning) return "text-yellow-500";
+      }
+    }
+    
+    return "text-green-400";
+  };
+
+  // Helper function to render gauge
+  const renderGauge = (item, icon) => {
+    const colorClass = getStatusColor(item);
+    
     return (
-      <div className="flex items-center justify-center h-64 bg-gray-900/50 rounded-xl border border-gray-800">
-        <div className="flex flex-col items-center text-gray-400">
-          <AlertCircle className="h-10 w-10 mb-2 text-red-500" />
-          <p>Vehicle not found</p>
+      <div className="bg-gray-800 rounded-lg p-4 flex flex-col items-center">
+        <div className="flex justify-between w-full mb-2">
+          <span className="text-gray-400 text-xs">{item.label}</span>
+          {icon && React.cloneElement(icon, { className: "h-4 w-4 text-gray-400" })}
         </div>
+        <div className={`text-2xl font-bold ${colorClass}`}>
+          {item.value}
+        </div>
+        <div className="text-xs text-gray-500">{item.unit}</div>
       </div>
     );
-  }
-
-  const toggleSection = (section) => {
-    setExpanded({
-      ...expanded,
-      [section]: !expanded[section]
-    });
   };
 
   return (
-    <div className="bg-black text-white">
-      <div className="max-w-7xl mx-auto px-4 mb-8">
-        {/* Vehicle Header */}
-        <div className="bg-gradient-to-r from-gray-900 to-black p-6 rounded-xl border border-gray-800 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-12 gap-6">
-            <div className="md:col-span-8">
-              <div className="flex items-center mb-2">
-                <h2 className="text-2xl md:text-3xl font-bold text-white mr-3">{vehicle.brand} {vehicle.model}</h2>
-                <div className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-900/50 text-green-300 border border-green-800">
-                  {vehicle.year}
-                </div>
-              </div>
-              
-              <div className="flex flex-wrap gap-4 mb-4 text-sm text-gray-400">
-                <div className="flex items-center">
-                  <Clock className="h-4 w-4 mr-1 text-blue-500" />
-                  <span>Year: <span className="text-white">{vehicle.year}</span></span>
-                </div>
-                <div className="flex items-center">
-                  <MapPin className="h-4 w-4 mr-1 text-rose-500" />
-                  <span>Location: <span className="text-white">{vehicle.location}</span></span>
-                </div>
-                <div className="flex items-center">
-                  <Info className="h-4 w-4 mr-1 text-amber-500" />
-                  <span>Condition: <span className="text-white">{vehicle.condition}</span></span>
-                </div>
-                <div className="flex items-center">
-                  <Activity className="h-4 w-4 mr-1 text-green-500" />
-                  <span>Mileage: <span className="text-white">{vehicle.mileage.toLocaleString()}</span></span>
-                </div>
-                <div className="flex items-center">
-                  <Hash className="h-4 w-4 mr-1 text-violet-500" />
-                  <span>VIN: <span className="text-white font-mono text-xs">{vehicle.vin}</span></span>
-                </div>
-              </div>
-              
-              <p className="text-gray-400">{vehicle.description}</p>
-            </div>
-            
-            <div className="md:col-span-4 flex flex-col">
-              <div className="text-3xl font-bold text-amber-500 mb-1">${vehicle.price.toLocaleString()}</div>
-              <div className="flex flex-col text-sm space-y-1 mb-4">
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Seller:</span>
-                  <span className="text-white">{vehicle.seller}</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Seller Rating:</span>
-                  <span className="text-amber-400">{vehicle.sellerRating} / 5.0</span>
-                </div>
-                <div className="flex justify-between">
-                  <span className="text-gray-400">Listed:</span>
-                  <span className="text-white">{vehicle.dateAdded}</span>
-                </div>
-              </div>
-              
-              <div className="mt-auto space-y-2">
-                <button className="w-full py-2 bg-blue-900 hover:bg-blue-800 transition-colors text-white rounded-lg border border-blue-700">
-                  Contact Seller
-                </button>
-                <button className="w-full py-2 bg-gray-800 hover:bg-gray-700 transition-colors text-gray-200 rounded-lg border border-gray-700">
-                  Schedule Viewing
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+    <div className="space-y-6">
+      <div className="bg-gray-900 rounded-lg p-4 border border-gray-800">
+        <h2 className="text-lg font-semibold text-blue-400 mb-4 flex items-center">
+          <Gauge className="h-5 w-5 mr-2" />
+          Vehicle Telemetry
+        </h2>
+        <p className="text-gray-400 text-sm mb-4">
+          F1-inspired real-time performance monitoring and diagnostics for your {vehicle.year} {vehicle.make} {vehicle.model}
+        </p>
         
-        {/* F1-Style Telemetry Dashboard */}
+        {/* Performance Section */}
         <div className="mb-6">
-          <h3 className="text-xl font-bold text-white mb-4 border-b border-gray-800 pb-2">
-            <span className="text-green-500">Performance</span> Telemetry
-          </h3>
-          
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-4">
-            <div className="bg-gradient-to-br from-gray-900 to-black p-4 rounded-xl border border-gray-800">
-              <div className="flex justify-between items-start mb-2">
-                <div className="text-xs text-gray-400">HORSEPOWER</div>
-                <Zap className="h-4 w-4 text-amber-500" />
-              </div>
-              <div className="text-2xl font-bold text-white">{vehicle.horsePower}</div>
-              <div className="text-xs text-gray-400 mt-1">HP @ RPM</div>
-            </div>
-            
-            <div className="bg-gradient-to-br from-gray-900 to-black p-4 rounded-xl border border-gray-800">
-              <div className="flex justify-between items-start mb-2">
-                <div className="text-xs text-gray-400">TORQUE</div>
-                <Activity className="h-4 w-4 text-blue-500" />
-              </div>
-              <div className="text-2xl font-bold text-white">{vehicle.torque || "N/A"}</div>
-              <div className="text-xs text-gray-400 mt-1">LB-FT</div>
-            </div>
-            
-            <div className="bg-gradient-to-br from-gray-900 to-black p-4 rounded-xl border border-gray-800">
-              <div className="flex justify-between items-start mb-2">
-                <div className="text-xs text-gray-400">0-60 MPH</div>
-                <Wind className="h-4 w-4 text-green-500" />
-              </div>
-              <div className="text-2xl font-bold text-white">{vehicle.acceleration || "N/A"}</div>
-              <div className="text-xs text-gray-400 mt-1">SECONDS</div>
-            </div>
-            
-            <div className="bg-gradient-to-br from-gray-900 to-black p-4 rounded-xl border border-gray-800">
-              <div className="flex justify-between items-start mb-2">
-                <div className="text-xs text-gray-400">TOP SPEED</div>
-                <Gauge className="h-4 w-4 text-rose-500" />
-              </div>
-              <div className="text-2xl font-bold text-white">{vehicle.topSpeed || "N/A"}</div>
-              <div className="text-xs text-gray-400 mt-1">MPH</div>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Track Performance */}
-            <div className="bg-gradient-to-br from-gray-900 to-black p-6 rounded-xl border border-gray-800">
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="text-lg font-semibold text-white flex items-center">
-                  <Flag className="mr-2 h-5 w-5 text-amber-500" />
-                  Track Performance
-                </h4>
-                <button 
-                  onClick={() => toggleSection('track')}
-                  className="text-gray-400 hover:text-white"
-                >
-                  {expanded.track ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
-                </button>
-              </div>
-              
-              {expanded.track && vehicle.trackData && (
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="text-sm font-medium text-gray-400">Lap Times</div>
-                    {vehicle.trackData.lapTimes && vehicle.trackData.lapTimes.map((lap, index) => (
-                      <div key={index} className="flex justify-between py-1 border-b border-gray-800">
-                        <span className="text-sm text-gray-400">{lap.track}</span>
-                        <span className="text-sm font-mono text-white">{lap.time}</span>
-                      </div>
-                    ))}
-                  </div>
-                  
-                  {vehicle.trackData.performance && (
-                    <div className="grid grid-cols-2 gap-4 mt-4">
-                      <div className="bg-gray-900/50 p-3 rounded-lg">
-                        <div className="text-xs text-gray-400 mb-1">CORNERING G-FORCE</div>
-                        <div className="text-xl font-bold text-green-500">{vehicle.trackData.performance.corneringG || "N/A"}g</div>
-                      </div>
-                      <div className="bg-gray-900/50 p-3 rounded-lg">
-                        <div className="text-xs text-gray-400 mb-1">BRAKING (60-0)</div>
-                        <div className="text-xl font-bold text-blue-500">{vehicle.trackData.performance.braking60to0 || "N/A"} ft</div>
-                      </div>
-                      <div className="bg-gray-900/50 p-3 rounded-lg col-span-2">
-                        <div className="text-xs text-gray-400 mb-1">QUARTER MILE</div>
-                        <div className="flex justify-between">
-                          <div className="text-xl font-bold text-amber-500">{vehicle.trackData.performance.quarterMile?.time || "N/A"}s</div>
-                          <div className="text-xl font-bold text-rose-500">{vehicle.trackData.performance.quarterMile?.speed || "N/A"} mph</div>
-                        </div>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
-            
-            {/* Market Analysis */}
-            <div className="bg-gradient-to-br from-gray-900 to-black p-6 rounded-xl border border-gray-800">
-              <div className="flex items-center justify-between mb-4">
-                <h4 className="text-lg font-semibold text-white flex items-center">
-                  <BarChart2 className="mr-2 h-5 w-5 text-blue-500" />
-                  Market Analysis
-                </h4>
-                <button 
-                  onClick={() => toggleSection('market')}
-                  className="text-gray-400 hover:text-white"
-                >
-                  {expanded.market ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
-                </button>
-              </div>
-              
-              {expanded.market && (
-                <div className="space-y-4">
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="bg-gray-900/50 p-3 rounded-lg">
-                      <div className="text-xs text-gray-400 mb-1">MARKET TREND</div>
-                      <div className="text-xl font-bold text-green-500 flex items-center">
-                        {vehicle.marketTrend || "N/A"}
-                        {vehicle.marketTrend === "Rising" && <TrendingUp className="ml-1 h-4 w-4" />}
-                      </div>
-                    </div>
-                    <div className="bg-gray-900/50 p-3 rounded-lg">
-                      <div className="text-xs text-gray-400 mb-1">ANNUAL APPRECIATION</div>
-                      <div className="text-xl font-bold text-amber-500">{vehicle.appreciationRate || "N/A"}%</div>
-                    </div>
-                    <div className="bg-gray-900/50 p-3 rounded-lg">
-                      <div className="text-xs text-gray-400 mb-1">MARKET DEMAND</div>
-                      <div className="text-xl font-bold text-violet-500">{vehicle.marketDemand || "N/A"}</div>
-                    </div>
-                    <div className="bg-gray-900/50 p-3 rounded-lg">
-                      <div className="text-xs text-gray-400 mb-1">PRODUCTION COUNT</div>
-                      <div className="text-xl font-bold text-blue-500">{vehicle.productionCount?.toLocaleString() || "N/A"}</div>
-                    </div>
-                  </div>
-                  
-                  {vehicle.valueHistory && vehicle.valueHistory.length > 0 && (
-                    <div className="mt-4">
-                      <div className="text-sm font-medium text-gray-400 mb-2">Value History</div>
-                      <div className="h-48 w-full">
-                        <ResponsiveContainer width="100%" height="100%">
-                          <LineChart
-                            data={vehicle.valueHistory}
-                            margin={{ top: 5, right: 10, left: 10, bottom: 5 }}
-                          >
-                            <CartesianGrid strokeDasharray="3 3" stroke="#333" />
-                            <XAxis dataKey="year" stroke="#666" />
-                            <YAxis 
-                              stroke="#666" 
-                              tickFormatter={(value) => `$${(value / 1000)}k`}
-                            />
-                            <Tooltip 
-                              formatter={(value) => [`$${value.toLocaleString()}`, 'Value']}
-                              labelFormatter={(year) => `Year: ${year}`}
-                              contentStyle={{ backgroundColor: '#111', border: '1px solid #333' }}
-                            />
-                            <Line 
-                              type="monotone" 
-                              dataKey="value" 
-                              stroke="#3b82f6" 
-                              strokeWidth={2}
-                              dot={{ r: 4, fill: '#3b82f6', stroke: '#3b82f6' }}
-                              activeDot={{ r: 6, fill: '#3b82f6', stroke: '#fff' }}
-                            />
-                          </LineChart>
-                        </ResponsiveContainer>
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
-            </div>
+          <h3 className="text-gray-300 font-medium mb-3 border-b border-gray-800 pb-2">Performance</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            {renderGauge(telemetryData.performance.acceleration, <Timer />)}
+            {renderGauge(telemetryData.performance.topSpeed, <Gauge />)}
+            {renderGauge(telemetryData.performance.brakingDistance, <Ruler />)}
+            {renderGauge(telemetryData.performance.quarterMile, <Activity />)}
+            {renderGauge(telemetryData.performance.lateralG, <RotateCw />)}
           </div>
         </div>
         
-        {/* Technical Specifications Accordion */}
-        <div className="bg-gradient-to-br from-gray-900 to-black p-6 rounded-xl border border-gray-800 mb-6">
-          <div className="flex items-center justify-between mb-4" onClick={() => toggleSection('specs')}>
-            <h4 className="text-lg font-semibold text-white flex items-center cursor-pointer">
-              <Layers className="mr-2 h-5 w-5 text-blue-500" />
-              Technical Specifications
-            </h4>
-            <button className="text-gray-400 hover:text-white">
-              {expanded.specs ? <ChevronDown className="h-5 w-5" /> : <ChevronRight className="h-5 w-5" />}
-            </button>
+        {/* Engine Section */}
+        <div className="mb-6">
+          <h3 className="text-gray-300 font-medium mb-3 border-b border-gray-800 pb-2">Engine</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            {renderGauge(telemetryData.engine.rpm, <RotateCw />)}
+            {renderGauge(telemetryData.engine.temperature, <Thermometer />)}
+            {renderGauge(telemetryData.engine.oilPressure, <Droplets />)}
+            {renderGauge(telemetryData.engine.coolantLevel, <Droplets />)}
+            {renderGauge(telemetryData.engine.airIntake, <Wind />)}
           </div>
-          
-          {expanded.specs && (
-            <div className="space-y-6">
-              {/* Engine & Performance */}
-              <div>
-                <h5 className="text-blue-500 text-md font-medium mb-3 border-b border-gray-800 pb-1">Engine & Performance</h5>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-4 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Engine Type:</span>
-                    <span className="text-white">{vehicle.engineType}</span>
-                  </div>
-                  {vehicle.displacement && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Displacement:</span>
-                      <span className="text-white">{vehicle.displacement} cc</span>
-                    </div>
-                  )}
-                  {vehicle.engineLayout && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Engine Layout:</span>
-                      <span className="text-white">{vehicle.engineLayout}</span>
-                    </div>
-                  )}
-                  {vehicle.cylinderConfig && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Cylinder Config:</span>
-                      <span className="text-white">{vehicle.cylinderConfig}</span>
-                    </div>
-                  )}
-                  {vehicle.valvetrain && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Valvetrain:</span>
-                      <span className="text-white">{vehicle.valvetrain}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Horsepower:</span>
-                    <span className="text-white">{vehicle.horsePower} hp {vehicle.peakPowerRPM ? `@ ${vehicle.peakPowerRPM} rpm` : ''}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Torque:</span>
-                    <span className="text-white">{vehicle.torque || "N/A"} lb-ft {vehicle.peakTorqueRPM ? `@ ${vehicle.peakTorqueRPM} rpm` : ''}</span>
-                  </div>
-                  {vehicle.compression && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Compression Ratio:</span>
-                      <span className="text-white">{vehicle.compression}</span>
-                    </div>
-                  )}
-                  {vehicle.redline && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Redline:</span>
-                      <span className="text-white">{vehicle.redline} rpm</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">0-60 mph:</span>
-                    <span className="text-white">{vehicle.acceleration || "N/A"} seconds</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Top Speed:</span>
-                    <span className="text-white">{vehicle.topSpeed || "N/A"} mph</span>
-                  </div>
-                  {vehicle.trackData && vehicle.trackData.performance && vehicle.trackData.performance.quarterMile && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Quarter Mile:</span>
-                      <span className="text-white">{vehicle.trackData.performance.quarterMile.time}s @ {vehicle.trackData.performance.quarterMile.speed} mph</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              {/* Drivetrain */}
-              <div>
-                <h5 className="text-blue-500 text-md font-medium mb-3 border-b border-gray-800 pb-1">Drivetrain</h5>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-4 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Transmission:</span>
-                    <span className="text-white">{vehicle.transmission}</span>
-                  </div>
-                  {vehicle.transmissionDetails && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Transmission Details:</span>
-                      <span className="text-white">{vehicle.transmissionDetails}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Drivetrain:</span>
-                    <span className="text-white">{vehicle.drivetrain}</span>
-                  </div>
-                  {vehicle.powerDistribution && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Power Distribution:</span>
-                      <span className="text-white">{vehicle.powerDistribution}</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-              
-              {/* Chassis & Suspension */}
-              {vehicle.chassis && (
-                <div>
-                  <h5 className="text-blue-500 text-md font-medium mb-3 border-b border-gray-800 pb-1">Chassis & Suspension</h5>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-4 text-sm">
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Chassis Type:</span>
-                      <span className="text-white">{vehicle.chassis.type}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Front Suspension:</span>
-                      <span className="text-white">{vehicle.chassis.frontSuspension}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Rear Suspension:</span>
-                      <span className="text-white">{vehicle.chassis.rearSuspension}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Adjustable Dampers:</span>
-                      <span className="text-white">{vehicle.chassis.adjustableDampers ? 'Yes' : 'No'}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Anti-Roll Bars:</span>
-                      <span className="text-white">{vehicle.chassis.antiRollBars}</span>
-                    </div>
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Steering System:</span>
-                      <span className="text-white">{vehicle.chassis.steeringSystem}</span>
-                    </div>
-                    {vehicle.chassis.steeringRatio && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Steering Ratio:</span>
-                        <span className="text-white">{vehicle.chassis.steeringRatio}:1</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-              
-              {/* Aerodynamics */}
-              {vehicle.aerodynamics && (
-                <div>
-                  <h5 className="text-blue-500 text-md font-medium mb-3 border-b border-gray-800 pb-1">Aerodynamics</h5>
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-4 text-sm">
-                    {vehicle.aerodynamics.dragCoefficient && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Drag Coefficient:</span>
-                        <span className="text-white">{vehicle.aerodynamics.dragCoefficient}</span>
-                      </div>
-                    )}
-                    {vehicle.aerodynamics.downforce && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Downforce:</span>
-                        <span className="text-white">{vehicle.aerodynamics.downforce}</span>
-                      </div>
-                    )}
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Active Aero:</span>
-                      <span className="text-white">{vehicle.aerodynamics.activeAero ? 'Yes' : 'No'}</span>
-                    </div>
-                    {vehicle.aerodynamics.frontSplitter && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Front Splitter:</span>
-                        <span className="text-white">Yes</span>
-                      </div>
-                    )}
-                    {vehicle.aerodynamics.rearDiffuser && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Rear Diffuser:</span>
-                        <span className="text-white">Yes</span>
-                      </div>
-                    )}
-                    {vehicle.aerodynamics.rearWing && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Rear Wing:</span>
-                        <span className="text-white">{vehicle.aerodynamics.rearWing}</span>
-                      </div>
-                    )}
-                    {vehicle.aerodynamics.underfloorAero && (
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Underbody:</span>
-                        <span className="text-white">{vehicle.aerodynamics.underfloorAero}</span>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              )}
-              
-              {/* Dimensions & Weight */}
-              <div>
-                <h5 className="text-blue-500 text-md font-medium mb-3 border-b border-gray-800 pb-1">Dimensions & Weight</h5>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-4 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Weight:</span>
-                    <span className="text-white">{vehicle.weight?.toLocaleString() || "N/A"} lbs</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Weight Distribution:</span>
-                    <span className="text-white">{vehicle.weightDistribution || "N/A"}</span>
-                  </div>
-                  {vehicle.dimensions && (
-                    <>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Length:</span>
-                        <span className="text-white">{vehicle.dimensions.length} mm</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Width:</span>
-                        <span className="text-white">{vehicle.dimensions.width} mm</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Height:</span>
-                        <span className="text-white">{vehicle.dimensions.height} mm</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Wheelbase:</span>
-                        <span className="text-white">{vehicle.dimensions.wheelbase} mm</span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-gray-400">Ground Clearance:</span>
-                        <span className="text-white">{vehicle.dimensions.groundClearance} mm</span>
-                      </div>
-                    </>
-                  )}
-                </div>
-              </div>
-              
-              {/* Wheels & Brakes */}
-              <div>
-                <h5 className="text-blue-500 text-md font-medium mb-3 border-b border-gray-800 pb-1">Wheels & Brakes</h5>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-x-10 gap-y-4 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Wheels:</span>
-                    <span className="text-white">{vehicle.wheels || "N/A"}</span>
-                  </div>
-                  {vehicle.frontWheels && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Front Wheels:</span>
-                      <span className="text-white">{vehicle.frontWheels}</span>
-                    </div>
-                  )}
-                  {vehicle.rearWheels && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Rear Wheels:</span>
-                      <span className="text-white">{vehicle.rearWheels}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Tires:</span>
-                    <span className="text-white">{vehicle.tires || "N/A"}</span>
-                  </div>
-                  {vehicle.frontTires && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Front Tires:</span>
-                      <span className="text-white">{vehicle.frontTires}</span>
-                    </div>
-                  )}
-                  {vehicle.rearTires && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">Rear Tires:</span>
-                      <span className="text-white">{vehicle.rearTires}</span>
-                    </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-gray-400">Brakes:</span>
-                    <span className="text-white">{vehicle.brakes || "N/A"}</span>
-                  </div>
-                  {vehicle.trackData && vehicle.trackData.performance && vehicle.trackData.performance.braking60to0 && (
-                    <div className="flex justify-between">
-                      <span className="text-gray-400">60-0 Braking:</span>
-                      <span className="text-white">{vehicle.trackData.performance.braking60to0} feet</span>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          )}
         </div>
         
-        {/* Similar Vehicles */}
-        <div className="bg-gradient-to-br from-gray-900 to-black p-6 rounded-xl border border-gray-800">
-          <h4 className="text-lg font-semibold text-white mb-4 flex items-center">
-            <CornerUpRight className="mr-2 h-5 w-5 text-blue-500" />
-            Similar Vehicles
-          </h4>
-          
-          <div className="text-sm text-gray-400 text-center py-6">
-            Similar vehicle recommendations coming soon
+        {/* Fuel Section */}
+        <div className="mb-6">
+          <h3 className="text-gray-300 font-medium mb-3 border-b border-gray-800 pb-2">Fuel</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {renderGauge(telemetryData.fuel.level, <Fuel />)}
+            {renderGauge(telemetryData.fuel.economy, <Fuel />)}
+            {renderGauge(telemetryData.fuel.range, <Map />)}
+            {renderGauge(telemetryData.fuel.consumption, <Fuel />)}
+          </div>
+        </div>
+        
+        {/* Tires Section */}
+        <div className="mb-6">
+          <h3 className="text-gray-300 font-medium mb-3 border-b border-gray-800 pb-2">Tires</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {renderGauge(telemetryData.tires.pressureFR, <Car />)}
+            {renderGauge(telemetryData.tires.pressureFL, <Car />)}
+            {renderGauge(telemetryData.tires.pressureRR, <Car />)}
+            {renderGauge(telemetryData.tires.pressureRL, <Car />)}
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mt-3">
+            {renderGauge(telemetryData.tires.tempFR, <Thermometer />)}
+            {renderGauge(telemetryData.tires.tempFL, <Thermometer />)}
+            {renderGauge(telemetryData.tires.tempRR, <Thermometer />)}
+            {renderGauge(telemetryData.tires.tempRL, <Thermometer />)}
+          </div>
+        </div>
+        
+        {/* Electrical Section */}
+        <div className="mb-6">
+          <h3 className="text-gray-300 font-medium mb-3 border-b border-gray-800 pb-2">Electrical</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            {renderGauge(telemetryData.electrical.batteryVoltage, <Battery />)}
+            {renderGauge(telemetryData.electrical.alternatorOutput, <Zap />)}
+            {renderGauge(telemetryData.electrical.batteryCurrent, <Zap />)}
+            {renderGauge(telemetryData.electrical.batteryHealth, <Battery />)}
+          </div>
+        </div>
+        
+        {/* Environment Section */}
+        <div>
+          <h3 className="text-gray-300 font-medium mb-3 border-b border-gray-800 pb-2">Environment</h3>
+          <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
+            {renderGauge(telemetryData.environment.outsideTemp, <SunMoon />)}
+            {renderGauge(telemetryData.environment.cabinTemp, <Thermometer />)}
+            {renderGauge(telemetryData.environment.humidity, <Droplets />)}
+            {renderGauge(telemetryData.environment.altitude, <Map />)}
+            {renderGauge(telemetryData.environment.barometer, <Wind />)}
           </div>
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default VehicleTelemetry;
