@@ -8,10 +8,12 @@ import {
   Trash2, Info
 } from 'lucide-react';
 import { handleDeclineTerms } from '../utils/accountUtils';
-import { useAuth } from '../hooks/useAuth';
+// Auth is passed as props instead of using the hook directly
+// import { useAuth } from '@/hooks/useAuth';
 
 interface UserOnboardingProps {
-  onComplete: (userId: number | string) => void;
+  onComplete: () => void;
+  user: any; // Accept user directly from parent
 }
 
 // Carolina blue color code for consistent branding
@@ -113,9 +115,8 @@ const moduleOptions = [
  * Uses brand-consistent styling with Orbitron for headings and Open Sans for body text.
  * Color scheme follows the dark carbon-fiber theme with Carolina blue accents.
  */
-const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
-  // Access authenticated user context
-  const auth = useAuth();
+const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete, user }) => {
+  // Use user prop directly instead of auth hook
   
   // Current step state (1-5)
   const [step, setStep] = useState(1);
