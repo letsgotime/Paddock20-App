@@ -1,14 +1,8 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-import { 
-  insertVehicleSchema, 
-  insertTireSchema, 
-  insertMaintenanceRecordSchema, 
-  insertMaintenanceFlagSchema, 
-  insertGlossTrackingSchema,
-  insertGlossLogSchema
-} from "@shared/schema";
+// Import schemas from shared schema
+import { users } from "@shared/schema";
 import { handleGoogleOAuth2Callback, handleAppleOAuth2Callback } from "./oauth";
 import { checkSlackIntegration, initializeSlackClient, shareVehicleToSlack, shareEventToSlack } from "./slack";
 import { setupAuth } from "./auth";
@@ -69,12 +63,15 @@ interface RateLimiter {
   geocodeMinInterval: number;
 }
 
+// Define CHECK_INTERVAL here
+const API_CHECK_INTERVAL = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
+
 const apiHealthStatus: WeatherApiStatus = {
   lastChecked: new Date(0), // Set to epoch time to force immediate check
   isOperational: true, // Assume operational until first check
   lastError: null,
   consecutiveFailures: 0,
-  checkInterval: CHECK_INTERVAL // 4 hours in milliseconds
+  checkInterval: API_CHECK_INTERVAL
 };
 
 // Initialize rate limiter to prevent hitting API rate limits

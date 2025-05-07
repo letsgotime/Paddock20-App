@@ -1,181 +1,365 @@
-import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { useAuth0 } from '@auth0/auth0-react';
+/**
+ * Authentication Page
+ * 
+ * Provides login and registration forms.
+ * Redirects to home page if already authenticated.
+ */
+
+import { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
-import { CheckCircle, ChevronRight, LogOut, RefreshCw } from 'lucide-react';
+import { z } from 'zod';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/useAuth';
+import { Loader2 } from 'lucide-react';
 
-const AuthPage = () => {
-  // Use both our wrapped auth context and the direct Auth0 hook for maximum reliability
-  const { login, register, user, logout, isAuthenticated } = useAuth();
-  const { loginWithRedirect } = useAuth0();
-  const [, setLocation] = useLocation();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
-  
-  // Debug logs to help diagnose Auth0 issues
-  useEffect(() => {
-    console.log('Auth Page - Direct Auth0 Login Redirect URI:', `${window.location.origin}/auth/callback`);
-    console.log('Auth Page - Current location:', window.location.href);
-  }, []);
-  
-  // Redirect if already logged in, but add a delay to give the logout time to process
-  React.useEffect(() => {
-    // If there's a user and we're not in the process of logging out, redirect
-    if (user && !isLoggingOut) {
-      const urlParams = new URLSearchParams(window.location.search);
-      const redirectPath = urlParams.get('redirect') || '/dashboard';
-      // Add a small delay to prevent immediate redirect if the user just clicked logout
-      const timer = setTimeout(() => {
-        setLocation(redirectPath);
-      }, 500);
-      return () => clearTimeout(timer);
-    }
-  }, [user, setLocation, isLoggingOut]);
-  
-  const handleLogout = () => {
-    setIsLoggingOut(true);
-    logout();
-    // Reset the flag after a delay - the Auth0 logout should have completed by then
-    setTimeout(() => setIsLoggingOut(false), 2000);
-  };
+// Login form schema
+const loginSchema = z.object({
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(1, 'Password is required'),
+});
 
-  // Direct Auth0 login - using Auth0's own function to ensure redirect works properly
-  const handleDirectAuth0Login = () => {
-    // Use the Auth0 loginWithRedirect directly to avoid any middleware issues
-    loginWithRedirect({
-      authorizationParams: {
-        redirect_uri: `${window.location.origin}/auth/callback`,
+// Registration form schema
+const registerSchema = z.object({
+  username: z.string().min(3, 'Username must be at least 3 characters').max(50),
+  email: z.string().email('Invalid email address'),
+  password: z.string().min(8, 'Password must be at least 8 characters'),
+  confirmPassword: z.string().min(1, 'Please confirm your password'),
+  firstName: z.string().optional(),
+  lastName: z.string().optional(),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: 'Passwords do not match',
+  path: ['confirmPassword'],
+});
+
+// Form types
+type LoginFormValues = z.infer<typeof loginSchema>;
+type RegisterFormValues = z.infer<typeof registerSchema>;
+
+export default function AuthPage() {
+  const [activeTab, setActiveTab] = useState<string>('login');
+  const [location, navigate] = useLocation();
+  const { toast } = useToast();
+  const { login, register, isAuthenticated, loading } = useAuth();
+
+  // Login form
+  const loginForm = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: '',
+      password: '',
+    },
+  });
+
+  // Registration form
+  const registerForm = useForm<RegisterFormValues>({
+    resolver: zodResolver(registerSchema),
+    defaultValues: {
+      username: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
+      firstName: '',
+      lastName: '',
+    },
+  });
+
+  // Handle login submission
+  const onLoginSubmit = async (values: LoginFormValues) => {
+    try {
+      const result = await login({
+        email: values.email,
+        password: values.password,
+      });
+
+      if (result) {
+        navigate('/dashboard');
       }
-    });
+    } catch (error) {
+      console.error('Login error:', error);
+    }
   };
-  
-  // Show a simpler debug version if user is logged in
-  if (user && !isLoggingOut) {
+
+  // Handle registration submission
+  const onRegisterSubmit = async (values: RegisterFormValues) => {
+    try {
+      const { confirmPassword, ...registerData } = values;
+      
+      const result = await register(registerData);
+
+      if (result) {
+        navigate('/dashboard');
+      }
+    } catch (error) {
+      console.error('Registration error:', error);
+    }
+  };
+
+  // If already authenticated, redirect to dashboard
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/dashboard');
+    }
+  }, [isAuthenticated, navigate]);
+
+  // If already authenticated, show loading while redirecting
+  if (isAuthenticated) {
     return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white flex flex-col items-center justify-center p-4">
-        <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-xl p-8 w-full max-w-md shadow-xl">
-          <h2 className="text-2xl font-bold text-[#1982FC] mb-4 text-center">Currently Logged In</h2>
-          <p className="text-gray-200 mb-8 text-center">You are currently logged in as {user.username || user.email}</p>
-          
-          <div className="flex flex-col gap-4">
-            <Button 
-              onClick={handleLogout}
-              variant="destructive" 
-              className="w-full font-bold py-6 h-16 rounded-lg transition-all duration-200"
-            >
-              Log Out
-              <LogOut className="ml-2 h-5 w-5" />
-            </Button>
-            
-            <Button 
-              onClick={() => setLocation('/dashboard')} 
-              className="w-full bg-[#1982FC] hover:bg-[#1982FC]/80 text-white font-bold py-6 h-16 rounded-lg transition-all duration-200"
-            >
-              Go to Dashboard
-              <ChevronRight className="ml-2 h-5 w-5" />
-            </Button>
-          </div>
-        </div>
+      <div className="flex items-center justify-center h-screen">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+        <span className="ml-2">Redirecting to dashboard...</span>
       </div>
     );
   }
-  
-  // Show a loading state while logout is in progress
-  if (isLoggingOut) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white flex flex-col items-center justify-center p-4">
-        <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-xl p-8 w-full max-w-md shadow-xl text-center">
-          <RefreshCw className="h-12 w-12 animate-spin text-[#1982FC] mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-white mb-4">Logging Out...</h2>
-          <p className="text-gray-200">Please wait while we complete the logout process</p>
-        </div>
-      </div>
-    );
-  }
-  
-  // Regular auth page for non-logged in users
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
-      <div className="container mx-auto px-4 py-16 max-w-6xl">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <h1 className="text-5xl md:text-6xl font-bold text-[#1982FC] mb-4">PADDOCK<span className="text-[#08c519]">20</span></h1>
-          <p className="text-xl text-gray-200 italic max-w-3xl mx-auto">
-            The bespoke automotive lifestyle platform with F1-precision intelligence that transforms everyday car care into a curated experience
-          </p>
-        </div>
-        
-        {/* Main content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-          {/* Left column: Features */}
-          <div className="space-y-10">
-            <div className="border-l-4 border-[#1982FC] pl-6 py-2">
-              <h3 className="text-2xl font-semibold mb-2 text-white">Track maintenance, mods, and detailing with precision</h3>
-              <p className="text-gray-300">A comprehensive system for all maintenance, modifications, and detailing records with F1-inspired interfaces</p>
-            </div>
-            
-            <div className="border-l-4 border-[#08c519] pl-6 py-2">
-              <h3 className="text-2xl font-semibold mb-2 text-white">Discover perfect drives with Weather Paddock intelligence</h3>
-              <p className="text-gray-300">Advanced weather telemetry and route planning designed specifically for the automotive enthusiast</p>
-            </div>
-            
-            <div className="border-l-4 border-[#1982FC] pl-6 py-2">
-              <h3 className="text-2xl font-semibold mb-2 text-white">Level up with premium features for the complete enthusiast</h3>
-              <p className="text-gray-300">Competitive goal tracking, performance analytics, and exclusive automotive experiences</p>
-            </div>
-            
-            <div className="bg-[#1982FC]/10 border border-[#1982FC]/40 rounded-lg p-8 mt-10">
-              <h4 className="text-2xl font-bold text-[#1982FC] mb-3 text-center">BETA ACCESS</h4>
-              <p className="text-lg text-gray-200 text-center mb-4">
-                Join the movement. Full access to our complete ecosystem during the exclusive beta phase
-              </p>
-            </div>
+    <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
+      <div className="container grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl">
+        {/* Left column: Auth forms */}
+        <div className="flex flex-col justify-center">
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold tracking-tight">Welcome to PADDOCK20</h1>
+            <p className="text-muted-foreground mt-2">
+              Sign in to your account or create a new one to get started.
+            </p>
           </div>
-          
-          {/* Right column: Auth card */}
-          <div className="flex items-center justify-center">
-            <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-xl p-8 w-full max-w-md shadow-xl">
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-white">Thanks for visiting!</h2>
-              </div>
-              
-              <div className="space-y-5 mb-8">
-                <div className="flex items-start">
-                  <CheckCircle className="h-6 w-6 text-[#08c519] mr-3 flex-shrink-0 mt-1" />
-                  <p className="text-gray-200 text-lg">Advanced vehicle management dashboard</p>
-                </div>
-                <div className="flex items-start">
-                  <CheckCircle className="h-6 w-6 text-[#08c519] mr-3 flex-shrink-0 mt-1" />
-                  <p className="text-gray-200 text-lg">Intelligent weather-based drive planning</p>
-                </div>
-                <div className="flex items-start">
-                  <CheckCircle className="h-6 w-6 text-[#08c519] mr-3 flex-shrink-0 mt-1" />
-                  <p className="text-gray-200 text-lg">Exclusive automotive community features</p>
-                </div>
-              </div>
-              
-              {/* Primary button - Try direct Auth0 login first */}
-              <Button 
-                onClick={handleDirectAuth0Login} 
-                className="w-full bg-[#08c519] hover:bg-[#08c519]/80 text-white font-bold text-xl py-6 h-16 rounded-lg transition-all duration-200 shadow-lg shadow-[#08c519]/20"
-              >
-                Join the Grid
-                <ChevronRight className="ml-2 h-6 w-6" />
-              </Button>
-              
-              {/* Fallback button that uses our wrapper method - just in case */}
-              <div className="mt-4">
-                <Button 
-                  onClick={() => register()} 
-                  variant="outline"
-                  className="w-full border-gray-700 text-gray-300 hover:text-white hover:bg-gray-800"
-                >
-                  Alternative Sign-In
-                </Button>
-              </div>
-              
-              <p className="text-sm text-center text-gray-400 mt-4">
-                By signing up, you agree to our <a href="/terms-of-service" className="text-[#1982FC] hover:underline">Terms of Service</a> and <a href="/privacy-policy" className="text-[#1982FC] hover:underline">Privacy Policy</a>
+
+          <Tabs defaultValue="login" value={activeTab} onValueChange={setActiveTab}>
+            <TabsList className="grid grid-cols-2 w-full mb-6">
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="register">Register</TabsTrigger>
+            </TabsList>
+
+            {/* Login Form */}
+            <TabsContent value="login">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Login</CardTitle>
+                  <CardDescription>
+                    Enter your credentials to access your account
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Form {...loginForm}>
+                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                      <FormField
+                        control={loginForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input placeholder="email@example.com" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={loginForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Password</FormLabel>
+                            <FormControl>
+                              <Input type="password" placeholder="••••••••" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button 
+                        type="submit" 
+                        className="w-full" 
+                        disabled={loginForm.formState.isSubmitting}
+                      >
+                        {loginForm.formState.isSubmitting ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Logging in...
+                          </>
+                        ) : (
+                          'Login'
+                        )}
+                      </Button>
+                    </form>
+                  </Form>
+                </CardContent>
+                <CardFooter className="flex flex-col items-start">
+                  <div className="text-sm text-muted-foreground">
+                    <span>Don't have an account? </span>
+                    <button
+                      type="button"
+                      className="text-primary hover:underline"
+                      onClick={() => setActiveTab('register')}
+                    >
+                      Register here
+                    </button>
+                  </div>
+                </CardFooter>
+              </Card>
+            </TabsContent>
+
+            {/* Registration Form */}
+            <TabsContent value="register">
+              <Card>
+                <CardHeader>
+                  <CardTitle>Create an Account</CardTitle>
+                  <CardDescription>
+                    Enter your details to create a new account
+                  </CardDescription>
+                </CardHeader>
+                <CardContent>
+                  <Form {...registerForm}>
+                    <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <FormField
+                          control={registerForm.control}
+                          name="firstName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>First Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="John" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                        <FormField
+                          control={registerForm.control}
+                          name="lastName"
+                          render={({ field }) => (
+                            <FormItem>
+                              <FormLabel>Last Name</FormLabel>
+                              <FormControl>
+                                <Input placeholder="Doe" {...field} />
+                              </FormControl>
+                              <FormMessage />
+                            </FormItem>
+                          )}
+                        />
+                      </div>
+                      <FormField
+                        control={registerForm.control}
+                        name="username"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Username</FormLabel>
+                            <FormControl>
+                              <Input placeholder="johndoe" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={registerForm.control}
+                        name="email"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Email</FormLabel>
+                            <FormControl>
+                              <Input placeholder="email@example.com" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={registerForm.control}
+                        name="password"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Password</FormLabel>
+                            <FormControl>
+                              <Input type="password" placeholder="••••••••" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <FormField
+                        control={registerForm.control}
+                        name="confirmPassword"
+                        render={({ field }) => (
+                          <FormItem>
+                            <FormLabel>Confirm Password</FormLabel>
+                            <FormControl>
+                              <Input type="password" placeholder="••••••••" {...field} />
+                            </FormControl>
+                            <FormMessage />
+                          </FormItem>
+                        )}
+                      />
+                      <Button 
+                        type="submit" 
+                        className="w-full"
+                        disabled={registerForm.formState.isSubmitting}
+                      >
+                        {registerForm.formState.isSubmitting ? (
+                          <>
+                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                            Creating account...
+                          </>
+                        ) : (
+                          'Create Account'
+                        )}
+                      </Button>
+                    </form>
+                  </Form>
+                </CardContent>
+                <CardFooter className="flex flex-col items-start">
+                  <div className="text-sm text-muted-foreground">
+                    <span>Already have an account? </span>
+                    <button
+                      type="button"
+                      className="text-primary hover:underline"
+                      onClick={() => setActiveTab('login')}
+                    >
+                      Login here
+                    </button>
+                  </div>
+                </CardFooter>
+              </Card>
+            </TabsContent>
+          </Tabs>
+        </div>
+
+        {/* Right column: Hero section */}
+        <div className="hidden md:flex flex-col justify-center">
+          <div className="space-y-4">
+            <div className="rounded-xl bg-gradient-to-br from-primary/90 to-primary/70 p-8 text-white shadow-lg">
+              <h2 className="text-3xl font-bold mb-4">Unlock Formula 1-Grade Technology</h2>
+              <p className="text-lg mb-6">
+                PADDOCK20 brings professional-grade automotive telemetry and insights to everyday drivers.
+              </p>
+              <ul className="space-y-2 mb-6">
+                <li className="flex items-center">
+                  <span className="mr-2">✓</span>
+                  <span>Advanced weather intelligence for driving</span>
+                </li>
+                <li className="flex items-center">
+                  <span className="mr-2">✓</span>
+                  <span>Detailed vehicle management and statistics</span>
+                </li>
+                <li className="flex items-center">
+                  <span className="mr-2">✓</span>
+                  <span>Smart drive planning and route optimization</span>
+                </li>
+                <li className="flex items-center">
+                  <span className="mr-2">✓</span>
+                  <span>Comprehensive automotive lifestyle platform</span>
+                </li>
+              </ul>
+              <p className="text-sm opacity-90 italic">
+                Join thousands of drivers who have elevated their automotive experience with PADDOCK20.
               </p>
             </div>
           </div>
@@ -183,6 +367,4 @@ const AuthPage = () => {
       </div>
     </div>
   );
-};
-
-export default AuthPage;
+}
