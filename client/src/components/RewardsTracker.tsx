@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation } from 'wouter';
 import { useRewardsTracker } from '../utils/rewardsTracker';
 
 /**
@@ -10,7 +10,7 @@ import { useRewardsTracker } from '../utils/rewardsTracker';
 const RewardsTracker: React.FC = () => {
   // Initialize rewards tracker - need to declare outside try/catch for hook rules
   const rewards = useRewardsTracker();
-  const location = useLocation();
+  const [location] = useLocation();
   
   // Track page visits for rewards
   useEffect(() => {
