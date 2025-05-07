@@ -226,8 +226,8 @@ export class DatabaseStorage implements IStorage {
       await db
         .update(users)
         .set({
-          // Use twoFactorEnabled (database column is two_factor_enabled)
-          twoFactorEnabled: true,
+          // Use isTwoFactorEnabled to match the schema
+          isTwoFactorEnabled: true,
           twoFactorSecret: secret,
           twoFactorBackupCodes: backupCodes,
           updatedAt: new Date()
@@ -246,8 +246,8 @@ export class DatabaseStorage implements IStorage {
       await db
         .update(users)
         .set({
-          // Use twoFactorEnabled (database column is two_factor_enabled)
-          twoFactorEnabled: false,
+          // Use isTwoFactorEnabled to match the schema
+          isTwoFactorEnabled: false,
           twoFactorSecret: null,
           twoFactorBackupCodes: null,
           updatedAt: new Date()
