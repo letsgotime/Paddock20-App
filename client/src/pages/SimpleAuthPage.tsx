@@ -43,6 +43,9 @@ type SignupFormValues = z.infer<typeof signupSchema>;
 export default function SimpleAuthPage() {
   const [activeTab, setActiveTab] = useState<string>('login');
   const [loading, setLoading] = useState(false);
+  const [loginStatus, setLoginStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [signupStatus, setSignupStatus] = useState<'idle' | 'loading' | 'success' | 'error'>('idle');
+  const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [, navigate] = useLocation();
   const { toast } = useToast();
   
@@ -70,6 +73,9 @@ export default function SimpleAuthPage() {
   // Handle login form submission
   const onLoginSubmit = async (values: LoginFormValues) => {
     setLoading(true);
+    setLoginStatus('loading');
+    setErrorMessage(null);
+    
     try {
       const response = await fetch('/api/auth/login', {
         method: 'POST',
@@ -85,12 +91,19 @@ export default function SimpleAuthPage() {
       const data = await response.json();
       
       if (!response.ok) {
+        // Update error state
+        setLoginStatus('error');
+        setErrorMessage(data.message || "Failed to log in with the provided credentials");
+        
         toast({
           title: "Login Failed",
           description: data.message || "Failed to log in with the provided credentials",
           variant: "destructive",
         });
       } else {
+        // Update success state
+        setLoginStatus('success');
+        
         toast({
           title: "Login Successful",
           description: "Welcome to Paddock20!",
@@ -101,7 +114,6 @@ export default function SimpleAuthPage() {
           saveUserProfileToLocalStorage(data.user);
           
           // Create default user profile for the Warehouse if the user is logging in for the first time
-          // Create default profile in the warehouse if needed
           // Set timestamp for all operations
           const currentTime = new Date().toISOString();
           
@@ -150,19 +162,27 @@ export default function SimpleAuthPage() {
           // Determine next path based on user's progress in the auth flow
           const nextPath = getNextAuthFlowPath(String(data.user.id));
           
+          // Show success message before redirect
+          // We'll add a visual feedback component to show this state
+          
           // Redirect to the appropriate page with a slight delay
           setTimeout(() => {
             navigate(nextPath);
-          }, 1000);
+          }, 1500); // Slightly longer delay to show success state
         } else {
-          // If no user data, go to home page
+          // If no user data, go to home page after a short delay
           setTimeout(() => {
             navigate('/');
-          }, 1000);
+          }, 1500);
         }
       }
     } catch (error: any) {
       console.error("Login error:", error);
+      
+      // Update error state
+      setLoginStatus('error');
+      setErrorMessage(error.message || "An error occurred while trying to log in");
+      
       toast({
         title: "Login Failed",
         description: error.message || "An error occurred while trying to log in.",
@@ -176,6 +196,9 @@ export default function SimpleAuthPage() {
   // Handle signup form submission
   const onSignupSubmit = async (values: SignupFormValues) => {
     setLoading(true);
+    setSignupStatus('loading');
+    setErrorMessage(null);
+    
     try {
       const response = await fetch('/api/auth/register', {
         method: 'POST',
@@ -193,12 +216,19 @@ export default function SimpleAuthPage() {
       const data = await response.json();
       
       if (!response.ok) {
+        // Update error state
+        setSignupStatus('error');
+        setErrorMessage(data.message || "Failed to create an account with the provided details");
+        
         toast({
           title: "Registration Failed",
           description: data.message || "Failed to create an account with the provided details",
           variant: "destructive",
         });
       } else {
+        // Update success state
+        setSignupStatus('success');
+        
         toast({
           title: "Registration Successful", 
           description: "Your account has been created successfully!",
@@ -212,19 +242,30 @@ export default function SimpleAuthPage() {
           // Mark beta agreement as pending (will redirect to beta agreement)
           // Note: We don't modify the beta modal functionality
           
+          // Clear form fields
+          signupForm.reset();
+          
           // Short delay to allow the toast to be visible
           setTimeout(() => {
             // Switch to login tab - we need the user to login after registering 
             // to establish the authenticated session properly
             setActiveTab('login');
             
+            // Reset signup status after the tab switch for the next time
+            setSignupStatus('idle');
+            
             // You could alternatively automatically log them in and redirect to beta agreement
             // but that depends on how backend sessions are established
-          }, 1500);
+          }, 2000);
         }
       }
     } catch (error: any) {
       console.error("Signup error:", error);
+      
+      // Update error state
+      setSignupStatus('error');
+      setErrorMessage(error.message || "An error occurred while trying to create an account");
+      
       toast({
         title: "Registration Failed",
         description: error.message || "An error occurred while trying to create an account.",

@@ -171,16 +171,27 @@ export default function OnboardingModal({ isOpen = true, onClose }: OnboardingMo
       }
       
       if (data.theme) {
-        // Update UI preferences
+        // Update UI preferences with standard fields only
         userProfileWarehouse.updatePreferences({
           theme: data.theme === 'carbon' ? 'dark' : 'light',
           colorAccent: data.theme === 'neon' ? '#ff00ff' : 
                       data.theme === 'track' ? '#ff3300' : '#1982FC',
-          notifications: true, // Default to enabled
-          customFields: {
-            drivingInterests: data.goals?.interests || []
-          }
+          notifications: true // Default to enabled
         });
+        
+        // Store driving interests in user preferences under custom key
+        if (data.goals?.interests && data.goals.interests.length > 0) {
+          // Get current preferences
+          const profile = userProfileWarehouse.getProfile();
+          const currentPrefs = profile?.preferences || {};
+          
+          // Update with interests
+          userProfileWarehouse.updatePreferences({
+            ...currentPrefs,
+            // Store under interests key which is supported
+            interests: data.goals.interests
+          });
+        }
       }
       
       if (data.region) {
@@ -203,15 +214,56 @@ export default function OnboardingModal({ isOpen = true, onClose }: OnboardingMo
       
       // Also update server if user is logged in
       if (user?.id) {
-        await fetch(`/api/user-profile/${user.id}/onboarding`, {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            step: step,
-            data: data,
-            completed: step === 'complete'
-          }),
-        });
+        try {
+          const response = await fetch(`/api/user-profile/${user.id}/onboarding`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              step: step,
+              data: data,
+              completed: step === 'complete'
+            }),
+          });
+          
+          const result = await response.json();
+          
+          if (!response.ok) {
+            console.error('Onboarding update failed:', result.message);
+            throw new Error(result.message || 'Failed to update onboarding status on server');
+          }
+          
+          console.log('Onboarding update success:', result.message);
+          
+          // If this is the final step, also update user preferences on server
+          if (step === 'complete') {
+            // Send a comprehensive profile update to the server
+            const profile = userProfileWarehouse.getProfile();
+            
+            if (profile) {
+              const profileUpdateResponse = await fetch(`/api/user-profile/${user.id}`, {
+                method: 'PATCH',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  onboardingCompleted: true,
+                  userPreferences: profile.preferences,
+                  vehicles: profile.vehicles,
+                  interests: profile.goals.map(goal => goal.category)
+                }),
+              });
+              
+              const profileUpdateResult = await profileUpdateResponse.json();
+              
+              if (!profileUpdateResponse.ok) {
+                console.error('Profile update failed:', profileUpdateResult.message);
+              } else {
+                console.log('Profile update success:', profileUpdateResult.message);
+              }
+            }
+          }
+        } catch (error) {
+          console.error('Error communicating with server during onboarding:', error);
+          // Continue with local updates even if server fails
+        }
       }
     } catch (error) {
       console.error('Error updating profile:', error);
