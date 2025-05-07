@@ -8,6 +8,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '@/components/ui/button';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
+import { cn } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
@@ -154,13 +155,13 @@ export default function NativeAuthPage() {
               <TabsList className="grid w-full grid-cols-2 mb-6 bg-[#797979]">
                 <TabsTrigger 
                   value="login" 
-                  className="text-[#1982FC] data-[state=active]:bg-[#08c519] data-[state=active]:text-[#1982FC]"
+                  className="text-white data-[state=active]:bg-[#08c519] data-[state=active]:text-white"
                 >
                   Log In
                 </TabsTrigger>
                 <TabsTrigger 
                   value="signup" 
-                  className="text-[#1982FC] data-[state=active]:bg-[#08c519] data-[state=active]:text-[#1982FC]"
+                  className="text-white data-[state=active]:bg-[#08c519] data-[state=active]:text-white"
                 >
                   Join the Grid
                 </TabsTrigger>
@@ -174,9 +175,13 @@ export default function NativeAuthPage() {
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Email</FormLabel>
+                          <FormLabel className="text-[#1982FC]">Email</FormLabel>
                           <FormControl>
-                            <Input placeholder="you@example.com" {...field} />
+                            <Input 
+                              placeholder="you@example.com" 
+                              className={cn("bg-gray-700 text-white border-gray-600 focus:border-[#1982FC]")} 
+                              {...field} 
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -188,9 +193,14 @@ export default function NativeAuthPage() {
                       name="password"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Password</FormLabel>
+                          <FormLabel className="text-[#1982FC]">Password</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="••••••••" {...field} />
+                            <Input 
+                              type="password" 
+                              placeholder="••••••••" 
+                              className={cn("bg-gray-700 text-white border-gray-600 focus:border-[#1982FC]")} 
+                              {...field} 
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -223,9 +233,13 @@ export default function NativeAuthPage() {
                       name="username"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Username</FormLabel>
+                          <FormLabel className="text-[#1982FC]">Username</FormLabel>
                           <FormControl>
-                            <Input placeholder="username" {...field} />
+                            <Input 
+                              placeholder="username" 
+                              className={cn("bg-gray-700 text-white border-gray-600 focus:border-[#1982FC]")} 
+                              {...field} 
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -237,9 +251,13 @@ export default function NativeAuthPage() {
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Email</FormLabel>
+                          <FormLabel className="text-[#1982FC]">Email</FormLabel>
                           <FormControl>
-                            <Input placeholder="you@example.com" {...field} />
+                            <Input 
+                              placeholder="you@example.com" 
+                              className={cn("bg-gray-700 text-white border-gray-600 focus:border-[#1982FC]")} 
+                              {...field} 
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
@@ -251,9 +269,14 @@ export default function NativeAuthPage() {
                       name="password"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Password</FormLabel>
+                          <FormLabel className="text-[#1982FC]">Password</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="••••••••" {...field} />
+                            <Input 
+                              type="password" 
+                              placeholder="••••••••" 
+                              className={cn("bg-gray-700 text-white border-gray-600 focus:border-[#1982FC]")} 
+                              {...field} 
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
