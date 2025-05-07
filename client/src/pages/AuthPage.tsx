@@ -286,8 +286,8 @@ export default function AuthPage() {
                 <p className="text-gray-300">Record and analyze your driving experiences</p>
               </div>
               <div className="bg-black/50 p-4 rounded border border-carolina-blue">
-                <h3 className="text-carolina-blue font-bold mb-2">Manifestation Station</h3>
-                <p className="text-gray-300">Transform goals into achievements with our proprietary system</p>
+                <h3 className="text-carolina-blue font-bold mb-2">Podium Pursuit</h3>
+                <p className="text-gray-300">Your performance journey through achievements, rewards, and milestones</p>
               </div>
             </div>
           </div>
