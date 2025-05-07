@@ -2,9 +2,9 @@
  * Authentication Flow Utilities
  * 
  * This module handles user flow tracking and navigation between authentication steps:
- * - Registration > Beta Agreement > Onboarding > Dashboard (first-time)
- * - Login > Dashboard (returning user)
- * - Logout > Auth page (consistent flow)
+ * - Registration > Beta Agreement > Onboarding > The Paddock (first-time)
+ * - Login > The Paddock (returning user)
+ * - Logout > Enhanced Logout Page > Auth page (consistent flow)
  * 
  * Key features:
  * - Store and retrieve user profile in localStorage during registration flow
@@ -96,8 +96,8 @@ export function clearUserFlowData(userId: string): void {
 
 /**
  * Get the appropriate next path for authenticated users based on their progress
- * Registration flow: Registration > Beta Agreement > Onboarding > Dashboard
- * Login flow: Login > Dashboard (if beta & onboarding done)
+ * Registration flow: Registration > Beta Agreement > Onboarding > The Paddock
+ * Login flow: Login > The Paddock (if beta & onboarding done)
  */
 export function getNextAuthFlowPath(userId: string): string {
   // Check if user has completed the beta agreement
@@ -110,14 +110,14 @@ export function getNextAuthFlowPath(userId: string): string {
     return '/onboarding';
   }
   
-  // If all steps are completed, return to dashboard
-  return '/';
+  // If all steps are completed, return to The Paddock
+  return '/the-paddock';
 }
 
 /**
  * Helper function to determine if a path is an auth-related path
  */
 export function isAuthPath(path: string): boolean {
-  const authPaths = ['/auth', '/beta-agreement', '/onboarding', '/logout'];
+  const authPaths = ['/auth', '/beta-agreement', '/onboarding', '/logout', '/enhanced-logout'];
   return authPaths.includes(path);
 }

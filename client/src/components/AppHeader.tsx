@@ -24,14 +24,11 @@ export default function AppHeader({ className }: { className?: string }) {
           {/* Main navigation - only show on larger screens when authenticated and not on auth page */}
           {showNavigation && (
             <nav className="hidden md:flex items-center gap-6">
-              <Link href="/">
-                <span className="text-white/80 hover:text-white transition-colors">Dashboard</span>
+              <Link href="/the-paddock">
+                <span className="text-white/80 hover:text-white transition-colors">The Paddock</span>
               </Link>
               <Link href="/weather-paddock">
                 <span className="text-white/80 hover:text-white transition-colors">Weather Paddock</span>
-              </Link>
-              <Link href="/garage-vault">
-                <span className="text-white/80 hover:text-white transition-colors">Garage Vault</span>
               </Link>
               <Link href="/drive-journal">
                 <span className="text-white/80 hover:text-white transition-colors">Drive Journal</span>
