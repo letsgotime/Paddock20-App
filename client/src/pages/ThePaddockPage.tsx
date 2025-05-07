@@ -1,6 +1,7 @@
 import React from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { format } from 'date-fns';
+import { useLocation } from 'wouter';
 
 // UI Components
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -20,6 +21,9 @@ import {
 const ThePaddockPage: React.FC = () => {
   // Get user data
   const { user } = useAuth();
+  
+  // Get navigation function from wouter
+  const [, navigate] = useLocation();
   
   // Format date in F1-style
   const formattedDate = format(new Date(), 'MMMM d, yyyy');
@@ -100,7 +104,7 @@ const ThePaddockPage: React.FC = () => {
                 <div className="mt-4">
                   <Button 
                     className="bg-[#1982FC] hover:bg-[#1982FC]/90"
-                    onClick={() => window.location.href = '/add-vehicle'}
+                    onClick={() => navigate('/add-vehicle')}
                   >
                     <Car className="mr-2 h-4 w-4" /> Add Vehicle
                   </Button>
@@ -124,7 +128,7 @@ const ThePaddockPage: React.FC = () => {
                     <p className="text-gray-400 mb-4">Get started by adding your first vehicle</p>
                     <Button 
                       className="bg-[#1982FC] hover:bg-[#1982FC]/90"
-                      onClick={() => window.location.href = '/add-vehicle'}
+                      onClick={() => navigate('/add-vehicle')}
                     >
                       <Car className="mr-2 h-4 w-4" /> Add Vehicle
                     </Button>
@@ -183,7 +187,7 @@ const ThePaddockPage: React.FC = () => {
                     <Button 
                       variant="outline" 
                       className="mt-4"
-                      onClick={() => window.location.href = '/settings'}
+                      onClick={() => navigate('/settings')}
                     >
                       Edit Profile
                     </Button>
