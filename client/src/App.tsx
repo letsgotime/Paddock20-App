@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Route, useLocation } from 'wouter';
-import { NativeAuthProvider, useNativeAuth } from '@/hooks/useNativeAuth';
 import { AuthProvider } from '@/auth/AuthProvider';
+import { useAuth } from '@/auth/useAuth';
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -120,42 +120,28 @@ function App() {
     }
   }, []);
 
-  // Special case for auth page to provide auth context
-  if (location === '/auth') {
-    return (
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <PageTitleManager />
-          <NativeAuthProvider>
-            <AuthProvider>
-              <>
-                <AppHeader />
-                <NativeAuthPage />
-              </>
-            </AuthProvider>
-          </NativeAuthProvider>
-        </TooltipProvider>
-      </QueryClientProvider>
-    );
-  }
-
-  // Default App setup with query client and other global providers
+  // Both auth page and regular app can use the same auth provider
   return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <PageTitleManager />
         {/* Custom scroll-to-top behavior */}
-        <ScrollToTopWrapper />
+        {location !== '/auth' && <ScrollToTopWrapper />}
         
-        {/* Wrap with native auth provider first, then the compatibility AuthProvider */}
-        <NativeAuthProvider>
-          <AuthProvider>
+        {/* Single AuthProvider for the entire app */}
+        <AuthProvider>
+          {location === '/auth' ? (
+            <>
+              <AppHeader />
+              <NativeAuthPage />
+            </>
+          ) : (
             <AppContent 
               hasCompletedOnboarding={hasCompletedOnboarding}
               setHasCompletedOnboarding={setHasCompletedOnboarding}
             />
-          </AuthProvider>
-        </NativeAuthProvider>
+          )}
+        </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
@@ -175,8 +161,8 @@ function AppContent({
   // Get location and navigate function from wouter
   const [location, navigate] = useLocation();
   
-  // Use the native auth hook directly in AppContent
-  const { user, loading, isAuthenticated } = useNativeAuth();
+  // Use the consolidated auth hook in AppContent
+  const { user, loading, isAuthenticated } = useAuth();
   
   // Redirect user to onboarding if authenticated and hasn't completed onboarding
   useEffect(() => {
