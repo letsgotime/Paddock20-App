@@ -1,8 +1,7 @@
 import { Router } from 'express';
 import { db } from '../db';
 import { users, authLogs } from '@shared/schema';
-import { eq, desc } from 'drizzle-orm';
-import { z } from 'zod';
+import { eq, desc, sql, and, or, like } from 'drizzle-orm';
 
 const router = Router();
 
@@ -14,27 +13,96 @@ router.use((req, res, next) => {
   next();
 });
 
-// GET all users
+// GET all users with pagination and search
 router.get('/users', async (req, res) => {
   try {
-    const allUsers = await db.select().from(users);
-    // Remove sensitive data
-    const safeUsers = allUsers.map(user => {
-      const { password, ...safeUser } = user;
-      return safeUser;
+    const { 
+      limit = '10', 
+      page = '1', 
+      search = '',
+      role,
+      sortBy = 'createdAt',
+      sortOrder = 'desc' 
+    } = req.query;
+    
+    // Parse query params
+    const limitNum = parseInt(limit as string, 10);
+    const pageNum = parseInt(page as string, 10);
+    const offset = (pageNum - 1) * limitNum;
+    
+    // Build base query
+    let query = db.select({
+      id: users.id,
+      username: users.username,
+      email: users.email,
+      role: users.role,
+      isEmailVerified: users.isEmailVerified,
+      createdAt: users.createdAt,
+      updatedAt: users.updatedAt,
+      firstName: users.firstName,
+      lastName: users.lastName,
+      profileImage: users.profileImage
+    })
+    .from(users);
+    
+    // Add search filter if provided
+    if (search) {
+      query = query.where(
+        or(
+          like(users.username, `%${search}%`),
+          like(users.email, `%${search}%`),
+          like(users.firstName, `%${search}%`),
+          like(users.lastName, `%${search}%`)
+        )
+      );
+    }
+    
+    // Add role filter if provided
+    if (role) {
+      query = query.where(eq(users.role, role as string));
+    }
+    
+    // Add sorting
+    if (sortBy === 'username') {
+      query = query.orderBy(sortOrder === 'asc' ? users.username : desc(users.username));
+    } else if (sortBy === 'email') {
+      query = query.orderBy(sortOrder === 'asc' ? users.email : desc(users.email));
+    } else if (sortBy === 'role') {
+      query = query.orderBy(sortOrder === 'asc' ? users.role : desc(users.role));
+    } else {
+      // Default to created date
+      query = query.orderBy(sortOrder === 'asc' ? users.createdAt : desc(users.createdAt));
+    }
+    
+    // Add pagination
+    query = query.limit(limitNum).offset(offset);
+    
+    const usersList = await query;
+    
+    // Get total count for pagination
+    const countResult = await db.select({ count: sql`count(*)` }).from(users);
+    const totalCount = Number(countResult[0]?.count) || 0;
+    
+    res.status(200).json({
+      success: true,
+      users: usersList,
+      pagination: {
+        total: totalCount,
+        page: pageNum,
+        limit: limitNum,
+        pages: Math.ceil(totalCount / limitNum)
+      }
     });
-    res.status(200).json({ success: true, users: safeUsers });
   } catch (err) {
     console.error('Failed to fetch users:', err);
     res.status(500).json({ success: false, message: 'Failed to fetch users' });
   }
 });
 
-// GET a specific user
-router.get('/user/:id', async (req, res) => {
+// GET a single user by ID
+router.get('/users/:id', async (req, res) => {
   try {
-    const { id } = req.params;
-    const userId = parseInt(id, 10);
+    const userId = parseInt(req.params.id, 10);
     
     if (isNaN(userId)) {
       return res.status(400).json({ success: false, message: 'Invalid user ID' });
@@ -46,174 +114,181 @@ router.get('/user/:id', async (req, res) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
     
-    // Remove sensitive data
-    const { password, ...safeUser } = user;
-    
-    return res.status(200).json({ success: true, user: safeUser });
+    res.status(200).json({ success: true, user });
   } catch (err) {
-    console.error(`Failed to fetch user ${req.params.id}:`, err);
+    console.error('Failed to fetch user:', err);
     res.status(500).json({ success: false, message: 'Failed to fetch user' });
   }
 });
 
-// PATCH update a user's role
-const roleSchema = z.object({
-  role: z.enum(['user', 'admin', 'editor'])
-});
-
+// PATCH update user role
 router.patch('/users/:id/role', async (req, res) => {
   try {
-    const { id } = req.params;
-    const userId = parseInt(id, 10);
+    const userId = parseInt(req.params.id, 10);
+    const { role } = req.body;
     
     if (isNaN(userId)) {
       return res.status(400).json({ success: false, message: 'Invalid user ID' });
     }
     
-    const validation = roleSchema.safeParse(req.body);
-    if (!validation.success) {
-      return res.status(400).json({ 
+    if (role !== 'admin' && role !== 'user') {
+      return res.status(400).json({ success: false, message: 'Invalid role. Must be "admin" or "user"' });
+    }
+    
+    // Check if user exists
+    const [existingUser] = await db.select().from(users).where(eq(users.id, userId));
+    
+    if (!existingUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    // Prevent changing own role to prevent locking yourself out
+    if (req.session.user.id === userId && existingUser.role === 'admin' && role === 'user') {
+      return res.status(403).json({ 
         success: false, 
-        message: 'Invalid role value',
-        errors: validation.error.errors
+        message: 'Cannot downgrade your own admin privileges' 
       });
     }
     
-    const { role } = validation.data;
-    
-    await db.update(users)
+    // Update the user role
+    const [updatedUser] = await db
+      .update(users)
       .set({ role, updatedAt: new Date() })
-      .where(eq(users.id, userId));
+      .where(eq(users.id, userId))
+      .returning();
     
-    return res.status(200).json({ 
-      success: true, 
-      message: `User role updated to ${role}`
+    // Create an audit log entry
+    await db.insert(authLogs).values({
+      userId: req.session.user.id,
+      action: 'CHANGE_ROLE',
+      status: 'SUCCESS',
+      details: JSON.stringify({
+        targetUserId: userId,
+        oldRole: existingUser.role,
+        newRole: role
+      }),
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent') || 'unknown',
+      device: 'web',
+      createdAt: new Date()
     });
+    
+    res.status(200).json({ success: true, user: updatedUser });
   } catch (err) {
-    console.error(`Failed to update role for user ${req.params.id}:`, err);
+    console.error('Failed to update user role:', err);
     res.status(500).json({ success: false, message: 'Failed to update user role' });
   }
 });
 
-// PATCH update a user's status (active/inactive)
-const statusSchema = z.object({
-  onboarding_complete: z.boolean().optional(),
-  isActive: z.boolean().optional()
-});
-
-router.patch('/user/:id', async (req, res) => {
+// PATCH update user onboarding status
+router.patch('/users/:id/onboarding', async (req, res) => {
   try {
-    const { id } = req.params;
-    const userId = parseInt(id, 10);
+    const userId = parseInt(req.params.id, 10);
+    const { onboardingCompleted } = req.body;
     
     if (isNaN(userId)) {
       return res.status(400).json({ success: false, message: 'Invalid user ID' });
     }
     
-    const validation = statusSchema.safeParse(req.body);
-    if (!validation.success) {
+    if (typeof onboardingCompleted !== 'boolean') {
       return res.status(400).json({ 
         success: false, 
-        message: 'Invalid input',
-        errors: validation.error.errors
+        message: 'Invalid onboardingCompleted status. Must be a boolean' 
       });
     }
     
-    await db.update(users)
-      .set({ 
-        ...validation.data,
-        updatedAt: new Date() 
-      })
-      .where(eq(users.id, userId));
+    // Check if user exists
+    const [existingUser] = await db.select().from(users).where(eq(users.id, userId));
     
-    // Fetch and return the updated user
-    const [updatedUser] = await db.select().from(users).where(eq(users.id, userId));
-    const { password, ...safeUser } = updatedUser;
+    if (!existingUser) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
     
-    return res.status(200).json({ 
-      success: true, 
-      message: 'User updated successfully',
-      user: safeUser
+    // Update the user onboarding status
+    const [updatedUser] = await db
+      .update(users)
+      .set({ onboardingCompleted, updatedAt: new Date() })
+      .where(eq(users.id, userId))
+      .returning();
+    
+    // Create an audit log entry
+    await db.insert(authLogs).values({
+      userId: req.session.user.id,
+      action: 'UPDATE_ONBOARDING_STATUS',
+      status: 'SUCCESS',
+      details: JSON.stringify({
+        targetUserId: userId,
+        oldStatus: existingUser.isEmailVerified,
+        newStatus: onboardingCompleted
+      }),
+      ipAddress: req.ip,
+      userAgent: req.get('User-Agent') || 'unknown',
+      device: 'web',
+      createdAt: new Date()
     });
+    
+    res.status(200).json({ success: true, user: updatedUser });
   } catch (err) {
-    console.error(`Failed to update user ${req.params.id}:`, err);
-    res.status(500).json({ success: false, message: 'Failed to update user' });
+    console.error('Failed to update user onboarding status:', err);
+    res.status(500).json({ success: false, message: 'Failed to update user onboarding status' });
   }
 });
 
-// GET user statistics
-router.get('/stats', async (req, res) => {
+// GET dashboard analytics
+router.get('/analytics', async (req, res) => {
   try {
-    // Get total user count
-    const totalUsersResult = await db.select({ count: users.id }).from(users);
-    const totalUsers = totalUsersResult[0]?.count || 0;
+    // Total users count
+    const [totalUsersResult] = await db.select({ count: sql`count(*)` }).from(users);
+    const totalUsers = Number(totalUsersResult?.count) || 0;
     
-    // Get active user count (where isActive === true)
-    const activeUsersResult = await db
-      .select({ count: users.id })
-      .from(users)
-      .where(eq(users.isActive, true));
-    const activeUsers = activeUsersResult[0]?.count || 0;
-    
-    // Get new users today
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
-    const newUsersTodayResult = await db
-      .select({ count: users.id })
-      .from(users)
-      .where(users.createdAt >= today);
-    const newUsersToday = newUsersTodayResult[0]?.count || 0;
-    
-    // Get onboarding completion stats
-    const onboardedUsersResult = await db
-      .select({ count: users.id })
+    // Active users (users who have completed onboarding)
+    const [activeUsersResult] = await db
+      .select({ count: sql`count(*)` })
       .from(users)
       .where(eq(users.onboardingCompleted, true));
-    const onboardedUsers = onboardedUsersResult[0]?.count || 0;
+    const activeUsers = Number(activeUsersResult?.count) || 0;
+    
+    // Admin users count
+    const [adminUsersResult] = await db
+      .select({ count: sql`count(*)` })
+      .from(users)
+      .where(eq(users.role, 'admin'));
+    const adminUsers = Number(adminUsersResult?.count) || 0;
+    
+    // New users in last 30 days
+    const thirtyDaysAgo = new Date();
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    
+    const [newUsersResult] = await db
+      .select({ count: sql`count(*)` })
+      .from(users)
+      .where(sql`${users.createdAt} >= ${thirtyDaysAgo}`);
+    const newUsers = Number(newUsersResult?.count) || 0;
+    
+    // Get onboarding completion rate
+    const onboardingRate = totalUsers > 0 ? Math.round((activeUsers / totalUsers) * 100) : 0;
+    
+    // Recent users
+    const recentUsers = await db
+      .select()
+      .from(users)
+      .orderBy(desc(users.createdAt))
+      .limit(5);
     
     res.status(200).json({
       success: true,
-      stats: {
+      analytics: {
         totalUsers,
         activeUsers,
-        newUsersToday,
-        onboardingCompletedPercentage: totalUsers > 0 
-          ? Math.round((onboardedUsers / totalUsers) * 100) 
-          : 0,
-        premiumUsers: 0, // Placeholder - implement premium user detection as needed
-        suspendedUsers: totalUsers - activeUsers
+        adminUsers,
+        newUsers,
+        onboardingRate,
+        recentUsers
       }
     });
   } catch (err) {
-    console.error('Failed to fetch stats:', err);
-    res.status(500).json({ success: false, message: 'Failed to fetch user statistics' });
-  }
-});
-
-// GET login activity
-router.get('/activity', async (req, res) => {
-  try {
-    const activity = await db
-      .select({
-        id: authLogs.id,
-        userId: authLogs.userId,
-        action: authLogs.action,
-        status: authLogs.status,
-        ipAddress: authLogs.ipAddress,
-        userAgent: authLogs.userAgent,
-        device: authLogs.device,
-        timestamp: authLogs.createdAt,
-        username: users.username
-      })
-      .from(authLogs)
-      .leftJoin(users, eq(authLogs.userId, users.id))
-      .orderBy(desc(authLogs.createdAt))
-      .limit(100);
-    
-    res.status(200).json({ success: true, activity });
-  } catch (err) {
-    console.error('Failed to fetch login activity:', err);
-    res.status(500).json({ success: false, message: 'Failed to fetch login activity' });
+    console.error('Failed to fetch analytics:', err);
+    res.status(500).json({ success: false, message: 'Failed to fetch analytics' });
   }
 });
 
