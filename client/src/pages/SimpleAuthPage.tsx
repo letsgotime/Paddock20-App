@@ -61,6 +61,7 @@ export default function SimpleAuthPage() {
     defaultValues: {
       username: '',
       email: '',
+      phone: '',
       password: '',
       confirmPassword: '',
     },
@@ -112,6 +113,7 @@ export default function SimpleAuthPage() {
               username: data.user.username || "driver",
               displayName: data.user.username || "New Driver",
               email: data.user.email,
+              phone: data.user.phone,
               memberSince: currentTime,
               lastActive: currentTime,
               membershipLevel: 'free',
@@ -183,6 +185,7 @@ export default function SimpleAuthPage() {
         body: JSON.stringify({
           username: values.username,
           email: values.email,
+          phone: values.phone,
           password: values.password,
         }),
       });
@@ -354,6 +357,24 @@ export default function SimpleAuthPage() {
                           <FormControl>
                             <Input 
                               placeholder="you@example.com" 
+                              className={cn("bg-gray-700 text-white border-gray-600 focus:border-[#1982FC]")} 
+                              {...field} 
+                            />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={signupForm.control}
+                      name="phone"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel className="text-[#1982FC]">Phone Number (Optional)</FormLabel>
+                          <FormControl>
+                            <Input 
+                              placeholder="(555) 123-4567" 
                               className={cn("bg-gray-700 text-white border-gray-600 focus:border-[#1982FC]")} 
                               {...field} 
                             />
