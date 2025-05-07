@@ -1,28 +1,21 @@
-import { useContext } from 'react';
 import { Button } from '@/components/ui/button';
-import { AuthContext } from '../context/SupabaseAuthContext';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, LogIn, LogOut, User } from 'lucide-react';
+import { useNativeAuth } from '@/hooks/useNativeAuth';
 
 export default function AuthStatus() {
-  const auth = useContext(AuthContext);
+  const { user, loading, logout, isAuthenticated } = useNativeAuth();
   const [, navigate] = useLocation();
   const { toast } = useToast();
 
-  if (!auth) {
-    return null;
-  }
-
-  const { user, loading, logout } = auth;
-
   const handleLogout = async () => {
     try {
-      const { error } = await logout();
-      if (error) {
+      const result = await logout();
+      if (!result.success) {
         toast({
           title: "Logout Failed",
-          description: error.message,
+          description: result.error || "An error occurred during logout",
           variant: "destructive",
         });
       } else {
@@ -50,12 +43,12 @@ export default function AuthStatus() {
     );
   }
 
-  if (user) {
+  if (isAuthenticated && user) {
     return (
       <div className="flex items-center gap-4">
         <div className="hidden md:flex items-center gap-2 text-sm text-muted-foreground">
           <User className="h-4 w-4" />
-          <span>{user.email}</span>
+          <span>{user.username || user.email}</span>
         </div>
         <Button 
           variant="outline" 
