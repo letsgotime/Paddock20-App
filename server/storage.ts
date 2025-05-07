@@ -38,6 +38,12 @@ export interface IStorage {
   createAuthLog(log: InsertAuthLog): Promise<AuthLog>;
   updateAuthLog(id: number, data: Partial<AuthLog>): Promise<AuthLog>;
   
+  // Two-Factor Authentication methods
+  updateTwoFactorSecret(userId: number, secret: string): Promise<boolean>;
+  enableTwoFactor(userId: number, secret: string, backupCodes: string[]): Promise<boolean>;
+  disableTwoFactor(userId: number): Promise<boolean>;
+  updateTwoFactorBackupCodes(userId: number, backupCodes: string[]): Promise<boolean>;
+  
   // Session store for express-session
   sessionStore: session.Store;
 }
@@ -160,10 +166,10 @@ export class DatabaseStorage implements IStorage {
   // Additional methods to maintain compatibility with auth.ts
   
   async updateAuthLogForUser(userId: number, data: Partial<AuthLog>): Promise<void> {
-    // Find the most recent auth log for the user and update it
-    await db
-      .update(authLogs)
-      .set(data)
+    // Find the most recent auth log for the user
+    const [recentLog] = await db
+      .select()
+      .from(authLogs)
       .where(and(
         eq(authLogs.userId, userId),
         eq(authLogs.action, 'login'),
@@ -171,6 +177,14 @@ export class DatabaseStorage implements IStorage {
       ))
       .orderBy(desc(authLogs.createdAt))
       .limit(1);
+    
+    // Update it if found
+    if (recentLog) {
+      await db
+        .update(authLogs)
+        .set(data)
+        .where(eq(authLogs.id, recentLog.id));
+    }
   }
   
   async updateResetToken(userId: number, token: string, expiresAt: Date): Promise<void> {
@@ -187,6 +201,81 @@ export class DatabaseStorage implements IStorage {
   
   async updatePassword(userId: number, password: string): Promise<void> {
     return this.updateUserPassword(userId, password);
+  }
+
+  // Two-Factor Authentication methods
+  async updateTwoFactorSecret(userId: number, secret: string): Promise<boolean> {
+    try {
+      await db
+        .update(users)
+        .set({
+          twoFactorSecret: secret,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId));
+      
+      return true;
+    } catch (error) {
+      console.error('Error updating two-factor secret:', error);
+      return false;
+    }
+  }
+  
+  async enableTwoFactor(userId: number, secret: string, backupCodes: string[]): Promise<boolean> {
+    try {
+      await db
+        .update(users)
+        .set({
+          // Use isTwoFactorEnabled (database column is is_two_factor_enabled)
+          isTwoFactorEnabled: true,
+          twoFactorSecret: secret,
+          twoFactorBackupCodes: backupCodes,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId));
+      
+      return true;
+    } catch (error) {
+      console.error('Error enabling two-factor authentication:', error);
+      return false;
+    }
+  }
+  
+  async disableTwoFactor(userId: number): Promise<boolean> {
+    try {
+      await db
+        .update(users)
+        .set({
+          // Use isTwoFactorEnabled (database column is is_two_factor_enabled)
+          isTwoFactorEnabled: false,
+          twoFactorSecret: null,
+          twoFactorBackupCodes: null,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId));
+      
+      return true;
+    } catch (error) {
+      console.error('Error disabling two-factor authentication:', error);
+      return false;
+    }
+  }
+  
+  async updateTwoFactorBackupCodes(userId: number, backupCodes: string[]): Promise<boolean> {
+    try {
+      await db
+        .update(users)
+        .set({
+          twoFactorBackupCodes: backupCodes,
+          updatedAt: new Date()
+        })
+        .where(eq(users.id, userId));
+      
+      return true;
+    } catch (error) {
+      console.error('Error updating two-factor backup codes:', error);
+      return false;
+    }
   }
 }
 
