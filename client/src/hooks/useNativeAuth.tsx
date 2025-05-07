@@ -63,14 +63,23 @@ export const NativeAuthProvider: React.FC<{ children: ReactNode }> = ({ children
           const userData = await response.json();
           setUser(userData);
           setIsAuthenticated(true);
+          
+          // Store user profile in localStorage when authentication check succeeds
+          saveUserProfileToLocalStorage(userData);
         } else {
           setUser(null);
           setIsAuthenticated(false);
+          
+          // Clear user profile from localStorage when auth check fails
+          clearUserProfileFromLocalStorage();
         }
       } catch (err) {
         console.error('Auth check error:', err);
         setUser(null);
         setIsAuthenticated(false);
+        
+        // Clear user profile from localStorage on error
+        clearUserProfileFromLocalStorage();
       } finally {
         setLoading(false);
       }
@@ -90,6 +99,10 @@ export const NativeAuthProvider: React.FC<{ children: ReactNode }> = ({ children
         const userData = await response.json();
         setUser(userData);
         setIsAuthenticated(true);
+        
+        // Store user profile in localStorage for other components to access
+        saveUserProfileToLocalStorage(userData);
+        
         return { success: true };
       } else {
         const errorData = await response.json();
@@ -123,6 +136,10 @@ export const NativeAuthProvider: React.FC<{ children: ReactNode }> = ({ children
         const userData = await response.json();
         setUser(userData);
         setIsAuthenticated(true);
+        
+        // Store user profile in localStorage for beta agreement and onboarding components
+        saveUserProfileToLocalStorage(userData);
+        
         return { success: true };
       } else {
         const errorData = await response.json();
@@ -146,6 +163,10 @@ export const NativeAuthProvider: React.FC<{ children: ReactNode }> = ({ children
       if (response.ok) {
         setUser(null);
         setIsAuthenticated(false);
+        
+        // Clear user profile from localStorage on logout
+        clearUserProfileFromLocalStorage();
+        
         return { success: true };
       } else {
         const errorData = await response.json();

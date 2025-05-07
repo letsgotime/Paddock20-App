@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader } from '@/components/ui/card';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { Loader2 } from 'lucide-react';
+import { getNextAuthFlowPath, getUserProfileFromLocalStorage, hasBetaAgreement } from '@/utils/authFlowUtils';
 
 // Login form schema
 const loginSchema = z.object({
@@ -44,27 +45,44 @@ export default function NativeAuthPage() {
   // Redirect if already authenticated
   useEffect(() => {
     if (isAuthenticated) {
-      navigate('/');
+      // Get the user profile from localStorage
+      const userProfile = getUserProfileFromLocalStorage();
+      
+      if (userProfile && userProfile.id) {
+        // Check if the user has completed beta agreement
+        const hasBetaAccepted = hasBetaAgreement(userProfile.id.toString());
+        
+        if (!hasBetaAccepted) {
+          // If beta agreement not accepted, redirect to it
+          navigate('/beta-agreement');
+        } else {
+          // Otherwise redirect to the dashboard
+          navigate('/');
+        }
+      } else {
+        // Fallback if no user profile in localStorage
+        navigate('/');
+      }
     }
   }, [isAuthenticated, navigate]);
 
-  // Form for login
+  // Setup form for login
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: "",
-      password: "",
+      email: '',
+      password: '',
     },
   });
 
-  // Form for signup
+  // Setup form for signup
   const signupForm = useForm<SignupFormValues>({
     resolver: zodResolver(signupSchema),
     defaultValues: {
-      username: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
+      username: '',
+      email: '',
+      password: '',
+      confirmPassword: '',
     },
   });
 
@@ -86,7 +104,22 @@ export default function NativeAuthPage() {
           description: "Welcome to Paddock20!",
         });
         
-        // Redirect will happen automatically via the useEffect
+        // Get user profile to determine next path
+        const userProfile = getUserProfileFromLocalStorage();
+        if (userProfile && userProfile.id) {
+          // Get the appropriate next path based on user's progress
+          const nextPath = getNextAuthFlowPath(userProfile.id.toString());
+          
+          // Redirect to the appropriate next step with a slight delay to show the toast
+          setTimeout(() => {
+            navigate(nextPath);
+          }, 1000);
+        } else {
+          // Fallback redirect to homepage if something is wrong with localStorage
+          setTimeout(() => {
+            navigate('/');
+          }, 1000);
+        }
       }
     } catch (error: any) {
       console.error("Login error:", error);
@@ -216,7 +249,7 @@ export default function NativeAuthPage() {
                     
                     <Button 
                       type="submit" 
-                      className="w-full bg-[#1982FC] hover:bg-blue-700"
+                      className="w-full bg-[#1982FC] hover:bg-blue-600 text-white font-medium mt-2"
                       disabled={loading}
                     >
                       {loading ? (
@@ -243,7 +276,7 @@ export default function NativeAuthPage() {
                           <FormLabel className="text-[#1982FC]">Username</FormLabel>
                           <FormControl>
                             <Input 
-                              placeholder="username" 
+                              placeholder="cooldriver99" 
                               className={cn("bg-gray-700 text-white border-gray-600 focus:border-[#1982FC]")} 
                               {...field} 
                             />
@@ -311,13 +344,13 @@ export default function NativeAuthPage() {
                     
                     <Button 
                       type="submit" 
-                      className="w-full bg-[#1982FC] hover:bg-blue-700"
+                      className="w-full bg-[#08c519] hover:bg-green-600 text-white font-medium mt-2"
                       disabled={loading}
                     >
                       {loading ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                          Joining the Grid...
+                          Creating account...
                         </>
                       ) : (
                         "Join the Grid"
@@ -329,49 +362,53 @@ export default function NativeAuthPage() {
             </Tabs>
           </CardContent>
           
-          <CardFooter className="flex flex-col space-y-4">
-            <div className="text-center text-sm text-gray-400">
-              <p>
-                By continuing, you agree to our{" "}
-                <a href="/terms-of-service" className="underline text-[#1982FC] hover:text-blue-700">
-                  Terms of Service
-                </a>{" "}
-                and{" "}
-                <a href="/privacy-policy" className="underline text-[#1982FC] hover:text-blue-700">
-                  Privacy Policy
-                </a>
-              </p>
-            </div>
+          <CardFooter className="flex flex-col text-center text-sm text-gray-400">
+            <p>
+              By using PADDOCK20, you agree to our <a href="/terms-of-service" className="text-[#1982FC] hover:underline">Terms of Service</a> and <a href="/privacy-policy" className="text-[#1982FC] hover:underline">Privacy Policy</a>.
+            </p>
           </CardFooter>
         </Card>
       </div>
       
-      {/* Right side - Hero section */}
-      <div className="hidden lg:flex flex-1 bg-[url('/carbon-fiber-bg-dark.jpg')] bg-cover">
-        <div className="flex flex-col justify-center items-center w-full p-8 bg-black/70">
-          <div className="max-w-md text-center">
-            <h1 className="text-4xl font-bold text-[#1982FC] mb-4 font-['Orbitron']">Experience F1-Grade Analytics</h1>
-            <p className="text-xl mb-6 font-['Orbitron']">
-              <span className="text-[#1982FC]">Paddock</span><span className="text-[#08c519]">20</span> <span className="text-gray-200">transforms your driving insights with Formula 1 level technology for everyday drivers</span>
-            </p>
-            <div className="grid grid-cols-2 gap-4 mb-8">
-              <div className="bg-black/50 p-4 rounded border border-[#1982FC]">
-                <h3 className="text-[#1982FC] font-bold mb-2 font-['Orbitron']">Weather Paddock</h3>
-                <p className="text-gray-300">Get F1-grade weather insights for your drive</p>
-              </div>
-              <div className="bg-black/50 p-4 rounded border border-[#1982FC]">
-                <h3 className="text-[#1982FC] font-bold mb-2 font-['Orbitron']">Garage Vault</h3>
-                <p className="text-gray-300">Manage your vehicles with comprehensive details</p>
-              </div>
-              <div className="bg-black/50 p-4 rounded border border-[#1982FC]">
-                <h3 className="text-[#1982FC] font-bold mb-2 font-['Orbitron']">Drive Journal</h3>
-                <p className="text-gray-300">Record and analyze your driving experiences</p>
-              </div>
-              <div className="bg-black/50 p-4 rounded border border-[#1982FC]">
-                <h3 className="text-[#1982FC] font-bold mb-2 font-['Orbitron']">Podium Pursuit</h3>
-                <p className="text-gray-300">Your performance journey through achievements, rewards, and milestones</p>
-              </div>
-            </div>
+      {/* Right side - Hero image with overlay */}
+      <div className="hidden md:block flex-1 bg-[url('/assets/auth-bg.jpg')] bg-cover bg-center relative">
+        <div className="absolute inset-0 bg-gradient-to-l from-black/70 to-black/30 flex items-center p-12">
+          <div className="max-w-lg">
+            <h2 className="text-4xl font-bold text-white mb-4 font-['Orbitron']">Your Ultimate Automotive Companion</h2>
+            <ul className="space-y-3 text-gray-200">
+              <li className="flex items-start">
+                <span className="bg-[#08c519] rounded-full p-1 mr-3 mt-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </span>
+                <span>Intelligent weather insights for optimal driving conditions</span>
+              </li>
+              <li className="flex items-start">
+                <span className="bg-[#08c519] rounded-full p-1 mr-3 mt-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </span>
+                <span>Track and manage your vehicle maintenance and performance</span>
+              </li>
+              <li className="flex items-start">
+                <span className="bg-[#08c519] rounded-full p-1 mr-3 mt-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </span>
+                <span>Document your driving experiences and journeys</span>
+              </li>
+              <li className="flex items-start">
+                <span className="bg-[#08c519] rounded-full p-1 mr-3 mt-1">
+                  <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-white" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                  </svg>
+                </span>
+                <span>Connect with fellow automotive enthusiasts</span>
+              </li>
+            </ul>
           </div>
         </div>
       </div>
