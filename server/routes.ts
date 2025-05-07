@@ -8,6 +8,7 @@ import { checkSlackIntegration, initializeSlackClient, shareVehicleToSlack, shar
 import { setupAuth } from "./auth";
 import twoFactorRoutes from "./routes/twoFactorRoutes";
 import supabaseAuthRoutes from "./routes/supabaseAuthRoutes";
+import authRegisterRoutes from "./routes/authRegisterRoutes";
 import spotifyRoutes from "./routes/spotifyRoutes";
 import adminRoutes from "./routes/adminRoutes";
 import adminAuditRoutes from "./routes/adminAuditRoutes";
@@ -244,6 +245,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register Supabase auth related routes
   app.use(supabaseAuthRoutes);
+  
+  // Register local auth registration routes
+  app.use('/api/auth', authRegisterRoutes);
   
   // Register User Profile routes
   app.use('/api/user-profile', userProfileRoutes);

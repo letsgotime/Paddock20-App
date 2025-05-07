@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import bcrypt from 'bcrypt';
 import { db } from '../db';
-import { users } from '@shared/schema';
+import { users, authLogs, insertUserSchema } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
@@ -87,6 +87,10 @@ router.post('/register', async (req, res) => {
       ipAddress: req.ip,
       userAgent: req.get('User-Agent') || 'unknown',
       device: 'web',
+      details: {
+        registrationMethod: 'local',
+        emailVerified: false
+      },
       createdAt: new Date()
     });
 
