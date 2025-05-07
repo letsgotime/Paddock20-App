@@ -1,943 +1,422 @@
 import passport from "passport";
 import { Strategy as LocalStrategy } from "passport-local";
-import { Express, Request, Response, NextFunction } from "express";
+import { Express } from "express";
 import session from "express-session";
 import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
-import { v4 as uuidv4 } from "uuid";
-import { db } from "./db";
-import { eq } from "drizzle-orm";
-import { users, type User, type InsertUser, type InsertAuthLog, type InsertSession } from "@shared/schema";
 import { storage } from "./storage";
-import { sendVerificationEmail, sendWelcomeEmail } from "./services/emailService";
+import { User } from "@shared/schema";
+import connectPg from "connect-pg-simple";
+import { db } from "./db";
 
-// Extend Express.User with our User type
 declare global {
   namespace Express {
-    // Define our User interface for Express
-    interface User {
-      id: number;
-      username: string;
-      password: string;
-      email: string;
-      firstName: string | null;
-      lastName: string | null;
-      fullName: string | null;
-      preferredUnit: string | null;
-      profileImage: string | null;
-      drivingExperience: string | null;
-      interests: string[];
-      bio: string | null;
-      role: string;
-      isActive: boolean;
-      lastLogin: Date | null;
-      resetToken: string | null;
-      resetTokenExpires: Date | null;
-      verificationToken: string | null;
-      isEmailVerified: boolean;
-      stripeCustomerId: string | null;
-      stripeSubscriptionId: string | null;
-      onboardingCompleted: boolean;
-      twoFactorEnabled: boolean;
-      twoFactorSecret: string | null;
-      twoFactorBackupCodes: string[] | null;
-      createdAt: Date;
-      updatedAt: Date | null;
-    }
+    interface User extends User {}
   }
 }
 
-// Create promisified version of scrypt
 const scryptAsync = promisify(scrypt);
+const PostgresSessionStore = connectPg(session);
 
-// Password validation function
-function validatePasswordStrength(password: string): { isValid: boolean; errors: string[] } {
-  const errors: string[] = [];
-  
-  // Check for minimum length
-  if (password.length < 8) {
-    errors.push('Password must be at least 8 characters long');
-  }
-  
-  // Check for uppercase letters
-  if (!/[A-Z]/.test(password)) {
-    errors.push('Password must include at least one uppercase letter');
-  }
-  
-  // Check for lowercase letters
-  if (!/[a-z]/.test(password)) {
-    errors.push('Password must include at least one lowercase letter');
-  }
-  
-  // Check for numbers
-  if (!/[0-9]/.test(password)) {
-    errors.push('Password must include at least one number');
-  }
-  
-  // Check for special characters
-  if (!/[!@#$%^&*(),.?":{}|<>]/.test(password)) {
-    errors.push('Password must include at least one special character');
-  }
-  
-  return {
-    isValid: errors.length === 0,
-    errors
-  };
-}
-
-// Password hashing functions
-async function hashPassword(password: string): Promise<string> {
+// Password hashing and verification
+async function hashPassword(password: string) {
   const salt = randomBytes(16).toString("hex");
   const buf = (await scryptAsync(password, salt, 64)) as Buffer;
   return `${buf.toString("hex")}.${salt}`;
 }
 
-async function comparePasswords(supplied: string, stored: string): Promise<boolean> {
+async function comparePasswords(supplied: string, stored: string) {
   const [hashed, salt] = stored.split(".");
   const hashedBuf = Buffer.from(hashed, "hex");
   const suppliedBuf = (await scryptAsync(supplied, salt, 64)) as Buffer;
   return timingSafeEqual(hashedBuf, suppliedBuf);
 }
 
-// Using storage.sessionStore now instead of creating a new instance here
-
-// Authentication setup function
 export function setupAuth(app: Express) {
-  // Session configuration
-  const isProduction = process.env.NODE_ENV === "production";
-  const sessionSecret = process.env.SESSION_SECRET || "paddock20-secure-session-secret";
-  
-  const sessionConfig: session.SessionOptions = {
-    secret: sessionSecret,
+  // Create session store
+  const sessionStore = new PostgresSessionStore({
+    conObject: {
+      connectionString: process.env.DATABASE_URL,
+    },
+    tableName: 'sessions',
+    createTableIfMissing: true
+  });
+
+  // Session middleware setup
+  const sessionSettings: session.SessionOptions = {
+    secret: process.env.SESSION_SECRET || 'paddock20-secret-key',
     resave: false,
     saveUninitialized: false,
-    store: storage.sessionStore,
+    store: sessionStore,
     cookie: {
-      secure: isProduction, // Set to true in production 
+      secure: process.env.NODE_ENV === 'production',
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 1 week
       httpOnly: true,
-      maxAge: 1000 * 60 * 60 * 24 * 7, // 1 week
-      sameSite: "lax"
+      sameSite: 'lax'
     }
   };
-  
-  // Enable trust proxy in production
-  if (isProduction) {
-    app.set("trust proxy", 1);
-  }
-  
-  // Setup session middleware
-  app.use(session(sessionConfig));
+
+  app.set("trust proxy", 1);
+  app.use(session(sessionSettings));
   app.use(passport.initialize());
   app.use(passport.session());
-  
-  // Local strategy configuration
+
+  // Configure LocalStrategy for username/password auth
   passport.use(
-    new LocalStrategy(async (username, password, done) => {
-      try {
-        // Try to find the user - no special development mode handling
-        const user = await storage.getUserByUsername(username);
-        
-        // User not found
-        if (!user) {
-          console.log(`Login attempt for non-existent user: ${username}`);
-          return done(null, false, { message: "Invalid username or password" });
-        }
-        
-        // Check if user is active
-        if (!user.isActive) {
-          console.log(`Login attempt for inactive user: ${username}`);
-          return done(null, false, { message: "Account is inactive" });
-        }
-        
-        // Verify password
-        const isPasswordValid = await comparePasswords(password, user.password);
-        if (!isPasswordValid) {
-          console.log(`Invalid password for user: ${username}`);
+    new LocalStrategy(
+      {
+        usernameField: 'email', // Using email as the username field
+        passwordField: 'password'
+      }, 
+      async (email, password, done) => {
+        try {
+          // Get user by email
+          const user = await storage.getUserByEmail(email);
           
-          // Log failed attempt
+          // No user or password doesn't match
+          if (!user || !(await comparePasswords(password, user.password))) {
+            return done(null, false, { message: "Invalid email or password" });
+          }
+          
+          // Update last login time
+          await storage.updateLastLogin(user.id);
+          
+          // Log the successful login
           await storage.createAuthLog({
             userId: user.id,
             action: 'login',
-            status: 'failed',
-            ipAddress: null, // Would be set from middleware in production
-            userAgent: null, // Would be set from middleware in production
-            details: { reason: 'invalid_password' }
-          });
-          
-          return done(null, false, { message: "Invalid username or password" });
-        }
-        
-        // Check if the user has two-factor authentication enabled
-        if (user.twoFactorEnabled) {
-          console.log(`User ${username} has 2FA enabled, requiring verification`);
-          
-          // Log successful first-factor authentication
-          await storage.createAuthLog({
-            userId: user.id,
-            action: 'login_2fa_needed',
             status: 'success',
-            ipAddress: null, // Would be set from middleware in production
-            userAgent: null, // Would be set from middleware in production
-            details: { stage: 'first_factor' }
+            ipAddress: '', // Will be filled by route handler
+            userAgent: '', // Will be filled by route handler
+            details: {}
           });
           
-          // Return the user but with a flag indicating 2FA is required
-          return done(null, user, { requiresTwoFactor: true });
+          return done(null, user);
+        } catch (error) {
+          console.error("Authentication error:", error);
+          return done(error);
         }
-        
-        // If 2FA not enabled, proceed with standard login flow
-        // Update last login time
-        await storage.updateUserLastLogin(user.id);
-        
-        // Log successful login
-        await storage.createAuthLog({
-          userId: user.id,
-          action: 'login',
-          status: 'success',
-          ipAddress: null, // Would be set from middleware in production
-          userAgent: null, // Would be set from middleware in production
-          details: {}
-        });
-        
-        return done(null, user);
-      } catch (error) {
-        console.error('Authentication error:', error);
-        return done(error);
       }
-    })
+    )
   );
-  
-  // Serialize and deserialize user
+
+  // Serialize user to session
   passport.serializeUser((user, done) => {
     done(null, user.id);
   });
-  
+
+  // Deserialize user from session
   passport.deserializeUser(async (id: number, done) => {
     try {
       const user = await storage.getUser(id);
-        
-      // User not found
-      if (!user) {
-        return done(null, false);
-      }
-      
-      return done(null, user);
+      done(null, user);
     } catch (error) {
-      return done(error);
+      done(error);
     }
   });
-  
-  // Authentication routes
-  
-  // Register new user
-  app.post("/api/register", async (req, res) => {
+
+  // Register a new user
+  app.post("/api/register", async (req, res, next) => {
     try {
-      // Check if username already exists
-      const existingUsername = await storage.getUserByUsername(req.body.username);
-      
-      if (existingUsername) {
-        return res.status(400).json({ 
-          success: false, 
-          error: "Username already exists" 
-        });
-      }
-      
       // Check if email already exists
-      const existingEmail = await storage.getUserByEmail(req.body.email);
-      
-      if (existingEmail) {
-        return res.status(400).json({ 
-          success: false, 
-          error: "Email already exists" 
-        });
+      const existingUserByEmail = await storage.getUserByEmail(req.body.email);
+      if (existingUserByEmail) {
+        return res.status(400).json({ error: "Email already registered" });
       }
-      
-      // Validate password strength
-      const { isValid, errors } = validatePasswordStrength(req.body.password);
-      if (!isValid) {
-        return res.status(400).json({
-          success: false,
-          error: "Password does not meet security requirements",
-          details: errors
-        });
+
+      // Check if username already exists
+      const existingUserByUsername = await storage.getUserByUsername(req.body.username);
+      if (existingUserByUsername) {
+        return res.status(400).json({ error: "Username already taken" });
       }
-      
-      // Validate password confirmation
-      if (req.body.password !== req.body.confirmPassword) {
-        return res.status(400).json({
-          success: false,
-          error: "Passwords do not match"
-        });
-      }
-      
-      // Hash password
+
+      // Hash the password
       const hashedPassword = await hashPassword(req.body.password);
-      
-      // Remove confirmPassword before inserting
-      const { confirmPassword, ...userData } = req.body;
-      
-      // Generate verification token
-      const verificationToken = randomBytes(32).toString("hex");
-      
-      // Check if user is registering as a beta tester
-      const isBetaTester = userData.userType === 'beta_tester';
-      
-      // Create user in database
-      const newUser = await storage.createUser({
-        ...userData,
+
+      // Create the user
+      const user = await storage.createUser({
+        ...req.body,
         password: hashedPassword,
-        verificationToken,
-        interests: (userData.interests || []) as string[],
-        role: isBetaTester ? 'beta_tester' : 'user',
-        isActive: true,
-        // Beta testers need email verification, regular users don't
-        isEmailVerified: !isBetaTester,
-        onboardingCompleted: false
       });
-      
-      // Log registration in auth logs
+
+      // Strip sensitive information
+      const safeUser = {
+        id: user.id,
+        username: user.username,
+        email: user.email,
+        firstName: user.firstName,
+        lastName: user.lastName,
+        fullName: user.fullName,
+        role: user.role,
+        profileImage: user.profileImage,
+        createdAt: user.createdAt,
+      };
+
+      // Log the successful registration
       await storage.createAuthLog({
-        userId: newUser.id,
+        userId: user.id,
         action: 'register',
         status: 'success',
-        ipAddress: null, // Set in middleware
-        userAgent: null, // Set in middleware
+        ipAddress: req.ip || '',
+        userAgent: req.headers['user-agent'] || '',
         details: {}
       });
-      
-      // Send verification email for beta testers 
-      try {
-        // Only send verification emails to beta testers
-        if (isBetaTester) {
-          // Make sure verificationToken is not null
-          if (newUser.verificationToken) {
-            await sendVerificationEmail(
-              newUser.email, 
-              newUser.verificationToken, 
-              newUser.username, 
-              true // isBetaTester = true
-            );
-          } else {
-            console.error('Verification token is null for user:', newUser.username);
-          }
-          console.log(`Beta tester verification email sent to ${newUser.email}`);
-        }
-      } catch (emailError) {
-        console.error('Error sending verification email:', emailError);
-        // Non-blocking - continue even if email sending fails
-      }
-      
-      // Login the user (auto-login after registration)
-      req.login(newUser, (err) => {
-        if (err) {
-          return res.status(500).json({ 
-            success: false, 
-            error: "Error logging in after registration" 
-          });
-        }
-        
-        // Return user data (exclude sensitive information)
-        const { password, resetToken, verificationToken, ...safeUserData } = newUser;
-        return res.status(201).json({ 
-          success: true, 
-          user: safeUserData
-        });
+
+      // Log the user in automatically
+      req.login(user, (err) => {
+        if (err) return next(err);
+        res.status(201).json(safeUser);
       });
     } catch (error) {
       console.error("Registration error:", error);
-      res.status(500).json({ 
-        success: false, 
-        error: "Registration failed. Please try again." 
-      });
+      res.status(500).json({ error: "Registration failed" });
     }
   });
-  
-  // Login route
+
+  // Login user
   app.post("/api/login", (req, res, next) => {
-    passport.authenticate('local', (err: Error | null, user: User | false, info: { message?: string } | undefined) => {
-      if (err) {
-        console.error('Login error:', err);
-        return res.status(500).json({ 
-          success: false, 
-          error: "An error occurred during login" 
-        });
-      }
+    passport.authenticate("local", (err, user, info) => {
+      if (err) return next(err);
       
       if (!user) {
-        return res.status(401).json({ 
-          success: false, 
-          error: info?.message || "Invalid username or password" 
-        });
+        // Log failed login attempt
+        storage.createAuthLog({
+          userId: null, // No user found
+          action: 'login',
+          status: 'failed',
+          ipAddress: req.ip || '',
+          userAgent: req.headers['user-agent'] || '',
+          details: { message: info?.message || "Authentication failed" }
+        }).catch(error => console.error("Error logging failed login:", error));
+        
+        return res.status(401).json({ error: info?.message || "Authentication failed" });
       }
       
-      // Check if user has two-factor authentication enabled
-      if (user.twoFactorEnabled) {
-        // Store temporary 2FA session data
-        req.session.temp2FA = {
-          userId: user.id,
+      req.login(user, (err) => {
+        if (err) return next(err);
+        
+        // Strip sensitive information
+        const safeUser = {
+          id: user.id,
           username: user.username,
-          remember: Boolean(req.body.remember)
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          fullName: user.fullName,
+          role: user.role,
+          profileImage: user.profileImage,
+          createdAt: user.createdAt,
         };
         
-        // Log 2FA challenge
-        storage.createAuthLog({
-          userId: user.id,
-          action: 'login_2fa_required',
-          status: 'pending',
-          ipAddress: req.ip || null,
-          userAgent: req.get('User-Agent') || null,
-          details: { requestedAt: new Date() }
-        }).catch(err => console.error('Failed to log 2FA attempt:', err));
+        // Update auth log with IP and user agent
+        storage.updateAuthLogForUser(user.id, {
+          ipAddress: req.ip || '',
+          userAgent: req.headers['user-agent'] || '',
+        }).catch(error => console.error("Error updating auth log:", error));
         
-        // Return response indicating 2FA is required
-        return res.json({
-          success: true,
-          requireTwoFactor: true, 
-          message: "Two-factor authentication required",
-          username: user.username
-        });
-      }
-      
-      // Normal login flow (no 2FA)
-      req.login(user, async (loginErr) => {
-        if (loginErr) {
-          console.error('Session creation error:', loginErr);
-          return res.status(500).json({ 
-            success: false, 
-            error: "Failed to create session" 
-          });
-        }
-        
-        // Create session record for tracking
-        try {
-          const sessionId = req.sessionID;
-          const cookieMaxAge = sessionConfig.cookie?.maxAge || 1000 * 60 * 60 * 24 * 7; // Default to 1 week
-          await storage.createSession({
-            id: sessionId,
-            userId: user.id,
-            expiresAt: new Date(Date.now() + cookieMaxAge),
-            ipAddress: req.ip || null,
-            userAgent: req.get('User-Agent') || null
-          });
-          
-          // Update last login time
-          await storage.updateUserLastLogin(user.id);
-          
-          // Log successful login
-          await storage.createAuthLog({
-            userId: user.id,
-            action: 'login',
-            status: 'success',
-            ipAddress: req.ip || null,
-            userAgent: req.get('User-Agent') || null,
-            details: {}
-          });
-        } catch (sessionError) {
-          // Non-blocking - continue even if session tracking fails
-          console.error('Session tracking error:', sessionError);
-        }
-        
-        // Return user data (exclude sensitive information)
-        const { password, resetToken, verificationToken, ...safeUserData } = user;
-        return res.json({ 
-          success: true, 
-          user: safeUserData 
-        });
+        res.status(200).json(safeUser);
       });
     })(req, res, next);
   });
-  
-  // Account deletion route for users who decline terms
-  app.delete("/api/user", async (req, res) => {
-    // User must be authenticated
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ 
-        success: false, 
-        error: "Not authenticated" 
-      });
-    }
-    
-    try {
-      const userId = req.user.id;
+
+  // Logout user
+  app.post("/api/logout", async (req, res, next) => {
+    if (req.isAuthenticated()) {
+      const userId = (req.user as User).id;
       
-      // Log deletion request
-      await storage.createAuthLog({
-        userId,
-        action: 'account_deletion',
-        status: 'success',
-        ipAddress: req.ip || null,
-        userAgent: req.get('User-Agent') || null,
-        details: { reason: req.body.reason || 'declined_terms' }
-      });
-      
-      // Delete user from database
-      await storage.deleteUser(userId);
-      
-      // Logout the user
-      req.logout(async (err) => {
-        if (err) {
-          console.error('Error during logout after account deletion:', err);
-          return res.status(500).json({ 
-            success: false, 
-            error: "Logout failed after account deletion" 
-          });
-        }
-        
-        return res.json({ 
-          success: true, 
-          message: "Account successfully deleted" 
-        });
-      });
-    } catch (error) {
-      console.error('Account deletion error:', error);
-      res.status(500).json({ 
-        success: false, 
-        error: "Account deletion failed. Please try again." 
-      });
-    }
-  });
-  
-  // Logout route
-  app.post("/api/logout", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(200).json({ 
-        success: true, 
-        message: "Already logged out" 
-      });
-    }
-    
-    // Capture user ID before logout
-    const userId = req.user.id;
-    
-    req.logout(async (err) => {
-      if (err) {
-        return res.status(500).json({ 
-          success: false, 
-          error: "Error logging out" 
-        });
-      }
-      
-      // Log successful logout
+      // Log the logout
       await storage.createAuthLog({
         userId,
         action: 'logout',
         status: 'success',
-        ipAddress: req.ip || null,
-        userAgent: req.get('User-Agent') || null,
+        ipAddress: req.ip || '',
+        userAgent: req.headers['user-agent'] || '',
         details: {}
       });
-      
-      res.json({ 
-        success: true, 
-        message: "Logged out successfully" 
-      });
+    }
+    
+    req.logout((err) => {
+      if (err) return next(err);
+      res.status(200).json({ message: "Logged out successfully" });
     });
   });
-  
-  // Get authenticated user
-  app.get("/api/user", async (req, res) => {
-    try {
-      // Always require proper authentication - no development bypasses
-      if (!req.isAuthenticated()) {
-        return res.status(401).json({ 
-          success: false, 
-          error: "Not authenticated" 
-        });
-      }
-      
-      // Return the authenticated user from the session
-      const { password, resetToken, verificationToken, ...safeUserData } = req.user;
-      return res.json({
-        success: true,
-        user: safeUserData
-      });
-    } catch (error) {
-      console.error("Get user error:", error);
-      res.status(500).json({ 
-        success: false, 
-        error: "Failed to retrieve user data" 
-      });
-    }
-  });
-  
-  // Update user profile
-  app.put("/api/user", async (req, res) => {
+
+  // Get current user
+  app.get("/api/user", (req, res) => {
     if (!req.isAuthenticated()) {
-      return res.status(401).json({ 
-        success: false, 
-        error: "Not authenticated" 
-      });
+      return res.status(401).json({ error: "Not authenticated" });
     }
     
-    try {
-      // Don't allow updating sensitive fields directly
-      const { 
-        password, resetToken, resetTokenExpires, verificationToken, 
-        isEmailVerified, role, isActive, lastLogin, ...updatableFields 
-      } = req.body;
-      
-      // Update user in database with storage method
-      const updatedUser = await storage.updateUser(req.user.id, {
-        ...updatableFields,
-        updatedAt: new Date()
-      });
-      
-      if (!updatedUser) {
-        return res.status(404).json({
-          success: false,
-          error: "User not found"
-        });
-      }
-      
-      // Log profile update in auth logs
-      await storage.createAuthLog({
-        userId: req.user.id,
-        action: 'profile_update',
-        status: 'success',
-        ipAddress: null, // Set in middleware
-        userAgent: null, // Set in middleware
-        details: {}
-      });
-      
-      // Return updated user data (exclude sensitive information)
-      const { password: pwd, resetToken: rt, verificationToken: vt, ...safeUserData } = updatedUser;
-      res.json({ 
-        success: true, 
-        user: safeUserData 
-      });
-    } catch (error) {
-      console.error("Profile update error:", error);
-      res.status(500).json({ 
-        success: false, 
-        error: "Profile update failed. Please try again." 
-      });
-    }
+    const user = req.user as User;
+    
+    // Strip sensitive information
+    const safeUser = {
+      id: user.id,
+      username: user.username,
+      email: user.email,
+      firstName: user.firstName,
+      lastName: user.lastName,
+      fullName: user.fullName,
+      role: user.role,
+      profileImage: user.profileImage,
+      createdAt: user.createdAt,
+    };
+    
+    res.json(safeUser);
   });
-  
-  // Email verification
-  app.get("/api/verify-email/:token", async (req, res) => {
-    try {
-      const token = req.params.token;
-      
-      // Find user with matching verification token
-      const [user] = await db
-        .select()
-        .from(users)
-        .where(eq(users.verificationToken, token));
-      
-      if (!user) {
-        return res.status(400).json({ 
-          success: false, 
-          error: "Invalid verification token" 
-        });
-      }
-      
-      // Update user as verified using storage method
-      const updatedUser = await storage.updateUser(user.id, {
-        isEmailVerified: true,
-        verificationToken: null,
-        updatedAt: new Date()
-      });
-      
-      if (!updatedUser) {
-        return res.status(404).json({
-          success: false,
-          error: "User not found"
-        });
-      }
-      
-      // Log verification in auth logs
-      await storage.createAuthLog({
-        userId: user.id,
-        action: 'email_verification',
-        status: 'success',
-        ipAddress: null, // Set in middleware
-        userAgent: null, // Set in middleware
-        details: {}
-      });
-      
-      // Send welcome email for verified users
-      try {
-        // Check if the user is a premium user (beta tester)
-        const isBetaTester = updatedUser.role === 'premium';
-        await sendWelcomeEmail(
-          updatedUser.email,
-          updatedUser.username,
-          isBetaTester
-        );
-        console.log(`Welcome email sent to ${updatedUser.email}`);
-      } catch (emailError) {
-        console.error('Error sending welcome email:', emailError);
-        // Non-blocking - continue even if email sending fails
-      }
-      
-      // Redirect to frontend verification success page
-      const frontendUrl = process.env.FRONTEND_URL || '';
-      res.redirect(`${frontendUrl}/email-verified`);
-    } catch (error) {
-      console.error("Email verification error:", error);
-      res.status(500).json({ 
-        success: false, 
-        error: "Email verification failed. Please try again." 
-      });
-    }
-  });
-  
+
   // Password reset request
-  app.post("/api/reset-password-request", async (req, res) => {
+  app.post("/api/reset-password/request", async (req, res) => {
     try {
       const { email } = req.body;
-      
-      // Find user by email with storage method
       const user = await storage.getUserByEmail(email);
       
-      // Don't reveal if user exists or not
       if (!user) {
-        // Log password reset request for non-existent email
-        await storage.createAuthLog({
-          userId: null,
-          action: 'password_reset_request',
-          status: 'failed',
-          ipAddress: null, // Set in middleware
-          userAgent: null, // Set in middleware
-          details: { reason: 'email_not_found', email }
-        });
-        
-        return res.json({ 
-          success: true, 
-          message: "If your email is registered, you will receive a password reset link." 
-        });
+        // Don't reveal that the email doesn't exist
+        return res.status(200).json({ message: "If your email is registered, you will receive a reset link shortly" });
       }
       
-      // Generate reset token and expiry (1 hour from now)
-      const resetToken = randomBytes(32).toString("hex");
-      const resetTokenExpires = new Date(Date.now() + 3600000); // 1 hour
+      // Generate token
+      const token = randomBytes(32).toString("hex");
+      const expiresAt = new Date();
+      expiresAt.setHours(expiresAt.getHours() + 1); // Token valid for 1 hour
       
-      // Update user with reset token using storage method
-      const updatedUser = await storage.updateUser(user.id, {
-        resetToken,
-        resetTokenExpires,
-        updatedAt: new Date()
-      });
+      // Store token in database
+      await storage.updateResetToken(user.id, token, expiresAt);
       
-      if (!updatedUser) {
-        return res.status(404).json({
-          success: false,
-          error: "User not found"
-        });
-      }
+      // In a real app, we would send an email with the reset link
+      // For now, we just return a message with the token for testing
+      console.log(`Reset token for ${email}: ${token}`);
       
-      // Log password reset request
-      await storage.createAuthLog({
-        userId: user.id,
-        action: 'password_reset_request',
-        status: 'success',
-        ipAddress: null, // Set in middleware
-        userAgent: null, // Set in middleware
-        details: {}
-      });
-      
-      // Send password reset email (to be implemented)
-      // sendPasswordResetEmail(user.email, resetToken);
-      
-      res.json({ 
-        success: true, 
-        message: "If your email is registered, you will receive a password reset link." 
-      });
+      res.status(200).json({ message: "If your email is registered, you will receive a reset link shortly" });
     } catch (error) {
       console.error("Password reset request error:", error);
-      res.status(500).json({ 
-        success: false, 
-        error: "Password reset request failed. Please try again." 
-      });
+      res.status(500).json({ error: "Failed to process password reset request" });
     }
   });
-  
-  // Password reset
-  app.post("/api/reset-password/:token", async (req, res) => {
+
+  // Password reset (with token)
+  app.post("/api/reset-password/confirm", async (req, res) => {
     try {
-      const { token } = req.params;
-      const { password } = req.body;
+      const { token, newPassword } = req.body;
       
-      // Find user with matching reset token that hasn't expired
-      // Note: We'll have to implement getUserByResetToken in the storage interface later
-      const [user] = await db
-        .select()
-        .from(users)
-        .where(eq(users.resetToken, token));
-      
-      if (!user || !user.resetTokenExpires || user.resetTokenExpires < new Date()) {
-        // Log failed password reset attempt
-        await storage.createAuthLog({
-          userId: user?.id || null,
-          action: 'password_reset',
-          status: 'failed',
-          ipAddress: null, // Set in middleware
-          userAgent: null, // Set in middleware
-          details: { reason: user ? 'token_expired' : 'invalid_token' }
-        });
-        
-        return res.status(400).json({ 
-          success: false, 
-          error: "Invalid or expired reset token" 
-        });
+      if (!token || !newPassword) {
+        return res.status(400).json({ error: "Missing token or new password" });
       }
       
-      // Hash new password
-      const hashedPassword = await hashPassword(password);
+      // Find user by reset token
+      const user = await storage.getUserByResetToken(token);
       
-      // Update user with new password using storage method
-      const updatedUser = await storage.updateUser(user.id, {
-        password: hashedPassword,
-        resetToken: null,
-        resetTokenExpires: null,
-        updatedAt: new Date()
-      });
-      
-      if (!updatedUser) {
-        return res.status(404).json({
-          success: false,
-          error: "User not found"
-        });
-      }
-      
-      // Log successful password reset
-      await storage.createAuthLog({
-        userId: user.id,
-        action: 'password_reset',
-        status: 'success',
-        ipAddress: null, // Set in middleware
-        userAgent: null, // Set in middleware
-        details: {}
-      });
-      
-      res.json({ 
-        success: true, 
-        message: "Password reset successful. Please login with your new password." 
-      });
-    } catch (error) {
-      console.error("Password reset error:", error);
-      res.status(500).json({ 
-        success: false, 
-        error: "Password reset failed. Please try again." 
-      });
-    }
-  });
-  
-  // Change password (authenticated)
-  app.post("/api/change-password", async (req, res) => {
-    if (!req.isAuthenticated()) {
-      return res.status(401).json({ 
-        success: false, 
-        error: "Not authenticated" 
-      });
-    }
-    
-    try {
-      const { currentPassword, newPassword } = req.body;
-      
-      // Check if current password is correct
-      if (!(await comparePasswords(currentPassword, req.user.password))) {
-        // Log failed password change attempt
-        await storage.createAuthLog({
-          userId: req.user.id,
-          action: 'password_change',
-          status: 'failed',
-          ipAddress: null, // Set in middleware
-          userAgent: null, // Set in middleware
-          details: { reason: 'incorrect_current_password' }
-        });
-        
-        return res.status(400).json({ 
-          success: false, 
-          error: "Current password is incorrect" 
-        });
+      if (!user || !user.resetTokenExpires || new Date() > user.resetTokenExpires) {
+        return res.status(400).json({ error: "Invalid or expired token" });
       }
       
       // Hash new password
       const hashedPassword = await hashPassword(newPassword);
       
-      // Update user with new password using storage method
-      const updatedUser = await storage.updateUser(req.user.id, {
-        password: hashedPassword,
-        updatedAt: new Date()
-      });
+      // Update password and clear reset token
+      await storage.updatePasswordAndClearResetToken(user.id, hashedPassword);
       
-      if (!updatedUser) {
-        return res.status(404).json({
-          success: false,
-          error: "User not found"
-        });
-      }
-      
-      // Log successful password change
+      // Log the password reset
       await storage.createAuthLog({
-        userId: req.user.id,
-        action: 'password_change',
+        userId: user.id,
+        action: 'password_reset',
         status: 'success',
-        ipAddress: null, // Set in middleware
-        userAgent: null, // Set in middleware
+        ipAddress: req.ip || '',
+        userAgent: req.headers['user-agent'] || '',
         details: {}
       });
       
-      res.json({ 
-        success: true, 
-        message: "Password changed successfully" 
-      });
+      res.status(200).json({ message: "Password updated successfully" });
     } catch (error) {
-      console.error("Password change error:", error);
-      res.status(500).json({ 
-        success: false, 
-        error: "Password change failed. Please try again." 
-      });
+      console.error("Password reset error:", error);
+      res.status(500).json({ error: "Failed to reset password" });
     }
   });
-  
-  // Complete onboarding flag
-  app.post("/api/complete-onboarding", async (req, res) => {
+
+  // Update password (when logged in)
+  app.post("/api/password/update", async (req, res) => {
     if (!req.isAuthenticated()) {
-      return res.status(401).json({ 
-        success: false, 
-        error: "Not authenticated" 
-      });
+      return res.status(401).json({ error: "Not authenticated" });
     }
     
     try {
-      // Update user as onboarded using storage method
-      const updatedUser = await storage.updateUser(req.user.id, {
-        onboardingCompleted: true,
-        updatedAt: new Date()
-      });
+      const { currentPassword, newPassword } = req.body;
+      const user = req.user as User;
       
-      if (!updatedUser) {
-        return res.status(404).json({
-          success: false,
-          error: "User not found"
-        });
+      // Verify current password
+      if (!(await comparePasswords(currentPassword, user.password))) {
+        return res.status(400).json({ error: "Current password is incorrect" });
       }
       
-      // Log onboarding completion in auth logs
+      // Hash new password
+      const hashedPassword = await hashPassword(newPassword);
+      
+      // Update password
+      await storage.updatePassword(user.id, hashedPassword);
+      
+      // Log the password change
       await storage.createAuthLog({
-        userId: req.user.id,
-        action: 'onboarding_completed',
+        userId: user.id,
+        action: 'password_change',
         status: 'success',
-        ipAddress: null, // Set in middleware
-        userAgent: null, // Set in middleware
+        ipAddress: req.ip || '',
+        userAgent: req.headers['user-agent'] || '',
         details: {}
       });
       
-      // Return updated user data (exclude sensitive information)
-      const { password, resetToken, verificationToken, ...safeUserData } = updatedUser;
-      res.json({ 
-        success: true, 
-        user: safeUserData 
-      });
+      res.status(200).json({ message: "Password updated successfully" });
     } catch (error) {
-      console.error("Complete onboarding error:", error);
-      res.status(500).json({ 
-        success: false, 
-        error: "Completing onboarding failed. Please try again." 
-      });
+      console.error("Password update error:", error);
+      res.status(500).json({ error: "Failed to update password" });
     }
+  });
+
+  // Update user profile
+  app.post("/api/profile/update", async (req, res) => {
+    if (!req.isAuthenticated()) {
+      return res.status(401).json({ error: "Not authenticated" });
+    }
+    
+    try {
+      const user = req.user as User;
+      const updatedFields = req.body;
+      
+      // Don't allow updating sensitive fields
+      delete updatedFields.password;
+      delete updatedFields.email; // Email updates should have their own verification flow
+      delete updatedFields.role;
+      delete updatedFields.createdAt;
+      delete updatedFields.updatedAt;
+      
+      // Update user profile
+      const updatedUser = await storage.updateUserProfile(user.id, updatedFields);
+      
+      // Strip sensitive information
+      const safeUser = {
+        id: updatedUser.id,
+        username: updatedUser.username,
+        email: updatedUser.email,
+        firstName: updatedUser.firstName,
+        lastName: updatedUser.lastName,
+        fullName: updatedUser.fullName,
+        role: updatedUser.role,
+        profileImage: updatedUser.profileImage,
+        createdAt: updatedUser.createdAt,
+      };
+      
+      res.status(200).json(safeUser);
+    } catch (error) {
+      console.error("Profile update error:", error);
+      res.status(500).json({ error: "Failed to update profile" });
+    }
+  });
+
+  // Middleware for requiring authentication
+  app.use("/api/protected", (req, res, next) => {
+    if (req.isAuthenticated()) {
+      return next();
+    }
+    res.status(401).json({ error: "Authentication required" });
   });
 }
