@@ -3,11 +3,21 @@
  * 
  * This is a bridge implementation that redirects all calls to the new
  * ConsolidatedWeatherContext to standardize our weather data access.
+ * The ConsolidatedWeatherContext currently integrates:
+ * - OpenWeather API (primary weather source)
+ * - TimeZoneDB API (for accurate time conversion)
+ * - IPInfo API (for geolocation services)
  * 
+ * Planned future integrations (not yet implemented):
+ * - AccuWeather API (fallback weather source)
+ * - Aviation Weather APIs
+ * - Spotify API (weather-based music recommendations)
+ * 
+ * ⚠️ DEPRECATION WARNING: This context is maintained for backward compatibility only.
  * DO NOT MODIFY THIS FILE - Add new features to ConsolidatedWeatherContext instead.
  */
 
-import React, { createContext, useContext } from 'react';
+import React, { createContext, useContext, useCallback } from 'react';
 import { 
   OneCallData,
   WeatherData,
@@ -15,7 +25,7 @@ import {
   Location
 } from '@/lib/weather';
 import { useWeather as useConsolidatedWeather } from '@/contexts/ConsolidatedWeatherContext';
-import { ConsolidatedWeatherData } from '@/services/consolidatedWeatherService';
+import { useToast } from '@/hooks/use-toast';
 
 // Define interface for our automotive weather data
 export interface AutomotiveWeatherData {
