@@ -1,7 +1,7 @@
 import { Router } from 'express';
 import { db } from '../db';
 import { authLogs, users } from '@shared/schema';
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 
 const router = Router();
 
@@ -58,8 +58,8 @@ router.get('/audit-log', async (req, res) => {
     const logs = await query;
     
     // Get total count for pagination
-    const countResult = await db.select({ count: authLogs.id }).from(authLogs);
-    const totalCount = countResult[0]?.count || 0;
+    const countResult = await db.select({ count: sql`count(*)` }).from(authLogs);
+    const totalCount = Number(countResult[0]?.count) || 0;
     
     res.status(200).json({
       success: true,
