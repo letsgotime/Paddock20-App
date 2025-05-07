@@ -22,7 +22,7 @@ const OnboardingContext = createContext<OnboardingContextType>({
 
 // Provider component
 export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
-  const { user, refreshUser } = useAuth();
+  const { user, checkAuthStatus } = useAuth();
   const [showOnboarding, setShowOnboarding] = useState(false);
   const [onboardingComplete, setOnboardingComplete] = useState(false);
 

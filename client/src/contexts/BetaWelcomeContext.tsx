@@ -13,7 +13,7 @@ const BetaWelcomeContext = createContext<BetaWelcomeContextType | undefined>(und
 export const BetaWelcomeProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
   const [showWelcomeModal, setShowWelcomeModal] = useState(false);
   const { user } = useAuth();
-  const { userProfile, loading } = useUserProfile();
+  const { profile, isLoading } = useUserProfile();
 
   // Track if the user is newly registered to show the welcome modal
   const [hasShownWelcome, setHasShownWelcome] = useState(false);
@@ -22,14 +22,14 @@ export const BetaWelcomeProvider: React.FC<{ children: React.ReactNode }> = ({ c
   useEffect(() => {
     const hasSeenWelcome = localStorage.getItem(`paddock20_welcome_seen_${user?.id}`);
     
-    if (user && userProfile && !loading && !hasSeenWelcome && !hasShownWelcome) {
+    if (user && profile && !isLoading && !hasSeenWelcome && !hasShownWelcome) {
       // Only show welcome once the profile is available and we have beta status
-      if (userProfile.betaStatus) {
+      if (profile.identity?.betaStatus) {
         setShowWelcomeModal(true);
         setHasShownWelcome(true);
       }
     }
-  }, [user, userProfile, loading, hasShownWelcome]);
+  }, [user, profile, isLoading, hasShownWelcome]);
 
   const hideWelcomeModal = () => {
     setShowWelcomeModal(false);
