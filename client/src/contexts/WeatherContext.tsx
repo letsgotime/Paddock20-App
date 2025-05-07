@@ -1,18 +1,21 @@
-import React, { createContext, useState, useContext, useEffect, useCallback, useRef } from 'react';
-import { queryClient, apiRequest } from '@/lib/queryClient';
-import { useQuery } from '@tanstack/react-query';
-import { useToast } from '@/hooks/use-toast';
+/**
+ * LEGACY WEATHER CONTEXT - NOW REDIRECTING TO CONSOLIDATED WEATHER CONTEXT
+ * 
+ * This is a bridge implementation that redirects all calls to the new
+ * ConsolidatedWeatherContext to standardize our weather data access.
+ * 
+ * DO NOT MODIFY THIS FILE - Add new features to ConsolidatedWeatherContext instead.
+ */
+
+import React, { createContext, useContext } from 'react';
 import { 
-  getWeatherData, 
-  getHourlyForecast, 
-  getOneCallData, 
   OneCallData,
   WeatherData,
   ForecastData,
   Location
 } from '@/lib/weather';
-import { fetchAutomotiveWeather } from '@/services/openWeatherService';
-import { fetchConsolidatedWeatherData, ConsolidatedWeatherData } from '@/services/consolidatedWeatherService';
+import { useWeather as useConsolidatedWeather } from '@/contexts/ConsolidatedWeatherContext';
+import { ConsolidatedWeatherData } from '@/services/consolidatedWeatherService';
 
 // Define interface for our automotive weather data
 export interface AutomotiveWeatherData {
@@ -105,40 +108,6 @@ interface WeatherContextType {
 }
 
 const WeatherContext = createContext<WeatherContextType | undefined>(undefined);
-
-// Load saved locations from localStorage
-const getSavedLocationsFromStorage = (): Location[] => {
-  try {
-    const savedLocations = localStorage.getItem('weatherLocations');
-    if (savedLocations) {
-      return JSON.parse(savedLocations);
-    }
-  } catch (error) {
-    console.error('Error loading saved locations from localStorage:', error);
-  }
-  
-  // Default locations if none are saved
-  return [
-    { id: '1', name: 'Roswell, GA', lat: 34.0232, lon: -84.3616 },
-    { id: '2', name: 'New York', lat: 40.7128, lon: -74.0060 },
-    { id: '3', name: 'San Francisco', lat: 37.7749, lon: -122.4194 }
-  ];
-};
-
-// Load preferred unit from localStorage
-const getUnitFromStorage = (): 'metric' | 'imperial' => {
-  try {
-    const unit = localStorage.getItem('weatherUnit');
-    if (unit === 'metric' || unit === 'imperial') {
-      return unit;
-    }
-  } catch (error) {
-    console.error('Error loading unit preference from localStorage:', error);
-  }
-  
-  // Default to imperial if not saved
-  return 'imperial';
-};
 
 export function WeatherProvider({ children }: { children: React.ReactNode }) {
   const { toast } = useToast();
