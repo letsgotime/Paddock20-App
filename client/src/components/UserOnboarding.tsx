@@ -726,7 +726,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete, user }) => 
                     
                     <div className="flex items-center space-x-2 text-[#08c519]">
                       <Clock size={20} />
-                      <span className="text-sm font-semibold">Expected beta duration: 3 months</span>
+                      <span className="text-sm font-semibold">Expected Beta duration: TBD</span>
                     </div>
                   </div>
                   
@@ -784,6 +784,10 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete, user }) => 
                     <h4 className="text-lg font-semibold text-[#1982FC] mb-4">
                       Beta Participant Options
                     </h4>
+                    
+                    <p className="text-gray-400 text-sm mb-4">
+                      You may apply to become a Beta Tester at any time, but we have limited space in the program available.
+                    </p>
                     
                     <div className="space-y-6">
                       <div className="flex items-start">
@@ -1196,7 +1200,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete, user }) => 
                           <h4 className="text-white font-medium mb-1">Contact Information</h4>
                           <p className="text-gray-400 text-sm">
                             If you have any questions about these agreements or the beta program, 
-                            please contact us at <span className="text-[#1982FC]">beta@paddock20.com</span>
+                            please contact us at <span className="text-[#1982FC]">beta@gotimemotorsports.com</span>
                           </p>
                         </div>
                       </div>
@@ -1635,15 +1639,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete, user }) => 
           )}
           
           <div className="flex items-center space-x-4">
-            {step < 5 && (
-              <button
-                type="button"
-                onClick={handleSkipToComplete}
-                className="text-[#1982FC] hover:text-[#1982FC]/80 text-sm transition-colors"
-              >
-                Skip to Completion
-              </button>
-            )}
+            {/* "Skip to Completion" button removed as requested */}
             
             <button
               type="button"
