@@ -1,18 +1,22 @@
 import { createClient } from '@supabase/supabase-js';
 
-// Check for environment variables and use demo fallbacks if not available
-const isDemoMode = typeof import.meta.env === 'undefined' || 
-                  !import.meta.env.VITE_SUPABASE_URL || 
-                  !import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Supabase credentials - hardcoded for now until environment variables are fixed
+// NOTE: Typically we would use environment variables, but for troubleshooting we're temporarily hardcoding
+const SUPABASE_URL = 'https://zpakosjpizkxiwsuzvrb.supabase.co';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InpwYWtvc2pwaXpreGl3c3V6dnJiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDY1Nzc0MjcsImV4cCI6MjA2MjE1MzQyN30.2Z-o9NRlZqvGLVwQMC1cRd_Ai0Qkb8KdENeKZeLUK7s';
 
-// Use environment variables or fallback to demo values
-const supabaseUrl = isDemoMode 
-  ? 'https://example.supabase.co' 
-  : import.meta.env.VITE_SUPABASE_URL;
+// Safely check environment variables
+const env = import.meta.env || {};
 
-const supabaseAnonKey = isDemoMode
-  ? 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.mock-key-for-development' 
-  : import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Debug: Log environment variable status without exposing full values
+console.log('Supabase configuration:', {
+  usingHardcodedValues: true,
+  urlFirstChars: SUPABASE_URL.substring(0, 15) + '...',
+  keyFirstChars: SUPABASE_ANON_KEY.substring(0, 15) + '...'
+});
+
+// We're no longer in demo mode since we're using hardcoded credentials
+const isDemoMode = false;
 
 // Log demo mode status
 if (isDemoMode) {
@@ -54,6 +58,9 @@ const createMockClient = () => {
 // Create a supabase client - either real or mocked
 const supabase = isDemoMode 
   ? createMockClient() as any
-  : createClient(supabaseUrl, supabaseAnonKey);
+  : createClient(
+      SUPABASE_URL,
+      SUPABASE_ANON_KEY
+    );
 
 export default supabase;
