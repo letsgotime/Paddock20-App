@@ -1,6 +1,8 @@
 import React, { useEffect, useState } from 'react';
 import { Route, useLocation } from 'wouter';
-import { useAuth } from './context/SupabaseAuthContext';
+import { SupabaseAuthProvider } from './context/SupabaseAuthContext';
+import { NativeAuthProvider } from './context/NativeAuthContext';
+import { useAuth } from './hooks/useAuth';
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -19,6 +21,11 @@ import SupportChatbot from "./components/SupportChatbot";
 import OneTapWeatherSnapshot from "./components/OneTapWeatherSnapshot";
 import RewardNotification from "./components/RewardNotification";
 import RewardsTracker from "./components/RewardsTracker";
+import AuthCallback from './pages/AuthCallback';
+import ResetPassword from './pages/ResetPassword';
+import LoginRedirect from './pages/LoginRedirect';
+import Logout from './pages/Logout';
+import AuthError from './pages/AuthError';
 
 // Page imports
 import Paddock20HomePage from "./pages/Paddock20HomePage";
@@ -60,6 +67,7 @@ import PrivacyPolicy from './pages/PrivacyPolicyPage';
 import TermsOfService from './pages/TermsOfServicePage';
 import BetaAgreement from './pages/BetaAgreement';
 import EmailVerifiedPage from './pages/EmailVerifiedPage';
+import AuthTestPage from './pages/AuthTestPage';
 
 // Context providers
 import { UserProfileProvider } from "./contexts/UserProfileContext";
@@ -75,6 +83,12 @@ import { SpotifyProvider } from "./contexts/SpotifyContext";
 // Accessibility
 import { MAIN_CONTENT_ID } from './lib/accessibility';
 import { useScrollToTop } from './hooks/useScrollToTop';
+
+// Wrapper component for the scrollToTop hook to avoid React Node type errors
+function ScrollToTopWrapper() {
+  useScrollToTop();
+  return null;
+}
 
 // Function to process onboarding status
 function App() {
@@ -108,13 +122,17 @@ function App() {
       <TooltipProvider>
         <PageTitleManager />
         {/* Custom scroll-to-top behavior */}
-        {typeof useScrollToTop === 'function' && useScrollToTop()}
+        <ScrollToTopWrapper />
         
-        {/* Main content */}
-        <AppContent 
-          hasCompletedOnboarding={hasCompletedOnboarding}
-          setHasCompletedOnboarding={setHasCompletedOnboarding}
-        />
+        {/* Wrap with both auth providers for transition period */}
+        <NativeAuthProvider>
+          <SupabaseAuthProvider>
+            <AppContent 
+              hasCompletedOnboarding={hasCompletedOnboarding}
+              setHasCompletedOnboarding={setHasCompletedOnboarding}
+            />
+          </SupabaseAuthProvider>
+        </NativeAuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
@@ -124,10 +142,22 @@ function App() {
 function AppContent({ 
   hasCompletedOnboarding, 
   setHasCompletedOnboarding 
+}: { 
+  hasCompletedOnboarding: boolean, 
+  setHasCompletedOnboarding: (value: boolean) => void 
 }) {
-  // Access auth state using the useAuth hook
-  const { user, loading, isAuthenticated } = useAuth();
+  // Get location without using auth
   const [location] = useLocation();
+  
+  // Use the auth hook with try/catch to handle potential errors
+  let authState = { user: null, loading: true, isAuthenticated: false };
+  try {
+    authState = useAuth();
+  } catch (error) {
+    console.error('Auth hook error:', error);
+  }
+  
+  const { user, loading, isAuthenticated } = authState;
   
   // Show loading state while auth is being determined
   if (loading) {
@@ -145,6 +175,7 @@ function AppContent({
   if (isAuthenticated && !hasCompletedOnboarding && user?.id) {
     return (
       <UserOnboarding 
+        user={user}
         onComplete={() => {
           // Mark onboarding as complete in localStorage
           const betaOnboardingKey = `paddock20_beta_onboarding_complete_${user.id}`;
@@ -206,8 +237,13 @@ function AppContent({
                           <Route path="/beta-agreement" component={BetaAgreement} />
                           <Route path="/email-verified" component={EmailVerifiedPage} />
                           <Route path="/auth" component={SupabaseAuthPage} />
+                          <Route path="/auth/callback" component={AuthCallback} />
+                          <Route path="/auth/reset-password" component={ResetPassword} />
+                          <Route path="/auth/error" component={AuthError} />
+                          <Route path="/login" component={LoginRedirect} />
                           <Route path="/spotify/callback" component={SpotifyCallbackPage} />
                           <Route path="/logout" component={LogoutPage} />
+                          <Route path="/logout/confirm" component={Logout} />
                           
                           {/* User onboarding redirect */}
                           <Route 
@@ -260,6 +296,7 @@ function AppContent({
                           <Route path="/spotify-test" component={() => <ProtectedRoute><SpotifyTestPage /></ProtectedRoute>} />
                           <Route path="/spotify-env-check" component={() => <ProtectedRoute><SpotifyEnvCheck /></ProtectedRoute>} />
                           <Route path="/api-explorer" component={() => <ProtectedRoute><ApiExplorerPage /></ProtectedRoute>} />
+                          <Route path="/auth-test" component={AuthTestPage} />
                           
                           {/* Special debug route */}
                           <Route path="/debug" component={() => {
@@ -323,4 +360,4 @@ function AppContent({
   );
 }
 
-export default App;
+export { App as default };

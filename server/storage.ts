@@ -88,6 +88,11 @@ export class DatabaseStorage implements IStorage {
       .returning();
     return user;
   }
+  
+  // Alias for updateUserLastLogin to maintain compatibility with auth.ts
+  async updateLastLogin(userId: number): Promise<User> {
+    return this.updateUserLastLogin(userId);
+  }
 
   async updateUserPassword(userId: number, password: string): Promise<void> {
     const now = new Date();
@@ -150,6 +155,38 @@ export class DatabaseStorage implements IStorage {
       .returning();
     
     return log;
+  }
+  
+  // Additional methods to maintain compatibility with auth.ts
+  
+  async updateAuthLogForUser(userId: number, data: Partial<AuthLog>): Promise<void> {
+    // Find the most recent auth log for the user and update it
+    await db
+      .update(authLogs)
+      .set(data)
+      .where(and(
+        eq(authLogs.userId, userId),
+        eq(authLogs.action, 'login'),
+        eq(authLogs.status, 'success')
+      ))
+      .orderBy(desc(authLogs.createdAt))
+      .limit(1);
+  }
+  
+  async updateResetToken(userId: number, token: string, expiresAt: Date): Promise<void> {
+    return this.updatePasswordResetToken(userId, token, expiresAt);
+  }
+  
+  async updatePasswordAndClearResetToken(userId: number, password: string): Promise<void> {
+    // Update password
+    await this.updateUserPassword(userId, password);
+    
+    // Clear reset token
+    await this.clearPasswordResetToken(userId);
+  }
+  
+  async updatePassword(userId: number, password: string): Promise<void> {
+    return this.updateUserPassword(userId, password);
   }
 }
 

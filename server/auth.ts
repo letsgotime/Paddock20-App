@@ -6,8 +6,8 @@ import { scrypt, randomBytes, timingSafeEqual } from "crypto";
 import { promisify } from "util";
 import { storage } from "./storage";
 import { User } from "@shared/schema";
-import connectPg from "connect-pg-simple";
-import { db } from "./db";
+// Use memorystore instead of PostgreSQL for sessions temporarily
+import memorystore from "memorystore";
 
 declare global {
   namespace Express {
@@ -16,7 +16,7 @@ declare global {
 }
 
 const scryptAsync = promisify(scrypt);
-const PostgresSessionStore = connectPg(session);
+const MemoryStore = memorystore(session);
 
 // Password hashing and verification
 async function hashPassword(password: string) {
@@ -33,13 +33,9 @@ async function comparePasswords(supplied: string, stored: string) {
 }
 
 export function setupAuth(app: Express) {
-  // Create session store
-  const sessionStore = new PostgresSessionStore({
-    conObject: {
-      connectionString: process.env.DATABASE_URL,
-    },
-    tableName: 'sessions',
-    createTableIfMissing: true
+  // Create a memory session store instead of Postgres
+  const sessionStore = new MemoryStore({
+    checkPeriod: 86400000 // Prune expired entries every 24h
   });
 
   // Session middleware setup

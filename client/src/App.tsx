@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Route, useLocation } from 'wouter';
 import { SupabaseAuthProvider } from './context/SupabaseAuthContext';
+import { NativeAuthProvider } from './context/NativeAuthContext';
 import { useAuth } from './hooks/useAuth';
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
@@ -123,13 +124,15 @@ function App() {
         {/* Custom scroll-to-top behavior */}
         <ScrollToTopWrapper />
         
-        {/* Main content wrapped in SupabaseAuthProvider to provide auth context */}
-        <SupabaseAuthProvider>
-          <AppContent 
-            hasCompletedOnboarding={hasCompletedOnboarding}
-            setHasCompletedOnboarding={setHasCompletedOnboarding}
-          />
-        </SupabaseAuthProvider>
+        {/* Wrap with both auth providers for transition period */}
+        <NativeAuthProvider>
+          <SupabaseAuthProvider>
+            <AppContent 
+              hasCompletedOnboarding={hasCompletedOnboarding}
+              setHasCompletedOnboarding={setHasCompletedOnboarding}
+            />
+          </SupabaseAuthProvider>
+        </NativeAuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
