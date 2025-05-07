@@ -9,6 +9,13 @@ export { AuthProvider, AuthContext } from './AuthProvider';
 // Hooks
 export { useAuth, useIsAdmin, useHasCompletedOnboarding } from './useAuth';
 
+// Route protection components
+export { ProtectedRoute, AdminRoute, OnboardedRoute } from './ProtectedRoute';
+
+// Page components
+export { default as AuthPage } from './AuthPage';
+export { default as LogoutPage } from './LogoutPage';
+
 // Types
 export type {
   User,
