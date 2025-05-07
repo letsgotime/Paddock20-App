@@ -21,6 +21,7 @@ import RewardNotification from "./components/RewardNotification";
 import RewardsTracker from "./components/RewardsTracker";
 import NativeAuthPage from './pages/NativeAuthPage';
 import NativeLogoutPage from './pages/NativeLogoutPage';
+import OnboardingPage from './pages/OnboardingPage';
 
 // Page imports
 import Paddock20HomePage from "./pages/Paddock20HomePage";
@@ -251,21 +252,8 @@ function AppContent({
                           <Route path="/spotify/callback" component={SpotifyCallbackPage} />
                           <Route path="/logout" component={NativeLogoutPage} />
                           
-                          {/* User onboarding redirect */}
-                          <Route 
-                            path="/onboarding" 
-                            component={() => {
-                              if (isAuthenticated && user?.id) {
-                                const betaOnboardingKey = `paddock20_beta_onboarding_complete_${user.id}`;
-                                localStorage.removeItem(betaOnboardingKey);
-                                window.location.href = '/';
-                                return <div className="p-8 text-white">Redirecting to onboarding...</div>;
-                              } else {
-                                window.location.href = '/auth';
-                                return <div className="p-8 text-white">Please log in to continue onboarding...</div>;
-                              }
-                            }} 
-                          />
+                          {/* User onboarding page */}
+                          <Route path="/onboarding" component={OnboardingPage} />
                         
                           {/* Protected routes */}
                           <Route path="/" component={() => <ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
