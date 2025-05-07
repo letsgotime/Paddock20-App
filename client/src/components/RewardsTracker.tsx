@@ -16,9 +16,10 @@ const RewardsTracker: React.FC = () => {
   useEffect(() => {
     const trackVisit = () => {
       try {
-        if (location && location.pathname && rewards && typeof rewards.trackPageVisit === 'function') {
+        // With wouter, location is just the path string
+        if (location && rewards && typeof rewards.trackPageVisit === 'function') {
           // Track the page visit
-          rewards.trackPageVisit(location.pathname);
+          rewards.trackPageVisit(location);
         }
       } catch (error) {
         console.error('Error tracking page visit:', error);
@@ -28,7 +29,7 @@ const RewardsTracker: React.FC = () => {
     // Add a small timeout to avoid potential render loops
     const timer = setTimeout(trackVisit, 50);
     return () => clearTimeout(timer);
-  }, [location?.pathname]); // Intentionally removed rewards dependency
+  }, [location]); // Intentionally removed rewards dependency
   
   // Run periodic checks for time-based rewards
   useEffect(() => {
