@@ -1,188 +1,298 @@
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '../context/AuthContext';
-import { useAuth0 } from '@auth0/auth0-react';
 import { useLocation } from 'wouter';
-import { CheckCircle, ChevronRight, LogOut, RefreshCw } from 'lucide-react';
-import { Button } from '@/components/ui/button';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from '../hooks/useAuth';
+import { z } from 'zod';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { useForm } from 'react-hook-form';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Loader2 } from "lucide-react";
 
-const AuthPage = () => {
-  // Use both our wrapped auth context and the direct Auth0 hook for maximum reliability
-  const { login, register, user, logout, isAuthenticated } = useAuth();
-  const { loginWithRedirect } = useAuth0();
-  const [, setLocation] = useLocation();
-  const [isLoggingOut, setIsLoggingOut] = useState(false);
+// Form validation schemas
+const loginSchema = z.object({
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+});
+
+const signupSchema = z.object({
+  username: z.string().min(3, { message: "Username must be at least 3 characters" }),
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  confirmPassword: z.string(),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
+});
+
+type LoginFormValues = z.infer<typeof loginSchema>;
+type SignupFormValues = z.infer<typeof signupSchema>;
+
+export default function AuthPage() {
+  const [activeTab, setActiveTab] = useState<string>('login');
+  const [, navigate] = useLocation();
+  const { toast } = useToast();
   
-  // Debug logs to help diagnose Auth0 issues
+  // Use try/catch to handle potential errors with auth context
+  let auth = {
+    user: null,
+    loading: false,
+    isAuthenticated: false,
+    error: null,
+    login: async (email: string, password: string) => {},
+    register: async (email: string, password: string, username: string) => {},
+    logout: async () => {},
+  };
+  
+  try {
+    auth = useAuth();
+  } catch (error) {
+    console.error("Auth hook error:", error);
+  }
+
+  // If already logged in, redirect to home
   useEffect(() => {
-    console.log('Auth Page - Direct Auth0 Login Redirect URI:', `${window.location.origin}/auth/callback`);
-    console.log('Auth Page - Current location:', window.location.href);
-  }, []);
-  
-  // Redirect if already logged in, but add a delay to give the logout time to process
-  React.useEffect(() => {
-    // If there's a user and we're not in the process of logging out, redirect
-    if (user && !isLoggingOut) {
-      const urlParams = new URLSearchParams(window.location.search);
-      const redirectPath = urlParams.get('redirect') || '/dashboard';
-      // Add a small delay to prevent immediate redirect if the user just clicked logout
-      const timer = setTimeout(() => {
-        setLocation(redirectPath);
-      }, 500);
-      return () => clearTimeout(timer);
+    if (auth.isAuthenticated) {
+      navigate("/");
     }
-  }, [user, setLocation, isLoggingOut]);
-  
-  const handleLogout = () => {
-    setIsLoggingOut(true);
-    logout();
-    // Reset the flag after a delay - the Auth0 logout should have completed by then
-    setTimeout(() => setIsLoggingOut(false), 2000);
+  }, [auth.isAuthenticated, navigate]);
+
+  // Form for login
+  const loginForm = useForm<LoginFormValues>({
+    resolver: zodResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  // Form for signup
+  const signupForm = useForm<SignupFormValues>({
+    resolver: zodResolver(signupSchema),
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
+    },
+  });
+
+  // Handle login form submission
+  const onLoginSubmit = async (values: LoginFormValues) => {
+    try {
+      // The login function will handle the toast messages
+      await auth.login(values.email, values.password);
+    } catch (error) {
+      console.error("Login error:", error);
+    }
   };
 
-  // Direct Auth0 login - using Auth0's own function to ensure redirect works properly
-  const handleDirectAuth0Login = () => {
-    // Use the Auth0 loginWithRedirect directly to avoid any middleware issues
-    loginWithRedirect({
-      authorizationParams: {
-        redirect_uri: `${window.location.origin}/auth/callback`,
-      }
-    });
+  // Handle signup form submission
+  const onSignupSubmit = async (values: SignupFormValues) => {
+    try {
+      // The register function will handle the toast messages
+      await auth.register(values.email, values.password, values.username);
+      setActiveTab('login');
+    } catch (error) {
+      console.error("Signup error:", error);
+    }
   };
-  
-  // Show a simpler debug version if user is logged in
-  if (user && !isLoggingOut) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white flex flex-col items-center justify-center p-4">
-        <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-xl p-8 w-full max-w-md shadow-xl">
-          <h2 className="text-2xl font-bold text-[#1982FC] mb-4 text-center">Currently Logged In</h2>
-          <p className="text-gray-200 mb-8 text-center">You are currently logged in as {user.username || user.email}</p>
-          
-          <div className="flex flex-col gap-4">
-            <Button 
-              onClick={handleLogout}
-              variant="destructive" 
-              className="w-full font-bold py-6 h-16 rounded-lg transition-all duration-200"
-            >
-              Log Out
-              <LogOut className="ml-2 h-5 w-5" />
-            </Button>
-            
-            <Button 
-              onClick={() => setLocation('/dashboard')} 
-              className="w-full bg-[#1982FC] hover:bg-[#1982FC]/80 text-white font-bold py-6 h-16 rounded-lg transition-all duration-200"
-            >
-              Go to Dashboard
-              <ChevronRight className="ml-2 h-5 w-5" />
-            </Button>
-          </div>
-        </div>
-      </div>
-    );
-  }
-  
-  // Show a loading state while logout is in progress
-  if (isLoggingOut) {
-    return (
-      <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white flex flex-col items-center justify-center p-4">
-        <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-xl p-8 w-full max-w-md shadow-xl text-center">
-          <RefreshCw className="h-12 w-12 animate-spin text-[#1982FC] mx-auto mb-4" />
-          <h2 className="text-2xl font-bold text-white mb-4">Logging Out...</h2>
-          <p className="text-gray-200">Please wait while we complete the logout process</p>
-        </div>
-      </div>
-    );
-  }
-  
-  // Regular auth page for non-logged in users
+
   return (
-    <div className="min-h-screen bg-gradient-to-b from-gray-900 to-black text-white">
-      <div className="container mx-auto px-4 py-16 max-w-6xl">
-        {/* Header */}
-        <div className="text-center mb-16">
-          <h1 className="text-5xl md:text-6xl font-bold text-[#1982FC] mb-4">PADDOCK<span className="text-[#08c519]">20</span></h1>
-          <p className="text-xl text-gray-200 italic max-w-3xl mx-auto">
-            The bespoke automotive lifestyle platform with F1-precision intelligence that transforms everyday car care into a curated experience
-          </p>
-        </div>
-        
-        {/* Main content */}
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-          {/* Left column: Features */}
-          <div className="space-y-10">
-            <div className="border-l-4 border-[#1982FC] pl-6 py-2">
-              <h3 className="text-2xl font-semibold mb-2 text-white">Track maintenance, mods, and detailing with precision</h3>
-              <p className="text-gray-300">A comprehensive system for all maintenance, modifications, and detailing records with F1-inspired interfaces</p>
-            </div>
-            
-            <div className="border-l-4 border-[#08c519] pl-6 py-2">
-              <h3 className="text-2xl font-semibold mb-2 text-white">Discover perfect drives with Weather Paddock intelligence</h3>
-              <p className="text-gray-300">Advanced weather telemetry and route planning designed specifically for the automotive enthusiast</p>
-            </div>
-            
-            <div className="border-l-4 border-[#1982FC] pl-6 py-2">
-              <h3 className="text-2xl font-semibold mb-2 text-white">Level up with premium features for the complete enthusiast</h3>
-              <p className="text-gray-300">Competitive goal tracking, performance analytics, and exclusive automotive experiences</p>
-            </div>
-            
-            <div className="bg-[#1982FC]/10 border border-[#1982FC]/40 rounded-lg p-8 mt-10">
-              <h4 className="text-2xl font-bold text-[#1982FC] mb-3 text-center">BETA ACCESS</h4>
-              <p className="text-lg text-gray-200 text-center mb-4">
-                Join the movement. Full access to our complete ecosystem during the exclusive beta phase
-              </p>
-            </div>
-          </div>
+    <div className="flex min-h-screen">
+      {/* Left side - Auth form */}
+      <div className="flex-1 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md mx-auto">
+          <CardHeader className="space-y-1 text-center">
+            <CardTitle className="text-2xl font-bold tracking-tight">Welcome to Paddock20</CardTitle>
+            <CardDescription>
+              Your gateway to the ultimate car enthusiast experience
+            </CardDescription>
+          </CardHeader>
           
-          {/* Right column: Auth card */}
-          <div className="flex items-center justify-center">
-            <div className="bg-gray-900/80 backdrop-blur-sm border border-gray-800 rounded-xl p-8 w-full max-w-md shadow-xl">
-              <div className="text-center mb-8">
-                <h2 className="text-2xl font-bold text-white">Thanks for visiting!</h2>
+          <CardContent>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="login">Log In</TabsTrigger>
+                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="login">
+                <Form {...loginForm}>
+                  <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                    <FormField
+                      control={loginForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="you@example.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={loginForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="••••••••" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-carolina-blue hover:bg-blue-700"
+                      disabled={auth.loading}
+                    >
+                      {auth.loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Logging in...
+                        </>
+                      ) : (
+                        "Log In"
+                      )}
+                    </Button>
+                  </form>
+                </Form>
+              </TabsContent>
+              
+              <TabsContent value="signup">
+                <Form {...signupForm}>
+                  <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-4">
+                    <FormField
+                      control={signupForm.control}
+                      name="username"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Username</FormLabel>
+                          <FormControl>
+                            <Input placeholder="username" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={signupForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="you@example.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={signupForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="••••••••" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={signupForm.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirm Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="••••••••" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-carolina-blue hover:bg-blue-700"
+                      disabled={auth.loading}
+                    >
+                      {auth.loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creating account...
+                        </>
+                      ) : (
+                        "Create Account"
+                      )}
+                    </Button>
+                  </form>
+                </Form>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+          
+          <CardFooter className="flex flex-col space-y-4">
+            <div className="text-center text-sm">
+              By continuing, you agree to our{" "}
+              <a href="/terms-of-service" className="underline text-carolina-blue hover:text-blue-700">
+                Terms of Service
+              </a>{" "}
+              and{" "}
+              <a href="/privacy-policy" className="underline text-carolina-blue hover:text-blue-700">
+                Privacy Policy
+              </a>
+            </div>
+          </CardFooter>
+        </Card>
+      </div>
+      
+      {/* Right side - Hero section */}
+      <div className="hidden lg:flex flex-1 bg-[url('/carbon-fiber-bg-dark.jpg')] bg-cover">
+        <div className="flex flex-col justify-center items-center w-full p-8 bg-black/70">
+          <div className="max-w-md text-center">
+            <h1 className="text-4xl font-bold text-white mb-4">Experience F1-Grade Analytics</h1>
+            <p className="text-xl text-gray-200 mb-6">
+              Paddock20 transforms your driving insights with Formula 1 level technology for everyday drivers
+            </p>
+            <div className="grid grid-cols-2 gap-4 mb-8">
+              <div className="bg-black/50 p-4 rounded border border-carolina-blue">
+                <h3 className="text-carolina-blue font-bold mb-2">Weather Paddock</h3>
+                <p className="text-gray-300">Get F1-grade weather insights for your drive</p>
               </div>
-              
-              <div className="space-y-5 mb-8">
-                <div className="flex items-start">
-                  <CheckCircle className="h-6 w-6 text-[#08c519] mr-3 flex-shrink-0 mt-1" />
-                  <p className="text-gray-200 text-lg">Advanced vehicle management dashboard</p>
-                </div>
-                <div className="flex items-start">
-                  <CheckCircle className="h-6 w-6 text-[#08c519] mr-3 flex-shrink-0 mt-1" />
-                  <p className="text-gray-200 text-lg">Intelligent weather-based drive planning</p>
-                </div>
-                <div className="flex items-start">
-                  <CheckCircle className="h-6 w-6 text-[#08c519] mr-3 flex-shrink-0 mt-1" />
-                  <p className="text-gray-200 text-lg">Exclusive automotive community features</p>
-                </div>
+              <div className="bg-black/50 p-4 rounded border border-carolina-blue">
+                <h3 className="text-carolina-blue font-bold mb-2">Garage Vault</h3>
+                <p className="text-gray-300">Manage your vehicles with comprehensive details</p>
               </div>
-              
-              {/* Primary button - Try direct Auth0 login first */}
-              <Button 
-                onClick={handleDirectAuth0Login} 
-                className="w-full bg-[#08c519] hover:bg-[#08c519]/80 text-white font-bold text-xl py-6 h-16 rounded-lg transition-all duration-200 shadow-lg shadow-[#08c519]/20"
-              >
-                Join the Grid
-                <ChevronRight className="ml-2 h-6 w-6" />
-              </Button>
-              
-              {/* Fallback button that uses our wrapper method - just in case */}
-              <div className="mt-4">
-                <Button 
-                  onClick={() => register()} 
-                  variant="outline"
-                  className="w-full border-gray-700 text-gray-300 hover:text-white hover:bg-gray-800"
-                >
-                  Alternative Sign-In
-                </Button>
+              <div className="bg-black/50 p-4 rounded border border-carolina-blue">
+                <h3 className="text-carolina-blue font-bold mb-2">Drive Journal</h3>
+                <p className="text-gray-300">Record and analyze your driving experiences</p>
               </div>
-              
-              <p className="text-sm text-center text-gray-400 mt-4">
-                By signing up, you agree to our <a href="/terms-of-service" className="text-[#1982FC] hover:underline">Terms of Service</a> and <a href="/privacy-policy" className="text-[#1982FC] hover:underline">Privacy Policy</a>
-              </p>
+              <div className="bg-black/50 p-4 rounded border border-carolina-blue">
+                <h3 className="text-carolina-blue font-bold mb-2">Podium Pursuit</h3>
+                <p className="text-gray-300">Your performance journey through achievements, rewards, and milestones</p>
+              </div>
             </div>
           </div>
         </div>
       </div>
     </div>
   );
-};
-
-export default AuthPage;
+}
