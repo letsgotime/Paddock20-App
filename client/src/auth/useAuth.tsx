@@ -5,6 +5,7 @@
 import { useContext } from 'react';
 import { AuthContext } from './AuthProvider';
 import type { AuthContextType } from './types';
+import { AuthRole, AuthPermission, ROLE_PERMISSIONS } from './types';
 
 /**
  * Hook to access authentication context
@@ -24,13 +25,49 @@ export function useAuth(): AuthContextType {
 }
 
 /**
- * Hook to check if the current user is an admin
+ * Hook to check if the current user is an admin (Team Principal or Race Engineer)
  * 
- * @returns Boolean indicating if user has admin role
+ * @returns Boolean indicating if user has admin privileges
  */
 export function useIsAdmin(): boolean {
   const { user, isAuthenticated } = useAuth();
-  return isAuthenticated && user?.role === 'admin';
+  return isAuthenticated && (
+    user?.role === AuthRole.TEAM_PRINCIPAL || 
+    user?.role === AuthRole.RACE_ENGINEER
+  );
+}
+
+/**
+ * Hook to check if the current user is a premium subscriber
+ * 
+ * @returns Boolean indicating if user has premium subscription
+ */
+export function useIsPremium(): boolean {
+  const { user, isAuthenticated } = useAuth();
+  
+  if (!isAuthenticated || !user) return false;
+  
+  // Check via subscription tier
+  if (user.subscriptionTier === 'premium' || user.subscriptionTier === 'team') {
+    return true;
+  }
+  
+  // Check via role
+  return (
+    user.role === AuthRole.TEAM_MANAGER || 
+    user.role === AuthRole.TEAM_PRINCIPAL || 
+    user.role === AuthRole.RACE_ENGINEER
+  );
+}
+
+/**
+ * Hook to check if the current user is a beta tester
+ * 
+ * @returns Boolean indicating if user is a beta tester
+ */
+export function useIsBetaTester(): boolean {
+  const { user, isAuthenticated } = useAuth();
+  return isAuthenticated && user?.role === AuthRole.BETA_TESTER;
 }
 
 /**
