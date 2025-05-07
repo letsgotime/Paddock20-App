@@ -5,37 +5,42 @@ import { eq } from 'drizzle-orm';
 
 export const authService = {
   async register(email: string, password: string, username: string) {
-    // Check if user already exists
-    const existingUser = await db.select().from(users).where(eq(users.email, email));
-    
-    if (existingUser.length > 0) {
-      throw new Error('User already exists');
-    }
-
-    // Hash password
-    const hash = await bcrypt.hash(password, 12);
-    
-    // Create new user with required fields
-    const newUsers = await db.insert(users)
-      .values({ 
-        email, 
-        password: hash, 
-        username,
-        role: 'user',
-        createdAt: new Date(),
-        updatedAt: new Date()
-      })
-      .returning();
+    try {
+      // Check if user already exists
+      const existingUser = await db.select().from(users).where(eq(users.email, email));
       
-    const newUser = newUsers[0];
-
-    // Return safe user object (without password)
-    return {
-      id: newUser.id,
-      email: newUser.email,
-      username: newUser.username,
-      role: newUser.role
-    };
+      if (existingUser.length > 0) {
+        throw new Error('User already exists');
+      }
+  
+      // Hash password
+      const hash = await bcrypt.hash(password, 12);
+      
+      // Only insert fields we know exist in the database
+      // Avoid any fields that might not exist (like phone)
+      const newUsers = await db.insert(users)
+        .values({ 
+          email, 
+          password: hash, 
+          username,
+          role: 'user'
+          // Let database defaults handle created_at and updated_at
+        })
+        .returning();
+        
+      const newUser = newUsers[0];
+  
+      // Return safe user object (without password)
+      return {
+        id: newUser.id,
+        email: newUser.email,
+        username: newUser.username,
+        role: newUser.role
+      };
+    } catch (error) {
+      console.error("Registration error details:", error);
+      throw error;
+    }
   },
 
   async login(email: string, password: string) {
