@@ -189,7 +189,6 @@ export default function OnboardingModal({ isOpen = true, onClose, betaRole = 'us
           // Update with interests
           userProfileWarehouse.updatePreferences({
             ...currentPrefs,
-            // Store under interests key which is supported
             interests: data.goals.interests
           });
         }
@@ -209,8 +208,7 @@ export default function OnboardingModal({ isOpen = true, onClose, betaRole = 'us
       
       if (data.onboarding_complete) {
         userProfileWarehouse.updateIdentity({
-          onboardingCompleted: true,
-          betaRole: betaRole
+          onboardingCompleted: true
         });
       }
       
@@ -247,7 +245,6 @@ export default function OnboardingModal({ isOpen = true, onClose, betaRole = 'us
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                   onboardingCompleted: true,
-                  betaRole: betaRole,
                   userPreferences: profile.preferences,
                   vehicles: profile.vehicles,
                   interests: profile.goals.map(goal => goal.category)

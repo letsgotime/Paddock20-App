@@ -99,6 +99,9 @@ export interface UserPreferences {
     dataCollection: boolean;
   };
   
+  // User interests
+  interests?: string[];
+  
   // Weather preferences
   weatherPreferences: {
     defaultLocation: {
@@ -125,6 +128,9 @@ export interface UserPreferences {
     backgroundSync: boolean;
     cacheStrategy: 'minimal' | 'balanced' | 'aggressive';
   };
+  
+  // Custom fields for extensibility
+  customFields?: Record<string, any>;
 }
 
 // 3. User agreement records
@@ -187,6 +193,7 @@ export interface VehicleReference {
   year: number;
   nickname?: string;
   vin?: string;
+  color?: string;
   status: 'active' | 'inactive' | 'archived' | 'sold';
   primaryImage?: string;
 }
