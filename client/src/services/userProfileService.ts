@@ -157,11 +157,18 @@ const demoUserProfile: UserProfile = {
   id: '1',
   username: username,
   displayName: userDisplayName,
+  name: userDisplayName,
   avatar: '/assets/images/default-avatar.png',
   memberSince: '2023-04-15',
   membershipLevel: 'premium',
   bio: 'Passionate driver with a love for mountain roads and track days. Always looking for the perfect line.',
   location: 'Atlanta, GA',
+  
+  // Onboarding progress tracking
+  hasMaintenanceRecords: true,
+  hasDetailingPlan: false,
+  hasAchievements: true,
+  hasViewedEvents: false,
   
   statistics: {
     totalDrives: 47,
@@ -293,6 +300,14 @@ const demoUserProfile: UserProfile = {
         name: 'Tail of the Dragon'
       }
     ]
+  },
+  
+  drivePreferences: {
+    preferredDriveTypes: ['scenic', 'spirited'],
+    preferredTimeOfDay: 'early morning',
+    favoriteRoadTypes: ['twisty mountain roads', 'coastal highways'],
+    maxDriveDistance: 200,
+    preferredWeather: ['sunny', 'partly cloudy']
   },
   
   lastActive: new Date().toISOString()
