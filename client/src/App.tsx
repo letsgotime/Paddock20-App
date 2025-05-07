@@ -19,6 +19,11 @@ import SupportChatbot from "./components/SupportChatbot";
 import OneTapWeatherSnapshot from "./components/OneTapWeatherSnapshot";
 import RewardNotification from "./components/RewardNotification";
 import RewardsTracker from "./components/RewardsTracker";
+import AuthCallback from './pages/AuthCallback';
+import ResetPassword from './pages/ResetPassword';
+import LoginRedirect from './pages/LoginRedirect';
+import Logout from './pages/Logout';
+import AuthError from './pages/AuthError';
 
 // Page imports
 import Paddock20HomePage from "./pages/Paddock20HomePage";
