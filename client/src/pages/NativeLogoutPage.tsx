@@ -5,19 +5,30 @@ import { useNativeAuth } from '@/hooks/useNativeAuth';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
+import { clearUserProfileFromLocalStorage, getUserProfileFromLocalStorage } from '@/utils/authFlowUtils';
 
 export default function NativeLogoutPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [, navigate] = useLocation();
-  const { logout, isAuthenticated } = useNativeAuth();
+  const { logout, isAuthenticated, user } = useNativeAuth();
   const { toast } = useToast();
 
+  // Store user info before logout to use in messages
+  const [userDisplayName, setUserDisplayName] = useState<string>('');
+
+  // If not authenticated, redirect to auth page
   useEffect(() => {
     if (!isAuthenticated) {
-      navigate('/');
+      navigate('/auth');
+    } else {
+      // Get a display name for personalized messages (username or email)
+      const userProfile = getUserProfileFromLocalStorage() || user;
+      if (userProfile) {
+        setUserDisplayName(userProfile.username || userProfile.email || '');
+      }
     }
-  }, [isAuthenticated, navigate]);
+  }, [isAuthenticated, navigate, user]);
 
   const handleLogout = async () => {
     setLoading(true);
@@ -27,11 +38,19 @@ export default function NativeLogoutPage() {
       const result = await logout();
       
       if (result.success) {
+        // Clear user profile from localStorage on successful logout
+        clearUserProfileFromLocalStorage();
+        
         toast({
           title: "Logout Successful",
           description: "You have been securely logged out",
         });
-        navigate('/');
+        
+        // Redirect to auth page after logout (not to homepage)
+        // This ensures consistent flow: Logout > Auth page
+        setTimeout(() => {
+          navigate('/auth');
+        }, 1000);
       } else {
         setError(result.error || 'An error occurred during logout');
         toast({
@@ -65,7 +84,11 @@ export default function NativeLogoutPage() {
         </CardHeader>
         
         <CardContent className="text-center">
-          <p className="mb-6">Are you sure you want to log out of your Paddock20 account?</p>
+          <p className="mb-6">
+            {userDisplayName 
+              ? `${userDisplayName}, are you sure you want to log out of your Paddock20 account?` 
+              : "Are you sure you want to log out of your Paddock20 account?"}
+          </p>
           
           {error && (
             <div className="p-3 mb-4 bg-red-900/30 border border-red-700 rounded-md text-red-50 text-sm">
