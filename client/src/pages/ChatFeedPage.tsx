@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { db } from "@/services/firebaseConfig";
 import { collection, addDoc, onSnapshot, query, orderBy, Timestamp, where, getDocs } from "firebase/firestore";
-import { useAuth } from "@/hooks/useAuth";
+import { useAuth } from "@/auth/useAuth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { UsersRound, Car, Trophy, Calendar, Heart, Users, Wrench, Map, MessageSquare } from "lucide-react";

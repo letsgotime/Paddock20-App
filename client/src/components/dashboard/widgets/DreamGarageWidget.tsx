@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Star, Heart, Car, Truck, Gauge, Map, Home, Clock, Bike, Compass, Edit2, Check, ChevronDown, ChevronUp, PlusCircle } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/auth/useAuth';
 import { useUserProfileStore } from '@/services/userProfileService';
 
 // Define interfaces for our dreams categories
