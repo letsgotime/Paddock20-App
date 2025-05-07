@@ -29,6 +29,7 @@ export interface UserIdentity {
   id: string;                               // Unique user identifier
   username: string;                         // Username for login
   email?: string;                           // User email (if available)
+  phone?: string;                           // User phone number (optional)
   displayName: string;                      // User's display name
   firstName?: string;                       // First name (optional)
   lastName?: string;                        // Last name (optional)
@@ -38,7 +39,6 @@ export interface UserIdentity {
   memberSince: string;                      // ISO date when user joined
   lastActive: string;                       // ISO date of last activity
   membershipLevel: 'free' | 'premium' | 'elite'; // Membership tier
-  phoneNumber?: string;                     // User phone (if provided)
   socialLinks?: {                           // Social media profiles
     instagram?: string;
     twitter?: string;
