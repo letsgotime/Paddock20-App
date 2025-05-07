@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
@@ -10,6 +10,9 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Loader2 } from "lucide-react";
+// Auth provider imports
+import { useContext } from 'react';
+import { AuthContext } from '../context/SupabaseAuthContext';
 
 // Form validation schemas
 const loginSchema = z.object({
@@ -35,6 +38,18 @@ export default function StandaloneAuthPage() {
   const [loading, setLoading] = useState(false);
   const [, navigate] = useLocation();
   const { toast } = useToast();
+  const auth = useContext(AuthContext);
+  if (!auth) {
+    throw new Error('Auth context is undefined, make sure the component is wrapped with SupabaseAuthProvider');
+  }
+  const { login, signUp, isAuthenticated } = auth;
+  
+  // Redirect if already authenticated
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
 
   // Form for login
   const loginForm = useForm<LoginFormValues>({
@@ -60,22 +75,27 @@ export default function StandaloneAuthPage() {
   const onLoginSubmit = async (values: LoginFormValues) => {
     setLoading(true);
     try {
-      // Simulate login API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { error } = await login(values.email, values.password);
       
-      toast({
-        title: "Login Simulation",
-        description: "This is a simulated login. The native authentication system is still in development.",
-      });
-      
-      // In a real implementation, we would make an API call here
-      // await fetch('/api/auth/login', {...})
-      
-    } catch (error) {
+      if (error) {
+        toast({
+          title: "Login Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Login Successful",
+          description: "Welcome to Paddock20!",
+        });
+        
+        // Redirect will happen automatically via the useEffect
+      }
+    } catch (error: any) {
       console.error("Login error:", error);
       toast({
         title: "Login Failed",
-        description: "An error occurred while trying to log in.",
+        description: error.message || "An error occurred while trying to log in.",
         variant: "destructive",
       });
     } finally {
@@ -87,23 +107,32 @@ export default function StandaloneAuthPage() {
   const onSignupSubmit = async (values: SignupFormValues) => {
     setLoading(true);
     try {
-      // Simulate registration API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      const { error } = await signUp(
+        values.email, 
+        values.password, 
+        { username: values.username }
+      );
       
-      toast({
-        title: "Registration Simulation",
-        description: "This is a simulated registration. The native authentication system is still in development.",
-      });
-      
-      // In a real implementation, we would make an API call here
-      // await fetch('/api/auth/register', {...})
-      
-      setActiveTab('login');
-    } catch (error) {
+      if (error) {
+        toast({
+          title: "Registration Failed",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Registration Successful",
+          description: "Your account has been created. Please check your email for verification.",
+        });
+        
+        // Switch to login tab
+        setActiveTab('login');
+      }
+    } catch (error: any) {
       console.error("Signup error:", error);
       toast({
         title: "Registration Failed",
-        description: "An error occurred while trying to create an account.",
+        description: error.message || "An error occurred while trying to create an account.",
         variant: "destructive",
       });
     } finally {
