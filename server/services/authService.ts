@@ -12,23 +12,27 @@ export const authService = {
       if (existingUser.length > 0) {
         throw new Error('User already exists');
       }
+      
+      // Check if username is taken
+      const existingUsername = await db.select().from(users).where(eq(users.username, username));
+      
+      if (existingUsername.length > 0) {
+        throw new Error('Username is already taken');
+      }
   
       // Hash password
       const hash = await bcrypt.hash(password, 12);
       
-      // Only insert fields we know exist in the database
-      // Avoid any fields that might not exist (like phone)
-      const newUsers = await db.insert(users)
-        .values({ 
-          email, 
-          password: hash, 
+      // Insert only the essential fields that we know exist in the schema
+      const newUser = await db.insert(users)
+        .values({
+          email,
           username,
+          password: hash,
           role: 'user'
-          // Let database defaults handle created_at and updated_at
         })
-        .returning();
-        
-      const newUser = newUsers[0];
+        .returning()
+        .then(users => users[0]);
   
       // Return safe user object (without password)
       return {
@@ -44,36 +48,43 @@ export const authService = {
   },
 
   async login(email: string, password: string) {
-    // Find user
-    const foundUsers = await db.select().from(users).where(eq(users.email, email));
-    
-    if (foundUsers.length === 0) {
-      throw new Error('Invalid credentials');
+    try {
+      // Find user
+      const foundUsers = await db.select().from(users).where(eq(users.email, email));
+      
+      if (foundUsers.length === 0) {
+        throw new Error('Invalid credentials');
+      }
+      
+      const user = foundUsers[0];
+  
+      // Check password
+      const isPasswordValid = await bcrypt.compare(password, user.password);
+      
+      if (!isPasswordValid) {
+        throw new Error('Invalid credentials');
+      }
+  
+      // Update lastLogin time
+      await db.update(users)
+        .set({ 
+          lastLogin: new Date()
+        })
+        .where(eq(users.id, user.id));
+  
+      // Return safe user object (without password)
+      return {
+        id: user.id,
+        email: user.email,
+        username: user.username,
+        role: user.role,
+        firstName: user.firstName || null,
+        lastName: user.lastName || null
+      };
+    } catch (error) {
+      console.error("Login error details:", error);
+      throw error;
     }
-    
-    const user = foundUsers[0];
-
-    // Check password
-    const isPasswordValid = await bcrypt.compare(password, user.password);
-    
-    if (!isPasswordValid) {
-      throw new Error('Invalid credentials');
-    }
-
-    // Update last login time
-    await db.update(users)
-      .set({ lastLogin: new Date(), updatedAt: new Date() })
-      .where(eq(users.id, user.id));
-
-    // Return safe user object (without password)
-    return {
-      id: user.id,
-      email: user.email,
-      username: user.username,
-      role: user.role,
-      firstName: user.firstName,
-      lastName: user.lastName
-    };
   },
 
   logout(req: any) {
