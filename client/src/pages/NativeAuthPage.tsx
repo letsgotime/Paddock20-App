@@ -288,9 +288,14 @@ export default function NativeAuthPage() {
                       name="confirmPassword"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel>Confirm Password</FormLabel>
+                          <FormLabel className="text-[#1982FC]">Confirm Password</FormLabel>
                           <FormControl>
-                            <Input type="password" placeholder="••••••••" {...field} />
+                            <Input 
+                              type="password" 
+                              placeholder="••••••••" 
+                              className={cn("bg-gray-700 text-white border-gray-600 focus:border-[#1982FC]")} 
+                              {...field} 
+                            />
                           </FormControl>
                           <FormMessage />
                         </FormItem>
