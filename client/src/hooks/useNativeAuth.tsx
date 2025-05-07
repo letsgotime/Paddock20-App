@@ -1,5 +1,10 @@
 import React, { createContext, useState, useEffect, useContext, ReactNode } from 'react';
 import { apiRequest } from '@/lib/queryClient';
+import { 
+  saveUserProfileToLocalStorage, 
+  clearUserProfileFromLocalStorage,
+  getNextAuthFlowPath
+} from '@/utils/authFlowUtils';
 
 // Define user type
 export type User = {
