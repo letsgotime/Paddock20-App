@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Route, useLocation } from 'wouter';
 import { NativeAuthProvider, useNativeAuth } from '@/hooks/useNativeAuth';
-import { AuthProvider } from '@/hooks/useAuth';
+import { AuthProvider } from '@/auth/AuthProvider';
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -13,7 +13,7 @@ import ContextualBreadcrumbs from './components/ContextualBreadcrumbs';
 import FixedSoundBar from "./components/FixedSoundBar";
 import Footer from "./components/Footer";
 import NotFound from "@/pages/not-found";
-import { ProtectedRoute } from './components/ProtectedRoute';
+import { ProtectedRoute } from './auth/ProtectedRoute';
 import UserOnboarding from "./components/UserOnboarding";
 import SupportChatbot from "./components/SupportChatbot";
 import OneTapWeatherSnapshot from "./components/OneTapWeatherSnapshot";

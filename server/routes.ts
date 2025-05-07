@@ -248,7 +248,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.use(supabaseAuthRoutes);
   
   // Register local auth registration routes
-  // NOTE: Auth routes are already registered in auth.ts's setupAuth function
+  // Auth routes are already registered in auth.ts's setupAuth function
+  // IMPORTANT: Do NOT uncomment this line - it causes route conflicts
   // app.use('/api/auth', authRegisterRoutes);
   
   // Register User Profile routes
