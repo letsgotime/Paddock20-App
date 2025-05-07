@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Route, useLocation } from 'wouter';
-import { SupabaseAuthProvider } from './context/SupabaseAuthContext';
+import { useAuth } from './context/SupabaseAuthContext';
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -60,7 +60,6 @@ import PrivacyPolicy from './pages/PrivacyPolicyPage';
 import TermsOfService from './pages/TermsOfServicePage';
 import BetaAgreement from './pages/BetaAgreement';
 import EmailVerifiedPage from './pages/EmailVerifiedPage';
-import AuthTestPage from './pages/AuthTestPage';
 
 // Context providers
 import { UserProfileProvider } from "./contexts/UserProfileContext";
@@ -76,12 +75,6 @@ import { SpotifyProvider } from "./contexts/SpotifyContext";
 // Accessibility
 import { MAIN_CONTENT_ID } from './lib/accessibility';
 import { useScrollToTop } from './hooks/useScrollToTop';
-
-// Wrapper component for the scrollToTop hook to avoid React Node type errors
-function ScrollToTopWrapper() {
-  useScrollToTop();
-  return null;
-}
 
 // Function to process onboarding status
 function App() {
@@ -115,15 +108,13 @@ function App() {
       <TooltipProvider>
         <PageTitleManager />
         {/* Custom scroll-to-top behavior */}
-        <ScrollToTopWrapper />
+        {typeof useScrollToTop === 'function' && useScrollToTop()}
         
-        {/* Main content wrapped in SupabaseAuthProvider to provide auth context */}
-        <SupabaseAuthProvider>
-          <AppContent 
-            hasCompletedOnboarding={hasCompletedOnboarding}
-            setHasCompletedOnboarding={setHasCompletedOnboarding}
-          />
-        </SupabaseAuthProvider>
+        {/* Main content */}
+        <AppContent 
+          hasCompletedOnboarding={hasCompletedOnboarding}
+          setHasCompletedOnboarding={setHasCompletedOnboarding}
+        />
       </TooltipProvider>
     </QueryClientProvider>
   );
@@ -133,29 +124,10 @@ function App() {
 function AppContent({ 
   hasCompletedOnboarding, 
   setHasCompletedOnboarding 
-}: { 
-  hasCompletedOnboarding: boolean, 
-  setHasCompletedOnboarding: (value: boolean) => void 
 }) {
-  // Get location without using auth
+  // Access auth state using the useAuth hook
+  const { user, loading, isAuthenticated } = useAuth();
   const [location] = useLocation();
-  
-  // Import the auth hook here - this is now structured so the hook is used
-  // within a component that's a child of the provider
-  const { user, loading, isAuthenticated } = (window as any).useAuthHook?.() || { 
-    user: null, 
-    loading: true, 
-    isAuthenticated: false 
-  };
-  
-  // Track when hook is available
-  useEffect(() => {
-    // Make the useAuth hook available globally for testing
-    // This is just a temporary solution for debugging
-    import('./hooks/useAuth').then((module) => {
-      (window as any).useAuthHook = module.useAuth;
-    });
-  }, []);
   
   // Show loading state while auth is being determined
   if (loading) {
@@ -288,7 +260,6 @@ function AppContent({
                           <Route path="/spotify-test" component={() => <ProtectedRoute><SpotifyTestPage /></ProtectedRoute>} />
                           <Route path="/spotify-env-check" component={() => <ProtectedRoute><SpotifyEnvCheck /></ProtectedRoute>} />
                           <Route path="/api-explorer" component={() => <ProtectedRoute><ApiExplorerPage /></ProtectedRoute>} />
-                          <Route path="/auth-test" component={AuthTestPage} />
                           
                           {/* Special debug route */}
                           <Route path="/debug" component={() => {
@@ -352,4 +323,4 @@ function AppContent({
   );
 }
 
-export { App as default };
+export default App;

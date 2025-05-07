@@ -2,7 +2,6 @@ import { createRoot } from "react-dom/client";
 import "./index.css";
 import "./bts.css";
 import "./utils/storageManager"; // Initialize enhanced storage management
-import { SupabaseAuthProvider } from './context/SupabaseAuthContext';
 import { Router } from 'wouter';
 import App from "./App";
 
@@ -19,8 +18,6 @@ console.log("Supabase config status:", {
 // Use Router as the outermost component to provide routing context to the entire app
 createRoot(document.getElementById("root")!).render(
   <Router>
-    <SupabaseAuthProvider>
-      <App />
-    </SupabaseAuthProvider>
+    <App />
   </Router>
 );
