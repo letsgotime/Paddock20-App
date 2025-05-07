@@ -190,14 +190,11 @@ function AppContent({
                      location !== '/onboarding' && location !== '/beta-enrollment'
     });
     
-    // Disable redirection temporarily for debugging
-    // This way we can navigate manually and test pages without getting stuck in redirect loops
-    
     // Only redirect if user is authenticated, hasn't completed onboarding, 
     // and isn't already on an onboarding-related page
-    /*
     if (isAuthenticated && !hasCompletedOnboarding && user?.id && 
-        location !== '/onboarding' && location !== '/beta-enrollment') {
+        location !== '/onboarding' && location !== '/beta-enrollment' && 
+        location !== '/beta-agreement') {
       // Use a setTimeout to avoid React state updates during render
       const redirectTimer = setTimeout(() => {
         navigate('/onboarding');
@@ -206,7 +203,6 @@ function AppContent({
       // Cleanup timer if component unmounts
       return () => clearTimeout(redirectTimer);
     }
-    */
   }, [isAuthenticated, hasCompletedOnboarding, user?.id, location, navigate]);
   
   // Show loading state while auth is being determined
