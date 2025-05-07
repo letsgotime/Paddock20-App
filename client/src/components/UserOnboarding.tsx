@@ -1606,7 +1606,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete, user }) => 
                     <div className="flex items-center bg-gray-800/50 py-2 px-3 rounded-lg">
                       <Info size={16} className="text-[#1982FC] mr-2" />
                       <span className="text-gray-300 text-sm">
-                        You can change your beta role at any time from your Profile Settings
+                        Beta Tester spots are limited and require active participation. Inactive testers may be moved to Beta User status.
                       </span>
                     </div>
                   </div>
