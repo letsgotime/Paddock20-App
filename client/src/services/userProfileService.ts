@@ -106,6 +106,7 @@ export interface UserProfile {
   email?: string;
   username: string;
   displayName?: string;
+  name?: string; // Used in onboarding
   avatar?: string;
   memberSince: string;
   membershipLevel: 'free' | 'premium' | 'elite';
@@ -133,6 +134,13 @@ export interface UserProfile {
   // User settings
   preferences: UserPreference;
   weatherPreferences: WeatherPreference;
+  drivePreferences?: Record<string, any>; // Drive preferences
+  
+  // Progress tracking for onboarding
+  hasMaintenanceRecords?: boolean;
+  hasDetailingPlan?: boolean;
+  hasAchievements?: boolean;
+  hasViewedEvents?: boolean;
   
   // Last activity timestamp
   lastActive: string;
