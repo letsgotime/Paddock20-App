@@ -28,9 +28,10 @@ type Step = typeof steps[number];
 interface OnboardingModalProps {
   isOpen?: boolean;
   onClose?: () => void;
+  betaRole?: 'user' | 'tester';
 }
 
-export default function OnboardingModal({ isOpen = true, onClose }: OnboardingModalProps) {
+export default function OnboardingModal({ isOpen = true, onClose, betaRole = 'user' }: OnboardingModalProps) {
   const { user } = useAuth();
   const { setOnboardingComplete } = useOnboarding();
   const [step, setStep] = useState<Step>('intro');
@@ -208,7 +209,8 @@ export default function OnboardingModal({ isOpen = true, onClose }: OnboardingMo
       
       if (data.onboarding_complete) {
         userProfileWarehouse.updateIdentity({
-          onboardingCompleted: true
+          onboardingCompleted: true,
+          betaRole: betaRole
         });
       }
       
