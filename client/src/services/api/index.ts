@@ -16,7 +16,7 @@ export * from './types';
 import { apiWarehouse } from './core';
 
 /**
- * Initialize the API Data Warehouse with all providers
+ * Initialize the API Data Warehouse with the available providers
  * This should be called early in the application bootstrap process
  */
 export function initializeAPIWarehouse(config?: {
@@ -25,96 +25,43 @@ export function initializeAPIWarehouse(config?: {
 }): void {
   console.info('🏎️ PADDOCK20: Initializing API Data Warehouse');
   
-  // Dynamically import all providers based on the requested list
-  const allProviders = [
+  // Currently available providers
+  const availableProviders = [
     'weather',
-    'geocoding',
-    'time',
-    'automotive',
-    'music',
-    'auth',
-    'storage',
-    'media'
+    'geocoding'
   ];
   
-  // Determine which providers to load
-  const providersToLoad = config?.providersList || allProviders;
+  // Determine which providers to load (intersection of requested and available)
+  const requested = config?.providersList || availableProviders;
+  const providersToLoad = requested.filter(p => availableProviders.includes(p));
   
-  // Load core providers immediately
-  import('./providers/weather').then(module => {
-    if (providersToLoad.includes('weather')) {
+  // Report on any requested providers that aren't available
+  const unavailableProviders = requested.filter(p => !availableProviders.includes(p));
+  if (unavailableProviders.length > 0) {
+    console.warn('Some requested API providers are not yet implemented:', unavailableProviders);
+  }
+  
+  // Load core weather providers
+  if (providersToLoad.includes('weather')) {
+    import('./providers/weather').then(module => {
       module.registerWeatherProviders(apiWarehouse);
       console.info('🏎️ PADDOCK20: Weather API providers registered');
-    }
-  }).catch(err => {
-    console.warn('Failed to load Weather API providers:', err);
-  });
+    }).catch(err => {
+      console.warn('Failed to load Weather API providers:', err);
+    });
+  }
   
-  import('./providers/geocoding').then(module => {
-    if (providersToLoad.includes('geocoding')) {
+  // Load geocoding providers
+  if (providersToLoad.includes('geocoding')) {
+    import('./providers/geocoding').then(module => {
       module.registerGeocodingProviders(apiWarehouse);
       console.info('🏎️ PADDOCK20: Geocoding API providers registered');
-    }
-  }).catch(err => {
-    console.warn('Failed to load Geocoding API providers:', err);
-  });
-  
-  import('./providers/time').then(module => {
-    if (providersToLoad.includes('time')) {
-      module.registerTimeProviders(apiWarehouse);
-      console.info('🏎️ PADDOCK20: Time API providers registered');
-    }
-  }).catch(err => {
-    console.warn('Failed to load Time API providers:', err);
-  });
-  
-  // Load other providers as needed
-  if (providersToLoad.includes('automotive')) {
-    import('./providers/automotive').then(module => {
-      module.registerAutomotiveProviders(apiWarehouse);
-      console.info('🏎️ PADDOCK20: Automotive API providers registered');
     }).catch(err => {
-      console.warn('Failed to load Automotive API providers:', err);
+      console.warn('Failed to load Geocoding API providers:', err);
     });
   }
   
-  if (providersToLoad.includes('music')) {
-    import('./providers/music').then(module => {
-      module.registerMusicProviders(apiWarehouse);
-      console.info('🏎️ PADDOCK20: Music API providers registered');
-    }).catch(err => {
-      console.warn('Failed to load Music API providers:', err);
-    });
-  }
-  
-  if (providersToLoad.includes('auth')) {
-    import('./providers/auth').then(module => {
-      module.registerAuthProviders(apiWarehouse);
-      console.info('🏎️ PADDOCK20: Auth API providers registered');
-    }).catch(err => {
-      console.warn('Failed to load Auth API providers:', err);
-    });
-  }
-  
-  if (providersToLoad.includes('storage')) {
-    import('./providers/storage').then(module => {
-      module.registerStorageProviders(apiWarehouse);
-      console.info('🏎️ PADDOCK20: Storage API providers registered');
-    }).catch(err => {
-      console.warn('Failed to load Storage API providers:', err);
-    });
-  }
-  
-  if (providersToLoad.includes('media')) {
-    import('./providers/media').then(module => {
-      module.registerMediaProviders(apiWarehouse);
-      console.info('🏎️ PADDOCK20: Media API providers registered');
-    }).catch(err => {
-      console.warn('Failed to load Media API providers:', err);
-    });
-  }
-  
-  console.info('🏎️ PADDOCK20: API Data Warehouse initialization complete');
+  console.info(`🏎️ PADDOCK20: API Data Warehouse initialized with providers: ${providersToLoad.join(', ')}`);
 }
 
 /**

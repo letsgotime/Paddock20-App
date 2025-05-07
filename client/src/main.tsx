@@ -6,6 +6,23 @@ import { Router } from 'wouter';
 import App from "./App";
 // Removing SupabaseAuthProvider reference - it causes conflicts with our auth providers in App.tsx
 
+// Initialize the API Data Warehouse
+import { initializeAPIWarehouse } from "./services/api";
+initializeAPIWarehouse({
+  logLevel: 'warn',
+  // Load all available providers by default
+  providersList: [
+    'weather',
+    'geocoding',
+    'time',
+    'automotive',
+    'music',
+    'auth',
+    'storage',
+    'media'
+  ]
+});
+
 // Check if Supabase environment variables are set
 const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
