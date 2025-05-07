@@ -1,6 +1,6 @@
 import React, { createContext, useState, useContext, useEffect } from 'react';
 import { useUserProfile } from './UserProfileContext';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/auth/useAuth';
 
 interface BetaWelcomeContextType {
   showWelcomeModal: boolean;

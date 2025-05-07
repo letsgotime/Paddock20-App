@@ -3,7 +3,7 @@ import { useDashboardStore } from '@/store/dashboardStore';
 import DashboardGrid from '@/components/dashboard/DashboardGrid';
 import { Gauge, Settings, ChevronRight, User } from 'lucide-react';
 import { Link, useNavigate } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/auth/useAuth';
 
 const PersonalizedDashboard: React.FC = () => {
   const theme = useDashboardStore(state => state.theme);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/auth/useAuth';
 import { Loader2, Car, Calendar, Droplet, Clock, BarChart3, AlertTriangle, Star } from 'lucide-react';
 
 // Dashboard widgets
