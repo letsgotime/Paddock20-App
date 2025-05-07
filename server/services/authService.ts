@@ -47,23 +47,36 @@ export const authService = {
     }
   },
 
-  async login(email: string, password: string) {
+  async login(emailOrUsername: string, password: string) {
     try {
-      // Find user
-      const foundUsers = await db.select().from(users).where(eq(users.email, email));
+      console.log(`Login attempt with: ${emailOrUsername}`);
+      
+      // First try to find by email
+      let foundUsers = await db.select().from(users).where(eq(users.email, emailOrUsername));
+      
+      // If not found by email, try by username
+      if (foundUsers.length === 0) {
+        console.log('User not found by email, trying username');
+        foundUsers = await db.select().from(users).where(eq(users.username, emailOrUsername));
+      }
       
       if (foundUsers.length === 0) {
+        console.log('User not found by email or username');
         throw new Error('Invalid credentials');
       }
       
       const user = foundUsers[0];
+      console.log(`Found user: ${user.username}`);
   
       // Check password
       const isPasswordValid = await bcrypt.compare(password, user.password);
       
       if (!isPasswordValid) {
+        console.log('Password validation failed');
         throw new Error('Invalid credentials');
       }
+      
+      console.log('Password validated successfully');
   
       // Update lastLogin time
       await db.update(users)
@@ -77,6 +90,7 @@ export const authService = {
         id: user.id,
         email: user.email,
         username: user.username,
+        phone: user.phone || null,
         role: user.role,
         firstName: user.firstName || null,
         lastName: user.lastName || null

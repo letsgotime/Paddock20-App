@@ -20,7 +20,7 @@ import userProfileWarehouse from '@/services/UserProfileWarehouse';
 
 // Login form schema
 const loginSchema = z.object({
-  email: z.string().email({ message: 'Please enter a valid email address' }),
+  email: z.string().min(3, { message: 'Please enter a valid email address or username' }),
   password: z.string().min(6, { message: 'Password must be at least 6 characters' }),
 });
 
@@ -277,10 +277,10 @@ export default function SimpleAuthPage() {
                       name="email"
                       render={({ field }) => (
                         <FormItem>
-                          <FormLabel className="text-[#1982FC]">Email</FormLabel>
+                          <FormLabel className="text-[#1982FC]">Email or Username</FormLabel>
                           <FormControl>
                             <Input 
-                              placeholder="you@example.com" 
+                              placeholder="you@example.com or username" 
                               className={cn("bg-gray-700 text-white border-gray-600 focus:border-[#1982FC]")} 
                               {...field} 
                             />
