@@ -51,21 +51,23 @@ export const NativeAuthProvider: React.FC<{ children: ReactNode }> = ({ children
   useEffect(() => {
     const checkAuthStatus = async () => {
       try {
-        const response = await fetch('/api/auth/me', {
-          method: 'GET',
-          credentials: 'include',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-        });
+        const response = await apiRequest('GET', '/api/auth/me');
 
         if (response.ok) {
-          const userData = await response.json();
-          setUser(userData);
-          setIsAuthenticated(true);
+          const responseData = await response.json();
           
-          // Store user profile in localStorage when authentication check succeeds
-          saveUserProfileToLocalStorage(userData);
+          // Check if the response has user data in the expected format
+          if (responseData.success && responseData.user) {
+            setUser(responseData.user);
+            setIsAuthenticated(true);
+            
+            // Store user profile in localStorage when authentication check succeeds
+            saveUserProfileToLocalStorage(responseData.user);
+          } else {
+            setUser(null);
+            setIsAuthenticated(false);
+            clearUserProfileFromLocalStorage();
+          }
         } else {
           setUser(null);
           setIsAuthenticated(false);
@@ -96,14 +98,22 @@ export const NativeAuthProvider: React.FC<{ children: ReactNode }> = ({ children
       const response = await apiRequest('POST', '/api/auth/login', { email, password });
       
       if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-        setIsAuthenticated(true);
+        const responseData = await response.json();
         
-        // Store user profile in localStorage for other components to access
-        saveUserProfileToLocalStorage(userData);
-        
-        return { success: true };
+        // Check if the response has user data in the expected format
+        if (responseData.success && responseData.user) {
+          setUser(responseData.user);
+          setIsAuthenticated(true);
+          
+          // Store user profile in localStorage for other components to access
+          saveUserProfileToLocalStorage(responseData.user);
+          
+          return { success: true };
+        } else {
+          // If response was OK but data format is unexpected
+          setError('Invalid response format from server');
+          return { success: false, error: 'Invalid response format from server' };
+        }
       } else {
         const errorData = await response.json();
         setError(errorData.message || 'Login failed');
@@ -111,6 +121,7 @@ export const NativeAuthProvider: React.FC<{ children: ReactNode }> = ({ children
       }
     } catch (err: any) {
       const errorMessage = err.message || 'An error occurred during login';
+      console.error('Login error:', err);
       setError(errorMessage);
       return { success: false, error: errorMessage };
     }
@@ -133,14 +144,22 @@ export const NativeAuthProvider: React.FC<{ children: ReactNode }> = ({ children
       });
       
       if (response.ok) {
-        const userData = await response.json();
-        setUser(userData);
-        setIsAuthenticated(true);
+        const responseData = await response.json();
         
-        // Store user profile in localStorage for beta agreement and onboarding components
-        saveUserProfileToLocalStorage(userData);
-        
-        return { success: true };
+        // Check if the response has user data in the expected format
+        if (responseData.success && responseData.user) {
+          setUser(responseData.user);
+          setIsAuthenticated(true);
+          
+          // Store user profile in localStorage for beta agreement and onboarding components
+          saveUserProfileToLocalStorage(responseData.user);
+          
+          return { success: true };
+        } else {
+          // If response was OK but data format is unexpected
+          setError('Invalid response format from server');
+          return { success: false, error: 'Invalid response format from server' };
+        }
       } else {
         const errorData = await response.json();
         setError(errorData.message || 'Registration failed');
@@ -148,6 +167,7 @@ export const NativeAuthProvider: React.FC<{ children: ReactNode }> = ({ children
       }
     } catch (err: any) {
       const errorMessage = err.message || 'An error occurred during registration';
+      console.error('Registration error:', err);
       setError(errorMessage);
       return { success: false, error: errorMessage };
     }
@@ -161,6 +181,9 @@ export const NativeAuthProvider: React.FC<{ children: ReactNode }> = ({ children
       const response = await apiRequest('POST', '/api/auth/logout');
       
       if (response.ok) {
+        const responseData = await response.json();
+        
+        // Even if the response data format is not as expected, we'll handle logout on the client side
         setUser(null);
         setIsAuthenticated(false);
         
@@ -175,6 +198,7 @@ export const NativeAuthProvider: React.FC<{ children: ReactNode }> = ({ children
       }
     } catch (err: any) {
       const errorMessage = err.message || 'An error occurred during logout';
+      console.error('Logout error:', err);
       setError(errorMessage);
       return { success: false, error: errorMessage };
     }

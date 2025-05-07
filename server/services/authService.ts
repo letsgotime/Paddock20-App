@@ -15,12 +15,15 @@ export const authService = {
     // Hash password
     const hash = await bcrypt.hash(password, 12);
     
-    // Create new user
+    // Create new user with required fields
     const newUsers = await db.insert(users)
       .values({ 
         email, 
         password: hash, 
-        username 
+        username,
+        role: 'user',
+        createdAt: new Date(),
+        updatedAt: new Date()
       })
       .returning();
       
@@ -30,7 +33,8 @@ export const authService = {
     return {
       id: newUser.id,
       email: newUser.email,
-      username: newUser.username
+      username: newUser.username,
+      role: newUser.role
     };
   },
 
@@ -53,14 +57,17 @@ export const authService = {
 
     // Update last login time
     await db.update(users)
-      .set({ lastLogin: new Date() })
+      .set({ lastLogin: new Date(), updatedAt: new Date() })
       .where(eq(users.id, user.id));
 
     // Return safe user object (without password)
     return {
       id: user.id,
       email: user.email,
-      username: user.username
+      username: user.username,
+      role: user.role,
+      firstName: user.firstName,
+      lastName: user.lastName
     };
   },
 
