@@ -25,9 +25,9 @@ export default function OnboardingPage() {
     // Get current user ID
     const userProfile = getUserProfileFromLocalStorage() || user;
     
-    // If user has already completed onboarding, redirect to dashboard
+    // If user has already completed onboarding, redirect to The Paddock
     if (userProfile && userProfile.id && hasCompletedOnboarding(userProfile.id.toString())) {
-      navigate('/');
+      navigate('/the-paddock');
     }
   }, [isAuthenticated, navigate, user]);
 
@@ -49,9 +49,9 @@ export default function OnboardingPage() {
           description: "Welcome to Paddock20! Your account is ready to use.",
         });
         
-        // Redirect to dashboard
+        // Redirect to The Paddock
         setTimeout(() => {
-          navigate('/');
+          navigate('/the-paddock');
         }, 1000);
       } else {
         console.error('Failed to get user profile for completing onboarding');

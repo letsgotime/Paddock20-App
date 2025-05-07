@@ -20,13 +20,14 @@ import OneTapWeatherSnapshot from "./components/OneTapWeatherSnapshot";
 import RewardNotification from "./components/RewardNotification";
 import RewardsTracker from "./components/RewardsTracker";
 import NativeAuthPage from './pages/NativeAuthPage';
-import NativeLogoutPage from './pages/NativeLogoutPage';
 import OnboardingPage from './pages/OnboardingPage';
+
+// New Pages
+import ThePaddockPage from './pages/ThePaddockPage';
+import EnhancedLogoutPage from './pages/EnhancedLogoutPage';
 
 // Page imports
 import Paddock20HomePage from "./pages/Paddock20HomePage";
-import DashboardPage from "./pages/DashboardPage";
-import PersonalizedDashboard from "./pages/PersonalizedDashboard";
 import AdminPage from './pages/AdminPage';
 import UserProfileHubPage from "./pages/UserProfileHubPage";
 import OnboardingTestPage from "./pages/OnboardingTestPage";
@@ -250,20 +251,17 @@ function AppContent({
                           {/* Main auth page with updated branding - already handled with special case above */}
                           <Route path="/auth" component={() => null} />
                           <Route path="/spotify/callback" component={SpotifyCallbackPage} />
-                          <Route path="/logout" component={NativeLogoutPage} />
+                          <Route path="/logout" component={EnhancedLogoutPage} />
                           
                           {/* User onboarding page */}
                           <Route path="/onboarding" component={OnboardingPage} />
                         
                           {/* Protected routes */}
-                          <Route path="/" component={() => <ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
-                          <Route path="/dashboard" component={() => <ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-                          <Route path="/personalized-dashboard" component={() => <ProtectedRoute><PersonalizedDashboard /></ProtectedRoute>} />
+                          <Route path="/" component={() => <ProtectedRoute><ThePaddockPage /></ProtectedRoute>} />
+                          <Route path="/the-paddock" component={() => <ProtectedRoute><ThePaddockPage /></ProtectedRoute>} />
                           <Route path="/admin" component={() => <ProtectedRoute><AdminPage /></ProtectedRoute>} />
-                          <Route path="/profile" component={() => <ProtectedRoute><UserProfileHubPage /></ProtectedRoute>} />
                           <Route path="/onboarding-test" component={() => <ProtectedRoute><OnboardingTestPage /></ProtectedRoute>} />
                           <Route path="/settings" component={() => <ProtectedRoute><Settings /></ProtectedRoute>} />
-                          <Route path="/garage-vault" component={() => <ProtectedRoute><GarageVaultPage /></ProtectedRoute>} />
                           <Route path="/garage" component={() => <ProtectedRoute><GaragePage /></ProtectedRoute>} />
                           <Route path="/add-vehicle" component={() => <ProtectedRoute><AddVehiclePage /></ProtectedRoute>} />
                           <Route path="/vehicle-mods" component={() => <ProtectedRoute><VehicleModsPage /></ProtectedRoute>} />
