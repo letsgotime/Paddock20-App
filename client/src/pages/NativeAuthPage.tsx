@@ -123,7 +123,7 @@ export default function NativeAuthPage() {
         if (result.success) {
           // Short delay to allow the toast to be visible
           setTimeout(() => {
-            setLocation('/beta-agreement');
+            navigate('/beta-agreement');
           }, 1500);
         } else if (!isAuthenticated) {
           // Fallback to login tab if something went wrong with auth
