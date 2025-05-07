@@ -128,6 +128,17 @@ export const authService = {
   },
 
   getSessionUser(req: any) {
-    return req.session?.user || null;
+    if (!req.session) {
+      console.log('No session found in request');
+      return null;
+    }
+    
+    if (!req.session.user) {
+      console.log('No user found in session');
+      return null;
+    }
+    
+    console.log('User found in session:', req.session.user.username);
+    return req.session.user;
   }
 };
