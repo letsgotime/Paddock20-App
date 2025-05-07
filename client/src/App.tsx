@@ -9,6 +9,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import PageTitleManager from './components/PageTitleManager';
 import Header from './components/Header';
+import AppHeader from './components/AppHeader';
 import ContextualBreadcrumbs from './components/ContextualBreadcrumbs';
 import FixedSoundBar from "./components/FixedSoundBar";
 import Footer from "./components/Footer";
@@ -129,7 +130,10 @@ function App() {
           <PageTitleManager />
           <NativeAuthProvider>
             <SupabaseAuthProvider>
-              <StandaloneAuthPage />
+              <>
+                <AppHeader />
+                <StandaloneAuthPage />
+              </>
             </SupabaseAuthProvider>
           </NativeAuthProvider>
         </TooltipProvider>
@@ -227,7 +231,7 @@ function AppContent({
                       {/* Main application container */}
                       <div className="min-h-screen bg-black font-openSans text-white">
                         {/* Header with auth controls */}
-                        <Header />
+                        <AppHeader />
                       
                         {/* Main navigation header */}
                         <header role="banner">
