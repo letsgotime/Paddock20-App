@@ -1,15 +1,17 @@
 import session from 'express-session';
+import connectPgSimple from 'connect-pg-simple';
+import pg from 'pg';
 import passport from 'passport';
 import { Express } from 'express';
 import authRoutes from './routes/authRoutes';
-import memorystore from 'memorystore';
 
-// Use memory store instead of database store to avoid schema conflicts
-const MemoryStore = memorystore(session);
+const pgSession = connectPgSimple(session);
 
 export const authMiddleware = session({
-  store: new MemoryStore({
-    checkPeriod: 86400000 // prune expired entries every 24h
+  store: new pgSession({
+    pool: new pg.Pool({ connectionString: process.env.DATABASE_URL }),
+    tableName: 'pg_sessions',
+    createTableIfMissing: true
   }),
   secret: process.env.SESSION_SECRET || 'paddock20_default_secret',
   resave: false,

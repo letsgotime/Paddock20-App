@@ -1,14 +1,6 @@
 import { Router } from 'express';
 import { z } from 'zod';
 import { authService } from '../services/authService';
-import 'express-session';
-
-// Extend express-session types to include user property
-declare module 'express-session' {
-  interface SessionData {
-    user: any;
-  }
-}
 
 const router = Router();
 
@@ -41,23 +33,11 @@ router.post('/register', async (req, res) => {
     // Set user in session
     req.session.user = user;
     
-    // Important: Save the session before responding
-    return req.session.save((err) => {
-      if (err) {
-        console.error('Session save error:', err);
-        return res.status(500).json({
-          success: false,
-          message: 'Session error during registration'
-        });
-      }
-      
-      return res.status(201).json({ 
-        success: true, 
-        user 
-      });
+    return res.status(201).json({ 
+      success: true, 
+      user 
     });
   } catch (err: any) {
-    console.error('Registration error:', err);
     return res.status(400).json({ 
       success: false, 
       message: err.message || 'Registration failed'
@@ -84,23 +64,11 @@ router.post('/login', async (req, res) => {
     // Set user in session
     req.session.user = user;
     
-    // Important: Save the session before responding
-    return req.session.save((err) => {
-      if (err) {
-        console.error('Session save error:', err);
-        return res.status(500).json({
-          success: false,
-          message: 'Session error during login'
-        });
-      }
-      
-      return res.status(200).json({ 
-        success: true, 
-        user 
-      });
+    return res.status(200).json({ 
+      success: true, 
+      user 
     });
   } catch (err: any) {
-    console.error('Login error:', err);
     return res.status(401).json({ 
       success: false, 
       message: err.message || 'Login failed' 
