@@ -97,9 +97,8 @@ function App() {
   // State to track if the user has completed onboarding
   const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(false);
   
-  // Get the current location to determine if we're on the auth demo page
+  // Get the current location
   const [location] = useLocation();
-  const isAuthDemoPage = location === '/auth-demo';
   
   // Check for onboarding status when app initializes
   useEffect(() => {
@@ -122,17 +121,7 @@ function App() {
     }
   }, []);
 
-  // Special case for auth demo page - return it directly without all the context providers
-  if (isAuthDemoPage) {
-    return (
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <PageTitleManager />
-          <StandaloneAuthPage />
-        </TooltipProvider>
-      </QueryClientProvider>
-    );
-  }
+  // Note: Using StandaloneAuthPage as the main auth page
 
   // Default App setup with query client and other global providers
   return (
@@ -254,9 +243,8 @@ function AppContent({
                           <Route path="/terms-of-service" component={TermsOfService} />
                           <Route path="/beta-agreement" component={BetaAgreement} />
                           <Route path="/email-verified" component={EmailVerifiedPage} />
-                          <Route path="/auth" component={SupabaseAuthPage} />
-                          {/* Standalone auth page at a separate route to avoid conflicts */}
-                          <Route path="/auth-demo" component={StandaloneAuthPage} />
+                          {/* Main auth page with updated branding */}
+                          <Route path="/auth" component={StandaloneAuthPage} />
                           <Route path="/auth/callback" component={AuthCallback} />
                           <Route path="/auth/reset-password" component={ResetPassword} />
                           <Route path="/auth/error" component={AuthError} />
