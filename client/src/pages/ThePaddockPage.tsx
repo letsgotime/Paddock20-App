@@ -5,7 +5,7 @@ import { useLocation } from 'wouter';
 
 // Hooks and Contexts
 import { useWeather } from '@/contexts/FixedWeatherContext';
-import { useVehicle } from '@/hooks/useVehicle';
+import { useVehicle } from '@/contexts/VehicleContext';
 
 // UI Components
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -47,8 +47,11 @@ const ThePaddockPage = () => {
   // Format date in F1-style
   const formattedDate = format(new Date(), 'MMMM d, yyyy');
   
-  // Weather context
-  const { currentWeather, forecastWeather, isLoading: weatherLoading } = useWeather();
+  // Weather context - safely get properties which may not exist in certain context versions
+  const weatherContext = useWeather();
+  const currentWeather = weatherContext?.currentWeather || null;
+  const forecastWeather = weatherContext?.forecastWeather || null;
+  const weatherLoading = weatherContext?.isLoading || false;
 
   // Vehicle data
   const { vehicles, loading: vehicleLoading } = useVehicle();
@@ -64,19 +67,27 @@ const ThePaddockPage = () => {
   });
 
   // Mock data for drive quality rating based on weather
-  const [driveQuality, setDriveQuality] = useState({
+  const [driveQuality, setDriveQuality] = useState<{
+    rating: number;
+    description: string;
+    factors: string[];
+  }>({
     rating: 0,
     description: "Calculating...",
     factors: []
   });
 
-  // Load data from all contexts
+  // Load data from all contexts (only once on mount to prevent infinite loop)
   useEffect(() => {
+    // Flag to prevent multiple initializations
+    let isInitialized = false;
+    
     const loadStats = async () => {
+      // Guard against multiple initializations
+      if (isInitialized) return;
+      isInitialized = true;
+      
       try {
-        // Initialize all data connections
-        DataSourceConnector.initializeDataConnections();
-        
         // Get user drive data (safely)
         let driveData = [];
         try {
@@ -119,8 +130,17 @@ const ThePaddockPage = () => {
       }
     };
     
+    // Initialize data connections once
+    try {
+      DataSourceConnector.initializeDataConnections();
+    } catch (e) {
+      console.error('Failed to initialize data connections:', e);
+    }
+    
     loadStats();
-  }, [vehicles]);
+    
+    // Empty dependency array to ensure this only runs once on mount
+  }, []);
 
   // Calculate drive quality based on weather data
   useEffect(() => {
