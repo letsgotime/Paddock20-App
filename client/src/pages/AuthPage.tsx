@@ -1,366 +1,294 @@
-/**
- * Authentication Page
- * 
- * Provides login and registration forms.
- * Redirects to home page if already authenticated.
- */
-
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useLocation } from 'wouter';
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/hooks/use-toast";
+import { useAuth } from '../hooks/useAuth';
 import { z } from 'zod';
-import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
+import { useForm } from 'react-hook-form';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { useToast } from '@/hooks/use-toast';
-import { useAuth } from '@/hooks/useAuth';
-import { Loader2 } from 'lucide-react';
+import { Loader2 } from "lucide-react";
 
-// Login form schema
+// Form validation schemas
 const loginSchema = z.object({
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(1, 'Password is required'),
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
 });
 
-// Registration form schema
-const registerSchema = z.object({
-  username: z.string().min(3, 'Username must be at least 3 characters').max(50),
-  email: z.string().email('Invalid email address'),
-  password: z.string().min(8, 'Password must be at least 8 characters'),
-  confirmPassword: z.string().min(1, 'Please confirm your password'),
-  firstName: z.string().optional(),
-  lastName: z.string().optional(),
-}).refine((data) => data.password === data.confirmPassword, {
-  message: 'Passwords do not match',
-  path: ['confirmPassword'],
+const signupSchema = z.object({
+  username: z.string().min(3, { message: "Username must be at least 3 characters" }),
+  email: z.string().email({ message: "Please enter a valid email address" }),
+  password: z.string().min(6, { message: "Password must be at least 6 characters" }),
+  confirmPassword: z.string(),
+}).refine(data => data.password === data.confirmPassword, {
+  message: "Passwords don't match",
+  path: ["confirmPassword"],
 });
 
-// Form types
 type LoginFormValues = z.infer<typeof loginSchema>;
-type RegisterFormValues = z.infer<typeof registerSchema>;
+type SignupFormValues = z.infer<typeof signupSchema>;
 
 export default function AuthPage() {
   const [activeTab, setActiveTab] = useState<string>('login');
-  const [location, navigate] = useLocation();
+  const [, navigate] = useLocation();
   const { toast } = useToast();
-  const { login, register, isAuthenticated, loading } = useAuth();
+  
+  // Use try/catch to handle potential errors with auth context
+  let auth = {
+    user: null,
+    loading: false,
+    isAuthenticated: false,
+    error: null,
+    login: async (email: string, password: string) => {},
+    register: async (email: string, password: string, username: string) => {},
+    logout: async () => {},
+  };
+  
+  try {
+    auth = useAuth();
+  } catch (error) {
+    console.error("Auth hook error:", error);
+  }
 
-  // Login form
+  // If already logged in, redirect to home
+  useEffect(() => {
+    if (auth.isAuthenticated) {
+      navigate("/");
+    }
+  }, [auth.isAuthenticated, navigate]);
+
+  // Form for login
   const loginForm = useForm<LoginFormValues>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
     },
   });
 
-  // Registration form
-  const registerForm = useForm<RegisterFormValues>({
-    resolver: zodResolver(registerSchema),
+  // Form for signup
+  const signupForm = useForm<SignupFormValues>({
+    resolver: zodResolver(signupSchema),
     defaultValues: {
-      username: '',
-      email: '',
-      password: '',
-      confirmPassword: '',
-      firstName: '',
-      lastName: '',
+      username: "",
+      email: "",
+      password: "",
+      confirmPassword: "",
     },
   });
 
-  // Handle login submission
+  // Handle login form submission
   const onLoginSubmit = async (values: LoginFormValues) => {
     try {
-      const result = await login({
-        email: values.email,
-        password: values.password,
-      });
-
-      if (result) {
-        navigate('/dashboard');
-      }
+      // The login function will handle the toast messages
+      await auth.login(values.email, values.password);
     } catch (error) {
-      console.error('Login error:', error);
+      console.error("Login error:", error);
     }
   };
 
-  // Handle registration submission
-  const onRegisterSubmit = async (values: RegisterFormValues) => {
+  // Handle signup form submission
+  const onSignupSubmit = async (values: SignupFormValues) => {
     try {
-      const { confirmPassword, ...registerData } = values;
-      
-      const result = await register(registerData);
-
-      if (result) {
-        navigate('/dashboard');
-      }
+      // The register function will handle the toast messages
+      await auth.register(values.email, values.password, values.username);
+      setActiveTab('login');
     } catch (error) {
-      console.error('Registration error:', error);
+      console.error("Signup error:", error);
     }
   };
-
-  // If already authenticated, redirect to dashboard
-  useEffect(() => {
-    if (isAuthenticated) {
-      navigate('/dashboard');
-    }
-  }, [isAuthenticated, navigate]);
-
-  // If already authenticated, show loading while redirecting
-  if (isAuthenticated) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <Loader2 className="w-8 h-8 animate-spin text-primary" />
-        <span className="ml-2">Redirecting to dashboard...</span>
-      </div>
-    );
-  }
 
   return (
-    <div className="flex min-h-screen items-center justify-center bg-gray-50 dark:bg-gray-900 p-4">
-      <div className="container grid grid-cols-1 md:grid-cols-2 gap-6 max-w-6xl">
-        {/* Left column: Auth forms */}
-        <div className="flex flex-col justify-center">
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold tracking-tight">Welcome to PADDOCK20</h1>
-            <p className="text-muted-foreground mt-2">
-              Sign in to your account or create a new one to get started.
+    <div className="flex min-h-screen">
+      {/* Left side - Auth form */}
+      <div className="flex-1 flex items-center justify-center p-4">
+        <Card className="w-full max-w-md mx-auto">
+          <CardHeader className="space-y-1 text-center">
+            <CardTitle className="text-2xl font-bold tracking-tight">Welcome to Paddock20</CardTitle>
+            <CardDescription>
+              Your gateway to the ultimate car enthusiast experience
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent>
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+              <TabsList className="grid w-full grid-cols-2 mb-6">
+                <TabsTrigger value="login">Log In</TabsTrigger>
+                <TabsTrigger value="signup">Sign Up</TabsTrigger>
+              </TabsList>
+              
+              <TabsContent value="login">
+                <Form {...loginForm}>
+                  <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
+                    <FormField
+                      control={loginForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="you@example.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={loginForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="••••••••" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-carolina-blue hover:bg-blue-700"
+                      disabled={auth.loading}
+                    >
+                      {auth.loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Logging in...
+                        </>
+                      ) : (
+                        "Log In"
+                      )}
+                    </Button>
+                  </form>
+                </Form>
+              </TabsContent>
+              
+              <TabsContent value="signup">
+                <Form {...signupForm}>
+                  <form onSubmit={signupForm.handleSubmit(onSignupSubmit)} className="space-y-4">
+                    <FormField
+                      control={signupForm.control}
+                      name="username"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Username</FormLabel>
+                          <FormControl>
+                            <Input placeholder="username" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={signupForm.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="you@example.com" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={signupForm.control}
+                      name="password"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="••••••••" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <FormField
+                      control={signupForm.control}
+                      name="confirmPassword"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Confirm Password</FormLabel>
+                          <FormControl>
+                            <Input type="password" placeholder="••••••••" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    
+                    <Button 
+                      type="submit" 
+                      className="w-full bg-carolina-blue hover:bg-blue-700"
+                      disabled={auth.loading}
+                    >
+                      {auth.loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Creating account...
+                        </>
+                      ) : (
+                        "Create Account"
+                      )}
+                    </Button>
+                  </form>
+                </Form>
+              </TabsContent>
+            </Tabs>
+          </CardContent>
+          
+          <CardFooter className="flex flex-col space-y-4">
+            <div className="text-center text-sm">
+              By continuing, you agree to our{" "}
+              <a href="/terms-of-service" className="underline text-carolina-blue hover:text-blue-700">
+                Terms of Service
+              </a>{" "}
+              and{" "}
+              <a href="/privacy-policy" className="underline text-carolina-blue hover:text-blue-700">
+                Privacy Policy
+              </a>
+            </div>
+          </CardFooter>
+        </Card>
+      </div>
+      
+      {/* Right side - Hero section */}
+      <div className="hidden lg:flex flex-1 bg-[url('/carbon-fiber-bg-dark.jpg')] bg-cover">
+        <div className="flex flex-col justify-center items-center w-full p-8 bg-black/70">
+          <div className="max-w-md text-center">
+            <h1 className="text-4xl font-bold text-white mb-4">Experience F1-Grade Analytics</h1>
+            <p className="text-xl text-gray-200 mb-6">
+              Paddock20 transforms your driving insights with Formula 1 level technology for everyday drivers
             </p>
-          </div>
-
-          <Tabs defaultValue="login" value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-2 w-full mb-6">
-              <TabsTrigger value="login">Login</TabsTrigger>
-              <TabsTrigger value="register">Register</TabsTrigger>
-            </TabsList>
-
-            {/* Login Form */}
-            <TabsContent value="login">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Login</CardTitle>
-                  <CardDescription>
-                    Enter your credentials to access your account
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Form {...loginForm}>
-                    <form onSubmit={loginForm.handleSubmit(onLoginSubmit)} className="space-y-4">
-                      <FormField
-                        control={loginForm.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input placeholder="email@example.com" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={loginForm.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Password</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="••••••••" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button 
-                        type="submit" 
-                        className="w-full" 
-                        disabled={loginForm.formState.isSubmitting}
-                      >
-                        {loginForm.formState.isSubmitting ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Logging in...
-                          </>
-                        ) : (
-                          'Login'
-                        )}
-                      </Button>
-                    </form>
-                  </Form>
-                </CardContent>
-                <CardFooter className="flex flex-col items-start">
-                  <div className="text-sm text-muted-foreground">
-                    <span>Don't have an account? </span>
-                    <button
-                      type="button"
-                      className="text-primary hover:underline"
-                      onClick={() => setActiveTab('register')}
-                    >
-                      Register here
-                    </button>
-                  </div>
-                </CardFooter>
-              </Card>
-            </TabsContent>
-
-            {/* Registration Form */}
-            <TabsContent value="register">
-              <Card>
-                <CardHeader>
-                  <CardTitle>Create an Account</CardTitle>
-                  <CardDescription>
-                    Enter your details to create a new account
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <Form {...registerForm}>
-                    <form onSubmit={registerForm.handleSubmit(onRegisterSubmit)} className="space-y-4">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        <FormField
-                          control={registerForm.control}
-                          name="firstName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>First Name</FormLabel>
-                              <FormControl>
-                                <Input placeholder="John" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                        <FormField
-                          control={registerForm.control}
-                          name="lastName"
-                          render={({ field }) => (
-                            <FormItem>
-                              <FormLabel>Last Name</FormLabel>
-                              <FormControl>
-                                <Input placeholder="Doe" {...field} />
-                              </FormControl>
-                              <FormMessage />
-                            </FormItem>
-                          )}
-                        />
-                      </div>
-                      <FormField
-                        control={registerForm.control}
-                        name="username"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Username</FormLabel>
-                            <FormControl>
-                              <Input placeholder="johndoe" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={registerForm.control}
-                        name="email"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Email</FormLabel>
-                            <FormControl>
-                              <Input placeholder="email@example.com" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={registerForm.control}
-                        name="password"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Password</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="••••••••" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <FormField
-                        control={registerForm.control}
-                        name="confirmPassword"
-                        render={({ field }) => (
-                          <FormItem>
-                            <FormLabel>Confirm Password</FormLabel>
-                            <FormControl>
-                              <Input type="password" placeholder="••••••••" {...field} />
-                            </FormControl>
-                            <FormMessage />
-                          </FormItem>
-                        )}
-                      />
-                      <Button 
-                        type="submit" 
-                        className="w-full"
-                        disabled={registerForm.formState.isSubmitting}
-                      >
-                        {registerForm.formState.isSubmitting ? (
-                          <>
-                            <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                            Creating account...
-                          </>
-                        ) : (
-                          'Create Account'
-                        )}
-                      </Button>
-                    </form>
-                  </Form>
-                </CardContent>
-                <CardFooter className="flex flex-col items-start">
-                  <div className="text-sm text-muted-foreground">
-                    <span>Already have an account? </span>
-                    <button
-                      type="button"
-                      className="text-primary hover:underline"
-                      onClick={() => setActiveTab('login')}
-                    >
-                      Login here
-                    </button>
-                  </div>
-                </CardFooter>
-              </Card>
-            </TabsContent>
-          </Tabs>
-        </div>
-
-        {/* Right column: Hero section */}
-        <div className="hidden md:flex flex-col justify-center">
-          <div className="space-y-4">
-            <div className="rounded-xl bg-gradient-to-br from-primary/90 to-primary/70 p-8 text-white shadow-lg">
-              <h2 className="text-3xl font-bold mb-4">Unlock Formula 1-Grade Technology</h2>
-              <p className="text-lg mb-6">
-                PADDOCK20 brings professional-grade automotive telemetry and insights to everyday drivers.
-              </p>
-              <ul className="space-y-2 mb-6">
-                <li className="flex items-center">
-                  <span className="mr-2">✓</span>
-                  <span>Advanced weather intelligence for driving</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2">✓</span>
-                  <span>Detailed vehicle management and statistics</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2">✓</span>
-                  <span>Smart drive planning and route optimization</span>
-                </li>
-                <li className="flex items-center">
-                  <span className="mr-2">✓</span>
-                  <span>Comprehensive automotive lifestyle platform</span>
-                </li>
-              </ul>
-              <p className="text-sm opacity-90 italic">
-                Join thousands of drivers who have elevated their automotive experience with PADDOCK20.
-              </p>
+            <div className="grid grid-cols-2 gap-4 mb-8">
+              <div className="bg-black/50 p-4 rounded border border-carolina-blue">
+                <h3 className="text-carolina-blue font-bold mb-2">Weather Paddock</h3>
+                <p className="text-gray-300">Get F1-grade weather insights for your drive</p>
+              </div>
+              <div className="bg-black/50 p-4 rounded border border-carolina-blue">
+                <h3 className="text-carolina-blue font-bold mb-2">Garage Vault</h3>
+                <p className="text-gray-300">Manage your vehicles with comprehensive details</p>
+              </div>
+              <div className="bg-black/50 p-4 rounded border border-carolina-blue">
+                <h3 className="text-carolina-blue font-bold mb-2">Drive Journal</h3>
+                <p className="text-gray-300">Record and analyze your driving experiences</p>
+              </div>
+              <div className="bg-black/50 p-4 rounded border border-carolina-blue">
+                <h3 className="text-carolina-blue font-bold mb-2">Podium Pursuit</h3>
+                <p className="text-gray-300">Track your achievements and set new goals</p>
+              </div>
             </div>
           </div>
         </div>

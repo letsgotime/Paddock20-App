@@ -15,12 +15,13 @@ import Footer from "./components/Footer";
 import NotFound from "@/pages/not-found";
 import SupabaseAuthPage from './pages/SupabaseAuthPage';
 import LogoutPage from './pages/LogoutPage';
-import ProtectedRoute from './components/ProtectedRoute';
+import { ProtectedRoute } from './components/ProtectedRoute';
 import UserOnboarding from "./components/UserOnboarding";
 import SupportChatbot from "./components/SupportChatbot";
 import OneTapWeatherSnapshot from "./components/OneTapWeatherSnapshot";
 import RewardNotification from "./components/RewardNotification";
 import RewardsTracker from "./components/RewardsTracker";
+import AuthPage from './pages/AuthPage';
 import AuthCallback from './pages/AuthCallback';
 import ResetPassword from './pages/ResetPassword';
 import LoginRedirect from './pages/LoginRedirect';
@@ -237,6 +238,11 @@ function AppContent({
                           <Route path="/beta-agreement" component={BetaAgreement} />
                           <Route path="/email-verified" component={EmailVerifiedPage} />
                           <Route path="/auth" component={SupabaseAuthPage} />
+                          <Route path="/auth/native" component={() => (
+                            <div className="min-h-screen bg-black font-openSans text-white">
+                              <AuthPage />
+                            </div>
+                          )} />
                           <Route path="/auth/callback" component={AuthCallback} />
                           <Route path="/auth/reset-password" component={ResetPassword} />
                           <Route path="/auth/error" component={AuthError} />
