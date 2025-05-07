@@ -1,8 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Route, useLocation } from 'wouter';
-import { SupabaseAuthProvider } from './context/SupabaseAuthContext';
-import { NativeAuthProvider } from './context/NativeAuthContext';
-import { useAuth } from './hooks/useAuth';
+import { NativeAuthProvider, useNativeAuth } from '@/hooks/useNativeAuth';
+import { AuthProvider } from '@/hooks/useAuth';
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -14,21 +13,14 @@ import ContextualBreadcrumbs from './components/ContextualBreadcrumbs';
 import FixedSoundBar from "./components/FixedSoundBar";
 import Footer from "./components/Footer";
 import NotFound from "@/pages/not-found";
-import SupabaseAuthPage from './pages/SupabaseAuthPage';
-import LogoutPage from './pages/LogoutPage';
 import { ProtectedRoute } from './components/ProtectedRoute';
 import UserOnboarding from "./components/UserOnboarding";
 import SupportChatbot from "./components/SupportChatbot";
 import OneTapWeatherSnapshot from "./components/OneTapWeatherSnapshot";
 import RewardNotification from "./components/RewardNotification";
 import RewardsTracker from "./components/RewardsTracker";
-import AuthPage from './pages/AuthPage';
-import StandaloneAuthPage from './pages/StandaloneAuthPage';
-import AuthCallback from './pages/AuthCallback';
-import ResetPassword from './pages/ResetPassword';
-import LoginRedirect from './pages/LoginRedirect';
-import Logout from './pages/Logout';
-import AuthError from './pages/AuthError';
+import NativeAuthPage from './pages/NativeAuthPage';
+import NativeLogoutPage from './pages/NativeLogoutPage';
 
 // Page imports
 import Paddock20HomePage from "./pages/Paddock20HomePage";
@@ -129,12 +121,12 @@ function App() {
         <TooltipProvider>
           <PageTitleManager />
           <NativeAuthProvider>
-            <SupabaseAuthProvider>
+            <AuthProvider>
               <>
                 <AppHeader />
-                <StandaloneAuthPage />
+                <NativeAuthPage />
               </>
-            </SupabaseAuthProvider>
+            </AuthProvider>
           </NativeAuthProvider>
         </TooltipProvider>
       </QueryClientProvider>
@@ -149,14 +141,14 @@ function App() {
         {/* Custom scroll-to-top behavior */}
         <ScrollToTopWrapper />
         
-        {/* Wrap with both auth providers for transition period */}
+        {/* Wrap with native auth provider first, then the compatibility AuthProvider */}
         <NativeAuthProvider>
-          <SupabaseAuthProvider>
+          <AuthProvider>
             <AppContent 
               hasCompletedOnboarding={hasCompletedOnboarding}
               setHasCompletedOnboarding={setHasCompletedOnboarding}
             />
-          </SupabaseAuthProvider>
+          </AuthProvider>
         </NativeAuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
@@ -174,15 +166,8 @@ function AppContent({
   // Get location without using auth
   const [location] = useLocation();
   
-  // Use the auth hook with try/catch to handle potential errors
-  let authState = { user: null, loading: true, isAuthenticated: false };
-  try {
-    authState = useAuth();
-  } catch (error) {
-    console.error('Auth hook error:', error);
-  }
-  
-  const { user, loading, isAuthenticated } = authState;
+  // Use the native auth hook directly in AppContent
+  const { user, loading, isAuthenticated } = useNativeAuth();
   
   // Show loading state while auth is being determined
   if (loading) {
@@ -263,13 +248,8 @@ function AppContent({
                           <Route path="/email-verified" component={EmailVerifiedPage} />
                           {/* Main auth page with updated branding - already handled with special case above */}
                           <Route path="/auth" component={() => null} />
-                          <Route path="/auth/callback" component={AuthCallback} />
-                          <Route path="/auth/reset-password" component={ResetPassword} />
-                          <Route path="/auth/error" component={AuthError} />
-                          <Route path="/login" component={LoginRedirect} />
                           <Route path="/spotify/callback" component={SpotifyCallbackPage} />
-                          <Route path="/logout" component={LogoutPage} />
-                          <Route path="/logout/confirm" component={Logout} />
+                          <Route path="/logout" component={NativeLogoutPage} />
                           
                           {/* User onboarding redirect */}
                           <Route 
