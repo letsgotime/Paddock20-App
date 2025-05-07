@@ -187,6 +187,9 @@ function AppContent({
     );
   }
   
+  // Get navigation function from wouter
+  const [, navigate] = useLocation();
+  
   // Redirect user to onboarding if authenticated and hasn't completed onboarding
   useEffect(() => {
     // Only redirect if user is authenticated, hasn't completed onboarding, 
@@ -195,13 +198,13 @@ function AppContent({
         location !== '/onboarding' && location !== '/beta-enrollment') {
       // Use a setTimeout to avoid React state updates during render
       const redirectTimer = setTimeout(() => {
-        window.location.href = '/onboarding';
+        navigate('/onboarding');
       }, 100);
       
       // Cleanup timer if component unmounts
       return () => clearTimeout(redirectTimer);
     }
-  }, [isAuthenticated, hasCompletedOnboarding, user?.id, location]);
+  }, [isAuthenticated, hasCompletedOnboarding, user?.id, location, navigate]);
 
   // Wrap the application with required context providers
   return (
