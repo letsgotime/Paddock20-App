@@ -173,6 +173,7 @@ function AppContent({
   if (isAuthenticated && !hasCompletedOnboarding && user?.id) {
     return (
       <UserOnboarding 
+        user={user}
         onComplete={() => {
           // Mark onboarding as complete in localStorage
           const betaOnboardingKey = `paddock20_beta_onboarding_complete_${user.id}`;
