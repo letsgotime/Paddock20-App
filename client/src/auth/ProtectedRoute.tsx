@@ -5,25 +5,32 @@
 import React, { ReactNode } from 'react';
 import { Redirect } from 'wouter';
 import { useAuth } from './useAuth';
+import { usePermissions } from './usePermissions';
+import { AuthPermission, AuthRole } from './types';
 
 interface ProtectedRouteProps {
   children: ReactNode;
-  requireAdmin?: boolean;
+  requiredPermissions?: AuthPermission[];
+  requiredRole?: AuthRole;
   requireOnboarding?: boolean;
+  redirectPath?: string;
 }
 
 /**
  * Protected Route Component
  * 
- * Secures routes by checking authentication status and role requirements.
+ * Secures routes by checking authentication status and permission requirements.
  * Redirects users to appropriate pages based on their authentication state.
  */
 export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
   children,
-  requireAdmin = false,
-  requireOnboarding = false
+  requiredPermissions = [],
+  requiredRole,
+  requireOnboarding = false,
+  redirectPath = "/auth"
 }) => {
   const { user, loading, isAuthenticated } = useAuth();
+  const { hasPermission } = usePermissions();
   
   // Show loading spinner while authentication is being determined
   if (loading) {
@@ -42,9 +49,14 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
     return <Redirect to="/auth" />;
   }
   
-  // If route requires admin role but user is not an admin
-  if (requireAdmin && user?.role !== 'admin') {
-    return <Redirect to="/the-paddock" />;
+  // Check for specific role requirement
+  if (requiredRole && user?.role !== requiredRole) {
+    return <Redirect to={redirectPath} />;
+  }
+  
+  // Check for specific permissions
+  if (requiredPermissions.length > 0 && !hasPermission(requiredPermissions)) {
+    return <Redirect to={redirectPath} />;
   }
   
   // If user hasn't completed onboarding but the route requires it
@@ -59,9 +71,15 @@ export const ProtectedRoute: React.FC<ProtectedRouteProps> = ({
 /**
  * Admin-only Protected Route Component
  */
-export const AdminRoute: React.FC<{ children: ReactNode }> = ({ children }) => {
+export const AdminRoute: React.FC<{ children: ReactNode; redirectPath?: string }> = ({ 
+  children, 
+  redirectPath = "/the-paddock" 
+}) => {
   return (
-    <ProtectedRoute requireAdmin={true}>
+    <ProtectedRoute 
+      requiredPermissions={[AuthPermission.VIEW_ADMIN_DASHBOARD]}
+      redirectPath={redirectPath}
+    >
       {children}
     </ProtectedRoute>
   );
@@ -73,6 +91,40 @@ export const AdminRoute: React.FC<{ children: ReactNode }> = ({ children }) => {
 export const OnboardedRoute: React.FC<{ children: ReactNode }> = ({ children }) => {
   return (
     <ProtectedRoute requireOnboarding={true}>
+      {children}
+    </ProtectedRoute>
+  );
+};
+
+/**
+ * Premium features route component
+ */
+export const PremiumRoute: React.FC<{ children: ReactNode; redirectPath?: string }> = ({ 
+  children, 
+  redirectPath = "/premium" 
+}) => {
+  return (
+    <ProtectedRoute 
+      requiredPermissions={[AuthPermission.ACCESS_PREMIUM_FEATURES]}
+      redirectPath={redirectPath}
+    >
+      {children}
+    </ProtectedRoute>
+  );
+};
+
+/**
+ * Beta features route component
+ */
+export const BetaRoute: React.FC<{ children: ReactNode; redirectPath?: string }> = ({ 
+  children, 
+  redirectPath = "/the-paddock" 
+}) => {
+  return (
+    <ProtectedRoute 
+      requiredPermissions={[AuthPermission.ACCESS_BETA_FEATURES]}
+      redirectPath={redirectPath}
+    >
       {children}
     </ProtectedRoute>
   );

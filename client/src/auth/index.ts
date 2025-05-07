@@ -1,46 +1,30 @@
 /**
- * PADDOCK20 Authentication System
- * Export all auth-related components, hooks, and utilities
+ * Auth Module Index
+ * Centralizes all auth-related exports
  */
 
-// Core auth provider
-export { AuthProvider, AuthContext } from './AuthProvider';
+// Export core auth hooks and providers
+export { AuthProvider } from './AuthProvider';
+export { useAuth } from './useAuth';
+export { usePermissions } from './usePermissions';
 
-// Hooks
-export { useAuth, useIsAdmin, useHasCompletedOnboarding } from './useAuth';
+// Export route protection components
+export { 
+  PermissionRoute, 
+  PremiumRoute, 
+  AdminRoute, 
+  BetaRoute 
+} from './PermissionRoute';
 
-// Route protection components
-export { ProtectedRoute, AdminRoute, OnboardedRoute } from './ProtectedRoute';
-
-// Page components
-export { default as AuthPage } from './AuthPage';
-export { default as LogoutPage } from './LogoutPage';
-
-// Types
-export type {
-  User,
-  AuthState,
-  LoginCredentials,
-  RegisterData,
-  ApiResponse,
-  AuthContextType
+// Export types
+export {
+  AuthRole,
+  AuthPermission,
+  ROLE_PERMISSIONS,
+  type User,
+  type AuthState,
+  type LoginCredentials,
+  type RegisterData,
+  type ApiResponse,
+  type AuthContextType
 } from './types';
-
-// Storage utilities
-export {
-  saveUserToStorage,
-  getUserFromStorage,
-  clearUserFromStorage,
-  clearAllAuthData,
-  hasCompletedOnboarding,
-  markOnboardingComplete
-} from './storage';
-
-// API methods
-export {
-  checkAuthStatus,
-  loginUser,
-  registerUser,
-  logoutUser,
-  updateUserProfile
-} from './api';
