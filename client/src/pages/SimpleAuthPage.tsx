@@ -69,6 +69,29 @@ export default function SimpleAuthPage() {
       confirmPassword: '',
     },
   });
+  
+  // Reset form and state when switching tabs
+  useEffect(() => {
+    // Reset error message and statuses
+    setErrorMessage(null);
+    
+    // Reset form states based on active tab
+    if (activeTab === 'login') {
+      setLoginStatus('idle');
+      // Only reset if not in success state (to avoid flickering during transition)
+      if (signupStatus !== 'success') {
+        signupForm.reset();
+        setSignupStatus('idle');
+      }
+    } else {
+      setSignupStatus('idle');
+      // Only reset if not in success state (to avoid flickering during transition)
+      if (loginStatus !== 'success') {
+        loginForm.reset();
+        setLoginStatus('idle');
+      }
+    }
+  }, [activeTab, loginForm, signupForm, loginStatus, signupStatus]);
 
   // Handle login form submission
   const onLoginSubmit = async (values: LoginFormValues) => {
@@ -350,15 +373,46 @@ export default function SimpleAuthPage() {
                       )}
                     />
                     
+                    {/* Error message display */}
+                    {loginStatus === 'error' && errorMessage && (
+                      <div className="p-3 mb-2 border border-red-500 bg-red-500/20 rounded-md text-red-200 text-sm">
+                        <p className="font-medium">{errorMessage}</p>
+                      </div>
+                    )}
+                    
+                    {/* Success message display */}
+                    {loginStatus === 'success' && (
+                      <div className="p-3 mb-2 border border-[#08c519] bg-[#08c519]/20 rounded-md text-[#08c519] text-sm">
+                        <p className="font-medium flex items-center">
+                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Login successful! Redirecting you...
+                        </p>
+                      </div>
+                    )}
+                    
                     <Button 
                       type="submit" 
-                      className="w-full bg-[#1982FC] hover:bg-blue-600 text-white font-medium mt-2"
-                      disabled={loading}
+                      className={cn(
+                        "w-full font-medium mt-2",
+                        loginStatus === 'success' 
+                          ? "bg-[#08c519] hover:bg-[#08c519]/80 text-white" 
+                          : "bg-[#1982FC] hover:bg-blue-600 text-white"
+                      )}
+                      disabled={loading || loginStatus === 'success'}
                     >
                       {loading ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           Logging in...
+                        </>
+                      ) : loginStatus === 'success' ? (
+                        <>
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Success
                         </>
                       ) : (
                         "Log In"
@@ -463,15 +517,46 @@ export default function SimpleAuthPage() {
                       )}
                     />
                     
+                    {/* Error message display */}
+                    {signupStatus === 'error' && errorMessage && (
+                      <div className="p-3 mb-2 border border-red-500 bg-red-500/20 rounded-md text-red-200 text-sm">
+                        <p className="font-medium">{errorMessage}</p>
+                      </div>
+                    )}
+                    
+                    {/* Success message display */}
+                    {signupStatus === 'success' && (
+                      <div className="p-3 mb-2 border border-[#08c519] bg-[#08c519]/20 rounded-md text-[#08c519] text-sm">
+                        <p className="font-medium flex items-center">
+                          <svg className="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Account created successfully! Please log in.
+                        </p>
+                      </div>
+                    )}
+                    
                     <Button 
                       type="submit" 
-                      className="w-full bg-[#08c519] hover:bg-green-600 text-white font-medium mt-2"
-                      disabled={loading}
+                      className={cn(
+                        "w-full font-medium mt-2",
+                        signupStatus === 'success' 
+                          ? "bg-[#08c519] hover:bg-[#08c519]/80 text-white" 
+                          : "bg-[#08c519] hover:bg-green-600 text-white"
+                      )}
+                      disabled={loading || signupStatus === 'success'}
                     >
                       {loading ? (
                         <>
                           <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                           Creating account...
+                        </>
+                      ) : signupStatus === 'success' ? (
+                        <>
+                          <svg className="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                          </svg>
+                          Account Created
                         </>
                       ) : (
                         "Join the Grid"
