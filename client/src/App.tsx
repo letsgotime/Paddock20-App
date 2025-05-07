@@ -25,6 +25,7 @@ import OnboardingPage from './pages/OnboardingPage';
 // New Pages
 import ThePaddockPage from './pages/ThePaddockPage';
 import EnhancedLogoutPage from './pages/EnhancedLogoutPage';
+import JoinTheGrid from './pages/JoinTheGrid';
 
 // Page imports
 import Paddock20HomePage from "./pages/Paddock20HomePage";
@@ -250,6 +251,7 @@ function AppContent({
                           <Route path="/email-verified" component={EmailVerifiedPage} />
                           {/* Main auth page with updated branding - already handled with special case above */}
                           <Route path="/auth" component={() => null} />
+                          <Route path="/join-the-grid" component={JoinTheGrid} />
                           <Route path="/spotify/callback" component={SpotifyCallbackPage} />
                           <Route path="/logout" component={EnhancedLogoutPage} />
                           
