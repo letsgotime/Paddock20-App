@@ -169,26 +169,14 @@ function AppContent({
   hasCompletedOnboarding: boolean, 
   setHasCompletedOnboarding: (value: boolean) => void 
 }) {
-  // Get location without using auth
-  const [location] = useLocation();
+  // All hooks must be called in the same order on every render
+  // So declare all hooks at the top of the component
+  
+  // Get location and navigate function from wouter
+  const [location, navigate] = useLocation();
   
   // Use the native auth hook directly in AppContent
   const { user, loading, isAuthenticated } = useNativeAuth();
-  
-  // Show loading state while auth is being determined
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen bg-black">
-        <div className="p-8 text-center">
-          <div className="w-16 h-16 border-t-2 border-carolina-blue border-solid rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-carolina-blue">Loading Paddock20...</p>
-        </div>
-      </div>
-    );
-  }
-  
-  // Get navigation function from wouter
-  const [, navigate] = useLocation();
   
   // Redirect user to onboarding if authenticated and hasn't completed onboarding
   useEffect(() => {
@@ -205,6 +193,18 @@ function AppContent({
       return () => clearTimeout(redirectTimer);
     }
   }, [isAuthenticated, hasCompletedOnboarding, user?.id, location, navigate]);
+  
+  // Show loading state while auth is being determined
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center min-h-screen bg-black">
+        <div className="p-8 text-center">
+          <div className="w-16 h-16 border-t-2 border-carolina-blue border-solid rounded-full animate-spin mx-auto mb-4"></div>
+          <p className="text-carolina-blue">Loading Paddock20...</p>
+        </div>
+      </div>
+    );
+  }
 
   // Wrap the application with required context providers
   return (
