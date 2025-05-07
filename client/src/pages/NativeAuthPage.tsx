@@ -151,9 +151,19 @@ export default function NativeAuthPage() {
           
           <CardContent>
             <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-2 mb-6">
-                <TabsTrigger value="login" className="text-[#1982FC]">Log In</TabsTrigger>
-                <TabsTrigger value="signup" className="text-[#1982FC]">Join the Grid</TabsTrigger>
+              <TabsList className="grid w-full grid-cols-2 mb-6 bg-white">
+                <TabsTrigger 
+                  value="login" 
+                  className="text-[#1982FC] data-[state=active]:bg-[#08c519] data-[state=active]:text-[#1982FC]"
+                >
+                  Log In
+                </TabsTrigger>
+                <TabsTrigger 
+                  value="signup" 
+                  className="text-[#1982FC] data-[state=active]:bg-[#08c519] data-[state=active]:text-[#1982FC]"
+                >
+                  Join the Grid
+                </TabsTrigger>
               </TabsList>
               
               <TabsContent value="login">
