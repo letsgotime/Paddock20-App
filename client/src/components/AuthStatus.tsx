@@ -2,7 +2,7 @@ import { Button } from '@/components/ui/button';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2, LogIn, LogOut, User } from 'lucide-react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/auth/useAuth';
 
 export default function AuthStatus() {
   const { user, loading, logout, isAuthenticated } = useAuth();

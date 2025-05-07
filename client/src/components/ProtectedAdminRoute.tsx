@@ -1,5 +1,5 @@
 import { Redirect } from 'wouter';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/auth/useAuth';
 import { Loader2 } from 'lucide-react';
 
 interface ProtectedAdminRouteProps {
