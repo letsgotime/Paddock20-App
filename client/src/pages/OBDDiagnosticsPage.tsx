@@ -1,5 +1,5 @@
 import React from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '@/auth/useAuth';
 import OBDManager from '@/components/OBDManager';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -7,10 +7,10 @@ import { useLocation } from 'wouter';
 import { Loader2, AlertTriangle, InfoIcon } from 'lucide-react';
 
 export default function OBDDiagnosticsPage() {
-  const { user, isLoading } = useAuth();
+  const { user, loading } = useAuth();
   const [, navigate] = useLocation();
 
-  if (isLoading) {
+  if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />

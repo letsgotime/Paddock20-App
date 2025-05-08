@@ -42,6 +42,7 @@ import GaragePage from "./pages/GaragePage";
 import AddVehiclePage from "./pages/AddVehiclePage";
 import VehicleModsPage from "./pages/VehicleModsPage";
 import ModPlannerPage from "./pages/ModPlannerPage";
+import OBDDiagnosticsPage from "./pages/OBDDiagnosticsPage";
 import WeatherPage from "./pages/WeatherPage";
 import Weather from "./pages/Weather";
 import TimeServicesPage from "./pages/TimeServicesPage";
@@ -291,6 +292,7 @@ function AppContent({
                           <Route path="/add-vehicle" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_GARAGE_VAULT]}><AddVehiclePage /></ProtectedRoute>} />
                           <Route path="/vehicle-mods" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_GARAGE_VAULT]}><VehicleModsPage /></ProtectedRoute>} />
                           <Route path="/mod-planner" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_GARAGE_VAULT]}><ModPlannerPage /></ProtectedRoute>} />
+                          <Route path="/obd-diagnostics" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_GARAGE_VAULT]}><OBDDiagnosticsPage /></ProtectedRoute>} />
                           <Route path="/weather-paddock" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_WEATHER_PADDOCK]}><WeatherPage /></ProtectedRoute>} />
                           <Route path="/weather" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_WEATHER_PADDOCK]}><Weather /></ProtectedRoute>} />
                           <Route path="/time-services" component={() => <ProtectedRoute><TimeServicesPage /></ProtectedRoute>} />
