@@ -2421,14 +2421,43 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Profile Image Upload API
   app.post('/api/user/profile/image', async (req, res) => {
     try {
-      // Check if authenticated
-      if (!req.user) {
+      // Get user profile data from Auth0
+      let user = null;
+      
+      // Check for Auth0 session via our GET /api/user-profile endpoint
+      try {
+        const response = await fetch(`http://localhost:5000/api/user-profile`, {
+          headers: {
+            'Cookie': req.headers.cookie || '',
+            'Authorization': req.headers.authorization || ''
+          }
+        });
+        
+        if (response.ok) {
+          user = await response.json();
+          console.log('Retrieved user from Auth0 for image upload:', user);
+        } else {
+          console.log('No Auth0 user found for image upload, checking session user');
+        }
+      } catch (err) {
+        console.error('Error fetching Auth0 user for image upload:', err);
+      }
+      
+      // Use session user as fallback
+      if (!user && req.user) {
+        user = req.user;
+        console.log('Using session user for image upload:', user);
+      }
+      
+      // If no user found in any authentication method, return 401
+      if (!user) {
+        console.log('No authenticated user found for image upload');
         return res.status(401).json({ success: false, error: 'Not authenticated' });
       }
       
       // In a real implementation, this would handle file upload
       // For now, just acknowledge the request
-      console.log('Profile image upload requested');
+      console.log('Profile image upload requested for user:', user.username || user.email);
       
       res.json({ 
         success: true, 
