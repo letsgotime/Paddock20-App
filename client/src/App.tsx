@@ -100,7 +100,8 @@ import TermsOfService from './pages/TermsOfServicePage';
 import BetaAgreement from './pages/BetaAgreement';
 import EmailVerifiedPage from './pages/EmailVerifiedPage';
 import AdminPage from './pages/AdminPage';
-// BetaEnrollmentPage removed as not needed
+// BetaEnrollmentPage renamed to BetaWelcomePage
+import BetaWelcomePage from './pages/BetaWelcomePage';
 
 // Create an AuthenticatedApp component to handle auth-dependent UI
 function AuthenticatedContent({ 
