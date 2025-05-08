@@ -116,10 +116,14 @@ const OnboardingPage: React.FC = () => {
       
       try {
         // Step 1: Update user profile
+        // Get Auth0 token from localStorage
+        const auth0Token = localStorage.getItem('auth0_token');
+        
         const profileResponse = await fetch('/api/user/profile', {
           method: 'PATCH',
           headers: {
             'Content-Type': 'application/json',
+            'Authorization': auth0Token ? `Bearer ${auth0Token}` : '',
           },
           body: JSON.stringify({
             username, // Allow username to be changed during onboarding
@@ -141,6 +145,9 @@ const OnboardingPage: React.FC = () => {
           
           const imageResponse = await fetch('/api/user/profile/image', {
             method: 'POST',
+            headers: {
+              'Authorization': auth0Token ? `Bearer ${auth0Token}` : '',
+            },
             body: formData,
           });
           
@@ -195,6 +202,7 @@ const OnboardingPage: React.FC = () => {
             method: 'POST',
             headers: {
               'Content-Type': 'application/json',
+              'Authorization': auth0Token ? `Bearer ${auth0Token}` : '',
             },
             body: JSON.stringify(vehicle),
           });
