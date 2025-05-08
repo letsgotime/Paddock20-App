@@ -1,20 +1,9 @@
-/**
- * ⚠️ BETA FILE PROTECTION ⚠️
- * 
- * WARNING: This file is part of the Beta Program core implementation.
- * DO NOT MODIFY this file without proper authorization.
- * Any unauthorized changes may break the beta enrollment process.
- * 
- * Last verified: May 07, 2025
- */
-
 import React, { useState, useEffect } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth0 } from '@auth0/auth0-react';
 import { useLocation } from 'wouter';
 import { useToast } from '@/hooks/use-toast';
 import BetaWelcomeModal from '@/components/dashboard/BetaWelcomeModal';
 import OnboardingModal from '@/components/OnboardingModal';
-import { Loader2 } from 'lucide-react';
 
 /**
  * Beta Enrollment Page
@@ -22,7 +11,7 @@ import { Loader2 } from 'lucide-react';
  * This page manages the flow from BetaWelcomeModal to OnboardingModal
  */
 const BetaEnrollmentPage = () => {
-  const { user, isAuthenticated, loading } = useAuth();
+  const { user } = useAuth0();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   
@@ -31,20 +20,10 @@ const BetaEnrollmentPage = () => {
   const [showOnboardingModal, setShowOnboardingModal] = useState(false);
   const [selectedBetaRole, setSelectedBetaRole] = useState<'user' | 'tester'>('user');
   
-  // Protect this page for authenticated users only
+  // Show the welcome modal when the component mounts
   useEffect(() => {
-    if (!loading && !isAuthenticated) {
-      // Redirect to auth page if not authenticated
-      setLocation('/auth');
-    }
-  }, [isAuthenticated, loading, setLocation]);
-  
-  // Show the welcome modal when the component mounts and user is authenticated
-  useEffect(() => {
-    if (isAuthenticated && user) {
-      setShowBetaWelcomeModal(true);
-    }
-  }, [isAuthenticated, user]);
+    setShowBetaWelcomeModal(true);
+  }, []);
   
   // Handle when the beta welcome modal is closed
   const handleBetaWelcomeClose = (betaRole?: 'user' | 'tester') => {
@@ -82,23 +61,6 @@ const BetaEnrollmentPage = () => {
     // Redirect to dashboard
     setLocation('/dashboard');
   };
-  
-  // Show loading state while checking authentication
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-black flex items-center justify-center">
-        <div className="flex flex-col items-center space-y-4">
-          <Loader2 className="h-8 w-8 animate-spin text-[#1982FC]" />
-          <p className="text-gray-400">Verifying your credentials...</p>
-        </div>
-      </div>
-    );
-  }
-  
-  // If not authenticated, this will redirect in the useEffect
-  if (!isAuthenticated || !user) {
-    return null;
-  }
   
   return (
     <div className="min-h-screen bg-black flex items-center justify-center">

@@ -1,13 +1,3 @@
-/**
- * ⚠️ BETA FILE PROTECTION ⚠️
- * 
- * WARNING: This file is part of the Beta Program core implementation.
- * DO NOT MODIFY this file without proper authorization.
- * Any unauthorized changes may break the beta enrollment process.
- * 
- * Last verified: May 07, 2025
- */
-
 import React, { useState, useEffect } from 'react';
 import { X, Zap, ClipboardCheck } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -89,7 +79,6 @@ const BetaWelcomeModal: React.FC<BetaWelcomeModalProps> = ({ isOpen, onClose }) 
           {/* Beta Role Selection Box - Moved from slide 5 */}
           <div className="bg-gray-900/70 border border-gray-800 rounded-lg p-4">
             <h3 className="text-lg font-medium text-white mb-3">Choose Your Beta Program Level</h3>
-            <p className="text-gray-400 text-sm mb-4">Select how you'd like to participate in the Paddock20 beta program.</p>
             
             <RadioGroup 
               value={betaRole} 
@@ -108,41 +97,12 @@ const BetaWelcomeModal: React.FC<BetaWelcomeModalProps> = ({ isOpen, onClose }) 
                     Beta User
                   </Label>
                   <p className="text-gray-400 text-sm mt-1">
-                    Experience Paddock20 early and provide occasional feedback on your experience. Perfect for enthusiasts who want to try the platform with minimal commitment.
+                    Access the beta program with basic feedback options. Ideal for users who want to try new features without additional commitments.
                   </p>
-                  <ul className="mt-2 space-y-1">
-                    <li className="flex items-center text-gray-400 text-sm">
-                      <svg className="h-4 w-4 mr-2 text-[#08c519]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Early access to all features
-                    </li>
-                    <li className="flex items-center text-gray-400 text-sm">
-                      <svg className="h-4 w-4 mr-2 text-[#08c519]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Occasional feedback requests
-                    </li>
-                    <li className="flex items-center text-gray-400 text-sm">
-                      <svg className="h-4 w-4 mr-2 text-[#08c519]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Basic bug reporting
-                    </li>
-                    <li className="flex items-center text-gray-400 text-sm">
-                      <svg className="h-4 w-4 mr-2 text-[#08c519]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      No additional commitments
-                    </li>
-                  </ul>
                 </div>
               </div>
               
-              <div className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-800/50 relative">
-                <div className="absolute -top-2 -right-2 bg-[#08c519] text-xs text-white px-2 py-0.5 rounded-full">
-                  Recommended
-                </div>
+              <div className="flex items-start space-x-3 p-3 rounded-lg hover:bg-gray-800/50">
                 <RadioGroupItem 
                   value="tester" 
                   id="beta-role-tester"
@@ -154,60 +114,11 @@ const BetaWelcomeModal: React.FC<BetaWelcomeModalProps> = ({ isOpen, onClose }) 
                     Beta Tester
                   </Label>
                   <p className="text-gray-400 text-sm mt-1">
-                    Actively contribute to shaping Paddock20's future by participating in focused testing sessions, providing detailed feedback, and getting direct access to the development team.
+                    Enhanced program with priority access to features and direct input on product development. Includes additional feedback responsibilities.
                   </p>
-                  <ul className="mt-2 space-y-1">
-                    <li className="flex items-center text-gray-400 text-sm">
-                      <svg className="h-4 w-4 mr-2 text-[#08c519]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      All Beta User benefits
-                    </li>
-                    <li className="flex items-center text-gray-400 text-sm">
-                      <svg className="h-4 w-4 mr-2 text-[#08c519]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Priority feature access
-                    </li>
-                    <li className="flex items-center text-gray-400 text-sm">
-                      <svg className="h-4 w-4 mr-2 text-[#08c519]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Exclusive testing sessions
-                    </li>
-                    <li className="flex items-center text-gray-400 text-sm">
-                      <svg className="h-4 w-4 mr-2 text-[#08c519]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Direct developer communication
-                    </li>
-                    <li className="flex items-center text-gray-400 text-sm">
-                      <svg className="h-4 w-4 mr-2 text-[#08c519]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Beta Tester recognition
-                    </li>
-                    <li className="flex items-center text-gray-400 text-sm">
-                      <svg className="h-4 w-4 mr-2 text-[#08c519]" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Early access to premium features
-                    </li>
-                  </ul>
                 </div>
               </div>
             </RadioGroup>
-            
-            <div className="mt-4 flex items-start p-3 border border-amber-900/30 bg-amber-900/10 rounded-lg">
-              <div className="text-amber-500 mr-3 flex-shrink-0 mt-0.5">
-                <svg className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-                </svg>
-              </div>
-              <p className="text-gray-300 text-sm">
-                <span className="font-medium text-amber-400">Important:</span> Beta Tester spots are limited. While Beta User access is open to all, Beta Tester status requires consistent participation and quality feedback. Inactive testers may be moved to Beta User status to make room for active participants.
-              </p>
-            </div>
           </div>
           
           <div className="pt-3">

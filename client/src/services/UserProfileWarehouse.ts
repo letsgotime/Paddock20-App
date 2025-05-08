@@ -29,7 +29,6 @@ export interface UserIdentity {
   id: string;                               // Unique user identifier
   username: string;                         // Username for login
   email?: string;                           // User email (if available)
-  phone?: string;                           // User phone number (optional)
   displayName: string;                      // User's display name
   firstName?: string;                       // First name (optional)
   lastName?: string;                        // Last name (optional)
@@ -39,6 +38,7 @@ export interface UserIdentity {
   memberSince: string;                      // ISO date when user joined
   lastActive: string;                       // ISO date of last activity
   membershipLevel: 'free' | 'premium' | 'elite'; // Membership tier
+  phoneNumber?: string;                     // User phone (if provided)
   socialLinks?: {                           // Social media profiles
     instagram?: string;
     twitter?: string;
@@ -99,9 +99,6 @@ export interface UserPreferences {
     dataCollection: boolean;
   };
   
-  // User interests
-  interests?: string[];
-  
   // Weather preferences
   weatherPreferences: {
     defaultLocation: {
@@ -128,9 +125,6 @@ export interface UserPreferences {
     backgroundSync: boolean;
     cacheStrategy: 'minimal' | 'balanced' | 'aggressive';
   };
-  
-  // Custom fields for extensibility
-  customFields?: Record<string, any>;
 }
 
 // 3. User agreement records
@@ -193,7 +187,6 @@ export interface VehicleReference {
   year: number;
   nickname?: string;
   vin?: string;
-  color?: string;
   status: 'active' | 'inactive' | 'archived' | 'sold';
   primaryImage?: string;
 }
@@ -2207,34 +2200,6 @@ class UserProfileWarehouseService {
    */
   addVehicleReference(vehicle: VehicleReference): void {
     this.store.getState().addVehicleReference(vehicle);
-  }
-  
-  /**
-   * Updates a vehicle reference
-   */
-  updateVehicleReference(id: string, updates: Partial<VehicleReference>): void {
-    this.store.getState().updateVehicleReference(id, updates);
-  }
-  
-  /**
-   * Adds a goal
-   */
-  addGoal(goal: GoalRecord): void {
-    this.store.getState().addGoal(goal);
-  }
-  
-  /**
-   * Updates a goal
-   */
-  updateGoal(id: string, updates: Partial<GoalRecord>): void {
-    this.store.getState().updateGoal(id, updates);
-  }
-  
-  /**
-   * Updates the user profile
-   */
-  updateProfile(updates: Partial<UserProfileData>): void {
-    this.store.getState().updateProfile(updates);
   }
   
   /**

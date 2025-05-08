@@ -1,18 +1,20 @@
 import type { Express, Request, Response } from "express";
 import { createServer, type Server } from "http";
 import { storage } from "./storage";
-// Import schemas from shared schema
-import { users } from "@shared/schema";
+import { 
+  insertVehicleSchema, 
+  insertTireSchema, 
+  insertMaintenanceRecordSchema, 
+  insertMaintenanceFlagSchema, 
+  insertGlossTrackingSchema,
+  insertGlossLogSchema
+} from "@shared/schema";
 import { handleGoogleOAuth2Callback, handleAppleOAuth2Callback } from "./oauth";
 import { checkSlackIntegration, initializeSlackClient, shareVehicleToSlack, shareEventToSlack } from "./slack";
 import { setupAuth } from "./auth";
-// Temporarily disabled 2FA
-// import twoFactorRoutes from "./routes/twoFactorRoutes";
-import supabaseAuthRoutes from "./routes/supabaseAuthRoutes";
-import authRegisterRoutes from "./routes/authRegisterRoutes";
+import twoFactorRoutes from "./routes/twoFactorRoutes";
+import auth0Routes from "./routes/auth0Routes";
 import spotifyRoutes from "./routes/spotifyRoutes";
-import adminRoutes from "./routes/adminRoutes";
-import adminAuditRoutes from "./routes/adminAuditRoutes";
 
 // OpenWeather API keys - updated May 1, 2025
 const OPENWEATHER_API_KEYS = {
@@ -67,15 +69,12 @@ interface RateLimiter {
   geocodeMinInterval: number;
 }
 
-// Define CHECK_INTERVAL here
-const API_CHECK_INTERVAL = 4 * 60 * 60 * 1000; // 4 hours in milliseconds
-
 const apiHealthStatus: WeatherApiStatus = {
   lastChecked: new Date(0), // Set to epoch time to force immediate check
   isOperational: true, // Assume operational until first check
   lastError: null,
   consecutiveFailures: 0,
-  checkInterval: API_CHECK_INTERVAL
+  checkInterval: CHECK_INTERVAL // 4 hours in milliseconds
 };
 
 // Initialize rate limiter to prevent hitting API rate limits
@@ -234,33 +233,20 @@ async function checkWeatherApiHealth(): Promise<boolean> {
   return await checkServiceHealth('OpenWeather API');
 }
 
-// Import the user profile routes
-import userProfileRoutes from './routes/userProfileRoutes';
+// Already imported at the top of the file
 
 export async function registerRoutes(app: Express): Promise<Server> {
   // Setup user authentication system first
   setupAuth(app);
   
-  // Two-Factor Authentication temporarily disabled
-  // app.use(twoFactorRoutes);
+  // Then register the Two-Factor Authentication Routes
+  app.use(twoFactorRoutes);
   
-  // Register Supabase auth related routes
-  app.use(supabaseAuthRoutes);
-  
-  // Register local auth registration routes
-  // Auth routes are already registered in auth.ts's setupAuth function
-  // IMPORTANT: Do NOT uncomment this line - it causes route conflicts
-  // app.use('/api/auth', authRegisterRoutes);
-  
-  // Register User Profile routes
-  app.use('/api/user-profile', userProfileRoutes);
+  // Register Auth0 related routes
+  app.use(auth0Routes);
   
   // Register Spotify API routes
   app.use('/api/spotify', spotifyRoutes);
-  
-  // Register Admin routes
-  app.use('/api/admin', adminRoutes);
-  app.use('/api/admin', adminAuditRoutes);
   
   // Using only OpenWeather API for all weather services
   

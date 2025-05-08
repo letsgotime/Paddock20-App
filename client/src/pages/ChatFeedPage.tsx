@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { db } from "@/services/firebaseConfig";
 import { collection, addDoc, onSnapshot, query, orderBy, Timestamp, where, getDocs } from "firebase/firestore";
-import { useAuth } from "@/auth/useAuth";
+import { useAuth } from "@/hooks/useAuth";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { UsersRound, Car, Trophy, Calendar, Heart, Users, Wrench, Map, MessageSquare } from "lucide-react";
@@ -34,12 +34,13 @@ const ChatFeedPage = () => {
   const [newMessage, setNewMessage] = useState("");
   const [activeRoom, setActiveRoom] = useState<string>("general");
   const [chatRooms, setChatRooms] = useState<ChatRoom[]>([]);
-  const { user } = useAuth();
+  const { session } = useAuth();
   
   // Get current user information
-  const userEmail = user?.email || "paddock20@member.com";
-  const userId = user?.id || "anonymous";
-  const displayName = user?.username || userEmail.split('@')[0] || "Paddock20 Member";
+  const currentUser = session?.user;
+  const userEmail = currentUser?.email || "paddock20@member.com";
+  const userId = currentUser?.id || "anonymous";
+  const displayName = userEmail.split('@')[0] || "Paddock20 Member";
 
   // Initialize chat rooms
   useEffect(() => {

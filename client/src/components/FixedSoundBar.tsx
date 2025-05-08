@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { VolumeX, Volume2, Home, ArrowLeft, ArrowRight, Music, Music2 } from "lucide-react";
-import { useLocation, Link } from "wouter";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useSoundContext } from "@/contexts/SoundContext";
 import SoundButton from "@/components/ui/SoundButton";
 
@@ -10,10 +10,11 @@ import SoundButton from "@/components/ui/SoundButton";
  * This component is designed to be always visible regardless of authentication state
  * and is positioned at the bottom of the screen using fixed positioning.
  * 
- * Now uses wouter's Link component for seamless SPA navigation.
+ * Now uses React Router's Link component for seamless SPA navigation.
  */
 const FixedSoundBar: React.FC = () => {
-  const [location, setLocation] = useLocation();
+  const navigate = useNavigate();
+  const location = useLocation();
   const { isEnabled: soundEnabled, ambientEnabled, volume, playSound, toggleSound, toggleAmbient, setVolumeLevel } = useSoundContext();
   const [canGoBack, setCanGoBack] = useState(false);
   const [canGoForward, setCanGoForward] = useState(false);
@@ -27,12 +28,12 @@ const FixedSoundBar: React.FC = () => {
   // Update history when location changes
   useEffect(() => {
     // Check if we're navigating with the back/forward buttons
-    const isPopstate = navigationHistory[currentHistoryIndex] === location;
+    const isPopstate = navigationHistory[currentHistoryIndex] === location.pathname;
     
     if (!isPopstate) {
       // Normal navigation (not back/forward)
       // Remove any "future" history if we navigated to a new path
-      const newHistory = [...navigationHistory.slice(0, currentHistoryIndex + 1), location];
+      const newHistory = [...navigationHistory.slice(0, currentHistoryIndex + 1), location.pathname];
       setNavigationHistory(newHistory);
       setCurrentHistoryIndex(newHistory.length - 1);
     }
@@ -40,12 +41,12 @@ const FixedSoundBar: React.FC = () => {
     // Update back/forward button states
     setCanGoBack(currentHistoryIndex > 0);
     setCanGoForward(currentHistoryIndex < navigationHistory.length - 1);
-  }, [location]);
+  }, [location.pathname]);
   
   // Initialize history on first render
   useEffect(() => {
     if (navigationHistory.length === 0) {
-      setNavigationHistory([location]);
+      setNavigationHistory([location.pathname]);
       setCurrentHistoryIndex(0);
     }
   }, []);
@@ -54,7 +55,7 @@ const FixedSoundBar: React.FC = () => {
   useEffect(() => {
     const handlePopstate = () => {
       // Find the pathname in our history
-      const index = navigationHistory.findIndex(path => path === location);
+      const index = navigationHistory.findIndex(path => path === location.pathname);
       
       if (index !== -1) {
         // Update our current index
@@ -70,7 +71,7 @@ const FixedSoundBar: React.FC = () => {
     return () => {
       window.removeEventListener('popstate', handlePopstate);
     };
-  }, [navigationHistory, currentHistoryIndex, location]);
+  }, [navigationHistory, currentHistoryIndex, location.pathname]);
   
   // Handle clicks outside the sound menu to close it
   useEffect(() => {
@@ -86,7 +87,7 @@ const FixedSoundBar: React.FC = () => {
     };
   }, []);
 
-  // Navigation handlers using wouter and our custom history tracking
+  // Navigation handlers using React Router and our custom history tracking
   const handleBackClick = (e: React.MouseEvent) => {
     if (canGoBack) {
       if (soundEnabled) playSound('ui_click');
@@ -95,7 +96,7 @@ const FixedSoundBar: React.FC = () => {
       const prevIndex = currentHistoryIndex - 1;
       if (prevIndex >= 0) {
         const prevPath = navigationHistory[prevIndex];
-        setLocation(prevPath);
+        navigate(prevPath);
         setCurrentHistoryIndex(prevIndex);
       }
     } else {
@@ -111,7 +112,7 @@ const FixedSoundBar: React.FC = () => {
       const nextIndex = currentHistoryIndex + 1;
       if (nextIndex < navigationHistory.length) {
         const nextPath = navigationHistory[nextIndex];
-        setLocation(nextPath);
+        navigate(nextPath);
         setCurrentHistoryIndex(nextIndex);
       }
     } else {
@@ -183,7 +184,7 @@ const FixedSoundBar: React.FC = () => {
         
         <div className="mx-1 h-4 w-px bg-blue-900/50"></div>
         
-        {/* Home Button - Using wouter's Link for SPA navigation */}
+        {/* Home Button - Using React Router Link for SPA navigation */}
         <Link
           to="/"
           onClick={handleHomeClick}

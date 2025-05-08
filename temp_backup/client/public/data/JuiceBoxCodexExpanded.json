@@ -1,0 +1,123 @@
+[
+  {
+    "category": "Wash & Foam",
+    "products": [
+      {
+        "name": "Frothe (AMMO NYC)",
+        "link": "https://www.ammonyc.com/shop/hoseless-lift-kit-150/",
+        "notes": "Hoseless safe wash, gloss-preserving.",
+        "affiliate": false
+      },
+      {
+        "name": "GYEON Foam",
+        "link": "https://www.gyeonquartzusa.com/",
+        "notes": "Heavy foam jobs, deep cleaning.",
+        "affiliate": false
+      },
+      {
+        "name": "MTM PF22.2 Foam Cannon",
+        "link": "https://www.obsessedgarage.com/products/mtm-pf22-2-foam-cannon",
+        "notes": "Best-in-class foam application.",
+        "affiliate": true
+      },
+      {
+        "name": "CarPro Reload",
+        "link": "https://www.amazon.com/CarPro-Reload-Inorganic-Spray-Sealant/dp/B00VK9HUMG/",
+        "notes": "Topper hybrid sealant for high flex gloss.",
+        "affiliate": true
+      }
+    ]
+  },
+  {
+    "category": "Coatings & Sealants",
+    "products": [
+      {
+        "name": "CQuartz UK 3.0",
+        "link": "https://www.amazon.com/dp/B00W8APMQM/",
+        "notes": "Ultimate base ceramic coating with 2+ year durability.",
+        "affiliate": true
+      },
+      {
+        "name": "DLUX Trim and Wheel Coating",
+        "link": "https://www.amazon.com/dp/B00FPUIQWE/",
+        "notes": "High temp durable trim and wheel protection.",
+        "affiliate": true
+      },
+      {
+        "name": "FlyBy Forte Glass Coating",
+        "link": "https://www.amazon.com/dp/B01C6E6DIA/",
+        "notes": "Wiper safe, glass hydrophobic coating.",
+        "affiliate": false
+      }
+    ]
+  },
+  {
+    "category": "Wheels & Tires",
+    "products": [
+      {
+        "name": "AMMO Plum Wheel Cleaner",
+        "link": "https://www.ammonyc.com/shop/ammo-plum-wheel-cleaner/",
+        "notes": "Strong but safe iron remover tire degreaser.",
+        "affiliate": false
+      },
+      {
+        "name": "GYEON Tire Cleaner",
+        "link": "https://www.gyeonquartzusa.com/",
+        "notes": "Deep rubber cleaning agent for tire prep.",
+        "affiliate": false
+      },
+      {
+        "name": "RaceGlaze XL Barrel Brush",
+        "link": "https://www.obsessedgarage.com/products/raceglaze-detailing-brush-xl",
+        "notes": "Ultimate reach and safe flex for wheel barrels.",
+        "affiliate": true
+      }
+    ]
+  },
+  {
+    "category": "Interior Maintenance",
+    "products": [
+      {
+        "name": "AMMO Mousse Interior Cleaner",
+        "link": "https://www.ammonyc.com/shop/mousse-interior-cleaner/",
+        "notes": "Dry-touch, gloss-neutral interior cleaning.",
+        "affiliate": false
+      },
+      {
+        "name": "GYEON Leather Shield",
+        "link": "https://www.gyeonquartzusa.com/",
+        "notes": "Easy and safe leather protection for daily drivers.",
+        "affiliate": false
+      },
+      {
+        "name": "BigBoi BlowR Pro",
+        "link": "https://www.obsessedgarage.com/products/bigboi-blowr-pro",
+        "notes": "Safe heat drying, zero towel swipes.",
+        "affiliate": true
+      }
+    ]
+  },
+  {
+    "category": "Polishing Tools",
+    "products": [
+      {
+        "name": "Torq22D Polisher",
+        "link": "https://www.amazon.com/dp/B014ONKB6Q/",
+        "notes": "Safe and aggressive 5-6 inch polish work.",
+        "affiliate": true
+      },
+      {
+        "name": "Griot's G9 Random Orbital",
+        "link": "https://www.griotsgarage.com/g9-random-orbital-polisher/",
+        "notes": "Professional grade 9mm throw polisher for serious correction.",
+        "affiliate": false
+      },
+      {
+        "name": "Lake Country CCS Pads",
+        "link": "https://www.amazon.com/dp/B073P24LCS/",
+        "notes": "Color-coded system for polish and compound work.",
+        "affiliate": true
+      }
+    ]
+  }
+]

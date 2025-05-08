@@ -2,12 +2,8 @@ import React, { useState, useEffect } from 'react';
 import { useVehicle } from '@/hooks/useVehicle';
 import { Gauge, Fuel, Thermometer, Activity, Info } from 'lucide-react';
 
-interface F1TelemetryWidgetProps {
-  compact?: boolean;
-}
-
-const F1TelemetryWidget: React.FC<F1TelemetryWidgetProps> = ({ compact = false }) => {
-  const { selectedVehicle } = useVehicle();
+const F1TelemetryWidget: React.FC = () => {
+  const { activeVehicle } = useVehicle();
   
   // State for simulated telemetry data
   const [telemetry, setTelemetry] = useState({
@@ -34,8 +30,8 @@ const F1TelemetryWidget: React.FC<F1TelemetryWidgetProps> = ({ compact = false }
   
   // Animate telemetry data as if car is in motion
   useEffect(() => {
-    // Only animate if we have a selected vehicle
-    if (!selectedVehicle) return;
+    // Only animate if we have an active vehicle
+    if (!activeVehicle) return;
     
     // Simulation values
     let rpmValue = 800;
@@ -104,7 +100,7 @@ const F1TelemetryWidget: React.FC<F1TelemetryWidgetProps> = ({ compact = false }
     }, 100);
     
     return () => clearInterval(interval);
-  }, [selectedVehicle]);
+  }, [activeVehicle]);
   
   // Helper to get color for RPM gauge
   const getRpmColor = (rpm: number) => {
@@ -168,213 +164,138 @@ const F1TelemetryWidget: React.FC<F1TelemetryWidgetProps> = ({ compact = false }
     );
   };
   
-  // Render compact version of the telemetry widget
-  const renderCompactTelemetry = () => {
-    return (
-      <div className="flex flex-col h-full">
-        {/* Main telemetry display for compact view */}
-        <div className="flex items-center justify-between mb-2">
-          <div className="flex items-baseline">
-            <div className="text-2xl font-bold text-blue-300 mr-1">{telemetry.speed}</div>
-            <div className="text-xs text-gray-500">MPH</div>
-          </div>
-          
-          <div className="flex flex-col items-center">
-            <div className="text-3xl font-bold text-green-500 font-mono">{telemetry.gearPosition}</div>
-            <div className="text-xs text-gray-500">GEAR</div>
-          </div>
-          
-          <div className="flex items-baseline">
-            <div className="text-sm font-semibold text-blue-300 mr-1">{Math.round(telemetry.rpm / 1000)}</div>
-            <div className="text-xs text-gray-500">K RPM</div>
-          </div>
-        </div>
-        
-        {/* RPM Gauge for compact view */}
-        {renderRpmGauge()}
-        
-        {/* Compact metrics grid */}
-        <div className="grid grid-cols-4 gap-1 text-xs">
-          <div className="bg-blue-950/30 rounded-md p-1">
-            <div className="flex items-center text-xxs text-gray-400">
-              <Fuel className="h-2 w-2 mr-0.5" />
-              <span>FUEL</span>
-            </div>
-            <div className="text-blue-300">{Math.round(telemetry.fuelLevel)}%</div>
-          </div>
-          
-          <div className="bg-blue-950/30 rounded-md p-1">
-            <div className="flex items-center text-xxs text-gray-400">
-              <Thermometer className="h-2 w-2 mr-0.5" />
-              <span>ENG</span>
-            </div>
-            <div className={`${getTempColor(telemetry.engineTemp)}`}>{Math.round(telemetry.engineTemp)}°</div>
-          </div>
-          
-          <div className="bg-blue-950/30 rounded-md p-1">
-            <div className="flex items-center text-xxs text-gray-400">
-              <Activity className="h-2 w-2 mr-0.5 transform rotate-90" />
-              <span>LAT</span>
-            </div>
-            <div className="text-blue-300">{formatLateralG(telemetry.g_forces.lateral)}</div>
-          </div>
-          
-          <div className="bg-blue-950/30 rounded-md p-1">
-            <div className="flex items-center text-xxs text-gray-400">
-              <Activity className="h-2 w-2 mr-0.5" />
-              <span>LONG</span>
-            </div>
-            <div className="text-blue-300">{formatLongG(telemetry.g_forces.longitudinal)}</div>
-          </div>
-        </div>
-        
-        <div className="text-center mt-auto pt-1">
-          <div className="text-xs text-gray-500">Simulated telemetry</div>
-        </div>
-      </div>
-    );
-  };
-  
-  // Render standard version of the telemetry widget
-  const renderFullTelemetry = () => {
-    return (
-      <div className="flex flex-col">
-        {/* Main telemetry display */}
-        <div className="mb-4 flex items-end justify-between">
-          <div className="flex flex-col items-center">
-            <div className="text-xs text-gray-500 mb-1">SPEED</div>
-            <div className="text-3xl font-bold text-blue-300">
-              {telemetry.speed}
-              <span className="text-sm ml-1">mph</span>
-            </div>
-          </div>
-          
-          <div className="flex flex-col items-center mx-5">
-            <div className="text-5xl font-bold text-green-500 font-mono">
-              {telemetry.gearPosition}
-            </div>
-            <div className="text-xs text-gray-500">GEAR</div>
-          </div>
-          
-          <div className="flex flex-col items-end">
-            <div className="text-xs text-gray-500 mb-1">RPM</div>
-            <div className="text-xl font-semibold text-blue-300">
-              {telemetry.rpm.toLocaleString()}
-            </div>
-          </div>
-        </div>
-        
-        {/* RPM Gauge */}
-        {renderRpmGauge()}
-        
-        {/* Throttle/Brake Position */}
-        <div className="grid grid-cols-2 gap-3 mb-3">
-          <div>
-            <div className="flex justify-between text-xs text-gray-500 mb-1">
-              <span>0%</span>
-              <span>THROTTLE</span>
-              <span>100%</span>
-            </div>
-            <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-green-500"
-                style={{ width: `${telemetry.throttlePosition}%` }}
-              ></div>
-            </div>
-          </div>
-          
-          <div>
-            <div className="flex justify-between text-xs text-gray-500 mb-1">
-              <span>0%</span>
-              <span>BRAKE</span>
-              <span>100%</span>
-            </div>
-            <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
-              <div 
-                className="h-full bg-red-500"
-                style={{ width: `${telemetry.brakePosition}%` }}
-              ></div>
-            </div>
-          </div>
-        </div>
-        
-        {/* Secondary metrics grid */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
-          <div className="bg-blue-950/30 rounded-md p-2">
-            <div className="flex items-center text-xs text-gray-400 mb-1">
-              <Fuel className="h-3 w-3 mr-1" />
-              <span>FUEL</span>
-            </div>
-            <div className="text-blue-300 font-medium">
-              {Math.round(telemetry.fuelLevel)}%
-            </div>
-          </div>
-          
-          <div className="bg-blue-950/30 rounded-md p-2">
-            <div className="flex items-center text-xs text-gray-400 mb-1">
-              <Thermometer className="h-3 w-3 mr-1" />
-              <span>ENGINE</span>
-            </div>
-            <div className={`font-medium ${getTempColor(telemetry.engineTemp)}`}>
-              {Math.round(telemetry.engineTemp)}°F
-            </div>
-          </div>
-          
-          <div className="bg-blue-950/30 rounded-md p-2">
-            <div className="flex items-center text-xs text-gray-400 mb-1">
-              <Activity className="h-3 w-3 mr-1 transform rotate-90" />
-              <span>LAT-G</span>
-            </div>
-            <div className="text-blue-300 font-medium">
-              {formatLateralG(telemetry.g_forces.lateral)}
-            </div>
-          </div>
-          
-          <div className="bg-blue-950/30 rounded-md p-2">
-            <div className="flex items-center text-xs text-gray-400 mb-1">
-              <Activity className="h-3 w-3 mr-1" />
-              <span>LONG-G</span>
-            </div>
-            <div className="text-blue-300 font-medium">
-              {formatLongG(telemetry.g_forces.longitudinal)}
-            </div>
-          </div>
-        </div>
-        
-        {/* Tire Pressures */}
-        {renderTirePressures()}
-        
-        {/* Lap information */}
-        <div className="mt-3 bg-green-950/20 rounded-md p-2 border-l-2 border-green-800">
-          <div className="flex justify-between">
-            <div>
-              <div className="text-xs text-gray-400">LAST LAP</div>
-              <div className="text-green-500 font-mono font-medium">
-                {telemetry.lastLapTime}
-              </div>
-            </div>
-            <div className="text-right">
-              <div className="text-xs text-gray-400">DELTA</div>
-              <div className="text-yellow-500 font-mono font-medium">
-                {telemetry.deltaToOptimal}
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="mt-2 flex items-center justify-center">
-          <Info className="h-3 w-3 text-gray-500 mr-1" />
-          <span className="text-xs text-gray-500">Simulated telemetry data</span>
-        </div>
-      </div>
-    );
-  };
-
-  // Render component with appropriate layout
   return (
     <div className="h-full">
-      {selectedVehicle ? (
-        compact ? renderCompactTelemetry() : renderFullTelemetry()
+      {activeVehicle ? (
+        <div className="flex flex-col">
+          {/* Main telemetry display */}
+          <div className="mb-4 flex items-end justify-between">
+            <div className="flex flex-col items-center">
+              <div className="text-xs text-gray-500 mb-1">SPEED</div>
+              <div className="text-3xl font-bold text-blue-300">
+                {telemetry.speed}
+                <span className="text-sm ml-1">mph</span>
+              </div>
+            </div>
+            
+            <div className="flex flex-col items-center mx-5">
+              <div className="text-5xl font-bold text-green-500 font-mono">
+                {telemetry.gearPosition}
+              </div>
+              <div className="text-xs text-gray-500">GEAR</div>
+            </div>
+            
+            <div className="flex flex-col items-end">
+              <div className="text-xs text-gray-500 mb-1">RPM</div>
+              <div className="text-xl font-semibold text-blue-300">
+                {telemetry.rpm.toLocaleString()}
+              </div>
+            </div>
+          </div>
+          
+          {/* RPM Gauge */}
+          {renderRpmGauge()}
+          
+          {/* Throttle/Brake Position */}
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <div>
+              <div className="flex justify-between text-xs text-gray-500 mb-1">
+                <span>0%</span>
+                <span>THROTTLE</span>
+                <span>100%</span>
+              </div>
+              <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-green-500"
+                  style={{ width: `${telemetry.throttlePosition}%` }}
+                ></div>
+              </div>
+            </div>
+            
+            <div>
+              <div className="flex justify-between text-xs text-gray-500 mb-1">
+                <span>0%</span>
+                <span>BRAKE</span>
+                <span>100%</span>
+              </div>
+              <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-red-500"
+                  style={{ width: `${telemetry.brakePosition}%` }}
+                ></div>
+              </div>
+            </div>
+          </div>
+          
+          {/* Secondary metrics grid */}
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+            <div className="bg-blue-950/30 rounded-md p-2">
+              <div className="flex items-center text-xs text-gray-400 mb-1">
+                <Fuel className="h-3 w-3 mr-1" />
+                <span>FUEL</span>
+              </div>
+              <div className="text-blue-300 font-medium">
+                {Math.round(telemetry.fuelLevel)}%
+              </div>
+            </div>
+            
+            <div className="bg-blue-950/30 rounded-md p-2">
+              <div className="flex items-center text-xs text-gray-400 mb-1">
+                <Thermometer className="h-3 w-3 mr-1" />
+                <span>ENGINE</span>
+              </div>
+              <div className={`font-medium ${getTempColor(telemetry.engineTemp)}`}>
+                {Math.round(telemetry.engineTemp)}°F
+              </div>
+            </div>
+            
+            <div className="bg-blue-950/30 rounded-md p-2">
+              <div className="flex items-center text-xs text-gray-400 mb-1">
+                <Activity className="h-3 w-3 mr-1 transform rotate-90" />
+                <span>LAT-G</span>
+              </div>
+              <div className="text-blue-300 font-medium">
+                {formatLateralG(telemetry.g_forces.lateral)}
+              </div>
+            </div>
+            
+            <div className="bg-blue-950/30 rounded-md p-2">
+              <div className="flex items-center text-xs text-gray-400 mb-1">
+                <Activity className="h-3 w-3 mr-1" />
+                <span>LONG-G</span>
+              </div>
+              <div className="text-blue-300 font-medium">
+                {formatLongG(telemetry.g_forces.longitudinal)}
+              </div>
+            </div>
+          </div>
+          
+          {/* Tire Pressures */}
+          {renderTirePressures()}
+          
+          {/* Lap information */}
+          <div className="mt-3 bg-green-950/20 rounded-md p-2 border-l-2 border-green-800">
+            <div className="flex justify-between">
+              <div>
+                <div className="text-xs text-gray-400">LAST LAP</div>
+                <div className="text-green-500 font-mono font-medium">
+                  {telemetry.lastLapTime}
+                </div>
+              </div>
+              <div className="text-right">
+                <div className="text-xs text-gray-400">DELTA</div>
+                <div className="text-yellow-500 font-mono font-medium">
+                  {telemetry.deltaToOptimal}
+                </div>
+              </div>
+            </div>
+          </div>
+          
+          <div className="mt-2 flex items-center justify-center">
+            <Info className="h-3 w-3 text-gray-500 mr-1" />
+            <span className="text-xs text-gray-500">Simulated telemetry data</span>
+          </div>
+        </div>
       ) : (
         <div className="h-full flex flex-col items-center justify-center text-center">
           <div className="bg-blue-900/30 rounded-full p-3 mb-3">

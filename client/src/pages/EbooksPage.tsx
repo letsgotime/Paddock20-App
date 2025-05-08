@@ -1,13 +1,3 @@
-/**
- * ⚠️ PREMIUM CONTENT PROTECTION ⚠️
- * 
- * WARNING: This file is part of the Premium Content core implementation.
- * DO NOT MODIFY this file without proper authorization.
- * Any unauthorized changes may break the eBooks functionality.
- * 
- * Last verified: May 07, 2025
- */
-
 import React, { useState } from 'react';
 import { Book, Search, Download, Star, Clock, Tag, Eye, BookOpen, ChevronDown } from 'lucide-react';
 
