@@ -118,6 +118,19 @@ function App() {
                                 <Route path="/demo/tires-timepieces" component={TiresTimepieces} />
                                 <Route path="/demo/podium-pursuit" component={PodiumPursuitPage} />
                                 
+                                {/* Standard routes */}
+                                <Route path="/weather-paddock" component={WeatherPage} />
+                                <Route path="/garage" component={GarageVaultPage} />
+                                <Route path="/add-vehicle" component={AddVehiclePage} />
+                                <Route path="/connect-vehicle" component={ConnectVehiclePage} />
+                                <Route path="/juicebox" component={JuiceBox} />
+                                <Route path="/manifestation-station" component={ManifestationStationPage} />
+                                <Route path="/events" component={EventsPage} />
+                                <Route path="/drive-journal" component={DriveJournalPage} />
+                                <Route path="/tires-timepieces" component={TiresTimepieces} />
+                                <Route path="/podium-pursuit" component={PodiumPursuitPage} />
+                                <Route path="/the-paddock" component={ThePaddockPage} />
+                                
                                 {/* Redirect all other routes to beta welcome */}
                                 <Route component={BetaWelcomePage} />
                               </Switch>
