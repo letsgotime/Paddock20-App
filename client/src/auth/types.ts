@@ -101,6 +101,15 @@ export interface User {
   // Subscription and premium features data
   subscriptionTier?: 'free' | 'premium' | 'team';
   subscriptionExpiresAt?: Date | string | null;
+  // Driver specific measurements
+  helmetSize?: string | null;
+  shoeSize?: string | null;
+  // Vehicle connection status
+  hasConnectedVehicle?: boolean;
+  connectedVehicleType?: 'smartcar' | 'obd' | 'manual' | null;
+  // Auth0 persistence data
+  auth0Identifier?: string;
+  auth0Metadata?: any;
   // Additional user profile data can be extended here
   [key: string]: any;
 }
