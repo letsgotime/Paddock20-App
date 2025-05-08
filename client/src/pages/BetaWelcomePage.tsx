@@ -9,6 +9,10 @@ export default function BetaWelcomePage() {
   // Handler for beta modal close
   const handleBetaModalClose = (betaRole?: 'user' | 'tester') => {
     setModalOpen(false);
+    // Store the selected beta role in localStorage so OnboardingPage can access it
+    if (betaRole) {
+      localStorage.setItem('paddock20_selected_beta_role', betaRole);
+    }
     // Navigate to onboarding page
     navigate('/onboarding');
   };
