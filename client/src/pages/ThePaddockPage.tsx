@@ -481,7 +481,7 @@ const ThePaddockPage = ({ demoMode = false }: ThePaddockPageProps) => {
                         Weather impact on driving experience
                       </CardDescription>
                     </div>
-                    <div className="cursor-pointer" onClick={() => navigate('/weather-paddock')}>
+                    <div className="cursor-pointer" onClick={() => navigateSafely('/weather-paddock')}>
                       {getWeatherIcon(currentWeather)}
                     </div>
                   </div>
