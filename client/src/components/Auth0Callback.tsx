@@ -61,12 +61,13 @@ const Auth0Callback = () => {
             console.log('Auth0 token stored in localStorage for onboarding');
           }
           
-          // IMPORTANT: Follow this flow exactly: Auth0 → Beta Welcome → Onboarding → Dashboard
+          // IMPORTANT: Updated flow: Auth0 → Onboarding → Dashboard
+          // The beta welcome modal is now shown in the onboarding process
           
-          // Always direct to Beta Welcome page first
-          console.log('✅ Auth0 complete - directing to beta welcome process');
+          // Direct to onboarding process immediately - beta welcome is now integrated there
+          console.log('✅ Auth0 complete - directing to onboarding process');
           localStorage.setItem('paddock20_beta_status', 'pending');
-          setLocation('/beta-welcome');
+          setLocation('/onboarding');
         }, 500);
       } 
       // Authentication error
