@@ -154,7 +154,7 @@ const AuthPage = () => {
                 </div>
               </div>
               
-              {/* Primary button - Try direct Auth0 login first */}
+              {/* Single button for Auth0 login */}
               <Button 
                 onClick={handleDirectAuth0Login} 
                 className="w-full bg-[#08c519] hover:bg-[#08c519]/80 text-white font-bold text-xl py-6 h-16 rounded-lg transition-all duration-200 shadow-lg shadow-[#08c519]/20"
@@ -162,17 +162,6 @@ const AuthPage = () => {
                 Join the Grid
                 <ChevronRight className="ml-2 h-6 w-6" />
               </Button>
-              
-              {/* Fallback button that uses our wrapper method - just in case */}
-              <div className="mt-4">
-                <Button 
-                  onClick={() => register()} 
-                  variant="outline"
-                  className="w-full border-gray-700 text-gray-300 hover:text-white hover:bg-gray-800"
-                >
-                  Alternative Sign-In
-                </Button>
-              </div>
               
               <p className="text-sm text-center text-gray-400 mt-4">
                 By signing up, you agree to our <a href="/terms-of-service" className="text-[#1982FC] hover:underline">Terms of Service</a> and <a href="/privacy-policy" className="text-[#1982FC] hover:underline">Privacy Policy</a>
