@@ -10,7 +10,6 @@ import PageTitleManager from './components/PageTitleManager';
 import OnboardingPage from './pages/OnboardingPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Auth0Callback from './components/Auth0Callback';
-import SmartcarCallback from './components/vehicle/SmartcarCallback';
 import LogoutPage from './pages/LogoutPage';
 // Import disabled to remove Unsplash API warnings
 // import { initializeImageCache } from "./services/unsplashService";
@@ -85,8 +84,6 @@ import SoundLibraryPage from "./pages/SoundLibraryPage";
 import SpotifyTestPage from "./pages/SpotifyTestPage";
 import SpotifyEnvCheck from "./pages/SpotifyEnvCheck";
 import OnboardingTestPage from "./pages/OnboardingTestPage";
-import OBDTestPage from "./pages/obd-test";
-import AddVehicle from "./pages/add-vehicle";
 import SupportChatbot from "./components/SupportChatbot";
 import HomePage from "./pages/Home";
 import OneTapWeatherSnapshot from "./components/OneTapWeatherSnapshot";
@@ -199,9 +196,6 @@ function AuthenticatedContent({
           {/* Spotify callback route - Handles redirection after Spotify authentication */}
           <Route path="/spotify/callback" component={SpotifyCallbackPage} />
           
-          {/* Smartcar callback route - Handles redirection after Smartcar authentication */}
-          <Route path="/smartcar/callback" component={SmartcarCallback} />
-          
           {/* Logout Page - Handles secure logout process */}
           <Route path="/logout" component={LogoutPage} />
           
@@ -211,11 +205,18 @@ function AuthenticatedContent({
           {/* User Onboarding - Explicit URL path that redirects to the proper flow */}
           <Route 
             path="/onboarding" 
-            component={() => (
-              <ProtectedRoute>
-                <OnboardingPage />
-              </ProtectedRoute>
-            )}
+            component={() => {
+              // Check if user is authenticated
+              if (isAuthenticated && user?.id) {
+                // Instead of removing the flag which creates a loop,
+                // we'll render the onboarding component directly
+                return <OnboardingPage />;
+              } else {
+                // Not authenticated, redirect to auth page
+                window.location.href = '/auth';
+                return <div className="p-8 text-white">Please log in to continue onboarding...</div>;
+              }
+            }} 
           />
         
           {/* Core Routes */}

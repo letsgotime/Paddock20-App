@@ -368,8 +368,14 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
   const handleStepTransition = (direction: 'next' | 'prev') => {
     // Validate current step before proceeding
     if (direction === 'next') {
-      // Skip from step 2 directly to step 4 (skip step 3 legal agreements)
-      if (step === 2) {
+      // Legal agreements validation
+      if (step === 3 && !allAgreed) {
+        setError('You must accept all agreements to continue');
+        return;
+      }
+      
+      // Skip step 4 (profile creation) and go directly to step 6 (dashboard customization)
+      if (step === 3 && allAgreed) {
         // Pre-populate minimal profile data to satisfy validation
         setUserProfile(prev => ({
           ...prev,
@@ -391,10 +397,10 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
         // Animate out
         setAnimateIn(false);
         
-        // Short delay for animation then jump to step 4 (profile setup)
+        // Short delay for animation then jump to step 5 (beta role selection)
         setTimeout(() => {
-          setStep(4);
-          setVisibleStep(4);
+          setStep(5);
+          setVisibleStep(5);
           setAnimateIn(true);
         }, 300);
         return;
@@ -843,15 +849,17 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
             </div>
           )}
           
-          {/* Step 3: Legal agreements - Removed as it's now handled in BetaWelcomeModal */}
+          {/* Step 3: Legal agreements */}
           {step === 3 && (
-            <div className="space-y-6 animate-fadeIn">
-              <div className="flex items-center bg-[#1982FC]/10 p-4 rounded-lg mb-6">
-                <Shield className="text-[#1982FC] mr-4" size={24} />
-                <p className="text-gray-200">
-                  Please review and accept the following agreements to proceed with the beta program.
-                  These agreements protect both your rights and the platform's intellectual property.
-                </p>
+            <div className={`space-y-6 ${animateIn ? 'animate-fadeIn' : 'animate-fadeOut'}`}>
+              <div className="bg-[#1982FC]/10 p-4 rounded-lg mb-6">
+                <div className="flex items-center">
+                  <Shield className="text-[#1982FC] mr-4" size={24} />
+                  <p className="text-gray-200">
+                    Please review and accept the following agreements to proceed with the beta program.
+                    These agreements protect both your rights and the platform's intellectual property.
+                  </p>
+                </div>
               </div>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

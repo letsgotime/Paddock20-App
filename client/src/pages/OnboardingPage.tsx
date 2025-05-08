@@ -20,9 +20,7 @@ const OnboardingPage: React.FC = () => {
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
   const [betaAgreed, setBetaAgreed] = useState(false);
-  // Get the beta role from localStorage that was set in BetaWelcomePage
-  const savedBetaRole = localStorage.getItem('paddock20_selected_beta_role');
-  const [betaTesterRequest, setBetaTesterRequest] = useState(savedBetaRole === 'tester'); // Set based on previous selection
+  const [betaTesterRequest, setBetaTesterRequest] = useState(false); // Track if user wants to be a beta tester
   
   // User profile data - pre-populated from authentication
   const [email, setEmail] = useState<string>(user?.email || '');
@@ -277,9 +275,9 @@ const OnboardingPage: React.FC = () => {
           // Set a global flag to inform protected routes that onboarding was just completed
           window.localStorage.setItem('paddock20_onboarding_just_completed', 'true');
           
-          // All steps completed - redirect to homepage
-          console.log('All onboarding steps completed - redirecting to homepage');
-          navigate('/', { replace: true });
+          // All steps completed - redirect to dashboard
+          console.log('All onboarding steps completed - redirecting to dashboard');
+          navigate('/dashboard', { replace: true });
         } else {
           console.error('Cannot navigate to dashboard - user ID not available');
           // Show error toast
