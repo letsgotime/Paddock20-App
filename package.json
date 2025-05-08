@@ -90,6 +90,7 @@
     "react-resizable-panels": "^2.1.7",
     "react-router-dom": "^7.5.2",
     "recharts": "^2.15.3",
+    "smartcar": "^9.15.0",
     "speakeasy": "^2.0.0",
     "stripe": "^18.0.0",
     "tailwind-merge": "^2.6.0",
