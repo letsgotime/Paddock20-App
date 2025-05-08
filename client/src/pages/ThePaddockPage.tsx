@@ -89,6 +89,17 @@ const ThePaddockPage = ({ demoMode = false }: ThePaddockPageProps) => {
   // Get navigation function from wouter
   const [, navigate] = useLocation();
   
+  // Demo-aware navigation function to handle both authenticated and demo routes
+  const navigateSafely = (path: string) => {
+    if (demoMode && !path.startsWith('/demo') && path !== '/auth') {
+      // In demo mode, prefix internal navigation with /demo
+      navigate('/demo' + (path.startsWith('/') ? path : '/' + path));
+    } else {
+      // Normal navigation
+      navigate(path);
+    }
+  };
+  
   // Format date in F1-style
   const formattedDate = format(new Date(), 'MMMM d, yyyy');
   
@@ -551,7 +562,7 @@ const ThePaddockPage = ({ demoMode = false }: ThePaddockPageProps) => {
                 <CardFooter className="pt-0">
                   <Button 
                     className="bg-[#1982FC] hover:bg-[#1982FC]/90"
-                    onClick={() => navigate('/weather-paddock')}
+                    onClick={() => navigateSafely('/weather-paddock')}
                   >
                     <Cloud className="mr-2 h-4 w-4" /> Full Weather Report
                   </Button>
@@ -571,7 +582,7 @@ const ThePaddockPage = ({ demoMode = false }: ThePaddockPageProps) => {
                   <Button 
                     variant="outline" 
                     className="w-full border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10"
-                    onClick={() => navigate('/telemetry')}
+                    onClick={() => navigateSafely('/telemetry')}
                   >
                     <Gauge className="mr-2 h-4 w-4" /> Full Telemetry
                   </Button>
@@ -593,7 +604,7 @@ const ThePaddockPage = ({ demoMode = false }: ThePaddockPageProps) => {
                       </CardTitle>
                       <CardDescription>Your automotive collection</CardDescription>
                     </div>
-                    <Badge className="bg-[#1982FC] hover:bg-[#1982FC]/90 cursor-pointer" onClick={() => navigate('/garage-vault')}>
+                    <Badge className="bg-[#1982FC] hover:bg-[#1982FC]/90 cursor-pointer" onClick={() => navigateSafely('/garage-vault')}>
                       {displayVehicles.length} Vehicles
                     </Badge>
                   </div>
@@ -727,7 +738,7 @@ const ThePaddockPage = ({ demoMode = false }: ThePaddockPageProps) => {
                 <CardFooter className="pt-0">
                   <Button 
                     className="bg-[#1982FC] hover:bg-[#1982FC]/90 w-full"
-                    onClick={() => navigate('/add-vehicle')}
+                    onClick={() => navigateSafely('/add-vehicle')}
                   >
                     <Car className="mr-2 h-4 w-4" /> Add Vehicle
                   </Button>
@@ -849,7 +860,7 @@ const ThePaddockPage = ({ demoMode = false }: ThePaddockPageProps) => {
                                   size="sm" 
                                   variant="outline" 
                                   className="text-xs border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10 flex-1"
-                                  onClick={() => navigate('/events/' + event.id)}
+                                  onClick={() => navigateSafely('/events/' + event.id)}
                                 >
                                   Event Details
                                 </Button>
@@ -859,7 +870,7 @@ const ThePaddockPage = ({ demoMode = false }: ThePaddockPageProps) => {
                                     size="sm" 
                                     variant="outline" 
                                     className="text-xs border-red-500 text-red-500 hover:bg-red-500/10 flex-1"
-                                    onClick={() => navigate('/podium-pursuit/race/' + event.id)}
+                                    onClick={() => navigateSafely('/podium-pursuit/race/' + event.id)}
                                   >
                                     <Flag className="h-3 w-3 mr-1" />
                                     Race Info
@@ -869,7 +880,7 @@ const ThePaddockPage = ({ demoMode = false }: ThePaddockPageProps) => {
                                     size="sm" 
                                     variant="outline" 
                                     className="text-xs border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10 flex-1"
-                                    onClick={() => navigate('/fun-drive-planner?event=' + event.id)}
+                                    onClick={() => navigateSafely('/fun-drive-planner?event=' + event.id)}
                                   >
                                     <MapPin className="h-3 w-3 mr-1" />
                                     Plan Route

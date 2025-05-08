@@ -3,7 +3,7 @@
  * F1-grade access control for secure paddock areas
  */
 import React, { ReactNode } from 'react';
-import { Redirect } from 'wouter';
+import { Redirect, useLocation } from 'wouter';
 import { useAuth } from './useAuth';
 import { usePermissions } from './usePermissions';
 import { AuthPermission, AuthRole } from './types';
@@ -128,4 +128,21 @@ export const BetaRoute: React.FC<{ children: ReactNode; redirectPath?: string }>
       {children}
     </ProtectedRoute>
   );
+};
+
+/**
+ * Demo Route Component
+ * 
+ * Allows access to routes in demo mode without authentication
+ */
+export const DemoRoute: React.FC<{ children: ReactNode }> = ({ children }) => {
+  const [location] = useLocation();
+  
+  // If we're in demo mode, allow access without authentication
+  if (location.startsWith('/demo')) {
+    return <>{children}</>;
+  }
+  
+  // Otherwise, redirect to the demo route
+  return <Redirect to="/demo" />;
 };
