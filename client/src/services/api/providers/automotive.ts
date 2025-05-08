@@ -1717,8 +1717,6 @@ export function createNHTSAProvider(): NHTSAVehicleProvider {
  */
 export function createAutomotiveProviders(): BaseProvider[] {
   return [
-    createMockAutomotiveProvider(), // Higher priority for development
-    createCarScanProvider(),
-    createNHTSAProvider()
+    createNHTSAProvider() // Using only authentic data from NHTSA API
   ];
 }
