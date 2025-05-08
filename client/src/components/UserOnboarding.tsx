@@ -117,10 +117,9 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
   // Access authenticated user context
   const auth = useAuth();
   
-  // Current step state - simplified to start at step 4 (profile creation) directly
-  // Using step 4 as our starting point since steps 1-3 are redundant with BetaWelcomeModal
-  const [step, setStep] = useState(4);
-  const [visibleStep, setVisibleStep] = useState(4);
+  // Current step state (1-5)
+  const [step, setStep] = useState(1);
+  const [visibleStep, setVisibleStep] = useState(1);
   const [animateIn, setAnimateIn] = useState(true);
   const [error, setError] = useState<string | null>(null);
   
@@ -128,15 +127,14 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
   const [hasUploadedProfilePic, setHasUploadedProfilePic] = useState(false);
   const [hasUploadedVehicleImage, setHasUploadedVehicleImage] = useState(false);
   
-  // Get previously selected beta role from BetaWelcomeModal
-  const savedBetaRole = localStorage.getItem('paddock20_selected_beta_role');
-  const [betaRole, setBetaRole] = useState<'user' | 'tester'>(savedBetaRole === 'tester' ? 'tester' : 'user');
+  // Beta role selection
+  const [betaRole, setBetaRole] = useState<'user' | 'tester'>('user');
   
-  // Legal agreements are already accepted in BetaWelcomeModal, so we'll consider them accepted here
+  // Legal agreement tracking
   const [agreements, setAgreements] = useState({
-    termsOfService: true,
-    privacyPolicy: true,
-    betaAgreement: true
+    termsOfService: false,
+    privacyPolicy: false,
+    betaAgreement: false
   });
   
   // Track state for declining agreements and handling account deletion
@@ -370,8 +368,43 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
   const handleStepTransition = (direction: 'next' | 'prev') => {
     // Validate current step before proceeding
     if (direction === 'next') {
-      // No need to validate step 3 agreements since we're starting at step 4
-      // and all agreements are set to true
+      // Legal agreements validation
+      if (step === 3 && !allAgreed) {
+        setError('You must accept all agreements to continue');
+        return;
+      }
+      
+      // Skip step 4 (profile creation) and go directly to step 6 (dashboard customization)
+      if (step === 3 && allAgreed) {
+        // Pre-populate minimal profile data to satisfy validation
+        setUserProfile(prev => ({
+          ...prev,
+          fullName: prev.fullName || (auth.user && auth.user.firstName && auth.user.lastName ? `${auth.user.firstName} ${auth.user.lastName}` : (auth.user?.username || 'User')),
+          username: prev.username || auth.user?.username || 'user',
+          email: prev.email || auth.user?.email || 'user@example.com',
+          password: 'password123',  // These will never be used as Auth0 handles auth
+          confirmPassword: 'password123',
+        }));
+        
+        // Set default vehicle info to satisfy validation
+        setVehicleProfile(prev => ({
+          ...prev,
+          make: 'Default',
+          model: 'Default',
+          year: new Date().getFullYear().toString(),
+        }));
+        
+        // Animate out
+        setAnimateIn(false);
+        
+        // Short delay for animation then jump to step 5 (beta role selection)
+        setTimeout(() => {
+          setStep(5);
+          setVisibleStep(5);
+          setAnimateIn(true);
+        }, 300);
+        return;
+      }
       
       // User profile validation
       if (step === 4) {
