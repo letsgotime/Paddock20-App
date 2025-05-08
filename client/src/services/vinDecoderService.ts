@@ -56,7 +56,7 @@ export function validateVIN(vin: string): { isValid: boolean; message?: string }
 }
 
 /**
- * Decodes a VIN using the NHTSA API
+ * Decodes a VIN using the NHTSA API with improved caching and fallback options
  * @param vin Vehicle Identification Number to decode
  * @returns Promise resolving to decoded vehicle information
  */
@@ -73,7 +73,31 @@ export async function decodeVIN(vin: string): Promise<DecodedVehicleInfo> {
       };
     }
     
-    // Make API call to NHTSA VIN decoder
+    // Check in-memory cache first
+    const cachedData = getFromCache(vin);
+    if (cachedData) {
+      console.log('Retrieved vehicle info from cache for VIN:', vin);
+      return cachedData;
+    }
+    
+    // Try to get vehicle data from server-side endpoint first (if implemented)
+    try {
+      const serverResponse = await fetch(`/api/vehicles/decode-vin/${vin}`);
+      if (serverResponse.ok) {
+        const data = await serverResponse.json();
+        if (data && !data.error) {
+          // Add to cache
+          addToCache(vin, data);
+          return data;
+        }
+      }
+    } catch (serverError) {
+      console.warn('Server-side VIN decoding failed, falling back to direct API:', serverError);
+      // Proceed to direct API call if server endpoint fails
+    }
+    
+    // Make direct API call to NHTSA VIN decoder as fallback
+    console.log('Making direct API call to NHTSA for VIN:', vin);
     const response = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/${vin}?format=json`);
     
     if (!response.ok) {
@@ -91,60 +115,41 @@ export async function decodeVIN(vin: string): Promise<DecodedVehicleInfo> {
     
     // Extract relevant information from the API response
     if (data && data.Results && Array.isArray(data.Results)) {
+      // Enhanced data extraction with more fields
+      const dataMap: Record<string, string> = {};
+      
+      // First pass: collect all data into a map for easier access
       data.Results.forEach((item: any) => {
         if (item.Value && item.Value !== "Not Applicable") {
-          switch (item.Variable) {
-            case "Make":
-              vehicleInfo.make = item.Value;
-              break;
-            case "Model":
-              vehicleInfo.model = item.Value;
-              break;
-            case "Model Year":
-              vehicleInfo.year = item.Value;
-              break;
-            case "Trim":
-              vehicleInfo.trim = item.Value;
-              break;
-            case "Engine Model":
-              vehicleInfo.engine = item.Value;
-              break;
-            case "Transmission Style":
-              vehicleInfo.transmission = item.Value;
-              break;
-            case "Vehicle Type":
-              vehicleInfo.vehicleType = item.Value;
-              break;
-            case "Manufacturer Name":
-              vehicleInfo.manufacturer = item.Value;
-              break;
-            case "Plant Country":
-              vehicleInfo.plantCountry = item.Value;
-              break;
-            case "Plant State":
-              vehicleInfo.plantState = item.Value;
-              break;
-            case "Plant City":
-              vehicleInfo.plantCity = item.Value;
-              break;
-            case "Drive Type":
-              vehicleInfo.driveLine = item.Value;
-              break;
-            case "Body Class":
-              vehicleInfo.bodyStyle = item.Value;
-              break;
-            case "Fuel Type - Primary":
-              vehicleInfo.fuelType = item.Value;
-              break;
-            case "Displacement (L)":
-              vehicleInfo.displacement = item.Value;
-              break;
-            case "Engine Number of Cylinders":
-              vehicleInfo.cylinders = item.Value;
-              break;
-          }
+          dataMap[item.Variable] = item.Value;
         }
       });
+      
+      // Second pass: extract data in a structured way
+      vehicleInfo.make = dataMap["Make"] || '';
+      vehicleInfo.model = dataMap["Model"] || '';
+      vehicleInfo.year = dataMap["Model Year"] || '';
+      vehicleInfo.trim = dataMap["Trim"] || '';
+      vehicleInfo.engine = dataMap["Engine Model"] || '';
+      vehicleInfo.transmission = dataMap["Transmission Style"] || '';
+      vehicleInfo.vehicleType = dataMap["Vehicle Type"] || '';
+      vehicleInfo.manufacturer = dataMap["Manufacturer Name"] || '';
+      vehicleInfo.plantCountry = dataMap["Plant Country"] || '';
+      vehicleInfo.plantState = dataMap["Plant State"] || '';
+      vehicleInfo.plantCity = dataMap["Plant City"] || '';
+      vehicleInfo.driveLine = dataMap["Drive Type"] || '';
+      vehicleInfo.bodyStyle = dataMap["Body Class"] || '';
+      vehicleInfo.fuelType = dataMap["Fuel Type - Primary"] || '';
+      vehicleInfo.displacement = dataMap["Displacement (L)"] || '';
+      vehicleInfo.cylinders = dataMap["Engine Number of Cylinders"] || '';
+      
+      // Additional useful fields
+      const series = dataMap["Series"] || '';
+      const gvwr = dataMap["GVWR"] || '';
+      
+      if (series && !vehicleInfo.trim) {
+        vehicleInfo.trim = series;
+      }
     }
     
     // Validate essential data was obtained
@@ -161,6 +166,10 @@ export async function decodeVIN(vin: string): Promise<DecodedVehicleInfo> {
         };
       }
     }
+    
+    // Format data for better user experience
+    vehicleInfo.make = formatMakeName(vehicleInfo.make);
+    vehicleInfo.model = formatModelName(vehicleInfo.model);
     
     // Parse transmission into a more consumer-friendly format
     if (vehicleInfo.transmission) {
@@ -185,6 +194,9 @@ export async function decodeVIN(vin: string): Promise<DecodedVehicleInfo> {
       }
     }
     
+    // Add to cache before returning
+    addToCache(vin, vehicleInfo);
+    
     return vehicleInfo;
   } catch (error) {
     console.error('Error decoding VIN:', error);
@@ -195,6 +207,77 @@ export async function decodeVIN(vin: string): Promise<DecodedVehicleInfo> {
       error: 'An error occurred while decoding the VIN. Please try again or enter vehicle details manually.'
     };
   }
+}
+
+/**
+ * Simple in-memory cache for VIN decoder results
+ */
+const vinCache = new Map<string, { data: DecodedVehicleInfo, timestamp: number }>();
+
+/**
+ * Cache TTL (24 hours in milliseconds)
+ */
+const CACHE_TTL = 24 * 60 * 60 * 1000;
+
+/**
+ * Add vehicle info to cache
+ */
+function addToCache(vin: string, data: DecodedVehicleInfo): void {
+  vinCache.set(vin, {
+    data,
+    timestamp: Date.now()
+  });
+}
+
+/**
+ * Get vehicle info from cache if available and not expired
+ */
+function getFromCache(vin: string): DecodedVehicleInfo | null {
+  const cached = vinCache.get(vin);
+  if (!cached) return null;
+  
+  // Check if cache has expired
+  if (Date.now() - cached.timestamp > CACHE_TTL) {
+    vinCache.delete(vin);
+    return null;
+  }
+  
+  return cached.data;
+}
+
+/**
+ * Format make name to be more user-friendly
+ */
+function formatMakeName(make: string): string {
+  if (!make) return '';
+  
+  // Make names are often all caps from the API
+  make = make.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  
+  // Common abbreviations and formatting fixes
+  const makeReplacements: Record<string, string> = {
+    'Bmw': 'BMW',
+    'Gmc': 'GMC',
+    'Vw': 'Volkswagen',
+    'Mercedes Benz': 'Mercedes-Benz',
+    'Land Rover': 'Land Rover',
+    'Hyundai Motor Company': 'Hyundai',
+    'Kia Motors Corporation': 'Kia'
+  };
+  
+  return makeReplacements[make] || make;
+}
+
+/**
+ * Format model name to be more user-friendly
+ */
+function formatModelName(model: string): string {
+  if (!model) return '';
+  
+  // Model names are often all caps or strangely formatted from the API
+  model = model.toLowerCase().replace(/\b\w/g, c => c.toUpperCase());
+  
+  return model;
 }
 
 /**
