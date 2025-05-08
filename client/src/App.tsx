@@ -265,10 +265,13 @@ function AppContent({
                           <Route path="/beta-enrollment" component={BetaEnrollmentPage} />
                           
                           {/* Protected routes */}
+                          {/* Main Home Route - Use ThePaddockPage as the standard home */}
                           <Route path="/" component={() => <ProtectedRoute><ThePaddockPage /></ProtectedRoute>} />
-                          <Route path="/the-paddock" component={() => <ProtectedRoute><ThePaddockPage /></ProtectedRoute>} />
-                          <Route path="/paddock" component={() => <ProtectedRoute><PaddockPage /></ProtectedRoute>} />
-                          <Route path="/admin" component={() => <ProtectedRoute><AdminPage /></ProtectedRoute>} />
+                          
+                          {/* Redirects for backward compatibility */}
+                          <Route path="/the-paddock" component={() => <Redirect to="/" />} />
+                          <Route path="/paddock" component={() => <Redirect to="/" />} />
+                          <Route path="/admin" component={() => <AdminRoute><AdminPage /></AdminRoute>} />
                           <Route path="/onboarding-test" component={() => <ProtectedRoute><OnboardingTestPage /></ProtectedRoute>} />
                           <Route path="/settings" component={() => <ProtectedRoute><Settings /></ProtectedRoute>} />
                           <Route path="/garage" component={() => <ProtectedRoute><GaragePage /></ProtectedRoute>} />
@@ -284,16 +287,21 @@ function AppContent({
                           <Route path="/juicebox" component={() => <ProtectedRoute><JuiceBox /></ProtectedRoute>} />
                           <Route path="/product-organizer" component={() => <ProtectedRoute><ProductOrganizerPage /></ProtectedRoute>} />
                           <Route path="/tires-timepieces" component={() => <ProtectedRoute><TiresTimepieces /></ProtectedRoute>} />
-                          <Route path="/podium-pursuit" component={() => <ProtectedRoute><PodiumPursuitPage /></ProtectedRoute>} />
-                          <Route path="/events" component={() => <ProtectedRoute><EventsPage /></ProtectedRoute>} />
-                          <Route path="/motorsports-events" component={() => <ProtectedRoute><MotorsportsEventsPage /></ProtectedRoute>} />
-                          <Route path="/motorsports-gallery" component={() => <ProtectedRoute><MotorsportsGalleryPage /></ProtectedRoute>} />
+                          {/* Premium features - use PremiumRoute for routes that require subscription */}
+                          <Route path="/podium-pursuit" component={() => <PremiumRoute><PodiumPursuitPage /></PremiumRoute>} />
+                          <Route path="/events" component={() => <PremiumRoute><EventsPage /></PremiumRoute>} />
+                          <Route path="/motorsports-events" component={() => <PremiumRoute><MotorsportsEventsPage /></PremiumRoute>} />
+                          <Route path="/motorsports-gallery" component={() => <PremiumRoute><MotorsportsGalleryPage /></PremiumRoute>} />
+                          
+                          {/* Membership and support pages */}
                           <Route path="/membership" component={() => <ProtectedRoute><MembershipPage /></ProtectedRoute>} />
                           <Route path="/chat-feed" component={() => <ProtectedRoute><ChatFeedPage /></ProtectedRoute>} />
                           <Route path="/contact" component={() => <ProtectedRoute><ContactPage /></ProtectedRoute>} />
-                          <Route path="/ebooks" component={() => <ProtectedRoute><EbooksPage /></ProtectedRoute>} />
-                          <Route path="/concierge" component={() => <ProtectedRoute><ConciergePage /></ProtectedRoute>} />
-                          <Route path="/discounts" component={() => <ProtectedRoute><DiscountsPage /></ProtectedRoute>} />
+                          
+                          {/* Premium content features */}
+                          <Route path="/ebooks" component={() => <PremiumRoute><EbooksPage /></PremiumRoute>} />
+                          <Route path="/concierge" component={() => <PremiumRoute><ConciergePage /></PremiumRoute>} />
+                          <Route path="/discounts" component={() => <PremiumRoute><DiscountsPage /></PremiumRoute>} />
                           <Route path="/spotify-test" component={() => <ProtectedRoute><SpotifyTestPage /></ProtectedRoute>} />
                           <Route path="/spotify-env-check" component={() => <ProtectedRoute><SpotifyEnvCheck /></ProtectedRoute>} />
                           <Route path="/api-explorer" component={() => <ProtectedRoute><ApiExplorerPage /></ProtectedRoute>} />
