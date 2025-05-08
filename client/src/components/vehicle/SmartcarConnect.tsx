@@ -17,7 +17,11 @@ import { apiRequest } from '@/lib/queryClient';
  * 
  * This component handles the Smartcar connection flow and displays connected vehicle information.
  */
-const SmartcarConnect = () => {
+interface SmartcarConnectProps {
+  onConnect?: (vehicleData?: any) => void;
+}
+
+const SmartcarConnect: React.FC<SmartcarConnectProps> = ({ onConnect }) => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [vehicles, setVehicles] = useState<any[]>([]);
@@ -38,7 +42,13 @@ const SmartcarConnect = () => {
       const data = await response.json();
       
       if (response.ok) {
-        setVehicles(data.vehicles || []);
+        const vehicleList = data.vehicles || [];
+        setVehicles(vehicleList);
+        
+        // Call onConnect if provided and vehicles are available
+        if (onConnect && vehicleList.length > 0) {
+          onConnect(vehicleList[0]);
+        }
       } else {
         // 401 is expected if no vehicles connected yet
         if (response.status !== 401) {

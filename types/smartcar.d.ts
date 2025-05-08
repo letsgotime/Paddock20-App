@@ -1,90 +1,80 @@
 declare module 'smartcar' {
-  export interface SmartcarVehicleInfo {
-    id: string;
-    make: string;
-    model: string;
-    year: string;
-    trim?: string;
-    fuel?: boolean;
-    battery?: boolean;
-  }
-
-  export interface SmartcarOdometerResponse {
-    distance: number;
-    unitSystem: 'metric' | 'imperial';
-    timestamp: string;
-  }
-
-  export interface SmartcarFuelResponse {
-    range: number;
-    percentRemaining: number;
-    amountRemaining: number;
-    timestamp: string;
-  }
-
-  export interface SmartcarBatteryResponse {
-    range: number;
-    percentRemaining: number;
-    timestamp: string;
-  }
-
-  export interface SmartcarLocationResponse {
-    latitude: number;
-    longitude: number;
-    timestamp: string;
-  }
-
-  export interface SmartcarVinResponse {
-    vin: string;
-  }
-
-  export interface SmartcarTiresResponse {
-    frontLeft?: number;
-    frontRight?: number;
-    backLeft?: number;
-    backRight?: number;
-    unitSystem: 'metric' | 'imperial';
-    timestamp: string;
+  export interface SmartcarOptions {
+    clientId: string;
+    clientSecret: string;
+    redirectUri: string;
+    scope?: string[];
+    testMode?: boolean;
+    mode?: 'test' | 'live' | 'simulated';
   }
 
   export interface TokenResponse {
     accessToken: string;
     refreshToken: string;
-    expiration: Date;
-    refreshExpiration: Date;
+    expiration: number;
+    refreshExpiration: number;
     vehicles: string[];
   }
 
-  export class AuthClient {
-    constructor(options: {
-      clientId: string;
-      clientSecret: string;
-      redirectUri: string;
-      testMode?: boolean;
-    });
-    
-    getAuthUrl(scope: string[]): string;
+  export interface VehicleInfo {
+    id: string;
+    make: string;
+    model: string;
+    year: number;
+    [key: string]: any;
+  }
+
+  export interface VinInfo {
+    vin: string;
+  }
+
+  export interface OdometerInfo {
+    distance: number;
+    unit: string;
+  }
+
+  export interface FuelInfo {
+    range: number;
+    percentRemaining: number;
+    amountRemaining: number;
+  }
+
+  export interface BatteryInfo {
+    range: number;
+    percentRemaining: number;
+  }
+
+  export interface TirePressureInfo {
+    frontLeft: number | null;
+    frontRight: number | null;
+    backLeft: number | null;
+    backRight: number | null;
+  }
+
+  export interface LocationInfo {
+    latitude: number;
+    longitude: number;
+  }
+
+  export interface AuthClient {
+    getAuthUrl(options?: {scope?: string[]}): string;
     exchangeCode(code: string): Promise<TokenResponse>;
     exchangeRefreshToken(refreshToken: string): Promise<TokenResponse>;
   }
 
-  export class Vehicle {
-    constructor(id: string, accessToken: string);
-    
-    info(): Promise<SmartcarVehicleInfo>;
-    odometer(): Promise<SmartcarOdometerResponse>;
-    fuel(): Promise<SmartcarFuelResponse>;
-    battery(): Promise<SmartcarBatteryResponse>;
-    location(): Promise<SmartcarLocationResponse>;
-    vin(): Promise<SmartcarVinResponse>;
-    tires(): Promise<SmartcarTiresResponse>;
+  export interface Vehicle {
+    info(): Promise<VehicleInfo>;
+    vin(): Promise<VinInfo>;
+    odometer(): Promise<OdometerInfo>;
+    fuel(): Promise<FuelInfo>;
+    battery(): Promise<BatteryInfo>;
+    tirePressure(): Promise<TirePressureInfo>;
+    location(): Promise<LocationInfo>;
+    lock(): Promise<void>;
+    unlock(): Promise<void>;
+    disconnect(): Promise<void>;
   }
 
-  // Properly exported namespace
-  const Smartcar: {
-    AuthClient: typeof AuthClient;
-    Vehicle: typeof Vehicle;
-  };
-  
-  export default Smartcar;
+  export default function smartcar(options: SmartcarOptions): AuthClient;
+  export function getVehicle(accessToken: string, vehicleId: string): Vehicle;
 }
