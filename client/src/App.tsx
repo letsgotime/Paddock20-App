@@ -205,18 +205,11 @@ function AuthenticatedContent({
           {/* User Onboarding - Explicit URL path that redirects to the proper flow */}
           <Route 
             path="/onboarding" 
-            component={() => {
-              // Check if user is authenticated
-              if (isAuthenticated && user?.id) {
-                // Instead of removing the flag which creates a loop,
-                // we'll render the onboarding component directly
-                return <OnboardingPage />;
-              } else {
-                // Not authenticated, redirect to auth page
-                window.location.href = '/auth';
-                return <div className="p-8 text-white">Please log in to continue onboarding...</div>;
-              }
-            }} 
+            component={() => (
+              <ProtectedRoute>
+                <OnboardingPage />
+              </ProtectedRoute>
+            )}
           />
         
           {/* Core Routes */}
