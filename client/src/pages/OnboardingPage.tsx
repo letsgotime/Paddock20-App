@@ -131,7 +131,7 @@ const OnboardingPage: React.FC = () => {
       try {
         // Step 1: Update user profile
         // Get Auth0 token from localStorage
-        const auth0Token = localStorage.getItem('auth0_token');
+        const auth0Token = localStorage.getItem('auth0_user_token');
         console.log('Auth0 token available:', !!auth0Token, 'User available:', !!user);
         
         const profileResponse = await fetch('/api/user/profile', {
