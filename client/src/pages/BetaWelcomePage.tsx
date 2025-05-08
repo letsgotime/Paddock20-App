@@ -1,8 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
+import { useLocation } from 'wouter';
 import BetaWelcomeModal from '../components/BetaWelcomeModal';
 
 export default function BetaWelcomePage() {
   const [modalOpen, setModalOpen] = useState(true);
+  const [, navigate] = useLocation();
+  
+  // Handler for beta modal close
+  const handleBetaModalClose = (betaRole?: 'user' | 'tester') => {
+    setModalOpen(false);
+    // Navigate to onboarding page
+    navigate('/onboarding');
+  };
   
   return (
     <div className="min-h-screen flex items-center justify-center bg-black">
@@ -20,8 +29,8 @@ export default function BetaWelcomePage() {
         </p>
         
         <BetaWelcomeModal 
-          open={modalOpen} 
-          onOpenChange={setModalOpen}
+          isOpen={modalOpen} 
+          onClose={handleBetaModalClose}
         />
       </div>
     </div>
