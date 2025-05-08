@@ -66,6 +66,10 @@ const Auth0Callback = () => {
           // Always direct to Beta Welcome page first
           console.log('✅ Auth0 complete - directing to beta welcome process');
           localStorage.setItem('paddock20_beta_status', 'pending');
+          
+          // Mark that we're using the simplified onboarding flow
+          localStorage.setItem('paddock20_simplified_flow', 'true');
+          
           setLocation('/beta-welcome');
         }, 500);
       } 
