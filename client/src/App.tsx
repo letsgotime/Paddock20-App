@@ -16,15 +16,34 @@ import BetaWelcomePage from './pages/BetaWelcomePage';
 import SimpleOnboardingPage from './pages/SimpleOnboardingPage';
 import ThePaddockPage from './pages/ThePaddockPage';
 import WeatherPage from "./pages/WeatherPage";
+import Weather from "./pages/Weather";
 import GarageVaultPage from "./pages/GarageVaultPage";
+import GaragePage from "./pages/GaragePage";
 import AddVehiclePage from "./pages/AddVehiclePage";
 import ConnectVehiclePage from "./pages/ConnectVehiclePage";
+import VehicleModsPage from "./pages/VehicleModsPage";
+import ModPlannerPage from "./pages/ModPlannerPage";
 import DriveJournalPage from "./pages/DriveJournalPage";
 import ManifestationStationPage from "./pages/ManifestationStationPage";
 import JuiceBox from "./pages/JuiceBox";
 import PodiumPursuitPage from "./pages/PodiumPursuitPage";
 import EventsPage from "./pages/EventsPage";
+import MotorsportsEventsPage from "./pages/MotorsportsEventsPage";
+import MotorsportsGalleryPage from "./pages/MotorsportsGalleryPage";
+import MembershipPage from "./pages/MembershipPage";
+import UserProfileHubPage from "./pages/UserProfileHubPage";
+import ProductOrganizerPage from "./pages/ProductOrganizerPage";
 import TiresTimepieces from "./pages/TiresTimepieces";
+import ContactPage from "./pages/ContactPage";
+import EbooksPage from "./pages/EbooksPage";
+import ConciergePage from "./pages/ConciergePage";
+import DiscountsPage from "./pages/DiscountsPage";
+import PrivacyPolicyPage from "./pages/PrivacyPolicyPage";
+import TermsOfServicePage from "./pages/TermsOfServicePage";
+import BetaAgreement from "./pages/BetaAgreement";
+import DashboardPage from "./pages/DashboardPage";
+import TimeServicesPage from "./pages/TimeServicesPage";
+import RoutePlannerPage from "./pages/RoutePlannerPage";
 
 // Context providers
 import { UserProfileProvider } from "./contexts/UserProfileContext";
@@ -107,21 +126,27 @@ function App() {
                               
                               {/* Routes defined here */}
                               <Switch>
-                                {/* Primary routes */}
+                                {/* Root route - Beta Welcome Page */}
                                 <Route path="/" component={BetaWelcomePage} />
-                                <Route path="/home" component={ThePaddockPage} />
+                                
+                                {/* Core Routes */}
                                 <Route path="/onboarding" component={SimpleOnboardingPage} />
-                                <Route path="/juicebox" component={JuiceBox} />
                                 <Route path="/the-paddock" component={ThePaddockPage} />
+                                <Route path="/juicebox" component={JuiceBox} />
                                 <Route path="/weather-paddock" component={WeatherPage} />
-                                <Route path="/garage" component={GarageVaultPage} />
+                                <Route path="/garage-vault" component={GarageVaultPage} />
                                 <Route path="/add-vehicle" component={AddVehiclePage} />
-                                <Route path="/connect-vehicle" component={ConnectVehiclePage} />
-                                <Route path="/manifestation-station" component={ManifestationStationPage} />
-                                <Route path="/events" component={EventsPage} />
                                 <Route path="/drive-journal" component={DriveJournalPage} />
+                                <Route path="/manifestation-station" component={ManifestationStationPage} />
                                 <Route path="/tires-timepieces" component={TiresTimepieces} />
                                 <Route path="/podium-pursuit" component={PodiumPursuitPage} />
+                                <Route path="/events" component={EventsPage} />
+                                <Route path="/connect-vehicle" component={ConnectVehiclePage} />
+                                
+                                {/* Legal Pages */}
+                                <Route path="/privacy-policy" component={PrivacyPolicyPage} />
+                                <Route path="/terms-of-service" component={TermsOfServicePage} />
+                                <Route path="/beta-agreement" component={BetaAgreement} />
                               
                                 {/* Fallback route */}
                                 <Route component={BetaWelcomePage} />
