@@ -30,6 +30,7 @@ import JoinTheGrid from './pages/JoinTheGrid';
 import OptimizedOnboardingPage from './pages/OptimizedOnboardingPage';
 import BetaEnrollmentPage from './pages/BetaEnrollmentPage';
 import PaddockPage from './pages/PaddockPage';
+import LandingPage from './pages/LandingPage';
 
 // Page imports
 import Paddock20HomePage from "./pages/Paddock20HomePage";
@@ -272,6 +273,9 @@ function AppContent({
                           {/* Protected routes */}
                           {/* Main Home Route - Use ThePaddockPage as the standard home */}
                           <Route path="/" component={() => <ProtectedRoute><ThePaddockPage /></ProtectedRoute>} />
+                          
+                          {/* Demo route to access The Paddock without authentication */}
+                          <Route path="/demo" component={ThePaddockPage} />
                           
                           {/* Redirects for backward compatibility */}
                           <Route 
