@@ -447,12 +447,28 @@ export class DatabaseStorage implements IStorage {
   
   // Vehicle methods
   async getVehicle(id: number): Promise<Vehicle | undefined> {
-    const [vehicle] = await db.select().from(vehicles).where(eq(vehicles.id, id));
+    const [vehicle] = await db.select({
+      id: vehicles.id,
+      userId: vehicles.userId,
+      make: vehicles.make,
+      model: vehicles.model,
+      year: vehicles.year,
+      createdAt: vehicles.createdAt,
+      updatedAt: vehicles.updatedAt
+    }).from(vehicles).where(eq(vehicles.id, id));
     return vehicle;
   }
   
   async getVehiclesByUserId(userId: number): Promise<Vehicle[]> {
-    return await db.select().from(vehicles).where(eq(vehicles.userId, userId));
+    return await db.select({
+      id: vehicles.id,
+      userId: vehicles.userId,
+      make: vehicles.make,
+      model: vehicles.model,
+      year: vehicles.year,
+      createdAt: vehicles.createdAt,
+      updatedAt: vehicles.updatedAt
+    }).from(vehicles).where(eq(vehicles.userId, userId));
   }
   
   async createVehicle(vehicle: InsertVehicle): Promise<Vehicle> {
