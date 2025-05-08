@@ -55,35 +55,18 @@ const Auth0Callback = () => {
             return;
           }
           
-          // IMPORTANT: Enforce the exact flow: Marketing page → Auth0 → Beta Modal → Onboarding
-          
-          // Get the user's status from localStorage
-          const hasCompletedBetaEnrollment = localStorage.getItem('paddock20_beta_status');
-          const hasCompletedOnboarding = localStorage.getItem(`paddock20_beta_onboarding_complete_${user?.sub || 'guest'}`);
-          
-          console.log('Auth flow status checks:', { 
-            isAuthenticated: true, 
-            hasCompletedBetaEnrollment, 
-            hasCompletedOnboarding 
-          });
-          
-          // Step 1: After Auth0 authentication, always direct to Beta Welcome page first
-          if (!hasCompletedBetaEnrollment) {
-            console.log('✅ Auth0 complete - directing to beta welcome process');
-            // Redirect to the newly added beta-welcome route
-            localStorage.setItem('paddock20_beta_status', 'pending');
-            setLocation('/beta-welcome');
+          // Store Auth0 token in localStorage for use during onboarding
+          if (user?.sub) {
+            localStorage.setItem('auth0_user_token', user.sub);
+            console.log('Auth0 token stored in localStorage for onboarding');
           }
-          // Step 2: If beta enrollment is complete, check if onboarding is complete
-          else if (!hasCompletedOnboarding) {
-            console.log('✅ Beta enrollment complete - directing to onboarding process');
-            setLocation('/onboarding');
-          } 
-          // Step 3: If both beta enrollment and onboarding are complete, go to dashboard
-          else {
-            console.log('✅ All steps complete - sending to dashboard');
-            setLocation('/dashboard');
-          }
+          
+          // IMPORTANT: Follow this flow exactly: Auth0 → Beta Welcome → Onboarding → Dashboard
+          
+          // Always direct to Beta Welcome page first
+          console.log('✅ Auth0 complete - directing to beta welcome process');
+          localStorage.setItem('paddock20_beta_status', 'pending');
+          setLocation('/beta-welcome');
         }, 500);
       } 
       // Authentication error
