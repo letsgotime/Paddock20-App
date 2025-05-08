@@ -49,7 +49,7 @@ const EmailVerifiedPage = () => {
   }, [user, isLoading]);
 
   return (
-    <div className="min-h-screen bg-[#0a0a0a] bg-[url('/assets/carbon-fiber-bg.png')] bg-repeat flex flex-col items-center justify-center px-4 py-12">
+    <div className="min-h-screen bg-[#0a0a0a] bg-gradient-to-b from-black to-zinc-900 flex flex-col items-center justify-center px-4 py-12">
       {/* Premium F1-style header */}
       <div className="w-full max-w-md">
         <div className="h-2 bg-gradient-to-r from-[#1982FC] to-[#08c519] rounded-t-md"></div>
