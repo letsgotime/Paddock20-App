@@ -89,13 +89,18 @@ export default function ConnectVehiclePage() {
                     </li>
                     <li className="flex items-start">
                       <LinkIcon className="mt-1 h-4 w-4 mr-2 text-green-500 shrink-0" />
-                      <span>Works with multiple vehicle brands</span>
+                      <span>Works with Tesla, BMW, Ford, GM, and more</span>
                     </li>
                     <li className="flex items-start">
                       <Car className="mt-1 h-4 w-4 mr-2 text-green-500 shrink-0" />
                       <span>Vehicle information, location, and odometer</span>
                     </li>
                   </ul>
+                  
+                  <div className="mt-4 p-3 bg-blue-50 rounded border border-blue-100 text-blue-800">
+                    <p className="text-sm font-medium mb-1">Compatible Brands Include:</p>
+                    <p className="text-sm">Tesla, BMW, Mercedes-Benz, Volkswagen, Ford, GM, Hyundai, Kia, Toyota, Honda, Nissan, FCA (Jeep, Dodge), and more</p>
+                  </div>
                 </div>
               </>
             )}
@@ -156,6 +161,11 @@ export default function ConnectVehiclePage() {
                   <span>Real-time sensor data and diagnostic codes</span>
                 </li>
               </ul>
+              
+              <div className="mt-4 p-3 bg-slate-100 rounded border border-slate-200 text-slate-800">
+                <p className="text-sm font-medium mb-1">Works With Most Vehicles:</p>
+                <p className="text-sm">Compatible with any vehicle that has an OBD-II port (generally all vehicles manufactured after 1996). Access engine parameters, sensor data, and diagnostic trouble codes.</p>
+              </div>
             </div>
           </CardContent>
           
