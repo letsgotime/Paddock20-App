@@ -35,12 +35,16 @@ export default function BetaWelcomePage() {
         
         // Set a global flag indicating we're using simplified onboarding
         localStorage.setItem('paddock20_simplified_onboarding', 'true');
+        
+        // Set the betamodalgo flag to indicate the beta modal flow is complete
+        localStorage.setItem('betamodalgo', 'true');
       } else {
         // Fallback if no user ID is available
         localStorage.setItem('paddock20_beta_onboarding_complete', 'true');
         localStorage.setItem('paddock20_legal_agreements', 'true');
         localStorage.setItem('paddock20_onboarding_just_completed', 'true');
         localStorage.setItem('paddock20_simplified_onboarding', 'true');
+        localStorage.setItem('betamodalgo', 'true');
       }
       
       // Show welcome toast
