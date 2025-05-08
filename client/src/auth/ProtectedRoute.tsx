@@ -138,11 +138,8 @@ export const BetaRoute: React.FC<{ children: ReactNode; redirectPath?: string }>
 export const DemoRoute: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [location] = useLocation();
   
-  // If we're in demo mode, allow access without authentication
-  if (location.startsWith('/demo')) {
-    return <>{children}</>;
-  }
+  console.log('DemoRoute accessed with path:', location);
   
-  // Otherwise, redirect to the demo route
-  return <Redirect to="/demo" />;
+  // Always render the children for demo routes - no restrictions
+  return <>{children}</>;
 };
