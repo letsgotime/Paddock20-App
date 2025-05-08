@@ -2367,23 +2367,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get user profile data from Auth0
       let user = null;
       
-      // Check for Auth0 session via our GET /api/user-profile endpoint
+      // Instead of using fetch, we'll directly access session data
       try {
-        const response = await fetch(`http://localhost:5000/api/user-profile`, {
-          headers: {
-            'Cookie': req.headers.cookie || '',
-            'Authorization': req.headers.authorization || ''
+        // Check if we have Auth0 token in the request
+        const authHeader = req.headers.authorization;
+        const token = authHeader?.split(' ')[1];
+
+        if (token) {
+          // If we have an Auth0 token, we consider the user authenticated
+          // The actual user data should be retrieved from the user-profile endpoint
+          // but for our purposes, let's use the session data
+          if (req.session?.user) {
+            // User is authenticated via session
+            console.log('User authenticated via session:', req.session.user);
+            user = req.session.user;
+            console.log('Using session data for user:', user);
+          } else {
+            // Check if the Auth0 callback handler added user info to the request
+            console.log('Checking for Auth0 user info...');
+            if (req.user) {
+              user = req.user;
+              console.log('Found Auth0 user info:', user);
+            }
           }
-        });
-        
-        if (response.ok) {
-          user = await response.json();
-          console.log('Retrieved user from Auth0:', user);
         } else {
-          console.log('No Auth0 user found, checking session user');
+          console.log('No Auth0 token found, checking session user');
         }
       } catch (err) {
-        console.error('Error fetching Auth0 user:', err);
+        console.error('Error retrieving user session data:', err);
       }
       
       // Use session user as fallback
@@ -2424,23 +2435,34 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Get user profile data from Auth0
       let user = null;
       
-      // Check for Auth0 session via our GET /api/user-profile endpoint
+      // Instead of using fetch, we'll directly access session data
       try {
-        const response = await fetch(`http://localhost:5000/api/user-profile`, {
-          headers: {
-            'Cookie': req.headers.cookie || '',
-            'Authorization': req.headers.authorization || ''
+        // Check if we have Auth0 token in the request
+        const authHeader = req.headers.authorization;
+        const token = authHeader?.split(' ')[1];
+
+        if (token) {
+          // If we have an Auth0 token, we consider the user authenticated
+          // The actual user data should be retrieved from the user-profile endpoint
+          // but for our purposes, let's use the session data
+          if (req.session?.user) {
+            // User is authenticated via session
+            console.log('User authenticated via session for image upload:', req.session.user);
+            user = req.session.user;
+            console.log('Using session data for image upload user:', user);
+          } else {
+            // Check if the Auth0 callback handler added user info to the request
+            console.log('Checking for Auth0 user info for image upload...');
+            if (req.user) {
+              user = req.user;
+              console.log('Found Auth0 user info for image upload:', user);
+            }
           }
-        });
-        
-        if (response.ok) {
-          user = await response.json();
-          console.log('Retrieved user from Auth0 for image upload:', user);
         } else {
-          console.log('No Auth0 user found for image upload, checking session user');
+          console.log('No Auth0 token found for image upload, checking session user');
         }
       } catch (err) {
-        console.error('Error fetching Auth0 user for image upload:', err);
+        console.error('Error retrieving user session data for image upload:', err);
       }
       
       // Use session user as fallback
@@ -2473,8 +2495,45 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Vehicle API
   app.post('/api/garage/vehicles', async (req, res) => {
     try {
-      // Check if authenticated
-      if (!req.user) {
+      // Get user profile data
+      let user = null;
+      
+      // Instead of using fetch, we'll directly access session data
+      try {
+        // Check if we have Auth0 token in the request
+        const authHeader = req.headers.authorization;
+        const token = authHeader?.split(' ')[1];
+
+        if (token) {
+          // If we have an Auth0 token, we consider the user authenticated
+          if (req.session?.user) {
+            // User is authenticated via session
+            console.log('User authenticated via session for vehicle:', req.session.user);
+            user = req.session.user;
+          } else {
+            // Check if the Auth0 callback handler added user info to the request
+            console.log('Checking for Auth0 user info for vehicle API...');
+            if (req.user) {
+              user = req.user;
+              console.log('Found Auth0 user info for vehicle API:', user);
+            }
+          }
+        } else {
+          console.log('No Auth0 token found for vehicle API, checking session user');
+        }
+      } catch (err) {
+        console.error('Error retrieving user session data for vehicle API:', err);
+      }
+      
+      // Use session user as fallback
+      if (!user && req.user) {
+        user = req.user;
+        console.log('Using session user for vehicle API:', user);
+      }
+      
+      // If no user found in any authentication method, return 401
+      if (!user) {
+        console.log('No authenticated user found for vehicle API');
         return res.status(401).json({ success: false, error: 'Not authenticated' });
       }
       
@@ -2491,7 +2550,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
         vehicle: {
           id: Math.floor(Math.random() * 1000), // Generate random ID for now
           ...vehicleData,
-          userId: req.user.id
+          userId: user.id
         }
       });
     } catch (error) {
