@@ -1,11 +1,12 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/auth/useAuth';
-import { format } from 'date-fns';
+import { format, addDays } from 'date-fns';
 import { useLocation } from 'wouter';
 
 // Hooks and Contexts
 import { useWeather } from '@/contexts/FixedWeatherContext';
 import { useVehicle } from '@/contexts/VehicleContext';
+import { useGallery } from '@/contexts/GalleryContext';
 
 // UI Components
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from '@/components/ui/card';
@@ -16,6 +17,15 @@ import { Badge } from '@/components/ui/badge';
 import { Progress } from '@/components/ui/progress';
 import { Separator } from '@/components/ui/separator';
 import { ScrollArea } from '@/components/ui/scroll-area';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { 
+  DropdownMenu, 
+  DropdownMenuContent, 
+  DropdownMenuItem, 
+  DropdownMenuLabel, 
+  DropdownMenuSeparator, 
+  DropdownMenuTrigger 
+} from '@/components/ui/dropdown-menu';
 
 // Widgets
 import F1TelemetryWidget from '@/components/dashboard/widgets/F1TelemetryWidget';
@@ -27,11 +37,16 @@ import {
   Cloud, Droplets, Wind, Sun, CloudRain, CloudSnow, Thermometer,
   AlertTriangle, Wrench, CloudLightning, Clock, Map, FileText,
   Filter, Award, Music, PlaneLanding, CircleDollarSign, Star, Check,
-  CalendarClock, BookOpen, Share2, Camera, MessageSquare, List
+  CalendarClock, BookOpen, Share2, Camera, MessageSquare, List,
+  Activity, Zap, ShieldAlert, Fuel, Flame, Timer, ChevronRight,
+  RefreshCw, Settings, MoreHorizontal, Pin, Bell, ArrowUpRight,
+  Headphones, Layers, Compass, GitBranch, Database, Smartphone,
+  Radio, Mic, Info, HelpCircle, Maximize
 } from 'lucide-react';
 
 // Utils and Services
 import DataSourceConnector from '@/services/DataSourceConnector';
+import apiWarehouse from '@/services/api/APIDataWarehouse';
 
 /**
  * The Paddock Page - Main hub for the application
@@ -39,6 +54,30 @@ import DataSourceConnector from '@/services/DataSourceConnector';
  * Combines functionality from Dashboard, Garage Vault, Profile, and other pages
  */
 const ThePaddockPage = () => {
+  // Component state for expandable sections
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
+  const [animatingSection, setAnimatingSection] = useState<string | null>(null);
+  
+  // Function to toggle section expansion with animation
+  const toggleSection = (sectionId: string) => {
+    setAnimatingSection(sectionId);
+    setExpandedSections(prev => ({
+      ...prev,
+      [sectionId]: !prev[sectionId]
+    }));
+    
+    // Remove animating flag after animation completes
+    setTimeout(() => {
+      setAnimatingSection(null);
+    }, 300);
+  };
+  
+  // CSS classes for animation
+  const getAnimationClass = (sectionId: string) => {
+    if (animatingSection !== sectionId) return '';
+    return expandedSections[sectionId] ? 'animate-expand' : 'animate-collapse';
+  };
+  
   // Get user data
   const { user } = useAuth();
   
@@ -56,6 +95,9 @@ const ThePaddockPage = () => {
 
   // Vehicle data
   const { vehicles, loading: vehicleLoading } = useVehicle();
+  
+  // Gallery context for images
+  const galleryContext = useGallery();
 
   // Stats from data stores
   const [stats, setStats] = useState({
@@ -401,12 +443,17 @@ const ThePaddockPage = () => {
           <TabsContent value="overview" className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
               {/* Weather and Drive Conditions */}
-              <Card className="bg-[#1e1e1e] border-[#333] shadow-lg md:col-span-2">
+              <Card className="bg-[#1e1e1e] border-[#333] shadow-lg md:col-span-2 overflow-hidden">
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-start">
                     <div>
                       <CardTitle className="flex items-center gap-2">
-                        Current Conditions
+                        <div className="cursor-pointer flex items-center" onClick={() => toggleSection('weather')}>
+                          Current Conditions
+                          <ChevronRight 
+                            className={`ml-1 h-4 w-4 transition-transform duration-200 ${expandedSections.weather ? 'rotate-90' : ''}`} 
+                          />
+                        </div>
                         <Badge variant="outline" className="ml-2 bg-[#1982FC]/20 text-[#1982FC] border-[#1982FC]/50">
                           LIVE
                         </Badge>
@@ -415,7 +462,9 @@ const ThePaddockPage = () => {
                         Weather impact on driving experience
                       </CardDescription>
                     </div>
-                    {getWeatherIcon(currentWeather)}
+                    <div className="cursor-pointer" onClick={() => navigate('/weather-paddock')}>
+                      {getWeatherIcon(currentWeather)}
+                    </div>
                   </div>
                 </CardHeader>
                 
@@ -526,10 +575,19 @@ const ThePaddockPage = () => {
                 <CardHeader className="pb-2">
                   <div className="flex justify-between items-center">
                     <div>
-                      <CardTitle>Vehicle Summary</CardTitle>
+                      <CardTitle className="flex items-center">
+                        <div className="cursor-pointer flex items-center" onClick={() => toggleSection('vehicles')}>
+                          Vehicle Summary
+                          <ChevronRight 
+                            className={`ml-1 h-4 w-4 transition-transform duration-200 ${expandedSections.vehicles ? 'rotate-90' : ''}`} 
+                          />
+                        </div>
+                      </CardTitle>
                       <CardDescription>Your automotive collection</CardDescription>
                     </div>
-                    <Badge>{displayVehicles.length} Vehicles</Badge>
+                    <Badge className="bg-[#1982FC] hover:bg-[#1982FC]/90 cursor-pointer" onClick={() => navigate('/garage-vault')}>
+                      {displayVehicles.length} Vehicles
+                    </Badge>
                   </div>
                 </CardHeader>
                 
@@ -545,35 +603,116 @@ const ThePaddockPage = () => {
                       <p className="text-gray-500 text-sm">Add your first vehicle to get started</p>
                     </div>
                   ) : (
-                    <ScrollArea className="h-56 rounded-md">
-                      <div className="space-y-4">
-                        {displayVehicles.map((vehicle) => {
-                          const status = getMaintenanceStatus(vehicle);
-                          const statusColor = getStatusColor(status);
-                          
-                          return (
-                            <div 
-                              key={vehicle.id} 
-                              className="flex items-center justify-between p-2 rounded-md hover:bg-gray-800/30 transition-colors cursor-pointer"
-                              onClick={() => navigate(`/vehicle/${vehicle.id}`)}
-                            >
-                              <div className="flex items-center gap-3">
-                                <div className="flex-shrink-0 w-12 h-12 bg-gray-800 rounded-md flex items-center justify-center">
-                                  <Car className="h-6 w-6 text-[#1982FC]" />
+                    <div>
+                      {expandedSections.vehicles ? (
+                        <div className="space-y-4">
+                          {displayVehicles.map((vehicle) => {
+                            const status = getMaintenanceStatus(vehicle);
+                            const statusColor = getStatusColor(status);
+                            
+                            return (
+                              <div key={vehicle.id} className="rounded-md border border-[#333] overflow-hidden">
+                                <div 
+                                  className="flex items-center justify-between p-3 bg-[#252525] cursor-pointer"
+                                  onClick={() => navigate(`/vehicle/${vehicle.id}`)}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className="flex-shrink-0 w-12 h-12 bg-gray-800 rounded-md flex items-center justify-center">
+                                      <Car className="h-6 w-6 text-[#1982FC]" />
+                                    </div>
+                                    <div>
+                                      <p className="font-medium">{vehicle.name || `${vehicle.year} ${vehicle.make} ${vehicle.model}`}</p>
+                                      <p className="text-sm text-gray-400">{vehicle.make} {vehicle.model} {vehicle.year}</p>
+                                    </div>
+                                  </div>
+                                  <Badge className={statusColor}>
+                                    {status}
+                                  </Badge>
                                 </div>
-                                <div>
-                                  <p className="font-medium">{vehicle.name || `${vehicle.year} ${vehicle.make} ${vehicle.model}`}</p>
-                                  <p className="text-sm text-gray-400">{vehicle.make} {vehicle.model} {vehicle.year}</p>
+                                
+                                <div className="p-3 text-sm">
+                                  <div className="grid grid-cols-2 gap-y-2 gap-x-4 mb-3">
+                                    <div>
+                                      <p className="text-xs text-gray-400">Last Service</p>
+                                      <p className="font-medium">2 months ago</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-gray-400">Next Service</p>
+                                      <p className="font-medium">In 2 months</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-gray-400">Odometer</p>
+                                      <p className="font-medium">{Math.floor(Math.random() * 50000) + 10000} km</p>
+                                    </div>
+                                    <div>
+                                      <p className="text-xs text-gray-400">Fuel Level</p>
+                                      <p className="font-medium">{Math.floor(Math.random() * 100)}%</p>
+                                    </div>
+                                  </div>
+                                  
+                                  <div className="flex flex-wrap gap-2">
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline" 
+                                      className="text-xs border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10"
+                                      onClick={() => navigate(`/vehicle/${vehicle.id}`)}
+                                    >
+                                      Details
+                                    </Button>
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline" 
+                                      className="text-xs border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10"
+                                      onClick={() => navigate(`/vehicle/${vehicle.id}/maintenance`)}
+                                    >
+                                      Service History
+                                    </Button>
+                                    <Button 
+                                      size="sm" 
+                                      variant="outline" 
+                                      className="text-xs border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10"
+                                      onClick={() => navigate(`/vehicle/${vehicle.id}/telemetry`)}
+                                    >
+                                      Telemetry
+                                    </Button>
+                                  </div>
                                 </div>
                               </div>
-                              <Badge className={statusColor}>
-                                {status}
-                              </Badge>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    </ScrollArea>
+                            );
+                          })}
+                        </div>
+                      ) : (
+                        <ScrollArea className="h-56 rounded-md">
+                          <div className="space-y-4">
+                            {displayVehicles.map((vehicle) => {
+                              const status = getMaintenanceStatus(vehicle);
+                              const statusColor = getStatusColor(status);
+                              
+                              return (
+                                <div 
+                                  key={vehicle.id} 
+                                  className="flex items-center justify-between p-2 rounded-md hover:bg-gray-800/30 transition-colors cursor-pointer"
+                                  onClick={() => navigate(`/vehicle/${vehicle.id}`)}
+                                >
+                                  <div className="flex items-center gap-3">
+                                    <div className="flex-shrink-0 w-12 h-12 bg-gray-800 rounded-md flex items-center justify-center">
+                                      <Car className="h-6 w-6 text-[#1982FC]" />
+                                    </div>
+                                    <div>
+                                      <p className="font-medium">{vehicle.name || `${vehicle.year} ${vehicle.make} ${vehicle.model}`}</p>
+                                      <p className="text-sm text-gray-400">{vehicle.make} {vehicle.model} {vehicle.year}</p>
+                                    </div>
+                                  </div>
+                                  <Badge className={statusColor}>
+                                    {status}
+                                  </Badge>
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </ScrollArea>
+                      )}
+                    </div>
                   )}
                 </CardContent>
                 
