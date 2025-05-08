@@ -169,7 +169,7 @@ function AppContent({
   // Use the consolidated auth hook in AppContent
   const { user, loading, isAuthenticated } = useAuth();
   
-  // Redirect user to onboarding if authenticated and hasn't completed onboarding
+  // Handle various redirection cases
   useEffect(() => {
     // Log current state to debug redirection issues
     console.log('[Redirection Debug]', { 
@@ -181,18 +181,30 @@ function AppContent({
                      location !== '/onboarding' && location !== '/beta-enrollment'
     });
     
-    // Only redirect if user is authenticated, hasn't completed onboarding, 
-    // and isn't already on an onboarding-related page
+    // Case 1: Authenticated user who hasn't completed onboarding
     if (isAuthenticated && !hasCompletedOnboarding && user?.id && 
         location !== '/onboarding' && location !== '/beta-enrollment' && 
         location !== '/beta-agreement') {
-      // Use a setTimeout to avoid React state updates during render
       const redirectTimer = setTimeout(() => {
         navigate('/onboarding');
       }, 100);
-      
-      // Cleanup timer if component unmounts
       return () => clearTimeout(redirectTimer);
+    }
+    
+    // Case 2: Authenticated user on the home page - redirect to dashboard
+    if (isAuthenticated && hasCompletedOnboarding && location === '/') {
+      const dashboardTimer = setTimeout(() => {
+        navigate('/dashboard');
+      }, 100);
+      return () => clearTimeout(dashboardTimer);
+    }
+    
+    // Case 3: Authenticated user on auth page - redirect to dashboard
+    if (isAuthenticated && location === '/auth') {
+      const authRedirectTimer = setTimeout(() => {
+        navigate('/dashboard');
+      }, 100);
+      return () => clearTimeout(authRedirectTimer);
     }
   }, [isAuthenticated, hasCompletedOnboarding, user?.id, location, navigate]);
   
@@ -271,24 +283,27 @@ function AppContent({
                           <Route path="/beta-enrollment" component={BetaEnrollmentPage} />
                           
                           {/* Protected routes */}
-                          {/* Main Home Route - Use ThePaddockPage as the standard home */}
-                          <Route path="/" component={() => <ProtectedRoute><ThePaddockPage /></ProtectedRoute>} />
+                          {/* Landing page as the main route for first-time visitors */}
+                          <Route path="/" component={LandingPage} />
                           
                           {/* Demo route to access The Paddock without authentication */}
                           <Route path="/demo" component={ThePaddockPage} />
+                          
+                          {/* Authenticated dashboard */}
+                          <Route path="/dashboard" component={() => <ProtectedRoute><ThePaddockPage /></ProtectedRoute>} />
                           
                           {/* Redirects for backward compatibility */}
                           <Route 
                             path="/the-paddock" 
                             component={() => {
-                              window.location.href = '/';
+                              window.location.href = '/dashboard';
                               return null;
                             }} 
                           />
                           <Route 
                             path="/paddock" 
                             component={() => {
-                              window.location.href = '/';
+                              window.location.href = '/dashboard';
                               return null;
                             }} 
                           />
