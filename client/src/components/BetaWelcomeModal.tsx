@@ -20,8 +20,8 @@ export function BetaWelcomeModal({ open, onOpenChange, onComplete }: BetaWelcome
     // Close the modal
     onOpenChange(false);
     
-    // Navigate to the demo page
-    navigate('/demo');
+    // Navigate to the onboarding page
+    navigate('/onboarding');
     
     // Trigger the onComplete callback if provided
     if (onComplete) {

@@ -1,79 +1,30 @@
-import React, { useEffect, useState } from 'react';
-import { Route, Switch, Redirect, useLocation } from 'wouter';
-import { AuthProvider } from '@/auth/AuthProvider';
-import { useAuth } from '@/auth/useAuth';
+import React, { useState, useEffect } from 'react';
+import { Route, Switch, useLocation } from 'wouter';
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
 import PageTitleManager from './components/PageTitleManager';
-import Header from './components/Header';
 import AppHeader from './components/AppHeader';
-import ContextualBreadcrumbs from './components/ContextualBreadcrumbs';
 import FixedSoundBar from "./components/FixedSoundBar";
 import Footer from "./components/Footer";
 import NotFound from "@/pages/not-found";
-import { ProtectedRoute, DemoRoute } from './auth/ProtectedRoute';
-import { AuthPermission, AuthRole } from './auth/types';
-import UserOnboarding from "./components/UserOnboarding";
-import SupportChatbot from "./components/SupportChatbot";
-import OneTapWeatherSnapshot from "./components/OneTapWeatherSnapshot";
-import RewardNotification from "./components/RewardNotification";
-import RewardsTracker from "./components/RewardsTracker";
-import NativeAuthPage from './pages/NativeAuthPage';
-import OnboardingPage from './pages/OnboardingPage';
-
-// New Pages
-import ThePaddockPage from './pages/ThePaddockPage';
-import EnhancedLogoutPage from './pages/EnhancedLogoutPage';
-import JoinTheGrid from './pages/JoinTheGrid';
-import OptimizedOnboardingPage from './pages/OptimizedOnboardingPage';
-import BetaEnrollmentPage from './pages/BetaEnrollmentPage';
-import PaddockPage from './pages/PaddockPage';
-import LandingPage from './pages/LandingPage';
+import { MockAuthProvider } from './auth/MockAuthProvider';
 
 // Page imports
-import Paddock20HomePage from "./pages/Paddock20HomePage";
-import AdminPage from './pages/AdminPage';
-import UserProfileHubPage from "./pages/UserProfileHubPage";
-import OnboardingTestPage from "./pages/OnboardingTestPage";
-import Settings from "@/pages/Settings";
-import GarageVaultPage from "./pages/GarageVaultPage";
-import GaragePage from "./pages/GaragePage";
-import AddVehiclePage from "./pages/AddVehiclePage";
-import VehicleModsPage from "./pages/VehicleModsPage";
-import ModPlannerPage from "./pages/ModPlannerPage";
-import OBDDiagnosticsPage from "./pages/OBDDiagnosticsPage";
-import ConnectVehiclePage from "./pages/ConnectVehiclePage";
-import SmartcarCallbackPage from "./pages/SmartcarCallbackPage";
+import BetaWelcomePage from './pages/BetaWelcomePage';
+import SimpleOnboardingPage from './pages/SimpleOnboardingPage';
+import ThePaddockPage from './pages/ThePaddockPage';
 import WeatherPage from "./pages/WeatherPage";
-import Weather from "./pages/Weather";
-import TimeServicesPage from "./pages/TimeServicesPage";
-import RoutePlannerPage from "./pages/RoutePlannerPage";
+import GarageVaultPage from "./pages/GarageVaultPage";
+import AddVehiclePage from "./pages/AddVehiclePage";
+import ConnectVehiclePage from "./pages/ConnectVehiclePage";
 import DriveJournalPage from "./pages/DriveJournalPage";
 import ManifestationStationPage from "./pages/ManifestationStationPage";
 import JuiceBox from "./pages/JuiceBox";
-import ProductOrganizerPage from "./pages/ProductOrganizerPage";
-import TiresTimepieces from "./pages/TiresTimepieces";
 import PodiumPursuitPage from "./pages/PodiumPursuitPage";
 import EventsPage from "./pages/EventsPage";
-import MotorsportsEventsPage from "./pages/MotorsportsEventsPage";
-import MotorsportsGalleryPage from "./pages/MotorsportsGalleryPage";
-import MembershipPage from "./pages/MembershipPage";
-import ChatFeedPage from "./pages/ChatFeedPage";
-import ContactPage from "./pages/ContactPage";
-import EbooksPage from "./pages/EbooksPage";
-import ConciergePage from "./pages/ConciergePage";
-import DiscountsPage from "./pages/DiscountsPage";
-import SpotifyTestPage from "./pages/SpotifyTestPage";
-import SpotifyEnvCheck from "./pages/SpotifyEnvCheck";
-import SpotifyCallbackPage from "./pages/SpotifyCallbackPage";
-import ApiExplorerPage from "./pages/api-explorer-page";
-import PrivacyPolicy from './pages/PrivacyPolicyPage';
-import TermsOfService from './pages/TermsOfServicePage';
-import BetaAgreement from './pages/BetaAgreement';
-import EmailVerifiedPage from './pages/EmailVerifiedPage';
-import AuthTestPage from './pages/AuthTestPage';
+import TiresTimepieces from "./pages/TiresTimepieces";
 
 // Context providers
 import { UserProfileProvider } from "./contexts/UserProfileContext";
@@ -84,7 +35,6 @@ import { LocationServicesProvider } from "./contexts/LocationServicesContext";
 import { WeatherProvider } from "./contexts/ConsolidatedWeatherContext";
 import { GalleryProvider } from "./contexts/GalleryContext";
 import { RewardsProvider } from "./contexts/RewardsContext";
-import { SpotifyProvider } from "./contexts/SpotifyContext";
 
 // Accessibility
 import { MAIN_CONTENT_ID } from './lib/accessibility';
@@ -96,327 +46,98 @@ function ScrollToTopWrapper() {
   return null;
 }
 
-// Function to process onboarding status
 function App() {
-  // State to track if the user has completed onboarding
-  const [hasCompletedOnboarding, setHasCompletedOnboarding] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState(true);
   
-  // Get the current location
-  const [location] = useLocation();
-  
-  // Check for onboarding status when app initializes
   useEffect(() => {
-    const userProfileStr = localStorage.getItem('userProfile');
-    
-    if (userProfileStr) {
-      try {
-        const userProfile = JSON.parse(userProfileStr);
-        const userId = userProfile.id;
-        
-        if (userId) {
-          // Check if this user has completed onboarding
-          const betaOnboardingKey = `paddock20_beta_onboarding_complete_${userId}`;
-          const hasCompleted = localStorage.getItem(betaOnboardingKey) === 'true';
-          setHasCompletedOnboarding(hasCompleted);
-        }
-      } catch (error) {
-        console.error('Error parsing user profile:', error);
-      }
-    }
+    // Simulate loading/startup delay for better UX
+    setTimeout(() => setIsLoading(false), 500);
   }, []);
-
-  // Both auth page and regular app can use the same auth provider
-  return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <PageTitleManager />
-        {/* Custom scroll-to-top behavior */}
-        {location !== '/auth' && <ScrollToTopWrapper />}
-        
-        {/* Single AuthProvider for the entire app */}
-        <AuthProvider>
-          {location === '/auth' ? (
-            <>
-              <AppHeader />
-              <NativeAuthPage />
-            </>
-          ) : (
-            <AppContent 
-              hasCompletedOnboarding={hasCompletedOnboarding}
-              setHasCompletedOnboarding={setHasCompletedOnboarding}
-            />
-          )}
-        </AuthProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
-  );
-}
-
-// Separate component to access auth context
-function AppContent({ 
-  hasCompletedOnboarding, 
-  setHasCompletedOnboarding 
-}: { 
-  hasCompletedOnboarding: boolean, 
-  setHasCompletedOnboarding: (value: boolean) => void 
-}) {
-  // All hooks must be called in the same order on every render
-  // So declare all hooks at the top of the component
   
-  // Get location and navigate function from wouter
-  const [location, navigate] = useLocation();
-  
-  // Use the consolidated auth hook in AppContent
-  const { user, loading, isAuthenticated } = useAuth();
-  
-  // Handle various redirection cases
-  useEffect(() => {
-    // Log current state to debug redirection issues
-    console.log('[Redirection Debug]', { 
-      isAuthenticated, 
-      hasCompletedOnboarding, 
-      userId: user?.id, 
-      location,
-      shouldRedirect: isAuthenticated && !hasCompletedOnboarding && user?.id && 
-                     location !== '/onboarding' && location !== '/beta-enrollment'
-    });
-    
-    // Case 1: Authenticated user who hasn't completed onboarding
-    if (isAuthenticated && !hasCompletedOnboarding && user?.id && 
-        location !== '/onboarding' && location !== '/beta-enrollment' && 
-        location !== '/beta-agreement') {
-      const redirectTimer = setTimeout(() => {
-        navigate('/onboarding');
-      }, 100);
-      return () => clearTimeout(redirectTimer);
-    }
-    
-    // Case 2: Authenticated user on the home page - redirect to dashboard
-    if (isAuthenticated && hasCompletedOnboarding && location === '/') {
-      const dashboardTimer = setTimeout(() => {
-        navigate('/dashboard');
-      }, 100);
-      return () => clearTimeout(dashboardTimer);
-    }
-    
-    // Case 3: Authenticated user on auth page - redirect to dashboard
-    if (isAuthenticated && location === '/auth') {
-      const authRedirectTimer = setTimeout(() => {
-        navigate('/dashboard');
-      }, 100);
-      return () => clearTimeout(authRedirectTimer);
-    }
-  }, [isAuthenticated, hasCompletedOnboarding, user?.id, location, navigate]);
-  
-  // Show loading state while auth is being determined
-  if (loading) {
+  if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-black">
-        <div className="p-8 text-center">
-          <div className="w-16 h-16 border-t-2 border-carolina-blue border-solid rounded-full animate-spin mx-auto mb-4"></div>
-          <p className="text-carolina-blue">Loading Paddock20...</p>
+      <div className="min-h-screen flex items-center justify-center bg-black">
+        <div className="text-center p-8">
+          <div className="w-24 h-24 border-t-2 border-blue-500 border-solid rounded-full animate-spin mx-auto mb-6"></div>
+          <h1 className="text-3xl font-orbitron bg-gradient-to-r from-[#1982FC] to-[#08c519] bg-clip-text text-transparent">
+            PADDOCK20
+          </h1>
+          <p className="text-gray-500 mt-2">Initializing telemetry systems...</p>
         </div>
       </div>
     );
   }
 
-  // Wrap the application with required context providers
   return (
-    <UserProfileProvider>
-      <SoundProvider>
-        <VehicleProvider>
-          <VehicleDataProvider>
-            <LocationServicesProvider>
-              <WeatherProvider>
-                <GalleryProvider>
-                  <RewardsProvider>
-                    <SpotifyProvider>
-                      {/* Skip link for keyboard navigation */}
-                      <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
-                        Skip to main content
-                      </a>
-                    
-                      {/* Main application container */}
-                      <div className="min-h-screen bg-black font-openSans text-white">
-                        {/* Header with auth controls */}
-                        <AppHeader />
-                      
-                        {/* Main navigation header */}
-                        <header role="banner">
-                          {/* Breadcrumbs - only visible when logged in */}
-                          {isAuthenticated && <ContextualBreadcrumbs />}
-                        </header>
+    <QueryClientProvider client={queryClient}>
+      <TooltipProvider>
+        <PageTitleManager />
+        <ScrollToTopWrapper />
+        
+        <MockAuthProvider>
+          <UserProfileProvider>
+            <SoundProvider>
+              <VehicleProvider>
+                <VehicleDataProvider>
+                  <LocationServicesProvider>
+                    <WeatherProvider>
+                      <GalleryProvider>
+                        <RewardsProvider>
+                          {/* Skip link for keyboard navigation */}
+                          <a href={`#${MAIN_CONTENT_ID}`} className="skip-link">
+                            Skip to main content
+                          </a>
                         
-                        {/* Fixed components */}
-                        <FixedSoundBar />
-                        {isAuthenticated && <SupportChatbot />}
-                
-                        {/* Main content area */}
-                        <main id={MAIN_CONTENT_ID} className="container mx-auto px-4 mt-[60px] pb-[70px]" tabIndex={-1}>
-                          <Toaster />
-                          
-                          {/* Floating weather widget */}
-                          {isAuthenticated && (
-                            <OneTapWeatherSnapshot 
-                              floating={true}
-                              className={location === '/weather-paddock' ? 'hidden' : ''}
-                            />
-                          )}
-                          
-                          {/* Routes defined here */}
-                          {/* Publicly accessible routes */}
-                          <Route path="/privacy-policy" component={PrivacyPolicy} />
-                          <Route path="/terms-of-service" component={TermsOfService} />
-                          <Route path="/beta-agreement" component={BetaAgreement} />
-                          <Route path="/email-verified" component={EmailVerifiedPage} />
-                          {/* Main auth page with updated branding - already handled with special case above */}
-                          <Route path="/auth" component={() => null} />
-                          <Route path="/join-the-grid" component={JoinTheGrid} />
-                          <Route path="/spotify/callback" component={SpotifyCallbackPage} />
-                          <Route path="/smartcar/callback" component={SmartcarCallbackPage} />
-                          <Route path="/logout" component={EnhancedLogoutPage} />
-                          
-                          {/* User onboarding pages */}
-                          <Route path="/onboarding" component={OnboardingPage} />
-                          <Route path="/onboarding/optimized" component={() => <ProtectedRoute><OptimizedOnboardingPage /></ProtectedRoute>} />
-                          <Route path="/onboarding/all" component={() => <ProtectedRoute><OptimizedOnboardingPage showAllFeatures={true} /></ProtectedRoute>} />
-                          <Route path="/beta-enrollment" component={BetaEnrollmentPage} />
-                          
-                          {/* Protected routes */}
-                          {/* Landing page as the main route for first-time visitors */}
-                          <Route path="/" component={LandingPage} />
-                          
-                          {/* Demo route to access The Paddock without authentication */}
-                          <Route path="/demo" component={() => <ThePaddockPage demoMode={true} />} />
-                          
-                          {/* Demo routes for feature pages */}
-                          <Route path="/demo/weather-paddock" component={() => <DemoRoute><WeatherPage /></DemoRoute>} />
-                          <Route path="/demo/garage-vault" component={() => <DemoRoute><GarageVaultPage /></DemoRoute>} />
-                          <Route path="/demo/add-vehicle" component={() => <DemoRoute><AddVehiclePage /></DemoRoute>} />
-                          <Route path="/demo/connect-vehicle" component={() => <DemoRoute><ConnectVehiclePage /></DemoRoute>} />
-                          <Route path="/demo/juice-box" component={() => <DemoRoute><JuiceBox /></DemoRoute>} />
-                          <Route path="/demo/manifestation-station" component={() => <DemoRoute><ManifestationStationPage /></DemoRoute>} />
-                          <Route path="/demo/events" component={() => <DemoRoute><EventsPage /></DemoRoute>} />
-                          <Route path="/demo/drive-journal" component={() => <DemoRoute><DriveJournalPage /></DemoRoute>} />
-                          <Route path="/demo/tires-timepieces" component={() => <DemoRoute><TiresTimepieces /></DemoRoute>} />
-                          <Route path="/demo/podium-pursuit" component={() => <DemoRoute><PodiumPursuitPage /></DemoRoute>} />
-                          
-                          {/* Authenticated dashboard */}
-                          <Route path="/dashboard" component={() => <ProtectedRoute><ThePaddockPage /></ProtectedRoute>} />
-                          
-                          {/* Redirects for backward compatibility */}
-                          <Route 
-                            path="/the-paddock" 
-                            component={() => {
-                              window.location.href = '/dashboard';
-                              return null;
-                            }} 
-                          />
-                          <Route 
-                            path="/paddock" 
-                            component={() => {
-                              window.location.href = '/dashboard';
-                              return null;
-                            }} 
-                          />
-                          <Route path="/admin" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.VIEW_ADMIN_DASHBOARD]}><AdminPage /></ProtectedRoute>} />
-                          <Route path="/onboarding-test" component={() => <ProtectedRoute><OnboardingTestPage /></ProtectedRoute>} />
-                          <Route path="/settings" component={() => <ProtectedRoute><Settings /></ProtectedRoute>} />
-                          <Route path="/garage" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_GARAGE_VAULT]}><GaragePage /></ProtectedRoute>} />
-                          <Route path="/add-vehicle" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_GARAGE_VAULT]}><AddVehiclePage /></ProtectedRoute>} />
-                          <Route path="/vehicle-mods" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_GARAGE_VAULT]}><VehicleModsPage /></ProtectedRoute>} />
-                          <Route path="/mod-planner" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_GARAGE_VAULT]}><ModPlannerPage /></ProtectedRoute>} />
-                          <Route path="/obd-diagnostics" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_GARAGE_VAULT]}><OBDDiagnosticsPage /></ProtectedRoute>} />
-                          <Route path="/connect-vehicle" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_GARAGE_VAULT]}><ConnectVehiclePage /></ProtectedRoute>} />
-                          <Route path="/weather-paddock" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_WEATHER_PADDOCK]}><WeatherPage /></ProtectedRoute>} />
-                          <Route path="/weather" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_WEATHER_PADDOCK]}><Weather /></ProtectedRoute>} />
-                          <Route path="/time-services" component={() => <ProtectedRoute><TimeServicesPage /></ProtectedRoute>} />
-                          <Route path="/route-planner" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_WEATHER_PADDOCK]}><RoutePlannerPage /></ProtectedRoute>} />
-                          <Route path="/drive-journal" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_DRIVE_JOURNAL]}><DriveJournalPage /></ProtectedRoute>} />
-                          <Route path="/manifestation-station" component={() => <ProtectedRoute><ManifestationStationPage /></ProtectedRoute>} />
-                          <Route path="/juicebox" component={() => <ProtectedRoute><JuiceBox /></ProtectedRoute>} />
-                          <Route path="/product-organizer" component={() => <ProtectedRoute><ProductOrganizerPage /></ProtectedRoute>} />
-                          <Route path="/tires-timepieces" component={() => <ProtectedRoute><TiresTimepieces /></ProtectedRoute>} />
-                          {/* Premium features - require ACCESS_PREMIUM_FEATURES permission */}
-                          <Route path="/podium-pursuit" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_PREMIUM_FEATURES]}><PodiumPursuitPage /></ProtectedRoute>} />
-                          <Route path="/events" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_PREMIUM_FEATURES]}><EventsPage /></ProtectedRoute>} />
-                          <Route path="/motorsports-events" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_PREMIUM_FEATURES]}><MotorsportsEventsPage /></ProtectedRoute>} />
-                          <Route path="/motorsports-gallery" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_PREMIUM_FEATURES]}><MotorsportsGalleryPage /></ProtectedRoute>} />
-                          
-                          {/* Membership and support pages */}
-                          <Route path="/membership" component={() => <ProtectedRoute><MembershipPage /></ProtectedRoute>} />
-                          <Route path="/chat-feed" component={() => <ProtectedRoute><ChatFeedPage /></ProtectedRoute>} />
-                          <Route path="/contact" component={() => <ProtectedRoute><ContactPage /></ProtectedRoute>} />
-                          
-                          {/* Premium content features */}
-                          <Route path="/ebooks" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_PREMIUM_FEATURES]}><EbooksPage /></ProtectedRoute>} />
-                          <Route path="/concierge" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_PREMIUM_FEATURES]}><ConciergePage /></ProtectedRoute>} />
-                          <Route path="/discounts" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_PREMIUM_FEATURES]}><DiscountsPage /></ProtectedRoute>} />
-                          <Route path="/spotify-test" component={() => <ProtectedRoute><SpotifyTestPage /></ProtectedRoute>} />
-                          <Route path="/spotify-env-check" component={() => <ProtectedRoute><SpotifyEnvCheck /></ProtectedRoute>} />
-                          <Route path="/api-explorer" component={() => <ProtectedRoute><ApiExplorerPage /></ProtectedRoute>} />
-                          <Route path="/auth-test" component={AuthTestPage} />
-                          
-                          {/* Special debug route */}
-                          <Route path="/debug" component={() => {
-                            const SimpleDebug = React.lazy(() => import('./pages/SimpleDebug'));
-                            return (
-                              <React.Suspense fallback={<div className="p-8 text-white">Loading debug page...</div>}>
-                                <SimpleDebug />
-                              </React.Suspense>
-                            );
-                          }} />
-                          
-                          {/* Special geocoding test route */}
-                          <Route path="/geocoding-test" component={() => (
-                            <div className="container mx-auto py-6 px-4">
-                              <div className="space-y-6">
-                                <div>
-                                  <h1 className="text-3xl font-bold tracking-tight">OpenCage Geocoding Explorer</h1>
-                                  <p className="text-muted-foreground mt-2">
-                                    Ultra-conservative implementation with 1 request/day limit and permanent caching
-                                  </p>
-                                </div>
+                          {/* Main application container */}
+                          <div className="min-h-screen bg-black font-openSans text-white">
+                            {/* Fixed components */}
+                            <FixedSoundBar />
+                      
+                            {/* Main content area */}
+                            <main id={MAIN_CONTENT_ID} className="container mx-auto px-4 pb-[70px]" tabIndex={-1}>
+                              <Toaster />
+                              
+                              {/* Routes defined here */}
+                              <Switch>
+                                {/* Root route - show welcome/beta modal */}
+                                <Route path="/" component={BetaWelcomePage} />
                                 
-                                <div className="border-b pb-2" />
+                                {/* Onboarding route */}
+                                <Route path="/onboarding" component={SimpleOnboardingPage} />
                                 
-                                <div className="flex items-center justify-center min-h-[50vh]">
-                                  <div className="bg-muted rounded-lg p-8 text-center max-w-md">
-                                    <h2 className="text-2xl font-bold mb-4">Geocoding Test</h2>
-                                    <p className="mb-4">
-                                      An ultra-conservative geocoding solution has been implemented to work with OpenCage's 1 request/day limit. 
-                                      The solution includes 30-day caching, request limiting, and coordinate grid approximation.
-                                    </p>
-                                    <p className="text-sm mt-4 text-muted-foreground">
-                                      Note: We can't display the full test UI currently due to some dependencies in the main LocationServicesContext that need to be fixed.
-                                    </p>
-                                  </div>
-                                </div>
-                              </div>
-                            </div>
-                          )} />
-                          
-                          {/* 404 fallback */}
-                          <Route path="*" component={NotFound} />
-                          
-                          {/* Interactive elements */}
-                          {isAuthenticated && <RewardNotification />}
-                          {isAuthenticated && <RewardsTracker />}
-                        </main>
-
-                        {/* Footer */}
-                        <Footer />
-                      </div>
-                    </SpotifyProvider>
-                  </RewardsProvider>
-                </GalleryProvider>
-              </WeatherProvider>
-            </LocationServicesProvider>
-          </VehicleDataProvider>
-        </VehicleProvider>
-      </SoundProvider>
-    </UserProfileProvider>
+                                {/* Demo routes - all accessible without authentication */}
+                                <Route path="/demo" component={() => <ThePaddockPage demoMode={true} />} />
+                                <Route path="/demo/weather-paddock" component={WeatherPage} />
+                                <Route path="/demo/garage-vault" component={GarageVaultPage} />
+                                <Route path="/demo/add-vehicle" component={AddVehiclePage} />
+                                <Route path="/demo/connect-vehicle" component={ConnectVehiclePage} />
+                                <Route path="/demo/juice-box" component={JuiceBox} />
+                                <Route path="/demo/manifestation-station" component={ManifestationStationPage} />
+                                <Route path="/demo/events" component={EventsPage} />
+                                <Route path="/demo/drive-journal" component={DriveJournalPage} />
+                                <Route path="/demo/tires-timepieces" component={TiresTimepieces} />
+                                <Route path="/demo/podium-pursuit" component={PodiumPursuitPage} />
+                                
+                                {/* Redirect all other routes to beta welcome */}
+                                <Route component={BetaWelcomePage} />
+                              </Switch>
+                            </main>
+                            
+                            {/* Footer */}
+                            <Footer />
+                          </div>
+                        </RewardsProvider>
+                      </GalleryProvider>
+                    </WeatherProvider>
+                  </LocationServicesProvider>
+                </VehicleDataProvider>
+              </VehicleProvider>
+            </SoundProvider>
+          </UserProfileProvider>
+        </MockAuthProvider>
+      </TooltipProvider>
+    </QueryClientProvider>
   );
 }
 
-export { App as default };
+export default App;

@@ -1,5 +1,5 @@
 import React, { createContext, useState, useEffect, ReactNode } from 'react';
-import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '../auth/MockAuthProvider';
 // Define Vehicle interface here to avoid circular dependency
 export interface Vehicle {
   id: string;
