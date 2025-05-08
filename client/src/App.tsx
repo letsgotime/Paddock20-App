@@ -46,6 +46,11 @@ function ScrollToTopWrapper() {
   return null;
 }
 
+// Route component wrappers
+function PaddockWrapper() {
+  return <ThePaddockPage demoMode={true} />;
+}
+
 function App() {
   const [isLoading, setIsLoading] = useState(true);
   
@@ -90,6 +95,9 @@ function App() {
                         
                           {/* Main application container */}
                           <div className="min-h-screen bg-black font-openSans text-white">
+                            {/* App Header (global navigation) */}
+                            <AppHeader demoMode={true} />
+                            
                             {/* Fixed components */}
                             <FixedSoundBar />
                       
@@ -99,40 +107,25 @@ function App() {
                               
                               {/* Routes defined here */}
                               <Switch>
-                                {/* Root route - show welcome/beta modal */}
-                                <Route path="/" component={BetaWelcomePage} />
+                                {/* Directly route to JuiceBox as per user request */}
+                                <Route path="/" component={JuiceBox} />
                                 
-                                {/* Onboarding route */}
-                                <Route path="/onboarding" component={SimpleOnboardingPage} />
-                                
-                                {/* Demo routes - all accessible without authentication */}
-                                <Route path="/demo" component={() => <ThePaddockPage demoMode={true} />} />
-                                <Route path="/demo/weather-paddock" component={WeatherPage} />
-                                <Route path="/demo/garage-vault" component={GarageVaultPage} />
-                                <Route path="/demo/add-vehicle" component={AddVehiclePage} />
-                                <Route path="/demo/connect-vehicle" component={ConnectVehiclePage} />
-                                <Route path="/demo/juice-box" component={JuiceBox} />
-                                <Route path="/demo/manifestation-station" component={ManifestationStationPage} />
-                                <Route path="/demo/events" component={EventsPage} />
-                                <Route path="/demo/drive-journal" component={DriveJournalPage} />
-                                <Route path="/demo/tires-timepieces" component={TiresTimepieces} />
-                                <Route path="/demo/podium-pursuit" component={PodiumPursuitPage} />
-                                
-                                {/* Standard routes */}
+                                {/* All other routes */}
+                                <Route path="/juicebox" component={JuiceBox} />
                                 <Route path="/weather-paddock" component={WeatherPage} />
                                 <Route path="/garage" component={GarageVaultPage} />
                                 <Route path="/add-vehicle" component={AddVehiclePage} />
                                 <Route path="/connect-vehicle" component={ConnectVehiclePage} />
-                                <Route path="/juicebox" component={JuiceBox} />
                                 <Route path="/manifestation-station" component={ManifestationStationPage} />
                                 <Route path="/events" component={EventsPage} />
                                 <Route path="/drive-journal" component={DriveJournalPage} />
                                 <Route path="/tires-timepieces" component={TiresTimepieces} />
                                 <Route path="/podium-pursuit" component={PodiumPursuitPage} />
-                                <Route path="/the-paddock" component={ThePaddockPage} />
-                                
-                                {/* Redirect all other routes to beta welcome */}
-                                <Route component={BetaWelcomePage} />
+                                <Route path="/the-paddock" component={PaddockWrapper} />
+                                <Route path="/onboarding" component={SimpleOnboardingPage} />
+                              
+                                {/* If no routes match, show JuiceBox */}
+                                <Route component={JuiceBox} />
                               </Switch>
                             </main>
                             
