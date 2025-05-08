@@ -296,7 +296,30 @@ export const insertGlossLogSchema = createInsertSchema(glossLogs).omit({ id: tru
 export const insertModificationSchema = createInsertSchema(modifications).omit({ id: true, createdAt: true, updatedAt: true });
 
 // Types
-export type User = typeof users.$inferSelect;
+// Define the structure of onboardingStatus for better type checking
+export type OnboardingStatus = {
+  hasAcceptedBeta?: boolean;
+  hasCompletedOnboarding?: boolean;
+  currentStep?: string;
+  nextStep?: string;
+  
+  betaWelcomeCompleted?: boolean;
+  legalAgreementsCompleted?: boolean;
+  profileSetupCompleted?: boolean;
+  vehicleAdditionCompleted?: boolean;
+  
+  onboardingStartedAt?: string | null;
+  onboardingCompletedAt?: string | null;
+  
+  beta?: {
+    role?: string;
+    entryDate?: string;
+  };
+};
+
+export type User = typeof users.$inferSelect & {
+  onboardingStatus?: string | OnboardingStatus;
+};
 export type InsertUser = z.infer<typeof insertUserSchema>;
 
 export type Session = typeof sessions.$inferSelect;
