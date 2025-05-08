@@ -122,6 +122,7 @@ const OnboardingPage: React.FC = () => {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
+            username, // Allow username to be changed during onboarding
             fullName,
             drivingExperience,
             interests,
@@ -514,10 +515,9 @@ const OnboardingPage: React.FC = () => {
                       type="text"
                       className="w-full rounded-md bg-gray-700/50 border border-gray-700 px-3 py-2 text-white focus:border-[#1982FC] focus:outline-none"
                       value={username}
-                      readOnly
-                      disabled
+                      onChange={(e) => setUsername(e.target.value)}
                     />
-                    <p className="mt-1 text-xs text-gray-500">Your username cannot be changed</p>
+                    <p className="mt-1 text-xs text-gray-500">Choose a unique username for your profile</p>
                   </div>
                   
                   <div>
