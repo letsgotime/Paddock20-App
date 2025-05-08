@@ -7,6 +7,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import PageTitleManager from './components/PageTitleManager';
+import OnboardingPage from './pages/OnboardingPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Auth0Callback from './components/Auth0Callback';
 import LogoutPage from './pages/LogoutPage';
@@ -205,14 +206,9 @@ function AuthenticatedContent({
             component={() => {
               // Check if user is authenticated
               if (isAuthenticated && user?.id) {
-                // Update local storage directly - this will trigger the onboarding flow
-                // in the AuthenticatedContent component on next render
-                const betaOnboardingKey = `paddock20_beta_onboarding_complete_${user.id}`;
-                localStorage.removeItem(betaOnboardingKey);
-                
-                // Redirect to home, which will then show the onboarding
-                window.location.href = '/';
-                return <div className="p-8 text-white">Redirecting to onboarding...</div>;
+                // Instead of removing the flag which creates a loop,
+                // we'll render the onboarding component directly
+                return <OnboardingPage />;
               } else {
                 // Not authenticated, redirect to auth page
                 window.location.href = '/auth';
