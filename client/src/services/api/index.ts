@@ -1,124 +1,110 @@
-/**
- * API Data Warehouse - Main Export
- * 
- * This file exports all the necessary components of the API Data Warehouse
- * for easy consumption by other parts of the application.
- */
+// Import core API Warehouse functionality
+import { APIDataWarehouse } from './core/APIDataWarehouseCore';
 
-import { apiWarehouse } from './core';
-import { APICategory, APIRequest, APIResponse, HealthStatusType } from './types/core';
-import { registerWeatherProviders } from './providers/weather';
-import { registerGeocodingProviders } from './providers/geocoding';
+// Import the provider factory functions we've created
+import { createCloudinaryProvider } from './providers/media';
+import { createLastFmProvider } from './providers/music';
+
+// Group providers by type for registration
+const mediaProviders = (() => {
+  try {
+    return [createCloudinaryProvider()];
+  } catch (error) {
+    console.error('Failed to initialize media providers:', error);
+    return [];
+  }
+})();
+
+const musicProviders = (() => {
+  try {
+    return [createLastFmProvider()];
+  } catch (error) {
+    console.error('Failed to initialize music providers:', error);
+    return [];
+  }
+})();
+
+// Mock other provider types that aren't fully implemented yet
+const weatherProviders = [];
+const geocodingProviders = [];
+// Other provider imports will go here when implemented
 
 /**
- * Initialize the API Data Warehouse with specified providers
+ * Initialize and configure the API Data Warehouse
  */
-export function initializeAPIWarehouse(options: {
-  logLevel?: 'debug' | 'info' | 'warn' | 'error';
-  providersList?: string[];
-}): void {
+export function initializeAPIWarehouse(): APIDataWarehouse {
   console.info('🏎️ PADDOCK20: Initializing API Data Warehouse');
   
-  // Set up logging level
-  const logLevel = options.logLevel || 'info';
+  // Create the API Warehouse instance
+  const warehouse = new APIDataWarehouse();
   
-  // Register requested providers
-  const requestedProviders = options.providersList || ['weather', 'geocoding'];
-  
-  // Register available providers
-  if (requestedProviders.includes('weather')) {
-    registerWeatherProviders(apiWarehouse);
-    console.info('🏎️ PADDOCK20: Weather API providers registered');
-  }
-  
-  if (requestedProviders.includes('geocoding')) {
-    registerGeocodingProviders(apiWarehouse);
-    console.info('🏎️ PADDOCK20: Geocoding API providers registered');
-  }
-  
-  // Log unimplemented providers
-  const implementedProviders = ['weather', 'geocoding'];
-  const unimplementedProviders = requestedProviders.filter(
-    provider => !implementedProviders.includes(provider)
-  );
-  
-  if (unimplementedProviders.length > 0) {
-    console.warn('Some requested API providers are not yet implemented:', unimplementedProviders);
-  }
-  
-  console.info('🏎️ PADDOCK20: API Data Warehouse initialized with providers: weather, geocoding');
-}
-
-// Initialize by default with basic providers
-if (typeof window !== 'undefined') {
-  // Only auto-initialize in browser environment
-  setTimeout(() => {
-    if (!window.__apiWarehouseInitialized) {
-      initializeAPIWarehouse({
-        logLevel: 'warn',
-        providersList: ['weather', 'geocoding']
-      });
-      window.__apiWarehouseInitialized = true;
-    }
-  }, 0);
-}
-
-/**
- * Fetch data from the API Warehouse
- * 
- * This is the main function to use for getting data from any API.
- * It handles caching, failover, and error handling automatically.
- */
-export async function fetchAPI<T>(request: APIRequest): Promise<APIResponse<T>> {
-  return await apiWarehouse.fetch<T>(request);
-}
-
-/**
- * Check the health of all API services
- * 
- * Useful for displaying service status to users and monitoring.
- */
-export async function checkAPIHealth(): Promise<{
-  status: HealthStatusType;
-  providers: Record<string, HealthStatusType>;
-}> {
+  // Register all providers
   try {
-    const healthStatus = await apiWarehouse.getHealthStatus();
-    let worstStatus: HealthStatusType = 'healthy';
+    // Register weather providers (mock for now)
+    weatherProviders.forEach(provider => {
+      warehouse.registerProvider(provider);
+    });
+    console.info('🏎️ PADDOCK20: Weather API providers registered');
     
-    // Determine overall status from individual provider statuses
-    const providers: Record<string, HealthStatusType> = {};
+    // Register geocoding providers (mock for now)
+    geocodingProviders.forEach(provider => {
+      warehouse.registerProvider(provider);
+    });
+    console.info('🏎️ PADDOCK20: Geocoding API providers registered');
     
-    for (const [category, health] of Object.entries(healthStatus)) {
-      providers[category] = health.status;
-      
-      // Track worst status (unavailable > degraded > healthy)
-      if (health.status === 'unavailable') {
-        worstStatus = 'unavailable';
-      } else if (health.status === 'degraded' && worstStatus !== 'unavailable') {
-        worstStatus = 'degraded';
-      }
+    // Register media providers (Cloudinary)
+    mediaProviders.forEach(provider => {
+      warehouse.registerProvider(provider);
+    });
+    console.info('🏎️ PADDOCK20: Media API providers registered');
+    
+    // Register music providers (Last.fm)
+    musicProviders.forEach(provider => {
+      warehouse.registerProvider(provider);
+    });
+    console.info('🏎️ PADDOCK20: Music API providers registered');
+    
+    // Add other provider registrations here as they are implemented
+    
+    // Identify any missing requested providers
+    const requestedTypes = ['weather', 'geocoding', 'time', 'automotive', 'music', 'auth', 'storage', 'media'];
+    const implementedTypes = warehouse.getProviderTypes();
+    const missingTypes = requestedTypes.filter(type => !implementedTypes.includes(type));
+    
+    if (missingTypes.length > 0) {
+      console.warn('Some requested API providers are not yet implemented:', missingTypes);
     }
     
-    return {
-      status: worstStatus,
-      providers,
-    };
   } catch (error) {
-    console.error('Error checking API health:', error);
-    return {
-      status: 'unavailable',
-      providers: {}
-    };
+    console.error('Error initializing API Data Warehouse:', error);
   }
+  
+  console.info('🏎️ PADDOCK20: API Data Warehouse initialized with providers:', warehouse.getProviderTypes());
+  
+  return warehouse;
 }
 
-// Add TypeScript declaration for window
-declare global {
-  interface Window {
-    __apiWarehouseInitialized?: boolean;
+// Create a singleton instance of the API Data Warehouse
+let warehouseInstance: APIDataWarehouse | null = null;
+
+/**
+ * Get the singleton instance of the API Data Warehouse
+ * This ensures we only create one instance throughout the application
+ */
+export function getAPIWarehouse(): APIDataWarehouse {
+  if (!warehouseInstance) {
+    warehouseInstance = initializeAPIWarehouse();
   }
+  return warehouseInstance;
 }
 
-// Export everything for direct access
-export { apiWarehouse, APICategory };
+/**
+ * Reset the API Data Warehouse
+ * This is useful for testing or when we need to rebuild the warehouse with new providers
+ */
+export function resetAPIWarehouse(): void {
+  warehouseInstance = null;
+}
+
+// Export a default instance for immediate use
+export default getAPIWarehouse();

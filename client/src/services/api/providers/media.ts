@@ -1,475 +1,343 @@
-/**
- * PADDOCK20 Media API Providers
- * 
- * This module contains providers for media-related APIs (images, videos, etc.).
- */
-
-import { 
-  APICategory, 
-  APIProvider, 
-  APIRequest, 
-  APIResponse,
-  HealthStatusType 
-} from '../types/core';
-
-import axios from 'axios';
+import { BaseProvider, ProviderResponse } from '../core/provider';
+import { ApiRequestConfig } from '../core/types';
 
 /**
- * Pexels API Provider
- * 
- * Implementation of the Pexels API for high-quality free stock photos and videos.
- * https://www.pexels.com/api/documentation/
+ * Image transformation and optimization options
  */
-export class PexelsProvider implements APIProvider {
-  name = 'Pexels';
-  category = APICategory.MEDIA;
-  priority = 10;
-  
-  /**
-   * Execute a request to the Pexels API
-   */
-  async execute<T>(request: APIRequest): Promise<APIResponse<T>> {
-    const apiKey = import.meta.env.VITE_PEXELS_API_KEY || process.env.PEXELS_API_KEY;
-    
-    if (!apiKey) {
-      return {
-        success: false,
-        error: {
-          code: 'no_api_key',
-          message: 'Pexels API key is missing',
-          reason: 'AUTHENTICATION_ERROR',
-        },
-        fromCache: false,
-        provider: this.name,
-      };
-    }
-    
-    try {
-      let endpoint: string;
-      let params: Record<string, any> = { ...request.params };
-      
-      // Determine the appropriate endpoint based on the requested endpoint
-      switch (request.endpoint) {
-        case 'search_photos':
-          endpoint = 'https://api.pexels.com/v1/search';
-          if (!params.query) {
-            return {
-              success: false,
-              error: {
-                code: 'missing_query',
-                message: 'Query parameter is required for photo search',
-                reason: 'VALIDATION_ERROR',
-              },
-              fromCache: false,
-              provider: this.name,
-            };
-          }
-          break;
-          
-        case 'curated_photos':
-          endpoint = 'https://api.pexels.com/v1/curated';
-          break;
-          
-        case 'search_videos':
-          endpoint = 'https://api.pexels.com/videos/search';
-          if (!params.query) {
-            return {
-              success: false,
-              error: {
-                code: 'missing_query',
-                message: 'Query parameter is required for video search',
-                reason: 'VALIDATION_ERROR',
-              },
-              fromCache: false,
-              provider: this.name,
-            };
-          }
-          break;
-          
-        case 'popular_videos':
-          endpoint = 'https://api.pexels.com/videos/popular';
-          break;
-          
-        case 'get_photo':
-          if (!params.id) {
-            return {
-              success: false,
-              error: {
-                code: 'missing_id',
-                message: 'Photo ID is required',
-                reason: 'VALIDATION_ERROR',
-              },
-              fromCache: false,
-              provider: this.name,
-            };
-          }
-          endpoint = `https://api.pexels.com/v1/photos/${params.id}`;
-          break;
-          
-        case 'get_video':
-          if (!params.id) {
-            return {
-              success: false,
-              error: {
-                code: 'missing_id',
-                message: 'Video ID is required',
-                reason: 'VALIDATION_ERROR',
-              },
-              fromCache: false,
-              provider: this.name,
-            };
-          }
-          endpoint = `https://api.pexels.com/videos/videos/${params.id}`;
-          break;
-          
-        default:
-          endpoint = 'https://api.pexels.com/v1/search';
-      }
-      
-      // Execute the request with authorization header
-      const response = await axios.get(endpoint, {
-        params,
-        headers: {
-          'Authorization': apiKey
-        }
-      });
-      
-      return {
-        success: true,
-        data: response.data as T,
-        fromCache: false,
-        provider: this.name,
-        timestamp: Date.now(),
-      };
-    } catch (error: any) {
-      console.error('Pexels API error:', error);
-      
-      return {
-        success: false,
-        error: {
-          code: error.response?.status?.toString() || 'unknown',
-          message: error.message || 'Unknown error',
-          reason: this.mapErrorReason(error),
-          details: error.response?.data,
-        },
-        fromCache: false,
-        provider: this.name,
-      };
-    }
-  }
-  
-  /**
-   * Map error responses to standard error reasons
-   */
-  private mapErrorReason(error: any): 'NETWORK_ERROR' | 'AUTHENTICATION_ERROR' | 'RATE_LIMIT_ERROR' | 'SERVER_ERROR' | 'RESOURCE_NOT_FOUND' | 'UNKNOWN_ERROR' {
-    const status = error.response?.status;
-    
-    if (!error.response) {
-      return 'NETWORK_ERROR';
-    }
-    
-    switch (status) {
-      case 401:
-      case 403:
-        return 'AUTHENTICATION_ERROR';
-      case 404:
-        return 'RESOURCE_NOT_FOUND';
-      case 429:
-        return 'RATE_LIMIT_ERROR';
-      case 500:
-      case 502:
-      case 503:
-      case 504:
-        return 'SERVER_ERROR';
-      default:
-        return 'UNKNOWN_ERROR';
-    }
-  }
-  
-  /**
-   * Check the health status of the Pexels API
-   */
-  async getHealthStatus(): Promise<HealthStatusType> {
-    const apiKey = import.meta.env.VITE_PEXELS_API_KEY || process.env.PEXELS_API_KEY;
-    
-    if (!apiKey) {
-      return 'unavailable';
-    }
-    
-    try {
-      // Simple health check with a lightweight request
-      const response = await axios.get('https://api.pexels.com/v1/curated?per_page=1', {
-        headers: {
-          'Authorization': apiKey
-        },
-        timeout: 5000 // 5 second timeout
-      });
-      
-      return response.status === 200 ? 'healthy' : 'degraded';
-    } catch (error: any) {
-      // Check if it's an authentication issue or a service issue
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        return 'unavailable'; // API key issue
-      } else if (error.response?.status === 429) {
-        return 'degraded'; // Rate limited
-      } else {
-        return 'unavailable';
-      }
-    }
-  }
+export interface ImageTransformOptions {
+  width?: number;
+  height?: number;
+  crop?: 'fill' | 'scale' | 'fit' | 'thumb' | 'crop';
+  gravity?: 'auto' | 'face' | 'center' | 'north' | 'south' | 'east' | 'west';
+  quality?: number | 'auto';
+  format?: 'auto' | 'jpg' | 'png' | 'webp' | 'avif';
+  effect?: string;
+  background?: string;
+  overlay?: string;
+  angle?: number;
+  radius?: number | string;
+  border?: string;
+  dpr?: number | 'auto';
+  fetchFormat?: 'auto' | 'jpg' | 'png' | 'webp' | 'avif';
+  defaultImage?: string;
+  colorSpace?: string;
+  secure?: boolean;
 }
 
 /**
- * Cloudinary Provider
- * 
- * Implementation of the Cloudinary API for media storage and transformation.
- * https://cloudinary.com/documentation/client_api
+ * Represents media asset metadata
  */
-export class CloudinaryProvider implements APIProvider {
-  name = 'Cloudinary';
-  category = APICategory.STORAGE;
-  priority = 10;
-  
+export interface MediaAsset {
+  id: string;
+  url: string;
+  secureUrl?: string;
+  publicId?: string;
+  format?: string;
+  resourceType?: 'image' | 'video' | 'raw' | 'auto';
+  type?: string;
+  createdAt?: Date;
+  width?: number;
+  height?: number;
+  bytes?: number;
+  duration?: number;
+  tags?: string[];
+  context?: Record<string, any>;
+  metadata?: Record<string, any>;
+}
+
+/**
+ * Cloudinary provider for media transformation and optimization
+ */
+export class CloudinaryProvider extends BaseProvider {
   private cloudName: string;
-  private apiKey: string;
-  private apiSecret: string;
+  private apiKey?: string;
+  private apiSecret?: string;
+  private secureDomain: string;
+  private uploadDomain: string;
   
   constructor() {
-    this.cloudName = import.meta.env.VITE_CLOUDINARY_CLOUD_NAME || process.env.CLOUDINARY_CLOUD_NAME || '';
-    this.apiKey = import.meta.env.VITE_CLOUDINARY_API_KEY || process.env.CLOUDINARY_API_KEY || '';
-    this.apiSecret = import.meta.env.VITE_CLOUDINARY_API_SECRET || process.env.CLOUDINARY_API_SECRET || '';
+    super('cloudinary', 'media', 7); // Higher priority as reliable service
+    
+    // Extract credentials from CLOUDINARY_URL
+    const cloudinaryUrl = process.env.CLOUDINARY_URL || '';
+    
+    // Format is cloudinary://api_key:api_secret@cloud_name
+    if (cloudinaryUrl) {
+      try {
+        const url = new URL(cloudinaryUrl.replace('cloudinary://', 'https://'));
+        this.cloudName = url.hostname;
+        this.apiKey = url.username;
+        this.apiSecret = url.password;
+      } catch (error) {
+        console.error('Invalid CLOUDINARY_URL format:', error);
+        this.cloudName = '';
+      }
+    } else {
+      this.cloudName = ''; // Will be treated as non-configured
+    }
+    
+    this.secureDomain = `https://res.cloudinary.com/${this.cloudName}`;
+    this.uploadDomain = `https://api.cloudinary.com/v1_1/${this.cloudName}`;
+    
+    if (!this.cloudName) {
+      console.warn('Cloudinary provider not configured. Media optimization will be limited.');
+    }
   }
   
   /**
-   * Execute a request to the Cloudinary API
+   * Checks if the provider is properly configured
    */
-  async execute<T>(request: APIRequest): Promise<APIResponse<T>> {
-    if (!this.cloudName || !this.apiKey || !this.apiSecret) {
-      return {
-        success: false,
-        error: {
-          code: 'missing_credentials',
-          message: 'Cloudinary credentials are missing',
-          reason: 'AUTHENTICATION_ERROR',
-        },
-        fromCache: false,
-        provider: this.name,
-      };
+  isConfigured(): boolean {
+    return !!this.cloudName && !!this.apiKey && !!this.apiSecret;
+  }
+  
+  /**
+   * Builds a URL for optimized image delivery
+   */
+  buildImageUrl(publicId: string, options: ImageTransformOptions = {}): string {
+    if (!this.cloudName) {
+      // If not configured, return the original URL if it's a full URL
+      if (publicId.startsWith('http')) {
+        return publicId;
+      }
+      return '';
     }
     
+    const transformations: string[] = [];
+    
+    // Add width and height if specified
+    const dimensions: string[] = [];
+    if (options.width) dimensions.push(`w_${options.width}`);
+    if (options.height) dimensions.push(`h_${options.height}`);
+    if (options.crop && dimensions.length > 0) dimensions.push(`c_${options.crop}`);
+    if (dimensions.length > 0) transformations.push(dimensions.join(','));
+    
+    // Add quality
+    if (options.quality) transformations.push(`q_${options.quality}`);
+    
+    // Add format
+    if (options.format) transformations.push(`f_${options.format}`);
+    
+    // Add gravity
+    if (options.gravity) transformations.push(`g_${options.gravity}`);
+    
+    // Add effect
+    if (options.effect) transformations.push(`e_${options.effect}`);
+    
+    // Add background
+    if (options.background) transformations.push(`b_${options.background}`);
+    
+    // Add overlay
+    if (options.overlay) transformations.push(`l_${options.overlay}`);
+    
+    // Add angle
+    if (options.angle) transformations.push(`a_${options.angle}`);
+    
+    // Add radius
+    if (options.radius) transformations.push(`r_${options.radius}`);
+    
+    // Add border
+    if (options.border) transformations.push(`bo_${options.border}`);
+    
+    // Add DPR
+    if (options.dpr) transformations.push(`dpr_${options.dpr}`);
+    
+    // Add fetch format
+    if (options.fetchFormat) transformations.push(`f_${options.fetchFormat}`);
+    
+    // Add default image
+    if (options.defaultImage) transformations.push(`d_${options.defaultImage}`);
+    
+    // Add color space
+    if (options.colorSpace) transformations.push(`cs_${options.colorSpace}`);
+    
+    // Build the URL
+    const transformationString = transformations.length > 0 
+      ? transformations.join('/') + '/' 
+      : '';
+    
+    // Handle different types of publicIds
+    let finalPublicId = publicId;
+    
+    // If it's an external URL, use fetch
+    if (publicId.startsWith('http')) {
+      finalPublicId = `fetch/${encodeURIComponent(publicId)}`;
+    } 
+    // If it's already a Cloudinary URL, extract the publicId
+    else if (publicId.includes('cloudinary.com')) {
+      try {
+        const url = new URL(publicId);
+        const pathParts = url.pathname.split('/');
+        // Extract publicId from path
+        const idx = pathParts.findIndex(part => part === 'image' || part === 'video');
+        if (idx >= 0 && idx < pathParts.length - 2) {
+          // Skip resource_type and delivery_type
+          finalPublicId = pathParts.slice(idx + 2).join('/');
+        }
+      } catch (e) {
+        // Keep original if parsing fails
+      }
+    }
+    
+    return `${this.secureDomain}/image/upload/${transformationString}${finalPublicId}`;
+  }
+  
+  /**
+   * Optimizes an image URL for specific dimensions and quality
+   */
+  async optimizeImage(
+    imageUrl: string, 
+    options: ImageTransformOptions = {}
+  ): Promise<ProviderResponse<string>> {
     try {
-      let endpoint: string;
-      let method: 'get' | 'post' | 'delete' = 'get';
-      let params: Record<string, any> = { ...request.params };
-      let data: any = null;
-      
-      // Add authentication parameters
-      params.api_key = this.apiKey;
-      params.timestamp = Math.floor(Date.now() / 1000);
-      
-      // Determine the appropriate endpoint based on the requested endpoint
-      switch (request.endpoint) {
-        case 'list_resources':
-          endpoint = `https://api.cloudinary.com/v1_1/${this.cloudName}/resources/${params.resource_type || 'image'}`;
-          break;
-          
-        case 'get_resource':
-          if (!params.public_id) {
-            return {
-              success: false,
-              error: {
-                code: 'missing_public_id',
-                message: 'Public ID is required',
-                reason: 'VALIDATION_ERROR',
-              },
-              fromCache: false,
-              provider: this.name,
-            };
-          }
-          endpoint = `https://api.cloudinary.com/v1_1/${this.cloudName}/resources/${params.resource_type || 'image'}/upload/${params.public_id}`;
-          break;
-          
-        case 'upload':
-          method = 'post';
-          endpoint = `https://api.cloudinary.com/v1_1/${this.cloudName}/image/upload`;
-          data = params;
-          params = {}; // Clear params since we're sending as form data
-          break;
-          
-        case 'delete_resource':
-          method = 'delete';
-          if (!params.public_id) {
-            return {
-              success: false,
-              error: {
-                code: 'missing_public_id',
-                message: 'Public ID is required',
-                reason: 'VALIDATION_ERROR',
-              },
-              fromCache: false,
-              provider: this.name,
-            };
-          }
-          endpoint = `https://api.cloudinary.com/v1_1/${this.cloudName}/resources/${params.resource_type || 'image'}/upload`;
-          break;
-          
-        default:
-          endpoint = `https://api.cloudinary.com/v1_1/${this.cloudName}/resources/image`;
+      if (!this.cloudName) {
+        return {
+          success: false,
+          error: 'Cloudinary provider not configured',
+          data: imageUrl, // Return original as fallback
+          provider: this.name,
+          timestamp: Date.now(),
+        };
       }
       
-      // Generate signature for authentication
-      const signature = this.generateSignature(params);
-      params.signature = signature;
+      // Set defaults for responsive images if not specified
+      if (!options.format) options.format = 'auto';
+      if (!options.quality) options.quality = 'auto';
       
-      // Execute the request
-      let response;
-      if (method === 'get') {
-        response = await axios.get(endpoint, { params });
-      } else if (method === 'post') {
-        response = await axios.post(endpoint, data || params);
-      } else if (method === 'delete') {
-        response = await axios.delete(endpoint, { params });
+      const optimizedUrl = this.buildImageUrl(imageUrl, options);
+      
+      return {
+        success: true,
+        data: optimizedUrl,
+        provider: this.name,
+        timestamp: Date.now(),
+      };
+    } catch (error) {
+      return this.handleError<string>(error, 'Failed to optimize image');
+    }
+  }
+  
+  /**
+   * Creates a responsive set of images at different breakpoints
+   */
+  async createResponsiveImageSet(
+    imageUrl: string,
+    breakpoints: number[] = [320, 640, 768, 1024, 1280, 1600],
+    options: ImageTransformOptions = {}
+  ): Promise<ProviderResponse<Record<number, string>>> {
+    try {
+      if (!this.cloudName) {
+        return {
+          success: false,
+          error: 'Cloudinary provider not configured',
+          data: breakpoints.reduce((acc, breakpoint) => {
+            acc[breakpoint] = imageUrl;
+            return acc;
+          }, {} as Record<number, string>),
+          provider: this.name,
+          timestamp: Date.now(),
+        };
+      }
+      
+      // Set quality and format defaults for responsive images
+      if (!options.format) options.format = 'auto';
+      if (!options.quality) options.quality = 'auto';
+      
+      const responsiveUrls: Record<number, string> = {};
+      
+      // Generate optimized URLs for each breakpoint
+      for (const width of breakpoints) {
+        responsiveUrls[width] = this.buildImageUrl(imageUrl, {
+          ...options,
+          width,
+        });
       }
       
       return {
         success: true,
-        data: response?.data as T,
-        fromCache: false,
+        data: responsiveUrls,
         provider: this.name,
         timestamp: Date.now(),
       };
-    } catch (error: any) {
-      console.error('Cloudinary API error:', error);
-      
-      return {
-        success: false,
-        error: {
-          code: error.response?.status?.toString() || 'unknown',
-          message: error.message || 'Unknown error',
-          reason: this.mapErrorReason(error),
-          details: error.response?.data,
-        },
-        fromCache: false,
-        provider: this.name,
-      };
+    } catch (error) {
+      return this.handleError<Record<number, string>>(
+        error, 
+        'Failed to create responsive image set'
+      );
     }
   }
   
   /**
-   * Generate a signature for Cloudinary API authentication
+   * Helper to create srcset attribute value for responsive images
    */
-  private generateSignature(params: Record<string, any>): string {
-    // Sort parameters alphabetically
-    const sortedKeys = Object.keys(params).sort();
-    
-    // Build the string to sign
-    let signatureString = '';
-    for (const key of sortedKeys) {
-      // Skip file parameter if present
-      if (key === 'file') continue;
-      
-      // Add key-value pair to the signature string
-      signatureString += `${key}=${params[key]}&`;
-    }
-    
-    // Remove trailing & and add the API secret
-    signatureString = signatureString.slice(0, -1) + this.apiSecret;
-    
-    // Return SHA-1 hash
-    return this.sha1(signatureString);
+  createSrcset(responsiveUrls: Record<number, string>): string {
+    return Object.entries(responsiveUrls)
+      .map(([width, url]) => `${url} ${width}w`)
+      .join(', ');
   }
   
   /**
-   * Simple SHA-1 implementation for Cloudinary signature
+   * Applies a preset transformation to an image
    */
-  private sha1(str: string): string {
-    // This is a browser-side implementation of SHA-1
-    // In production, use a proper crypto library
+  applyPreset(
+    imageUrl: string, 
+    preset: 'avatar' | 'thumbnail' | 'card' | 'banner' | 'background'
+  ): string {
+    // Define preset transformations
+    const presets: Record<string, ImageTransformOptions> = {
+      avatar: {
+        width: 150,
+        height: 150,
+        crop: 'fill',
+        gravity: 'face',
+        format: 'auto',
+        quality: 'auto',
+      },
+      thumbnail: {
+        width: 300,
+        height: 300,
+        crop: 'fit',
+        format: 'auto',
+        quality: 'auto',
+      },
+      card: {
+        width: 600,
+        crop: 'fill',
+        format: 'auto',
+        quality: 'auto',
+      },
+      banner: {
+        width: 1200,
+        height: 630,
+        crop: 'fill',
+        gravity: 'auto',
+        format: 'auto',
+        quality: 'auto',
+      },
+      background: {
+        width: 1920,
+        crop: 'fill',
+        gravity: 'auto',
+        format: 'auto',
+        quality: 'auto',
+        effect: 'blur:300',
+      },
+    };
     
-    // For now, we'll use a simplified approach
-    // We'll return a mock hash since we don't want to implement SHA-1 here
-    // In a real implementation, use crypto.createHash('sha1')
-    
-    // This will fail in production but works for now
-    return `mock_signature_${Math.random().toString(36).substring(7)}`;
-  }
-  
-  /**
-   * Map error responses to standard error reasons
-   */
-  private mapErrorReason(error: any): 'NETWORK_ERROR' | 'AUTHENTICATION_ERROR' | 'RATE_LIMIT_ERROR' | 'SERVER_ERROR' | 'RESOURCE_NOT_FOUND' | 'UNKNOWN_ERROR' {
-    const status = error.response?.status;
-    
-    if (!error.response) {
-      return 'NETWORK_ERROR';
-    }
-    
-    switch (status) {
-      case 401:
-      case 403:
-        return 'AUTHENTICATION_ERROR';
-      case 404:
-        return 'RESOURCE_NOT_FOUND';
-      case 429:
-        return 'RATE_LIMIT_ERROR';
-      case 500:
-      case 502:
-      case 503:
-      case 504:
-        return 'SERVER_ERROR';
-      default:
-        return 'UNKNOWN_ERROR';
-    }
-  }
-  
-  /**
-   * Check the health status of the Cloudinary API
-   */
-  async getHealthStatus(): Promise<HealthStatusType> {
-    if (!this.cloudName || !this.apiKey || !this.apiSecret) {
-      return 'unavailable';
-    }
-    
-    try {
-      // Simple health check - just verify we can connect and authenticate
-      const params = {
-        api_key: this.apiKey,
-        timestamp: Math.floor(Date.now() / 1000)
-      };
-      
-      const signature = this.generateSignature(params);
-      params['signature' as keyof typeof params] = signature;
-      
-      const response = await axios.get(`https://api.cloudinary.com/v1_1/${this.cloudName}/ping`, {
-        params,
-        timeout: 5000 // 5 second timeout
-      });
-      
-      return response.status === 200 ? 'healthy' : 'degraded';
-    } catch (error: any) {
-      // Check if it's an authentication issue or a service issue
-      if (error.response?.status === 401 || error.response?.status === 403) {
-        return 'unavailable'; // API key issue
-      } else if (error.response?.status === 429) {
-        return 'degraded'; // Rate limited
-      } else {
-        return 'unavailable';
-      }
-    }
+    return this.buildImageUrl(imageUrl, presets[preset]);
   }
 }
 
 /**
- * Register all media providers with the API Data Warehouse
+ * Factory function to create a Cloudinary provider
  */
-export function registerMediaProviders(warehouse: any): void {
-  // Register Pexels provider
-  const pexelsProvider = new PexelsProvider();
-  warehouse.registerProvider(APICategory.MEDIA, pexelsProvider, 10);
-  
-  // Register Cloudinary provider
-  const cloudinaryProvider = new CloudinaryProvider();
-  warehouse.registerProvider(APICategory.STORAGE, cloudinaryProvider, 10);
-  
-  console.log(`Registered media providers: ${pexelsProvider.name}, ${cloudinaryProvider.name}`);
+export function createCloudinaryProvider(): CloudinaryProvider {
+  return new CloudinaryProvider();
+}
+
+/**
+ * Factory function to create all media providers
+ */
+export function createMediaProviders(): BaseProvider[] {
+  return [createCloudinaryProvider()];
 }
