@@ -17,7 +17,7 @@
  * DO NOT MODIFY THIS FILE - Add new features to ConsolidatedWeatherContext instead.
  */
 
-import React, { createContext, useContext, useCallback } from 'react';
+import React, { createContext, useContext, useCallback, useState } from 'react';
 import { 
   OneCallData,
   WeatherData,
