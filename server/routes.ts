@@ -14,12 +14,10 @@ import { checkSlackIntegration, initializeSlackClient, shareVehicleToSlack, shar
 import { setupAuth } from "./auth";
 import twoFactorRoutes from "./routes/twoFactorRoutes";
 import auth0Routes from "./routes/auth0Routes";
-import authProfileRoutes from "./routes/authProfileRoutes";
 import spotifyRoutes from "./routes/spotifyRoutes";
 import vinDecoderRoutes from "./routes/vinDecoderRoutes";
 import smartcarRoutes from "./routes/smartcarRoutes";
 import obdRoutes from "./routes/obdRoutes";
-import onboardingFlowRoutes from "./routes/onboardingFlowRoutes";
 
 // OpenWeather API keys - updated May 1, 2025
 const OPENWEATHER_API_KEYS = {
@@ -250,9 +248,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register Auth0 related routes
   app.use(auth0Routes);
   
-  // Register Auth Profile routes for unified authentication experience
-  app.use(authProfileRoutes);
-  
   // Register Spotify API routes
   app.use('/api/spotify', spotifyRoutes);
   
@@ -264,9 +259,6 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register OBD-II Integration routes
   app.use('/api/obd', obdRoutes);
-  
-  // Register Onboarding Flow routes
-  app.use(onboardingFlowRoutes);
   
   // Using only OpenWeather API for all weather services
   
@@ -1980,15 +1972,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/vehicles', async (req, res) => {
     try {
-      // Get user ID from auth session
-      const userId = req.user?.id || 1; // Default to user 1 if not authenticated for testing
-      
-      // Use getVehiclesByUserId instead of getVehicles
-      const vehicles = await storage.getVehiclesByUserId(userId);
-      
-      // Log success for debugging
-      console.log(`Successfully retrieved ${vehicles.length} vehicles for user ${userId}`);
-      
+      const vehicles = await storage.getVehicles();
       res.json(vehicles);
     } catch (error) {
       console.error('Error fetching vehicles:', error);
@@ -2033,8 +2017,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/vehicles/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      // Set status to deleted instead of using is_deleted field
-      await storage.updateVehicle(id, { status: 'Deleted' });
+      await storage.deleteVehicle(id);
       res.sendStatus(204);
     } catch (error) {
       console.error('Error deleting vehicle:', error);
@@ -2057,7 +2040,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/vehicles/:vehicleId/tires', async (req, res) => {
     try {
       const vehicleId = parseInt(req.params.vehicleId);
-      const tires = await storage.getTiresByVehicleId(vehicleId);
+      const tires = await storage.getTiresByVehicle(vehicleId);
       res.json(tires);
     } catch (error) {
       console.error('Error fetching tires:', error);
@@ -2080,7 +2063,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/vehicles/:vehicleId/maintenance-records', async (req, res) => {
     try {
       const vehicleId = parseInt(req.params.vehicleId);
-      const records = await storage.getMaintenanceRecordsByVehicleId(vehicleId);
+      const records = await storage.getMaintenanceRecordsByVehicle(vehicleId);
       res.json(records);
     } catch (error) {
       console.error('Error fetching maintenance records:', error);
@@ -2103,7 +2086,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/vehicles/:vehicleId/maintenance-flags', async (req, res) => {
     try {
       const vehicleId = parseInt(req.params.vehicleId);
-      const flags = await storage.getMaintenanceFlagByVehicleId(vehicleId);
+      const flags = await storage.getMaintenanceFlagsByVehicle(vehicleId);
       res.json(flags);
     } catch (error) {
       console.error('Error fetching maintenance flags:', error);
@@ -2126,7 +2109,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/vehicles/:vehicleId/gloss-tracking', async (req, res) => {
     try {
       const vehicleId = parseInt(req.params.vehicleId);
-      const glossTracking = await storage.getGlossTrackingByVehicleId(vehicleId);
+      const glossTracking = await storage.getGlossTrackingByVehicle(vehicleId);
       res.json(glossTracking);
     } catch (error) {
       console.error('Error fetching gloss tracking:', error);
@@ -2149,7 +2132,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/gloss-tracking/:glossTrackingId/logs', async (req, res) => {
     try {
       const glossTrackingId = parseInt(req.params.glossTrackingId);
-      const logs = await storage.getGlossLogs(glossTrackingId);
+      const logs = await storage.getGlossLogsByTracking(glossTrackingId);
       res.json(logs);
     } catch (error) {
       console.error('Error fetching gloss logs:', error);
@@ -2162,14 +2145,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Create demo vehicle
       const vehicle = await storage.createVehicle({
-        userId: 1, // Default user ID for demo
         make: 'Ferrari',
         model: '488 GTB',
         year: 2019,
         color: 'Rosso Corsa',
         vin: 'ZFF79ALA7K0240372',
-        license_plate: 'PDCK-20',
-        purchase_date: new Date('2023-01-15'),
+        licensePlate: 'PDCK-20',
+        purchaseDate: new Date('2023-01-15'),
         mileage: 8500
       });
       
@@ -2180,10 +2162,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
         model: 'Pilot Sport 4S',
         frontSize: '245/35ZR20',
         rearSize: '305/30ZR20',
-        installDate: new Date('2023-03-10'),
-        mileage: 7200,
-        currentPressureFront: 32.5,
-        currentPressureRear: 34.0,
+        dateInstalled: new Date('2023-03-10'),
+        mileageInstalled: 7200,
+        currentTreadDepth: 6.5,
         notes: 'High performance summer tires'
       });
       

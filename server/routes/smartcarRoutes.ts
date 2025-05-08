@@ -230,7 +230,7 @@ router.post('/import/:vehicleId', async (req, res) => {
         status: 'Active',
         license_plate: '',
         mileage: odometerInfo?.distance || null,
-        // preferredUnit value is stored at user level, not vehicle level
+        mileageUnit: odometerInfo?.unitSystem || 'imperial',
         trim: info.trim || null,
         color: null,
         nickname: `${info.make} ${info.model}`,
