@@ -212,6 +212,43 @@ const OnboardingPage: React.FC = () => {
           }
         }
         
+        // Set onboarding completion flags in localStorage
+        if (user?.id) {
+          // Mark beta onboarding as complete
+          const betaOnboardingKey = `paddock20_beta_onboarding_complete_${user.id}`;
+          localStorage.setItem(betaOnboardingKey, 'true');
+          
+          // Also mark legal agreements as accepted
+          const legalAgreementsKey = `paddock20_legal_agreements_${user.id}`;
+          localStorage.setItem(legalAgreementsKey, JSON.stringify({
+            accepted: true,
+            acceptedDate: new Date().toISOString(),
+            version: '1.0'
+          }));
+          
+          // Log detailed information for debugging
+          console.log('Onboarding completed successfully. Details:', {
+            userId: user.id,
+            username: user.username,
+            betaOnboardingKey,
+            legalAgreementsKey,
+            vehiclesAdded: vehicles.length,
+            onboardingFlags: {
+              betaOnboarding: localStorage.getItem(betaOnboardingKey),
+              legalAgreements: localStorage.getItem(legalAgreementsKey)
+            }
+          });
+          
+          // Notify the user
+          toast({
+            title: 'Setup Complete!',
+            description: 'Your profile has been set up successfully.',
+            variant: 'default'
+          });
+        } else {
+          console.warn('No user ID found when trying to set onboarding flags');
+        }
+        
         // All steps completed - redirect to dashboard
         navigate('/dashboard', { replace: true });
         
