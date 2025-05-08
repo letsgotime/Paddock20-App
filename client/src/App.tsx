@@ -228,6 +228,7 @@ function AuthenticatedContent({
           <Route path="/profile" component={() => <ProtectedRoute><UserProfileHubPage /></ProtectedRoute>} />
           <Route path="/onboarding-test" component={() => <ProtectedRoute><OnboardingTestPage /></ProtectedRoute>} />
           <Route path="/settings" component={() => <ProtectedRoute><Settings /></ProtectedRoute>} />
+          <Route path="/setup-slack" component={() => <ProtectedRoute><SetupSlackIntegration /></ProtectedRoute>} />
           
           {/* Vehicle Management Routes */}
           <Route path="/garage-vault" component={() => <ProtectedRoute><GarageVaultPage /></ProtectedRoute>} />

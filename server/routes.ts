@@ -326,58 +326,70 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Make onecall API request - try/catch so we can still return weather data without OneCall
       let oneCallData;
       try {
-        // Try the OneCall API key with the 3.0 endpoint
+        // Try the OneCall API key with the 3.0 endpoint for paid subscription
         const onecallUrl = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&units=${units}&exclude=minutely&appid=${ONECALL_API_KEY}`;
         console.log(`Making OneCall API request to: ${onecallUrl}`);
-        const onecallResponse = await fetch(onecallUrl);
+        
+        // Add timeout to prevent hanging requests
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
+        
+        const onecallResponse = await fetch(onecallUrl, { 
+          signal: controller.signal,
+          headers: {
+            'Accept': 'application/json'
+          }
+        });
+        
+        // Clear the timeout
+        clearTimeout(timeoutId);
+        
         if (!onecallResponse.ok) {
-          console.warn(`OneCall API error: ${onecallResponse.status} - ${await onecallResponse.text()} - falling back to basic weather data`);
+          // Get detailed error information
+          let errorText;
+          try {
+            errorText = await onecallResponse.text();
+          } catch (textError) {
+            errorText = 'Unable to get error details';
+          }
+          
+          console.warn(`OneCall API error: ${onecallResponse.status} - ${errorText} - falling back to basic weather data`);
+          
+          // Log API health status
+          apiHealthStatus.isOperational = false;
+          apiHealthStatus.lastError = `Status ${onecallResponse.status}: ${errorText}`;
+          apiHealthStatus.lastChecked = new Date();
+          apiHealthStatus.consecutiveFailures++;
+          
           // Generate basic equivalent to oneCallData from the weather and forecast data
-          oneCallData = {
-            lat: Number(lat),
-            lon: Number(lon),
-            timezone: "UTC", // Default since we don't have this data
-            current: {
-              dt: weatherData.dt,
-              sunrise: weatherData.sys.sunrise,
-              sunset: weatherData.sys.sunset,
-              temp: weatherData.main.temp,
-              feels_like: weatherData.main.feels_like,
-              pressure: weatherData.main.pressure,
-              humidity: weatherData.main.humidity,
-              dew_point: 0, // Not available in basic API
-              uvi: 0, // Not available in basic API
-              clouds: weatherData.clouds.all,
-              visibility: weatherData.visibility,
-              wind_speed: weatherData.wind.speed,
-              wind_deg: weatherData.wind.deg,
-              weather: weatherData.weather,
-              rain: weatherData.rain || {}
-            },
-            hourly: forecastData.list.slice(0, 24).map(item => ({
-              dt: item.dt,
-              temp: item.main.temp,
-              feels_like: item.main.feels_like,
-              pressure: item.main.pressure,
-              humidity: item.main.humidity,
-              dew_point: 0,
-              uvi: 0,
-              clouds: item.clouds.all,
-              visibility: item.visibility || 10000,
-              wind_speed: item.wind.speed,
-              wind_deg: item.wind.deg,
-              weather: item.weather,
-              pop: item.pop || 0
-            })),
-            daily: [] // Not available from basic forecast, would require additional logic to generate
-          };
+          oneCallData = generateOneCallFallbackData(weatherData, forecastData, lat, lon);
         } else {
           oneCallData = await onecallResponse.json();
+          
+          // Reset health status on success
+          apiHealthStatus.isOperational = true;
+          apiHealthStatus.lastError = null;
+          apiHealthStatus.lastChecked = new Date();
+          apiHealthStatus.consecutiveFailures = 0;
         }
-      } catch (error) {
-        console.error("Error fetching OneCall data, falling back to basic weather:", error);
+      } catch (error: any) {
+        console.error("Error fetching OneCall data, falling back to basic weather:", error.message || error);
+        
+        // Update API health status
+        apiHealthStatus.isOperational = false;
+        apiHealthStatus.lastError = error.message || 'Unknown error';
+        apiHealthStatus.lastChecked = new Date();
+        apiHealthStatus.consecutiveFailures++;
+        
         // Generate basic equivalent to oneCallData from the weather and forecast data
-        oneCallData = {
+        oneCallData = generateOneCallFallbackData(weatherData, forecastData, lat, lon);
+      }
+      
+      /**
+       * Helper function to generate fallback OneCall data from basic weather and forecast data
+       */
+      function generateOneCallFallbackData(weatherData: any, forecastData: any, lat: any, lon: any) {
+        return {
           lat: Number(lat),
           lon: Number(lon),
           timezone: "UTC", // Default since we don't have this data
@@ -398,7 +410,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             weather: weatherData.weather,
             rain: weatherData.rain || {}
           },
-          hourly: forecastData.list.slice(0, 24).map(item => ({
+          hourly: forecastData.list.slice(0, 24).map((item: any) => ({
             dt: item.dt,
             temp: item.main.temp,
             feels_like: item.main.feels_like,
