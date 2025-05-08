@@ -250,6 +250,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register Auth0 related routes
   app.use(auth0Routes);
   
+  // Register Auth Profile routes for unified authentication experience
+  app.use(authProfileRoutes);
+  
   // Register Spotify API routes
   app.use('/api/spotify', spotifyRoutes);
   
@@ -1977,7 +1980,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.get('/api/vehicles', async (req, res) => {
     try {
-      const vehicles = await storage.getVehicles();
+      // Get user ID from auth session
+      const userId = req.user?.id || 1; // Default to user 1 if not authenticated for testing
+      
+      // Use getVehiclesByUserId instead of getVehicles
+      const vehicles = await storage.getVehiclesByUserId(userId);
+      
+      // Log success for debugging
+      console.log(`Successfully retrieved ${vehicles.length} vehicles for user ${userId}`);
+      
       res.json(vehicles);
     } catch (error) {
       console.error('Error fetching vehicles:', error);
@@ -2022,7 +2033,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/vehicles/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      await storage.deleteVehicle(id);
+      // Use proper method name
+      await storage.updateVehicle(id, { is_deleted: true });
       res.sendStatus(204);
     } catch (error) {
       console.error('Error deleting vehicle:', error);
@@ -2045,7 +2057,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/vehicles/:vehicleId/tires', async (req, res) => {
     try {
       const vehicleId = parseInt(req.params.vehicleId);
-      const tires = await storage.getTiresByVehicle(vehicleId);
+      const tires = await storage.getTireByVehicleId(vehicleId);
       res.json(tires);
     } catch (error) {
       console.error('Error fetching tires:', error);
@@ -2068,7 +2080,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/vehicles/:vehicleId/maintenance-records', async (req, res) => {
     try {
       const vehicleId = parseInt(req.params.vehicleId);
-      const records = await storage.getMaintenanceRecordsByVehicle(vehicleId);
+      const records = await storage.getMaintenanceRecordByVehicleId(vehicleId);
       res.json(records);
     } catch (error) {
       console.error('Error fetching maintenance records:', error);
@@ -2091,7 +2103,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/vehicles/:vehicleId/maintenance-flags', async (req, res) => {
     try {
       const vehicleId = parseInt(req.params.vehicleId);
-      const flags = await storage.getMaintenanceFlagsByVehicle(vehicleId);
+      const flags = await storage.getMaintenanceFlagByVehicleId(vehicleId);
       res.json(flags);
     } catch (error) {
       console.error('Error fetching maintenance flags:', error);
@@ -2114,7 +2126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/vehicles/:vehicleId/gloss-tracking', async (req, res) => {
     try {
       const vehicleId = parseInt(req.params.vehicleId);
-      const glossTracking = await storage.getGlossTrackingByVehicle(vehicleId);
+      const glossTracking = await storage.getGlossTrackingByVehicleId(vehicleId);
       res.json(glossTracking);
     } catch (error) {
       console.error('Error fetching gloss tracking:', error);
@@ -2137,7 +2149,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/gloss-tracking/:glossTrackingId/logs', async (req, res) => {
     try {
       const glossTrackingId = parseInt(req.params.glossTrackingId);
-      const logs = await storage.getGlossLogsByTracking(glossTrackingId);
+      const logs = await storage.getGlossLogs(glossTrackingId);
       res.json(logs);
     } catch (error) {
       console.error('Error fetching gloss logs:', error);
@@ -2155,8 +2167,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
         year: 2019,
         color: 'Rosso Corsa',
         vin: 'ZFF79ALA7K0240372',
-        licensePlate: 'PDCK-20',
-        purchaseDate: new Date('2023-01-15'),
+        license_plate: 'PDCK-20',
+        purchase_date: new Date('2023-01-15'),
         mileage: 8500
       });
       
@@ -2167,9 +2179,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
         model: 'Pilot Sport 4S',
         frontSize: '245/35ZR20',
         rearSize: '305/30ZR20',
-        dateInstalled: new Date('2023-03-10'),
-        mileageInstalled: 7200,
-        currentTreadDepth: 6.5,
+        installDate: new Date('2023-03-10'),
+        mileage: 7200,
+        currentPressureFront: 32.5,
+        currentPressureRear: 34.0,
         notes: 'High performance summer tires'
       });
       
