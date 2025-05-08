@@ -4,7 +4,7 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { ArrowRight, Car, CloudSun, Map, Calendar, Award, Tool, Clock } from 'lucide-react';
+import { ArrowRight, Car, CloudSun, Map, Calendar, Award, Wrench, Clock } from 'lucide-react';
 
 export interface BetaWelcomeModalProps {
   open: boolean;
@@ -115,7 +115,7 @@ export function BetaWelcomeModal({ open, onOpenChange, onComplete }: BetaWelcome
                   <p className="text-xs text-gray-400">Set and achieve automotive goals</p>
                 </div>
                 <div className="p-3 rounded-lg bg-gray-900 flex flex-col items-center text-center">
-                  <Tool className="h-6 w-6 text-[#08c519] mb-2" />
+                  <Wrench className="h-6 w-6 text-[#08c519] mb-2" />
                   <h3 className="font-medium">Maintenance</h3>
                   <p className="text-xs text-gray-400">Track vehicle service history</p>
                 </div>
