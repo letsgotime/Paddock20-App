@@ -8,8 +8,12 @@
  * Last verified: May 08, 2025
  */
 
-import React, { useState, useEffect } from 'react';
-import { X, Zap, ClipboardCheck, Shield, Car, CheckCircle, User, Flag, ChevronRight, ChevronLeft, XCircle } from 'lucide-react';
+import React, { useState, useEffect, useRef } from 'react';
+import { 
+  X, Zap, ClipboardCheck, Shield, Car, CheckCircle, User, Flag, 
+  ChevronRight, ChevronLeft, XCircle, Speedometer, Award,
+  Settings, Gauge, Sparkles, Lightning, Activity, Compass
+} from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -33,6 +37,10 @@ const BetaWelcomeModal: React.FC<BetaWelcomeModalProps> = ({ isOpen, onClose }) 
   const [error, setError] = useState<string | null>(null);
   const { logout } = useAuth();
   const [, setLocation] = useLocation();
+  const modalRef = useRef<HTMLDivElement>(null);
+  
+  // Animation state
+  const [animationCount, setAnimationCount] = useState(0);
   
   // Legal agreement tracking
   const [agreements, setAgreements] = useState({
@@ -40,6 +48,15 @@ const BetaWelcomeModal: React.FC<BetaWelcomeModalProps> = ({ isOpen, onClose }) 
     privacyPolicy: false,
     betaAgreement: false
   });
+  
+  // Animation trigger
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAnimationCount(prev => (prev + 1) % 5);
+    }, 3000);
+    
+    return () => clearInterval(interval);
+  }, []);
   
   // Check if legal agreements are complete
   const allAgreed = Object.values(agreements).every(value => value === true);
@@ -79,20 +96,33 @@ const BetaWelcomeModal: React.FC<BetaWelcomeModalProps> = ({ isOpen, onClose }) 
       // Delay actual close to allow for animation
       setTimeout(() => {
         onClose(betaRole);
-      }, 400); // Match this with the CSS transition duration
+      }, 500); // Match this with the CSS transition duration
       return;
     }
     
-    // Move to next step
-    setStep(prev => prev + 1);
-    setError(null);
+    // Start exit animation for current step
+    setIsExiting(true);
+    
+    // After a short delay, move to next step with entrance animation
+    setTimeout(() => {
+      setStep(prev => prev + 1);
+      setError(null);
+      setIsExiting(false);
+    }, 300);
   };
   
   // Handle previous step navigation
   const handlePrevious = () => {
     if (step > 1) {
-      setStep(prev => prev - 1);
-      setError(null);
+      // Start exit animation for current step
+      setIsExiting(true);
+      
+      // After a short delay, move to previous step with entrance animation
+      setTimeout(() => {
+        setStep(prev => prev - 1);
+        setError(null);
+        setIsExiting(false);
+      }, 300);
     }
   };
   
@@ -111,65 +141,86 @@ const BetaWelcomeModal: React.FC<BetaWelcomeModalProps> = ({ isOpen, onClose }) 
       
       // Redirect to auth page
       setLocation('/auth');
-    }, 400);
+    }, 500);
   };
   
-  // Base modal classes
+  // Base modal classes with enhanced backdrop
   const modalClasses = `
-    fixed inset-0 bg-black/90 flex items-center justify-center z-50 p-4 overflow-y-auto
-    transition-opacity duration-300 ease-in-out backdrop-blur-sm
+    fixed inset-0 bg-black/95 flex items-center justify-center z-50 p-4 overflow-y-auto
+    transition-opacity duration-500 ease-in-out backdrop-blur-lg
     ${isExiting ? 'opacity-0' : 'opacity-100'}
   `;
   
-  // Content animation classes
+  // Content animation classes with F1-inspired design
   const contentClasses = `
-    bg-gradient-to-b from-gray-900 to-black border border-[#1982FC]/20 rounded-lg 
-    max-w-2xl w-full md:w-3/4 lg:w-2/3 relative mx-auto my-8 overflow-hidden
-    transition-all duration-400 ease-in-out shadow-2xl shadow-[#1982FC]/10
+    bg-gradient-to-b from-gray-900 to-black border border-[#1982FC]/30 rounded-lg 
+    max-w-4xl w-full md:w-4/5 relative mx-auto my-8 overflow-hidden
+    transition-all duration-500 ease-in-out shadow-2xl shadow-[#1982FC]/20
     ${isExiting ? 'transform translate-y-8 scale-95 opacity-0' : 'transform translate-y-0 scale-100 opacity-100'}
   `;
   
-  // Get step icon
+  // Get step icon with enhanced styling
   const getStepIcon = () => {
     switch (step) {
-      case 1: return <Flag className="h-6 w-6 text-[#1982FC]" />;
-      case 2: return <Car className="h-6 w-6 text-[#1982FC]" />;
-      case 3: return <Shield className="h-6 w-6 text-[#1982FC]" />;
-      case 4: return <User className="h-6 w-6 text-[#1982FC]" />;
-      case 5: return <Zap className="h-6 w-6 text-[#1982FC]" />;
-      case 6: return <CheckCircle className="h-6 w-6 text-[#08c519]" />;
-      default: return <Flag className="h-6 w-6 text-[#1982FC]" />;
+      case 1: return <Flag className="h-7 w-7 text-[#1982FC] drop-shadow-glow" />;
+      case 2: return <Car className="h-7 w-7 text-[#1982FC] drop-shadow-glow" />;
+      case 3: return <Shield className="h-7 w-7 text-[#1982FC] drop-shadow-glow" />;
+      case 4: return <User className="h-7 w-7 text-[#1982FC] drop-shadow-glow" />;
+      case 5: return <Zap className="h-7 w-7 text-[#1982FC] drop-shadow-glow" />;
+      case 6: return <CheckCircle className="h-7 w-7 text-[#08c519] drop-shadow-glow" />;
+      default: return <Flag className="h-7 w-7 text-[#1982FC] drop-shadow-glow" />;
     }
   };
   
-  // Get step title
+  // Get step title with enhanced styling
   const getStepTitle = () => {
     switch (step) {
-      case 1: return <span className="text-[#1982FC] tracking-wider">WELCOME TO <span className="text-[#1982FC]">PADDOCK</span><span className="text-[#08c519]">20</span> <span className="text-[#08c519]">BETA</span></span>;
-      case 2: return <span className="text-[#1982FC] tracking-wider">ABOUT <span className="text-[#1982FC]">PADDOCK</span><span className="text-[#08c519]">20</span> <span className="text-[#08c519]">BETA</span></span>;
-      case 3: return <span className="text-[#1982FC] tracking-wider">LEGAL AGREEMENTS REQUIRED</span>;
-      case 4: return <span className="text-[#1982FC] tracking-wider">YOUR <span className="text-[#1982FC]">PADDOCK</span><span className="text-[#08c519]">20</span> PROFILE</span>;
-      case 5: return <span className="text-[#1982FC] tracking-wider">CHOOSE YOUR BETA ROLE</span>;
-      case 6: return <span className="text-[#08c519] tracking-wider">READY TO ENTER THE PADDOCK</span>;
-      default: return <span className="text-[#1982FC] tracking-wider">WELCOME TO <span className="text-[#1982FC]">PADDOCK</span><span className="text-[#08c519]">20</span></span>;
+      case 1: return <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1982FC] to-[#08c519] font-orbitron tracking-wider">WELCOME TO <span className="font-bold">PADDOCK<span className="text-[#08c519]">20</span></span> <span className="text-[#08c519] font-bold">BETA</span></span>;
+      case 2: return <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1982FC] to-[#08c519] font-orbitron tracking-wider">ABOUT <span className="font-bold">PADDOCK<span className="text-[#08c519]">20</span></span> <span className="text-[#08c519] font-bold">BETA</span></span>;
+      case 3: return <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1982FC] to-[#08c519] font-orbitron tracking-wider">LEGAL AGREEMENTS REQUIRED</span>;
+      case 4: return <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1982FC] to-[#08c519] font-orbitron tracking-wider">YOUR <span className="font-bold">PADDOCK<span className="text-[#08c519]">20</span></span> PROFILE</span>;
+      case 5: return <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1982FC] to-[#08c519] font-orbitron tracking-wider">CHOOSE YOUR BETA ROLE</span>;
+      case 6: return <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#08c519] to-[#1982FC] font-orbitron tracking-wider">READY TO ENTER THE PADDOCK</span>;
+      default: return <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#1982FC] to-[#08c519] font-orbitron tracking-wider">WELCOME TO <span className="font-bold">PADDOCK<span className="text-[#08c519]">20</span></span></span>;
     }
   };
   
-  // Progress dots
-  const renderProgressDots = () => {
+  // Enhanced progress indicator with F1-inspired styling
+  const renderProgressIndicator = () => {
     return (
-      <div className="flex space-x-2 items-center justify-center mt-6">
-        {[1, 2, 3, 4, 5, 6].map((dot) => (
+      <div className="relative mt-6 mb-2">
+        {/* Track background */}
+        <div className="h-2 bg-gray-800 rounded-full overflow-hidden border border-gray-700">
+          {/* Progress fill */}
           <div 
-            key={dot}
-            className={`
-              w-2.5 h-2.5 rounded-full transition-all duration-300 
-              ${dot === step ? 
-                (step === 6 ? 'bg-[#08c519] w-4 h-4' : 'bg-[#1982FC] w-4 h-4') : 
-                (dot < step ? 'bg-gray-300' : 'bg-gray-600')}
-            `}
-          />
-        ))}
+            className="h-full rounded-full transition-all duration-500 ease-out bg-gradient-to-r from-[#1982FC] to-[#08c519]"
+            style={{ width: `${(step / 6) * 100}%` }}
+          ></div>
+        </div>
+        
+        {/* Step markers */}
+        <div className="flex justify-between absolute -top-3 left-0 right-0">
+          {[1, 2, 3, 4, 5, 6].map((dot) => (
+            <div 
+              key={dot}
+              className={`
+                flex flex-col items-center transition-all duration-300 -ml-2 first:ml-0 last:ml-0
+              `}
+            >
+              <div className={`
+                w-6 h-6 rounded-full flex items-center justify-center border-2
+                transition-all duration-300
+                ${dot <= step 
+                  ? 'border-[#1982FC] bg-gray-900 shadow-glow' 
+                  : 'border-gray-600 bg-gray-800'}
+              `}>
+                <span className={`text-xs font-bold ${dot <= step ? 'text-[#1982FC]' : 'text-gray-500'}`}>
+                  {dot}
+                </span>
+              </div>
+            </div>
+          ))}
+        </div>
       </div>
     );
   };
