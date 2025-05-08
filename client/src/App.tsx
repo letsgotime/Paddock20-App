@@ -10,6 +10,7 @@ import PageTitleManager from './components/PageTitleManager';
 import OnboardingPage from './pages/OnboardingPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Auth0Callback from './components/Auth0Callback';
+import SmartcarCallback from './components/vehicle/SmartcarCallback';
 import LogoutPage from './pages/LogoutPage';
 // Import disabled to remove Unsplash API warnings
 // import { initializeImageCache } from "./services/unsplashService";
@@ -195,6 +196,9 @@ function AuthenticatedContent({
           
           {/* Spotify callback route - Handles redirection after Spotify authentication */}
           <Route path="/spotify/callback" component={SpotifyCallbackPage} />
+          
+          {/* Smartcar callback route - Handles redirection after Smartcar authentication */}
+          <Route path="/smartcar/callback" component={SmartcarCallback} />
           
           {/* Logout Page - Handles secure logout process */}
           <Route path="/logout" component={LogoutPage} />

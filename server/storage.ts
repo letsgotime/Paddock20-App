@@ -117,6 +117,23 @@ export interface IStorage {
   lockAccount(userId: number, durationMinutes: number): Promise<boolean>;
   unlockAccount(userId: number): Promise<boolean>;
   updateFailedLoginAttempts(userId: number, count: number): Promise<boolean>;
+  
+  // Smartcar methods
+  saveSmartcarTokens(userId: number, tokens: {
+    accessToken: string;
+    refreshToken: string;
+    expiration: Date;
+    refreshExpiration: Date;
+    vehicleIds: string[];
+  }): Promise<boolean>;
+  getSmartcarTokens(userId: number): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    expiration: Date;
+    refreshExpiration: Date;
+    vehicleIds: string[];
+  } | undefined>;
+  deleteSmartcarTokens(userId: number): Promise<boolean>;
 }
 
 // Database Storage Implementation
@@ -660,6 +677,101 @@ export class DatabaseStorage implements IStorage {
   // Alias for updateTwoFactorBackupCodes for compatibility with two-factor service
   async updateBackupCodes(userId: number, backupCodes: string[]): Promise<boolean> {
     return this.updateTwoFactorBackupCodes(userId, backupCodes);
+  }
+  
+  // Smartcar methods - Simple implementation using user metadata since we're not adding another table
+  // In a production app, these should be stored in a proper database table with encryption
+  async saveSmartcarTokens(userId: number, tokens: {
+    accessToken: string;
+    refreshToken: string;
+    expiration: Date;
+    refreshExpiration: Date;
+    vehicleIds: string[];
+  }): Promise<boolean> {
+    try {
+      // For demo purposes, we'll store tokens in the user's metadata
+      // In a real app, create a separate table with proper security
+      const user = await this.getUser(userId);
+      
+      if (!user) {
+        return false;
+      }
+      
+      const metadata = user.metadata || {};
+      
+      // Store tokens in user metadata
+      const updatedUser = await this.updateUser(userId, {
+        metadata: {
+          ...metadata,
+          smartcarTokens: {
+            accessToken: tokens.accessToken,
+            refreshToken: tokens.refreshToken,
+            expiration: tokens.expiration,
+            refreshExpiration: tokens.refreshExpiration,
+            vehicleIds: tokens.vehicleIds,
+            updatedAt: new Date()
+          }
+        }
+      });
+      
+      return !!updatedUser;
+    } catch (error) {
+      console.error('Error storing Smartcar tokens:', error);
+      return false;
+    }
+  }
+  
+  async getSmartcarTokens(userId: number): Promise<{
+    accessToken: string;
+    refreshToken: string;
+    expiration: Date;
+    refreshExpiration: Date;
+    vehicleIds: string[];
+  } | undefined> {
+    try {
+      const user = await this.getUser(userId);
+      
+      if (!user || !user.metadata?.smartcarTokens) {
+        return undefined;
+      }
+      
+      const tokens = user.metadata.smartcarTokens;
+      
+      // Ensure the timestamps are Date objects
+      return {
+        accessToken: tokens.accessToken,
+        refreshToken: tokens.refreshToken,
+        expiration: new Date(tokens.expiration),
+        refreshExpiration: new Date(tokens.refreshExpiration),
+        vehicleIds: tokens.vehicleIds
+      };
+    } catch (error) {
+      console.error('Error retrieving Smartcar tokens:', error);
+      return undefined;
+    }
+  }
+  
+  async deleteSmartcarTokens(userId: number): Promise<boolean> {
+    try {
+      const user = await this.getUser(userId);
+      
+      if (!user) {
+        return false;
+      }
+      
+      // Remove the tokens from user metadata
+      const metadata = { ...user.metadata } || {};
+      delete metadata.smartcarTokens;
+      
+      const updatedUser = await this.updateUser(userId, {
+        metadata
+      });
+      
+      return !!updatedUser;
+    } catch (error) {
+      console.error('Error deleting Smartcar tokens:', error);
+      return false;
+    }
   }
 }
 
