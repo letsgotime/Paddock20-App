@@ -32,7 +32,7 @@ const SmartcarConnect: React.FC<SmartcarConnectProps> = ({ onConnect }) => {
     fetchConnectedVehicles();
   }, []);
 
-  // Function to fetch connected vehicles list
+  // Function to fetch connected vehicles list with enhanced data
   const fetchConnectedVehicles = async () => {
     try {
       setIsLoading(true);
@@ -43,12 +43,53 @@ const SmartcarConnect: React.FC<SmartcarConnectProps> = ({ onConnect }) => {
       
       if (response.ok) {
         const vehicleList = data.vehicles || [];
-        setVehicles(vehicleList);
         
-        // Call onConnect if provided and vehicles are available
-        if (onConnect && vehicleList.length > 0) {
-          onConnect(vehicleList[0]);
+        // If we have vehicles, fetch detailed information for the first one
+        if (vehicleList.length > 0) {
+          try {
+            // Get additional vehicle information (VIN, odometer, etc.)
+            const vehicleId = vehicleList[0].id;
+            const detailsResponse = await apiRequest('GET', `/api/smartcar/vehicle/${vehicleId}/info`);
+            
+            if (detailsResponse.ok) {
+              const detailsData = await detailsResponse.json();
+              
+              // Combine basic and detailed vehicle information
+              const enhancedVehicle = {
+                ...vehicleList[0],
+                ...detailsData,
+                // Ensure these properties are available for form population
+                make: vehicleList[0].make || detailsData.make || '',
+                model: vehicleList[0].model || detailsData.model || '',
+                year: vehicleList[0].year || detailsData.year || new Date().getFullYear(),
+                vin: detailsData.vin || ''
+              };
+              
+              // Update the first vehicle with enhanced data
+              vehicleList[0] = enhancedVehicle;
+              
+              // Call onConnect with the enhanced vehicle data
+              if (onConnect) {
+                onConnect(enhancedVehicle);
+              }
+              
+              // Let user know we have imported the data
+              toast({
+                title: 'Vehicle Data Retrieved',
+                description: `Successfully imported data for your ${enhancedVehicle.year} ${enhancedVehicle.make} ${enhancedVehicle.model}`,
+              });
+            }
+          } catch (detailsErr) {
+            console.error('Error fetching vehicle details:', detailsErr);
+            // Still call onConnect with basic vehicle data
+            if (onConnect) {
+              onConnect(vehicleList[0]);
+            }
+          }
         }
+        
+        // Update the state with the vehicle list
+        setVehicles(vehicleList);
       } else {
         // 401 is expected if no vehicles connected yet
         if (response.status !== 401) {
@@ -100,6 +141,38 @@ const SmartcarConnect: React.FC<SmartcarConnectProps> = ({ onConnect }) => {
     try {
       setIsLoading(true);
       
+      // Get additional information before importing
+      try {
+        const infoResponse = await apiRequest('GET', `/api/smartcar/vehicle/${vehicleId}/info`);
+        
+        if (infoResponse.ok) {
+          const vehicleInfo = await infoResponse.json();
+          // Find this vehicle in our vehicles list and enhance it
+          const vehicleIndex = vehicles.findIndex(v => v.id === vehicleId);
+          
+          if (vehicleIndex !== -1) {
+            // Create enhanced vehicle with all available info
+            const enhancedVehicle = {
+              ...vehicles[vehicleIndex],
+              ...vehicleInfo,
+              // Guarantee core fields for form population
+              make: vehicles[vehicleIndex].make || vehicleInfo.make || '',
+              model: vehicles[vehicleIndex].model || vehicleInfo.model || '',
+              year: vehicles[vehicleIndex].year || vehicleInfo.year || new Date().getFullYear(),
+              vin: vehicleInfo.vin || vehicles[vehicleIndex].vin || ''
+            };
+            
+            // Call onConnect with enhanced data
+            if (onConnect) {
+              onConnect(enhancedVehicle);
+            }
+          }
+        }
+      } catch (infoErr) {
+        console.error('Error fetching additional vehicle info:', infoErr);
+      }
+      
+      // Proceed with import
       const response = await apiRequest('POST', `/api/smartcar/import/${vehicleId}`);
       const data = await response.json();
       
@@ -109,6 +182,11 @@ const SmartcarConnect: React.FC<SmartcarConnectProps> = ({ onConnect }) => {
           description: 'Vehicle successfully added to your garage',
           variant: 'default',
         });
+        
+        // If the import returned vehicle data and we have onConnect callback
+        if (data.vehicle && onConnect) {
+          onConnect(data.vehicle);
+        }
       } else {
         toast({
           title: 'Import Failed',
