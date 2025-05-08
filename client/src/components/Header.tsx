@@ -227,30 +227,31 @@ const Header: React.FC = () => {
             {/* Dropdown Menu - Complete with all navigation options */}
             {isMenuOpen && (
               <div className="absolute right-0 mt-1 w-64 bg-black border border-blue-900 rounded-md shadow-lg overflow-auto max-h-[90vh] z-50">
-                <div className="bg-blue-900/20 px-3 py-2 text-sm text-blue-300 font-semibold border-b border-blue-900/40 sticky top-0">
-                  Paddock Menu
-                </div>
-                
-                <div className="py-1">
-                  {/* Menu Items - Comprehensive */}
+                <div className="py-1 max-h-[70vh] overflow-y-auto">
+                  {/* Menu Header */}
+                  <div className="bg-blue-900/20 px-3 py-2 text-sm text-blue-300 font-semibold border-b border-blue-900/40 sticky top-0">
+                    Paddock Menu
+                  </div>
+                  
+                  {/* Main Menu Items - Based on provided structure */}
                   <Link to="/" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <Home className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Home</span>
                   </Link>
                   
-                  <Link to="/personalized-dashboard" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/my-dashboard" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <LayoutDashboard className="h-4 w-4 mr-2 text-blue-400" />
                     <span>My Dashboard</span>
                   </Link>
                   
-                  <Link to="/profile" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/driver-profile" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <User className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Driver Profile</span>
                     <span className="ml-2 text-xs text-green-500 font-orbitron">NEW</span>
                   </Link>
                   
                   <Link to="/podium-pursuit" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
-                    <Medal className="h-4 w-4 mr-2 text-blue-400" />
+                    <Trophy className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Podium Pursuit</span>
                   </Link>
                   
@@ -259,7 +260,7 @@ const Header: React.FC = () => {
                     <span>Weather Paddock</span>
                   </Link>
                   
-                  <Link to="/route-planner" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/fun-drive-planner" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <MapPin className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Fun Drive Planner</span>
                   </Link>
@@ -270,7 +271,7 @@ const Header: React.FC = () => {
                   </Link>
                   
                   <Link to="/motorsports-events" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
-                    <Trophy className="h-4 w-4 mr-2 text-blue-400" />
+                    <Flag className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Motorsports Events</span>
                   </Link>
                   
@@ -285,7 +286,7 @@ const Header: React.FC = () => {
                   </Link>
                   
                   <Link to="/membership" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
-                    <Flag className="h-4 w-4 mr-2 text-blue-400" />
+                    <Award className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Paddock20 Membership</span>
                   </Link>
                   
@@ -309,29 +310,8 @@ const Header: React.FC = () => {
                     <span>Drive Journal</span>
                   </Link>
                   
-                  <Link to="/spotify-test" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
-                    <Music className="h-4 w-4 mr-2 text-green-400" />
-                    <span>Spotify Integration</span>
-                    <span className="ml-2 text-xs text-green-500 font-orbitron">NEW</span>
-                  </Link>
-                  
-                  <Link to="/api-explorer" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
-                    <GitBranch className="h-4 w-4 mr-2 text-green-400" />
-                    <span>API Explorer</span>
-                    <span className="ml-2 text-xs text-green-500 font-orbitron">NEW</span>
-                  </Link>
-                  
-                  <Link to="/onboarding-test" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
-                    <User className="h-4 w-4 mr-2 text-green-400" />
-                    <span>Onboarding Test</span>
-                    <span className="ml-2 text-xs text-green-500 font-orbitron">NEW</span>
-                  </Link>
-                  
-                  <Link to="/manifestation-station" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors" onClick={() => {
-                    // Directly navigate to the Manifestation Station with the discipline tracker view
-                    window.localStorage.setItem('manifestation_activeView', 'discipline-tracker');
-                  }}>
-                    <Calendar className="h-4 w-4 mr-2 text-blue-400" />
+                  <Link to="/daily-check-in" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                    <ClipboardCheck className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Daily Check-in</span>
                   </Link>
                   
@@ -350,9 +330,7 @@ const Header: React.FC = () => {
                     <Percent className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Discounts & Promotions</span>
                   </Link>
-                </div>
-                
-                <div className="border-t border-blue-900/40 py-1">
+                  
                   <Link to="/concierge" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <HeartHandshake className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Concierge</span>
@@ -377,6 +355,12 @@ const Header: React.FC = () => {
                     <Settings className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Settings</span>
                   </Link>
+                </div>
+                
+                <div className="border-t border-blue-900/40 py-1">
+                  <div className="px-3 py-2 text-sm text-blue-300 font-semibold">
+                    GoTime Motorsports
+                  </div>
                   
                   <button 
                     onClick={handleLogout}
