@@ -6,13 +6,17 @@ import { createServer } from "http";
 import { setupVite } from "./vite";
 import { registerRoutes } from "./routes";
 import obdRoutes from "./routes/obdRoutes";
+import smartcarRoutes from "./routes/smartcarRoutes";
 
-// Register the OBD routes with the main Express app
-async function setupOBDRoutes(app: express.Express) {
+// Register specialized routes with the main Express app
+async function setupSpecializedRoutes(app: express.Express) {
   // Add the OBD routes to the Express app
   app.use('/api/obd', obdRoutes);
-  
   console.log("OBD routes registered successfully");
+  
+  // Add Smartcar routes
+  app.use('/api/smartcar', smartcarRoutes);
+  console.log("Smartcar routes registered successfully");
 }
 
 async function main() {
@@ -28,8 +32,8 @@ async function main() {
   // Set up Vite for development or serve the built client for production
   await setupVite(app, httpServer);
   
-  // Set up OBD routes
-  await setupOBDRoutes(app);
+  // Set up specialized routes
+  await setupSpecializedRoutes(app);
   
   // Register additional routes
   await registerRoutes(app);

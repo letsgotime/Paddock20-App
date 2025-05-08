@@ -43,6 +43,8 @@ import AddVehiclePage from "./pages/AddVehiclePage";
 import VehicleModsPage from "./pages/VehicleModsPage";
 import ModPlannerPage from "./pages/ModPlannerPage";
 import OBDDiagnosticsPage from "./pages/OBDDiagnosticsPage";
+import ConnectVehiclePage from "./pages/ConnectVehiclePage";
+import SmartcarCallbackPage from "./pages/SmartcarCallbackPage";
 import WeatherPage from "./pages/WeatherPage";
 import Weather from "./pages/Weather";
 import TimeServicesPage from "./pages/TimeServicesPage";
@@ -258,6 +260,7 @@ function AppContent({
                           <Route path="/auth" component={() => null} />
                           <Route path="/join-the-grid" component={JoinTheGrid} />
                           <Route path="/spotify/callback" component={SpotifyCallbackPage} />
+                          <Route path="/smartcar/callback" component={SmartcarCallbackPage} />
                           <Route path="/logout" component={EnhancedLogoutPage} />
                           
                           {/* User onboarding pages */}
