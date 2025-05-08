@@ -67,8 +67,8 @@ const BetaWelcomeModal: React.FC<BetaWelcomeModalProps> = ({ isOpen, onClose }) 
       return;
     }
     
-    // Legal agreements accepted (step 3) - complete flow
-    if (step === 3 && allAgreed) {
+    // Final step - complete flow
+    if (step === 6) {
       // Start exit animation
       setIsExiting(true);
       
@@ -79,7 +79,7 @@ const BetaWelcomeModal: React.FC<BetaWelcomeModalProps> = ({ isOpen, onClose }) 
       return;
     }
     
-    // Move to next step (only for steps 1-2)
+    // Move to next step
     setStep(prev => prev + 1);
     setError(null);
   };
@@ -133,17 +133,17 @@ const BetaWelcomeModal: React.FC<BetaWelcomeModalProps> = ({ isOpen, onClose }) 
     }
   };
   
-  // Progress dots - now only showing steps 1-3
+  // Progress dots
   const renderProgressDots = () => {
     return (
       <div className="flex space-x-2 items-center justify-center mt-6">
-        {[1, 2, 3].map((dot) => (
+        {[1, 2, 3, 4, 5, 6].map((dot) => (
           <div 
             key={dot}
             className={`
               w-2.5 h-2.5 rounded-full transition-all duration-300 
               ${dot === step ? 
-                (step === 3 && allAgreed ? 'bg-[#08c519] w-4 h-4' : 'bg-[#1982FC] w-4 h-4') : 
+                (step === 6 ? 'bg-[#08c519] w-4 h-4' : 'bg-[#1982FC] w-4 h-4') : 
                 (dot < step ? 'bg-gray-300' : 'bg-gray-600')}
             `}
           />
