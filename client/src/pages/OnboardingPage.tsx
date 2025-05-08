@@ -15,8 +15,6 @@ const OnboardingPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
-
-  
   // Legal document states
   const [activeDocument, setActiveDocument] = useState<string | null>(null);
   const [termsAgreed, setTermsAgreed] = useState(false);
@@ -131,7 +129,7 @@ const OnboardingPage: React.FC = () => {
       try {
         // Step 1: Update user profile
         // Get Auth0 token from localStorage
-        const auth0Token = localStorage.getItem('auth0_user_token');
+        const auth0Token = localStorage.getItem('auth0_token');
         console.log('Auth0 token available:', !!auth0Token, 'User available:', !!user);
         
         const profileResponse = await fetch('/api/user/profile', {

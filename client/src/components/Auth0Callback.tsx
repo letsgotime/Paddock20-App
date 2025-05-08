@@ -61,25 +61,12 @@ const Auth0Callback = () => {
             console.log('Auth0 token stored in localStorage for onboarding');
           }
           
-          // IMPORTANT: Follow this flow: Auth0 → Beta Welcome → Onboarding → Dashboard
-          // Keep these flows separate rather than coupling them
+          // IMPORTANT: Follow this flow exactly: Auth0 → Beta Welcome → Onboarding → Dashboard
           
-          // Check beta status - if beta flow is required, direct to beta welcome first
-          console.log('✅ Auth0 complete - determining next steps');
-          
-          // Get beta status from localStorage - it might be set already
-          const betaStatus = localStorage.getItem('paddock20_beta_status');
-          
-          // If user has already seen beta welcome or completed beta onboarding, skip to onboarding
-          if (betaStatus === 'accepted') {
-            console.log('Beta already accepted - directing to onboarding');
-            setLocation('/onboarding');
-          } else {
-            // Otherwise, start with beta welcome
-            console.log('Beta status pending - directing to beta welcome');
-            localStorage.setItem('paddock20_beta_status', 'pending');
-            setLocation('/beta-welcome');
-          }
+          // Always direct to Beta Welcome page first
+          console.log('✅ Auth0 complete - directing to beta welcome process');
+          localStorage.setItem('paddock20_beta_status', 'pending');
+          setLocation('/beta-welcome');
         }, 500);
       } 
       // Authentication error
