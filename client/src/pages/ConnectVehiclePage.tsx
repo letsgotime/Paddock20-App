@@ -1,143 +1,202 @@
 import React, { useEffect, useState } from 'react';
-import { useAuth } from '@/auth/useAuth';
+import { Link } from 'wouter';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
-import { Loader2, Car, Info, Zap } from 'lucide-react';
+import { Car, Link as LinkIcon, Shield, Bluetooth, Loader2 } from 'lucide-react';
+import { useAuth } from '@/auth/useAuth';
 import { apiRequest } from '@/lib/queryClient';
-import { useLocation } from 'wouter';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
+// Component for initiating the Smartcar connection process
 export default function ConnectVehiclePage() {
-  const { user, loading } = useAuth();
-  const [, navigate] = useLocation();
+  const { user } = useAuth();
   const [authUrl, setAuthUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
+    // Get the Smartcar authorization URL
     const getAuthUrl = async () => {
       try {
-        setIsLoading(true);
+        setLoading(true);
+        setError(null);
+        
         const response = await apiRequest('GET', '/api/smartcar/auth-url');
         const data = await response.json();
         
-        if (data.success) {
+        if (data.authUrl) {
           setAuthUrl(data.authUrl);
         } else {
-          setError(data.message || 'Failed to get authentication URL');
+          setError(data.message || 'Failed to get authorization URL');
         }
       } catch (err) {
-        setError('Error connecting to vehicle service');
-        console.error('Error getting Smartcar auth URL:', err);
+        console.error('Error getting auth URL:', err);
+        setError('Failed to connect to Smartcar service');
       } finally {
-        setIsLoading(false);
+        setLoading(false);
       }
     };
 
     if (user) {
       getAuthUrl();
+    } else {
+      setLoading(false);
+      setError('You need to be logged in to connect your vehicle');
     }
   }, [user]);
 
-  if (loading) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-      </div>
-    );
-  }
-
-  if (!user) {
-    return (
-      <div className="container max-w-7xl mx-auto px-4 py-8">
-        <Alert variant="destructive" className="mb-6">
-          <Info className="h-4 w-4" />
-          <AlertTitle>Authentication Required</AlertTitle>
-          <AlertDescription>
-            You need to be logged in to connect your vehicle.
-          </AlertDescription>
-        </Alert>
-        <Button onClick={() => navigate('/auth')}>Log In</Button>
-      </div>
-    );
-  }
-
-  const handleConnect = () => {
-    if (authUrl) {
-      window.location.href = authUrl;
-    }
-  };
-
   return (
     <div className="container max-w-3xl mx-auto px-4 py-12">
-      <Card className="border-2">
-        <CardHeader>
-          <CardTitle className="flex items-center gap-2">
-            <Car className="h-6 w-6 text-carolina-blue" />
-            <span>Connect Your Vehicle</span>
-          </CardTitle>
-          <CardDescription>
-            Connect your vehicle to PADDOCK20 to unlock advanced features and insights.
-          </CardDescription>
-        </CardHeader>
-        
-        <CardContent className="space-y-6">
-          <Alert className="bg-blue-50 border-blue-200">
-            <Info className="h-4 w-4 text-blue-600" />
-            <AlertTitle className="text-blue-700">How It Works</AlertTitle>
-            <AlertDescription className="text-blue-600">
-              We use Smartcar to securely connect to your vehicle. You'll be redirected to select your vehicle
-              and authorize connection. Your data is secure and you can revoke access at any time.
-            </AlertDescription>
-          </Alert>
+      <h1 className="text-3xl font-semibold mb-8 flex items-center">
+        <Car className="mr-2 h-8 w-8 text-carolina-blue" />
+        <span>Connect Your Vehicle</span>
+      </h1>
+      
+      <div className="grid gap-8 md:grid-cols-2">
+        {/* Smartcar connection card */}
+        <Card className={`overflow-hidden ${authUrl ? 'border-carolina-blue border-2' : ''}`}>
+          <CardHeader className="bg-gradient-to-r from-blue-900 to-carolina-blue pb-8">
+            <CardTitle className="text-white flex items-center">
+              <Car className="mr-2 h-5 w-5" />
+              <span>Smartcar Connection</span>
+            </CardTitle>
+            <CardDescription className="text-gray-100">
+              Connect with supported vehicle platforms
+            </CardDescription>
+          </CardHeader>
           
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div className="border rounded-lg p-4 bg-slate-50">
-              <div className="flex items-center gap-2 mb-2">
-                <Zap className="h-5 w-5 text-green-600" />
-                <h3 className="font-semibold">Real-time Data</h3>
+          <CardContent className="pt-6">
+            {loading ? (
+              <div className="flex justify-center py-6">
+                <Loader2 className="h-10 w-10 animate-spin text-carolina-blue" />
               </div>
-              <p className="text-sm text-slate-600">
-                Access odometer, fuel level, tire pressure, battery status and more from your dashboard.
-              </p>
-            </div>
-            <div className="border rounded-lg p-4 bg-slate-50">
-              <div className="flex items-center gap-2 mb-2">
-                <Car className="h-5 w-5 text-green-600" />
-                <h3 className="font-semibold">Vehicle Controls</h3>
-              </div>
-              <p className="text-sm text-slate-600">
-                Lock/unlock doors, start climate control, and access other remote features from anywhere.
-              </p>
-            </div>
-          </div>
-          
-          {error && (
-            <Alert variant="destructive">
-              <AlertTitle>Error</AlertTitle>
-              <AlertDescription>{error}</AlertDescription>
-            </Alert>
-          )}
-        </CardContent>
-        
-        <CardFooter className="flex justify-end">
-          <Button 
-            size="lg"
-            onClick={handleConnect} 
-            disabled={isLoading || !authUrl}
-            className="bg-carolina-blue hover:bg-carolina-blue/90"
-          >
-            {isLoading ? (
-              <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" /> 
-                Loading...
-              </>
+            ) : error ? (
+              <Alert variant="destructive" className="mb-4">
+                <AlertTitle>Connection Error</AlertTitle>
+                <AlertDescription>{error}</AlertDescription>
+              </Alert>
             ) : (
-              <>Connect My Vehicle</>
+              <>
+                <div className="space-y-4">
+                  <p>
+                    Connecting your vehicle with Smartcar provides enhanced features:
+                  </p>
+                  
+                  <ul className="space-y-2">
+                    <li className="flex items-start">
+                      <Shield className="mt-1 h-4 w-4 mr-2 text-green-500 shrink-0" />
+                      <span>Secure, read-only access to vehicle data</span>
+                    </li>
+                    <li className="flex items-start">
+                      <LinkIcon className="mt-1 h-4 w-4 mr-2 text-green-500 shrink-0" />
+                      <span>Works with multiple vehicle brands</span>
+                    </li>
+                    <li className="flex items-start">
+                      <Car className="mt-1 h-4 w-4 mr-2 text-green-500 shrink-0" />
+                      <span>Vehicle information, location, and odometer</span>
+                    </li>
+                  </ul>
+                </div>
+              </>
             )}
-          </Button>
-        </CardFooter>
-      </Card>
+          </CardContent>
+          
+          <CardFooter>
+            {authUrl ? (
+              <Button 
+                className="w-full bg-carolina-blue hover:bg-blue-600" 
+                asChild
+              >
+                <a href={authUrl} target="_self">
+                  <Car className="mr-2 h-4 w-4" />
+                  Connect with Smartcar
+                </a>
+              </Button>
+            ) : (
+              <Button 
+                className="w-full" 
+                disabled={loading || !!error}
+              >
+                <Car className="mr-2 h-4 w-4" />
+                {loading ? 'Loading...' : 'Connect with Smartcar'}
+              </Button>
+            )}
+          </CardFooter>
+        </Card>
+        
+        {/* OBD-II connection card */}
+        <Card>
+          <CardHeader className="bg-gradient-to-r from-slate-800 to-slate-700 pb-8">
+            <CardTitle className="text-white flex items-center">
+              <Bluetooth className="mr-2 h-5 w-5" />
+              <span>OBD-II Connection</span>
+            </CardTitle>
+            <CardDescription className="text-gray-200">
+              Connect with your own OBD-II adapter
+            </CardDescription>
+          </CardHeader>
+          
+          <CardContent className="pt-6">
+            <div className="space-y-4">
+              <p>
+                Connect using an ELM327-compatible OBD-II adapter for advanced diagnostics:
+              </p>
+              
+              <ul className="space-y-2">
+                <li className="flex items-start">
+                  <Bluetooth className="mt-1 h-4 w-4 mr-2 text-carolina-blue shrink-0" />
+                  <span>Works with Bluetooth, WiFi, or USB adapters</span>
+                </li>
+                <li className="flex items-start">
+                  <Shield className="mt-1 h-4 w-4 mr-2 text-carolina-blue shrink-0" />
+                  <span>Direct connection to your vehicle's ECU</span>
+                </li>
+                <li className="flex items-start">
+                  <Car className="mt-1 h-4 w-4 mr-2 text-carolina-blue shrink-0" />
+                  <span>Real-time sensor data and diagnostic codes</span>
+                </li>
+              </ul>
+            </div>
+          </CardContent>
+          
+          <CardFooter>
+            <Button 
+              variant="outline"
+              className="w-full" 
+              asChild
+            >
+              <Link to="/obd-diagnostics">
+                <Bluetooth className="mr-2 h-4 w-4" />
+                Open OBD Diagnostics
+              </Link>
+            </Button>
+          </CardFooter>
+        </Card>
+      </div>
+      
+      <div className="mt-10 bg-slate-800 rounded-lg p-6 border border-slate-700">
+        <h2 className="text-xl font-semibold mb-4 flex items-center">
+          <Shield className="mr-2 h-5 w-5 text-carolina-blue" />
+          <span>Your Privacy & Security</span>
+        </h2>
+        <p className="mb-4">
+          Paddock20 values your privacy and security. We follow industry best practices:
+        </p>
+        <ul className="space-y-2">
+          <li className="flex items-start">
+            <Shield className="mt-1 h-4 w-4 mr-2 text-green-500 shrink-0" />
+            <span>All data is encrypted in transit and at rest</span>
+          </li>
+          <li className="flex items-start">
+            <Shield className="mt-1 h-4 w-4 mr-2 text-green-500 shrink-0" />
+            <span>Vehicle connections are read-only by default</span>
+          </li>
+          <li className="flex items-start">
+            <Shield className="mt-1 h-4 w-4 mr-2 text-green-500 shrink-0" />
+            <span>You can disconnect your vehicle at any time</span>
+          </li>
+        </ul>
+      </div>
     </div>
   );
 }

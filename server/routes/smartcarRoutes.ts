@@ -2,6 +2,15 @@ import express, { Request, Response } from 'express';
 import { smartcarService } from '../services/smartcarService';
 import { storage } from '../storage';
 
+// Extend Express Request type to include user
+declare global {
+  namespace Express {
+    interface User {
+      id: string | number;
+    }
+  }
+}
+
 const router = express.Router();
 
 // Get Smartcar authentication URL

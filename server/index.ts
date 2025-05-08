@@ -6,8 +6,7 @@ import { createServer } from "http";
 import { setupVite } from "./vite";
 import { registerRoutes } from "./routes";
 import obdRoutes from "./routes/obdRoutes";
-// Smartcar integration temporarily on hold
-// import smartcarRoutes from "./routes/smartcarRoutes";
+import smartcarRoutes from "./routes/smartcarRoutes";
 
 // Register specialized routes with the main Express app
 async function setupSpecializedRoutes(app: express.Express) {
@@ -15,9 +14,9 @@ async function setupSpecializedRoutes(app: express.Express) {
   app.use('/api/obd', obdRoutes);
   console.log("OBD routes registered successfully");
   
-  // Smartcar routes temporarily on hold
-  // app.use('/api/smartcar', smartcarRoutes);
-  // console.log("Smartcar routes registered successfully");
+  // Add the Smartcar routes
+  app.use('/api/smartcar', smartcarRoutes);
+  console.log("Smartcar routes registered successfully");
 }
 
 async function main() {

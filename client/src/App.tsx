@@ -43,9 +43,8 @@ import AddVehiclePage from "./pages/AddVehiclePage";
 import VehicleModsPage from "./pages/VehicleModsPage";
 import ModPlannerPage from "./pages/ModPlannerPage";
 import OBDDiagnosticsPage from "./pages/OBDDiagnosticsPage";
-// Smartcar integration temporarily on hold
-// import ConnectVehiclePage from "./pages/ConnectVehiclePage";
-// import SmartcarCallbackPage from "./pages/SmartcarCallbackPage";
+import ConnectVehiclePage from "./pages/ConnectVehiclePage";
+import SmartcarCallbackPage from "./pages/SmartcarCallbackPage";
 import WeatherPage from "./pages/WeatherPage";
 import Weather from "./pages/Weather";
 import TimeServicesPage from "./pages/TimeServicesPage";
@@ -261,8 +260,7 @@ function AppContent({
                           <Route path="/auth" component={() => null} />
                           <Route path="/join-the-grid" component={JoinTheGrid} />
                           <Route path="/spotify/callback" component={SpotifyCallbackPage} />
-                          {/* Smartcar integration temporarily on hold */}
-                          {/* <Route path="/smartcar/callback" component={SmartcarCallbackPage} /> */}
+                          <Route path="/smartcar/callback" component={SmartcarCallbackPage} />
                           <Route path="/logout" component={EnhancedLogoutPage} />
                           
                           {/* User onboarding pages */}
@@ -298,6 +296,7 @@ function AppContent({
                           <Route path="/vehicle-mods" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_GARAGE_VAULT]}><VehicleModsPage /></ProtectedRoute>} />
                           <Route path="/mod-planner" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_GARAGE_VAULT]}><ModPlannerPage /></ProtectedRoute>} />
                           <Route path="/obd-diagnostics" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_GARAGE_VAULT]}><OBDDiagnosticsPage /></ProtectedRoute>} />
+                          <Route path="/connect-vehicle" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_GARAGE_VAULT]}><ConnectVehiclePage /></ProtectedRoute>} />
                           <Route path="/weather-paddock" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_WEATHER_PADDOCK]}><WeatherPage /></ProtectedRoute>} />
                           <Route path="/weather" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_WEATHER_PADDOCK]}><Weather /></ProtectedRoute>} />
                           <Route path="/time-services" component={() => <ProtectedRoute><TimeServicesPage /></ProtectedRoute>} />
