@@ -107,11 +107,12 @@ function App() {
                               
                               {/* Routes defined here */}
                               <Switch>
-                                {/* Directly route to JuiceBox as per user request */}
-                                <Route path="/" component={JuiceBox} />
-                                
-                                {/* All other routes */}
+                                {/* Primary routes */}
+                                <Route path="/" component={BetaWelcomePage} />
+                                <Route path="/home" component={ThePaddockPage} />
+                                <Route path="/onboarding" component={SimpleOnboardingPage} />
                                 <Route path="/juicebox" component={JuiceBox} />
+                                <Route path="/the-paddock" component={ThePaddockPage} />
                                 <Route path="/weather-paddock" component={WeatherPage} />
                                 <Route path="/garage" component={GarageVaultPage} />
                                 <Route path="/add-vehicle" component={AddVehiclePage} />
@@ -121,11 +122,9 @@ function App() {
                                 <Route path="/drive-journal" component={DriveJournalPage} />
                                 <Route path="/tires-timepieces" component={TiresTimepieces} />
                                 <Route path="/podium-pursuit" component={PodiumPursuitPage} />
-                                <Route path="/the-paddock" component={PaddockWrapper} />
-                                <Route path="/onboarding" component={SimpleOnboardingPage} />
                               
-                                {/* If no routes match, show JuiceBox */}
-                                <Route component={JuiceBox} />
+                                {/* Fallback route */}
+                                <Route component={BetaWelcomePage} />
                               </Switch>
                             </main>
                             
