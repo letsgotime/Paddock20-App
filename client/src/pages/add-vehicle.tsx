@@ -691,15 +691,22 @@ export default function AddVehiclePage() {
                     )}
                     
                     {obdConnected && !obdVehicleData && (
-                      <div className="flex flex-col items-center justify-center py-6">
-                        <RotateCw className="h-8 w-8 animate-spin text-primary mb-4" />
-                        <p className="text-sm text-center">
-                          Connected to OBD adapter. Attempting to read vehicle information...
-                        </p>
-                        <p className="text-xs text-muted-foreground text-center mt-2">
-                          If no data appears, your vehicle may not support VIN retrieval through OBD.
-                          You can still use the manual entry method.
-                        </p>
+                      <div className="space-y-4">
+                        <Alert>
+                          <AlertCircle className="h-4 w-4" />
+                          <AlertTitle>OBD Connected</AlertTitle>
+                          <AlertDescription>
+                            Connected to OBD adapter. Attempting to read vehicle information...
+                          </AlertDescription>
+                        </Alert>
+                        
+                        <div className="flex flex-col items-center justify-center py-3">
+                          <RotateCw className="h-8 w-8 animate-spin text-primary mb-3" />
+                          <p className="text-xs text-muted-foreground text-center">
+                            If no data appears, your vehicle may not support VIN retrieval through OBD.
+                            You can still use the manual entry method.
+                          </p>
+                        </div>
                       </div>
                     )}
                   </div>

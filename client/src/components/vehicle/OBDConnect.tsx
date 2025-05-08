@@ -12,7 +12,8 @@ type OBDConnectProps = {
 }
 
 export default function OBDConnect({ onConnect, onDisconnect }: OBDConnectProps) {
-  const [status, setStatus] = useState<'idle' | 'starting' | 'connected' | 'disconnecting' | 'error'>('idle');
+  type ConnectionStatus = 'idle' | 'starting' | 'connected' | 'disconnecting' | 'error';
+  const [status, setStatus] = useState<ConnectionStatus>('idle');
   const [serviceStatus, setServiceStatus] = useState<'running' | 'stopped' | 'loading'>('loading');
   const [availablePorts, setAvailablePorts] = useState<string[]>([]);
   const [selectedPort, setSelectedPort] = useState<string>('');
@@ -264,7 +265,7 @@ export default function OBDConnect({ onConnect, onDisconnect }: OBDConnectProps)
             <Button 
               size="sm"
               onClick={startService} 
-              disabled={status === 'starting' || status === 'disconnecting'}
+              disabled={refreshing}
             >
               {status === 'starting' ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
@@ -280,7 +281,7 @@ export default function OBDConnect({ onConnect, onDisconnect }: OBDConnectProps)
               variant="destructive" 
               size="sm"
               onClick={stopService} 
-              disabled={status === 'disconnecting'}
+              disabled={refreshing}
             >
               {status === 'disconnecting' ? (
                 <Loader2 className="h-4 w-4 animate-spin mr-2" />
