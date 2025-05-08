@@ -17,7 +17,18 @@ import {
   clearAllAuthData, 
   getUserFromStorage,
   hasCompletedOnboarding,
-  markOnboardingComplete
+  markOnboardingComplete,
+  saveAuthToken,
+  getAuthToken,
+  getRefreshToken,
+  saveRefreshToken,
+  setSessionPersistence,
+  isSessionPersistent,
+  shouldAutoLogin,
+  setRememberMe,
+  getRememberMe,
+  isUsernameAvailable,
+  saveUsernameCheckStatus
 } from './storage';
 import { 
   checkAuthStatus, 
@@ -77,9 +88,14 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setLoading(true);
     
     try {
-      // Try to get cached user first for faster UI rendering
+      // Check if we should auto-login
+      const shouldAttemptAutoLogin = shouldAutoLogin();
+      
+      // Try to get cached user and token first for faster UI rendering
       const cachedUser = getUserFromStorage();
-      if (cachedUser) {
+      const authToken = getAuthToken();
+      
+      if (cachedUser && authToken) {
         setUser(cachedUser);
         setIsAuthenticated(true);
         
@@ -89,6 +105,10 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         }
         
         paddockLog('Cached driver credentials found, welcome back to the grid');
+      } else if (!shouldAttemptAutoLogin) {
+        // If we shouldn't auto-login and have no valid credentials, return early
+        setLoading(false);
+        return;
       }
 
       // Verify with server
@@ -96,6 +116,18 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       
       if (response.success && response.data) {
         paddockLog('Driver authenticated with pit wall');
+        
+        // Save token if it exists in the response
+        if (response.data.token) {
+          saveAuthToken(response.data.token);
+          delete response.data.token; // Remove token from user object
+        }
+        
+        // Save refresh token if it exists
+        if (response.data.refreshToken) {
+          saveRefreshToken(response.data.refreshToken);
+          delete response.data.refreshToken; // Remove from user object
+        }
         
         // Ensure the user has a proper role assigned
         const userWithDefaults = {
@@ -109,6 +141,9 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         setIsAuthenticated(true);
         saveUserToStorage(userWithDefaults);
         
+        // Maintain session persistence based on remember me setting
+        setSessionPersistence(getRememberMe());
+        
         // Refresh onboarding status
         if (userWithDefaults.id) {
           refreshOnboardingStatus(userWithDefaults.id);
@@ -121,7 +156,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         paddockLog('Driver not authenticated with pit wall');
       }
     } catch (err: any) {
-      console.error('Authentication check error:', err);
+      console.error('Auth status check error:', err);
       setError(err.message || 'Failed to verify authentication status');
       setUser(null);
       setIsAuthenticated(false);
@@ -138,9 +173,30 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
     setLoading(true);
 
     try {
+      // Remember me flag can be optionally passed via credentials
+      const rememberMe = credentials.rememberMe || false;
+      setRememberMe(rememberMe);
+      
+      // If remember me is true, enable session persistence
+      if (rememberMe) {
+        setSessionPersistence(true);
+      }
+      
       const response = await loginUser(credentials);
       
       if (response.success && response.data) {
+        // Save token if it exists in the response
+        if (response.data.token) {
+          saveAuthToken(response.data.token);
+          delete response.data.token; // Remove token from user object
+        }
+        
+        // Save refresh token if it exists
+        if (response.data.refreshToken) {
+          saveRefreshToken(response.data.refreshToken);
+          delete response.data.refreshToken; // Remove from user object
+        }
+        
         // Ensure the user has a proper role assigned
         const userWithDefaults = {
           ...response.data,
@@ -154,6 +210,7 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
         
         paddockLog('Driver successfully checked in at the paddock', userWithDefaults.username);
         paddockLog('Driver role', userWithDefaults.role);
+        paddockLog('Session persistence:', rememberMe ? 'enabled' : 'disabled');
         
         // Check and refresh onboarding status
         if (userWithDefaults.id) {
