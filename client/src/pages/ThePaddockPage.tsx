@@ -59,6 +59,8 @@ interface ThePaddockPageProps {
 }
 
 const ThePaddockPage = ({ demoMode = false }: ThePaddockPageProps) => {
+  // Debug demo mode setting
+  console.log('ThePaddockPage: demoMode =', demoMode, 'path =', window.location.pathname);
   // Component state for expandable sections
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
   const [animatingSection, setAnimatingSection] = useState<string | null>(null);
