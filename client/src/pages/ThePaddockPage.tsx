@@ -358,19 +358,19 @@ const ThePaddockPage = ({ demoMode = false }: ThePaddockPageProps) => {
             </div>
             
             <div className="mt-4 md:mt-0">
-              {user && (
+              {(user || demoMode) && (
                 <div className="flex items-center gap-4">
                   <Avatar>
                     <AvatarImage src="/assets/avatar.png" />
                     <AvatarFallback className="bg-blue-900 text-white">
-                      {user.username?.substring(0, 2).toUpperCase() || 'P2'}
+                      {user?.username?.substring(0, 2).toUpperCase() || 'P2'}
                     </AvatarFallback>
                   </Avatar>
                   <div>
-                    <p className="font-medium">{user.username || 'Driver'}</p>
+                    <p className="font-medium">{user?.username || 'Test Driver'}</p>
                     <div className="flex items-center gap-2">
                       <Badge variant="secondary" className="bg-[#1982FC] text-white text-xs font-medium">
-                        PADDOCK20 BETA
+                        {demoMode ? 'DEMO MODE' : 'PADDOCK20 BETA'}
                       </Badge>
                     </div>
                   </div>

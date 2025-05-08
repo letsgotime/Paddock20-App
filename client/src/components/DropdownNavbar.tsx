@@ -1,65 +1,209 @@
-import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
-import { VolumeX, Volume2 } from "lucide-react";
-import { playMotorsportSound, getSoundSettings, setSoundEnabled } from "../services/soundService";
+import { useEffect } from "react";
+import { useLocation, Link } from "wouter";
+import { 
+  Car, Cloud, Calendar, Book, Map, 
+  Settings, Award, User, Package, 
+  BarChart3, ShoppingCart, Wrench, FileSpreadsheet,
+  X, LogOut
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { useNativeAuth } from "@/hooks/useNativeAuth";
 
-const DropdownNavbar = () => {
-  const [soundEnabled, setSoundEnabledState] = useState(true);
-  const location = useLocation();
+interface DropdownNavbarProps {
+  isOpen: boolean;
+  onClose: () => void;
+  demoMode?: boolean;
+}
+
+const DropdownNavbar = ({ isOpen, onClose, demoMode = false }: DropdownNavbarProps) => {
+  const [location, navigate] = useLocation();
+  const { logout } = useNativeAuth();
   
-  // Initialize sound settings from sound service
+  // Handle navigation with closing menu
+  const navigateTo = (path: string) => {
+    navigate(path);
+    onClose();
+  };
+
+  // Group menu items by category
+  const menuGroups = [
+    {
+      title: "Main",
+      items: [
+        { 
+          name: "Dashboard", 
+          path: demoMode ? "/demo" : "/dashboard", 
+          icon: <BarChart3 className="h-4 w-4 mr-2" /> 
+        },
+        { 
+          name: "Garage Vault", 
+          path: "/garage", 
+          icon: <Car className="h-4 w-4 mr-2" /> 
+        },
+        { 
+          name: "Weather Paddock", 
+          path: "/weather-paddock", 
+          icon: <Cloud className="h-4 w-4 mr-2" /> 
+        },
+        { 
+          name: "Drive Journal", 
+          path: "/drive-journal", 
+          icon: <Book className="h-4 w-4 mr-2" /> 
+        },
+        { 
+          name: "Route Planner", 
+          path: "/route-planner", 
+          icon: <Map className="h-4 w-4 mr-2" /> 
+        },
+      ]
+    },
+    {
+      title: "Premium Features",
+      items: [
+        { 
+          name: "Podium Pursuit", 
+          path: "/podium-pursuit", 
+          icon: <Award className="h-4 w-4 mr-2" /> 
+        },
+        { 
+          name: "Manifestation Station", 
+          path: "/manifestation-station", 
+          icon: <FileSpreadsheet className="h-4 w-4 mr-2" /> 
+        },
+        { 
+          name: "Juice Box", 
+          path: "/juicebox", 
+          icon: <Package className="h-4 w-4 mr-2" /> 
+        },
+        { 
+          name: "Tires & Timepieces", 
+          path: "/tires-timepieces", 
+          icon: <ShoppingCart className="h-4 w-4 mr-2" /> 
+        },
+      ]
+    },
+    {
+      title: "Account",
+      items: [
+        { 
+          name: "Profile", 
+          path: "/settings", 
+          icon: <User className="h-4 w-4 mr-2" /> 
+        },
+        { 
+          name: "Connect Vehicle", 
+          path: "/connect-vehicle", 
+          icon: <Wrench className="h-4 w-4 mr-2" /> 
+        },
+        { 
+          name: "Settings", 
+          path: "/settings", 
+          icon: <Settings className="h-4 w-4 mr-2" /> 
+        },
+      ]
+    }
+  ];
+
+  // Close on ESC key
   useEffect(() => {
-    const soundSettings = getSoundSettings();
-    setSoundEnabledState(soundSettings.enabled);
-  }, []);
+    const handleEsc = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') onClose();
+    };
+    
+    window.addEventListener('keydown', handleEsc);
+    return () => window.removeEventListener('keydown', handleEsc);
+  }, [onClose]);
+
+  if (!isOpen) return null;
 
   return (
-    <nav className="flex items-center justify-between p-4 bg-black border-b border-gray-700 fixed top-0 left-0 right-0 z-40">
-      <Link to="/dashboard" className="flex items-center font-orbitron text-2xl no-underline">
-        <img 
-          src="/assets/GTM Logo - Green-White.png" 
-          alt="GoTime Motorsports" 
-          className="h-10 w-auto mr-2"
-        />
-      </Link>
-      
-      <div className="flex items-center space-x-3">
-        {/* Sound toggle button */}
-        <button
-          onClick={() => {
-            // Toggle sound setting
-            const newState = !soundEnabled;
-            setSoundEnabledState(newState);
-            setSoundEnabled(newState);
-            // Play sound effect for toggle
-            if (newState) {
-              playMotorsportSound('radio_beep');
-            }
-          }}
-          className="text-gray-400 hover:text-blue-400 p-2 rounded-full transition-colors duration-200"
-          aria-label={soundEnabled ? "Mute sounds" : "Enable sounds"}
-          title={soundEnabled ? "Mute sounds" : "Enable sounds"}
-        >
-          {soundEnabled ? <Volume2 size={18} /> : <VolumeX size={18} />}
-        </button>
+    <div className="fixed inset-0 bg-black bg-opacity-80 z-50 overflow-y-auto">
+      <div className="relative w-full max-w-md mx-auto bg-[#1a1a1a] min-h-screen shadow-xl border-r border-[#333]">
+        {/* Header */}
+        <div className="flex items-center justify-between p-4 border-b border-[#333]">
+          <h2 className="text-xl font-bold text-white font-orbitron">
+            <span className="text-[#1982FC]">PADDOCK</span>
+            <span className="text-[#08c519]">20</span>
+          </h2>
+          
+          <Button 
+            variant="ghost" 
+            size="sm" 
+            onClick={onClose}
+            className="text-gray-400 hover:text-white"
+          >
+            <X className="h-5 w-5" />
+          </Button>
+        </div>
         
-        {/* Sound Library link */}
-        <Link 
-          to="/sound-library" 
-          className="text-gray-400 hover:text-blue-400 p-2 transition-colors duration-200"
-          aria-label="Sound Library"
-          title="Sound Library"
-          onClick={() => soundEnabled && playMotorsportSound('button_press')}
-        >
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M2 9.5a6 2.5 0 0 1 6 -2.5"></path>
-            <path d="M8 17a6 2.5 0 0 0 6 -2.5"></path>
-            <path d="M14 7a6 2.5 0 0 1 6 -2.5"></path>
-            <path d="M20 14.5a6 2.5 0 0 1 -6 2.5"></path>
-          </svg>
-        </Link>
+        {/* Menu items */}
+        <div className="p-4">
+          {menuGroups.map((group, index) => (
+            <div key={index} className="mb-6">
+              <h3 className="text-gray-400 text-xs uppercase tracking-wider mb-2 font-semibold">
+                {group.title}
+              </h3>
+              
+              <div className="space-y-1">
+                {group.items.map((item, itemIndex) => (
+                  <Button
+                    key={itemIndex}
+                    variant="ghost"
+                    size="sm"
+                    className={`w-full justify-start text-left ${
+                      location === item.path 
+                        ? 'bg-[#1982FC]/20 text-[#1982FC]' 
+                        : 'text-gray-300 hover:text-white hover:bg-gray-800'
+                    }`}
+                    onClick={() => navigateTo(item.path)}
+                  >
+                    {item.icon}
+                    {item.name}
+                  </Button>
+                ))}
+              </div>
+            </div>
+          ))}
+          
+          {/* Logout button */}
+          {!demoMode && (
+            <div className="mt-8">
+              <Button
+                variant="destructive"
+                size="sm"
+                className="w-full justify-start"
+                onClick={() => {
+                  logout();
+                  navigate('/auth');
+                  onClose();
+                }}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Logout
+              </Button>
+            </div>
+          )}
+          
+          {/* Demo mode exit button */}
+          {demoMode && (
+            <div className="mt-8">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full justify-start"
+                onClick={() => {
+                  navigate('/auth');
+                  onClose();
+                }}
+              >
+                <LogOut className="h-4 w-4 mr-2" />
+                Exit Demo Mode
+              </Button>
+            </div>
+          )}
+        </div>
       </div>
-    </nav>
+    </div>
   );
 };
 
