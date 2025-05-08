@@ -30,6 +30,18 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
       setCheckingOnboarding(true);
       
       try {
+        // Check if onboarding was just completed (special case)
+        const justCompletedOnboarding = localStorage.getItem('paddock20_onboarding_just_completed') === 'true';
+        
+        if (justCompletedOnboarding) {
+          console.log('Onboarding was just completed - bypassing checks');
+          // Clear the flag so it's only used once
+          localStorage.removeItem('paddock20_onboarding_just_completed');
+          // Allow user to continue to protected route
+          setHasCompletedOnboarding(true);
+          return;
+        }
+        
         // Get user ID safely
         const userId = user.id.toString();
         
