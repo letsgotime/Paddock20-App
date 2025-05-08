@@ -67,12 +67,12 @@ const Auth0Callback = () => {
             hasCompletedOnboarding 
           });
           
-          // Step 1: After Auth0 authentication, always direct to Beta Enrollment first
+          // Step 1: After Auth0 authentication, always direct to Beta Welcome page first
           if (!hasCompletedBetaEnrollment) {
-            console.log('✅ Auth0 complete - directing to beta enrollment process');
-            // Use beta-agreement route instead since beta-enrollment route doesn't exist
+            console.log('✅ Auth0 complete - directing to beta welcome process');
+            // Redirect to the newly added beta-welcome route
             localStorage.setItem('paddock20_beta_status', 'pending');
-            setLocation('/');
+            setLocation('/beta-welcome');
           }
           // Step 2: If beta enrollment is complete, check if onboarding is complete
           else if (!hasCompletedOnboarding) {

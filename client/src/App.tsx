@@ -199,7 +199,8 @@ function AuthenticatedContent({
           {/* Logout Page - Handles secure logout process */}
           <Route path="/logout" component={LogoutPage} />
           
-          {/* Beta Enrollment Page - Removed as not needed */}
+          {/* Beta Welcome Page - For new users to see introduction */}
+          <Route path="/beta-welcome" component={BetaWelcomePage} />
           
           {/* User Onboarding - Explicit URL path that redirects to the proper flow */}
           <Route 
