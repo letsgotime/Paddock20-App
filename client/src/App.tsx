@@ -48,6 +48,7 @@ import AddVehiclePage from "./pages/AddVehiclePage";
 import FixedSoundBar from "./components/FixedSoundBar";
 import Footer from "./components/Footer";
 import { WeatherProvider } from "./contexts/ConsolidatedWeatherContext";
+import SetupSlackIntegration from "./pages/SetupSlackIntegration";
 import { LocationServicesProvider } from "./contexts/LocationServicesContext";
 import { GalleryProvider } from "./contexts/GalleryContext";
 import { RewardsProvider } from "./contexts/RewardsContext";

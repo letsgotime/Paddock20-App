@@ -20,8 +20,11 @@ import vinDecoderRoutes from "./routes/vinDecoderRoutes";
 import smartcarRoutes from "./routes/smartcarRoutes";
 import obdRoutes from "./routes/obdRoutes";
 import onboardingFlowRoutes from "./routes/onboardingFlowRoutes";
+import consolidatedWeatherRoutes from "./routes/consolidatedWeatherRoutes";
+import slackRoutes from "./routes/slackRoutes";
 
-// OpenWeather API keys - updated May 1, 2025
+// Note: These OpenWeather API keys are now managed in the weatherDataWarehouse service
+// Keeping this for backwards compatibility during the transition period
 const OPENWEATHER_API_KEYS = {
   default: process.env.OPENWEATHER_API_KEY || "2379a18ee0e478c88aa7d4aa1df44410", // General key
   onecall: process.env.ONECALL_API_KEY || "653c5104ce3e922c371a315209765d2f",     // Special key for 3.0
@@ -271,10 +274,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register Onboarding Flow routes
   app.use(onboardingFlowRoutes);
   
-  // Using only OpenWeather API for all weather services
+  // Register consolidated weather routes using the new Weather Data Warehouse
+  app.use('/api/weather', consolidatedWeatherRoutes);
   
-  // Consolidated weather API endpoint
-  app.get('/api/weather/consolidated', async (req, res) => {
+  // Register Slack integration routes
+  app.use('/api/slack', slackRoutes);
+  
+  // Legacy OpenWeather API endpoint - marked for deprecation
+  // This will be removed in a future update once all clients migrate to the new endpoints
+  app.get('/api/weather/consolidated-legacy', async (req, res) => {
     try {
       // Ensure we're only returning JSON
       res.setHeader('Content-Type', 'application/json');

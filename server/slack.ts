@@ -1,33 +1,109 @@
 import { WebClient } from '@slack/web-api';
+import type { ChatPostMessageArguments } from '@slack/web-api';
+import { EventEmitter } from 'events';
+
+// Slack configuration
+const SLACK_CONFIG = {
+  botToken: process.env.SLACK_BOT_TOKEN,
+  signingSecret: process.env.SLACK_SIGNING_SECRET,
+  channelId: process.env.SLACK_CHANNEL_ID || 'general', // Default channel
+  clientId: process.env.SLACK_CLIENT_ID || '5156981603956.8872571224820',
+  clientSecret: process.env.SLACK_CLIENT_SECRET
+};
+
+// Type for the Slack integration state
+interface SlackState {
+  initialized: boolean;
+  lastMessage: string | null;
+  lastMessageTimestamp: Date | null;
+  lastError: Error | null;
+  connected: boolean;
+  availableChannels: string[];
+}
+
+// Global singleton for Slack client
+let slackClient: WebClient | null = null;
+
+// State management for Slack integration
+const slackState: SlackState = {
+  initialized: false,
+  lastMessage: null,
+  lastMessageTimestamp: null,
+  lastError: null,
+  connected: false,
+  availableChannels: []
+};
+
+// Event emitter for Slack events
+const slackEvents = new EventEmitter();
 
 /**
- * Returns the Slack client if properly configured
+ * Initialize the Slack client
+ * @returns Promise resolving to a boolean indicating success
  */
-export function getSlackClient(): WebClient | null {
-  if (!process.env.SLACK_BOT_TOKEN) {
-    console.log('SLACK_BOT_TOKEN environment variable is not set');
-    return null;
+export async function initializeSlackClient(): Promise<boolean> {
+  if (!SLACK_CONFIG.botToken) {
+    console.warn('Slack integration not available, alerts will only be logged');
+    return false;
   }
-  
+
   try {
-    return new WebClient(process.env.SLACK_BOT_TOKEN);
-  } catch (error) {
-    console.error('Error initializing Slack client:', error);
-    return null;
+    // Create the Slack client
+    slackClient = new WebClient(SLACK_CONFIG.botToken);
+    
+    // Test the connection
+    const authTest = await slackClient.auth.test();
+    if (!authTest.ok) {
+      throw new Error(`Slack authentication failed: ${authTest.error}`);
+    }
+    
+    // Get available channels
+    try {
+      const conversationsResponse = await slackClient.conversations.list({
+        types: 'public_channel,private_channel'
+      });
+      
+      if (conversationsResponse.channels) {
+        slackState.availableChannels = conversationsResponse.channels
+          .filter(channel => channel.name)
+          .map(channel => channel.name as string);
+      }
+    } catch (error) {
+      console.warn('Could not fetch Slack channels:', error);
+    }
+    
+    // Update state
+    slackState.initialized = true;
+    slackState.connected = true;
+    slackState.lastError = null;
+    
+    console.log('Slack integration initialized successfully');
+    slackEvents.emit('connected', authTest.user);
+    
+    return true;
+  } catch (error: any) {
+    console.error('Failed to initialize Slack client:', error.message || error);
+    slackState.lastError = error;
+    slackState.connected = false;
+    
+    slackEvents.emit('error', error);
+    
+    return false;
   }
 }
 
 /**
- * Checks if the Slack integration is configured
+ * Check if Slack integration is available and working
+ * @returns Promise resolving to a boolean indicating if Slack is working
  */
 export async function checkSlackIntegration(): Promise<boolean> {
+  if (!slackClient) {
+    return false;
+  }
+  
   try {
-    const slack = getSlackClient();
-    if (!slack) return false;
-    
-    // Test the connection
-    const result = await slack.api.test();
-    return result.ok === true;
+    const authTest = await slackClient.auth.test();
+    return authTest.ok === true;
   } catch (error) {
     console.error('Slack integration check failed:', error);
     return false;
@@ -35,115 +111,238 @@ export async function checkSlackIntegration(): Promise<boolean> {
 }
 
 /**
- * Shares a vehicle to a Slack channel
+ * Get the status of the Slack integration
+ * @returns The current Slack state
  */
-export async function shareVehicleToSlack(vehicle: any): Promise<boolean> {
+export function getSlackStatus(): SlackState {
+  return { ...slackState };
+}
+
+/**
+ * Send a message to a Slack channel
+ * @param options Message options including text and channel
+ * @returns Promise resolving to boolean indicating success
+ */
+export async function sendSlackMessage(
+  options: ChatPostMessageArguments
+): Promise<boolean> {
+  if (!slackClient || !slackState.connected) {
+    console.log('Slack message not sent (not connected):', options.text);
+    return false;
+  }
+  
   try {
-    const slack = getSlackClient();
-    if (!slack || !process.env.SLACK_CHANNEL_ID) return false;
+    const channel = options.channel || SLACK_CONFIG.channelId;
     
-    const blocks = [
-      {
-        type: 'header',
-        text: {
-          type: 'plain_text',
-          text: `Vehicle Shared: ${vehicle.year} ${vehicle.make} ${vehicle.model}`,
-          emoji: true
-        }
-      },
-      {
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: `*Details:*\n• Color: ${vehicle.color || 'N/A'}\n• VIN: ${vehicle.vin || 'N/A'}\n• Mileage: ${vehicle.mileage?.toLocaleString() || 'N/A'}`
-        }
-      }
-    ];
-    
-    // Add image if available
-    if (vehicle.imageUrl) {
-      // For Slack blocks with images, need a different approach
-      blocks.push({
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: `*Image:* ${vehicle.imageUrl}`
-        }
-      });
-    }
-    
-    const result = await slack.chat.postMessage({
-      channel: process.env.SLACK_CHANNEL_ID,
-      blocks,
-      text: `Vehicle Shared: ${vehicle.year} ${vehicle.make} ${vehicle.model}` // Fallback text
+    const result = await slackClient.chat.postMessage({
+      ...options,
+      channel
     });
     
-    return result.ok === true;
-  } catch (error) {
-    console.error('Error sharing vehicle to Slack:', error);
+    if (result.ok) {
+      slackState.lastMessage = options.text?.toString() || '';
+      slackState.lastMessageTimestamp = new Date();
+      
+      slackEvents.emit('message_sent', {
+        text: options.text,
+        channel,
+        timestamp: result.ts
+      });
+      
+      return true;
+    } else {
+      throw new Error(result.error || 'Unknown Slack error');
+    }
+  } catch (error: any) {
+    console.error('Failed to send Slack message:', error.message || error);
+    slackState.lastError = error;
+    
+    slackEvents.emit('error', error);
+    
     return false;
   }
 }
 
 /**
- * Shares an event to a Slack channel
+ * Share vehicle details to Slack
+ * @param vehicleData The vehicle data to share
+ * @param message Optional custom message
+ * @returns Promise resolving to boolean indicating success
  */
-export async function shareEventToSlack(event: any): Promise<boolean> {
-  try {
-    const slack = getSlackClient();
-    if (!slack || !process.env.SLACK_CHANNEL_ID) return false;
-    
-    const blocks = [
-      {
-        type: 'header',
-        text: {
-          type: 'plain_text',
-          text: `Event Shared: ${event.title}`,
-          emoji: true
-        }
-      },
-      {
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: `*Date:* ${event.date}\n*Type:* ${event.type}\n*Description:* ${event.description || 'No description provided'}`
-        }
-      }
-    ];
-    
-    // Add image if available
-    if (event.imageUrl) {
-      // For Slack blocks with images, need a different approach
-      blocks.push({
-        type: 'section',
-        text: {
-          type: 'mrkdwn',
-          text: `*Image:* ${event.imageUrl}`
-        }
-      });
-    }
-    
-    const result = await slack.chat.postMessage({
-      channel: process.env.SLACK_CHANNEL_ID,
-      blocks,
-      text: `Event Shared: ${event.title}` // Fallback text
-    });
-    
-    return result.ok === true;
-  } catch (error) {
-    console.error('Error sharing event to Slack:', error);
+export async function shareVehicleToSlack(
+  vehicleData: any,
+  message: string = 'New vehicle added:'
+): Promise<boolean> {
+  if (!slackClient) {
+    console.log('Vehicle not shared to Slack (not connected):', vehicleData.name);
     return false;
   }
+  
+  let vehicleEmoji = '🚗';
+  if (vehicleData.type === 'Motorcycle') vehicleEmoji = '🏍️';
+  if (vehicleData.type === 'Truck') vehicleEmoji = '🚚';
+  if (vehicleData.type === 'SUV') vehicleEmoji = '🚙';
+  
+  const blocks = [
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: `*${message}* ${vehicleEmoji}`
+      }
+    },
+    {
+      type: 'section',
+      fields: [
+        {
+          type: 'mrkdwn',
+          text: `*Vehicle:*\n${vehicleData.year} ${vehicleData.make} ${vehicleData.model}`
+        },
+        {
+          type: 'mrkdwn',
+          text: `*Added by:*\n${vehicleData.owner || 'Unknown user'}`
+        }
+      ]
+    }
+  ];
+  
+  if (vehicleData.trim) {
+    blocks.push({
+      type: 'section',
+      fields: [
+        {
+          type: 'mrkdwn',
+          text: `*Trim:*\n${vehicleData.trim}`
+        },
+        {
+          type: 'mrkdwn',
+          text: `*Color:*\n${vehicleData.color || 'Not specified'}`
+        }
+      ]
+    });
+  }
+  
+  return await sendSlackMessage({
+    channel: SLACK_CONFIG.channelId,
+    text: `${message} ${vehicleData.year} ${vehicleData.make} ${vehicleData.model}`,
+    blocks
+  });
 }
 
 /**
- * Initialize the Slack client on server startup
+ * Share event details to Slack
+ * @param eventData The event data to share
+ * @param message Optional custom message
+ * @returns Promise resolving to boolean indicating success
  */
-export function initializeSlackClient(): void {
-  const slack = getSlackClient();
-  if (slack) {
-    console.log('Slack integration initialized successfully');
-  } else {
-    console.log('Slack integration not initialized. Ensure SLACK_BOT_TOKEN and SLACK_CHANNEL_ID environment variables are set.');
+export async function shareEventToSlack(
+  eventData: any,
+  message: string = 'New event scheduled:'
+): Promise<boolean> {
+  if (!slackClient) {
+    console.log('Event not shared to Slack (not connected):', eventData.title);
+    return false;
   }
+  
+  let eventEmoji = '📅';
+  if (eventData.type === 'Race') eventEmoji = '🏁';
+  if (eventData.type === 'Track Day') eventEmoji = '🏎️';
+  if (eventData.type === 'Maintenance') eventEmoji = '🔧';
+  
+  let dateDisplay = 'Date not specified';
+  try {
+    if (eventData.date) {
+      const eventDate = new Date(eventData.date);
+      dateDisplay = eventDate.toLocaleDateString('en-US', {
+        weekday: 'long',
+        month: 'long',
+        day: 'numeric',
+        year: 'numeric'
+      });
+    }
+  } catch (e) {
+    console.warn('Failed to format event date:', e);
+  }
+  
+  const blocks = [
+    {
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: `*${message}* ${eventEmoji}`
+      }
+    },
+    {
+      type: 'section',
+      fields: [
+        {
+          type: 'mrkdwn',
+          text: `*Event:*\n${eventData.title}`
+        },
+        {
+          type: 'mrkdwn',
+          text: `*When:*\n${dateDisplay}`
+        }
+      ]
+    }
+  ];
+  
+  if (eventData.location) {
+    blocks.push({
+      type: 'section',
+      fields: [
+        {
+          type: 'mrkdwn',
+          text: `*Location:*\n${eventData.location}`
+        },
+        {
+          type: 'mrkdwn',
+          text: `*Type:*\n${eventData.type || 'Not specified'}`
+        }
+      ]
+    });
+  }
+  
+  if (eventData.description) {
+    blocks.push({
+      type: 'section',
+      text: {
+        type: 'mrkdwn',
+        text: `*Details:*\n${eventData.description}`
+      }
+    });
+  }
+  
+  return await sendSlackMessage({
+    channel: SLACK_CONFIG.channelId,
+    text: `${message} ${eventData.title} - ${dateDisplay}`,
+    blocks
+  });
 }
+
+/**
+ * Listen for Slack events
+ * @param event The event name
+ * @param callback The callback function
+ */
+export function onSlackEvent(
+  event: 'connected' | 'error' | 'message_sent',
+  callback: (data: any) => void
+): void {
+  slackEvents.on(event, callback);
+}
+
+// Try to initialize Slack on module load
+initializeSlackClient().catch(error => {
+  console.error('Failed to auto-initialize Slack:', error);
+});
+
+export default {
+  initializeSlackClient,
+  checkSlackIntegration,
+  sendSlackMessage,
+  shareVehicleToSlack,
+  shareEventToSlack,
+  getSlackStatus,
+  onSlackEvent
+};
