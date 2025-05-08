@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { useAuth } from '@/auth/useAuth';
-import { format, addDays } from 'date-fns';
+import { format, addDays, isEqual, startOfDay, differenceInDays } from 'date-fns';
 import { useLocation } from 'wouter';
 
 // Hooks and Contexts
@@ -729,95 +729,384 @@ const ThePaddockPage = () => {
               {/* Upcoming Events */}
               <Card className="bg-[#1e1e1e] border-[#333] shadow-lg">
                 <CardHeader className="pb-2">
-                  <CardTitle>Upcoming Events</CardTitle>
-                  <CardDescription>Motorsport and personal calendar</CardDescription>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle className="flex items-center">
+                        <div className="cursor-pointer flex items-center" onClick={() => toggleSection('events')}>
+                          Upcoming Events
+                          <ChevronRight 
+                            className={`ml-1 h-4 w-4 transition-transform duration-200 ${expandedSections.events ? 'rotate-90' : ''}`} 
+                          />
+                        </div>
+                      </CardTitle>
+                      <CardDescription>Motorsport and personal calendar</CardDescription>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <TooltipProvider>
+                        <Tooltip>
+                          <TooltipTrigger asChild>
+                            <div className="flex h-7 items-center justify-center rounded-full bg-[#1982FC]/20 px-3 text-xs font-medium text-[#1982FC]">
+                              {demoEvents.length} upcoming
+                            </div>
+                          </TooltipTrigger>
+                          <TooltipContent>
+                            <p>You have {demoEvents.length} upcoming events in your calendar</p>
+                          </TooltipContent>
+                        </Tooltip>
+                      </TooltipProvider>
+                    </div>
+                  </div>
                 </CardHeader>
                 
                 <CardContent>
-                  <ScrollArea className="h-56 rounded-md">
-                    <div className="space-y-4">
-                      {demoEvents.map((event) => (
-                        <div 
-                          key={event.id} 
-                          className="flex items-start gap-3 p-2 rounded-md hover:bg-gray-800/30 transition-colors cursor-pointer"
-                        >
-                          <div className="flex-shrink-0 w-10 h-10 bg-gray-800 rounded-md flex items-center justify-center">
-                            {event.type === "Motorsport" ? (
-                              <Flag className="h-5 w-5 text-red-500" />
-                            ) : event.type === "Local" ? (
-                              <Users className="h-5 w-5 text-blue-500" />
-                            ) : (
-                              <CalendarClock className="h-5 w-5 text-green-500" />
-                            )}
-                          </div>
-                          <div>
-                            <div className="flex items-center gap-2">
-                              <p className="font-medium">{event.title}</p>
-                              <Badge variant="outline" className="text-xs">
-                                {event.type}
-                              </Badge>
+                  {expandedSections.events ? (
+                    <div className={`space-y-4 ${getAnimationClass('events')} animate-slide-down`}>
+                      {demoEvents.map((event) => {
+                        const eventDate = new Date(event.date);
+                        const isToday = isEqual(startOfDay(eventDate), startOfDay(new Date()));
+                        const daysUntil = differenceInDays(eventDate, new Date());
+                        
+                        return (
+                          <div 
+                            key={event.id} 
+                            className="rounded-md border border-[#333] overflow-hidden hover:border-[#1982FC]/40 transition-colors"
+                          >
+                            <div className="flex items-start gap-3 p-3 bg-[#252525]">
+                              <div className="flex-shrink-0 w-12 h-12 bg-gray-800 rounded-md flex items-center justify-center">
+                                {event.type === "Motorsport" ? (
+                                  <Flag className="h-6 w-6 text-red-500" />
+                                ) : event.type === "Local" ? (
+                                  <Users className="h-6 w-6 text-blue-500" />
+                                ) : (
+                                  <CalendarClock className="h-6 w-6 text-green-500" />
+                                )}
+                              </div>
+                              <div className="flex-1">
+                                <div className="flex items-center justify-between">
+                                  <p className="font-medium text-white">{event.title}</p>
+                                  <Badge 
+                                    variant={isToday ? "default" : "outline"} 
+                                    className={isToday ? "bg-[#08c519]" : ""}
+                                  >
+                                    {isToday ? "Today" : daysUntil <= 0 ? "Past" : `In ${daysUntil} days`}
+                                  </Badge>
+                                </div>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <Badge variant="outline" className="text-xs">
+                                    {event.type}
+                                  </Badge>
+                                  <p className="text-xs text-gray-400">{format(eventDate, 'E, MMM d, yyyy')}</p>
+                                </div>
+                              </div>
                             </div>
-                            <p className="text-sm text-gray-400">{format(new Date(event.date), 'MMM d, yyyy')}</p>
-                            {event.location && (
-                              <p className="text-xs text-gray-500">{event.location}</p>
-                            )}
-                            {event.vehicle && (
-                              <p className="text-xs text-gray-500">Vehicle: {event.vehicle}</p>
-                            )}
+                            
+                            <div className="p-3 text-sm">
+                              <div className="grid grid-cols-2 gap-y-2 gap-x-4 mb-3">
+                                {event.location && (
+                                  <div>
+                                    <p className="text-xs text-gray-400">Location</p>
+                                    <p className="font-medium flex items-center gap-1">
+                                      <MapPin className="h-3 w-3 text-gray-400" />
+                                      {event.location}
+                                    </p>
+                                  </div>
+                                )}
+                                {event.vehicle && (
+                                  <div>
+                                    <p className="text-xs text-gray-400">Vehicle</p>
+                                    <p className="font-medium flex items-center gap-1">
+                                      <Car className="h-3 w-3 text-gray-400" />
+                                      {event.vehicle}
+                                    </p>
+                                  </div>
+                                )}
+                                <div>
+                                  <p className="text-xs text-gray-400">Time</p>
+                                  <p className="font-medium flex items-center gap-1">
+                                    <Clock className="h-3 w-3 text-gray-400" />
+                                    {format(eventDate, 'h:mm aaa')}
+                                  </p>
+                                </div>
+                                <div>
+                                  <p className="text-xs text-gray-400">Weather Forecast</p>
+                                  <p className="font-medium flex items-center gap-1">
+                                    <Cloud className="h-3 w-3 text-gray-400" />
+                                    Check closer to date
+                                  </p>
+                                </div>
+                              </div>
+                              
+                              <div className="flex gap-2 mt-1">
+                                <Button 
+                                  size="sm" 
+                                  variant="outline" 
+                                  className="text-xs border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10 flex-1"
+                                  onClick={() => navigate('/events/' + event.id)}
+                                >
+                                  Event Details
+                                </Button>
+                                
+                                {event.type === "Motorsport" ? (
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    className="text-xs border-red-500 text-red-500 hover:bg-red-500/10 flex-1"
+                                    onClick={() => navigate('/podium-pursuit/race/' + event.id)}
+                                  >
+                                    <Flag className="h-3 w-3 mr-1" />
+                                    Race Info
+                                  </Button>
+                                ) : (
+                                  <Button 
+                                    size="sm" 
+                                    variant="outline" 
+                                    className="text-xs border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10 flex-1"
+                                    onClick={() => navigate('/fun-drive-planner?event=' + event.id)}
+                                  >
+                                    <MapPin className="h-3 w-3 mr-1" />
+                                    Plan Route
+                                  </Button>
+                                )}
+                              </div>
+                            </div>
                           </div>
-                        </div>
-                      ))}
+                        );
+                      })}
+                      
+                      <Button 
+                        variant="default" 
+                        className="w-full bg-[#1982FC] hover:bg-[#1982FC]/90"
+                        onClick={() => navigate('/events/new')}
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Add New Event
+                      </Button>
                     </div>
-                  </ScrollArea>
+                  ) : (
+                    <ScrollArea className="h-56 rounded-md">
+                      <div className="space-y-4">
+                        {demoEvents.map((event) => {
+                          const eventDate = new Date(event.date);
+                          const isToday = isEqual(startOfDay(eventDate), startOfDay(new Date()));
+                          
+                          return (
+                            <div 
+                              key={event.id} 
+                              className="flex items-start gap-3 p-2 rounded-md hover:bg-gray-800/30 transition-colors cursor-pointer"
+                              onClick={() => toggleSection('events')}
+                            >
+                              <div className="flex-shrink-0 w-10 h-10 bg-gray-800 rounded-md flex items-center justify-center">
+                                {event.type === "Motorsport" ? (
+                                  <Flag className="h-5 w-5 text-red-500" />
+                                ) : event.type === "Local" ? (
+                                  <Users className="h-5 w-5 text-blue-500" />
+                                ) : (
+                                  <CalendarClock className="h-5 w-5 text-green-500" />
+                                )}
+                              </div>
+                              <div>
+                                <div className="flex items-center gap-2">
+                                  <p className="font-medium">{event.title}</p>
+                                  {isToday && (
+                                    <Badge className="bg-[#08c519]">Today</Badge>
+                                  )}
+                                </div>
+                                <div className="flex items-center gap-2">
+                                  <Badge variant="outline" className="text-xs">
+                                    {event.type}
+                                  </Badge>
+                                  <p className="text-sm text-gray-400">{format(eventDate, 'MMM d, yyyy')}</p>
+                                </div>
+                                {event.location && (
+                                  <p className="text-xs text-gray-500">{event.location}</p>
+                                )}
+                                {event.vehicle && (
+                                  <p className="text-xs text-gray-500">Vehicle: {event.vehicle}</p>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </ScrollArea>
+                  )}
                 </CardContent>
                 
-                <CardFooter className="pt-0">
+                <CardFooter className="pt-0 flex justify-between">
                   <Button 
                     variant="outline" 
-                    className="w-full border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10"
+                    className="border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10 flex-1 mr-2"
                     onClick={() => navigate('/events')}
                   >
-                    <Calendar className="mr-2 h-4 w-4" /> View All Events
+                    <Calendar className="mr-2 h-4 w-4" /> View Calendar
                   </Button>
+                  
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          className="border-[#333] text-gray-400 hover:text-white"
+                          onClick={() => toggleSection('events')}
+                        >
+                          {expandedSections.events ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{expandedSections.events ? 'Collapse details' : 'Expand details'}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </CardFooter>
               </Card>
               
               {/* Manifestation Station Summary (Goals) */}
               <Card className="bg-[#1e1e1e] border-[#333] shadow-lg">
                 <CardHeader className="pb-2">
-                  <CardTitle>Automotive Goals</CardTitle>
-                  <CardDescription>Your journey tracker from Manifestation Station</CardDescription>
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <CardTitle className="flex items-center">
+                        <div className="cursor-pointer flex items-center" onClick={() => toggleSection('goals')}>
+                          Automotive Goals
+                          <ChevronRight 
+                            className={`ml-1 h-4 w-4 transition-transform duration-200 ${expandedSections.goals ? 'rotate-90' : ''}`} 
+                          />
+                        </div>
+                      </CardTitle>
+                      <CardDescription>Your journey tracker from Manifestation Station</CardDescription>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Badge className="bg-gradient-to-r from-[#1982FC] to-[#08c519] cursor-pointer" onClick={() => navigate('/manifestation-station')}>
+                        {demoGoals.filter(g => g.progress === 100).length}/{demoGoals.length} Complete
+                      </Badge>
+                    </div>
+                  </div>
                 </CardHeader>
                 
                 <CardContent>
-                  <ScrollArea className="h-56 rounded-md">
-                    <div className="space-y-5">
+                  {expandedSections.goals ? (
+                    <div className={`space-y-5 ${getAnimationClass('goals')} animate-slide-down`}>
                       {demoGoals.map((goal) => (
-                        <div key={goal.id} className="space-y-2">
-                          <div className="flex justify-between items-start">
+                        <div key={goal.id} className="rounded-md border border-[#333] p-3 hover:border-[#1982FC]/40 transition-colors">
+                          <div className="flex justify-between items-start mb-2">
                             <div>
-                              <p className="font-medium">{goal.title}</p>
-                              <p className="text-xs text-gray-400">{goal.category}</p>
+                              <p className="font-medium text-white">{goal.title}</p>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Badge variant="outline" className="text-xs">
+                                  {goal.category}
+                                </Badge>
+                                <p className="text-xs text-gray-400">Last updated: {format(new Date(), 'MMM d, yyyy')}</p>
+                              </div>
                             </div>
-                            <Badge className={goal.progress === 100 ? 'bg-[#08c519]' : 'bg-[#1982FC]'}>
+                            <Badge className={`${goal.progress === 100 ? 'bg-[#08c519]' : 'bg-[#1982FC]'} ${goal.progress === 100 ? 'animate-pulse-glow' : ''}`}>
                               {goal.progress}%
                             </Badge>
                           </div>
-                          <Progress value={goal.progress} className={`h-1 bg-gray-800 [&>div]:${goal.progress === 100 ? 'bg-[#08c519]' : 'bg-[#1982FC]'}`} />
+                          
+                          <div className="h-2 bg-gray-800 mb-3 rounded-full overflow-hidden">
+                            <div 
+                              className={`h-full ${goal.progress === 100 ? 'bg-[#08c519]' : 'bg-[#1982FC]'}`}
+                              style={{ width: `${goal.progress}%` }}
+                            />
+                          </div>
+                          
+                          <div className="mt-2 flex flex-col gap-2">
+                            <div className="flex justify-between text-xs text-gray-400 border-t border-[#333] pt-2">
+                              <span>Total steps: 5</span>
+                              <span>Completed steps: {Math.floor(5 * goal.progress / 100)}</span>
+                            </div>
+                            
+                            <div className="flex gap-2 mt-1">
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="text-xs border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10 flex-1"
+                                onClick={() => navigate('/manifestation-station/goal/' + goal.id)}
+                              >
+                                View Details
+                              </Button>
+                              
+                              <Button 
+                                size="sm" 
+                                variant={goal.progress === 100 ? "ghost" : "outline"} 
+                                className={`text-xs ${goal.progress === 100 
+                                  ? 'border-green-500 text-green-500 hover:bg-green-500/10' 
+                                  : 'border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10'} flex-1`}
+                                onClick={() => navigate('/manifestation-station/update/' + goal.id)}
+                              >
+                                {goal.progress === 100 ? <Check className="h-3 w-3 mr-1" /> : <Edit className="h-3 w-3 mr-1" />}
+                                {goal.progress === 100 ? 'Completed' : 'Update Progress'}
+                              </Button>
+                            </div>
+                          </div>
                         </div>
                       ))}
+                      
+                      <Button 
+                        variant="default" 
+                        className="w-full bg-[#1982FC] hover:bg-[#1982FC]/90"
+                        onClick={() => navigate('/manifestation-station/new')}
+                      >
+                        <Plus className="h-4 w-4 mr-2" /> Add New Goal
+                      </Button>
                     </div>
-                  </ScrollArea>
+                  ) : (
+                    <ScrollArea className="h-56 rounded-md">
+                      <div className="space-y-5">
+                        {demoGoals.map((goal) => (
+                          <div 
+                            key={goal.id} 
+                            className="space-y-2 p-2 rounded-md hover:bg-gray-800/30 transition-colors cursor-pointer"
+                            onClick={() => toggleSection('goals')}
+                          >
+                            <div className="flex justify-between items-start">
+                              <div>
+                                <p className="font-medium">{goal.title}</p>
+                                <p className="text-xs text-gray-400">{goal.category}</p>
+                              </div>
+                              <Badge className={goal.progress === 100 ? 'bg-[#08c519]' : 'bg-[#1982FC]'}>
+                                {goal.progress}%
+                              </Badge>
+                            </div>
+                            <div className="h-1 bg-gray-800 rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full ${goal.progress === 100 ? 'bg-[#08c519]' : 'bg-[#1982FC]'}`}
+                                style={{ width: `${goal.progress}%` }}
+                              />
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    </ScrollArea>
+                  )}
                 </CardContent>
                 
-                <CardFooter className="pt-0">
+                <CardFooter className="pt-0 flex justify-between">
                   <Button 
                     variant="outline" 
-                    className="w-full border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10"
+                    className="border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10 flex-1 mr-2"
                     onClick={() => navigate('/manifestation-station')}
                   >
                     <Star className="mr-2 h-4 w-4" /> Manifestation Station
                   </Button>
+                  
+                  <TooltipProvider>
+                    <Tooltip>
+                      <TooltipTrigger asChild>
+                        <Button 
+                          variant="outline" 
+                          size="icon"
+                          className="border-[#333] text-gray-400 hover:text-white"
+                          onClick={() => toggleSection('goals')}
+                        >
+                          {expandedSections.goals ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                        </Button>
+                      </TooltipTrigger>
+                      <TooltipContent>
+                        <p>{expandedSections.goals ? 'Collapse details' : 'Expand details'}</p>
+                      </TooltipContent>
+                    </Tooltip>
+                  </TooltipProvider>
                 </CardFooter>
               </Card>
               
@@ -1459,6 +1748,6 @@ const ThePaddockPage = () => {
 };
 
 // Additional imported icons
-import { Flag, Plus } from 'lucide-react';
+import { Flag, Plus, ChevronUp, ChevronDown, Edit, MapPin } from 'lucide-react';
 
 export default ThePaddockPage;
