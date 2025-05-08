@@ -189,6 +189,38 @@ export default function OBDConnect({ onConnect, onDisconnect }: OBDConnectProps)
             <AlertDescription>{errorMessage}</AlertDescription>
           </Alert>
         )}
+        
+        {status === 'connected' && !errorMessage && (
+          <Alert variant="default" className="mb-4 bg-green-50 border-green-200">
+            <AlertTitle className="text-green-800">Connected Successfully</AlertTitle>
+            <AlertDescription className="text-green-700">
+              Your OBD adapter is connected and ready to retrieve data from your vehicle.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {status === 'starting' && (
+          <Alert variant="default" className="mb-4 bg-blue-50 border-blue-200">
+            <AlertTitle className="text-blue-800">Connecting...</AlertTitle>
+            <AlertDescription className="text-blue-700">
+              Attempting to establish connection with your OBD adapter. Please wait.
+            </AlertDescription>
+          </Alert>
+        )}
+        
+        {availablePorts.length === 0 && status !== 'starting' && status !== 'connected' && !refreshing && (
+          <Alert variant="default" className="mb-4 bg-amber-50 border-amber-200">
+            <AlertTitle className="text-amber-800">No OBD Adapters Found</AlertTitle>
+            <AlertDescription className="text-amber-700">
+              Please connect your OBD adapter to your computer and click "Scan for Adapters" to detect it.
+              <ul className="list-disc pl-5 mt-2 space-y-1">
+                <li>Make sure the adapter is properly connected via USB or Bluetooth</li>
+                <li>Some adapters require device drivers to be installed</li>
+                <li>Check that your OBD adapter is powered on</li>
+              </ul>
+            </AlertDescription>
+          </Alert>
+        )}
 
         <div className="grid gap-4">
           <div className="flex items-center justify-between">
@@ -261,33 +293,41 @@ export default function OBDConnect({ onConnect, onDisconnect }: OBDConnectProps)
         </Button>
 
         <div className="flex gap-2">
-          {(status === 'idle' || status === 'error') && (
+          {((status === 'idle' as ConnectionStatus) || (status === 'error' as ConnectionStatus)) && (
             <Button 
               size="sm"
               onClick={startService} 
               disabled={refreshing}
             >
-              {status === 'starting' ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <PlayCircle className="h-4 w-4 mr-2" />
-              )}
+              {(() => {
+                // Safely handle the conditional with proper type checking
+                // Safe type check for status using string comparison
+                if (status === 'starting' as ConnectionStatus) {
+                  return <Loader2 className="h-4 w-4 animate-spin mr-2" />;
+                } else {
+                  return <PlayCircle className="h-4 w-4 mr-2" />;
+                }
+              })()}
               Connect
             </Button>
           )}
 
-          {status === 'connected' && (
+          {(status === 'connected' as ConnectionStatus) && (
             <Button 
               variant="destructive" 
               size="sm"
               onClick={stopService} 
               disabled={refreshing}
             >
-              {status === 'disconnecting' ? (
-                <Loader2 className="h-4 w-4 animate-spin mr-2" />
-              ) : (
-                <StopCircle className="h-4 w-4 mr-2" />
-              )}
+              {(() => {
+                // Safely handle the conditional with proper type checking
+                // Safe type check for status using string comparison
+                if (status === 'disconnecting' as ConnectionStatus) {
+                  return <Loader2 className="h-4 w-4 animate-spin mr-2" />;
+                } else {
+                  return <StopCircle className="h-4 w-4 mr-2" />;
+                }
+              })()}
               Disconnect
             </Button>
           )}
