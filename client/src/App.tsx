@@ -48,7 +48,6 @@ import AddVehiclePage from "./pages/AddVehiclePage";
 import FixedSoundBar from "./components/FixedSoundBar";
 import Footer from "./components/Footer";
 import { WeatherProvider } from "./contexts/ConsolidatedWeatherContext";
-import SetupSlackIntegration from "./pages/SetupSlackIntegration";
 import { LocationServicesProvider } from "./contexts/LocationServicesContext";
 import { GalleryProvider } from "./contexts/GalleryContext";
 import { RewardsProvider } from "./contexts/RewardsContext";
@@ -229,7 +228,6 @@ function AuthenticatedContent({
           <Route path="/profile" component={() => <ProtectedRoute><UserProfileHubPage /></ProtectedRoute>} />
           <Route path="/onboarding-test" component={() => <ProtectedRoute><OnboardingTestPage /></ProtectedRoute>} />
           <Route path="/settings" component={() => <ProtectedRoute><Settings /></ProtectedRoute>} />
-          <Route path="/setup-slack" component={() => <ProtectedRoute><SetupSlackIntegration /></ProtectedRoute>} />
           
           {/* Vehicle Management Routes */}
           <Route path="/garage-vault" component={() => <ProtectedRoute><GarageVaultPage /></ProtectedRoute>} />
@@ -297,20 +295,7 @@ function App() {
   
   // Check for onboarding status when app initializes - this will be updated once auth is ready
   useEffect(() => {
-    // First check if the user has used the simplified flow (beta welcome only)
-    // Check for both possible flag names for backward compatibility
-    const simplifiedOnboardingFlow = 
-      localStorage.getItem('paddock20_simplified_onboarding') === 'true' || 
-      localStorage.getItem('paddock20_simplified_flow') === 'true' ||
-      localStorage.getItem('betamodalgo') === 'true';
-    
-    if (simplifiedOnboardingFlow) {
-      console.log('Using simplified onboarding flow - bypassing full onboarding');
-      setHasCompletedOnboarding(true);
-      return;
-    }
-    
-    // Regular flow - check user profile and onboarding status
+    // Get user profile from local storage
     const userProfileStr = localStorage.getItem('userProfile');
     
     if (userProfileStr) {

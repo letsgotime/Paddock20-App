@@ -10,13 +10,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from '@/hooks/use-toast';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { ChevronLeft, Car, Scan, Database, Cable, RotateCw, Check, AlertCircle } from 'lucide-react';
+import { ChevronLeft, Car, Scan, Database, Cable, RotateCw, Check } from 'lucide-react';
 import { Link } from 'wouter';
 import OBDConnect from '@/components/vehicle/OBDConnect';
 import SmartcarConnect from '@/components/vehicle/SmartcarConnect';
 import { queryClient } from '@/lib/queryClient';
-import { Badge } from '@/components/ui/badge';
-import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 // Define vehicle schema
 const vehicleSchema = z.object({
@@ -226,23 +224,7 @@ export default function AddVehiclePage() {
   };
   
   // Handle Smartcar connection
-  const handleSmartcarConnect = (vehicleData: any) => {
-    if (vehicleData) {
-      // Set form values with vehicle data
-      manualForm.setValue('make', vehicleData.make || '');
-      manualForm.setValue('model', vehicleData.model || '');
-      manualForm.setValue('year', vehicleData.year || new Date().getFullYear());
-      if (vehicleData.vin) manualForm.setValue('vin', vehicleData.vin);
-      
-      // Switch to manual tab to review and submit
-      setActiveTab('manual');
-      
-      toast({
-        title: 'Vehicle Imported',
-        description: `${vehicleData.year} ${vehicleData.make} ${vehicleData.model} imported from Smartcar`,
-      });
-    }
-    
+  const handleSmartcarConnect = () => {
     setSmartcarConnected(true);
   };
   
@@ -618,11 +600,10 @@ export default function AddVehiclePage() {
                     
                     {smartcarConnected && (
                       <Alert>
-                        <AlertCircle className="h-4 w-4" />
-                        <AlertTitle>Connection Successful</AlertTitle>
-                        <AlertDescription>
+                        <Check className="h-4 w-4" />
+                        <span className="ml-2">
                           Your vehicle has been connected with Smartcar and will appear in your garage shortly.
-                        </AlertDescription>
+                        </span>
                       </Alert>
                     )}
                   </div>
@@ -652,91 +633,54 @@ export default function AddVehiclePage() {
                     />
                     
                     {obdConnected && obdVehicleData && (
-                      <div className="mt-6">
-                        <Alert variant="default" className="mb-4 bg-green-50 border-green-200">
-                          <Check className="h-4 w-4 text-green-600" />
-                          <AlertTitle className="text-green-800">Vehicle Information Retrieved</AlertTitle>
-                          <AlertDescription className="text-green-700">
-                            Successfully read vehicle data through OBD connection. Review the details below.
-                          </AlertDescription>
-                        </Alert>
-                        
-                        <div className="p-4 border rounded-md bg-slate-50">
-                          <h3 className="text-lg font-medium mb-3 flex items-center gap-2">
-                            <Car className="h-5 w-5 text-primary" />
-                            {obdVehicleData.year} {obdVehicleData.make} {obdVehicleData.model}
-                            {obdVehicleData.trim && <Badge variant="outline">{obdVehicleData.trim}</Badge>}
-                          </h3>
-                          
-                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-sm">
-                            <div className="flex flex-col border rounded-md p-3 bg-white">
-                              <span className="text-xs uppercase text-muted-foreground mb-1">Make</span>
-                              <span className="font-medium">{obdVehicleData.make}</span>
-                            </div>
-                            <div className="flex flex-col border rounded-md p-3 bg-white">
-                              <span className="text-xs uppercase text-muted-foreground mb-1">Model</span>
-                              <span className="font-medium">{obdVehicleData.model}</span>
-                            </div>
-                            <div className="flex flex-col border rounded-md p-3 bg-white">
-                              <span className="text-xs uppercase text-muted-foreground mb-1">Year</span>
-                              <span className="font-medium">{obdVehicleData.year}</span>
-                            </div>
-                            {obdVehicleData.trim && (
-                              <div className="flex flex-col border rounded-md p-3 bg-white">
-                                <span className="text-xs uppercase text-muted-foreground mb-1">Trim</span>
-                                <span className="font-medium">{obdVehicleData.trim}</span>
-                              </div>
-                            )}
-                            <div className="flex flex-col border rounded-md p-3 bg-white col-span-full">
-                              <span className="text-xs uppercase text-muted-foreground mb-1">VIN</span>
-                              <span className="font-medium font-mono">{obdVehicleData.vin}</span>
-                            </div>
+                      <div className="mt-6 p-4 border rounded-md bg-secondary/20">
+                        <h3 className="text-lg font-medium mb-2">Detected Vehicle Information</h3>
+                        <dl className="grid grid-cols-2 gap-2 text-sm">
+                          <div>
+                            <dt className="text-muted-foreground">Make:</dt>
+                            <dd className="font-medium">{obdVehicleData.make}</dd>
                           </div>
-                          
-                          <div className="mt-4 flex flex-col gap-2">
-                            <Button 
-                              variant="default" 
-                              onClick={importObdVehicle}
-                              className="w-full"
-                              size="lg"
-                            >
-                              <Check className="h-4 w-4 mr-2" />
-                              Import This Vehicle
-                            </Button>
-                            <p className="text-xs text-center text-muted-foreground">
-                              You'll have a chance to add additional details after importing
-                            </p>
+                          <div>
+                            <dt className="text-muted-foreground">Model:</dt>
+                            <dd className="font-medium">{obdVehicleData.model}</dd>
                           </div>
+                          <div>
+                            <dt className="text-muted-foreground">Year:</dt>
+                            <dd className="font-medium">{obdVehicleData.year}</dd>
+                          </div>
+                          {obdVehicleData.trim && (
+                            <div>
+                              <dt className="text-muted-foreground">Trim:</dt>
+                              <dd className="font-medium">{obdVehicleData.trim}</dd>
+                            </div>
+                          )}
+                          <div className="col-span-2">
+                            <dt className="text-muted-foreground">VIN:</dt>
+                            <dd className="font-medium">{obdVehicleData.vin}</dd>
+                          </div>
+                        </dl>
+                        <div className="mt-4">
+                          <Button 
+                            variant="default" 
+                            onClick={importObdVehicle}
+                            className="w-full"
+                          >
+                            Import This Vehicle
+                          </Button>
                         </div>
                       </div>
                     )}
                     
                     {obdConnected && !obdVehicleData && (
-                      <div className="space-y-4">
-                        <Alert variant="default" className="bg-blue-50 border-blue-200">
-                          <Check className="h-4 w-4 text-blue-600" />
-                          <AlertTitle className="text-blue-800">OBD Connected Successfully</AlertTitle>
-                          <AlertDescription className="text-blue-700">
-                            Connection established with your OBD adapter. Attempting to retrieve your vehicle information...
-                          </AlertDescription>
-                        </Alert>
-                        
-                        <div className="flex flex-col items-center justify-center py-4 bg-slate-50 rounded-md border">
-                          <RotateCw className="h-8 w-8 animate-spin text-primary mb-3" />
-                          <h4 className="text-sm font-medium mb-1">Reading Vehicle Data</h4>
-                          <p className="text-xs text-muted-foreground text-center max-w-md mx-auto">
-                            This process may take a few moments. Please make sure:
-                          </p>
-                          <ul className="text-xs text-muted-foreground text-left list-disc pl-6 pt-2 space-y-1">
-                            <li>Your vehicle ignition is turned on</li>
-                            <li>The OBD adapter is securely connected to the OBD port</li>
-                            <li>Your connection remains stable throughout the process</li>
-                          </ul>
-                          <p className="text-xs text-muted-foreground text-center mt-3">
-                            If no data appears, your vehicle may not support VIN retrieval through OBD.
-                            You can still use the manual entry method.
-                          </p>
-                        </div>
+                      <div className="flex flex-col items-center justify-center py-6">
+                        <RotateCw className="h-8 w-8 animate-spin text-primary mb-4" />
+                        <p className="text-sm text-center">
+                          Connected to OBD adapter. Attempting to read vehicle information...
+                        </p>
+                        <p className="text-xs text-muted-foreground text-center mt-2">
+                          If no data appears, your vehicle may not support VIN retrieval through OBD.
+                          You can still use the manual entry method.
+                        </p>
                       </div>
                     )}
                   </div>

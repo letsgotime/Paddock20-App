@@ -30,19 +30,13 @@ export default function ProtectedRoute({ children }: ProtectedRouteProps) {
       setCheckingOnboarding(true);
       
       try {
-        // Check if onboarding was just completed (special case) or if using simplified flow
+        // Check if onboarding was just completed (special case)
         const justCompletedOnboarding = localStorage.getItem('paddock20_onboarding_just_completed') === 'true';
-        const isUsingSimplifiedFlow = 
-          localStorage.getItem('paddock20_simplified_flow') === 'true' ||
-          localStorage.getItem('paddock20_simplified_onboarding') === 'true' ||
-          localStorage.getItem('betamodalgo') === 'true';
         
-        if (justCompletedOnboarding || isUsingSimplifiedFlow) {
-          console.log('Onboarding was just completed or using simplified flow - bypassing checks');
-          // Clear the flag so it's only used once (for the just completed flag)
-          if (justCompletedOnboarding) {
-            localStorage.removeItem('paddock20_onboarding_just_completed');
-          }
+        if (justCompletedOnboarding) {
+          console.log('Onboarding was just completed - bypassing checks');
+          // Clear the flag so it's only used once
+          localStorage.removeItem('paddock20_onboarding_just_completed');
           // Allow user to continue to protected route
           setHasCompletedOnboarding(true);
           return;

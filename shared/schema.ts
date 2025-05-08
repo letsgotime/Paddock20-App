@@ -39,7 +39,6 @@ export const users = pgTable('users', {
   stripeCustomerId: varchar('stripe_customer_id', { length: 255 }),
   stripeSubscriptionId: varchar('stripe_subscription_id', { length: 255 }),
   metadata: jsonb('metadata'), // For storing arbitrary data like Smartcar tokens
-  onboardingStatus: jsonb('onboarding_status'),
   onboardingCompleted: boolean('onboarding_completed').default(false),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
@@ -176,12 +175,12 @@ export const maintenanceRecords = pgTable('maintenance_records', {
 export const maintenanceFlags = pgTable('maintenance_flags', {
   id: serial('id').primaryKey(),
   vehicleId: integer('vehicle_id').references(() => vehicles.id).notNull(),
-  // The following fields reflect the actual database structure
-  missedWeekly: boolean('missed_weekly').default(false),
-  missedMonthly: boolean('missed_monthly').default(false),
-  missedQuarterly: boolean('missed_quarterly').default(false),
-  missedSeasonal: boolean('missed_seasonal').default(false),
-  createdAt: timestamp('created_at').defaultNow(),
+  flagType: varchar('flag_type', { length: 50 }).notNull(), // oil, tires, brakes, etc.
+  dueDate: timestamp('due_date'),
+  dueMileage: integer('due_mileage'),
+  isDue: boolean('is_due').default(false),
+  isUrgent: boolean('is_urgent').default(false),
+  notes: text('notes'),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 
@@ -296,30 +295,7 @@ export const insertGlossLogSchema = createInsertSchema(glossLogs).omit({ id: tru
 export const insertModificationSchema = createInsertSchema(modifications).omit({ id: true, createdAt: true, updatedAt: true });
 
 // Types
-// Define the structure of onboardingStatus for better type checking
-export type OnboardingStatus = {
-  hasAcceptedBeta?: boolean;
-  hasCompletedOnboarding?: boolean;
-  currentStep?: string;
-  nextStep?: string;
-  
-  betaWelcomeCompleted?: boolean;
-  legalAgreementsCompleted?: boolean;
-  profileSetupCompleted?: boolean;
-  vehicleAdditionCompleted?: boolean;
-  
-  onboardingStartedAt?: string | null;
-  onboardingCompletedAt?: string | null;
-  
-  beta?: {
-    role?: string;
-    entryDate?: string;
-  };
-};
-
-export type User = typeof users.$inferSelect & {
-  onboardingStatus?: string | OnboardingStatus;
-};
+export type User = typeof users.$inferSelect;
 export type InsertUser = z.infer<typeof insertUserSchema>;
 
 export type Session = typeof sessions.$inferSelect;
