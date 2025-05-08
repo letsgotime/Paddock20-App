@@ -13,7 +13,7 @@ import ContextualBreadcrumbs from './components/ContextualBreadcrumbs';
 import FixedSoundBar from "./components/FixedSoundBar";
 import Footer from "./components/Footer";
 import NotFound from "@/pages/not-found";
-import { ProtectedRoute } from './auth/ProtectedRoute';
+import { ProtectedRoute, DemoRoute } from './auth/ProtectedRoute';
 import { AuthPermission, AuthRole } from './auth/types';
 import UserOnboarding from "./components/UserOnboarding";
 import SupportChatbot from "./components/SupportChatbot";
@@ -288,6 +288,18 @@ function AppContent({
                           
                           {/* Demo route to access The Paddock without authentication */}
                           <Route path="/demo" component={() => <ThePaddockPage demoMode={true} />} />
+                          
+                          {/* Demo routes for feature pages */}
+                          <Route path="/demo/weather-paddock" component={() => <DemoRoute><WeatherPage /></DemoRoute>} />
+                          <Route path="/demo/garage-vault" component={() => <DemoRoute><GarageVaultPage /></DemoRoute>} />
+                          <Route path="/demo/add-vehicle" component={() => <DemoRoute><AddVehiclePage /></DemoRoute>} />
+                          <Route path="/demo/connect-vehicle" component={() => <DemoRoute><ConnectVehiclePage /></DemoRoute>} />
+                          <Route path="/demo/juice-box" component={() => <DemoRoute><JuiceBox /></DemoRoute>} />
+                          <Route path="/demo/manifestation-station" component={() => <DemoRoute><ManifestationStationPage /></DemoRoute>} />
+                          <Route path="/demo/events" component={() => <DemoRoute><EventsPage /></DemoRoute>} />
+                          <Route path="/demo/drive-journal" component={() => <DemoRoute><DriveJournalPage /></DemoRoute>} />
+                          <Route path="/demo/tires-timepieces" component={() => <DemoRoute><TiresTimepieces /></DemoRoute>} />
+                          <Route path="/demo/podium-pursuit" component={() => <DemoRoute><PodiumPursuitPage /></DemoRoute>} />
                           
                           {/* Authenticated dashboard */}
                           <Route path="/dashboard" component={() => <ProtectedRoute><ThePaddockPage /></ProtectedRoute>} />
