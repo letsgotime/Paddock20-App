@@ -54,7 +54,7 @@ const LogoutPage = () => {
           </p>
           
           <Link href="/auth">
-            <Button className="w-full mt-6" variant="outline">
+            <Button className="w-full mt-6 bg-[#1982FC] text-white hover:bg-[#1982FC]/90">
               <ArrowLeft className="w-4 h-4 mr-2" />
               Return to Login
             </Button>
