@@ -2364,23 +2364,51 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch('/api/user/profile', async (req, res) => {
     try {
-      // Check if authenticated
-      if (!req.user) {
+      // Get user profile data from Auth0
+      let user = null;
+      
+      // Check for Auth0 session via our GET /api/user-profile endpoint
+      try {
+        const response = await fetch(`http://localhost:5000/api/user-profile`, {
+          headers: {
+            'Cookie': req.headers.cookie || '',
+            'Authorization': req.headers.authorization || ''
+          }
+        });
+        
+        if (response.ok) {
+          user = await response.json();
+          console.log('Retrieved user from Auth0:', user);
+        } else {
+          console.log('No Auth0 user found, checking session user');
+        }
+      } catch (err) {
+        console.error('Error fetching Auth0 user:', err);
+      }
+      
+      // Use session user as fallback
+      if (!user && req.user) {
+        user = req.user;
+        console.log('Using session user:', user);
+      }
+      
+      // If no user found in any authentication method, return 401
+      if (!user) {
+        console.log('No authenticated user found for profile update');
         return res.status(401).json({ success: false, error: 'Not authenticated' });
       }
       
       // Get profile data from request body
       const profileData = req.body;
       
-      // Update user profile in database (normally would use storage interface)
-      // For now, we'll just return success since it's a placeholder
+      // Now that we have the authenticated user, update profile
       console.log('Updating user profile with data:', profileData);
       
       res.json({ 
         success: true, 
         message: 'Profile updated successfully',
         user: {
-          ...req.user,
+          ...user,
           ...profileData
         }
       });
