@@ -67,9 +67,15 @@ const Auth0Callback = () => {
           console.log('✅ Auth0 complete - directing to beta welcome process');
           localStorage.setItem('paddock20_beta_status', 'pending');
           
-          // Mark that we're using the simplified onboarding flow (setting both flags for consistency)
-          localStorage.setItem('paddock20_simplified_flow', 'true');
-          localStorage.setItem('paddock20_simplified_onboarding', 'true');
+          // Remove ALL existing onboarding flags to ensure clean state
+          localStorage.removeItem('paddock20_simplified_flow');
+          localStorage.removeItem('paddock20_simplified_onboarding');
+          localStorage.removeItem('betamodalgo');
+          localStorage.removeItem('paddock20_onboarding_completed');
+          localStorage.removeItem('paddock20_onboarding_just_completed');
+          
+          // Log clear debug of localStorage state
+          console.log('📦 localStorage cleared before beta welcome page redirect');
           
           setLocation('/beta-welcome');
         }, 500);
