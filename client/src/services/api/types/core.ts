@@ -1,131 +1,157 @@
 /**
- * API Data Warehouse Type Definitions
+ * API Data Warehouse Core Types
  * 
- * This file contains all the type definitions used by the API Data Warehouse.
+ * This file defines the core types and interfaces used throughout the API Data Warehouse.
  */
 
 /**
  * API Categories
- * Each category represents a group of related API services.
+ * 
+ * Defines the different categories of API services available in the system.
  */
 export enum APICategory {
   WEATHER = 'weather',
   GEOCODING = 'geocoding',
-  AUTOMOTIVE = 'automotive',
   TIME = 'time',
+  AUTOMOTIVE = 'automotive',
   MUSIC = 'music',
   AUTH = 'auth',
   STORAGE = 'storage',
   MEDIA = 'media',
-  // Add more categories as needed
 }
 
 /**
- * Available cache levels
+ * Log levels
+ */
+export enum LogLevel {
+  DEBUG = 'debug',
+  INFO = 'info',
+  WARN = 'warn',
+  ERROR = 'error',
+}
+
+/**
+ * Cache levels
  */
 export enum CacheLevel {
-  PRIMARY = 'primary',
-  SECONDARY = 'secondary',
-  OFFLINE = 'offline',
+  PRIMARY = 'primary',    // Fast-access, short-lived cache (memory)
+  SECONDARY = 'secondary', // Medium-term cache (indexed DB)
+  OFFLINE = 'offline',    // Long-term, persistent cache (for offline use)
 }
 
 /**
- * API Error Reason
- * Standardized error categories for easier handling
+ * Error reasons
  */
-export type APIErrorReason = 
-  | 'NETWORK_ERROR'  // Connection issues
-  | 'RATE_LIMIT'     // Rate limiting from the provider
-  | 'AUTH_ERROR'     // Authentication/authorization failure
-  | 'API_ERROR'      // Remote API returned an error
-  | 'TIMEOUT'        // Request timed out
-  | 'VALIDATION_ERROR' // Request validation failed
-  | 'NO_PROVIDER'    // No provider available for the category
-  | 'PROVIDER_ERROR' // Provider-specific error
-  | 'CACHE_ERROR'    // Cache-related error
-  | 'UNKNOWN_ERROR'; // Unclassified/unexpected error
+export type ErrorReason = 
+  | 'NETWORK_ERROR'      // Network connection issues
+  | 'PROVIDER_ERROR'     // Provider-specific errors
+  | 'AUTHENTICATION_ERROR' // Auth errors (API keys, tokens, etc.)
+  | 'RATE_LIMIT_ERROR'   // Rate limiting or quotas
+  | 'TIMEOUT_ERROR'      // Request timeout
+  | 'VALIDATION_ERROR'   // Input validation issues
+  | 'RESOURCE_NOT_FOUND' // Requested resource doesn't exist
+  | 'PERMISSION_ERROR'   // Permission or access issues
+  | 'SERVER_ERROR'       // Server-side errors
+  | 'UNKNOWN_ERROR'      // Unspecified or unknown errors
+  | 'NO_PROVIDER';       // No provider available for request
 
 /**
  * API Error
- * Standardized error format
  */
 export interface APIError {
-  code: string;          // Error code (provider-specific or standardized)
-  message: string;       // Human-readable error message
-  reason: APIErrorReason; // Categorized reason
-  details?: any;         // Additional error details
+  code: string;
+  message: string;
+  reason: ErrorReason;
+  details?: any;
 }
 
 /**
- * API Request
- * Standard format for all API requests
- */
-export interface APIRequest {
-  category: APICategory;  // API category
-  endpoint?: string;      // Specific endpoint within the category
-  params?: any;           // Request parameters
-  headers?: Record<string, string>; // Optional headers
-  timeout?: number;       // Optional timeout in milliseconds
-  cacheTTL?: number;      // Time-to-live for cache in milliseconds (0 = no cache)
-  allowStale?: boolean;   // Whether to allow stale cached data if fresh fails
-}
-
-/**
- * API Response
- * Standard format for all API responses
- */
-export interface APIResponse<T> {
-  success: boolean;      // Whether the request was successful
-  data?: T;              // Response data (if successful)
-  error?: APIError;      // Error information (if unsuccessful)
-  fromCache: boolean;    // Whether this response came from cache
-  provider: string | null; // Which provider fulfilled the request
-  stale?: boolean;       // Whether the data is stale (older than preferred)
-  timestamp?: number;    // When this response was generated
-}
-
-/**
- * Health Status Type
- * Indicates the health of a service or provider
+ * Health status types
  */
 export type HealthStatusType = 'healthy' | 'degraded' | 'unavailable';
 
 /**
- * Health Status
- * Information about the health of a service or provider
+ * Health status
  */
 export interface HealthStatus {
-  status: HealthStatusType;    // Overall status
-  details?: any;               // Additional health information
+  status: HealthStatusType;
+  timestamp: number;
+  details?: any;
+  providers?: Record<string, HealthStatusType>;
 }
 
 /**
- * API Provider Interface
- * Standard interface that all providers must implement
+ * API Request
+ * 
+ * Standard format for all API requests within the system.
+ */
+export interface APIRequest {
+  category: APICategory;
+  endpoint: string;
+  params?: Record<string, any>;
+  cacheTTL?: number;
+  cacheControl?: {
+    maxAge?: number;
+    staleWhileRevalidate?: number;
+    noCache?: boolean;
+    noStore?: boolean;
+  };
+  noBackgroundRefresh?: boolean;
+  headers?: Record<string, string>;
+  timeout?: number;
+}
+
+/**
+ * API Response
+ * 
+ * Standard format for all API responses within the system.
+ */
+export interface APIResponse<T> {
+  success: boolean;
+  data?: T;
+  error?: APIError;
+  fromCache: boolean;
+  stale?: boolean;
+  cacheLevel?: CacheLevel;
+  provider: string | null;
+  timestamp?: number;
+  providersAttempted?: string[];
+}
+
+/**
+ * API Provider
+ * 
+ * Interface that all API providers must implement.
  */
 export interface APIProvider {
   name: string;
   category: APICategory;
   priority: number;
-  
-  // Execute an API request
+  timeout?: number;
   execute<T>(request: APIRequest): Promise<APIResponse<T>>;
-  
-  // Check health status
   getHealthStatus(): Promise<HealthStatusType>;
-  
-  // Optional settings
-  settings?: {
-    rateLimitPerMinute?: number;
-    timeout?: number;
-    retries?: number;
-  };
 }
 
 /**
  * Provider Registry
- * Used to manage multiple providers for each category
+ * 
+ * Map of API categories to their available providers.
  */
-export interface ProviderRegistry {
-  [category: string]: APIProvider[];
+export type ProviderRegistry = Record<APICategory, APIProvider[]>;
+
+/**
+ * Metrics Data for API performance monitoring
+ */
+export interface MetricsData {
+  requestCount: number;
+  errorCount: number;
+  cacheHits: number;
+  cacheMisses: number;
+  averageResponseTime: number;
+  responseTimeP95: number;
+  lastErrors: Array<{
+    timestamp: number;
+    error: APIError;
+    request: APIRequest;
+  }>;
 }
