@@ -10,11 +10,13 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { toast } from '@/hooks/use-toast';
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
-import { ChevronLeft, Car, Scan, Database, Cable, RotateCw, Check } from 'lucide-react';
+import { ChevronLeft, Car, Scan, Database, Cable, RotateCw, Check, AlertCircle } from 'lucide-react';
 import { Link } from 'wouter';
 import OBDConnect from '@/components/vehicle/OBDConnect';
 import SmartcarConnect from '@/components/vehicle/SmartcarConnect';
 import { queryClient } from '@/lib/queryClient';
+import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 // Define vehicle schema
 const vehicleSchema = z.object({
