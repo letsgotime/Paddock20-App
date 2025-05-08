@@ -1,61 +1,20 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useLocation } from 'wouter';
 import BetaWelcomeModal from '../components/BetaWelcomeModal';
-import { useAuth } from '../hooks/useAuth';
-import { useToast } from '@/hooks/use-toast';
 
 export default function BetaWelcomePage() {
   const [modalOpen, setModalOpen] = useState(true);
   const [, navigate] = useLocation();
-  const { user } = useAuth();
-  const { toast } = useToast();
   
   // Handler for beta modal close
   const handleBetaModalClose = (betaRole?: 'user' | 'tester') => {
     setModalOpen(false);
-    
-    // Store the selected beta role in localStorage
+    // Store the selected beta role in localStorage so OnboardingPage can access it
     if (betaRole) {
       localStorage.setItem('paddock20_selected_beta_role', betaRole);
-      
-      // Mark beta onboarding and legal agreements as complete
-      if (user?.id) {
-        // Mark beta onboarding as complete
-        localStorage.setItem(`paddock20_beta_onboarding_complete_${user.id}`, 'true');
-        
-        // Mark legal agreements as accepted
-        localStorage.setItem(`paddock20_legal_agreements_${user.id}`, JSON.stringify({
-          accepted: true,
-          acceptedDate: new Date().toISOString(),
-          version: '1.0'
-        }));
-        
-        // Set a global flag indicating onboarding was completed
-        localStorage.setItem('paddock20_onboarding_just_completed', 'true');
-        
-        // Set all flag variations to ensure consistent behavior across the app
-        localStorage.setItem('paddock20_simplified_onboarding', 'true');
-        localStorage.setItem('paddock20_simplified_flow', 'true');
-        localStorage.setItem('betamodalgo', 'true');
-      } else {
-        // Fallback if no user ID is available
-        localStorage.setItem('paddock20_beta_onboarding_complete', 'true');
-        localStorage.setItem('paddock20_legal_agreements', 'true');
-        localStorage.setItem('paddock20_onboarding_just_completed', 'true');
-        localStorage.setItem('paddock20_simplified_onboarding', 'true');
-        localStorage.setItem('paddock20_simplified_flow', 'true');
-        localStorage.setItem('betamodalgo', 'true');
-      }
-      
-      // Show welcome toast
-      toast({
-        title: 'Welcome to Paddock20!',
-        description: 'You\'re all set up and ready to explore the platform.',
-      });
     }
-    
-    // Navigate directly to main app instead of onboarding
-    navigate('/', { replace: true });
+    // Navigate to onboarding page
+    navigate('/onboarding');
   };
   
   return (

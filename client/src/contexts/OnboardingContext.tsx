@@ -33,12 +33,8 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
       const profile = userProfileWarehouse.getProfile();
       const completedInWarehouse = profile?.identity?.onboardingCompleted || false;
       
-      // Check if onboarding is complete from localStorage (multiple flags for compatibility)
-      const completedInLocalStorage = 
-        localStorage.getItem('paddock20_onboarding_completed') === 'true' ||
-        localStorage.getItem('paddock20_simplified_flow') === 'true' ||
-        localStorage.getItem('paddock20_simplified_onboarding') === 'true' ||
-        localStorage.getItem('betamodalgo') === 'true';
+      // Check if onboarding is complete from localStorage
+      const completedInLocalStorage = localStorage.getItem('paddock20_onboarding_completed') === 'true';
       
       // If either source shows completed, treat as complete
       const isComplete = completedInWarehouse || completedInLocalStorage;
@@ -56,12 +52,7 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
   // Reset onboarding status
   const resetOnboarding = () => {
     setOnboardingComplete(false);
-    
-    // Remove all variations of onboarding flags for consistency
     localStorage.removeItem('paddock20_onboarding_completed');
-    localStorage.removeItem('paddock20_simplified_flow');
-    localStorage.removeItem('paddock20_simplified_onboarding');
-    localStorage.removeItem('betamodalgo');
     
     // Update warehouse
     if (user) {
@@ -85,11 +76,8 @@ export const OnboardingProvider = ({ children }: { children: ReactNode }) => {
   // Mark onboarding as complete
   useEffect(() => {
     if (onboardingComplete && user) {
-      // Update localStorage with all flag variations for consistency
+      // Update localStorage
       localStorage.setItem('paddock20_onboarding_completed', 'true');
-      localStorage.setItem('paddock20_simplified_flow', 'true');
-      localStorage.setItem('paddock20_simplified_onboarding', 'true');
-      localStorage.setItem('betamodalgo', 'true');
       
       // Update warehouse
       userProfileWarehouse.updateIdentity({

@@ -120,47 +120,18 @@ async function fetchForecastData(lat, lon, units) {
 
 /**
  * Helper function to fetch one-call data
- * Note: This function now includes error handling and fallback for free plans
  */
 async function fetchOneCallData(lat, lon, units) {
-  try {
-    console.log('Using OpenWeather API key:', process.env.OPENWEATHER_API_KEY);
-    console.log('OpenWeather API key from env:', process.env.OPENWEATHER_API_KEY);
-    
-    const url = `${process.env.OPENWEATHER_API_URL || 'https://api.openweathermap.org/data/2.5'}/onecall`;
-    return await axios.get(url, {
-      params: {
-        lat,
-        lon,
-        units,
-        exclude: 'minutely', // Exclude minutely data to reduce response size
-        appid: process.env.OPENWEATHER_API_KEY
-      }
-    });
-  } catch (error) {
-    // Handle 401 unauthorized errors (free plan)
-    if (error.response && error.response.status === 401) {
-      console.log('OneCall API error: 401 - falling back to basic weather data');
-      // Return a properly formatted response with essential data
-      return {
-        data: {
-          lat,
-          lon,
-          current: {
-            dt: Math.floor(Date.now() / 1000),
-            temp: 0, // Will be updated from weather data
-            feels_like: 0,
-            humidity: 0,
-            wind_speed: 0,
-            weather: [{ id: 800, main: "Clear", description: "clear sky", icon: "01d" }]
-          },
-          hourly: [],
-          daily: []
-        }
-      };
+  const url = `${process.env.OPENWEATHER_API_URL || 'https://api.openweathermap.org/data/2.5'}/onecall`;
+  return await axios.get(url, {
+    params: {
+      lat,
+      lon,
+      units,
+      exclude: 'minutely', // Exclude minutely data to reduce response size
+      appid: process.env.OPENWEATHER_API_KEY
     }
-    throw error;
-  }
+  });
 }
 
 /**

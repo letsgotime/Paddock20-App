@@ -20,11 +20,8 @@ import vinDecoderRoutes from "./routes/vinDecoderRoutes";
 import smartcarRoutes from "./routes/smartcarRoutes";
 import obdRoutes from "./routes/obdRoutes";
 import onboardingFlowRoutes from "./routes/onboardingFlowRoutes";
-import consolidatedWeatherRoutes from "./routes/consolidatedWeatherRoutes";
-import slackRoutes from "./routes/slackRoutes";
 
-// Note: These OpenWeather API keys are now managed in the weatherDataWarehouse service
-// Keeping this for backwards compatibility during the transition period
+// OpenWeather API keys - updated May 1, 2025
 const OPENWEATHER_API_KEYS = {
   default: process.env.OPENWEATHER_API_KEY || "2379a18ee0e478c88aa7d4aa1df44410", // General key
   onecall: process.env.ONECALL_API_KEY || "653c5104ce3e922c371a315209765d2f",     // Special key for 3.0
@@ -77,15 +74,12 @@ interface RateLimiter {
   geocodeMinInterval: number;
 }
 
-// Use the WEATHER_CHECK_INTERVAL to avoid name conflicts with imported CHECK_INTERVAL
-const WEATHER_CHECK_INTERVAL = 4 * 60 * 60 * 1000;
-
 const apiHealthStatus: WeatherApiStatus = {
   lastChecked: new Date(0), // Set to epoch time to force immediate check
   isOperational: true, // Assume operational until first check
   lastError: null,
   consecutiveFailures: 0,
-  checkInterval: WEATHER_CHECK_INTERVAL // 4 hours in milliseconds
+  checkInterval: CHECK_INTERVAL // 4 hours in milliseconds
 };
 
 // Initialize rate limiter to prevent hitting API rate limits
@@ -216,14 +210,14 @@ const commonTimezones = [
   'Africa/Cairo'
 ];
 
-// Import health monitoring system first to avoid import order issues
+// Import health monitoring system
 import {
   registerService,
   checkServiceHealth,
-  startHealthMonitoring
+  startHealthMonitoring,
+  CHECK_INTERVAL
 } from './healthMonitor';
 
-// Then import the service-specific health checks
 import {
   checkOpenWeatherHealth,
   checkUnsplashHealth,
@@ -274,15 +268,10 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Register Onboarding Flow routes
   app.use(onboardingFlowRoutes);
   
-  // Register consolidated weather routes using the new Weather Data Warehouse
-  app.use('/api/weather', consolidatedWeatherRoutes);
+  // Using only OpenWeather API for all weather services
   
-  // Register Slack integration routes
-  app.use('/api/slack', slackRoutes);
-  
-  // Legacy OpenWeather API endpoint - marked for deprecation
-  // This will be removed in a future update once all clients migrate to the new endpoints
-  app.get('/api/weather/consolidated-legacy', async (req, res) => {
+  // Consolidated weather API endpoint
+  app.get('/api/weather/consolidated', async (req, res) => {
     try {
       // Ensure we're only returning JSON
       res.setHeader('Content-Type', 'application/json');
@@ -334,70 +323,57 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Make onecall API request - try/catch so we can still return weather data without OneCall
       let oneCallData;
       try {
-        // Try the OneCall API key with the 3.0 endpoint for paid subscription
-        const onecallUrl = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&units=${units}&exclude=minutely&appid=${ONECALL_API_KEY}`;
-        console.log(`Making OneCall API request to: ${onecallUrl}`);
-        
-        // Add timeout to prevent hanging requests
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 5000); // 5 second timeout
-        
-        const onecallResponse = await fetch(onecallUrl, { 
-          signal: controller.signal,
-          headers: {
-            'Accept': 'application/json'
-          }
-        });
-        
-        // Clear the timeout
-        clearTimeout(timeoutId);
-        
+        // Try the OneCall API key first
+        const onecallUrl = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&units=${units}&exclude=minutely&appid=${ONECALL_API_KEY || apiKey}`;
+        const onecallResponse = await fetch(onecallUrl);
         if (!onecallResponse.ok) {
-          // Get detailed error information
-          let errorText;
-          try {
-            errorText = await onecallResponse.text();
-          } catch (textError) {
-            errorText = 'Unable to get error details';
-          }
-          
-          console.warn(`OneCall API error: ${onecallResponse.status} - ${errorText} - falling back to basic weather data`);
-          
-          // Log API health status
-          apiHealthStatus.isOperational = false;
-          apiHealthStatus.lastError = `Status ${onecallResponse.status}: ${errorText}`;
-          apiHealthStatus.lastChecked = new Date();
-          apiHealthStatus.consecutiveFailures++;
-          
+          console.warn(`OneCall API error: ${onecallResponse.status} - falling back to basic weather data`);
           // Generate basic equivalent to oneCallData from the weather and forecast data
-          oneCallData = generateOneCallFallbackData(weatherData, forecastData, lat, lon);
+          oneCallData = {
+            lat: Number(lat),
+            lon: Number(lon),
+            timezone: "UTC", // Default since we don't have this data
+            current: {
+              dt: weatherData.dt,
+              sunrise: weatherData.sys.sunrise,
+              sunset: weatherData.sys.sunset,
+              temp: weatherData.main.temp,
+              feels_like: weatherData.main.feels_like,
+              pressure: weatherData.main.pressure,
+              humidity: weatherData.main.humidity,
+              dew_point: 0, // Not available in basic API
+              uvi: 0, // Not available in basic API
+              clouds: weatherData.clouds.all,
+              visibility: weatherData.visibility,
+              wind_speed: weatherData.wind.speed,
+              wind_deg: weatherData.wind.deg,
+              weather: weatherData.weather,
+              rain: weatherData.rain || {}
+            },
+            hourly: forecastData.list.slice(0, 24).map(item => ({
+              dt: item.dt,
+              temp: item.main.temp,
+              feels_like: item.main.feels_like,
+              pressure: item.main.pressure,
+              humidity: item.main.humidity,
+              dew_point: 0,
+              uvi: 0,
+              clouds: item.clouds.all,
+              visibility: item.visibility || 10000,
+              wind_speed: item.wind.speed,
+              wind_deg: item.wind.deg,
+              weather: item.weather,
+              pop: item.pop || 0
+            })),
+            daily: [] // Not available from basic forecast, would require additional logic to generate
+          };
         } else {
           oneCallData = await onecallResponse.json();
-          
-          // Reset health status on success
-          apiHealthStatus.isOperational = true;
-          apiHealthStatus.lastError = null;
-          apiHealthStatus.lastChecked = new Date();
-          apiHealthStatus.consecutiveFailures = 0;
         }
-      } catch (error: any) {
-        console.error("Error fetching OneCall data, falling back to basic weather:", error.message || error);
-        
-        // Update API health status
-        apiHealthStatus.isOperational = false;
-        apiHealthStatus.lastError = error.message || 'Unknown error';
-        apiHealthStatus.lastChecked = new Date();
-        apiHealthStatus.consecutiveFailures++;
-        
+      } catch (error) {
+        console.error("Error fetching OneCall data, falling back to basic weather:", error);
         // Generate basic equivalent to oneCallData from the weather and forecast data
-        oneCallData = generateOneCallFallbackData(weatherData, forecastData, lat, lon);
-      }
-      
-      /**
-       * Helper function to generate fallback OneCall data from basic weather and forecast data
-       */
-      function generateOneCallFallbackData(weatherData: any, forecastData: any, lat: any, lon: any) {
-        return {
+        oneCallData = {
           lat: Number(lat),
           lon: Number(lon),
           timezone: "UTC", // Default since we don't have this data
@@ -418,7 +394,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
             weather: weatherData.weather,
             rain: weatherData.rain || {}
           },
-          hourly: forecastData.list.slice(0, 24).map((item: any) => ({
+          hourly: forecastData.list.slice(0, 24).map(item => ({
             dt: item.dt,
             temp: item.main.temp,
             feels_like: item.main.feels_like,
@@ -2127,7 +2103,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/vehicles/:vehicleId/maintenance-flags', async (req, res) => {
     try {
       const vehicleId = parseInt(req.params.vehicleId);
-      const flags = await storage.getMaintenanceFlagsByVehicleId(vehicleId);
+      const flags = await storage.getMaintenanceFlagByVehicleId(vehicleId);
       res.json(flags);
     } catch (error) {
       console.error('Error fetching maintenance flags:', error);
@@ -2150,7 +2126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/vehicles/:vehicleId/gloss-tracking', async (req, res) => {
     try {
       const vehicleId = parseInt(req.params.vehicleId);
-      const glossTracking = await storage.getGlossTrackingsByVehicleId(vehicleId);
+      const glossTracking = await storage.getGlossTrackingByVehicleId(vehicleId);
       res.json(glossTracking);
     } catch (error) {
       console.error('Error fetching gloss tracking:', error);
@@ -2222,13 +2198,15 @@ export async function registerRoutes(app: Express): Promise<Server> {
         notes: 'Shell Helix Ultra 5W-40, OEM filter'
       });
       
-      // Create maintenance flag
+      // Create maintenance flag for upcoming service
       await storage.createMaintenanceFlag({
         vehicleId: vehicle.id,
-        missedWeekly: false,
-        missedMonthly: false,
-        missedQuarterly: true,
-        missedSeasonal: false
+        flagType: 'Scheduled Maintenance',
+        notes: 'Annual service due',
+        dueDate: new Date('2023-12-15'),
+        dueMileage: 10000,
+        isDue: false,
+        isUrgent: false
       });
       
       // Create gloss tracking for paint protection
