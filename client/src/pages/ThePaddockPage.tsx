@@ -1040,7 +1040,7 @@ const ThePaddockPage = ({ demoMode = false }: ThePaddockPageProps) => {
                                 size="sm" 
                                 variant="outline" 
                                 className="text-xs border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10 flex-1"
-                                onClick={() => navigate('/manifestation-station/goal/' + goal.id)}
+                                onClick={() => navigateSafely('/manifestation-station/goal/' + goal.id)}
                               >
                                 View Details
                               </Button>
@@ -1051,7 +1051,7 @@ const ThePaddockPage = ({ demoMode = false }: ThePaddockPageProps) => {
                                 className={`text-xs ${goal.progress === 100 
                                   ? 'border-green-500 text-green-500 hover:bg-green-500/10' 
                                   : 'border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10'} flex-1`}
-                                onClick={() => navigate('/manifestation-station/update/' + goal.id)}
+                                onClick={() => navigateSafely('/manifestation-station/update/' + goal.id)}
                               >
                                 {goal.progress === 100 ? <Check className="h-3 w-3 mr-1" /> : <Edit className="h-3 w-3 mr-1" />}
                                 {goal.progress === 100 ? 'Completed' : 'Update Progress'}
@@ -1064,7 +1064,7 @@ const ThePaddockPage = ({ demoMode = false }: ThePaddockPageProps) => {
                       <Button 
                         variant="default" 
                         className="w-full bg-[#1982FC] hover:bg-[#1982FC]/90"
-                        onClick={() => navigate('/manifestation-station/new')}
+                        onClick={() => navigateSafely('/manifestation-station/new')}
                       >
                         <Plus className="h-4 w-4 mr-2" /> Add New Goal
                       </Button>
@@ -1104,7 +1104,7 @@ const ThePaddockPage = ({ demoMode = false }: ThePaddockPageProps) => {
                   <Button 
                     variant="outline" 
                     className="border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10 flex-1 mr-2"
-                    onClick={() => navigate('/manifestation-station')}
+                    onClick={() => navigateSafely('/manifestation-station')}
                   >
                     <Star className="mr-2 h-4 w-4" /> Manifestation Station
                   </Button>
@@ -1151,7 +1151,7 @@ const ThePaddockPage = ({ demoMode = false }: ThePaddockPageProps) => {
             
             {/* Quick Action Buttons */}
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-              <Button variant="outline" className="border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10" onClick={() => navigate('/fun-drive-planner')}>
+              <Button variant="outline" className="border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10" onClick={() => navigateSafely('/fun-drive-planner')}>
                 <Map className="mr-2 h-4 w-4" /> Plan a Drive
               </Button>
               <Button variant="outline" className="border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10" onClick={() => navigateSafely('/drive-journal')}>
