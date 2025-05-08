@@ -9,10 +9,12 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { X, Zap, ClipboardCheck, Shield, Car, CheckCircle, User, Flag, ChevronRight, ChevronLeft } from 'lucide-react';
+import { X, Zap, ClipboardCheck, Shield, Car, CheckCircle, User, Flag, ChevronRight, ChevronLeft, XCircle } from 'lucide-react';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import { useAuth } from '../context/AuthContext';
+import { useLocation } from 'wouter';
 
 interface BetaWelcomeModalProps {
   isOpen: boolean;
@@ -29,6 +31,8 @@ const BetaWelcomeModal: React.FC<BetaWelcomeModalProps> = ({ isOpen, onClose }) 
   const [betaRole, setBetaRole] = useState<'user' | 'tester'>('user');
   const [isExiting, setIsExiting] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const { logout } = useAuth();
+  const [, setLocation] = useLocation();
   
   // Legal agreement tracking
   const [agreements, setAgreements] = useState({
@@ -90,6 +94,24 @@ const BetaWelcomeModal: React.FC<BetaWelcomeModalProps> = ({ isOpen, onClose }) 
       setStep(prev => prev - 1);
       setError(null);
     }
+  };
+  
+  // Handle terms decline - logs user out and redirects to auth
+  const handleDecline = () => {
+    // Start exit animation
+    setIsExiting(true);
+    
+    // Small delay to allow animation
+    setTimeout(() => {
+      // Clear any beta-related localStorage items
+      localStorage.removeItem('paddock20_beta_status');
+      
+      // Perform logout
+      logout();
+      
+      // Redirect to auth page
+      setLocation('/auth');
+    }, 400);
   };
   
   // Base modal classes
@@ -742,13 +764,25 @@ const BetaWelcomeModal: React.FC<BetaWelcomeModalProps> = ({ isOpen, onClose }) 
         {/* Footer with navigation */}
         <div className="border-t border-gray-800 p-4 md:p-6 flex justify-between items-center bg-gradient-to-r from-gray-900 to-black">
           {step > 1 ? (
-            <button
-              onClick={handlePrevious}
-              className="px-4 py-2 bg-black hover:bg-gray-900 text-white rounded-md transition-colors flex items-center border border-gray-800"
-            >
-              <ChevronLeft className="mr-1" size={18} />
-              <span>PREVIOUS</span>
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handlePrevious}
+                className="px-4 py-2 bg-black hover:bg-gray-900 text-white rounded-md transition-colors flex items-center border border-gray-800"
+              >
+                <ChevronLeft className="mr-1" size={18} />
+                <span>PREVIOUS</span>
+              </button>
+              
+              {step === 3 && (
+                <button
+                  onClick={handleDecline}
+                  className="px-4 py-2 bg-black hover:bg-red-900/20 text-red-500 hover:text-red-400 rounded-md transition-colors flex items-center border border-red-900/30"
+                >
+                  <XCircle className="mr-1" size={18} />
+                  <span>I DO NOT ACCEPT THESE TERMS</span>
+                </button>
+              )}
+            </div>
           ) : (
             <div></div> // Empty div to maintain layout with justify-between
           )}
