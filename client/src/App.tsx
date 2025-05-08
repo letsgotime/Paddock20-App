@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { Route, useLocation } from 'wouter';
+import { Route, Switch, Redirect, useLocation } from 'wouter';
 import { AuthProvider } from '@/auth/AuthProvider';
 import { useAuth } from '@/auth/useAuth';
 import { queryClient } from "./lib/queryClient";
@@ -14,6 +14,7 @@ import FixedSoundBar from "./components/FixedSoundBar";
 import Footer from "./components/Footer";
 import NotFound from "@/pages/not-found";
 import { ProtectedRoute } from './auth/ProtectedRoute';
+import { AuthPermission, AuthRole } from './auth/types';
 import UserOnboarding from "./components/UserOnboarding";
 import SupportChatbot from "./components/SupportChatbot";
 import OneTapWeatherSnapshot from "./components/OneTapWeatherSnapshot";
@@ -269,9 +270,21 @@ function AppContent({
                           <Route path="/" component={() => <ProtectedRoute><ThePaddockPage /></ProtectedRoute>} />
                           
                           {/* Redirects for backward compatibility */}
-                          <Route path="/the-paddock" component={() => <Redirect to="/" />} />
-                          <Route path="/paddock" component={() => <Redirect to="/" />} />
-                          <Route path="/admin" component={() => <AdminRoute><AdminPage /></AdminRoute>} />
+                          <Route 
+                            path="/the-paddock" 
+                            component={() => {
+                              window.location.href = '/';
+                              return null;
+                            }} 
+                          />
+                          <Route 
+                            path="/paddock" 
+                            component={() => {
+                              window.location.href = '/';
+                              return null;
+                            }} 
+                          />
+                          <Route path="/admin" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.VIEW_ADMIN_DASHBOARD]}><AdminPage /></ProtectedRoute>} />
                           <Route path="/onboarding-test" component={() => <ProtectedRoute><OnboardingTestPage /></ProtectedRoute>} />
                           <Route path="/settings" component={() => <ProtectedRoute><Settings /></ProtectedRoute>} />
                           <Route path="/garage" component={() => <ProtectedRoute><GaragePage /></ProtectedRoute>} />
@@ -287,11 +300,11 @@ function AppContent({
                           <Route path="/juicebox" component={() => <ProtectedRoute><JuiceBox /></ProtectedRoute>} />
                           <Route path="/product-organizer" component={() => <ProtectedRoute><ProductOrganizerPage /></ProtectedRoute>} />
                           <Route path="/tires-timepieces" component={() => <ProtectedRoute><TiresTimepieces /></ProtectedRoute>} />
-                          {/* Premium features - use PremiumRoute for routes that require subscription */}
-                          <Route path="/podium-pursuit" component={() => <PremiumRoute><PodiumPursuitPage /></PremiumRoute>} />
-                          <Route path="/events" component={() => <PremiumRoute><EventsPage /></PremiumRoute>} />
-                          <Route path="/motorsports-events" component={() => <PremiumRoute><MotorsportsEventsPage /></PremiumRoute>} />
-                          <Route path="/motorsports-gallery" component={() => <PremiumRoute><MotorsportsGalleryPage /></PremiumRoute>} />
+                          {/* Premium features - require ACCESS_PREMIUM_FEATURES permission */}
+                          <Route path="/podium-pursuit" component={() => <ProtectedRoute requiredPermissions={["ACCESS_PREMIUM_FEATURES"]}><PodiumPursuitPage /></ProtectedRoute>} />
+                          <Route path="/events" component={() => <ProtectedRoute requiredPermissions={["ACCESS_PREMIUM_FEATURES"]}><EventsPage /></ProtectedRoute>} />
+                          <Route path="/motorsports-events" component={() => <ProtectedRoute requiredPermissions={["ACCESS_PREMIUM_FEATURES"]}><MotorsportsEventsPage /></ProtectedRoute>} />
+                          <Route path="/motorsports-gallery" component={() => <ProtectedRoute requiredPermissions={["ACCESS_PREMIUM_FEATURES"]}><MotorsportsGalleryPage /></ProtectedRoute>} />
                           
                           {/* Membership and support pages */}
                           <Route path="/membership" component={() => <ProtectedRoute><MembershipPage /></ProtectedRoute>} />
@@ -299,9 +312,9 @@ function AppContent({
                           <Route path="/contact" component={() => <ProtectedRoute><ContactPage /></ProtectedRoute>} />
                           
                           {/* Premium content features */}
-                          <Route path="/ebooks" component={() => <PremiumRoute><EbooksPage /></PremiumRoute>} />
-                          <Route path="/concierge" component={() => <PremiumRoute><ConciergePage /></PremiumRoute>} />
-                          <Route path="/discounts" component={() => <PremiumRoute><DiscountsPage /></PremiumRoute>} />
+                          <Route path="/ebooks" component={() => <ProtectedRoute requiredPermissions={["ACCESS_PREMIUM_FEATURES"]}><EbooksPage /></ProtectedRoute>} />
+                          <Route path="/concierge" component={() => <ProtectedRoute requiredPermissions={["ACCESS_PREMIUM_FEATURES"]}><ConciergePage /></ProtectedRoute>} />
+                          <Route path="/discounts" component={() => <ProtectedRoute requiredPermissions={["ACCESS_PREMIUM_FEATURES"]}><DiscountsPage /></ProtectedRoute>} />
                           <Route path="/spotify-test" component={() => <ProtectedRoute><SpotifyTestPage /></ProtectedRoute>} />
                           <Route path="/spotify-env-check" component={() => <ProtectedRoute><SpotifyEnvCheck /></ProtectedRoute>} />
                           <Route path="/api-explorer" component={() => <ProtectedRoute><ApiExplorerPage /></ProtectedRoute>} />
