@@ -14,10 +14,12 @@ import { checkSlackIntegration, initializeSlackClient, shareVehicleToSlack, shar
 import { setupAuth } from "./auth";
 import twoFactorRoutes from "./routes/twoFactorRoutes";
 import auth0Routes from "./routes/auth0Routes";
+import authProfileRoutes from "./routes/authProfileRoutes";
 import spotifyRoutes from "./routes/spotifyRoutes";
 import vinDecoderRoutes from "./routes/vinDecoderRoutes";
 import smartcarRoutes from "./routes/smartcarRoutes";
 import obdRoutes from "./routes/obdRoutes";
+import onboardingFlowRoutes from "./routes/onboardingFlowRoutes";
 
 // OpenWeather API keys - updated May 1, 2025
 const OPENWEATHER_API_KEYS = {
@@ -259,6 +261,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register OBD-II Integration routes
   app.use('/api/obd', obdRoutes);
+  
+  // Register Onboarding Flow routes
+  app.use(onboardingFlowRoutes);
   
   // Using only OpenWeather API for all weather services
   
