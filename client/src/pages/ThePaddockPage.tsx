@@ -30,6 +30,7 @@ import {
 // Widgets
 import F1TelemetryWidget from '@/components/dashboard/widgets/F1TelemetryWidget';
 import { SoundPlayer } from '@/components/SoundPlayer';
+import AppHeader from '@/components/AppHeader';
 
 // Icons
 import {
@@ -53,7 +54,11 @@ import apiWarehouse from '@/services/api/APIDataWarehouse';
  * A consolidated command center for all user and vehicle information
  * Combines functionality from Dashboard, Garage Vault, Profile, and other pages
  */
-const ThePaddockPage = () => {
+interface ThePaddockPageProps {
+  demoMode?: boolean;
+}
+
+const ThePaddockPage = ({ demoMode = false }: ThePaddockPageProps) => {
   // Component state for expandable sections
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>({});
   const [animatingSection, setAnimatingSection] = useState<string | null>(null);
@@ -336,6 +341,9 @@ const ThePaddockPage = () => {
   
   return (
     <div className="min-h-screen bg-[#121212]">
+      {/* Custom AppHeader with demo mode prop */}
+      <AppHeader demoMode={demoMode} />
+      
       <div className="container mx-auto px-4 py-6">
         {/* Page Header with title and user greeting */}
         <div className="mb-6">

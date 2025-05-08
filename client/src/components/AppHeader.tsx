@@ -5,11 +5,15 @@ import { useNativeAuth } from '@/hooks/useNativeAuth';
 import { Menu } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useState } from 'react';
+import DropdownNavbar from './DropdownNavbar';
 
-export default function AppHeader({ className }: { className?: string }) {
+export default function AppHeader({ className, demoMode = false }: { className?: string, demoMode?: boolean }) {
   const [location] = useLocation();
   const { isAuthenticated } = useNativeAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  
+  // Show menu if user is authenticated or in demo mode
+  const showMenu = (isAuthenticated || demoMode) && location !== '/auth';
   
   return (
     <header className={cn("bg-black/90 text-white border-b border-[#1982FC]/50 px-4 py-3", className)}>
@@ -27,7 +31,7 @@ export default function AppHeader({ className }: { className?: string }) {
         
         {/* Auth status and menu button */}
         <div className="flex items-center gap-2">
-          {isAuthenticated && location !== '/auth' && (
+          {showMenu && (
             <Button 
               variant="ghost" 
               size="sm"
@@ -37,11 +41,23 @@ export default function AppHeader({ className }: { className?: string }) {
               <Menu className="h-5 w-5" />
             </Button>
           )}
-          <AuthStatus />
+          {!demoMode && <AuthStatus />}
+          {demoMode && (
+            <Button variant="outline" size="sm" asChild>
+              <Link href="/auth">Exit Demo</Link>
+            </Button>
+          )}
         </div>
       </div>
       
-      {/* We can implement the mobile menu later if needed */}
+      {/* Dropdown Menu */}
+      {menuOpen && showMenu && (
+        <DropdownNavbar 
+          isOpen={menuOpen} 
+          onClose={() => setMenuOpen(false)}
+          demoMode={demoMode}
+        />
+      )}
     </header>
   );
 }
