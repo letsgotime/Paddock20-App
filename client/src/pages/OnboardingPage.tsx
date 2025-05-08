@@ -79,38 +79,50 @@ const OnboardingPage: React.FC = () => {
   
   // Form submission for each step
   const handleContinue = async () => {
+    console.log(`Starting onboarding step ${currentStep} validation`);
+    
     // Step 1 validation
     if (currentStep === 1) {
+      console.log('Step 1 validation data:', { fullName, termsAgreed, privacyAgreed, betaAgreed });
+      
       if (!fullName) {
         setError('Please enter your full name');
+        console.log('Step 1 validation failed: Missing full name');
         return;
       }
       
       if (!validateLegalAgreements()) {
+        console.log('Step 1 validation failed: Legal agreements not accepted');
         return;
       }
       
+      console.log('Step 1 validation passed - proceeding to step 2');
       setCurrentStep(2);
       return;
     }
     
     // Step 2 validation
     if (currentStep === 2) {
+      console.log('Step 2 validation data:', { vehicles });
+      
       const hasCompleteVehicle = vehicles.some(v => 
         v.make && v.model && v.year
       );
       
       if (!hasCompleteVehicle) {
         setError('Please enter at least one vehicle with make, model, and year');
+        console.log('Step 2 validation failed: No complete vehicle');
         return;
       }
       
+      console.log('Step 2 validation passed - proceeding to step 3');
       setCurrentStep(3);
       return;
     }
     
     if (currentStep === 3) {
       // Final step - submit all data
+      console.log('Starting final step (3) submission');
       setIsSubmitting(true);
       setError(null);
       
@@ -118,6 +130,7 @@ const OnboardingPage: React.FC = () => {
         // Step 1: Update user profile
         // Get Auth0 token from localStorage
         const auth0Token = localStorage.getItem('auth0_token');
+        console.log('Auth0 token available:', !!auth0Token, 'User available:', !!user);
         
         const profileResponse = await fetch('/api/user/profile', {
           method: 'PATCH',
@@ -249,8 +262,31 @@ const OnboardingPage: React.FC = () => {
           console.warn('No user ID found when trying to set onboarding flags');
         }
         
-        // All steps completed - redirect to dashboard
-        navigate('/dashboard', { replace: true });
+        // Before navigation, ensure we can retrieve the flags to verify they were set
+        if (user?.id) {
+          const betaOnboardingKey = `paddock20_beta_onboarding_complete_${user.id}`;
+          const legalAgreementsKey = `paddock20_legal_agreements_${user.id}`;
+          
+          console.log('Verifying onboarding flags before navigation:', {
+            betaOnboardingCompleted: localStorage.getItem(betaOnboardingKey),
+            legalAgreementsAccepted: localStorage.getItem(legalAgreementsKey)
+          });
+          
+          // Set a global flag to inform protected routes that onboarding was just completed
+          window.localStorage.setItem('paddock20_onboarding_just_completed', 'true');
+          
+          // All steps completed - redirect to dashboard
+          console.log('All onboarding steps completed - redirecting to dashboard');
+          navigate('/dashboard', { replace: true });
+        } else {
+          console.error('Cannot navigate to dashboard - user ID not available');
+          // Show error toast
+          toast({
+            title: 'Error Completing Setup',
+            description: 'Unable to verify your identity. Please try again or contact support.',
+            variant: 'destructive'
+          });
+        }
         
       } catch (error) {
         console.error('Onboarding error:', error);
