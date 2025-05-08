@@ -8,6 +8,10 @@ export default function BetaWelcomePage() {
   
   // Handler for beta modal close
   const handleBetaModalClose = (betaRole?: 'user' | 'tester') => {
+    // Set beta status as accepted in localStorage
+    localStorage.setItem('paddock20_beta_status', 'accepted');
+    console.log('Beta terms accepted - status set to accepted');
+    
     setModalOpen(false);
     // Navigate to onboarding page
     navigate('/onboarding');
