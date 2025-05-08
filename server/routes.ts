@@ -74,12 +74,15 @@ interface RateLimiter {
   geocodeMinInterval: number;
 }
 
+// Use the WEATHER_CHECK_INTERVAL to avoid name conflicts with imported CHECK_INTERVAL
+const WEATHER_CHECK_INTERVAL = 4 * 60 * 60 * 1000;
+
 const apiHealthStatus: WeatherApiStatus = {
   lastChecked: new Date(0), // Set to epoch time to force immediate check
   isOperational: true, // Assume operational until first check
   lastError: null,
   consecutiveFailures: 0,
-  checkInterval: CHECK_INTERVAL // 4 hours in milliseconds
+  checkInterval: WEATHER_CHECK_INTERVAL // 4 hours in milliseconds
 };
 
 // Initialize rate limiter to prevent hitting API rate limits
@@ -210,14 +213,14 @@ const commonTimezones = [
   'Africa/Cairo'
 ];
 
-// Import health monitoring system
+// Import health monitoring system first to avoid import order issues
 import {
   registerService,
   checkServiceHealth,
-  startHealthMonitoring,
-  CHECK_INTERVAL
+  startHealthMonitoring
 } from './healthMonitor';
 
+// Then import the service-specific health checks
 import {
   checkOpenWeatherHealth,
   checkUnsplashHealth,
@@ -323,11 +326,12 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // Make onecall API request - try/catch so we can still return weather data without OneCall
       let oneCallData;
       try {
-        // Try the OneCall API key first
-        const onecallUrl = `https://api.openweathermap.org/data/2.5/onecall?lat=${lat}&lon=${lon}&units=${units}&exclude=minutely&appid=${ONECALL_API_KEY || apiKey}`;
+        // Try the OneCall API key with the 3.0 endpoint
+        const onecallUrl = `https://api.openweathermap.org/data/3.0/onecall?lat=${lat}&lon=${lon}&units=${units}&exclude=minutely&appid=${ONECALL_API_KEY}`;
+        console.log(`Making OneCall API request to: ${onecallUrl}`);
         const onecallResponse = await fetch(onecallUrl);
         if (!onecallResponse.ok) {
-          console.warn(`OneCall API error: ${onecallResponse.status} - falling back to basic weather data`);
+          console.warn(`OneCall API error: ${onecallResponse.status} - ${await onecallResponse.text()} - falling back to basic weather data`);
           // Generate basic equivalent to oneCallData from the weather and forecast data
           oneCallData = {
             lat: Number(lat),
