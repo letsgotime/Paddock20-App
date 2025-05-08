@@ -13,52 +13,89 @@ import {
   HealthStatusType 
 } from '../types/core';
 
+import axios from 'axios';
+
 /**
- * IP-based Location Provider
- * Uses IPInfo service to get approximate location from IP
+ * IPInfo Provider
+ * 
+ * Implementation of the IPInfo API provider for geocoding.
  */
 export class IPInfoProvider implements APIProvider {
   name = 'IPInfo';
   category = APICategory.GEOCODING;
   priority = 10;
   
-  private token: string;
-  private baseUrl = 'https://ipinfo.io';
-  
-  constructor(token?: string) {
-    this.token = token || import.meta.env.VITE_IPINFO_TOKEN || '';
-  }
-  
   /**
-   * Execute a geocoding API request
+   * Execute a request to the IPInfo API
    */
   async execute<T>(request: APIRequest): Promise<APIResponse<T>> {
-    const { endpoint } = request;
+    const token = import.meta.env.VITE_IPINFO_TOKEN || process.env.IPINFO_TOKEN;
     
     try {
-      if (endpoint === 'ip_location') {
-        return await this.getLocationFromIP() as unknown as APIResponse<T>;
-      } else {
-        return {
-          success: false,
-          error: {
-            code: 'unsupported_endpoint',
-            message: `IPInfo provider does not support the ${endpoint} endpoint`,
-            reason: 'VALIDATION_ERROR',
-          },
-          fromCache: false,
-          provider: this.name,
-        };
+      let endpoint: string;
+      let params: Record<string, any> = {};
+      
+      // Handle different endpoints
+      switch (request.endpoint) {
+        case 'current':
+          // Get location from current IP
+          endpoint = 'https://ipinfo.io/json';
+          if (token) {
+            params.token = token;
+          }
+          break;
+        
+        case 'lookup':
+          // Look up specific IP
+          if (!request.params?.ip) {
+            return {
+              success: false,
+              error: {
+                code: 'missing_ip',
+                message: 'IP address is required for lookup',
+                reason: 'VALIDATION_ERROR',
+              },
+              fromCache: false,
+              provider: this.name,
+            };
+          }
+          
+          endpoint = `https://ipinfo.io/${request.params.ip}/json`;
+          if (token) {
+            params.token = token;
+          }
+          break;
+          
+        default:
+          endpoint = 'https://ipinfo.io/json';
+          if (token) {
+            params.token = token;
+          }
       }
-    } catch (error) {
-      console.error('IPInfo provider error:', error);
+      
+      // Execute the request
+      const response = await axios.get(endpoint, { params });
+      
+      // Transform to standardized format
+      const transformedData = this.transformData<T>(response.data);
+      
+      return {
+        success: true,
+        data: transformedData,
+        fromCache: false,
+        provider: this.name,
+        timestamp: Date.now(),
+      };
+    } catch (error: any) {
+      console.error('IPInfo API error:', error);
       
       return {
         success: false,
         error: {
-          code: 'ipinfo_error',
-          message: `IPInfo API error: ${error instanceof Error ? error.message : String(error)}`,
-          reason: 'UNKNOWN_ERROR',
+          code: error.response?.status?.toString() || 'unknown',
+          message: error.message || 'Unknown error',
+          reason: this.mapErrorReason(error),
+          details: error.response?.data,
         },
         fromCache: false,
         provider: this.name,
@@ -67,87 +104,57 @@ export class IPInfoProvider implements APIProvider {
   }
   
   /**
-   * Get user's approximate location from their IP address
+   * Transform IPInfo data to our standardized format
    */
-  private async getLocationFromIP(): Promise<APIResponse<any>> {
-    // Check if we have a token
-    const authParam = this.token ? `?token=${this.token}` : '';
-    
-    // Call the IPInfo API
-    const response = await fetch(`${this.baseUrl}/json${authParam}`);
-    
-    if (!response.ok) {
-      const status = response.status;
-      let reason = 'API_ERROR';
-      
-      if (status === 401 || status === 403) {
-        reason = 'AUTH_ERROR';
-      } else if (status === 429) {
-        reason = 'RATE_LIMIT';
-      }
-      
-      return {
-        success: false,
-        error: {
-          code: `ipinfo_${status}`,
-          message: `IPInfo API error: ${response.statusText}`,
-          reason: reason as any,
-        },
-        fromCache: false,
-        provider: this.name,
-      };
-    }
-    
-    // Parse the response
-    const data = await response.json();
-    
-    // Extract coordinates from "loc" which is a string like "37.7749,-122.4194"
-    let lat = null;
-    let lon = null;
-    
+  private transformData<T>(data: any): T {
+    // Parse the coordinates from the loc field "lat,lon"
+    let lat = 0, lon = 0;
     if (data.loc && typeof data.loc === 'string') {
-      const [latStr, lonStr] = data.loc.split(',');
-      lat = parseFloat(latStr);
-      lon = parseFloat(lonStr);
+      const [latitude, longitude] = data.loc.split(',').map(parseFloat);
+      lat = latitude;
+      lon = longitude;
     }
-    
-    // Verify coordinates are valid
-    if (isNaN(lat!) || isNaN(lon!)) {
-      return {
-        success: false,
-        error: {
-          code: 'invalid_coordinates',
-          message: 'IPInfo returned invalid coordinates',
-          reason: 'API_ERROR',
-        },
-        fromCache: false,
-        provider: this.name,
-      };
-    }
-    
-    // Transform data to standardized format
-    const transformedData = {
-      location: {
-        lat,
-        lon,
-        city: data.city,
-        region: data.region,
-        country: data.country,
-        postal: data.postal,
-        timezone: data.timezone,
-        ip: data.ip,
-      },
-      accuracy: 'low', // IP-based location is generally low accuracy
-      source: 'ipinfo',
-    };
     
     return {
-      success: true,
-      data: transformedData,
-      fromCache: false,
-      provider: this.name,
-      timestamp: Date.now(),
-    };
+      name: data.city || 'Unknown',
+      country: data.country || '',
+      region: data.region || '',
+      city: data.city || '',
+      postal: data.postal || '',
+      lat,
+      lon,
+      ip: data.ip,
+      timezone: data.timezone,
+      provider: 'ipinfo',
+    } as unknown as T;
+  }
+  
+  /**
+   * Map error responses to standard error reasons
+   */
+  private mapErrorReason(error: any): string {
+    const status = error.response?.status;
+    
+    if (!error.response) {
+      return 'NETWORK_ERROR';
+    }
+    
+    switch (status) {
+      case 401:
+      case 403:
+        return 'AUTHENTICATION_ERROR';
+      case 404:
+        return 'RESOURCE_NOT_FOUND';
+      case 429:
+        return 'RATE_LIMIT_ERROR';
+      case 500:
+      case 502:
+      case 503:
+      case 504:
+        return 'SERVER_ERROR';
+      default:
+        return 'UNKNOWN_ERROR';
+    }
   }
   
   /**
@@ -155,75 +162,135 @@ export class IPInfoProvider implements APIProvider {
    */
   async getHealthStatus(): Promise<HealthStatusType> {
     try {
-      // Use a simple API call to check health
-      const authParam = this.token ? `?token=${this.token}` : '';
-      const response = await fetch(`${this.baseUrl}/json${authParam}`);
+      // Simple health check - just verify we can connect
+      const response = await axios.get('https://ipinfo.io/json', {
+        timeout: 3000, // 3 second timeout
+      });
       
-      if (response.ok) {
-        return 'healthy';
-      } else if (response.status === 429) {
+      return response.status === 200 ? 'healthy' : 'degraded';
+    } catch (error: any) {
+      // Check if it's just an authentication issue or a real service problem
+      if (error.response?.status === 429) {
         return 'degraded'; // Rate limited
-      } else if (response.status === 401 || response.status === 403) {
-        return 'unavailable'; // Authentication issues
       } else {
-        return 'degraded'; // Other issues
+        return 'unavailable';
       }
-    } catch (error) {
-      console.error('IPInfo health check error:', error);
-      return 'unavailable';
     }
   }
 }
 
 /**
- * Open Street Map Geocoding Provider (Nominatim)
- * Uses Nominatim service for address-to-coordinate and reverse geocoding
+ * Nominatim Provider (OpenStreetMap)
+ * 
+ * Implementation of the Nominatim API provider for geocoding.
  */
 export class NominatimProvider implements APIProvider {
   name = 'OpenStreetMap';
   category = APICategory.GEOCODING;
   priority = 5;
   
-  private baseUrl = 'https://nominatim.openstreetmap.org';
-  private userAgent = 'PADDOCK20-Geocoding-App';
-  
   /**
-   * Execute a geocoding API request
+   * Execute a request to the Nominatim API
    */
   async execute<T>(request: APIRequest): Promise<APIResponse<T>> {
-    const { endpoint, params } = request;
-    
     try {
-      switch (endpoint) {
-        case 'geocode':
-          // Address to coordinates
-          return await this.forwardGeocode(params) as unknown as APIResponse<T>;
+      let endpoint: string;
+      let params: Record<string, any> = {
+        format: 'json',
+      };
+      
+      // Handle different endpoints
+      switch (request.endpoint) {
+        case 'search':
+          // Search by query (address, place name, etc.)
+          if (!request.params?.q) {
+            return {
+              success: false,
+              error: {
+                code: 'missing_query',
+                message: 'Query parameter is required for search',
+                reason: 'VALIDATION_ERROR',
+              },
+              fromCache: false,
+              provider: this.name,
+            };
+          }
+          
+          endpoint = 'https://nominatim.openstreetmap.org/search';
+          params = {
+            ...params,
+            q: request.params.q,
+            limit: request.params.limit || 5,
+            addressdetails: 1,
+          };
+          break;
           
         case 'reverse':
-          // Coordinates to address
-          return await this.reverseGeocode(params) as unknown as APIResponse<T>;
+          // Reverse geocoding (coordinates to address)
+          if (!request.params?.lat || !request.params?.lon) {
+            return {
+              success: false,
+              error: {
+                code: 'missing_coordinates',
+                message: 'Latitude and longitude are required for reverse geocoding',
+                reason: 'VALIDATION_ERROR',
+              },
+              fromCache: false,
+              provider: this.name,
+            };
+          }
+          
+          endpoint = 'https://nominatim.openstreetmap.org/reverse';
+          params = {
+            ...params,
+            lat: request.params.lat,
+            lon: request.params.lon,
+            zoom: request.params.zoom || 18,
+            addressdetails: 1,
+          };
+          break;
           
         default:
           return {
             success: false,
             error: {
               code: 'unsupported_endpoint',
-              message: `Nominatim provider does not support the ${endpoint} endpoint`,
+              message: `Endpoint '${request.endpoint}' is not supported by this provider`,
               reason: 'VALIDATION_ERROR',
             },
             fromCache: false,
             provider: this.name,
           };
       }
-    } catch (error) {
-      console.error('Nominatim provider error:', error);
+      
+      // Add application identifier
+      const headers = {
+        'User-Agent': 'PADDOCK20/1.0 (info@gotime.studio)',
+      };
+      
+      // Execute the request
+      const response = await axios.get(endpoint, { params, headers });
+      
+      // Transform to standardized format
+      const transformedData = this.transformData<T>(request.endpoint, response.data);
+      
+      return {
+        success: true,
+        data: transformedData,
+        fromCache: false,
+        provider: this.name,
+        timestamp: Date.now(),
+      };
+    } catch (error: any) {
+      console.error('Nominatim API error:', error);
       
       return {
         success: false,
         error: {
-          code: 'nominatim_error',
-          message: `Nominatim API error: ${error instanceof Error ? error.message : String(error)}`,
-          reason: 'UNKNOWN_ERROR',
+          code: error.response?.status?.toString() || 'unknown',
+          message: error.message || 'Unknown error',
+          reason: this.mapErrorReason(error),
+          details: error.response?.data,
         },
         fromCache: false,
         provider: this.name,
@@ -232,169 +299,65 @@ export class NominatimProvider implements APIProvider {
   }
   
   /**
-   * Forward geocoding (address to coordinates)
+   * Transform Nominatim data to our standardized format
    */
-  private async forwardGeocode(params: any): Promise<APIResponse<any>> {
-    const { query, limit = 1 } = params || {};
-    
-    if (!query) {
-      return {
-        success: false,
-        error: {
-          code: 'missing_query',
-          message: 'A search query is required for forward geocoding',
-          reason: 'VALIDATION_ERROR',
-        },
-        fromCache: false,
-        provider: this.name,
-      };
-    }
-    
-    // Call the Nominatim API
-    const apiUrl = new URL(`${this.baseUrl}/search`);
-    apiUrl.searchParams.append('q', query);
-    apiUrl.searchParams.append('format', 'json');
-    apiUrl.searchParams.append('limit', limit.toString());
-    
-    const response = await fetch(apiUrl.toString(), {
-      headers: {
-        'User-Agent': this.userAgent,
-      },
-    });
-    
-    if (!response.ok) {
-      return {
-        success: false,
-        error: {
-          code: `nominatim_${response.status}`,
-          message: `Nominatim API error: ${response.statusText}`,
-          reason: 'API_ERROR',
-        },
-        fromCache: false,
-        provider: this.name,
-      };
-    }
-    
-    // Parse the response
-    const data = await response.json();
-    
-    if (!data || data.length === 0) {
-      return {
-        success: false,
-        error: {
-          code: 'no_results',
-          message: 'No results found for the provided query',
-          reason: 'API_ERROR',
-        },
-        fromCache: false,
-        provider: this.name,
-      };
-    }
-    
-    // Transform the results
-    const transformedData = data.map((item: any) => ({
-      location: {
+  private transformData<T>(endpoint: string, data: any): T {
+    if (endpoint === 'search') {
+      if (!Array.isArray(data) || data.length === 0) {
+        return [] as unknown as T;
+      }
+      
+      return data.map((item: any) => ({
+        name: item.display_name || 'Unknown',
+        country: item.address?.country || '',
+        region: item.address?.state || '',
+        city: item.address?.city || item.address?.town || item.address?.village || '',
+        postal: item.address?.postcode || '',
         lat: parseFloat(item.lat),
         lon: parseFloat(item.lon),
-        name: item.display_name,
-        type: item.type,
-        class: item.class,
-        importance: item.importance,
-      },
-      accuracy: 'high', // Address-based geocoding is generally high accuracy
-      source: 'nominatim',
-    }));
+        provider: 'osm',
+      })) as unknown as T;
+    } else if (endpoint === 'reverse') {
+      return {
+        name: data.display_name || 'Unknown',
+        country: data.address?.country || '',
+        region: data.address?.state || '',
+        city: data.address?.city || data.address?.town || data.address?.village || '',
+        postal: data.address?.postcode || '',
+        lat: parseFloat(data.lat),
+        lon: parseFloat(data.lon),
+        provider: 'osm',
+      } as unknown as T;
+    }
     
-    return {
-      success: true,
-      data: limit === 1 ? transformedData[0] : transformedData,
-      fromCache: false,
-      provider: this.name,
-      timestamp: Date.now(),
-    };
+    return data as T;
   }
   
   /**
-   * Reverse geocoding (coordinates to address)
+   * Map error responses to standard error reasons
    */
-  private async reverseGeocode(params: any): Promise<APIResponse<any>> {
-    const { lat, lon } = params || {};
+  private mapErrorReason(error: any): string {
+    const status = error.response?.status;
     
-    if (lat === undefined || lon === undefined) {
-      return {
-        success: false,
-        error: {
-          code: 'missing_coordinates',
-          message: 'Latitude and longitude are required for reverse geocoding',
-          reason: 'VALIDATION_ERROR',
-        },
-        fromCache: false,
-        provider: this.name,
-      };
+    if (!error.response) {
+      return 'NETWORK_ERROR';
     }
     
-    // Call the Nominatim API
-    const apiUrl = new URL(`${this.baseUrl}/reverse`);
-    apiUrl.searchParams.append('lat', lat.toString());
-    apiUrl.searchParams.append('lon', lon.toString());
-    apiUrl.searchParams.append('format', 'json');
-    
-    const response = await fetch(apiUrl.toString(), {
-      headers: {
-        'User-Agent': this.userAgent,
-      },
-    });
-    
-    if (!response.ok) {
-      return {
-        success: false,
-        error: {
-          code: `nominatim_${response.status}`,
-          message: `Nominatim API error: ${response.statusText}`,
-          reason: 'API_ERROR',
-        },
-        fromCache: false,
-        provider: this.name,
-      };
+    switch (status) {
+      case 403:
+        return 'AUTHENTICATION_ERROR';
+      case 404:
+        return 'RESOURCE_NOT_FOUND';
+      case 429:
+        return 'RATE_LIMIT_ERROR';
+      case 500:
+      case 502:
+      case 503:
+      case 504:
+        return 'SERVER_ERROR';
+      default:
+        return 'UNKNOWN_ERROR';
     }
-    
-    // Parse the response
-    const data = await response.json();
-    
-    if (!data || data.error) {
-      return {
-        success: false,
-        error: {
-          code: 'nominatim_error',
-          message: data.error || 'Unknown Nominatim error',
-          reason: 'API_ERROR',
-        },
-        fromCache: false,
-        provider: this.name,
-      };
-    }
-    
-    // Transform the results
-    const transformedData = {
-      location: {
-        lat: parseFloat(data.lat),
-        lon: parseFloat(data.lon),
-        name: data.display_name,
-        type: data.type,
-        class: data.class,
-      },
-      address: data.address,
-      accuracy: 'high',
-      source: 'nominatim',
-    };
-    
-    return {
-      success: true,
-      data: transformedData,
-      fromCache: false,
-      provider: this.name,
-      timestamp: Date.now(),
-    };
   }
   
   /**
@@ -402,25 +365,27 @@ export class NominatimProvider implements APIProvider {
    */
   async getHealthStatus(): Promise<HealthStatusType> {
     try {
-      // Use a simple API call to check health
-      const response = await fetch(`${this.baseUrl}/search?q=London&format=json&limit=1`, {
-        headers: {
-          'User-Agent': this.userAgent,
+      // Simple health check - just verify we can connect with a sample query
+      const response = await axios.get('https://nominatim.openstreetmap.org/search', {
+        params: {
+          q: 'London',
+          format: 'json',
+          limit: 1,
         },
+        headers: {
+          'User-Agent': 'PADDOCK20/1.0 (info@gotime.studio)',
+        },
+        timeout: 3000, // 3 second timeout
       });
       
-      if (response.ok) {
-        return 'healthy';
-      } else if (response.status === 429) {
+      return response.status === 200 ? 'healthy' : 'degraded';
+    } catch (error: any) {
+      // Check if it's just a rate limiting issue or a real service problem
+      if (error.response?.status === 429) {
         return 'degraded'; // Rate limited
-      } else if (response.status >= 500) {
-        return 'unavailable'; // Server error
       } else {
-        return 'degraded'; // Other issues
+        return 'unavailable';
       }
-    } catch (error) {
-      console.error('Nominatim health check error:', error);
-      return 'unavailable';
     }
   }
 }
