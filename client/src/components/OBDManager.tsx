@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
+import { Button } from "@/components/ui/button";
 import { 
-  Button, 
   Card, 
   CardContent, 
   CardDescription, 
@@ -229,7 +229,7 @@ export default function OBDManager() {
     
     if (healthData.status?.connected) {
       return (
-        <Alert variant="success" className="mb-4 bg-green-50 border-green-200">
+        <Alert className="mb-4 bg-green-50 border-green-200">
           <CheckCircle2 className="h-4 w-4 text-green-500" />
           <AlertTitle className="text-green-700">Connected</AlertTitle>
           <AlertDescription className="text-green-600">
@@ -240,7 +240,7 @@ export default function OBDManager() {
     }
     
     return (
-      <Alert variant="warning" className="mb-4 bg-yellow-50 border-yellow-200">
+      <Alert className="mb-4 bg-yellow-50 border-yellow-200">
         <Activity className="h-4 w-4 text-yellow-500" />
         <AlertTitle className="text-yellow-700">Service Running</AlertTitle>
         <AlertDescription className="text-yellow-600">
