@@ -48,8 +48,8 @@ const LandingPage = () => {
       
       {/* Beta Welcome Modal */}
       <BetaWelcomeModal 
-        open={modalOpen} 
-        onOpenChange={setModalOpen}
+        isOpen={modalOpen} 
+        onClose={() => setModalOpen(false)}
       />
     </div>
   );
