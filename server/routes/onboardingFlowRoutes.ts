@@ -4,7 +4,7 @@
  */
 import express from 'express';
 import { db } from '../db';
-import { users } from '@shared/schema';
+import { users, OnboardingStatus } from '@shared/schema';
 import { eq } from 'drizzle-orm';
 import { flexibleAuth, syncAuth0User, requireAuth } from '../middleware/flexibleAuth';
 
@@ -14,16 +14,16 @@ const router = express.Router();
  * Get current onboarding state for a user
  * This allows the frontend to determine which screen to show
  */
-router.get('/api/onboarding/state', flexibleAuth, async (req, res) => {
+router.get('/api/onboarding/state', flexibleAuth, async (req: any, res) => {
   try {
-    const userId = req.user.id || req.session.user.id;
+    const userId = req.user?.id || req.session?.user?.id;
     console.log(`Getting onboarding state for user ${userId}`);
     
     // Try to fetch the user from the database
     const user = await db.select().from(users).where(eq(users.id, userId));
     
     // Default state is at the beginning
-    let state = {
+    let state: OnboardingStatus = {
       // Global state tracking
       hasAcceptedBeta: false,
       hasCompletedOnboarding: false,
@@ -101,9 +101,9 @@ router.get('/api/onboarding/state', flexibleAuth, async (req, res) => {
  * Update onboarding state for a user
  * This allows the frontend to progress through the onboarding flow
  */
-router.post('/api/onboarding/state', flexibleAuth, async (req, res) => {
+router.post('/api/onboarding/state', flexibleAuth, async (req: any, res) => {
   try {
-    const userId = req.user.id || req.session.user.id;
+    const userId = req.user?.id || req.session?.user?.id;
     console.log(`Updating onboarding state for user ${userId}`);
     
     const { step, completed, data } = req.body;
@@ -126,10 +126,10 @@ router.post('/api/onboarding/state', flexibleAuth, async (req, res) => {
     }
     
     // Parse existing onboarding status or start with a new one
-    let onboardingStatus = {};
+    let onboardingStatus: Partial<OnboardingStatus> = {};
     try {
-      if (user[0].onboardingStatus) {
-        onboardingStatus = JSON.parse(user[0].onboardingStatus);
+      if (user[0].onboardingStatus && typeof user[0].onboardingStatus === 'string') {
+        onboardingStatus = JSON.parse(user[0].onboardingStatus as string);
       }
     } catch (e) {
       console.warn('Could not parse onboarding status, starting fresh');
@@ -257,9 +257,9 @@ router.post('/api/onboarding/state', flexibleAuth, async (req, res) => {
  * Skip to the next onboarding step
  * Convenience endpoint for testing and for users who want to skip steps
  */
-router.post('/api/onboarding/next', flexibleAuth, async (req, res) => {
+router.post('/api/onboarding/next', flexibleAuth, async (req: any, res) => {
   try {
-    const userId = req.user.id || req.session.user.id;
+    const userId = req.user?.id || req.session?.user?.id;
     console.log(`Advancing to next onboarding step for user ${userId}`);
     
     // Get current onboarding status from database
@@ -273,14 +273,14 @@ router.post('/api/onboarding/next', flexibleAuth, async (req, res) => {
     }
     
     // Parse existing onboarding status or start with a new one
-    let onboardingStatus: any = {
+    let onboardingStatus: Partial<OnboardingStatus> = {
       currentStep: 'beta-welcome',
       nextStep: 'beta-welcome'
     };
     
     try {
-      if (user[0].onboardingStatus) {
-        onboardingStatus = JSON.parse(user[0].onboardingStatus);
+      if (user[0].onboardingStatus && typeof user[0].onboardingStatus === 'string') {
+        onboardingStatus = JSON.parse(user[0].onboardingStatus as string);
       }
     } catch (e) {
       console.warn('Could not parse onboarding status, starting fresh');
@@ -377,15 +377,15 @@ router.post('/api/onboarding/next', flexibleAuth, async (req, res) => {
  * Complete the entire onboarding process in one step
  * Useful for testing or for users who need to skip onboarding
  */
-router.post('/api/onboarding/complete', flexibleAuth, async (req, res) => {
+router.post('/api/onboarding/complete', flexibleAuth, async (req: any, res) => {
   try {
-    const userId = req.user.id || req.session.user.id;
+    const userId = req.user?.id || req.session?.user?.id;
     console.log(`Completing onboarding for user ${userId}`);
     
     const now = new Date().toISOString();
     
     // Create a completed onboarding status
-    const completedStatus = {
+    const completedStatus: OnboardingStatus = {
       hasAcceptedBeta: true,
       hasCompletedOnboarding: true,
       currentStep: 'homepage',
@@ -400,7 +400,7 @@ router.post('/api/onboarding/complete', flexibleAuth, async (req, res) => {
       onboardingCompletedAt: now,
       
       beta: {
-        role: req.body.betaRole || 'user',
+        role: req.body?.betaRole || 'user',
         entryDate: now
       }
     };
