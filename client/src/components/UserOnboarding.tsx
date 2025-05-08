@@ -368,14 +368,8 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
   const handleStepTransition = (direction: 'next' | 'prev') => {
     // Validate current step before proceeding
     if (direction === 'next') {
-      // Legal agreements validation
-      if (step === 3 && !allAgreed) {
-        setError('You must accept all agreements to continue');
-        return;
-      }
-      
-      // Skip step 4 (profile creation) and go directly to step 6 (dashboard customization)
-      if (step === 3 && allAgreed) {
+      // Skip from step 2 directly to step 4 (skip step 3 legal agreements)
+      if (step === 2) {
         // Pre-populate minimal profile data to satisfy validation
         setUserProfile(prev => ({
           ...prev,
@@ -397,10 +391,10 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
         // Animate out
         setAnimateIn(false);
         
-        // Short delay for animation then jump to step 5 (beta role selection)
+        // Short delay for animation then jump to step 4 (profile setup)
         setTimeout(() => {
-          setStep(5);
-          setVisibleStep(5);
+          setStep(4);
+          setVisibleStep(4);
           setAnimateIn(true);
         }, 300);
         return;
