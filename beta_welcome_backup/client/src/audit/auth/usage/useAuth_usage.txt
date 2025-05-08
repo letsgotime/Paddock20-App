@@ -1,0 +1,71 @@
+client/src/components/dashboard/widgets/DreamGarageWidget.tsx:import { useAuth } from '@/hooks/useAuth';
+client/src/components/dashboard/widgets/DreamGarageWidget.tsx:  const { user } = useAuth();
+client/src/components/dashboard/widgets/LockerRoomWidget.tsx:import { useAuth } from '@/hooks/useAuth';
+client/src/components/dashboard/widgets/LockerRoomWidget.tsx:  const { user } = useAuth();
+client/src/components/dashboard/BetaTesterRequestButton.tsx:import { useAuth0 } from '@auth0/auth0-react';
+client/src/components/dashboard/BetaTesterRequestButton.tsx:  const { user, getAccessTokenSilently, isAuthenticated, isLoading } = useAuth0();
+client/src/components/dashboard/DashboardOnboarding.tsx:import { useAuth0 } from '@auth0/auth0-react';
+client/src/components/dashboard/DashboardOnboarding.tsx:  const { user, getAccessTokenSilently } = useAuth0();
+client/src/components/SocialMediaProfiles.tsx:import { useAuth } from '../hooks/useAuth';
+client/src/components/SocialMediaProfiles.tsx:  const { user } = useAuth();
+client/src/components/UserProfileHub.tsx:import { useAuth } from '../hooks/useAuth';
+client/src/components/UserProfileHub.tsx:  const { user } = useAuth();
+client/src/components/admin/BetaTesterApprovalPanel.tsx:import { useAuth0 } from "@auth0/auth0-react";
+client/src/components/admin/BetaTesterApprovalPanel.tsx:  const { getAccessTokenSilently } = useAuth0();
+client/src/components/Auth0Callback.tsx:import { useAuth0 } from '@auth0/auth0-react';
+client/src/components/Auth0Callback.tsx:  const { isAuthenticated, isLoading, error, user } = useAuth0();
+client/src/components/Header.tsx:import { useAuth } from '../hooks/useAuth';
+client/src/components/Header.tsx:  const { user, logout } = useAuth();
+client/src/components/ProtectedRoute.tsx:import { useAuth } from '@/hooks/useAuth';
+client/src/components/ProtectedRoute.tsx:  const { isAuthenticated, loading } = useAuth();
+client/src/components/AuthStatus.tsx:import { useAuth } from '@/hooks/useAuth';
+client/src/components/AuthStatus.tsx:  const { user, loading, logout, isAuthenticated } = useAuth();
+client/src/components/UserOnboarding.tsx:// import { useAuth } from '@/hooks/useAuth';
+client/src/components/BetaTermsAndAgreements.tsx:import { useAuth } from '../hooks/useAuth';
+client/src/components/BetaTermsAndAgreements.tsx:  const auth = useAuth();
+client/src/components/OnboardingModal.tsx:import { useAuth } from '@/hooks/useAuth';
+client/src/components/OnboardingModal.tsx:  const { user } = useAuth();
+client/src/components/ProtectedAdminRoute.tsx:import { useAuth } from '@/hooks/useAuth';
+client/src/components/ProtectedAdminRoute.tsx:  const { user, loading } = useAuth();
+client/src/hooks/useVehicle.ts:// Temporarily removing useAuth to fix provider dependency issue
+client/src/hooks/useVehicle.ts:// import { useAuth } from '@/hooks/useAuth';
+client/src/hooks/useAuth.ts:export * from './useAuth.tsx';
+client/src/pages/UserDashboardPage.tsx:import { useAuth } from '@/hooks/useAuth';
+client/src/pages/UserDashboardPage.tsx:  const { user, isLoading } = useAuth();
+client/src/pages/ChatFeedPage.tsx:import { useAuth } from "@/hooks/useAuth";
+client/src/pages/ChatFeedPage.tsx:  const { session } = useAuth();
+client/src/pages/PersonalizedDashboard.tsx:import { useAuth } from '@/hooks/useAuth';
+client/src/pages/PersonalizedDashboard.tsx:  const { user } = useAuth();
+client/src/pages/UserProfileHubPage.tsx:import { useAuth } from '../hooks/useAuth';
+client/src/pages/UserProfileHubPage.tsx:  const { user } = useAuth();
+client/src/pages/DashboardPage.tsx:import { useAuth } from '../hooks/useAuth';
+client/src/pages/DashboardPage.tsx:  const { user } = useAuth();
+client/src/pages/AdminPage.tsx:import { useAuth0 } from "@auth0/auth0-react";
+client/src/pages/AdminPage.tsx:  const { getAccessTokenSilently, isAuthenticated, isLoading, user } = useAuth0();
+client/src/pages/SimpleDebug.tsx:import { useAuth0 } from '@auth0/auth0-react';
+client/src/pages/SimpleDebug.tsx:  } = useAuth0();
+client/src/pages/AuthTestPage.tsx:import { useAuth } from '@/hooks/useAuth';
+client/src/pages/AuthTestPage.tsx:  const auth = useAuth();
+client/src/pages/ThePaddockPage.tsx:import { useAuth } from '@/hooks/useAuth';
+client/src/pages/ThePaddockPage.tsx:  const { user } = useAuth();
+client/src/pages/EnhancedLogoutPage.tsx:import { useAuth } from '@/hooks/useAuth';
+client/src/pages/EnhancedLogoutPage.tsx:  const { logout } = useAuth();
+client/src/pages/BetaEnrollmentPage.tsx:import { useAuth0 } from '@auth0/auth0-react';
+client/src/pages/BetaEnrollmentPage.tsx:  const { user } = useAuth0();
+client/src/pages/admin/AdminDashboard.tsx:import { useAuth } from '@/hooks/useAuth';
+client/src/pages/admin/AdminDashboard.tsx:  const { user } = useAuth();
+client/src/contexts/UserProfileContext.tsx:// Temporarily removing useAuth to fix provider dependency issue
+client/src/contexts/UserProfileContext.tsx:// import { useAuth } from '../hooks/useAuth';
+client/src/contexts/VehicleContext.tsx:// Temporarily removing useAuth to fix provider dependency issue
+client/src/contexts/VehicleContext.tsx:// import { useAuth } from '../hooks/useAuth';
+client/src/contexts/BetaWelcomeContext.tsx:import { useAuth } from '@/hooks/useAuth';
+client/src/contexts/BetaWelcomeContext.tsx:  const { user } = useAuth();
+client/src/contexts/OnboardingContext.tsx:import { useAuth } from '@/hooks/useAuth';
+client/src/contexts/OnboardingContext.tsx:  const { user, refreshUser } = useAuth();
+client/src/utils/runDataIntegrityAudit.ts:    'profile.username': 'useAuth().user?.username',
+client/src/context/AuthContext.tsx:import { Auth0Provider, useAuth0 } from '@auth0/auth0-react';
+client/src/context/AuthContext.tsx:export function useAuth() {
+client/src/context/AuthContext.tsx:    throw new Error('useAuth must be used within an AuthProvider');
+client/src/context/AuthContext.tsx:  } = useAuth0();
+client/src/context/SupabaseAuthContext.tsx:// Note: useAuth is now imported from @/hooks/useAuth instead
+client/src/App.tsx:import { AuthProvider } from '@/hooks/useAuth';

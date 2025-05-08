@@ -297,7 +297,16 @@ function App() {
   
   // Check for onboarding status when app initializes - this will be updated once auth is ready
   useEffect(() => {
-    // Get user profile from local storage
+    // First check if the user has used the simplified flow (beta welcome only)
+    const simplifiedOnboardingFlow = localStorage.getItem('paddock20_simplified_onboarding') === 'true';
+    
+    if (simplifiedOnboardingFlow) {
+      console.log('Using simplified onboarding flow - bypassing full onboarding');
+      setHasCompletedOnboarding(true);
+      return;
+    }
+    
+    // Regular flow - check user profile and onboarding status
     const userProfileStr = localStorage.getItem('userProfile');
     
     if (userProfileStr) {

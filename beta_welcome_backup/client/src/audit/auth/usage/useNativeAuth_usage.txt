@@ -1,0 +1,12 @@
+client/src/components/AppHeader.tsx:import { useNativeAuth } from '@/hooks/useNativeAuth';
+client/src/components/AppHeader.tsx:  const { isAuthenticated } = useNativeAuth();
+client/src/hooks/useAuth.tsx:import { useNativeAuth, User } from './useNativeAuth';
+client/src/hooks/useAuth.tsx:  const nativeAuth = useNativeAuth();
+client/src/pages/NativeAuthPage.tsx:import { useNativeAuth } from '@/hooks/useNativeAuth';
+client/src/pages/NativeAuthPage.tsx:  const { login, register, isAuthenticated } = useNativeAuth();
+client/src/pages/OnboardingPage.tsx:import { useNativeAuth } from '@/hooks/useNativeAuth';
+client/src/pages/OnboardingPage.tsx:  const { isAuthenticated, user } = useNativeAuth();
+client/src/pages/BetaAgreement.tsx:import { useNativeAuth } from '@/hooks/useNativeAuth';
+client/src/pages/BetaAgreement.tsx:  const { isAuthenticated, user } = useNativeAuth();
+client/src/App.tsx:import { NativeAuthProvider, useNativeAuth } from '@/hooks/useNativeAuth';
+client/src/App.tsx:  const { user, loading, isAuthenticated } = useNativeAuth();
