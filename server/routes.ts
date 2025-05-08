@@ -2033,8 +2033,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.delete('/api/vehicles/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id);
-      // Use proper method name
-      await storage.updateVehicle(id, { is_deleted: true });
+      // Set status to deleted instead of using is_deleted field
+      await storage.updateVehicle(id, { status: 'Deleted' });
       res.sendStatus(204);
     } catch (error) {
       console.error('Error deleting vehicle:', error);
@@ -2057,7 +2057,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/vehicles/:vehicleId/tires', async (req, res) => {
     try {
       const vehicleId = parseInt(req.params.vehicleId);
-      const tires = await storage.getTireByVehicleId(vehicleId);
+      const tires = await storage.getTiresByVehicleId(vehicleId);
       res.json(tires);
     } catch (error) {
       console.error('Error fetching tires:', error);
@@ -2080,7 +2080,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/vehicles/:vehicleId/maintenance-records', async (req, res) => {
     try {
       const vehicleId = parseInt(req.params.vehicleId);
-      const records = await storage.getMaintenanceRecordByVehicleId(vehicleId);
+      const records = await storage.getMaintenanceRecordsByVehicleId(vehicleId);
       res.json(records);
     } catch (error) {
       console.error('Error fetching maintenance records:', error);
@@ -2162,6 +2162,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
     try {
       // Create demo vehicle
       const vehicle = await storage.createVehicle({
+        userId: 1, // Default user ID for demo
         make: 'Ferrari',
         model: '488 GTB',
         year: 2019,
