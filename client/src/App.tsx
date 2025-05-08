@@ -298,7 +298,11 @@ function App() {
   // Check for onboarding status when app initializes - this will be updated once auth is ready
   useEffect(() => {
     // First check if the user has used the simplified flow (beta welcome only)
-    const simplifiedOnboardingFlow = localStorage.getItem('paddock20_simplified_onboarding') === 'true';
+    // Check for both possible flag names for backward compatibility
+    const simplifiedOnboardingFlow = 
+      localStorage.getItem('paddock20_simplified_onboarding') === 'true' || 
+      localStorage.getItem('paddock20_simplified_flow') === 'true' ||
+      localStorage.getItem('betamodalgo') === 'true';
     
     if (simplifiedOnboardingFlow) {
       console.log('Using simplified onboarding flow - bypassing full onboarding');
