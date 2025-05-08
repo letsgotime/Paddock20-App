@@ -15,6 +15,8 @@ const OnboardingPage: React.FC = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   
+
+  
   // Legal document states
   const [activeDocument, setActiveDocument] = useState<string | null>(null);
   const [termsAgreed, setTermsAgreed] = useState(false);
