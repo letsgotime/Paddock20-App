@@ -1,190 +1,371 @@
-import express, { Request, Response } from 'express';
-import { smartcarService } from '../services/smartcarService';
-import { storage } from '../storage';
+/**
+ * Smartcar API Integration Routes
+ * 
+ * These routes handle Smartcar OAuth flow and vehicle data retrieval.
+ * Documentation: https://smartcar.com/docs/api
+ */
 
-// Extend Express Request type to include user
-declare global {
-  namespace Express {
-    interface User {
-      id: string | number;
-    }
-  }
-}
+import express, { Request, Response } from 'express';
+import Smartcar from 'smartcar';
+import { storage } from '../storage';
 
 const router = express.Router();
 
-// Get Smartcar authentication URL
-router.get('/auth-url', (req: Request, res: Response) => {
+// Initialize Smartcar client
+const client = new Smartcar.AuthClient({
+  clientId: process.env.SMARTCAR_CLIENT_ID || '',
+  clientSecret: process.env.SMARTCAR_CLIENT_SECRET || '',
+  redirectUri: 'https://gotimegarage.replit.app/smartcar/callback',
+  testMode: true, // Set to false for production
+});
+
+// Store Smartcar access tokens by userId
+const userSmartcarTokens = new Map<number, {
+  accessToken: string;
+  refreshToken: string;
+  expiration: Date;
+  vehicles: string[];
+}>();
+
+/**
+ * Starts the Smartcar authorization flow
+ * GET /api/smartcar/authorize
+ */
+router.get('/authorize', (req: Request, res: Response) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: 'User must be logged in' });
+  }
+
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: 'User ID not found' });
+  }
+
+  // Generate Smartcar authorization URL with specific scopes
+  const authUrl = client.getAuthUrl([
+    'required:read_vehicle_info',
+    'required:read_odometer',
+    'required:read_location',
+    'read_engine_oil',
+    'read_battery',
+    'read_charge',
+    'read_fuel',
+    'read_tires',
+    'read_vin',
+  ]);
+
+  // Store the user ID in the session to retrieve after callback
+  if (req.session) {
+    req.session.smartcarUserId = userId;
+  }
+
+  res.json({ authUrl });
+});
+
+/**
+ * Handles the Smartcar OAuth callback
+ * GET /api/smartcar/exchange
+ */
+router.get('/exchange', async (req: Request, res: Response) => {
+  if (!req.session?.smartcarUserId) {
+    return res.status(400).json({ error: 'Missing user session data' });
+  }
+
+  const userId = req.session.smartcarUserId;
+  const { code } = req.query;
+
+  if (!code || typeof code !== 'string') {
+    return res.status(400).json({ error: 'Missing authorization code' });
+  }
+
   try {
-    const authUrl = smartcarService.getAuthUrl();
-    res.json({ 
-      success: true, 
-      authUrl 
+    // Exchange authorization code for access token
+    const { accessToken, refreshToken, expiration, vehicles } = await client.exchangeCode(code);
+
+    // Store tokens for this user
+    userSmartcarTokens.set(userId, {
+      accessToken,
+      refreshToken,
+      expiration, 
+      vehicles
     });
-  } catch (error) {
-    console.error('Error generating auth URL:', error);
+
+    // Redirect to client-side page that will handle the callback success
+    res.status(200).json({ 
+      success: true,
+      message: 'Smartcar authorization successful',
+      vehicles: vehicles 
+    });
+  } catch (error: any) {
+    console.error('Smartcar token exchange error:', error);
     res.status(500).json({ 
-      success: false, 
-      message: 'Failed to generate authentication URL' 
+      error: 'Failed to complete Smartcar authorization',
+      message: error.message
     });
   }
 });
 
-// Exchange authorization code for access token
-router.post('/exchange', async (req: Request, res: Response) => {
-  const { code } = req.body;
-  
-  if (!code) {
-    return res.status(400).json({ 
-      success: false, 
-      message: 'Authorization code is required' 
-    });
+/**
+ * Retrieves basic vehicle information
+ * GET /api/smartcar/vehicles/:vehicleId
+ */
+router.get('/vehicles/:vehicleId', async (req: Request, res: Response) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: 'User must be logged in' });
   }
-  
+
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: 'User ID not found' });
+  }
+
+  const { vehicleId } = req.params;
+  const userTokens = userSmartcarTokens.get(userId);
+
+  if (!userTokens) {
+    return res.status(401).json({ error: 'Smartcar not authorized. Please connect your vehicle first.' });
+  }
+
   try {
-    // Exchange the code for access token
-    const tokenData = await smartcarService.exchangeCode(code);
-    
-    // Get the user's vehicles
-    const vehicleIds = await smartcarService.getVehicles(tokenData.access_token);
-    
-    if (vehicleIds.length === 0) {
-      return res.status(404).json({ 
-        success: false, 
-        message: 'No vehicles found for this account' 
+    // Check if token is expired and refresh if needed
+    if (new Date() >= userTokens.expiration) {
+      const { accessToken, refreshToken, expiration } = await client.exchangeRefreshToken(userTokens.refreshToken);
+      
+      userSmartcarTokens.set(userId, {
+        ...userTokens,
+        accessToken,
+        refreshToken,
+        expiration
       });
     }
-    
-    // For now just use the first vehicle
-    const vehicleId = vehicleIds[0];
+
+    // Create vehicle instance
+    const vehicle = new Smartcar.Vehicle(vehicleId, userTokens.accessToken);
     
     // Get vehicle info
-    const vehicleInfo = await smartcarService.getVehicleInfo(
-      vehicleId, 
-      tokenData.access_token
-    );
+    const info = await vehicle.info();
+    const odometer = await vehicle.odometer();
     
-    // Store the connection in our database
-    const userId = req.user?.id;
-    if (!userId) {
-      return res.status(401).json({ 
-        success: false, 
-        message: 'User not authenticated' 
+    let fuelOrBattery = {};
+    if (info.fuel) {
+      try {
+        const fuel = await vehicle.fuel();
+        fuelOrBattery = { fuel };
+      } catch (e) {
+        console.error('Error fetching fuel:', e);
+      }
+    } else if (info.battery) {
+      try {
+        const battery = await vehicle.battery();
+        fuelOrBattery = { battery };
+      } catch (e) {
+        console.error('Error fetching battery:', e);
+      }
+    }
+
+    // Try to get location if permission granted
+    let location = null;
+    try {
+      location = await vehicle.location();
+    } catch (e) {
+      console.error('Error fetching location:', e);
+    }
+
+    // Try to get VIN if permission granted
+    let vin = null;
+    try {
+      const vinResponse = await vehicle.vin();
+      vin = vinResponse.vin;
+    } catch (e) {
+      console.error('Error fetching VIN:', e);
+    }
+
+    // Try to get tire pressure if permission granted
+    let tires = null;
+    try {
+      tires = await vehicle.tires();
+    } catch (e) {
+      console.error('Error fetching tire pressure:', e);
+    }
+
+    // Combine all data
+    const vehicleData = {
+      ...info,
+      odometer,
+      ...fuelOrBattery,
+      location,
+      vin,
+      tires,
+    };
+
+    res.json(vehicleData);
+  } catch (error: any) {
+    console.error('Smartcar API error:', error);
+    res.status(500).json({ 
+      error: 'Failed to fetch vehicle data',
+      message: error.message 
+    });
+  }
+});
+
+/**
+ * Lists all connected vehicles
+ * GET /api/smartcar/vehicles
+ */
+router.get('/vehicles', async (req: Request, res: Response) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: 'User must be logged in' });
+  }
+
+  const userId = req.user?.id;
+  if (!userId) {
+    return res.status(401).json({ error: 'User ID not found' });
+  }
+
+  const userTokens = userSmartcarTokens.get(userId);
+
+  if (!userTokens) {
+    return res.status(401).json({ error: 'Smartcar not authorized. Please connect your vehicle first.' });
+  }
+
+  try {
+    // Check if token is expired and refresh if needed
+    if (new Date() >= userTokens.expiration) {
+      const { accessToken, refreshToken, expiration } = await client.exchangeRefreshToken(userTokens.refreshToken);
+      
+      userSmartcarTokens.set(userId, {
+        ...userTokens,
+        accessToken,
+        refreshToken,
+        expiration
       });
     }
-    
-    // Check if we have a storage method for smartcar connections
-    // if (storage.storeSmartcarConnection) {
-    //   await storage.storeSmartcarConnection({
-    //     userId,
-    //     vehicleId,
-    //     access_token: tokenData.access_token,
-    //     refresh_token: tokenData.refresh_token,
-    //     expires_at: tokenData.expires_at,
-    //     vehicle_info: vehicleInfo
-    //   });
-    // }
-    
-    // For now, just return success with vehicle ID
-    res.json({
-      success: true,
-      vehicleId,
-      vehicle: {
-        id: vehicleId,
-        make: vehicleInfo.make,
-        model: vehicleInfo.model,
-        year: vehicleInfo.year
+
+    // Get all vehicles basic info
+    const vehiclesData = [];
+    for (const vehicleId of userTokens.vehicles) {
+      try {
+        const vehicle = new Smartcar.Vehicle(vehicleId, userTokens.accessToken);
+        const info = await vehicle.info();
+        vehiclesData.push({
+          id: vehicleId,
+          ...info
+        });
+      } catch (error) {
+        console.error(`Error fetching vehicle ${vehicleId}:`, error);
       }
-    });
-  } catch (error) {
-    console.error('Error exchanging code:', error);
+    }
+
+    res.json({ vehicles: vehiclesData });
+  } catch (error: any) {
+    console.error('Smartcar API error:', error);
     res.status(500).json({ 
-      success: false, 
-      message: 'Failed to exchange authorization code' 
+      error: 'Failed to fetch vehicles list',
+      message: error.message 
     });
   }
 });
 
-// Get vehicle data
-router.get('/vehicles/:vehicleId', async (req: Request, res: Response) => {
-  const { vehicleId } = req.params;
+/**
+ * Disconnects a vehicle from Smartcar
+ * POST /api/smartcar/disconnect
+ */
+router.post('/disconnect', (req: Request, res: Response) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: 'User must be logged in' });
+  }
+
   const userId = req.user?.id;
-  
   if (!userId) {
-    return res.status(401).json({ 
-      success: false, 
-      message: 'User not authenticated' 
-    });
+    return res.status(401).json({ error: 'User ID not found' });
   }
-  
-  try {
-    // In a real implementation, we would:
-    // 1. Get the stored token from the database
-    // 2. Check if the token is expired and refresh if needed
-    // 3. Then make the API call
-    
-    // For this demo, we'll just mock the response
-    res.json({
-      success: true,
-      vehicle: {
-        id: vehicleId,
-        make: 'Tesla',
-        model: 'Model 3',
-        year: 2023,
-        odometer: 12350,
-        fuelLevel: 80,
-        location: {
-          latitude: 37.7749,
-          longitude: -122.4194
-        }
-      }
-    });
-  } catch (error) {
-    console.error('Error getting vehicle data:', error);
-    res.status(500).json({ 
-      success: false, 
-      message: 'Failed to get vehicle data' 
-    });
-  }
+
+  // Remove the user's Smartcar tokens
+  userSmartcarTokens.delete(userId);
+
+  res.json({ success: true, message: 'Successfully disconnected from Smartcar' });
 });
 
-// Vehicle action (lock/unlock)
-router.post('/vehicles/:vehicleId/action', async (req: Request, res: Response) => {
-  const { vehicleId } = req.params;
-  const { action } = req.body;
+/**
+ * Import vehicle from Smartcar to user's garage
+ * POST /api/smartcar/import/:vehicleId
+ */
+router.post('/import/:vehicleId', async (req: Request, res: Response) => {
+  if (!req.isAuthenticated()) {
+    return res.status(401).json({ error: 'User must be logged in' });
+  }
+
   const userId = req.user?.id;
-  
   if (!userId) {
-    return res.status(401).json({ 
-      success: false, 
-      message: 'User not authenticated' 
-    });
+    return res.status(401).json({ error: 'User ID not found' });
   }
-  
-  if (!action || !['lock', 'unlock'].includes(action)) {
-    return res.status(400).json({ 
-      success: false, 
-      message: 'Invalid action' 
-    });
+
+  const { vehicleId } = req.params;
+  const userTokens = userSmartcarTokens.get(userId);
+
+  if (!userTokens) {
+    return res.status(401).json({ error: 'Smartcar not authorized. Please connect your vehicle first.' });
   }
-  
+
   try {
-    // In a real implementation, we would:
-    // 1. Get the stored token from the database
-    // 2. Check if the token is expired and refresh if needed
-    // 3. Then make the API call
+    // Check if token is expired and refresh if needed
+    if (new Date() >= userTokens.expiration) {
+      const { accessToken, refreshToken, expiration } = await client.exchangeRefreshToken(userTokens.refreshToken);
+      
+      userSmartcarTokens.set(userId, {
+        ...userTokens,
+        accessToken,
+        refreshToken,
+        expiration
+      });
+    }
+
+    // Create vehicle instance
+    const vehicle = new Smartcar.Vehicle(vehicleId, userTokens.accessToken);
     
-    // For this demo, we'll just mock the response
-    res.json({
-      success: true,
-      action,
-      message: `Vehicle ${action === 'lock' ? 'locked' : 'unlocked'} successfully`
+    // Get vehicle info
+    const info = await vehicle.info();
+    const odometer = await vehicle.odometer();
+    
+    // Try to get VIN if permission granted
+    let vin = null;
+    try {
+      const vinResponse = await vehicle.vin();
+      vin = vinResponse.vin;
+    } catch (e) {
+      console.error('Error fetching VIN:', e);
+    }
+
+    // Create vehicle record in database
+    const newVehicle = await storage.createVehicle({
+      userId: userId,
+      make: info.make || '',
+      model: info.model || '',
+      year: parseInt(info.year || new Date().getFullYear().toString(), 10),
+      trim: info.trim,
+      color: null,
+      vin: vin || null,
+      vinLast6: vin ? vin.slice(-6) : null,
+      licensePlate: null,
+      nickname: null,
+      primaryDriver: null,
+      mileage: odometer ? Math.round(odometer.distance) : null,
+      mileageUnit: 'miles',
+      smartcarId: vehicleId,
+      image: null,
+      notes: `Imported from Smartcar on ${new Date().toLocaleString()}`
     });
-  } catch (error) {
-    console.error(`Error ${action}ing vehicle:`, error);
+
+    res.status(201).json({ 
+      success: true,
+      message: 'Vehicle successfully imported',
+      vehicle: newVehicle
+    });
+  } catch (error: any) {
+    console.error('Error importing vehicle from Smartcar:', error);
     res.status(500).json({ 
-      success: false, 
-      message: `Failed to ${action} vehicle` 
+      error: 'Failed to import vehicle',
+      message: error.message 
     });
   }
 });

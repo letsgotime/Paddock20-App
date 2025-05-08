@@ -16,6 +16,7 @@ import twoFactorRoutes from "./routes/twoFactorRoutes";
 import auth0Routes from "./routes/auth0Routes";
 import spotifyRoutes from "./routes/spotifyRoutes";
 import vinDecoderRoutes from "./routes/vinDecoderRoutes";
+import smartcarRoutes from "./routes/smartcarRoutes";
 
 // OpenWeather API keys - updated May 1, 2025
 const OPENWEATHER_API_KEYS = {
@@ -251,6 +252,9 @@ export async function registerRoutes(app: Express): Promise<Server> {
   
   // Register VIN Decoder routes
   app.use('/api/vehicles', vinDecoderRoutes);
+  
+  // Register Smartcar Integration routes
+  app.use('/api/smartcar', smartcarRoutes);
   
   // Using only OpenWeather API for all weather services
   
