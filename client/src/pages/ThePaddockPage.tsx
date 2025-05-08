@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { useAuth } from '@/auth/useAuth';
+import { useAuth } from '../auth/MockAuthProvider';
 import { format, addDays, isEqual, startOfDay, differenceInDays } from 'date-fns';
 import { useLocation } from 'wouter';
 
