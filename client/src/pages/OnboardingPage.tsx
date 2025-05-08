@@ -277,9 +277,9 @@ const OnboardingPage: React.FC = () => {
           // Set a global flag to inform protected routes that onboarding was just completed
           window.localStorage.setItem('paddock20_onboarding_just_completed', 'true');
           
-          // All steps completed - redirect to dashboard
-          console.log('All onboarding steps completed - redirecting to dashboard');
-          navigate('/dashboard', { replace: true });
+          // All steps completed - redirect to homepage
+          console.log('All onboarding steps completed - redirecting to homepage');
+          navigate('/', { replace: true });
         } else {
           console.error('Cannot navigate to dashboard - user ID not available');
           // Show error toast
