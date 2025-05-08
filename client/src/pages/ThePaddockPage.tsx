@@ -1154,13 +1154,13 @@ const ThePaddockPage = ({ demoMode = false }: ThePaddockPageProps) => {
               <Button variant="outline" className="border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10" onClick={() => navigate('/fun-drive-planner')}>
                 <Map className="mr-2 h-4 w-4" /> Plan a Drive
               </Button>
-              <Button variant="outline" className="border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10" onClick={() => navigate('/drive-journal')}>
+              <Button variant="outline" className="border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10" onClick={() => navigateSafely('/drive-journal')}>
                 <FileText className="mr-2 h-4 w-4" /> Drive Journal
               </Button>
-              <Button variant="outline" className="border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10" onClick={() => navigate('/juice-box')}>
+              <Button variant="outline" className="border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10" onClick={() => navigateSafely('/juice-box')}>
                 <Filter className="mr-2 h-4 w-4" /> Juice Box
               </Button>
-              <Button variant="outline" className="border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10" onClick={() => navigate('/podium-pursuit')}>
+              <Button variant="outline" className="border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10" onClick={() => navigateSafely('/podium-pursuit')}>
                 <Award className="mr-2 h-4 w-4" /> Podium Pursuit
               </Button>
             </div>
@@ -1179,13 +1179,13 @@ const ThePaddockPage = ({ demoMode = false }: ThePaddockPageProps) => {
                     <div className="flex gap-2">
                       <Button 
                         className="bg-[#1982FC] hover:bg-[#1982FC]/90"
-                        onClick={() => navigate('/connect-vehicle')}
+                        onClick={() => navigateSafely('/connect-vehicle')}
                       >
                         <Car className="mr-2 h-4 w-4" /> Connect Vehicle
                       </Button>
                       <Button 
                         className="bg-[#1982FC] hover:bg-[#1982FC]/90"
-                        onClick={() => navigate('/add-vehicle')}
+                        onClick={() => navigateSafely('/add-vehicle')}
                       >
                         <Car className="mr-2 h-4 w-4" /> Add Vehicle
                       </Button>
@@ -1205,13 +1205,13 @@ const ThePaddockPage = ({ demoMode = false }: ThePaddockPageProps) => {
                       <div className="flex gap-2">
                         <Button 
                           className="bg-[#1982FC] hover:bg-[#1982FC]/90"
-                          onClick={() => navigate('/connect-vehicle')}
+                          onClick={() => navigateSafely('/connect-vehicle')}
                         >
                           <Car className="mr-2 h-4 w-4" /> Connect Vehicle
                         </Button>
                         <Button 
                           className="bg-[#1982FC] hover:bg-[#1982FC]/90"
-                          onClick={() => navigate('/add-vehicle')}
+                          onClick={() => navigateSafely('/add-vehicle')}
                         >
                           <Car className="mr-2 h-4 w-4" /> Add Vehicle
                         </Button>
@@ -1261,7 +1261,7 @@ const ThePaddockPage = ({ demoMode = false }: ThePaddockPageProps) => {
                                   variant="outline" 
                                   size="sm" 
                                   className="flex-1"
-                                  onClick={() => navigate(`/vehicle/${vehicle.id}`)}
+                                  onClick={() => navigateSafely(`/vehicle/${vehicle.id}`)}
                                 >
                                   Details
                                 </Button>
@@ -1269,7 +1269,7 @@ const ThePaddockPage = ({ demoMode = false }: ThePaddockPageProps) => {
                                   variant="default" 
                                   size="sm" 
                                   className="flex-1 bg-[#1982FC] hover:bg-[#1982FC]/90"
-                                  onClick={() => navigate(`/vehicle/${vehicle.id}/maintenance`)}
+                                  onClick={() => navigateSafely(`/vehicle/${vehicle.id}/maintenance`)}
                                 >
                                   Service Log
                                 </Button>
@@ -1352,7 +1352,7 @@ const ThePaddockPage = ({ demoMode = false }: ThePaddockPageProps) => {
                     </div>
                     <Button 
                       className="bg-[#1982FC] hover:bg-[#1982FC]/90"
-                      onClick={() => navigate('/log-drive')}
+                      onClick={() => navigateSafely('/log-drive')}
                     >
                       <FileText className="mr-2 h-4 w-4" /> Log Drive
                     </Button>
@@ -1366,14 +1366,14 @@ const ThePaddockPage = ({ demoMode = false }: ThePaddockPageProps) => {
                     <div className="flex flex-col sm:flex-row gap-4 justify-center">
                       <Button 
                         className="bg-[#1982FC] hover:bg-[#1982FC]/90"
-                        onClick={() => navigate('/log-drive')}
+                        onClick={() => navigateSafely('/log-drive')}
                       >
                         <FileText className="mr-2 h-4 w-4" /> Log Your First Drive
                       </Button>
                       <Button 
                         variant="outline" 
                         className="border-[#1982FC] text-[#1982FC] hover:bg-[#1982FC]/10"
-                        onClick={() => navigate('/fun-drive-planner')}
+                        onClick={() => navigateSafely('/fun-drive-planner')}
                       >
                         <Map className="mr-2 h-4 w-4" /> Plan a Drive
                       </Button>
@@ -1395,7 +1395,7 @@ const ThePaddockPage = ({ demoMode = false }: ThePaddockPageProps) => {
                     <p className="text-gray-400 mb-6">Get personalized routes based on weather, traffic, and your driving preferences</p>
                     <Button 
                       className="bg-[#1982FC] hover:bg-[#1982FC]/90"
-                      onClick={() => navigate('/fun-drive-planner')}
+                      onClick={() => navigateSafely('/fun-drive-planner')}
                     >
                       <Map className="mr-2 h-4 w-4" /> Open Fun Drive Planner
                     </Button>
@@ -1417,7 +1417,7 @@ const ThePaddockPage = ({ demoMode = false }: ThePaddockPageProps) => {
                     </div>
                     <Button 
                       className="bg-[#1982FC] hover:bg-[#1982FC]/90"
-                      onClick={() => navigate('/manifestation-station')}
+                      onClick={() => navigateSafely('/manifestation-station')}
                     >
                       <Plus className="mr-2 h-4 w-4" /> Add Goal
                     </Button>
