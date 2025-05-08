@@ -90,6 +90,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             // Try to get or create user profile in our database
             const token = await getAccessTokenSilently();
             
+            // Store token in localStorage for use during onboarding
+            localStorage.setItem('auth0_token', token);
+            console.log('Auth0 token stored in localStorage for onboarding');
+            
             const response = await fetch('/api/user-profile', {
               method: 'GET',
               headers: {
@@ -225,6 +229,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Force a hard reset of local storage for auth-related items
     localStorage.removeItem('auth-session');
     localStorage.removeItem('auth-token');
+    localStorage.removeItem('auth0_token'); // Clear Auth0 token from onboarding
     localStorage.removeItem('returnToPath');
     localStorage.removeItem('currentVehicle');
     localStorage.removeItem('loginShown');
