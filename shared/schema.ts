@@ -175,12 +175,12 @@ export const maintenanceRecords = pgTable('maintenance_records', {
 export const maintenanceFlags = pgTable('maintenance_flags', {
   id: serial('id').primaryKey(),
   vehicleId: integer('vehicle_id').references(() => vehicles.id).notNull(),
-  flagType: varchar('flag_type', { length: 50 }).notNull(), // oil, tires, brakes, etc.
-  dueDate: timestamp('due_date'),
-  dueMileage: integer('due_mileage'),
-  isDue: boolean('is_due').default(false),
-  isUrgent: boolean('is_urgent').default(false),
-  notes: text('notes'),
+  // The following fields reflect the actual database structure
+  missedWeekly: boolean('missed_weekly').default(false),
+  missedMonthly: boolean('missed_monthly').default(false),
+  missedQuarterly: boolean('missed_quarterly').default(false),
+  missedSeasonal: boolean('missed_seasonal').default(false),
+  createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
 });
 

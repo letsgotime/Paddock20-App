@@ -2103,7 +2103,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/vehicles/:vehicleId/maintenance-flags', async (req, res) => {
     try {
       const vehicleId = parseInt(req.params.vehicleId);
-      const flags = await storage.getMaintenanceFlagByVehicleId(vehicleId);
+      const flags = await storage.getMaintenanceFlagsByVehicleId(vehicleId);
       res.json(flags);
     } catch (error) {
       console.error('Error fetching maintenance flags:', error);
@@ -2126,7 +2126,7 @@ export async function registerRoutes(app: Express): Promise<Server> {
   app.get('/api/vehicles/:vehicleId/gloss-tracking', async (req, res) => {
     try {
       const vehicleId = parseInt(req.params.vehicleId);
-      const glossTracking = await storage.getGlossTrackingByVehicleId(vehicleId);
+      const glossTracking = await storage.getGlossTrackingsByVehicleId(vehicleId);
       res.json(glossTracking);
     } catch (error) {
       console.error('Error fetching gloss tracking:', error);
@@ -2198,15 +2198,13 @@ export async function registerRoutes(app: Express): Promise<Server> {
         notes: 'Shell Helix Ultra 5W-40, OEM filter'
       });
       
-      // Create maintenance flag for upcoming service
+      // Create maintenance flag
       await storage.createMaintenanceFlag({
         vehicleId: vehicle.id,
-        flagType: 'Scheduled Maintenance',
-        notes: 'Annual service due',
-        dueDate: new Date('2023-12-15'),
-        dueMileage: 10000,
-        isDue: false,
-        isUrgent: false
+        missedWeekly: false,
+        missedMonthly: false,
+        missedQuarterly: true,
+        missedSeasonal: false
       });
       
       // Create gloss tracking for paint protection

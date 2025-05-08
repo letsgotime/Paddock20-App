@@ -480,6 +480,10 @@ export class DatabaseStorage implements IStorage {
     return tire;
   }
   
+  async getTiresByVehicleId(vehicleId: number): Promise<Tire[]> {
+    return await db.select().from(tires).where(eq(tires.vehicleId, vehicleId));
+  }
+  
   async createTire(tire: InsertTire): Promise<Tire> {
     const [newTire] = await db.insert(tires).values(tire).returning();
     return newTire;
@@ -503,6 +507,10 @@ export class DatabaseStorage implements IStorage {
   async getMaintenanceRecordByVehicleId(vehicleId: number): Promise<MaintenanceRecord | undefined> {
     const [record] = await db.select().from(maintenanceRecords).where(eq(maintenanceRecords.vehicleId, vehicleId));
     return record;
+  }
+  
+  async getMaintenanceRecordsByVehicleId(vehicleId: number): Promise<MaintenanceRecord[]> {
+    return await db.select().from(maintenanceRecords).where(eq(maintenanceRecords.vehicleId, vehicleId));
   }
   
   async createMaintenanceRecord(record: InsertMaintenanceRecord): Promise<MaintenanceRecord> {
@@ -530,6 +538,10 @@ export class DatabaseStorage implements IStorage {
     return flag;
   }
   
+  async getMaintenanceFlagsByVehicleId(vehicleId: number): Promise<MaintenanceFlag[]> {
+    return await db.select().from(maintenanceFlags).where(eq(maintenanceFlags.vehicleId, vehicleId));
+  }
+  
   async createMaintenanceFlag(flag: InsertMaintenanceFlag): Promise<MaintenanceFlag> {
     const [newFlag] = await db.insert(maintenanceFlags).values(flag).returning();
     return newFlag;
@@ -553,6 +565,10 @@ export class DatabaseStorage implements IStorage {
   async getGlossTrackingByVehicleId(vehicleId: number): Promise<GlossTracking | undefined> {
     const [tracking] = await db.select().from(glossTracking).where(eq(glossTracking.vehicleId, vehicleId));
     return tracking;
+  }
+  
+  async getGlossTrackingsByVehicleId(vehicleId: number): Promise<GlossTracking[]> {
+    return await db.select().from(glossTracking).where(eq(glossTracking.vehicleId, vehicleId));
   }
   
   async createGlossTracking(tracking: InsertGlossTracking): Promise<GlossTracking> {
