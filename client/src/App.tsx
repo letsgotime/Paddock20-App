@@ -287,24 +287,24 @@ function AppContent({
                           <Route path="/admin" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.VIEW_ADMIN_DASHBOARD]}><AdminPage /></ProtectedRoute>} />
                           <Route path="/onboarding-test" component={() => <ProtectedRoute><OnboardingTestPage /></ProtectedRoute>} />
                           <Route path="/settings" component={() => <ProtectedRoute><Settings /></ProtectedRoute>} />
-                          <Route path="/garage" component={() => <ProtectedRoute><GaragePage /></ProtectedRoute>} />
-                          <Route path="/add-vehicle" component={() => <ProtectedRoute><AddVehiclePage /></ProtectedRoute>} />
-                          <Route path="/vehicle-mods" component={() => <ProtectedRoute><VehicleModsPage /></ProtectedRoute>} />
-                          <Route path="/mod-planner" component={() => <ProtectedRoute><ModPlannerPage /></ProtectedRoute>} />
-                          <Route path="/weather-paddock" component={() => <ProtectedRoute><WeatherPage /></ProtectedRoute>} />
-                          <Route path="/weather" component={() => <ProtectedRoute><Weather /></ProtectedRoute>} />
+                          <Route path="/garage" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_GARAGE_VAULT]}><GaragePage /></ProtectedRoute>} />
+                          <Route path="/add-vehicle" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_GARAGE_VAULT]}><AddVehiclePage /></ProtectedRoute>} />
+                          <Route path="/vehicle-mods" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_GARAGE_VAULT]}><VehicleModsPage /></ProtectedRoute>} />
+                          <Route path="/mod-planner" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_GARAGE_VAULT]}><ModPlannerPage /></ProtectedRoute>} />
+                          <Route path="/weather-paddock" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_WEATHER_PADDOCK]}><WeatherPage /></ProtectedRoute>} />
+                          <Route path="/weather" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_WEATHER_PADDOCK]}><Weather /></ProtectedRoute>} />
                           <Route path="/time-services" component={() => <ProtectedRoute><TimeServicesPage /></ProtectedRoute>} />
-                          <Route path="/route-planner" component={() => <ProtectedRoute><RoutePlannerPage /></ProtectedRoute>} />
-                          <Route path="/drive-journal" component={() => <ProtectedRoute><DriveJournalPage /></ProtectedRoute>} />
+                          <Route path="/route-planner" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_WEATHER_PADDOCK]}><RoutePlannerPage /></ProtectedRoute>} />
+                          <Route path="/drive-journal" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_DRIVE_JOURNAL]}><DriveJournalPage /></ProtectedRoute>} />
                           <Route path="/manifestation-station" component={() => <ProtectedRoute><ManifestationStationPage /></ProtectedRoute>} />
                           <Route path="/juicebox" component={() => <ProtectedRoute><JuiceBox /></ProtectedRoute>} />
                           <Route path="/product-organizer" component={() => <ProtectedRoute><ProductOrganizerPage /></ProtectedRoute>} />
                           <Route path="/tires-timepieces" component={() => <ProtectedRoute><TiresTimepieces /></ProtectedRoute>} />
                           {/* Premium features - require ACCESS_PREMIUM_FEATURES permission */}
-                          <Route path="/podium-pursuit" component={() => <ProtectedRoute requiredPermissions={["ACCESS_PREMIUM_FEATURES"]}><PodiumPursuitPage /></ProtectedRoute>} />
-                          <Route path="/events" component={() => <ProtectedRoute requiredPermissions={["ACCESS_PREMIUM_FEATURES"]}><EventsPage /></ProtectedRoute>} />
-                          <Route path="/motorsports-events" component={() => <ProtectedRoute requiredPermissions={["ACCESS_PREMIUM_FEATURES"]}><MotorsportsEventsPage /></ProtectedRoute>} />
-                          <Route path="/motorsports-gallery" component={() => <ProtectedRoute requiredPermissions={["ACCESS_PREMIUM_FEATURES"]}><MotorsportsGalleryPage /></ProtectedRoute>} />
+                          <Route path="/podium-pursuit" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_PREMIUM_FEATURES]}><PodiumPursuitPage /></ProtectedRoute>} />
+                          <Route path="/events" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_PREMIUM_FEATURES]}><EventsPage /></ProtectedRoute>} />
+                          <Route path="/motorsports-events" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_PREMIUM_FEATURES]}><MotorsportsEventsPage /></ProtectedRoute>} />
+                          <Route path="/motorsports-gallery" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_PREMIUM_FEATURES]}><MotorsportsGalleryPage /></ProtectedRoute>} />
                           
                           {/* Membership and support pages */}
                           <Route path="/membership" component={() => <ProtectedRoute><MembershipPage /></ProtectedRoute>} />
@@ -312,9 +312,9 @@ function AppContent({
                           <Route path="/contact" component={() => <ProtectedRoute><ContactPage /></ProtectedRoute>} />
                           
                           {/* Premium content features */}
-                          <Route path="/ebooks" component={() => <ProtectedRoute requiredPermissions={["ACCESS_PREMIUM_FEATURES"]}><EbooksPage /></ProtectedRoute>} />
-                          <Route path="/concierge" component={() => <ProtectedRoute requiredPermissions={["ACCESS_PREMIUM_FEATURES"]}><ConciergePage /></ProtectedRoute>} />
-                          <Route path="/discounts" component={() => <ProtectedRoute requiredPermissions={["ACCESS_PREMIUM_FEATURES"]}><DiscountsPage /></ProtectedRoute>} />
+                          <Route path="/ebooks" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_PREMIUM_FEATURES]}><EbooksPage /></ProtectedRoute>} />
+                          <Route path="/concierge" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_PREMIUM_FEATURES]}><ConciergePage /></ProtectedRoute>} />
+                          <Route path="/discounts" component={() => <ProtectedRoute requiredPermissions={[AuthPermission.ACCESS_PREMIUM_FEATURES]}><DiscountsPage /></ProtectedRoute>} />
                           <Route path="/spotify-test" component={() => <ProtectedRoute><SpotifyTestPage /></ProtectedRoute>} />
                           <Route path="/spotify-env-check" component={() => <ProtectedRoute><SpotifyEnvCheck /></ProtectedRoute>} />
                           <Route path="/api-explorer" component={() => <ProtectedRoute><ApiExplorerPage /></ProtectedRoute>} />
