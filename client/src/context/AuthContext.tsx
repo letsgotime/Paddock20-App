@@ -91,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             const token = await getAccessTokenSilently();
             
             // Store token in localStorage for use during onboarding
-            localStorage.setItem('auth0_user_token', token);
+            localStorage.setItem('auth0_token', token);
             console.log('Auth0 token stored in localStorage for onboarding');
             
             const response = await fetch('/api/user-profile', {
