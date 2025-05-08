@@ -67,8 +67,8 @@ const BetaWelcomeModal: React.FC<BetaWelcomeModalProps> = ({ isOpen, onClose }) 
       return;
     }
     
-    // Legal agreements accepted (step 3) - complete flow
-    if (step === 3 && allAgreed) {
+    // Final step - complete flow
+    if (step === 6) {
       // Start exit animation
       setIsExiting(true);
       
@@ -79,7 +79,7 @@ const BetaWelcomeModal: React.FC<BetaWelcomeModalProps> = ({ isOpen, onClose }) 
       return;
     }
     
-    // Move to next step (only for steps 1-2)
+    // Move to next step
     setStep(prev => prev + 1);
     setError(null);
   };
@@ -133,17 +133,17 @@ const BetaWelcomeModal: React.FC<BetaWelcomeModalProps> = ({ isOpen, onClose }) 
     }
   };
   
-  // Progress dots - now only showing steps 1-3
+  // Progress dots
   const renderProgressDots = () => {
     return (
       <div className="flex space-x-2 items-center justify-center mt-6">
-        {[1, 2, 3].map((dot) => (
+        {[1, 2, 3, 4, 5, 6].map((dot) => (
           <div 
             key={dot}
             className={`
               w-2.5 h-2.5 rounded-full transition-all duration-300 
               ${dot === step ? 
-                (step === 3 && allAgreed ? 'bg-[#08c519] w-4 h-4' : 'bg-[#1982FC] w-4 h-4') : 
+                (step === 6 ? 'bg-[#08c519] w-4 h-4' : 'bg-[#1982FC] w-4 h-4') : 
                 (dot < step ? 'bg-gray-300' : 'bg-gray-600')}
             `}
           />
@@ -359,24 +359,8 @@ const BetaWelcomeModal: React.FC<BetaWelcomeModalProps> = ({ isOpen, onClose }) 
               </div>
             </div>
             
-            {/* Decline terms option */}
-            <div className="flex justify-center mt-4">
-              <button 
-                onClick={() => {
-                  // Start exit animation and close without accepting terms
-                  setIsExiting(true);
-                  setTimeout(() => {
-                    onClose(); // Call without betaRole to indicate no agreement
-                  }, 400);
-                }}
-                className="text-gray-400 hover:text-red-400 text-sm underline"
-              >
-                I do not accept these terms
-              </button>
-            </div>
-            
             {error && (
-              <div className="flex items-center gap-2 text-red-500 text-sm bg-red-500/10 p-3 rounded border border-red-500/20 mt-4">
+              <div className="flex items-center gap-2 text-red-500 text-sm bg-red-500/10 p-3 rounded border border-red-500/20">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" className="w-5 h-5 flex-shrink-0">
                   <path d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" />
                 </svg>
@@ -742,10 +726,10 @@ const BetaWelcomeModal: React.FC<BetaWelcomeModalProps> = ({ isOpen, onClose }) 
           
           {/* Step indicator */}
           <div className="text-sm font-orbitron bg-black/30 px-2.5 py-1 rounded border border-[#1982FC]/20">
-            {step === 3 && allAgreed ? (
-              <span className="text-[#08c519]">STEP {step}/3</span>
+            {step === 6 ? (
+              <span className="text-[#08c519]">STEP {step}/6</span>
             ) : (
-              <span className="text-[#1982FC]">STEP {step}/3</span>
+              <span className="text-[#1982FC]">STEP {step}/6</span>
             )}
           </div>
         </div>
@@ -773,13 +757,13 @@ const BetaWelcomeModal: React.FC<BetaWelcomeModalProps> = ({ isOpen, onClose }) 
             onClick={handleNext}
             className={`
               px-6 py-2 text-white rounded-md transition-all flex items-center shadow-lg
-              ${step === 3 && allAgreed
+              ${step === 6 
                 ? 'bg-gradient-to-r from-[#08c519] to-[#08c519]/80 hover:brightness-110 border border-[#08c519]/30' 
                 : 'bg-gradient-to-r from-[#1982FC] to-[#1982FC]/80 hover:brightness-110 border border-[#1982FC]/30'}
             `}
             disabled={step === 3 && !allAgreed}
           >
-            <span className="font-orbitron tracking-wide">{step === 3 && allAgreed ? 'COMPLETE SETUP' : 'CONTINUE'}</span>
+            <span className="font-orbitron tracking-wide">{step === 6 ? 'COMPLETE SETUP' : 'CONTINUE'}</span>
             <ChevronRight className="ml-1" size={18} />
           </button>
         </div>

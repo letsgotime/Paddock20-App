@@ -38,7 +38,6 @@ export const users = pgTable('users', {
   failedLoginAttempts: integer('failed_login_attempts').default(0),
   stripeCustomerId: varchar('stripe_customer_id', { length: 255 }),
   stripeSubscriptionId: varchar('stripe_subscription_id', { length: 255 }),
-  metadata: jsonb('metadata'), // For storing arbitrary data like Smartcar tokens
   onboardingCompleted: boolean('onboarding_completed').default(false),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
@@ -131,7 +130,6 @@ export const vehicles = pgTable('vehicles', {
   insurance_renewal: timestamp('insurance_renewal'),
   registration_renewal: timestamp('registration_renewal'),
   imageUrl: varchar('image_url', { length: 255 }),
-  smartcar_vehicle_id: varchar('smartcar_vehicle_id', { length: 100 }),
   notes: text('notes'),
   createdAt: timestamp('created_at').defaultNow(),
   updatedAt: timestamp('updated_at').defaultNow(),
