@@ -1,5 +1,5 @@
-import { Router } from 'express';
-import axios from 'axios';
+import { Router, Request, Response, NextFunction } from 'express';
+import axios, { AxiosError } from 'axios';
 
 // Create a router
 const router = Router();
@@ -8,7 +8,7 @@ const router = Router();
 const OBD_SERVICE_URL = 'http://localhost:5001';
 
 // Proxy middleware function
-const proxyOBDRequest = async (req, res, next) => {
+const proxyOBDRequest = async (req: Request, res: Response, next: NextFunction) => {
   try {
     // Build the target URL by appending the path after /api/obd
     const targetPath = req.url.replace(/^\/api\/obd/, '/api/obd');
@@ -32,7 +32,8 @@ const proxyOBDRequest = async (req, res, next) => {
     
     // Send the response back to the client
     return res.status(response.status).json(response.data);
-  } catch (error) {
+  } catch (err) {
+    const error = err as AxiosError;
     console.error('OBD proxy error:', error.message);
     
     // If the error has a response, send it back
@@ -50,7 +51,7 @@ const proxyOBDRequest = async (req, res, next) => {
 };
 
 // Route to check if OBD service is running
-router.get('/health', async (req, res) => {
+router.get('/health', async (req: Request, res: Response) => {
   try {
     const response = await axios.get(`${OBD_SERVICE_URL}/api/obd/status`);
     return res.status(200).json({
@@ -58,7 +59,8 @@ router.get('/health', async (req, res) => {
       running: true,
       status: response.data
     });
-  } catch (error) {
+  } catch (err) {
+    const error = err as Error;
     return res.status(200).json({
       serviceName: 'OBD Service',
       running: false,
@@ -68,7 +70,7 @@ router.get('/health', async (req, res) => {
 });
 
 // Route to start the OBD service
-router.post('/start-service', (req, res) => {
+router.post('/start-service', (req: Request, res: Response) => {
   const { spawn } = require('child_process');
   
   try {
@@ -76,15 +78,15 @@ router.post('/start-service', (req, res) => {
     const pythonProcess = spawn('python', ['server/services/obd_service.py']);
     
     // Handle process events
-    pythonProcess.stdout.on('data', (data) => {
+    pythonProcess.stdout.on('data', (data: Buffer) => {
       console.log(`OBD Service stdout: ${data}`);
     });
     
-    pythonProcess.stderr.on('data', (data) => {
+    pythonProcess.stderr.on('data', (data: Buffer) => {
       console.error(`OBD Service stderr: ${data}`);
     });
     
-    pythonProcess.on('close', (code) => {
+    pythonProcess.on('close', (code: number | null) => {
       console.log(`OBD Service process exited with code ${code}`);
     });
     
@@ -92,7 +94,8 @@ router.post('/start-service', (req, res) => {
       success: true,
       message: 'OBD service started successfully'
     });
-  } catch (error) {
+  } catch (err) {
+    const error = err as Error;
     console.error('Failed to start OBD service:', error);
     return res.status(500).json({
       success: false,
