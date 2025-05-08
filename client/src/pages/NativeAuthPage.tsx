@@ -362,8 +362,20 @@ export default function NativeAuthPage() {
             </Tabs>
           </CardContent>
           
-          <CardFooter className="flex flex-col text-center text-sm text-gray-400">
-            <p>
+          <CardFooter className="flex flex-col text-center text-sm space-y-4">
+            <div className="w-full">
+              <p className="text-orange-400 mb-2">Having login issues?</p>
+              <Button 
+                type="button" 
+                className="w-full bg-gradient-to-r from-[#1982FC] to-[#08c519] hover:brightness-110 text-white"
+                onClick={() => {
+                  window.location.href = "/demo";
+                }}
+              >
+                Quick Demo Access (No Login Required)
+              </Button>
+            </div>
+            <p className="text-gray-400">
               By using PADDOCK20, you agree to our <a href="/terms-of-service" className="text-[#1982FC] hover:underline">Terms of Service</a> and <a href="/privacy-policy" className="text-[#1982FC] hover:underline">Privacy Policy</a>.
             </p>
           </CardFooter>
