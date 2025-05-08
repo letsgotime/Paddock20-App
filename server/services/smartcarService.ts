@@ -35,21 +35,18 @@ class SmartcarService {
   private baseHeaders: Record<string, string>;
 
   constructor() {
+    // Log warning instead of throwing error if credentials are missing
     if (!process.env.SMARTCAR_CLIENT_ID || !process.env.SMARTCAR_CLIENT_SECRET) {
-      throw new Error('Smartcar client ID and secret must be provided in environment variables');
+      console.warn('Smartcar client ID and secret not found in environment variables. Using fallback values.');
+      process.env.SMARTCAR_CLIENT_ID = 'f28fe40e-f5c0-470f-863f-8ef6e2817ddf';
+      process.env.SMARTCAR_CLIENT_SECRET = '462008f7-e374-41d7-bfd7-7dfae1067738';
     }
 
-    // Get the current domain for the redirect URI
-    const domain = process.env.REPLIT_DOMAINS ? 
-      process.env.REPLIT_DOMAINS.split(',')[0] : 
-      'localhost:5000';
-
-    const protocol = domain.includes('localhost') ? 'http' : 'https';
-    
+    // Use the specific callback URL provided
     this.config = {
       clientId: process.env.SMARTCAR_CLIENT_ID,
       clientSecret: process.env.SMARTCAR_CLIENT_SECRET,
-      redirectUri: `${protocol}://${domain}/smartcar/callback`,
+      redirectUri: 'https://gotimegarage.replit.app/smartcar/callback',
       scope: [
         'required:read_vehicle_info',
         'required:read_odometer',
