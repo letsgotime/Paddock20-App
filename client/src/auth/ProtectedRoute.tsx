@@ -140,6 +140,11 @@ export const DemoRoute: React.FC<{ children: ReactNode }> = ({ children }) => {
   
   console.log('DemoRoute accessed with path:', location);
   
+  if (!location.startsWith('/demo')) {
+    console.log('Redirecting to demo mode because current path is not a demo path:', location);
+    return <Redirect to={`/demo${location}`} />;
+  }
+  
   // Always render the children for demo routes - no restrictions
   return <>{children}</>;
 };
