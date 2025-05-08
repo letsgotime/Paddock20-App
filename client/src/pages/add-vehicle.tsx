@@ -226,7 +226,23 @@ export default function AddVehiclePage() {
   };
   
   // Handle Smartcar connection
-  const handleSmartcarConnect = () => {
+  const handleSmartcarConnect = (vehicleData: any) => {
+    if (vehicleData) {
+      // Set form values with vehicle data
+      manualForm.setValue('make', vehicleData.make || '');
+      manualForm.setValue('model', vehicleData.model || '');
+      manualForm.setValue('year', vehicleData.year || new Date().getFullYear());
+      if (vehicleData.vin) manualForm.setValue('vin', vehicleData.vin);
+      
+      // Switch to manual tab to review and submit
+      setActiveTab('manual');
+      
+      toast({
+        title: 'Vehicle Imported',
+        description: `${vehicleData.year} ${vehicleData.make} ${vehicleData.model} imported from Smartcar`,
+      });
+    }
+    
     setSmartcarConnected(true);
   };
   
@@ -602,10 +618,11 @@ export default function AddVehiclePage() {
                     
                     {smartcarConnected && (
                       <Alert>
-                        <Check className="h-4 w-4" />
-                        <span className="ml-2">
+                        <AlertCircle className="h-4 w-4" />
+                        <AlertTitle>Connection Successful</AlertTitle>
+                        <AlertDescription>
                           Your vehicle has been connected with Smartcar and will appear in your garage shortly.
-                        </span>
+                        </AlertDescription>
                       </Alert>
                     )}
                   </div>
