@@ -729,12 +729,20 @@ const ThePaddockPage = () => {
                       <CardTitle>Your Vehicles</CardTitle>
                       <CardDescription>Manage your automotive collection</CardDescription>
                     </div>
-                    <Button 
-                      className="bg-[#1982FC] hover:bg-[#1982FC]/90"
-                      onClick={() => navigate('/add-vehicle')}
-                    >
-                      <Car className="mr-2 h-4 w-4" /> Add Vehicle
-                    </Button>
+                    <div className="flex gap-2">
+                      <Button 
+                        className="bg-[#1982FC] hover:bg-[#1982FC]/90"
+                        onClick={() => navigate('/connect-vehicle')}
+                      >
+                        <Car className="mr-2 h-4 w-4" /> Connect Vehicle
+                      </Button>
+                      <Button 
+                        className="bg-[#1982FC] hover:bg-[#1982FC]/90"
+                        onClick={() => navigate('/add-vehicle')}
+                      >
+                        <Car className="mr-2 h-4 w-4" /> Add Vehicle
+                      </Button>
+                    </div>
                   </div>
                 </CardHeader>
                 <CardContent>
@@ -746,13 +754,21 @@ const ThePaddockPage = () => {
                     <div className="flex flex-col items-center justify-center h-64 text-center">
                       <Car className="w-16 h-16 text-gray-500 mb-4" />
                       <h3 className="text-xl font-medium mb-2">No Vehicles Added Yet</h3>
-                      <p className="text-gray-400 mb-4">Get started by adding your first vehicle</p>
-                      <Button 
-                        className="bg-[#1982FC] hover:bg-[#1982FC]/90"
-                        onClick={() => navigate('/add-vehicle')}
-                      >
-                        <Car className="mr-2 h-4 w-4" /> Add Vehicle
-                      </Button>
+                      <p className="text-gray-400 mb-4">Get started by adding or connecting your first vehicle</p>
+                      <div className="flex gap-2">
+                        <Button 
+                          className="bg-[#1982FC] hover:bg-[#1982FC]/90"
+                          onClick={() => navigate('/connect-vehicle')}
+                        >
+                          <Car className="mr-2 h-4 w-4" /> Connect Vehicle
+                        </Button>
+                        <Button 
+                          className="bg-[#1982FC] hover:bg-[#1982FC]/90"
+                          onClick={() => navigate('/add-vehicle')}
+                        >
+                          <Car className="mr-2 h-4 w-4" /> Add Vehicle
+                        </Button>
+                      </div>
                     </div>
                   ) : (
                     <div className="grid gap-6 md:grid-cols-2">
