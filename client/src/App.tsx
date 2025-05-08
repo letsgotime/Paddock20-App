@@ -287,7 +287,7 @@ function AppContent({
                           <Route path="/" component={LandingPage} />
                           
                           {/* Demo route to access The Paddock without authentication */}
-                          <Route path="/demo" component={ThePaddockPage} />
+                          <Route path="/demo" component={() => <ThePaddockPage demoMode={true} />} />
                           
                           {/* Authenticated dashboard */}
                           <Route path="/dashboard" component={() => <ProtectedRoute><ThePaddockPage /></ProtectedRoute>} />
