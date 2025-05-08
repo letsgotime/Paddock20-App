@@ -4,6 +4,8 @@ import { APIDataWarehouse } from './core/APIDataWarehouseCore';
 // Import the provider factory functions we've created
 import { createCloudinaryProvider } from './providers/media';
 import { createLastFmProvider } from './providers/music';
+import { createSoundProviders } from './providers/sound';
+import { createAutomotiveProviders } from './providers/automotive';
 
 // Group providers by type for registration
 const mediaProviders = (() => {
@@ -24,10 +26,27 @@ const musicProviders = (() => {
   }
 })();
 
+const soundProviders = (() => {
+  try {
+    return createSoundProviders();
+  } catch (error) {
+    console.error('Failed to initialize sound providers:', error);
+    return [];
+  }
+})();
+
+const automotiveProviders = (() => {
+  try {
+    return createAutomotiveProviders();
+  } catch (error) {
+    console.error('Failed to initialize automotive providers:', error);
+    return [];
+  }
+})();
+
 // Mock other provider types that aren't fully implemented yet
 const weatherProviders = [];
 const geocodingProviders = [];
-// Other provider imports will go here when implemented
 
 /**
  * Initialize and configure the API Data Warehouse
@@ -63,6 +82,18 @@ export function initializeAPIWarehouse(): APIDataWarehouse {
       warehouse.registerProvider(provider);
     });
     console.info('🏎️ PADDOCK20: Music API providers registered');
+    
+    // Register sound providers (Freesound)
+    soundProviders.forEach(provider => {
+      warehouse.registerProvider(provider);
+    });
+    console.info('🏎️ PADDOCK20: Sound API providers registered');
+    
+    // Register automotive providers (Mock + NHTSA)
+    automotiveProviders.forEach(provider => {
+      warehouse.registerProvider(provider);
+    });
+    console.info('🏎️ PADDOCK20: Automotive API providers registered');
     
     // Add other provider registrations here as they are implemented
     
