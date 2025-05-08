@@ -2,6 +2,7 @@ import fs from "fs";
 import path from "path";
 import express from "express";
 import { json } from "express";
+import { createServer } from "http";
 import { setupVite } from "./vite";
 import { registerRoutes } from "./routes";
 import obdRoutes from "./routes/obdRoutes";
@@ -21,14 +22,17 @@ async function main() {
   // Use JSON middleware
   app.use(json());
   
+  // Create an HTTP server
+  const httpServer = createServer(app);
+  
   // Set up Vite for development or serve the built client for production
-  await setupVite(app);
+  await setupVite(app, httpServer);
   
   // Set up OBD routes
   await setupOBDRoutes(app);
   
-  // Register all other routes
-  const httpServer = await registerRoutes(app);
+  // Register additional routes
+  await registerRoutes(app);
 
   // Set the port
   const port = process.env.PORT ? parseInt(process.env.PORT, 10) : 5000;
