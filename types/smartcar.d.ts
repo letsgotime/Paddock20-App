@@ -80,8 +80,11 @@ declare module 'smartcar' {
     tires(): Promise<SmartcarTiresResponse>;
   }
 
-  export default {
-    AuthClient,
-    Vehicle
+  // Properly exported namespace
+  const Smartcar: {
+    AuthClient: typeof AuthClient;
+    Vehicle: typeof Vehicle;
   };
+  
+  export default Smartcar;
 }
