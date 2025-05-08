@@ -93,19 +93,9 @@ export function SoundPlayer({ className }: SoundPlayerProps) {
       let response;
       
       if (soundCategory === 'racing') {
-        response = await apiWarehouse.executeRequest<SoundSearchResults>({
-          type: 'sound',
-          method: 'getRacingSounds',
-          params: [{ pageSize: 10 }],
-          cacheTtl: 3600, // 1 hour cache
-        });
+        response = await apiWarehouse.requestData<SoundSearchResults>('sound', 'getRacingSounds', [{ pageSize: 10 }]);
       } else {
-        response = await apiWarehouse.executeRequest<SoundSearchResults>({
-          type: 'sound',
-          method: 'getEngineSounds',
-          params: [{ pageSize: 10 }],
-          cacheTtl: 3600, // 1 hour cache
-        });
+        response = await apiWarehouse.requestData<SoundSearchResults>('sound', 'getEngineSounds', [{ pageSize: 10 }]);
       }
       
       if (response.success && response.data) {

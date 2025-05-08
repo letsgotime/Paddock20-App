@@ -19,6 +19,7 @@ import { ScrollArea } from '@/components/ui/scroll-area';
 
 // Widgets
 import F1TelemetryWidget from '@/components/dashboard/widgets/F1TelemetryWidget';
+import { SoundPlayer } from '@/components/SoundPlayer';
 
 // Icons
 import {
@@ -679,6 +680,25 @@ const ThePaddockPage = () => {
                     <Star className="mr-2 h-4 w-4" /> Manifestation Station
                   </Button>
                 </CardFooter>
+              </Card>
+              
+              {/* Vehicle Sound Player */}
+              <Card className="bg-[#1e1e1e] border-[#333] shadow-lg">
+                <CardHeader className="pb-2">
+                  <CardTitle className="flex items-center gap-2">
+                    Automotive Sounds
+                    <Badge variant="outline" className="ml-2 bg-[#1982FC]/20 text-[#1982FC] border-[#1982FC]/50">
+                      NEW
+                    </Badge>
+                  </CardTitle>
+                  <CardDescription>
+                    Experience authentic vehicle and racing sounds
+                  </CardDescription>
+                </CardHeader>
+                
+                <CardContent>
+                  <SoundPlayer className="w-full" />
+                </CardContent>
               </Card>
             </div>
             

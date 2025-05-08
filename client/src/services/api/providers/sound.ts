@@ -649,7 +649,6 @@ export function createMockSoundProvider(): MockSoundProvider {
  */
 export function createSoundProviders(): BaseProvider[] {
   return [
-    createFreesoundProvider(),
-    createMockSoundProvider()
+    createFreesoundProvider() // Using only authentic data from Freesound API
   ];
 }
