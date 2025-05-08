@@ -13,12 +13,6 @@ const ContextualBreadcrumbs: React.FC = () => {
   // Define breadcrumb mappings for all supported routes
   const routeMappings: Record<string, BreadcrumbItem[]> = {
     '/': [],
-    '/the-paddock': [
-      { path: '/', label: 'Paddock20 Home' }
-    ],
-    '/paddock': [
-      { path: '/', label: 'Paddock20 Home' }
-    ],
     '/new-weather-center': [
       { path: '/', label: 'Paddock20 Home' },
       { path: '/new-weather-center', label: 'Weather Center' }

@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useLocation } from 'wouter';
+import { useLocation } from 'react-router-dom';
 import { useRewardsTracker } from '../utils/rewardsTracker';
 
 /**
@@ -10,16 +10,15 @@ import { useRewardsTracker } from '../utils/rewardsTracker';
 const RewardsTracker: React.FC = () => {
   // Initialize rewards tracker - need to declare outside try/catch for hook rules
   const rewards = useRewardsTracker();
-  const [location] = useLocation();
+  const location = useLocation();
   
   // Track page visits for rewards
   useEffect(() => {
     const trackVisit = () => {
       try {
-        // With wouter, location is just the path string
-        if (location && rewards && typeof rewards.trackPageVisit === 'function') {
+        if (location && location.pathname && rewards && typeof rewards.trackPageVisit === 'function') {
           // Track the page visit
-          rewards.trackPageVisit(location);
+          rewards.trackPageVisit(location.pathname);
         }
       } catch (error) {
         console.error('Error tracking page visit:', error);
@@ -29,7 +28,7 @@ const RewardsTracker: React.FC = () => {
     // Add a small timeout to avoid potential render loops
     const timer = setTimeout(trackVisit, 50);
     return () => clearTimeout(timer);
-  }, [location]); // Intentionally removed rewards dependency
+  }, [location?.pathname]); // Intentionally removed rewards dependency
   
   // Run periodic checks for time-based rewards
   useEffect(() => {

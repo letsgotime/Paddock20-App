@@ -5,9 +5,6 @@ export default {
   content: ["./client/index.html", "./client/src/**/*.{js,jsx,ts,tsx}"],
   theme: {
     extend: {
-      fontSize: {
-        'xxs': '0.65rem',
-      },
       fontFamily: {
         'orbitron': ['Orbitron', 'sans-serif'],
       },
@@ -89,40 +86,11 @@ export default {
           "0%": { opacity: "0" },
           "100%": { opacity: "1" },
         },
-        "expand": {
-          "0%": { height: "0", opacity: "0" },
-          "100%": { height: "auto", opacity: "1" }
-        },
-        "collapse": {
-          "0%": { height: "auto", opacity: "1" },
-          "100%": { height: "0", opacity: "0" }
-        },
-        "slide-down": {
-          "0%": { transform: "translateY(-10px)", opacity: "0" },
-          "100%": { transform: "translateY(0)", opacity: "1" }
-        },
-        "slide-up": {
-          "0%": { transform: "translateY(10px)", opacity: "0" },
-          "100%": { transform: "translateY(0)", opacity: "1" }
-        },
-        "pulse-glow": {
-          "0%, 100%": { 
-            boxShadow: "0 0 0 0 rgba(25, 130, 252, 0)" 
-          },
-          "50%": { 
-            boxShadow: "0 0 10px 3px rgba(25, 130, 252, 0.5)" 
-          }
-        }
       },
       animation: {
         "accordion-down": "accordion-down 0.2s ease-out",
         "accordion-up": "accordion-up 0.2s ease-out",
         "fadeIn": "fade-in 0.3s ease-in-out",
-        "expand": "expand 0.3s ease-out forwards",
-        "collapse": "collapse 0.3s ease-in forwards",
-        "slide-down": "slide-down 0.3s ease-out",
-        "slide-up": "slide-up 0.3s ease-out",
-        "pulse-glow": "pulse-glow 2s ease-in-out infinite"
       },
     },
   },

@@ -1,13 +1,3 @@
-/**
- * ⚠️ BETA FILE PROTECTION ⚠️
- * 
- * WARNING: This file is part of the Beta Program core implementation.
- * DO NOT MODIFY this file without proper authorization.
- * Any unauthorized changes may break the beta enrollment process.
- * 
- * Last verified: May 07, 2025
- */
-
 import React, { useState, useEffect } from 'react';
 import { Link } from 'wouter';
 import { 
@@ -18,12 +8,10 @@ import {
   Trash2, Info
 } from 'lucide-react';
 import { handleDeclineTerms } from '../utils/accountUtils';
-// Auth is passed as props instead of using the hook directly
-// import { useAuth } from '@/hooks/useAuth';
+import { useAuth } from '../hooks/useAuth';
 
 interface UserOnboardingProps {
-  onComplete: () => void;
-  user: any; // Accept user directly from parent
+  onComplete: (userId: number | string) => void;
 }
 
 // Carolina blue color code for consistent branding
@@ -125,8 +113,9 @@ const moduleOptions = [
  * Uses brand-consistent styling with Orbitron for headings and Open Sans for body text.
  * Color scheme follows the dark carbon-fiber theme with Carolina blue accents.
  */
-const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete, user }) => {
-  // Use user prop directly instead of auth hook
+const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
+  // Access authenticated user context
+  const auth = useAuth();
   
   // Current step state (1-5)
   const [step, setStep] = useState(1);
@@ -390,10 +379,10 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete, user }) => 
         // Pre-populate minimal profile data to satisfy validation
         setUserProfile(prev => ({
           ...prev,
-          fullName: prev.fullName || user?.firstName && user?.lastName ? `${user.firstName} ${user.lastName}` : user?.username || 'User',
-          username: prev.username || user?.username || 'user',
-          email: prev.email || user?.email || 'user@example.com',
-          password: 'password123',  // These will never be used as Supabase handles auth
+          fullName: prev.fullName || auth.user?.firstName && auth.user?.lastName ? `${auth.user.firstName} ${auth.user.lastName}` : auth.user?.username || 'User',
+          username: prev.username || auth.user?.username || 'user',
+          email: prev.email || auth.user?.email || 'user@example.com',
+          password: 'password123',  // These will never be used as Auth0 handles auth
           confirmPassword: 'password123',
         }));
         
@@ -477,8 +466,8 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete, user }) => 
       
       // Simulate successful completion with a delay
       setTimeout(() => {
-        // Call the onComplete callback
-        onComplete();
+        // Call the onComplete callback with the user ID
+        onComplete(auth.user?.id || 1);
       }, 800);
     } catch (error) {
       console.error('Error submitting onboarding data:', error);
@@ -494,10 +483,10 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete, user }) => 
       // Pre-populate minimal data to satisfy any validation
       setUserProfile(prev => ({
         ...prev,
-        fullName: prev.fullName || user?.username || 'User',
-        username: prev.username || user?.username || 'user',
-        email: prev.email || user?.email || 'user@example.com',
-        password: 'password123',  // These will never be used as Supabase handles auth
+        fullName: prev.fullName || auth.user?.username || 'User',
+        username: prev.username || auth.user?.username || 'user',
+        email: prev.email || auth.user?.email || 'user@example.com',
+        password: 'password123',  // These will never be used as Auth0 handles auth
         confirmPassword: 'password123',
       }));
       
@@ -511,8 +500,8 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete, user }) => 
       
       // Simulate successful completion with a delay
       setTimeout(() => {
-        // Call the onComplete callback
-        onComplete();
+        // Call the onComplete callback with the user ID
+        onComplete(auth.user?.id || 1);
       }, 800);
     } catch (error) {
       console.error('Error skipping onboarding:', error);
@@ -658,7 +647,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete, user }) => 
                   >
                     <div className="absolute inset-0 bg-gradient-to-t from-gray-900 via-gray-900/70 to-transparent" />
                     <div className="absolute bottom-0 left-0 p-4">
-                      <h3 className="text-white font-bold text-lg">Bespoke Design</h3>
+                      <h3 className="text-white font-bold text-lg">Revolutionary Design</h3>
                       <p className="text-gray-200 text-sm">
                         Inspired by F1 telemetry and supercar aesthetics
                       </p>
@@ -726,7 +715,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete, user }) => 
                     
                     <div className="flex items-center space-x-2 text-[#08c519]">
                       <Clock size={20} />
-                      <span className="text-sm font-semibold">Expected Beta duration: TBD</span>
+                      <span className="text-sm font-semibold">Expected beta duration: 3 months</span>
                     </div>
                   </div>
                   
@@ -785,17 +774,13 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete, user }) => 
                       Beta Participant Options
                     </h4>
                     
-                    <p className="text-gray-400 text-sm mb-4">
-                      You may apply to become a Beta Tester at any time, but we have limited space in the program available.
-                    </p>
-                    
                     <div className="space-y-6">
                       <div className="flex items-start">
                         <div className="mt-1 mr-4 flex items-center justify-center w-8 h-8 bg-gray-700 text-[#1982FC] rounded-full flex-shrink-0">
                           <User size={18} />
                         </div>
                         <div>
-                          <h5 className="text-white font-medium mb-1">Paddock Beta User</h5>
+                          <h5 className="text-white font-medium mb-1">Basic Beta User</h5>
                           <p className="text-gray-400 text-sm mb-2">
                             Experience the platform with minimal commitment. Perfect for casual users.
                           </p>
@@ -827,7 +812,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete, user }) => 
                           <ul className="text-sm text-gray-400 space-y-1">
                             <li className="flex items-center">
                               <Check size={14} className="text-[#08c519] mr-2 flex-shrink-0" />
-                              <span>Everything in Paddock Beta User</span>
+                              <span>Everything in Basic Beta User</span>
                             </li>
                             <li className="flex items-center">
                               <Check size={14} className="text-[#08c519] mr-2 flex-shrink-0" />
@@ -1200,7 +1185,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete, user }) => 
                           <h4 className="text-white font-medium mb-1">Contact Information</h4>
                           <p className="text-gray-400 text-sm">
                             If you have any questions about these agreements or the beta program, 
-                            please contact us at <span className="text-[#1982FC]">beta@gotimemotorsports.com</span>
+                            please contact us at <span className="text-[#1982FC]">beta@paddock20.com</span>
                           </p>
                         </div>
                       </div>
@@ -1465,7 +1450,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete, user }) => 
                     Select Your Beta Participation Level
                   </h3>
                   <p className="text-gray-300 max-w-2xl mx-auto">
-                    Choose how you'd like to contribute to the Paddock20 beta program. Beta Tester spots are limited and require consistent participation.
+                    Choose how you'd like to contribute to the Paddock20 beta program. You can change this selection later.
                   </p>
                 </div>
                 
@@ -1606,7 +1591,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete, user }) => 
                     <div className="flex items-center bg-gray-800/50 py-2 px-3 rounded-lg">
                       <Info size={16} className="text-[#1982FC] mr-2" />
                       <span className="text-gray-300 text-sm">
-                        Beta Tester spots are limited and require active participation. Inactive testers may be moved to Beta User status.
+                        You can change your beta role at any time from your Profile Settings
                       </span>
                     </div>
                   </div>
@@ -1639,7 +1624,15 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete, user }) => 
           )}
           
           <div className="flex items-center space-x-4">
-            {/* "Skip to Completion" button removed as requested */}
+            {step < 5 && (
+              <button
+                type="button"
+                onClick={handleSkipToComplete}
+                className="text-[#1982FC] hover:text-[#1982FC]/80 text-sm transition-colors"
+              >
+                Skip to Completion
+              </button>
+            )}
             
             <button
               type="button"

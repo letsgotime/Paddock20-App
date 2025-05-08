@@ -3,22 +3,12 @@ import { useLocation } from 'wouter';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
-import { 
-  AlertCircle, 
-  Car, 
-  Info, 
-  Loader2, 
-  PlusCircle, 
-  Save as SaveIcon, 
-  Search
-} from 'lucide-react';
+import { Loader2, PlusCircle, SaveIcon } from 'lucide-react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
-import { decodeVIN, validateVIN } from '@/services/vinDecoderService';
 
 import { Button } from '@/components/ui/button';
-import { Alert, AlertTitle } from '@/components/ui/alert';
 import {
   Form,
   FormControl,
@@ -32,7 +22,6 @@ import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectGroup, SelectItem, SelectLabel, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Badge } from '@/components/ui/badge';
 import PageTitle from '@/components/PageTitle';
 import { useVehicle } from '../hooks/useVehicle';
 
@@ -57,9 +46,6 @@ const yearOptions = Array.from({ length: 100 }, (_, i) => currentYear - i);
 
 export default function AddVehiclePage() {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [isSearchingVin, setIsSearchingVin] = useState(false);
-  const [vinError, setVinError] = useState<string | null>(null);
-  const [vinDetails, setVinDetails] = useState<{make?: string; model?: string; year?: string; trim?: string;}>();
   const { toast } = useToast();
   const [, setLocation] = useLocation();
   const queryClient = useQueryClient();
@@ -83,66 +69,11 @@ export default function AddVehiclePage() {
   });
 
   // Handle form submission
-  // Function to handle VIN lookup
-  const handleVinLookup = async () => {
-    const vin = form.getValues("vin");
-    if (!vin) {
-      setVinError("Please enter a VIN first");
-      return;
-    }
-    
-    // Reset previous errors
-    setVinError(null);
-    setIsSearchingVin(true);
-    
-    try {
-      const result = await decodeVIN(vin);
-      
-      if (result.error) {
-        setVinError(result.error);
-        return;
-      }
-      
-      // Store the resulting vehicle details
-      setVinDetails({
-        make: result.make,
-        model: result.model,
-        year: result.year,
-        trim: result.trim
-      });
-      
-      // Update the form with the VIN results
-      form.setValue("make", result.make);
-      form.setValue("model", result.model);
-      form.setValue("year", result.year);
-      
-      // Show success notification
-      toast({
-        title: "VIN Decoded Successfully",
-        description: `Found ${result.year} ${result.make} ${result.model}`,
-        variant: "default",
-      });
-      
-    } catch (error) {
-      console.error("Error decoding VIN:", error);
-      setVinError("Failed to decode VIN. Please check the number and try again.");
-    } finally {
-      setIsSearchingVin(false);
-    }
-  };
-
-  // Handle form submission
   const onSubmit = async (data: VehicleFormValues) => {
     setIsSubmitting(true);
     try {
-      // Convert year to number if the API expects it
-      const vehicleData = {
-        ...data,
-        year: parseInt(data.year)
-      };
-      
       // If using the vehicle context
-      await addVehicle(vehicleData);
+      await addVehicle(data);
       
       toast({
         title: "Vehicle Added",

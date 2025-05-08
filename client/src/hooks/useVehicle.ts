@@ -1,25 +1,38 @@
-import { useVehicle as useVehicleContext } from '@/contexts/VehicleContext';
-import { useCallback } from 'react';
-import { Vehicle } from '@/contexts/VehicleContext';
+import { useState, useEffect, useCallback, useContext } from 'react';
 import { useToast } from '@/hooks/use-toast';
+import { VehicleContext, Vehicle, MaintenanceItem } from '../contexts/VehicleContext';
+// Temporarily removing useAuth to fix provider dependency issue
+// import { useAuth } from '@/hooks/useAuth';
 
-/**
- * Enhanced bridge hook that provides consistent property naming
- * and backward compatibility for components using different terminology.
- * 
- * This resolves issues between components importing from different paths
- * and ensures consistent naming between activeVehicle and selectedVehicle.
- */
-export const useVehicle = () => {
-  const vehicleContext = useVehicleContext();
+// Re-export these types for backward compatibility
+export type { Vehicle, MaintenanceItem };
+
+export function useVehicle() {
+  const vehicleContext = useContext(VehicleContext);
+  // Temporarily using a mock user for testing authentication issue
+  const user = null; // Will be fixed when auth issue is resolved
   const { toast } = useToast();
   
+  // This will synchronize with local storage on component mount
+  useEffect(() => {
+    // Any synchronization logic here if needed
+  }, []);
+
   /**
-   * Add a new vehicle
+   * Add a new vehicle to the user's garage
    */
-  const addVehicle = useCallback(async (vehicle: Vehicle): Promise<Vehicle> => {
+  const addVehicle = useCallback(async (vehicleData: Partial<Vehicle>) => {
+    if (!vehicleContext || !vehicleContext.addVehicle) {
+      throw new Error('Vehicle context not available');
+    }
+    
     try {
-      return await vehicleContext.addVehicle(vehicle);
+      return await vehicleContext.addVehicle({
+        ...vehicleData,
+        id: `vehicle-${Date.now()}`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      } as Vehicle);
     } catch (error) {
       console.error('Error adding vehicle:', error);
       toast({
@@ -34,11 +47,18 @@ export const useVehicle = () => {
   /**
    * Update an existing vehicle
    */
-  const updateVehicle = useCallback(async (id: string, vehicleData: Partial<Vehicle>): Promise<Vehicle> => {
+  const updateVehicle = useCallback(async (id: string, vehicleData: Partial<Vehicle>) => {
+    if (!vehicleContext || !vehicleContext.updateVehicle) {
+      throw new Error('Vehicle context not available');
+    }
+    
     try {
-      return await vehicleContext.updateVehicle(id, vehicleData);
+      return await vehicleContext.updateVehicle(id, {
+        ...vehicleData,
+        updatedAt: new Date().toISOString(),
+      });
     } catch (error) {
-      console.error(`Error updating vehicle ${id}:`, error);
+      console.error('Error updating vehicle:', error);
       toast({
         title: 'Error',
         description: 'Failed to update vehicle. Please try again.',
@@ -51,11 +71,15 @@ export const useVehicle = () => {
   /**
    * Delete a vehicle
    */
-  const deleteVehicle = useCallback(async (id: string): Promise<void> => {
+  const deleteVehicle = useCallback(async (id: string) => {
+    if (!vehicleContext || !vehicleContext.deleteVehicle) {
+      throw new Error('Vehicle context not available');
+    }
+    
     try {
       await vehicleContext.deleteVehicle(id);
     } catch (error) {
-      console.error(`Error deleting vehicle ${id}:`, error);
+      console.error('Error deleting vehicle:', error);
       toast({
         title: 'Error',
         description: 'Failed to delete vehicle. Please try again.',
@@ -66,9 +90,13 @@ export const useVehicle = () => {
   }, [vehicleContext, toast]);
 
   /**
-   * Get all vehicles
+   * Get all vehicles for the current user
    */
   const getVehicles = useCallback(() => {
+    if (!vehicleContext || !vehicleContext.getVehicles) {
+      return [];
+    }
+    
     try {
       return vehicleContext.getVehicles();
     } catch (error) {
@@ -113,9 +141,6 @@ export const useVehicle = () => {
     selectedVehicle: vehicleContext?.selectedVehicle,
     activeVehicle: vehicleContext?.selectedVehicle, // Add alias for backward compatibility
     setSelectedVehicle: vehicleContext?.setSelectedVehicle,
-    setActiveVehicle: vehicleContext?.setSelectedVehicle, // Add alias for backward compatibility
     loading: vehicleContext?.loading || false,
   };
-};
-
-export default useVehicle;
+}

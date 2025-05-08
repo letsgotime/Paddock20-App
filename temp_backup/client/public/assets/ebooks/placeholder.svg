@@ -1,0 +1,5 @@
+<svg width="300" height="400" xmlns="http://www.w3.org/2000/svg">
+  <rect width="300" height="400" fill="#333" />
+  <text x="150" y="200" font-family="Arial" font-size="24" fill="white" text-anchor="middle">GoTime eBook Cover</text>
+  <text x="150" y="230" font-family="Arial" font-size="16" fill="#7FC844" text-anchor="middle">Coming Soon</text>
+</svg>

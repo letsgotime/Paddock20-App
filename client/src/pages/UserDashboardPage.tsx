@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useAuth } from '@/auth/useAuth';
+import { useAuth } from '@/hooks/useAuth';
 import { Loader2, Car, Calendar, Droplet, Clock, BarChart3, AlertTriangle, Star } from 'lucide-react';
 
 // Dashboard widgets
@@ -14,7 +14,7 @@ import JuiceBoxFeaturedWidget from '../components/dashboard/JuiceBoxFeaturedWidg
 import DreamAssetWidget from '../components/dashboard/DreamAssetWidget';
 
 const UserDashboardPage = () => {
-  const { user, loading } = useAuth();
+  const { user, isLoading } = useAuth();
   const [greeting, setGreeting] = useState('');
 
   useEffect(() => {
@@ -32,7 +32,7 @@ const UserDashboardPage = () => {
     setGreeting(greetingText);
   }, []);
 
-  if (loading) {
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-border" />
