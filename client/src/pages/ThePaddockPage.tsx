@@ -91,11 +91,16 @@ const ThePaddockPage = ({ demoMode = false }: ThePaddockPageProps) => {
   
   // Demo-aware navigation function to handle both authenticated and demo routes
   const navigateSafely = (path: string) => {
+    console.log('navigateSafely called with:', { path, demoMode });
+    
     if (demoMode && !path.startsWith('/demo') && path !== '/auth') {
       // In demo mode, prefix internal navigation with /demo
-      navigate('/demo' + (path.startsWith('/') ? path : '/' + path));
+      const demoPath = '/demo' + (path.startsWith('/') ? path : '/' + path);
+      console.log('Redirecting to demo path:', demoPath);
+      navigate(demoPath);
     } else {
       // Normal navigation
+      console.log('Normal navigation to:', path);
       navigate(path);
     }
   };
