@@ -2,13 +2,13 @@ import React, { useEffect } from 'react';
 import { useDashboardStore } from '@/store/dashboardStore';
 import DashboardGrid from '@/components/dashboard/DashboardGrid';
 import { Gauge, Settings, ChevronRight, User } from 'lucide-react';
-import { Link, useNavigate } from 'react-router-dom';
+import { Link, useLocation } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 
 const PersonalizedDashboard: React.FC = () => {
   const theme = useDashboardStore(state => state.theme);
   const hasCompletedOnboarding = useDashboardStore(state => state.hasCompletedOnboarding);
-  const navigate = useNavigate();
+  const [location, setLocation] = useLocation();
   const { user } = useAuth();
   
   // Get background classes based on theme
@@ -33,7 +33,7 @@ const PersonalizedDashboard: React.FC = () => {
 
   // Handler for navigation
   const handleNavigation = (path: string) => {
-    navigate(path);
+    setLocation(path);
     window.scrollTo(0, 0);
   };
   
