@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import { Link } from "react-router-dom";
+import { Link } from "wouter";
 import EventsPreview from '../components/EventsPreview';
 import MotorsportsGallery from '../components/MotorsportsGallery';
 import F1GoalSettingPanel from '../components/F1GoalSettingPanel';
@@ -428,7 +428,7 @@ const Paddock20HomePage: React.FC = () => {
         <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 pl-4 mb-8">
           {/* Weather Paddock Card */}
           <div className="bg-black/60 border border-blue-900/30 rounded-md p-3 hover:border-blue-500/40 hover:bg-black/80 transition-all duration-300">
-            <Link to="/weather-paddock" className="block">
+            <Link href="/weather-paddock" className="block">
               <h3 className="text-blue-400 text-sm font-semibold flex items-center">
                 <Thermometer className="w-4 h-4 mr-2" />
                 Weather Paddock
@@ -439,7 +439,7 @@ const Paddock20HomePage: React.FC = () => {
           
           {/* Route Planner Card */}
           <div className="bg-black/60 border border-blue-900/30 rounded-md p-3 hover:border-blue-500/40 hover:bg-black/80 transition-all duration-300">
-            <Link to="/route-planner" className="block">
+            <Link href="/route-planner" className="block">
               <h3 className="text-blue-400 text-sm font-semibold flex items-center">
                 <Map className="w-4 h-4 mr-2" />
                 Route Planner
@@ -450,7 +450,7 @@ const Paddock20HomePage: React.FC = () => {
           
           {/* Drive Journal Card */}
           <div className="bg-black/60 border border-blue-900/30 rounded-md p-3 hover:border-blue-500/40 hover:bg-black/80 transition-all duration-300">
-            <Link to="/drive-journal" className="block">
+            <Link href="/drive-journal" className="block">
               <h3 className="text-blue-400 text-sm font-semibold flex items-center">
                 <Clock className="w-4 h-4 mr-2" />
                 Drive Journal
@@ -461,7 +461,7 @@ const Paddock20HomePage: React.FC = () => {
           
           {/* NEW: Driver Profile Card */}
           <div className="bg-gradient-to-br from-black/80 to-blue-900/20 border border-blue-500/30 rounded-md p-3 hover:border-blue-500/60 hover:shadow-[0_0_15px_rgba(75,156,211,0.25)] transition-all duration-300">
-            <Link to="/profile" className="block">
+            <Link href="/profile" className="block">
               <h3 className="text-blue-400 text-sm font-semibold flex items-center">
                 <User className="w-4 h-4 mr-2" />
                 Driver Profile
@@ -829,7 +829,7 @@ const Paddock20HomePage: React.FC = () => {
             <div className="mt-4 p-3 bg-gradient-to-r from-blue-900/20 to-blue-900/5 rounded-sm text-sm text-blue-300 border-l-2 border-blue-500/50">
               <p className="flex items-center">
                 <ArrowUp className="h-4 w-4 mr-2 text-blue-400" />
-                All metrics are real-time and critical for driving decisions. For detailed forecast and track conditions, visit the <Link to="/new-weather-center" className="text-blue-400 hover:underline font-medium">Weather Center <span className="text-xs">→</span></Link>
+                All metrics are real-time and critical for driving decisions. For detailed forecast and track conditions, visit the <Link href="/new-weather-center" className="text-blue-400 hover:underline font-medium">Weather Center <span className="text-xs">→</span></Link>
               </p>
             </div>
           </div>
@@ -886,7 +886,7 @@ const Paddock20HomePage: React.FC = () => {
           </div>
           
           <div className="flex justify-between items-center">
-            <Link to="/dashboard" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1">
+            <Link href="/dashboard" className="text-blue-400 hover:text-blue-300 text-sm flex items-center gap-1">
               <span>My Dashboard</span>
               <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                 <path d="M5 12h14"></path>
@@ -895,13 +895,13 @@ const Paddock20HomePage: React.FC = () => {
             </Link>
             
             <div className="flex gap-2">
-              <Link to="/dashboard" className="bg-green-600/10 hover:bg-green-600/20 text-green-400 p-1.5 rounded block">
+              <Link href="/dashboard" className="bg-green-600/10 hover:bg-green-600/20 text-green-400 p-1.5 rounded block">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
                   <polyline points="9 22 9 12 15 12 15 22"></polyline>
                 </svg>
               </Link>
-              <Link to="/settings" className="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 p-1.5 rounded block">
+              <Link href="/settings" className="bg-blue-600/10 hover:bg-blue-600/20 text-blue-400 p-1.5 rounded block">
                 <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                   <circle cx="12" cy="12" r="3"></circle>
                   <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
