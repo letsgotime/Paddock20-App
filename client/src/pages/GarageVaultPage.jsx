@@ -38,17 +38,17 @@ function GarageVaultPage() {
   // Get vehicle data from context
   const { vehicles, activeVehicle, setActiveVehicle, loading } = useVehicle();
   
-  // Parse URL query parameters
+  // Parse URL query parameters 
   const parseQueryParams = () => {
-    const searchParams = new URLSearchParams(location.search);
+    // In wouter, location is just the path string, not an object with search
+    const searchParams = new URLSearchParams(window.location.search);
     return {
       section: searchParams.get('section'),
       action: searchParams.get('action')
     };
   };
   
-  // State management
-  const [location, setLocation] = useLocation();
+  // State management - we're already using routePath above
   const [activeSection, setActiveSection] = useState('dashboard');
   const [activeView, setActiveView] = useState('grid');
   const [activeMod, setActiveMod] = useState(null);
@@ -141,7 +141,7 @@ function GarageVaultPage() {
           break;
       }
     }
-  }, [location.search]);
+  }, [routePath]);
   
   // Update car metrics when active vehicle changes
   useEffect(() => {
