@@ -17,7 +17,7 @@ import NavigationControls from './components/NavigationControls';
 import ContextualBreadcrumbs from './components/ContextualBreadcrumbs';
 import { useScrollToTop } from './hooks/useScrollToTop';
 import ProtectedRoute from './components/ProtectedRoute';
-import NotFound from "@/pages/not-found";
+import NotFound from "@/pages/NotFound";
 import Home from "@/pages/Home";
 import Garage from "@/pages/Garage";
 import Journal from "@/pages/Journal";
