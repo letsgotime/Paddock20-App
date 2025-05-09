@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useLocation, Link } from 'wouter';
 import { Music, Play, Shuffle, ExternalLink, ArrowRight } from 'lucide-react';
 import axios from 'axios';
 
@@ -33,7 +33,7 @@ interface ActivityPlaylists {
 }
 
 const PlaylistWidget: React.FC = () => {
-  const navigate = useNavigate();
+  const [location, setLocation] = useLocation();
   const [selectedActivity, setSelectedActivity] = useState('Fun Drives');
   const [playlistData, setPlaylistData] = useState<ActivityPlaylists>({});
   const [isLoading, setIsLoading] = useState(true);
@@ -162,7 +162,7 @@ const PlaylistWidget: React.FC = () => {
       {/* Widget footer */}
       <div className="mt-3 pt-3 border-t border-blue-900/20 flex justify-between">
         <button
-          onClick={() => navigate('/sound-library')}
+          onClick={() => setLocation('/sound-library')}
           className="text-sm text-blue-400 hover:text-blue-300 flex items-center"
         >
           <span>View All Playlists</span>
