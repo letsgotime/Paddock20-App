@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useLocation, Link } from 'wouter';
 import Logo from '../assets/Logos/GoTime-White.png';
 
 function Navbar() {

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useLocation, Link } from 'wouter';
 import { useAuth } from '@/hooks/useAuth';
 import { Loader2, Car, Calendar, Droplet, Clock, BarChart3, AlertTriangle, Star } from 'lucide-react';
 

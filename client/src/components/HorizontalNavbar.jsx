@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Link, useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'wouter';
 
 function HorizontalNavbar() {
   const location = useLocation();

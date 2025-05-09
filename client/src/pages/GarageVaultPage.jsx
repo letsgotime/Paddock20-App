@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, Suspense } from 'react';
-import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { useLocation, Link } from 'wouter';
 import supabase from '../services/supabaseClient';
 import { exportToPdf, exportToCsv, printElement } from '../utils/exportUtils';
 import TireTracker from '../components/TireTracker';
@@ -33,7 +33,7 @@ import {
 } from 'lucide-react';
 
 function GarageVaultPage() {
-  const location = useLocation();
+  const [routePath, setRoutePath] = useLocation();
   
   // Get vehicle data from context
   const { vehicles, activeVehicle, setActiveVehicle, loading } = useVehicle();
@@ -48,7 +48,7 @@ function GarageVaultPage() {
   };
   
   // State management
-  const navigate = useNavigate();
+  const [location, setLocation] = useLocation();
   const [activeSection, setActiveSection] = useState('dashboard');
   const [activeView, setActiveView] = useState('grid');
   const [activeMod, setActiveMod] = useState(null);

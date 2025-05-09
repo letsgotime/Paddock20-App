@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'wouter';
 import { useRewardsTracker } from '../utils/rewardsTracker';
 
 /**

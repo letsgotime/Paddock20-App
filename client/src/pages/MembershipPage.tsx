@@ -1,5 +1,5 @@
 import React, { useState, useRef } from 'react';
-import { Link } from 'react-router-dom';
+import { useLocation, Link } from 'wouter';
 import { Crown, Shield, Star, Check, X, Info } from 'lucide-react';
 import ExportOptions from '../components/ExportOptions';
 import PageHeader from '../components/PageHeader';

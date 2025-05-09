@@ -11,7 +11,7 @@ import {
   Gauge,
   BookOpenCheck
 } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { useLocation, Link } from 'wouter';
 
 // Define quick action item structure
 interface QuickAction {

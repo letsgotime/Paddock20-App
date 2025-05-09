@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useLocation, Link } from 'wouter';
 import { exportToPdf, exportToCsv, printElement } from '../utils/exportUtils';
 
 // Import component dependencies

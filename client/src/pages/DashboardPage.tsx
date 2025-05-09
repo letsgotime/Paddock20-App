@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { useLocation, Link } from 'wouter';
 import WeatherStation from '../components/WeatherStation';
 import WorldClockPanel from '../components/WorldClockPanel';
 import { useAuth } from '../hooks/useAuth';

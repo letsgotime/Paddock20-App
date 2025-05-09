@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import { useLocation, Link } from 'wouter';
 import { useGallery, MediaItem, EventGroup, UserGallery } from '../contexts/GalleryContext';
 
 const MotorsportsGalleryPage: React.FC = () => {
-  const navigate = useNavigate();
+  const [location, setLocation] = useLocation();
   const { 
     eventsData, 
     featuredMedia, 
@@ -263,7 +263,7 @@ const MotorsportsGalleryPage: React.FC = () => {
               <button 
                 onClick={() => {
                   // Use navigate directly for more reliable navigation
-                  navigate('/');
+                  setLocation('/');
                   // Also scroll to top
                   window.scrollTo(0, 0);
                 }}
