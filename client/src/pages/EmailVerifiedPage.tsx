@@ -110,9 +110,9 @@ const EmailVerifiedPage = () => {
             {user?.isEmailVerified ? (
               <Button 
                 className="w-full bg-[#1982FC] hover:bg-[#1982FC]/90 text-white"
-                onClick={() => navigate('/dashboard')}
+                onClick={() => navigate('/')}
               >
-                Go to Dashboard
+                Go to Command Center
               </Button>
             ) : (
               <>
