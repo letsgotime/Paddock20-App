@@ -14,8 +14,36 @@ export default function BetaWelcomePage() {
       localStorage.setItem('paddock20_selected_beta_role', betaRole);
     }
     
+    // Get Auth0 profile from localStorage or fetch from API
+    const auth0Token = localStorage.getItem('auth0_token');
+    let userId = localStorage.getItem('auth0_user_id') || 'user';
+    
+    // If we have an Auth0 token but no userId, fetch the profile
+    if (auth0Token && (!userId || userId === 'user')) {
+      try {
+        // Make a call to Auth0 to get the user profile
+        fetch(`https://${import.meta.env.VITE_AUTH0_DOMAIN}/userinfo`, {
+          headers: {
+            Authorization: `Bearer ${auth0Token}`
+          }
+        })
+        .then(response => response.json())
+        .then(profile => {
+          if (profile && profile.sub) {
+            // Store user ID in localStorage
+            localStorage.setItem('auth0_user_id', profile.sub);
+            userId = profile.sub;
+          }
+        })
+        .catch(error => {
+          console.error('Error fetching Auth0 profile:', error);
+        });
+      } catch (error) {
+        console.error('Error processing Auth0 token:', error);
+      }
+    }
+    
     // Mark beta onboarding and legal agreements as complete
-    const userId = localStorage.getItem('auth0_user_id') || 'user';
     const betaOnboardingKey = `paddock20_beta_onboarding_complete_${userId}`;
     const legalAgreementsKey = `paddock20_legal_agreements_${userId}`;
     

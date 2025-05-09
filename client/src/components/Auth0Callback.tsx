@@ -55,10 +55,10 @@ const Auth0Callback = () => {
             return;
           }
           
-          // Store Auth0 token in localStorage for use during onboarding
+          // Store Auth0 token and user ID in localStorage for use during onboarding
           if (user?.sub) {
-            localStorage.setItem('auth0_user_token', user.sub);
-            console.log('Auth0 token stored in localStorage for onboarding');
+            localStorage.setItem('auth0_user_id', user.sub);
+            console.log('Auth0 user ID stored in localStorage for onboarding');
           }
           
           // IMPORTANT: Follow this flow exactly: Auth0 → Beta Welcome → Onboarding → Dashboard
