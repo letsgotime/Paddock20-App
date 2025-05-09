@@ -1,11 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation } from "wouter";
 import { VolumeX, Volume2 } from "lucide-react";
 import { playMotorsportSound, getSoundSettings, setSoundEnabled } from "../services/soundService";
 
 const DropdownNavbar = () => {
   const [soundEnabled, setSoundEnabledState] = useState(true);
-  const location = useLocation();
+  const [location] = useLocation();
   
   // Initialize sound settings from sound service
   useEffect(() => {
@@ -15,7 +15,7 @@ const DropdownNavbar = () => {
 
   return (
     <nav className="flex items-center justify-between p-4 bg-black border-b border-gray-700 fixed top-0 left-0 right-0 z-40">
-      <Link to="/dashboard" className="flex items-center font-orbitron text-2xl no-underline">
+      <Link href="/dashboard" className="flex items-center font-orbitron text-2xl no-underline">
         <img 
           src="/assets/GTM Logo - Green-White.png" 
           alt="GoTime Motorsports" 
@@ -45,7 +45,7 @@ const DropdownNavbar = () => {
         
         {/* Sound Library link */}
         <Link 
-          to="/sound-library" 
+          href="/sound-library" 
           className="text-gray-400 hover:text-blue-400 p-2 transition-colors duration-200"
           aria-label="Sound Library"
           title="Sound Library"
