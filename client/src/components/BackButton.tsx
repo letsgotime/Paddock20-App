@@ -1,5 +1,5 @@
 import React from 'react';
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useLocation } from 'wouter';
 import { ChevronLeft } from 'lucide-react';
 
 interface BackButtonProps {
@@ -17,8 +17,7 @@ const BackButton: React.FC<BackButtonProps> = ({
   showLabel = true,
   color = 'default'
 }) => {
-  const navigate = useNavigate();
-  const location = useLocation();
+  const [location, setLocation] = useLocation();
 
   const getColorClasses = () => {
     switch (color) {
@@ -36,10 +35,10 @@ const BackButton: React.FC<BackButtonProps> = ({
   const handleGoBack = () => {
     // Check if we have history to go back to
     if (window.history.length > 1) {
-      navigate(-1); // Go back one step in history
+      window.history.back(); // Go back in browser history
     } else {
       // Fallback to a specified path if no history
-      navigate(fallbackPath);
+      setLocation(fallbackPath);
     }
   };
 
