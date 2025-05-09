@@ -20,7 +20,12 @@ const OnboardingPage: React.FC = () => {
   const [termsAgreed, setTermsAgreed] = useState(false);
   const [privacyAgreed, setPrivacyAgreed] = useState(false);
   const [betaAgreed, setBetaAgreed] = useState(false);
-  const [betaTesterRequest, setBetaTesterRequest] = useState(false); // Track if user wants to be a beta tester
+  // Get beta role from localStorage instead of asking the user again
+  const [betaTesterRequest, setBetaTesterRequest] = useState(() => {
+    const savedBetaRole = localStorage.getItem('paddock20_selected_beta_role');
+    // If they selected 'tester' in the BetaWelcomeModal, set betaTesterRequest to true
+    return savedBetaRole === 'tester';
+  });
   
   // User profile data - pre-populated from authentication
   const [email, setEmail] = useState<string>(user?.email || '');
