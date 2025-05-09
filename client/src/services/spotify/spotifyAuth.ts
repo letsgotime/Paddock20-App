@@ -18,10 +18,9 @@ class SpotifyAuth {
     // Read client ID from environment
     this.clientId = import.meta.env.VITE_SPOTIFY_CLIENT_ID as string;
     
-    // Automatically determine redirect URI based on current domain
-    const protocol = window.location.protocol;
-    const host = window.location.host;
-    this.redirectUri = `${protocol}//${host}/spotify/callback`;
+    // Use a fixed redirect URI that matches exactly what's registered in Spotify Developer Dashboard
+    // This should be the exact URL registered in your Spotify app settings
+    this.redirectUri = 'https://b3a4f353-dfcc-4127-ba8c-8d58ee1363a3-00-1h7svyzt8skoi.kirk.replit.dev/spotify/callback';
 
     // Load any existing tokens from storage
     this.loadFromStorage();
