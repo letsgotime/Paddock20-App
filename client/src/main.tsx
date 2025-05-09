@@ -1,5 +1,5 @@
 import { createRoot } from "react-dom/client";
-import { BrowserRouter } from 'react-router-dom';
+import { Router } from 'wouter';
 import App from "./App";
 import "./index.css";
 import "./bts.css";
@@ -21,7 +21,7 @@ console.log("Auth0 Redirect URI:", redirectUri);
 console.log("Auth0 Config:", { domain, clientId });
 
 createRoot(document.getElementById("root")!).render(
-  <BrowserRouter>
+  <Router>
     <Auth0Provider
       domain={domain}
       clientId={clientId}
@@ -32,5 +32,5 @@ createRoot(document.getElementById("root")!).render(
     >
       <App />
     </Auth0Provider>
-  </BrowserRouter>
+  </Router>
 );
