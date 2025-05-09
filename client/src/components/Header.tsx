@@ -311,12 +311,7 @@ const Header: React.FC = () => {
                     <span className="ml-2 text-xs text-green-500 font-orbitron">NEW</span>
                   </Link>
                   
-                  <Link href="/onboarding-test" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
-                    <User className="h-4 w-4 mr-2 text-green-400" />
-                    <span>Onboarding Test</span>
-                    <span className="ml-2 text-xs text-green-500 font-orbitron">NEW</span>
-                  </Link>
-                  
+
                   <Link href="/manifestation-station" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors" onClick={() => {
                     // Directly navigate to the Manifestation Station with the discipline tracker view
                     window.localStorage.setItem('manifestation_activeView', 'discipline-tracker');
