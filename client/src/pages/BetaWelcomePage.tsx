@@ -57,8 +57,8 @@ export default function BetaWelcomePage() {
     // Set global flag that onboarding was just completed
     localStorage.setItem('paddock20_onboarding_just_completed', 'true');
     
-    // Navigate directly to dashboard instead of onboarding
-    navigate('/dashboard');
+    // Navigate directly to Command Center instead of onboarding or dashboard
+    navigate('/');
   };
   
   return (

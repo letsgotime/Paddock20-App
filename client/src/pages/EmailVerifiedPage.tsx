@@ -41,7 +41,7 @@ const EmailVerifiedPage = () => {
     if (user && !isLoading && user?.isEmailVerified) {
       // Set a timeout to allow the success message to be seen
       const redirectTimer = setTimeout(() => {
-        navigate('/dashboard');
+        navigate('/');
       }, 5000); // 5 seconds
       
       return () => clearTimeout(redirectTimer);
@@ -92,7 +92,7 @@ const EmailVerifiedPage = () => {
                     </p>
                   </div>
                   <p className="text-center text-gray-400 text-sm">
-                    Redirecting to dashboard in a moment...
+                    Redirecting to Command Center in a moment...
                   </p>
                 </>
               ) : (

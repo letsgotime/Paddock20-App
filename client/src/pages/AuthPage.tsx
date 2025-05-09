@@ -23,7 +23,7 @@ const AuthPage = () => {
     // If there's a user and we're not in the process of logging out, redirect
     if (user && !isLoggingOut) {
       const urlParams = new URLSearchParams(window.location.search);
-      const redirectPath = urlParams.get('redirect') || '/dashboard';
+      const redirectPath = urlParams.get('redirect') || '/';
       // Add a small delay to prevent immediate redirect if the user just clicked logout
       const timer = setTimeout(() => {
         setLocation(redirectPath);
@@ -68,10 +68,10 @@ const AuthPage = () => {
             </Button>
             
             <Button 
-              onClick={() => setLocation('/dashboard')} 
+              onClick={() => setLocation('/')} 
               className="w-full bg-[#1982FC] hover:bg-[#1982FC]/80 text-white font-bold py-6 h-16 rounded-lg transition-all duration-200"
             >
-              Go to Dashboard
+              Go to Command Center
               <ChevronRight className="ml-2 h-5 w-5" />
             </Button>
           </div>
