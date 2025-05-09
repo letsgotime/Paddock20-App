@@ -9,12 +9,28 @@ export default function BetaWelcomePage() {
   // Handler for beta modal close
   const handleBetaModalClose = (betaRole?: 'user' | 'tester') => {
     setModalOpen(false);
-    // Store the selected beta role in localStorage so OnboardingPage can access it
+    // Store the selected beta role in localStorage
     if (betaRole) {
       localStorage.setItem('paddock20_selected_beta_role', betaRole);
     }
-    // Navigate to onboarding page
-    navigate('/onboarding');
+    
+    // Mark beta onboarding and legal agreements as complete
+    const userId = localStorage.getItem('auth0_user_id') || 'user';
+    const betaOnboardingKey = `paddock20_beta_onboarding_complete_${userId}`;
+    const legalAgreementsKey = `paddock20_legal_agreements_${userId}`;
+    
+    localStorage.setItem(betaOnboardingKey, 'true');
+    localStorage.setItem(legalAgreementsKey, JSON.stringify({
+      accepted: true,
+      acceptedDate: new Date().toISOString(),
+      version: '1.0'
+    }));
+    
+    // Set global flag that onboarding was just completed
+    localStorage.setItem('paddock20_onboarding_just_completed', 'true');
+    
+    // Navigate directly to dashboard instead of onboarding
+    navigate('/dashboard');
   };
   
   return (
