@@ -1,5 +1,5 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link } from "wouter";
 import F1MotorsportWeatherStation from '../components/F1MotorsportWeatherStation';
 
 const Home = () => {
@@ -57,23 +57,23 @@ const Home = () => {
       <section className="bg-gradient-to-br from-[#111111] to-[#1a1a1a] rounded-lg shadow-lg border border-gray-700 p-6 mb-8">
         <h2 className="font-orbitron text-blue-400 text-2xl mb-4">Quick Start Launchpad</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-          <Link to="/route-planner" className="bg-black p-4 rounded-lg border border-gray-800 hover:border-green-500 transition-colors">
+          <Link href="/route-planner" className="bg-black p-4 rounded-lg border border-gray-800 hover:border-green-500 transition-colors">
             <span className="text-2xl block mb-2">🛣️</span>
             <span className="text-white font-openSans hover:text-green-400">Plan Today's Drive</span>
           </Link>
-          <Link to="/garage-vault" className="bg-black p-4 rounded-lg border border-gray-800 hover:border-green-500 transition-colors">
+          <Link href="/garage-vault" className="bg-black p-4 rounded-lg border border-gray-800 hover:border-green-500 transition-colors">
             <span className="text-2xl block mb-2">🚗</span>
             <span className="text-white font-openSans hover:text-green-400">Update Your Garage</span>
           </Link>
-          <Link to="/marketplace" className="bg-black p-4 rounded-lg border border-gray-800 hover:border-green-500 transition-colors">
+          <Link href="/marketplace" className="bg-black p-4 rounded-lg border border-gray-800 hover:border-green-500 transition-colors">
             <span className="text-2xl block mb-2">🛒</span>
             <span className="text-white font-openSans hover:text-green-400">Browse Cars & Watches</span>
           </Link>
-          <Link to="/events" className="bg-black p-4 rounded-lg border border-gray-800 hover:border-green-500 transition-colors">
+          <Link href="/events" className="bg-black p-4 rounded-lg border border-gray-800 hover:border-green-500 transition-colors">
             <span className="text-2xl block mb-2">🏎️</span>
             <span className="text-white font-openSans hover:text-green-400">Find Motorsport Events</span>
           </Link>
-          <Link to="/drive-journal" className="bg-black p-4 rounded-lg border border-gray-800 hover:border-green-500 transition-colors">
+          <Link href="/drive-journal" className="bg-black p-4 rounded-lg border border-gray-800 hover:border-green-500 transition-colors">
             <span className="text-2xl block mb-2">📝</span>
             <span className="text-white font-openSans hover:text-green-400">Your Drive Journal</span>
           </Link>
