@@ -354,6 +354,9 @@ function App() {
     };
   }, []);
   
+  // Get navigation utilities at the component level
+  const [_, navigate] = useLocation();
+
   // Handle return from external navigation apps
   useEffect(() => {
     // Check if we have a saved return point from navigation
@@ -364,19 +367,18 @@ function App() {
       
       // Navigate to the saved path if it's different from current path
       if (window.location.pathname !== returnPoint) {
-        window.history.pushState(null, '', returnPoint);
+        // Use Wouter's navigate instead of manipulating history directly
+        navigate(returnPoint);
       }
     }
     
-    // Listen for custom route change events from the FixedSoundBar
+    // Handle route change events from FixedSoundBar
     const handleRouteChange = (event: CustomEvent) => {
       try {
         const { path } = event.detail;
         if (path && window.location.pathname !== path) {
-          // Navigate to the path using React Router programmatically
-          window.history.pushState(null, '', path);
-          // Dispatch a popstate event to trigger React Router navigation
-          window.dispatchEvent(new PopStateEvent('popstate'));
+          // Use Wouter's navigate function
+          navigate(path);
         }
       } catch (error) {
         console.error('Error handling route change:', error);

@@ -64,7 +64,8 @@ const OnboardingPage: React.FC = () => {
   // Redirect if already completed onboarding or not authenticated
   useEffect(() => {
     if (!user) {
-      navigate('/auth', { replace: true });
+      // Wouter's navigate only takes the path, not options
+      navigate('/auth');
     }
   }, [user, navigate]);
   
@@ -282,7 +283,7 @@ const OnboardingPage: React.FC = () => {
           
           // All steps completed - redirect to Command Center
           console.log('All onboarding steps completed - redirecting to Command Center');
-          navigate('/', { replace: true });
+          navigate('/');
         } else {
           console.error('Cannot navigate to Command Center - user ID not available');
           // Show error toast

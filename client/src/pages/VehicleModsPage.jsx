@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, Link } from 'wouter';
+import { useLocation, Link, useParams } from 'wouter';
 import supabase from '../services/supabaseClient';
 
 function VehicleModsPage() {
-  const { id } = useParams();
+  const [_, params] = useParams("/vehicle-mods/:id");
+  const id = params?.id;
   const [vehicle, setVehicle] = useState(null);
   const [mods, setMods] = useState([]);
   const [loading, setLoading] = useState(true);
