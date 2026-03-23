@@ -9,6 +9,7 @@ import { updatePageTitleFromPath } from '../utils/pageTitle';
  * title whenever the route changes.
  */
 const PageTitleManager: React.FC = () => {
+  // useLocation in wouter returns [path, navigate] array
   const [location] = useLocation();
   
   useEffect(() => {

@@ -1,17 +1,9 @@
 import React from "react";
-import { useLocation } from "wouter";
+import { Navigate } from "react-router-dom";
 import { isAuthenticated } from "../services/authService";
 
 function PrivateRoute({ children }) {
-  const [_, navigate] = useLocation();
-  
-  // If not authenticated, redirect to home
-  if (!isAuthenticated()) {
-    navigate("/");
-    return null;
-  }
-  
-  return children;
+  return isAuthenticated() ? children : <Navigate to="/" />;
 }
 
 export default PrivateRoute;

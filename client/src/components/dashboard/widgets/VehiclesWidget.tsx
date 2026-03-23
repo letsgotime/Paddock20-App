@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { useVehicle } from '@/hooks/useVehicle';
 import { Car, Plus, Check, Clock } from 'lucide-react';
-import { useLocation, Link } from 'wouter';
+import { Link } from 'react-router-dom';
 
 const VehiclesWidget: React.FC = () => {
   const { vehicles, selectedVehicle, setSelectedVehicle } = useVehicle();

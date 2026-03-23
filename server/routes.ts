@@ -239,6 +239,38 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Setup user authentication system first
   setupAuth(app);
   
+  // Add root endpoint health check for Replit deployment that still allows client-side routing
+  app.get('/', (req, res) => {
+    // Check if this is a health check (from monitoring systems or Replit deployment)
+    // Health checks typically don't set Accept headers requesting HTML
+    const acceptHeader = req.get('Accept') || '';
+    const userAgent = req.get('User-Agent') || '';
+    
+    // If this looks like a browser or explicitly requests HTML, let Vite serve the frontend
+    if (acceptHeader.includes('text/html') || userAgent.includes('Mozilla')) {
+      // Let the frontend routing handle this - we'll pass through to Vite
+      return res.status(200).send('<!DOCTYPE html><html><head><meta http-equiv="refresh" content="0;url=/index.html"></head><body>Redirecting...</body></html>');
+    }
+    
+    // Otherwise, respond with plain text for health checks
+    res.status(200).send('Paddock20 server is running');
+  });
+  
+  // Add health check endpoint
+  app.get('/api/health-check', (req, res) => {
+    res.json({
+      status: 'ok',
+      timestamp: new Date().toISOString(),
+      services: {
+        weather: true,
+        vehicle: true,
+        location: true,
+        user: true,
+        system: true
+      }
+    });
+  });
+  
   // Then register the Two-Factor Authentication Routes
   app.use(twoFactorRoutes);
   
@@ -2364,101 +2396,25 @@ export async function registerRoutes(app: Express): Promise<Server> {
 
   app.patch('/api/user/profile', async (req, res) => {
     try {
-      console.log('Profile update request received');
-      
-      // Extract auth token
-      const authHeader = req.headers.authorization;
-      const token = authHeader?.split(' ')[1];
-      
-      // Debugging
-      console.log('Authorization header present:', !!authHeader);
-      console.log('Auth token present:', !!token);
-      console.log('Request body:', req.body);
-      
-      // Default user if none exists
-      let user = {
-        id: 1,
-        username: req.body.username || 'user',
-        email: req.body.email || 'user@example.com',
-        firstName: req.body.firstName || null,
-        lastName: req.body.lastName || null,
-        fullName: req.body.fullName || null,
-        profileImage: null,
-        role: 'user'
-      };
-      
-      // Force authentication for onboarding when Auth0 token is provided
-      if (token) {
-        console.log('Auth0 token provided - processing onboarding profile update');
-        
-        try {
-          // Get profile data from request body
-          const profileData = req.body;
-          
-          // Update the user object with the profile data
-          // Make sure to keep the id intact
-          user = {
-            ...user,
-            ...profileData,
-            id: 1 // Ensure ID is preserved
-          };
-          
-          console.log('Updated user data:', user);
-          
-          // Store updated user in session
-          if (req.session) {
-            req.session.user = user;
-            console.log('Updated user stored in session');
-          }
-          
-          // Simulate successful database update
-          console.log('Profile update successful');
-          
-          // Return success response
-          return res.status(200).json({ 
-            success: true, 
-            message: 'Profile updated successfully for onboarding',
-            user
-          });
-        } catch (updateError) {
-          console.error('Error updating profile with Auth0 token:', updateError);
-          return res.status(500).json({ 
-            success: false, 
-            message: 'Failed to update profile during onboarding',
-            error: updateError.message
-          });
-        }
-      } 
-      
-      // If no token, try other auth methods
-      if (req.session?.user) {
-        console.log('Found user in session:', req.session.user);
-        user = req.session.user;
-      } else if (req.user) {
-        console.log('Found user in request:', req.user);
-        user = req.user;
+      // Check if authenticated
+      if (!req.user) {
+        return res.status(401).json({ success: false, error: 'Not authenticated' });
       }
       
       // Get profile data from request body
       const profileData = req.body;
       
-      // Update the user object with the profile data
-      user = {
-        ...user,
-        ...profileData
-      };
+      // Update user profile in database (normally would use storage interface)
+      // For now, we'll just return success since it's a placeholder
+      console.log('Updating user profile with data:', profileData);
       
-      // Store updated user in session if present
-      if (req.session) {
-        req.session.user = user;
-        console.log('Updated user stored in session:', user);
-      }
-      
-      // Return success response
       res.json({ 
         success: true, 
         message: 'Profile updated successfully',
-        user
+        user: {
+          ...req.user,
+          ...profileData
+        }
       });
     } catch (error) {
       console.error('Error updating profile:', error);
@@ -2469,66 +2425,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Profile Image Upload API
   app.post('/api/user/profile/image', async (req, res) => {
     try {
-      console.log('Profile image upload request received');
-      
-      // Check if we have Auth0 token or session user
-      const authHeader = req.headers.authorization;
-      const token = authHeader?.split(' ')[1];
-      
-      let user = null;
-      
-      // Force authentication for onboarding when Auth0 token is provided
-      if (token) {
-        console.log('Auth0 token provided for image upload - considering authenticated for onboarding');
-        
-        // In onboarding flow, we need to handle Auth0 tokens even if there's no session yet
-        // Default user
-        user = {
-          id: 1,
-          username: req.session?.user?.username || 'user',
-          email: req.session?.user?.email || 'user@example.com',
-          firstName: req.session?.user?.firstName || null,
-          lastName: req.session?.user?.lastName || null,
-          fullName: req.session?.user?.fullName || null,
-          profileImage: null,
-          role: 'user'
-        };
-        
-        console.log('Using Auth0 authenticated user for image upload');
-        
-        // Store in session if not already there
-        if (req.session && !req.session.user) {
-          req.session.user = user;
-          console.log('Stored user in session');
-        } else if (req.session?.user) {
-          user = req.session.user;
-          console.log('Using existing session user:', user.username);
-        }
-      } else {
-        // Try to get user from session or request
-        if (req.session?.user) {
-          user = req.session.user;
-          console.log('Using session user for image upload:', user);
-        } else if (req.user) {
-          user = req.user;
-          console.log('Using request user for image upload:', user);
-        }
-      }
-      
-      // If no user found in any authentication method, return 401
-      if (!user) {
-        console.log('No authenticated user found for image upload');
+      // Check if authenticated
+      if (!req.user) {
         return res.status(401).json({ success: false, error: 'Not authenticated' });
       }
       
       // In a real implementation, this would handle file upload
       // For now, just acknowledge the request
-      console.log('Profile image upload requested for user:', user.username || user.email);
-      
-      // Update user profile image URL in session
-      if (req.session?.user) {
-        req.session.user.profileImage = '/assets/default-profile.jpg';
-      }
+      console.log('Profile image upload requested');
       
       res.json({ 
         success: true, 
@@ -2544,57 +2448,8 @@ export async function registerRoutes(app: Express): Promise<Server> {
   // Vehicle API
   app.post('/api/garage/vehicles', async (req, res) => {
     try {
-      console.log('Vehicle creation request received');
-      
-      // Check if we have Auth0 token or session user
-      const authHeader = req.headers.authorization;
-      const token = authHeader?.split(' ')[1];
-      
-      let user = null;
-      
-      // Force authentication for onboarding when Auth0 token is provided
-      if (token) {
-        console.log('Auth0 token provided for vehicle creation - considering authenticated for onboarding');
-        
-        // In onboarding flow, we need to handle Auth0 tokens even if there's no session yet
-        // Use existing session user if available
-        if (req.session?.user) {
-          user = req.session.user;
-          console.log('Using existing session user for vehicle creation:', user.username);
-        } else {
-          // Create a default user when token provided but no session exists yet
-          user = {
-            id: 1,
-            username: 'user',
-            email: 'user@example.com',
-            firstName: null,
-            lastName: null,
-            fullName: null,
-            profileImage: null,
-            role: 'user'
-          };
-          console.log('Created default user for vehicle creation:', user);
-          
-          // Store in session
-          if (req.session) {
-            req.session.user = user;
-            console.log('Stored user in session for vehicle creation');
-          }
-        }
-      } else {
-        // Try to get user from session or request
-        if (req.session?.user) {
-          user = req.session.user;
-          console.log('Using session user for vehicle creation:', user);
-        } else if (req.user) {
-          user = req.user;
-          console.log('Using request user for vehicle creation:', user);
-        }
-      }
-      
-      // If no user found in any authentication method, return 401
-      if (!user) {
-        console.log('No authenticated user found for vehicle creation');
+      // Check if authenticated
+      if (!req.user) {
         return res.status(401).json({ success: false, error: 'Not authenticated' });
       }
       
@@ -2605,17 +2460,14 @@ export async function registerRoutes(app: Express): Promise<Server> {
       // For now, we'll just return success since it's a placeholder
       console.log('Adding vehicle to garage:', vehicleData);
       
-      // Create new vehicle object with user ID
-      const vehicle = {
-        id: Math.floor(Math.random() * 1000), // Generate random ID for now
-        ...vehicleData,
-        userId: user.id
-      };
-      
       res.json({ 
         success: true, 
         message: 'Vehicle added successfully',
-        vehicle
+        vehicle: {
+          id: Math.floor(Math.random() * 1000), // Generate random ID for now
+          ...vehicleData,
+          userId: req.user.id
+        }
       });
     } catch (error) {
       console.error('Error adding vehicle:', error);

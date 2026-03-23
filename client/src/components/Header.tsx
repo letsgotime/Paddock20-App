@@ -38,7 +38,7 @@ import {
   Music
 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
-import { playSound } from "../services/SoundService";
+import { playSound } from "../services/sound-service";
 // Using the consolidated auth context
 import { useAuth } from '../hooks/useAuth';
 
@@ -116,7 +116,7 @@ const Header: React.FC = () => {
       <div className="container mx-auto px-4 py-3 flex items-center justify-between">
         {/* Logo Section */}
         <div className="flex items-center">
-          <Link href="/" className="text-3xl font-extrabold hover:opacity-90 transition-colors font-['Orbitron'] tracking-wider">
+          <Link to="/" className="text-3xl font-extrabold hover:opacity-90 transition-colors font-['Orbitron'] tracking-wider">
             <span style={{ color: '#1982FC' }}>PADDOCK</span><span style={{ color: '#08c519' }}>20</span>
           </Link>
         </div>
@@ -167,25 +167,30 @@ const Header: React.FC = () => {
               <div className="py-1">
                 {user ? (
                   <>
-                    <Link href="/profile" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                    <Link to="/the-paddock" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                      <LayoutDashboard className="h-4 w-4 mr-2 text-blue-400" />
+                      <span>The Paddock</span>
+                      <span className="ml-2 text-xs text-green-500 font-orbitron">NEW</span>
+                    </Link>
+                    <Link to="/profile" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                       <User className="h-4 w-4 mr-2 text-blue-400" />
                       <span>My Profile</span>
                     </Link>
-                    <Link href="/personalized-dashboard" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                    <Link to="/personalized-dashboard" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                       <LayoutDashboard className="h-4 w-4 mr-2 text-blue-400" />
                       <span>My Dashboard</span>
                     </Link>
-                    <Link href="/garage-vault" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                    <Link to="/garage-vault" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                       <CarFront className="h-4 w-4 mr-2 text-blue-400" />
                       <span>My Vehicles</span>
                     </Link>
-                    <Link href="/settings" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                    <Link to="/settings" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                       <Settings className="h-4 w-4 mr-2 text-blue-400" />
                       <span>Account Settings</span>
                     </Link>
                   </>
                 ) : (
-                  <Link href="/auth" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/auth" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <User className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Sign In / Register</span>
                   </Link>
@@ -233,44 +238,53 @@ const Header: React.FC = () => {
                 
                 <div className="py-1">
                   {/* Menu Items - Comprehensive */}
-                  <Link href="/" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <Home className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Home</span>
                   </Link>
                   
-                  <Link href="/personalized-dashboard" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/the-paddock" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                    <LayoutDashboard className="h-4 w-4 mr-2 text-blue-400" />
+                    <span>The Paddock</span>
+                    <span className="ml-2 text-xs text-green-500 font-orbitron">NEW</span>
+                  </Link>
+                  
+                  <Link to="/personalized-dashboard" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <LayoutDashboard className="h-4 w-4 mr-2 text-blue-400" />
                     <span>My Dashboard</span>
                   </Link>
                   
-                  <Link href="/profile" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/profile" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <User className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Driver Profile</span>
-                    <span className="ml-2 text-xs text-green-500 font-orbitron">NEW</span>
                   </Link>
                   
-                  <Link href="/podium-pursuit" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/podium-pursuit" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <Medal className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Podium Pursuit</span>
                   </Link>
                   
-                  <Link href="/weather-paddock" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/weather-paddock" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <Cloud className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Weather Paddock</span>
                   </Link>
                   
-                  <Link href="/route-planner" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/route-planner" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <MapPin className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Fun Drive Planner</span>
                   </Link>
                   
-                  <Link href="/events" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/events" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <Calendar className="h-4 w-4 mr-2 text-blue-400" />
                     <span>P20 Events & Meetups</span>
                   </Link>
                   
-
-                  <Link href="/motorsports-gallery" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/motorsports-events" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                    <Trophy className="h-4 w-4 mr-2 text-blue-400" />
+                    <span>Motorsports Events</span>
+                  </Link>
+                  
+                  <Link to="/motorsports-gallery" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 mr-2 text-blue-400" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                       <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
                       <circle cx="8.5" cy="8.5" r="1.5"></circle>
@@ -280,39 +294,44 @@ const Header: React.FC = () => {
                     <span className="ml-2 text-xs text-green-500 font-orbitron">NEW</span>
                   </Link>
                   
-                  <Link href="/membership" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/membership" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <Flag className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Paddock20 Membership</span>
                   </Link>
                   
-                  <Link href="/garage-vault" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/garage-vault" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <CarFront className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Garage Vault</span>
                   </Link>
                   
-                  <Link href="/tires-timepieces" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/tires-timepieces" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <Watch className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Tires & Timepieces</span>
                   </Link>
                   
-                  <Link href="/manifestation-station" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/manifestation-station" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <Compass className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Manifestation Station™</span>
                   </Link>
                   
-                  <Link href="/drive-journal" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/drive-journal" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <BookOpen className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Drive Journal</span>
                   </Link>
                   
-                  <Link href="/spotify-test" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/spotify-test" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <Music className="h-4 w-4 mr-2 text-green-400" />
                     <span>Spotify Integration</span>
                     <span className="ml-2 text-xs text-green-500 font-orbitron">NEW</span>
                   </Link>
                   
-
-                  <Link href="/manifestation-station" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors" onClick={() => {
+                  <Link to="/onboarding-test" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                    <User className="h-4 w-4 mr-2 text-green-400" />
+                    <span>Onboarding Test</span>
+                    <span className="ml-2 text-xs text-green-500 font-orbitron">NEW</span>
+                  </Link>
+                  
+                  <Link to="/manifestation-station" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors" onClick={() => {
                     // Directly navigate to the Manifestation Station with the discipline tracker view
                     window.localStorage.setItem('manifestation_activeView', 'discipline-tracker');
                   }}>
@@ -320,45 +339,45 @@ const Header: React.FC = () => {
                     <span>Daily Check-in</span>
                   </Link>
                   
-                  <Link href="/juicebox" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/juicebox" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <SprayCan className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Juice Box</span>
                   </Link>
                   
-                  <Link href="/product-organizer" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/product-organizer" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <ShoppingBag className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Product Organizer</span>
                     <span className="ml-2 text-xs text-green-500 font-orbitron">NEW</span>
                   </Link>
                   
-                  <Link href="/discounts" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/discounts" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <Percent className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Discounts & Promotions</span>
                   </Link>
                 </div>
                 
                 <div className="border-t border-blue-900/40 py-1">
-                  <Link href="/concierge" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/concierge" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <HeartHandshake className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Concierge</span>
                   </Link>
                   
-                  <Link href="/contact" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/contact" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <Mail className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Contact Us</span>
                   </Link>
                   
-                  <Link href="/ebooks" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/ebooks" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <BookMarked className="h-4 w-4 mr-2 text-blue-400" />
                     <span>GoTime eBooks Vault</span>
                   </Link>
                   
-                  <Link href="/chat-feed" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/chat-feed" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <MessageCircle className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Member Chat Feed</span>
                   </Link>
                   
-                  <Link href="/settings" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
+                  <Link to="/settings" className="flex items-center px-4 py-2 text-white hover:bg-blue-900/30 transition-colors">
                     <Settings className="h-4 w-4 mr-2 text-blue-400" />
                     <span>Settings</span>
                   </Link>

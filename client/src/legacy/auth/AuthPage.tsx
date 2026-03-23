@@ -265,7 +265,7 @@ export default function AuthPage() {
       </div>
       
       {/* Right side - Hero section */}
-      <div className="hidden lg:flex flex-1 bg-gradient-to-b from-black to-zinc-900 bg-cover">
+      <div className="hidden lg:flex flex-1 bg-[url('/carbon-fiber-bg-dark.jpg')] bg-cover">
         <div className="flex flex-col justify-center items-center w-full p-8 bg-black/70">
           <div className="max-w-md text-center">
             <h1 className="text-4xl font-bold text-white mb-4">Experience F1-Grade Analytics</h1>

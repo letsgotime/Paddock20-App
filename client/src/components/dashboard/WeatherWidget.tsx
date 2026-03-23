@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Cloud, CloudRain, Sun, Snowflake, Wind } from 'lucide-react';
 import { useWeather } from '@/contexts/WeatherContext';
-import { useLocation, Link } from 'wouter';
+import { Link } from 'react-router-dom';
 
 const WeatherWidget = () => {
   const { weatherData, isLoading, error, unit } = useWeather();

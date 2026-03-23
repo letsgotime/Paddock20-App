@@ -1,5 +1,21 @@
 import React, { useState } from 'react';
-import { CornerDownRight, Thermometer, ArrowRight, Plus, Gauge, Trash2, Check, X } from 'lucide-react';
+import { 
+  CornerDownRight, 
+  Thermometer, 
+  ArrowRight, 
+  Plus, 
+  Gauge, 
+  Trash2, 
+  Check, 
+  X, 
+  Upload, 
+  FileImage, 
+  FileVideo, 
+  FileAudio, 
+  FileText,
+  Wrench,
+  RotateCw
+} from 'lucide-react';
 import TireTracker from './TireTracker';
 
 // F1-style telemetry colors

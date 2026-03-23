@@ -1,19 +1,19 @@
 import React from "react";
-import { Link } from "wouter";
+import { Link } from "react-router-dom";
 
 function Sidebar() {
   return (
     <aside className="w-64 bg-gray-900 p-6 hidden md:block">
       <nav className="flex flex-col space-y-4">
-        <Link href="/" className="hover:text-green-400">🏠 Home</Link>
-        <Link href="/garage-vault" className="hover:text-green-400">🚗 Garage Vault</Link>
-        <Link href="/paddock20-vault" className="hover:text-green-400">🏁 Paddock20 Vault</Link>
-        <Link href="/manifestation-station" className="hover:text-green-400">🧭 Manifestation Station</Link>
-        <Link href="/mod-planner" className="hover:text-green-400">🔧 Mod Planner</Link>
-        <Link href="/concierge" className="hover:text-green-400">🛞 Concierge</Link>
-        <Link href="/redline-report" className="hover:text-green-400">🎥 Redline Report</Link>
-        <Link href="/events" className="hover:text-green-400">📅 Events & Meetups</Link> {/* Links to your EXISTING module */}
-        <Link href="/hustle-planner" className="hover:text-green-400">🧠 Hustle Planner</Link>
+        <Link to="/" className="hover:text-green-400">🏠 Home</Link>
+        <Link to="/garage-vault" className="hover:text-green-400">🚗 Garage Vault</Link>
+        <Link to="/paddock20-vault" className="hover:text-green-400">🏁 Paddock20 Vault</Link>
+        <Link to="/manifestation-station" className="hover:text-green-400">🧭 Manifestation Station</Link>
+        <Link to="/mod-planner" className="hover:text-green-400">🔧 Mod Planner</Link>
+        <Link to="/concierge" className="hover:text-green-400">🛞 Concierge</Link>
+        <Link to="/redline-report" className="hover:text-green-400">🎥 Redline Report</Link>
+        <Link to="/events" className="hover:text-green-400">📅 Events & Meetups</Link> {/* Links to your EXISTING module */}
+        <Link to="/hustle-planner" className="hover:text-green-400">🧠 Hustle Planner</Link>
       </nav>
     </aside>
   );

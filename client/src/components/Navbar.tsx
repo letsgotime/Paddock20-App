@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation, Link } from 'wouter';
+import { Link } from 'wouter';
 
 function Navbar() {
   return (

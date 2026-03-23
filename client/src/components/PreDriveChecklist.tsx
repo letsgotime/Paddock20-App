@@ -19,8 +19,7 @@ import {
   Eye,
   Map,
   Shirt,
-  Oil,
-  Spray
+  SprayCan
 } from 'lucide-react';
 
 export interface ChecklistItem {
@@ -168,7 +167,7 @@ const PreDriveChecklist: React.FC<PreDriveChecklistProps> = ({
       category: 'enthusiast',
       name: 'Detail Spray',
       description: 'Quick detailer spray for touch-ups at stops',
-      icon: <Spray className="w-5 h-5" />,
+      icon: <SprayCan className="w-5 h-5" />,
       critical: false
     },
     {
@@ -176,7 +175,7 @@ const PreDriveChecklist: React.FC<PreDriveChecklistProps> = ({
       category: 'enthusiast',
       name: 'Extra Oil',
       description: 'Spare quart of manufacturer-recommended oil',
-      icon: <Oil className="w-5 h-5" />,
+      icon: <Droplet className="w-5 h-5" />,
       critical: false
     },
     {
@@ -192,7 +191,7 @@ const PreDriveChecklist: React.FC<PreDriveChecklistProps> = ({
       category: 'enthusiast',
       name: 'Microfiber Towels',
       description: 'Clean microfiber cloths for window cleaning and detailing',
-      icon: <Spray className="w-5 h-5" />,
+      icon: <SprayCan className="w-5 h-5" />,
       critical: false
     }
   ];

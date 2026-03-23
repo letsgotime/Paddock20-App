@@ -17,7 +17,8 @@ const BackButton: React.FC<BackButtonProps> = ({
   showLabel = true,
   color = 'default'
 }) => {
-  const [location, setLocation] = useLocation();
+  // In wouter, useLocation returns [path, navigate]
+  const [location, navigate] = useLocation();
 
   const getColorClasses = () => {
     switch (color) {
@@ -35,10 +36,10 @@ const BackButton: React.FC<BackButtonProps> = ({
   const handleGoBack = () => {
     // Check if we have history to go back to
     if (window.history.length > 1) {
-      window.history.back(); // Go back in browser history
+      window.history.back(); // Go back one step in history using browser API
     } else {
       // Fallback to a specified path if no history
-      setLocation(fallbackPath);
+      navigate(fallbackPath);
     }
   };
 

@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM", "DOM.Iterable"],
+    "module": "ESNext",
+    "skipLibCheck": true,
+    "moduleResolution": "bundler",
+    "allowImportingTsExtensions": true,
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "jsx": "react-jsx",
+    "strict": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noFallthroughCasesInSwitch": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["client/src/*"],
+      "@assets/*": ["client/src/assets/*"],
+      "@components/*": ["client/src/components/*"],
+      "@hooks/*": ["client/src/hooks/*"],
+      "@pages/*": ["client/src/pages/*"],
+      "@styles/*": ["client/src/styles/*"],
+      "@shared/*": ["shared/*"]
+    }
+  },
+  "include": ["client/src", "shared"],
+  "references": [{ "path": "./tsconfig.server.json" }]
+}

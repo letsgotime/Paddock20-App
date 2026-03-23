@@ -1,49 +1,45 @@
-import PreDriveChecklistPage from './pages/PreDriveChecklistPage';
+import PreDriveChecklistPage from './pages/pre-drive-checklist-page';
 import React, { useEffect, useState } from 'react';
-import { Route, Link, useLocation } from 'wouter';
+import { Route, Link, useLocation, Router } from 'wouter';
 import Header from './components/Header';
 import { queryClient } from "./lib/queryClient";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import PageTitleManager from './components/PageTitleManager';
-import OnboardingPage from './pages/OnboardingPage';
 import { AuthProvider, useAuth } from './context/AuthContext';
 import Auth0Callback from './components/Auth0Callback';
-import LogoutPage from './pages/LogoutPage';
+import EnhancedLogoutPage from './pages/enhanced-logout-page';
 // Import disabled to remove Unsplash API warnings
 // import { initializeImageCache } from "./services/unsplashService";
 import NavigationControls from './components/NavigationControls';
 import ContextualBreadcrumbs from './components/ContextualBreadcrumbs';
 import { useScrollToTop } from './hooks/useScrollToTop';
 import ProtectedRoute from './components/ProtectedRoute';
-import NotFound from "@/pages/NotFound";
-import Home from "@/pages/Home";
-import Garage from "@/pages/Garage";
-import Journal from "@/pages/Journal";
-import Marketplace from "@/pages/Marketplace";
-import Motorsports from "@/pages/Motorsports";
-import Settings from "@/pages/Settings";
-import Events from "./pages/Events";
-import EventsPage from "./pages/EventsPage";
-import MotorsportsEventsPage from "./pages/MotorsportsEventsPage";
-import JuiceBox from "./pages/JuiceBox";
-import GlossResetPage from "./pages/GlossResetPage";
-import LoadoutsPage from "./pages/LoadoutsPage";
-import GlossGrowthPage from "./pages/GlossGrowthPage";
-import VideoLibraryPage from "./pages/VideoLibraryPage";
-import BrokerPortalPage from "./pages/BrokerPortalPage";
-import Weather from "./pages/Weather";
-import WeatherPage from "./pages/WeatherPage";
-import NewGTGWeatherPage from "./pages/NewGTGWeatherPage";
-import RedlineReportPage from "./pages/RedlineReportPage";
-import SeasonalChecklistPage from "./pages/SeasonalChecklistPage";
-import EbooksPage from "./pages/EbooksPage";
-import Paddock20HomePage from "./pages/Paddock20HomePage";
-import ProductOrganizerPage from "./pages/ProductOrganizerPage"; 
-import UserProfileHubPage from "./pages/UserProfileHubPage"; 
-import GaragePage from "./pages/GaragePage"; 
-import AddVehiclePage from "./pages/AddVehiclePage"; 
+import NotFound from "./pages/not-found";
+import Journal from "./pages/journal-page";
+import Marketplace from "./pages/marketplace-page";
+import Motorsports from "./pages/motorsports-page";
+import Settings from "./pages/settings-page";
+import EventsPage from "./pages/events-page";
+import MotorsportsEventsPage from "./pages/motorsports-events-page";
+import JuiceBox from "./pages/juice-box";
+import GlossResetPage from "./pages/gloss-reset-page";
+import LoadoutsPage from "./pages/loadouts-page";
+import GlossGrowthPage from "./pages/gloss-growth-page";
+import VideoLibraryPage from "./pages/video-library-page";
+import BrokerPortalPage from "./pages/broker-portal-page";
+import WeatherPage from "./pages/weather-page";
+import WeatherPaddockPage from "./pages/weather-paddock-page";
+import NewGTGWeatherPage from "./pages/new-gtgweather-page";
+import RedlineReportPage from "./pages/redline-report-page";
+import SeasonalChecklistPage from "./pages/seasonal-checklist-page";
+import EbooksPage from "./pages/ebooks-page";
+import Paddock20HomePage from "./pages/paddock20-home-page";
+import ProductOrganizerPage from "./pages/product-organizer-page"; 
+import UserProfileHubPage from "./pages/user-profile-hub-page"; 
+import GaragePage from "./pages/garage-page"; 
+import AddVehiclePage from "./pages/add-vehicle-page"; 
 import FixedSoundBar from "./components/FixedSoundBar";
 import Footer from "./components/Footer";
 import { WeatherProvider } from "./contexts/ConsolidatedWeatherContext";
@@ -51,7 +47,7 @@ import { LocationServicesProvider } from "./contexts/LocationServicesContext";
 import { GalleryProvider } from "./contexts/GalleryContext";
 import { RewardsProvider } from "./contexts/RewardsContext";
 import { SpotifyProvider } from "./contexts/SpotifyContext";
-import SpotifyCallbackPage from "./pages/SpotifyCallbackPage";
+import SpotifyCallbackPage from "./pages/spotify-callback-page";
 import { VehicleProvider } from "./contexts/VehicleContext";
 import { VehicleDataProvider } from "./contexts/VehicleDataContext";
 import { SoundProvider } from "./contexts/SoundContext";
@@ -59,49 +55,52 @@ import { UserProfileProvider } from "./contexts/UserProfileContext";
 import SoundControlPanel from "./components/SoundControlPanel";
 import RewardNotification from "./components/RewardNotification";
 import RewardsTracker from "./components/RewardsTracker";
-import AuthPage from "./pages/AuthPage";
-import DashboardPage from "./pages/DashboardPage";
-import PersonalizedDashboard from "./pages/PersonalizedDashboard";
-import GarageVaultPage from "./pages/GarageVaultPage";
-import GoTimeGarageVault from "./pages/GoTimeGarageVault";
-import VehicleModsPage from "./pages/VehicleModsPage";
-import MembershipPage from "./pages/MembershipPage";
-import TiresTimepieces from "./pages/TiresTimepieces";
-import ManifestationStationPage from "./pages/ManifestationStationPage";
-import ModPlannerPage from "./pages/ModPlannerPage";
-import ConciergePage from "./pages/ConciergePage";
-import HustlePlannerPage from "./pages/HustlePlannerPage";
-import RoutePlannerPage from "./pages/RoutePlannerPage";
-import DriveJournalPage from "./pages/DriveJournalPage";
-import DiscountsPage from "./pages/DiscountsPage";
-import ContactPage from "./pages/ContactPage";
-import ChatFeedPage from "./pages/ChatFeedPage";
-import ShareDemoPage from "./pages/ShareDemoPage";
-import MoodEnergyTrackerPage from "./pages/MoodEnergyTrackerPage";
-import MotorsportsGalleryPage from "./pages/MotorsportsGalleryPage";
-import PodiumPursuitPage from "./pages/PodiumPursuitPage";
-import SoundLibraryPage from "./pages/SoundLibraryPage";
-import SpotifyTestPage from "./pages/SpotifyTestPage";
-import SpotifyEnvCheck from "./pages/SpotifyEnvCheck";
-import OnboardingTestPage from "./pages/OnboardingTestPage";
+import AuthPage from "./pages/auth-page";
+import DemoMode from "./pages/demo-mode";
+import ThePaddockPage from "./pages/the-paddock-page";
+// The following pages will be replaced by ThePaddockPage
+// import DashboardPage from "./pages/dashboard-page";
+// import PersonalizedDashboard from "./pages/personalized-dashboard";
+// import UserProfileHubPage from "./pages/user-profile-hub-page";
+// import GarageVaultPage from "./pages/garage-vault-page";
+import GoTimeGarageVault from "./pages/go-time-garage-vault";
+import VehicleModsPage from "./pages/vehicle-mods-page";
+import MembershipPage from "./pages/membership-page";
+import TiresTimepieces from "./pages/tires-timepieces";
+import ManifestationStationPage from "./pages/manifestation-station-page";
+import ModPlannerPage from "./pages/mod-planner-page";
+import ConciergePage from "./pages/concierge-page";
+import HustlePlannerPage from "./pages/hustle-planner-page";
+import RoutePlannerPage from "./pages/route-planner-page";
+import DriveJournalPage from "./pages/drive-journal-page";
+import DiscountsPage from "./pages/discounts-page";
+import ContactPage from "./pages/contact-page";
+import ChatFeedPage from "./pages/chat-feed-page";
+import ShareDemoPage from "./pages/share-demo-page";
+import MoodEnergyTrackerPage from "./pages/mood-energy-tracker-page";
+import MotorsportsGalleryPage from "./pages/motorsports-gallery-page";
+import PodiumPursuitPage from "./pages/podium-pursuit-page";
+import SoundLibraryPage from "./pages/sound-library-page";
+import SpotifyTestPage from "./pages/spotify-test-page";
+import SpotifyEnvCheck from "./pages/spotify-env-check";
+import OnboardingTestPage from "./pages/onboarding-test-page";
 import SupportChatbot from "./components/SupportChatbot";
-import HomePage from "./pages/Home";
+import HomePage from "./pages/home-page";
 import OneTapWeatherSnapshot from "./components/OneTapWeatherSnapshot";
 import UserOnboarding from "./components/UserOnboarding";
 // Auth Provider is imported in main.tsx
 import { MAIN_CONTENT_ID, LiveRegion } from './lib/accessibility';
 import './paddock20.css';
 import { getUserDisplayName } from './utils/DataIntegrityVerifier';
-import DebugPage from "./pages/DebugPage";
+import DebugPage from "./pages/debug-page";
 
 // Import legal pages
-import PrivacyPolicy from './pages/PrivacyPolicyPage';
-import TermsOfService from './pages/TermsOfServicePage';
-import BetaAgreement from './pages/BetaAgreement';
-import EmailVerifiedPage from './pages/EmailVerifiedPage';
-import AdminPage from './pages/AdminPage';
-// BetaEnrollmentPage renamed to BetaWelcomePage
-import BetaWelcomePage from './pages/BetaWelcomePage';
+import PrivacyPolicy from './pages/privacy-policy-page';
+import TermsOfService from './pages/terms-of-service-page';
+import BetaAgreement from './pages/beta-agreement';
+import EmailVerifiedPage from './pages/email-verified-page';
+import AdminPage from './pages/admin-page';
+// BetaEnrollmentPage removed as not needed
 
 // Create an AuthenticatedApp component to handle auth-dependent UI
 function AuthenticatedContent({ 
@@ -140,6 +139,9 @@ function AuthenticatedContent({
           
           // Update state
           setHasCompletedOnboarding(true);
+          
+          // Redirect to The Paddock after completing onboarding
+          window.location.href = '/the-paddock';
         }} 
       />
     );
@@ -193,14 +195,14 @@ function AuthenticatedContent({
           {/* Auth0 callback route - Handles redirection after Auth0 authentication */}
           <Route path="/auth/callback" component={Auth0Callback} />
           
+          {/* Demo Mode route - Direct entry point that bypasses Auth0 completely */}
+          <Route path="/demo-mode" component={() => <DemoMode />} />
+          
           {/* Spotify callback route - Handles redirection after Spotify authentication */}
           <Route path="/spotify/callback" component={SpotifyCallbackPage} />
           
           {/* Logout Page - Handles secure logout process */}
-          <Route path="/logout" component={LogoutPage} />
-          
-          {/* Beta Welcome Page - For new users to see introduction */}
-          <Route path="/beta-welcome" component={BetaWelcomePage} />
+          <Route path="/logout" component={EnhancedLogoutPage} />
           
           {/* User Onboarding - Explicit URL path that redirects to the proper flow */}
           <Route 
@@ -208,9 +210,14 @@ function AuthenticatedContent({
             component={() => {
               // Check if user is authenticated
               if (isAuthenticated && user?.id) {
-                // Instead of removing the flag which creates a loop,
-                // we'll render the onboarding component directly
-                return <OnboardingPage />;
+                // Update local storage directly - this will trigger the onboarding flow
+                // in the AuthenticatedContent component on next render
+                const betaOnboardingKey = `paddock20_beta_onboarding_complete_${user.id}`;
+                localStorage.removeItem(betaOnboardingKey);
+                
+                // Redirect to home, which will then show the onboarding
+                window.location.href = '/';
+                return <div className="p-8 text-white">Redirecting to onboarding...</div>;
               } else {
                 // Not authenticated, redirect to auth page
                 window.location.href = '/auth';
@@ -219,27 +226,48 @@ function AuthenticatedContent({
             }} 
           />
         
-          {/* Core Routes */}
-          <Route path="/" component={() => <ProtectedRoute><Paddock20HomePage /></ProtectedRoute>} />
-          <Route path="/dashboard" component={() => <ProtectedRoute><DashboardPage /></ProtectedRoute>} />
-          <Route path="/personalized-dashboard" component={() => <ProtectedRoute><PersonalizedDashboard /></ProtectedRoute>} />
-          <Route path="/admin" component={() => <ProtectedRoute><AdminPage /></ProtectedRoute>} />
+          {/* Core Routes - Memoized to prevent recreation of components on every render */}
+          <Route path="/" component={() => {
+            // Using dynamic import for the HomePageHandler to avoid circular dependencies
+            const HomePageHandlerPage = React.lazy(() => import('./components/HomePageHandler'));
+            
+            return (
+              <React.Suspense fallback={<div className="p-8 text-white">Loading homepage...</div>}>
+                <HomePageHandlerPage />
+              </React.Suspense>
+            );
+          }} />
+          <Route path="/the-paddock" component={() => <ProtectedRoute bypassAuth={true}><ThePaddockPage /></ProtectedRoute>} />
+          <Route path="/admin" component={() => <ProtectedRoute bypassAuth={true}><AdminPage /></ProtectedRoute>} />
           
-          {/* User & Profile Routes */}
-          <Route path="/profile" component={() => <ProtectedRoute><UserProfileHubPage /></ProtectedRoute>} />
-          <Route path="/onboarding-test" component={() => <ProtectedRoute><OnboardingTestPage /></ProtectedRoute>} />
-          <Route path="/settings" component={() => <ProtectedRoute><Settings /></ProtectedRoute>} />
+          {/* Beta Welcome Page - Special route to handle onboarding for new deployment users */}
+          <Route path="/beta-welcome" component={() => {
+            // Import the BetaWelcomePage component
+            const BetaWelcomePage = React.lazy(() => import('./pages/beta-welcome-page'));
+            return (
+              <React.Suspense fallback={<div className="p-8 text-white">Loading beta welcome...</div>}>
+                <BetaWelcomePage />
+              </React.Suspense>
+            );
+          }} />
           
-          {/* Vehicle Management Routes */}
-          <Route path="/garage-vault" component={() => <ProtectedRoute><GarageVaultPage /></ProtectedRoute>} />
-          <Route path="/garage" component={() => <ProtectedRoute><GaragePage /></ProtectedRoute>} />
-          <Route path="/add-vehicle" component={() => <ProtectedRoute><AddVehiclePage /></ProtectedRoute>} />
+          {/* User & Profile Routes - Keeping these for backward compatibility but will be replaced by ThePaddockPage */}
+          <Route path="/dashboard" component={() => <ProtectedRoute bypassAuth={true}><ThePaddockPage /></ProtectedRoute>} />
+          <Route path="/personalized-dashboard" component={() => <ProtectedRoute bypassAuth={true}><ThePaddockPage /></ProtectedRoute>} />
+          <Route path="/profile" component={() => <ProtectedRoute bypassAuth={true}><ThePaddockPage /></ProtectedRoute>} />
+          <Route path="/onboarding-test" component={() => <ProtectedRoute bypassAuth={true}><OnboardingTestPage /></ProtectedRoute>} />
+          <Route path="/settings" component={() => <ProtectedRoute bypassAuth={true}><Settings /></ProtectedRoute>} />
+          
+          {/* Vehicle Management Routes - Keeping these for backward compatibility but will be replaced by ThePaddockPage */}
+          <Route path="/garage-vault" component={() => <ProtectedRoute bypassAuth={true}><ThePaddockPage /></ProtectedRoute>} />
+          <Route path="/garage" component={() => <ProtectedRoute bypassAuth={true}><GaragePage /></ProtectedRoute>} />
+          <Route path="/add-vehicle" component={() => <ProtectedRoute bypassAuth={true}><AddVehiclePage /></ProtectedRoute>} />
           <Route path="/vehicle-mods" component={() => <ProtectedRoute><VehicleModsPage /></ProtectedRoute>} />
           <Route path="/mod-planner" component={() => <ProtectedRoute><ModPlannerPage /></ProtectedRoute>} />
           
           {/* Feature Routes */}
-          <Route path="/weather-paddock" component={() => <ProtectedRoute><WeatherPage /></ProtectedRoute>} />
-          <Route path="/weather" component={() => <ProtectedRoute><Weather /></ProtectedRoute>} />
+          <Route path="/weather-paddock" component={() => <ProtectedRoute><WeatherPaddockPage /></ProtectedRoute>} />
+          <Route path="/weather" component={() => <ProtectedRoute><WeatherPage /></ProtectedRoute>} />
           <Route path="/route-planner" component={() => <ProtectedRoute><RoutePlannerPage /></ProtectedRoute>} />
           <Route path="/drive-journal" component={() => <ProtectedRoute><DriveJournalPage /></ProtectedRoute>} />
           <Route path="/manifestation-station" component={() => <ProtectedRoute><ManifestationStationPage /></ProtectedRoute>} />
@@ -265,15 +293,15 @@ function AuthenticatedContent({
           
           {/* Debug Pages */}
           <Route path="/debug" component={() => {
-            const SimpleDebug = React.lazy(() => import('./pages/SimpleDebug'));
+            const DebugPage = React.lazy(() => import('./pages/debug-page'));
             return (
               <React.Suspense fallback={<div className="p-8 text-white">Loading debug page...</div>}>
-                <SimpleDebug />
+                <DebugPage />
               </React.Suspense>
             );
           }} />
           
-          {/* Create a special component for the 404 route as the final fallback */}
+          {/* 404 page for when no routes match */}
           <Route path="*" component={NotFound} />
           
           {/* Rewards notification - only shown when authenticated */}
@@ -338,9 +366,11 @@ function App() {
   
   // Authentication state is now managed through AuthContext with Auth0
   
-  // Function to mark onboarding as complete
+  // Function to mark onboarding as complete and redirect to The Paddock
   const completeOnboarding = () => {
     setHasCompletedOnboarding(true);
+    // Redirect to The Paddock after onboarding completion
+    window.location.href = '/the-paddock';
   };
 
   // Create a global screen reader notification system
@@ -354,9 +384,6 @@ function App() {
     };
   }, []);
   
-  // Get navigation utilities at the component level
-  const [_, navigate] = useLocation();
-
   // Handle return from external navigation apps
   useEffect(() => {
     // Check if we have a saved return point from navigation
@@ -367,18 +394,19 @@ function App() {
       
       // Navigate to the saved path if it's different from current path
       if (window.location.pathname !== returnPoint) {
-        // Use Wouter's navigate instead of manipulating history directly
-        navigate(returnPoint);
+        window.history.pushState(null, '', returnPoint);
       }
     }
     
-    // Handle route change events from FixedSoundBar
+    // Listen for custom route change events from the FixedSoundBar
     const handleRouteChange = (event: CustomEvent) => {
       try {
         const { path } = event.detail;
         if (path && window.location.pathname !== path) {
-          // Use Wouter's navigate function
-          navigate(path);
+          // Navigate to the path using React Router programmatically
+          window.history.pushState(null, '', path);
+          // Dispatch a popstate event to trigger React Router navigation
+          window.dispatchEvent(new PopStateEvent('popstate'));
         }
       } catch (error) {
         console.error('Error handling route change:', error);
@@ -397,9 +425,10 @@ function App() {
   // Authentication status is now handled by AuthContext from Auth0
   // This redundant effect has been removed to prevent conflicts
   
-  // Check if the current path is /auth
+  // Check if the current path is /auth or /demo-mode
   const [location] = useLocation();
   const isAuthPage = location === '/auth';
+  const isDemoModePage = location === '/demo-mode';
   
   // If we're on the auth page, render only the AuthPage component
   if (isAuthPage) {
@@ -410,6 +439,18 @@ function App() {
           <AuthProvider>
             <AuthPage />
           </AuthProvider>
+        </TooltipProvider>
+      </QueryClientProvider>
+    );
+  }
+  
+  // If we're on the demo mode page, bypass Auth0 completely
+  if (isDemoModePage) {
+    return (
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <Toaster />
+          <DemoMode />
         </TooltipProvider>
       </QueryClientProvider>
     );

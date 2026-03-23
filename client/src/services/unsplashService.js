@@ -13,9 +13,9 @@ const imageCache = new Map();
 // DORMANT MODE: Force accessKey to null to prevent API calls
 const accessKey = null; // API marked as dormant until further notice
 
-// Fallback images to use instead of API calls
-import ferrariImg from '@assets/Ferrari-458-With-HRE-P101-Wheels-By-TAG-Motorsports-2.jpg';
-import patekImg from '@assets/5711_1A_014_1@2x.jpg';
+// Fallback images from Unsplash URLs instead of local assets
+const ferrariImg = 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80';
+const patekImg = 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80';
 
 // Store URLs for manually added images to use later if needed
 // For now, we'll rely on Unsplash for images

@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, Link } from 'wouter';
+import { Link } from 'react-router-dom';
 import { 
   User, Shield, Award, Car, Calendar, Droplets, Map, Camera, Sliders, 
   ChevronDown, ChevronUp, ChevronRight, Clock, Gauge, Zap,

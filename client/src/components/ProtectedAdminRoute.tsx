@@ -17,7 +17,7 @@ export const ProtectedAdminRoute: React.FC<ProtectedAdminRouteProps> = ({ childr
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen bg-black bg-opacity-90 bg-gradient-to-b from-black to-zinc-900">
+      <div className="flex items-center justify-center min-h-screen bg-black bg-opacity-90 bg-[url('/assets/images/backgrounds/ferrari-desert.png')]">
         <div className="flex flex-col items-center justify-center p-8 rounded-lg border border-[#1982FC] bg-zinc-900 bg-opacity-80">
           <Loader2 className="w-12 h-12 animate-spin text-[#1982FC]" />
           <p className="mt-4 text-white font-orbitron">Accessing Admin Panel...</p>

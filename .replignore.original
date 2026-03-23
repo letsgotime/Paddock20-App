@@ -1,0 +1,60 @@
+# Node modules and build artifacts
+node_modules/
+dist/
+.DS_Store
+vite.config.ts.*
+*.tar.gz
+
+# Large backup folders
+attached_assets/
+May_09_2025_Auth_Backup/
+May_09_2025_Full_Codebase_Backup/
+May_8_2025_Restored_Backup/
+auth_updates_backup/
+backup_current_state/
+backup_paddock_refactor/
+backups/
+beta_backups/
+beta_welcome_backup/
+case_fix_backup/
+legacy-files/
+replit_agent/
+routing_and_onboarding_backup/
+temp_backup/
+
+# Specific project backups (excluding the 2 most recent)
+project_backup_20250509_*/
+project_backup_20250510_154559/
+project_backup_20250510_154946/
+
+# Keep only these recent backups
+# project_backup_20250510_155254/
+# project_backup_20250510_155037/
+
+# Media and document files 
+*.mp4
+*.mov
+*.pdf
+*.zip
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.psd
+*.ai
+*.docx
+*.xlsx
+*.log
+*.lock
+
+# Log and cache files
+.cache/
+.npm/
+log/
+logs/
+*.log*
+npm-debug.log*
+
+# Keep only necessary image assets
+!client/src/assets/images/backgrounds/carbon-fiber-blue.jpg
+!client/src/assets/images/logos/paddock-logo.png

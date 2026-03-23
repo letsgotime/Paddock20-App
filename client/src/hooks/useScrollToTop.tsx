@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { useLocation, Link } from 'wouter';
+import { useLocation } from 'react-router-dom';
 import { MAIN_CONTENT_ID } from '../lib/accessibility';
 
 /**

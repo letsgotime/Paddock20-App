@@ -1,5 +1,5 @@
 import React, { createContext, ReactNode, useContext } from 'react';
-import { SoundType } from '@/services/soundService';
+import { SoundType } from "@/services/sound-service-alt";
 import useSoundEffect from '@/hooks/useSoundEffect';
 
 /**
