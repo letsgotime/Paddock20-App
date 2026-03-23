@@ -9,9 +9,11 @@ import SoundButton from "@/components/ui/SoundButton";
  * 
  * This component is designed to be always visible regardless of authentication state
  * and is positioned at the bottom of the screen using fixed positioning.
+ * 
+ * Now uses Wouter's Link component for seamless SPA navigation.
  */
 const FixedSoundBar: React.FC = () => {
-  const [path, navigate] = useLocation();
+  const [currentPath, navigate] = useLocation();
   const { isEnabled: soundEnabled, ambientEnabled, volume, playSound, toggleSound, toggleAmbient, setVolumeLevel } = useSoundContext();
   const [canGoBack, setCanGoBack] = useState(false);
   const [canGoForward, setCanGoForward] = useState(false);
@@ -25,12 +27,12 @@ const FixedSoundBar: React.FC = () => {
   // Update history when location changes
   useEffect(() => {
     // Check if we're navigating with the back/forward buttons
-    const isPopstate = navigationHistory[currentHistoryIndex] === path;
+    const isPopstate = navigationHistory[currentHistoryIndex] === currentPath;
     
     if (!isPopstate) {
       // Normal navigation (not back/forward)
       // Remove any "future" history if we navigated to a new path
-      const newHistory = [...navigationHistory.slice(0, currentHistoryIndex + 1), path];
+      const newHistory = [...navigationHistory.slice(0, currentHistoryIndex + 1), currentPath];
       setNavigationHistory(newHistory);
       setCurrentHistoryIndex(newHistory.length - 1);
     }
@@ -38,12 +40,12 @@ const FixedSoundBar: React.FC = () => {
     // Update back/forward button states
     setCanGoBack(currentHistoryIndex > 0);
     setCanGoForward(currentHistoryIndex < navigationHistory.length - 1);
-  }, [path, navigationHistory, currentHistoryIndex]);
+  }, [currentPath, currentHistoryIndex, navigationHistory]);
   
   // Initialize history on first render
   useEffect(() => {
     if (navigationHistory.length === 0) {
-      setNavigationHistory([path]);
+      setNavigationHistory([currentPath]);
       setCurrentHistoryIndex(0);
     }
   }, []);
@@ -51,8 +53,8 @@ const FixedSoundBar: React.FC = () => {
   // Listen to browser popstate events (back/forward browser buttons)
   useEffect(() => {
     const handlePopstate = () => {
-      // Find the path in our history
-      const index = navigationHistory.findIndex(p => p === path);
+      // Find the current path in our history
+      const index = navigationHistory.findIndex(path => path === currentPath);
       
       if (index !== -1) {
         // Update our current index
@@ -68,7 +70,7 @@ const FixedSoundBar: React.FC = () => {
     return () => {
       window.removeEventListener('popstate', handlePopstate);
     };
-  }, [navigationHistory, currentHistoryIndex, path]);
+  }, [navigationHistory, currentHistoryIndex, currentPath]);
   
   // Handle clicks outside the sound menu to close it
   useEffect(() => {
@@ -84,7 +86,7 @@ const FixedSoundBar: React.FC = () => {
     };
   }, []);
 
-  // Navigation handlers using Wouter and our custom history tracking
+  // Navigation handlers using React Router and our custom history tracking
   const handleBackClick = (e: React.MouseEvent) => {
     if (canGoBack) {
       if (soundEnabled) playSound('ui_click');
@@ -93,7 +95,7 @@ const FixedSoundBar: React.FC = () => {
       const prevIndex = currentHistoryIndex - 1;
       if (prevIndex >= 0) {
         const prevPath = navigationHistory[prevIndex];
-        navigate(prevPath); // Using setLocation from useLocation hook
+        navigate(prevPath);
         setCurrentHistoryIndex(prevIndex);
       }
     } else {
@@ -109,7 +111,7 @@ const FixedSoundBar: React.FC = () => {
       const nextIndex = currentHistoryIndex + 1;
       if (nextIndex < navigationHistory.length) {
         const nextPath = navigationHistory[nextIndex];
-        navigate(nextPath); // Using setLocation from useLocation hook
+        navigate(nextPath);
         setCurrentHistoryIndex(nextIndex);
       }
     } else {
@@ -181,7 +183,7 @@ const FixedSoundBar: React.FC = () => {
         
         <div className="mx-1 h-4 w-px bg-blue-900/50"></div>
         
-        {/* Home Button - Using Wouter Link for SPA navigation */}
+        {/* Home Button - Using React Router Link for SPA navigation */}
         <Link
           to="/"
           onClick={handleHomeClick}

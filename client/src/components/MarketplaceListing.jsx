@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import { 
   Tag, Clock, Shield, ChevronDown, MapPin, 
-  Star, ExternalLink, Activity, Zap, Image as ImageIcon
+  Star, ExternalLink, Activity, Zap, Image as ImageIcon,
+  BarChart3, Gauge
 } from 'lucide-react';
 import { getImageForItem, searchImage } from '../services/unsplashService';
 
-// Local high-quality images for fallbacks
-import ferrariImg from '@assets/Ferrari-458-With-HRE-P101-Wheels-By-TAG-Motorsports-2.jpg';
-import patekImg from '@assets/5711_1A_014_1@2x.jpg';
+// Using placeholder URLs instead of local image assets
+const ferrariImg = 'https://images.unsplash.com/photo-1583121274602-3e2820c69888?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80';
+const patekImg = 'https://images.unsplash.com/photo-1524592094714-0f0654e20314?ixlib=rb-4.0.3&ixid=MnwxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8&auto=format&fit=crop&w=800&q=80';
 
 const MarketplaceListing = ({ listing, isAdmin, onEdit, onDelete, onViewTelemetry, expandedByDefault = false }) => {
   const [expanded, setExpanded] = useState(expandedByDefault);

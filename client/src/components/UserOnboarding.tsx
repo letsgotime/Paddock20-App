@@ -379,7 +379,7 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
         // Pre-populate minimal profile data to satisfy validation
         setUserProfile(prev => ({
           ...prev,
-          fullName: prev.fullName || (auth.user && auth.user.firstName && auth.user.lastName ? `${auth.user.firstName} ${auth.user.lastName}` : (auth.user?.username || 'User')),
+          fullName: prev.fullName || auth.user?.firstName && auth.user?.lastName ? `${auth.user.firstName} ${auth.user.lastName}` : auth.user?.username || 'User',
           username: prev.username || auth.user?.username || 'user',
           email: prev.email || auth.user?.email || 'user@example.com',
           password: 'password123',  // These will never be used as Auth0 handles auth
@@ -1624,8 +1624,6 @@ const UserOnboarding: React.FC<UserOnboardingProps> = ({ onComplete }) => {
           )}
           
           <div className="flex items-center space-x-4">
-            {/* Removed "Skip to Completion" button to ensure users complete the full onboarding process */}
-            
             <button
               type="button"
               onClick={() => handleStepTransition('next')}

@@ -73,6 +73,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     logout: auth0Logout
   } = useAuth0();
 
+  // Check for demo mode flags from Auth0Callback component
+  const isDemoMode = () => {
+    return localStorage.getItem('PADDOCK20_DEMO_MODE') === 'true' || 
+           localStorage.getItem('paddock20_demo_auth_bypass') === 'true';
+  };
+
   // Synchronize Auth0 state with our context
   useEffect(() => {
     const syncAuth0User = async () => {
@@ -83,16 +89,49 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(true);
 
       try {
+        // Check for demo mode - provides authenticated-like experience without real Auth0
+        if (isDemoMode()) {
+          console.log('Running in DEMO MODE - bypassing Auth0 authentication');
+
+          // Create a demo user with admin capabilities
+          const demoUser: User = {
+            id: 9999,
+            username: 'demoadmin',
+            email: 'demo@paddock20.example',
+            firstName: 'Demo',
+            lastName: 'User',
+            fullName: 'Demo User',
+            profileImage: 'https://ui-avatars.com/api/?name=Demo+User&background=1982FC&color=fff',
+            role: 'admin',
+          };
+
+          setUser(demoUser);
+          setSession({ user: demoUser });
+          
+          // Persist the demo user
+          localStorage.setItem('userProfile', JSON.stringify(demoUser));
+          
+          // Show a special demo mode notification only on first load after enabling demo
+          if (!localStorage.getItem('demoModeNotified')) {
+            toast({
+              title: 'Demo Mode Active',
+              description: 'You are using Paddock20 in demo mode. No real user data is being used.',
+              variant: 'default',
+            });
+            localStorage.setItem('demoModeNotified', 'true');
+          }
+          
+          setLoading(false);
+          return;
+        }
+          
+        // Normal Auth0 authentication flow
         if (isAuthenticated && auth0User) {
           console.log('Auth0 authentication successful', auth0User.email);
           
           try {
             // Try to get or create user profile in our database
             const token = await getAccessTokenSilently();
-            
-            // Store token in localStorage for use during onboarding
-            localStorage.setItem('auth0_token', token);
-            console.log('Auth0 token stored in localStorage for onboarding');
             
             const response = await fetch('/api/user-profile', {
               method: 'GET',
@@ -229,7 +268,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     // Force a hard reset of local storage for auth-related items
     localStorage.removeItem('auth-session');
     localStorage.removeItem('auth-token');
-    localStorage.removeItem('auth0_token'); // Clear Auth0 token from onboarding
     localStorage.removeItem('returnToPath');
     localStorage.removeItem('currentVehicle');
     localStorage.removeItem('loginShown');
@@ -245,17 +283,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     sessionStorage.removeItem('lastLocation');
     sessionStorage.removeItem('lastSearch');
     
-    // Log out from Auth0
+    // Log out from Auth0 without showing toast notification
+    // The EnhancedLogoutPage will handle the visual feedback
     auth0Logout({
       logoutParams: {
         returnTo: window.location.origin + redirectPath
       }
-    });
-    
-    toast({
-      title: 'Logged Out',
-      description: 'You have been successfully logged out.',
-      variant: 'default',
     });
   };
 

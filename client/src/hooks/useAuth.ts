@@ -15,13 +15,9 @@ export function useAuth() {
     throw new Error('useAuth must be used within an AuthProvider');
   }
   
-  // Add a computed property for authentication state
-  // This simplifies checking if the user is authenticated
-  const isAuthenticated = !!context.session;
+  // Use the isAuthenticated value from context (which is derived from user existence)
+  // This ensures consistency across the application
   
-  // Return the context with the additional helper
-  return {
-    ...context,
-    isAuthenticated
-  };
+  // Return the context directly - the isAuthenticated property is already computed in AuthContext
+  return context;
 }

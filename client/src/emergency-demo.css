@@ -1,0 +1,97 @@
+/* EMERGENCY INVESTOR DEMO FAILSAFE STYLES */
+#emergency-demo-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: #0f172a; /* Dark blue background */
+  z-index: 99999;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  color: white;
+  font-family: 'Orbitron', sans-serif;
+  overflow: auto;
+  padding: 2rem;
+}
+
+#emergency-demo-overlay h1 {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  color: #1982FC; /* Carolina Blue */
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-align: center;
+}
+
+#emergency-demo-overlay p {
+  margin-bottom: 1rem;
+  font-size: 1.1rem;
+  max-width: 800px;
+  text-align: center;
+}
+
+#emergency-demo-overlay .buttons {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+  margin-bottom: 2rem;
+}
+
+#emergency-demo-overlay .button {
+  background-color: #1982FC; /* Carolina Blue */
+  color: white;
+  border: none;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
+  font-weight: bold;
+  cursor: pointer;
+  text-transform: uppercase;
+  transition: all 0.2s;
+}
+
+#emergency-demo-overlay .button:hover {
+  background-color: #08c519; /* GoTime Green */
+}
+
+#emergency-demo-overlay .stats-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-top: 0.5rem;
+  width: 90%;
+  max-width: 800px;
+}
+
+#emergency-demo-overlay .stat-card {
+  background-color: rgba(25, 130, 252, 0.1); /* Light Carolina Blue background */
+  border: 1px solid #1982FC;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+#emergency-demo-overlay .stat-card h3 {
+  color: #08c519; /* GoTime Green */
+  margin-bottom: 0.5rem;
+  font-size: 1.2rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+#emergency-demo-overlay .stat-card p {
+  margin: 0.3rem 0;
+  font-size: 0.9rem;
+  text-align: left;
+}
+
+@media (max-width: 768px) {
+  #emergency-demo-overlay .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  #emergency-demo-overlay h1 {
+    font-size: 1.5rem;
+  }
+}

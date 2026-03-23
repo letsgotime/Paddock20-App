@@ -1,0 +1,313 @@
+import React, { useState } from 'react';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Checkbox } from '@/components/ui/checkbox';
+import { Button } from '@/components/ui/button';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { useToast } from '@/hooks/use-toast';
+
+interface ChecklistItem {
+  id: string;
+  name: string;
+  description: string;
+  isComplete: boolean;
+  priority: 'critical' | 'important' | 'recommended';
+}
+
+/**
+ * Pre-Drive Checklist Page
+ * 
+ * A comprehensive checklist for drivers to ensure their vehicle is ready and safe before driving.
+ * Includes critical safety checks, fluid levels, and condition assessments with an improved interface.
+ */
+export default function PreDriveChecklistPage() {
+  const { toast } = useToast();
+  
+  // Initial checklist items
+  const [checklistItems, setChecklistItems] = useState<ChecklistItem[]>([
+    {
+      id: 'tires',
+      name: 'Tire Pressure Front/Rear Match',
+      description: 'Verify tire pressure matches recommended PSI for current conditions',
+      isComplete: false,
+      priority: 'critical'
+    },
+    {
+      id: 'torque',
+      name: 'Torque Spec Glance',
+      description: 'Visual inspection of wheel lug nuts and other critical fasteners',
+      isComplete: false,
+      priority: 'critical'
+    },
+    {
+      id: 'oil',
+      name: 'Oil Level Check',
+      description: 'Engine oil level is between min and max marks on dipstick',
+      isComplete: false,
+      priority: 'critical'
+    },
+    {
+      id: 'brakes-pad',
+      name: 'Brake Pad Depth Check',
+      description: 'Visual inspection of brake pad thickness',
+      isComplete: false,
+      priority: 'critical'
+    },
+    {
+      id: 'brake-fluid',
+      name: 'Brake Fluid Level Check',
+      description: 'Brake fluid reservoir is between min and max marks',
+      isComplete: false,
+      priority: 'critical'
+    },
+    {
+      id: 'battery',
+      name: 'Battery Health Scan',
+      description: 'Check battery voltage and terminal condition',
+      isComplete: false,
+      priority: 'important'
+    },
+    {
+      id: 'lights',
+      name: 'Lights and Signals Check',
+      description: 'All exterior lights, turn signals, and hazards are functional',
+      isComplete: false,
+      priority: 'important'
+    },
+    {
+      id: 'wipers',
+      name: 'Wiper Blades and Washer Fluid',
+      description: 'Wiper blades are in good condition and washer fluid is adequate',
+      isComplete: false,
+      priority: 'important'
+    },
+    {
+      id: 'fuel',
+      name: 'Fuel Range Check',
+      description: 'Sufficient fuel for planned journey with safety margin',
+      isComplete: false,
+      priority: 'important'
+    },
+    {
+      id: 'leaks',
+      name: 'Garage Floor Leak Check',
+      description: 'Check for fluid leaks where vehicle was parked',
+      isComplete: false,
+      priority: 'recommended'
+    },
+    {
+      id: 'weather',
+      name: 'Weather Condition Check',
+      description: 'Review weather forecast for route and prepare accordingly',
+      isComplete: false,
+      priority: 'recommended'
+    },
+    {
+      id: 'walkaround',
+      name: 'Final Pre-Drive Walkaround',
+      description: 'Complete exterior inspection before departure',
+      isComplete: false,
+      priority: 'recommended'
+    }
+  ]);
+  
+  // Calculate completion percentage
+  const completedItems = checklistItems.filter(item => item.isComplete).length;
+  const completionPercentage = Math.round((completedItems / checklistItems.length) * 100);
+  
+  // Toggle completion status of an item
+  const toggleItemCompletion = (id: string) => {
+    setChecklistItems(items => 
+      items.map(item => 
+        item.id === id ? { ...item, isComplete: !item.isComplete } : item
+      )
+    );
+  };
+  
+  // Reset all checklist items
+  const resetChecklist = () => {
+    setChecklistItems(items => 
+      items.map(item => ({ ...item, isComplete: false }))
+    );
+    
+    toast({
+      title: "Checklist Reset",
+      description: "Pre-drive checklist has been reset.",
+    });
+  };
+  
+  // Complete all checklist items
+  const completeAllItems = () => {
+    setChecklistItems(items => 
+      items.map(item => ({ ...item, isComplete: true }))
+    );
+    
+    toast({
+      title: "Checklist Completed",
+      description: "All items marked as complete. Drive safe!",
+    });
+  };
+  
+  // Filter items by priority
+  const criticalItems = checklistItems.filter(item => item.priority === 'critical');
+  const importantItems = checklistItems.filter(item => item.priority === 'important');
+  const recommendedItems = checklistItems.filter(item => item.priority === 'recommended');
+  
+  // Render checklist items by priority
+  const renderChecklistItems = (items: ChecklistItem[]) => {
+    return items.map(item => (
+      <div key={item.id} className="flex items-start space-x-3 p-3 border border-gray-800 rounded-md bg-black/40 hover:border-carolina-blue/50 transition-colors">
+        <Checkbox 
+          id={item.id} 
+          checked={item.isComplete}
+          onCheckedChange={() => toggleItemCompletion(item.id)}
+          className="mt-1"
+        />
+        <div className="space-y-1">
+          <label 
+            htmlFor={item.id} 
+            className={`font-medium cursor-pointer ${
+              item.isComplete ? 'line-through text-gray-500' : 'text-white'
+            }`}
+          >
+            {item.name}
+          </label>
+          <p className={`text-sm ${
+            item.isComplete ? 'text-gray-600' : 'text-gray-400'
+          }`}>
+            {item.description}
+          </p>
+        </div>
+      </div>
+    ));
+  };
+  
+  return (
+    <div className="container mx-auto py-8">
+      <h1 className="text-3xl font-bold text-carolina-blue mb-2">PRE-DRIVE READINESS CHECKLIST</h1>
+      <p className="text-gray-400 mb-6">Ensure your vehicle is ready for a safe and enjoyable drive</p>
+      
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        {/* Left column - Progress and controls */}
+        <div className="lg:col-span-1">
+          <Card className="bg-black/80 border-gray-800 mb-6">
+            <CardHeader>
+              <CardTitle className="text-xl">Checklist Progress</CardTitle>
+              <CardDescription>
+                {completedItems} of {checklistItems.length} items complete
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              {/* Progress bar */}
+              <div className="w-full h-4 bg-gray-800 rounded-full overflow-hidden mb-4">
+                <div 
+                  className="h-full bg-carolina-blue transition-all duration-500 ease-out"
+                  style={{ width: `${completionPercentage}%` }}
+                />
+              </div>
+              
+              <div className="text-center text-2xl font-bold text-carolina-blue mb-4">
+                {completionPercentage}%
+              </div>
+              
+              <div className="flex justify-between space-x-3">
+                <Button 
+                  variant="outline" 
+                  className="w-1/2 border-gray-700 hover:bg-gray-900 hover:text-white"
+                  onClick={resetChecklist}
+                >
+                  Reset
+                </Button>
+                <Button 
+                  className="w-1/2 bg-carolina-blue hover:bg-carolina-blue/80"
+                  onClick={completeAllItems}
+                >
+                  Complete All
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-black/80 border-gray-800">
+            <CardHeader>
+              <CardTitle className="text-xl">Safety Statistics</CardTitle>
+              <CardDescription>Pre-drive checks impact</CardDescription>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="p-3 border border-green-900/30 rounded-md bg-green-950/20">
+                <div className="text-green-400 font-medium mb-1">Reduces Incidents</div>
+                <p className="text-sm text-gray-300">Proper pre-drive checks can reduce roadside incidents by up to 62%.</p>
+              </div>
+              
+              <div className="p-3 border border-blue-900/30 rounded-md bg-blue-950/20">
+                <div className="text-carolina-blue font-medium mb-1">Extends Vehicle Life</div>
+                <p className="text-sm text-gray-300">Regular inspections can extend vehicle lifespan by identifying issues early.</p>
+              </div>
+              
+              <div className="p-3 border border-purple-900/30 rounded-md bg-purple-950/20">
+                <div className="text-purple-400 font-medium mb-1">Optimizes Performance</div>
+                <p className="text-sm text-gray-300">Proper tire pressure alone can improve fuel efficiency by 3-4%.</p>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+        
+        {/* Right column - Checklist tabs */}
+        <div className="lg:col-span-3">
+          <Card className="bg-black/80 border-gray-800">
+            <CardHeader>
+              <CardTitle className="text-xl">Complete Your Pre-Drive Checklist</CardTitle>
+              <CardDescription>
+                Categorized by importance for safer, more enjoyable driving
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Tabs defaultValue="critical">
+                <TabsList className="grid w-full grid-cols-3 mb-6">
+                  <TabsTrigger value="critical" className="data-[state=active]:bg-red-900/30 data-[state=active]:text-red-300">
+                    Critical
+                  </TabsTrigger>
+                  <TabsTrigger value="important" className="data-[state=active]:bg-yellow-900/30 data-[state=active]:text-yellow-300">
+                    Important
+                  </TabsTrigger>
+                  <TabsTrigger value="recommended" className="data-[state=active]:bg-green-900/30 data-[state=active]:text-green-300">
+                    Recommended
+                  </TabsTrigger>
+                </TabsList>
+                
+                <TabsContent value="critical" className="space-y-3">
+                  <div className="p-3 border border-red-900/50 rounded-md bg-red-950/20 mb-4">
+                    <p className="text-red-300 text-sm">
+                      These checks are essential for safety and should never be skipped.
+                      Critical items directly impact your vehicle's safe operation.
+                    </p>
+                  </div>
+                  {renderChecklistItems(criticalItems)}
+                </TabsContent>
+                
+                <TabsContent value="important" className="space-y-3">
+                  <div className="p-3 border border-yellow-900/50 rounded-md bg-yellow-950/20 mb-4">
+                    <p className="text-yellow-300 text-sm">
+                      These checks significantly improve safety and performance.
+                      Important items should be completed regularly before driving.
+                    </p>
+                  </div>
+                  {renderChecklistItems(importantItems)}
+                </TabsContent>
+                
+                <TabsContent value="recommended" className="space-y-3">
+                  <div className="p-3 border border-green-900/50 rounded-md bg-green-950/20 mb-4">
+                    <p className="text-green-300 text-sm">
+                      These checks enhance your driving experience and vehicle longevity.
+                      Recommended items complete a thorough pre-drive inspection.
+                    </p>
+                  </div>
+                  {renderChecklistItems(recommendedItems)}
+                </TabsContent>
+              </Tabs>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </div>
+  );
+}

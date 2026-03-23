@@ -4,6 +4,8 @@ import { setupVite, serveStatic, log } from "./vite";
 import 'dotenv/config'; // Load environment variables from .env file
 
 const app = express();
+const PORT = process.env.PORT || 5000;
+
 app.use(express.json());
 app.use(express.urlencoded({ extended: false }));
 
@@ -57,15 +59,17 @@ app.use((req, res, next) => {
     serveStatic(app);
   }
 
-  // ALWAYS serve the app on port 5000
-  // this serves both the API and the client.
-  // It is the only port that is not firewalled.
-  const port = 5000;
+  // Use environment PORT or fallback to 5000 (Replit requires port 5000)
+  // When deployed to GitHub, process.env.PORT will be used automatically
+  const port = Number(process.env.PORT) || 5000;
+
+  // Force binding to 0.0.0.0 to make sure it's accessible externally
   server.listen({
-    port,
-    host: "0.0.0.0",
+    port: port,
+    host: '0.0.0.0',
     reusePort: true,
   }, () => {
-    log(`serving on port ${port}`);
+    log(`Server running at http://0.0.0.0:${port}`);
+    log(`Application available at: ${process.env.REPLIT_DOMAINS?.split(',')[0] || 'local development'}`);
   });
 })();

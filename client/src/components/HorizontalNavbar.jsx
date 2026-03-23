@@ -1,13 +1,13 @@
 import React, { useState } from 'react';
-import { useLocation, Link } from 'wouter';
+import { Link, useLocation } from 'wouter';
 
 function HorizontalNavbar() {
-  const location = useLocation();
+  const [location] = useLocation();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   
   // Check current route
   const isActive = (path) => {
-    return location.pathname === path ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-green-400';
+    return location === path ? 'text-green-400 border-b-2 border-green-400' : 'text-gray-400 hover:text-green-400';
   };
   
   return (

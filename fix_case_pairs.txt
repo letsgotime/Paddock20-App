@@ -1,0 +1,10 @@
+Case sensitivity pairs to resolve:
+
+kebab-case (KEEP):                   PascalCase/camelCase (DELETE):
+------------------------------        ------------------------------
+client/src/pages/journal-page.tsx    client/src/pages/journal.tsx
+client/src/pages/marketplace-page.tsx client/src/pages/marketplace.tsx 
+client/src/pages/motorsports-page.tsx client/src/pages/motorsports.tsx
+client/src/pages/settings-page.tsx    client/src/pages/settings.tsx
+client/src/pages/privacy-policy-page.tsx client/src/pages/privacy-policy.tsx
+client/src/pages/terms-of-service-page.tsx client/src/pages/terms-of-service.tsx

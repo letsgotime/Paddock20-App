@@ -42,31 +42,31 @@ const Footer: React.FC = () => {
             <h4 className="font-semibold mb-4 text-white">Navigation</h4>
             <ul className="space-y-2">
               <li>
-                <Link href="/">
-                  <a className="text-gray-400 hover:text-blue-500 transition-colors flex items-center">
+                <Link to="/">
+                  <div className="text-gray-400 hover:text-blue-500 transition-colors flex items-center cursor-pointer">
                     <HomeIcon size={14} className="mr-2" /> Home
-                  </a>
+                  </div>
                 </Link>
               </li>
               <li>
-                <Link href="/weather">
-                  <a className="text-gray-400 hover:text-blue-500 transition-colors flex items-center">
+                <Link to="/weather">
+                  <div className="text-gray-400 hover:text-blue-500 transition-colors flex items-center cursor-pointer">
                     <GaugeCircle size={14} className="mr-2" /> Weather Center
-                  </a>
+                  </div>
                 </Link>
               </li>
               <li>
-                <Link href="/garage">
-                  <a className="text-gray-400 hover:text-blue-500 transition-colors flex items-center">
+                <Link to="/garage">
+                  <div className="text-gray-400 hover:text-blue-500 transition-colors flex items-center cursor-pointer">
                     <Car size={14} className="mr-2" /> Garage Vault
-                  </a>
+                  </div>
                 </Link>
               </li>
               <li>
-                <Link href="/events">
-                  <a className="text-gray-400 hover:text-blue-500 transition-colors flex items-center">
+                <Link to="/events">
+                  <div className="text-gray-400 hover:text-blue-500 transition-colors flex items-center cursor-pointer">
                     <Calendar size={14} className="mr-2" /> Events
-                  </a>
+                  </div>
                 </Link>
               </li>
             </ul>
@@ -76,31 +76,31 @@ const Footer: React.FC = () => {
             <h4 className="font-semibold mb-4 text-white">Features</h4>
             <ul className="space-y-2">
               <li>
-                <Link href="/juicebox">
-                  <a className="text-gray-400 hover:text-blue-500 transition-colors flex items-center">
+                <Link to="/juicebox">
+                  <div className="text-gray-400 hover:text-blue-500 transition-colors flex items-center cursor-pointer">
                     <ShoppingBag size={14} className="mr-2" /> Juice Box™
-                  </a>
+                  </div>
                 </Link>
               </li>
               <li>
-                <Link href="/chat">
-                  <a className="text-gray-400 hover:text-blue-500 transition-colors flex items-center">
+                <Link to="/chat-feed">
+                  <div className="text-gray-400 hover:text-blue-500 transition-colors flex items-center cursor-pointer">
                     <MessageSquare size={14} className="mr-2" /> Chat Feed
-                  </a>
+                  </div>
                 </Link>
               </li>
               <li>
-                <Link href="/redline">
-                  <a className="text-gray-400 hover:text-blue-500 transition-colors flex items-center">
+                <Link to="/redline-report">
+                  <div className="text-gray-400 hover:text-blue-500 transition-colors flex items-center cursor-pointer">
                     <GaugeCircle size={14} className="mr-2" /> Redline Report
-                  </a>
+                  </div>
                 </Link>
               </li>
               <li>
-                <Link href="/settings">
-                  <a className="text-gray-400 hover:text-blue-500 transition-colors flex items-center">
+                <Link to="/settings">
+                  <div className="text-gray-400 hover:text-blue-500 transition-colors flex items-center cursor-pointer">
                     <Settings size={14} className="mr-2" /> Settings
-                  </a>
+                  </div>
                 </Link>
               </li>
             </ul>
@@ -110,35 +110,32 @@ const Footer: React.FC = () => {
             <h4 className="font-semibold mb-4 text-white">Account</h4>
             <ul className="space-y-2">
               <li>
-                <Link href="/profile">
-                  <a className="text-gray-400 hover:text-blue-500 transition-colors flex items-center">
+                <Link to="/profile">
+                  <div className="text-gray-400 hover:text-blue-500 transition-colors flex items-center cursor-pointer">
                     <User size={14} className="mr-2" /> My Profile
-                  </a>
+                  </div>
                 </Link>
               </li>
               <li>
-                <a 
-                  href="#support" 
-                  className="text-gray-400 hover:text-blue-500 transition-colors"
-                >
-                  Support
-                </a>
+                <Link to="/contact">
+                  <div className="text-gray-400 hover:text-blue-500 transition-colors cursor-pointer">
+                    Support
+                  </div>
+                </Link>
               </li>
               <li>
-                <a 
-                  href="#privacy" 
-                  className="text-gray-400 hover:text-blue-500 transition-colors"
-                >
-                  Privacy Policy
-                </a>
+                <Link to="/privacy-policy">
+                  <div className="text-gray-400 hover:text-blue-500 transition-colors cursor-pointer">
+                    Privacy Policy
+                  </div>
+                </Link>
               </li>
               <li>
-                <a 
-                  href="#terms" 
-                  className="text-gray-400 hover:text-blue-500 transition-colors"
-                >
-                  Terms of Service
-                </a>
+                <Link to="/terms-of-service">
+                  <div className="text-gray-400 hover:text-blue-500 transition-colors cursor-pointer">
+                    Terms of Service
+                  </div>
+                </Link>
               </li>
             </ul>
           </div>

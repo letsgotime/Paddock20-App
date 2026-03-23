@@ -1,5 +1,5 @@
 import React from 'react';
-import { useLocation, Link } from 'wouter';
+import { Link } from 'wouter';
 import { CalendarDays, MapPin, ArrowRight } from 'lucide-react';
 
 /**

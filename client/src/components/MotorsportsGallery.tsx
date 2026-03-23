@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, Link } from 'wouter';
+import { Link } from 'wouter';
 import { useGallery, MediaItem } from '../contexts/GalleryContext';
 
 interface GalleryImage {

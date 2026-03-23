@@ -414,7 +414,7 @@ const AuthPage: React.FC = () => {
         
         {/* Hero Section */}
         <div className="hidden lg:flex flex-col p-10 bg-gradient-to-br from-black to-zinc-900 rounded-xl border border-zinc-800 shadow-lg relative overflow-hidden">
-          <div className="absolute inset-0 opacity-10 bg-gradient-to-b from-black to-zinc-900 bg-cover bg-center"></div>
+          <div className="absolute inset-0 opacity-10 bg-[url('/src/assets/carbon-fiber-bg.jpg')] bg-cover bg-center"></div>
           
           <div className="relative z-10 h-full flex flex-col justify-between">
             <div>

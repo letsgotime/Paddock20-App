@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { playSound, playSoundSequence, SoundType } from '@/services/soundService';
+import { playSound, playSoundSequence, SoundType } from "@/services/sound-service-alt";
 
 /**
  * Custom hook for managing sound effects throughout the application

@@ -1,0 +1,138 @@
+# Node modules and build artifacts
+node_modules/
+dist/
+.DS_Store
+vite.config.ts.*
+*.tar.gz
+
+# Large backup folders
+attached_assets/
+May_09_2025_Auth_Backup/
+May_09_2025_Full_Codebase_Backup/
+May_8_2025_Restored_Backup/
+auth_updates_backup/
+backup_current_state/
+backup_paddock_refactor/
+backups/
+beta_backups/
+beta_welcome_backup/
+case_fix_backup/
+legacy-files/
+replit_agent/
+routing_and_onboarding_backup/
+temp_backup/
+
+# Specific project backups (excluding the 2 most recent)
+project_backup_20250509_*/
+project_backup_20250510_154559/
+project_backup_20250510_154946/
+
+# Keep only these recent backups
+# project_backup_20250510_155254/
+# project_backup_20250510_155037/
+
+# Media and document files 
+*.mp4
+*.mov
+*.pdf
+*.zip
+*.jpg
+*.jpeg
+*.png
+*.gif
+*.psd
+*.ai
+*.docx
+*.xlsx
+*.log
+*.lock
+
+# Log and cache files
+.cache/
+.npm/
+log/
+logs/
+*.log*
+npm-debug.log*
+
+# Keep only necessary image assets
+!client/src/assets/images/backgrounds/carbon-fiber-blue.jpg
+!client/src/assets/images/logos/paddock-logo.png
+# Large image files excluded for faster deployment
+# Large image files to exclude from deployment
+client/public/assets/gallery/Ferrari-458-With-HRE-P101-Wheels-By-TAG-Motorsports-2.jpg
+client/public/assets/gallery/ferrari-mountain-road.png
+client/public/assets/gallery/ferrari-f1.png
+client/public/assets/gallery/ferrari-desert.png
+client/public/assets/gallery/mclaren-4184249_1280.jpg
+client/public/assets/gallery/porsche-911-gt2-5795128_1280.jpg
+client/public/assets/gallery/race-car-8338236_1280.jpg
+client/public/assets/gallery/redbull-f1-motion.jpg
+client/public/assets/images/backgrounds/traffic-332857_1280.jpg
+client/public/assets/images/backgrounds/tank-400-8600203_1280.jpg
+client/public/assets/images/backgrounds/sergio-perez-6633997_1280.jpg
+client/public/assets/images/backgrounds/ferrari-desert.png
+client/public/assets/images/backgrounds/race-car-8338236_1280.jpg
+client/public/assets/images/backgrounds/porsche-911-gt2-5795128_1280.jpg
+client/public/assets/images/backgrounds/mclaren-4184249_1280.jpg
+client/public/assets/images/backgrounds/lewis-4341616_1280.jpg
+client/public/assets/images/backgrounds/white-mclaren.png
+client/public/assets/images/backgrounds/ferrari-f1.png
+client/public/assets/images/backgrounds/mercedes-f1-art.png
+client/public/assets/images/backgrounds/redbull-f1-motion.jpg
+client/public/assets/images/backgrounds/ferrari-mountain.jpg
+client/public/assets/images/backgrounds/qr-code-sports-car.png
+client/public/assets/images/bugatti-sunset.png
+client/public/assets/images/city-skyline-sunset.jpg
+client/public/assets/images/corporate-towers.jpg
+client/public/assets/images/Events/corvette-street-event.png
+client/public/assets/images/F1/ferrari-laferrari-mountains.png
+client/public/assets/images/F1/f1-stadium-sunset.png
+client/public/assets/images/F1/ferrari-f1-pitstop-aerial.png
+client/public/assets/images/F1/redbull-honda-track.png
+client/public/assets/images/F1/redbull-sparks-night.png
+client/public/assets/images/ferrari-desert.png
+client/public/assets/images/ferrari-f1.png
+client/public/assets/images/ferrari-fxx-mountain.png
+client/public/assets/images/ferrari-mountain.jpg
+client/public/assets/images/ferrari-mountain-road.png
+client/public/assets/images/ferrari-pit-crew.jpg
+client/public/assets/images/leclerc-ferrari-f1.jpg
+client/public/assets/images/lewis-4341616_1280.jpg
+client/public/assets/images/luxury-car-interior.jpg
+client/public/assets/images/mclaren-4184249_1280.jpg
+client/public/assets/images/mercedes-f1-art.png
+client/public/assets/images/porsche-911-gt2-5795128_1280.jpg
+client/public/assets/images/qr-code-sports-car.png
+client/public/assets/images/race-car-8338236_1280.jpg
+client/public/assets/images/redbull-f1-motion.jpg
+client/public/assets/images/renault-f1-cockpit.jpg
+client/public/assets/images/sergio-perez-6633997_1280.jpg
+client/public/assets/images/Supercars/mclaren-720s-orange.png
+client/public/assets/images/Supercars/bugatti-chiron-track.png
+client/public/assets/images/Supercars/corvette-desert.png
+client/public/assets/images/tank-400-8600203_1280.jpg
+client/public/assets/images/traffic-332857_1280.jpg
+client/public/assets/images/white-mclaren.png
+client/public/assets/images/an exotic car with qr codes on it.png
+client/public/assets/images/image (6).png
+client/public/assets/images/f1-stadium-sunset.png
+client/public/assets/images/backgrounds/traffic-332857_1280.jpg
+client/public/assets/images/backgrounds/tank-400-8600203_1280.jpg
+client/public/assets/images/backgrounds/sergio-perez-6633997_1280.jpg
+client/public/assets/images/backgrounds/ferrari-desert.png
+client/public/assets/images/backgrounds/race-car-8338236_1280.jpg
+client/public/assets/images/backgrounds/porsche-911-gt2-5795128_1280.jpg
+client/public/assets/images/backgrounds/mclaren-4184249_1280.jpg
+client/public/assets/images/backgrounds/lewis-4341616_1280.jpg
+client/public/assets/images/backgrounds/white-mclaren.png
+client/public/assets/images/backgrounds/ferrari-f1.png
+client/public/assets/images/backgrounds/mercedes-f1-art.png
+client/public/assets/images/backgrounds/redbull-f1-motion.jpg
+client/public/assets/images/backgrounds/ferrari-mountain.jpg
+client/public/assets/images/backgrounds/qr-code-sports-car.png
+client/public/assets/images/F1/ferrari-laferrari-mountains.png
+client/public/assets/images/F1/f1-stadium-sunset.png
+client/public/assets/images/F1/ferrari-f1-pitstop-aerial.png
+client/public/assets/images/F1/redbull-honda-track.png
+client/public/assets/images/F1/redbull-sparks-night.png

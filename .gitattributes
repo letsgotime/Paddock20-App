@@ -1,0 +1,40 @@
+# Auto detect text files and perform LF normalization
+* text=auto
+
+# Exclude binary and large files from deployment
+*.jpg binary
+*.jpeg binary
+*.png binary
+*.gif binary
+*.ico binary
+*.pdf binary
+*.zip binary
+*.tar.gz binary
+*.mp4 binary
+*.mov binary
+
+# Mark backup folders to be excluded from deployment
+attached_assets/ export-ignore
+May_09_2025_Auth_Backup/ export-ignore
+May_09_2025_Full_Codebase_Backup/ export-ignore
+May_8_2025_Restored_Backup/ export-ignore
+auth_updates_backup/ export-ignore
+backup_current_state/ export-ignore
+backup_paddock_refactor/ export-ignore
+backups/ export-ignore
+beta_backups/ export-ignore
+beta_welcome_backup/ export-ignore
+case_fix_backup/ export-ignore
+legacy-files/ export-ignore
+replit_agent/ export-ignore
+routing_and_onboarding_backup/ export-ignore
+temp_backup/ export-ignore
+
+# Specific project backups (excluding the 2 most recent)
+project_backup_20250509_*/ export-ignore
+project_backup_20250510_154559/ export-ignore
+project_backup_20250510_154946/ export-ignore
+
+# Keep only these recent backups
+# project_backup_20250510_155254/
+# project_backup_20250510_155037/

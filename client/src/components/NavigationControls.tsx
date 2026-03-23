@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef, useCallback } from 'react';
 import { ArrowLeft, ArrowRight, Home } from 'lucide-react';
-import { useLocation, Link } from 'wouter';
+import { useNavigate, useLocation } from 'react-router-dom';
 
 // Constants for localStorage keys
 const HISTORY_KEY = 'paddock20_navigation_history';
@@ -13,7 +13,7 @@ const CURRENT_INDEX_KEY = 'paddock20_navigation_index';
  * that stays anchored to the bottom of the screen at all times.
  */
 const NavigationControls: React.FC = () => {
-  const [location, setLocation] = useLocation();
+  const navigate = useNavigate();
   const location = useLocation();
   
   // Navigation state
@@ -135,7 +135,7 @@ const NavigationControls: React.FC = () => {
       isNavigatingRef.current = true;
       const prevPath = navigationHistory[currentIndex - 1];
       setCurrentIndex(currentIndex - 1);
-      setLocation(prevPath);
+      navigate(prevPath);
     }
   }, [navigate, navigationHistory, currentIndex]);
 
@@ -144,13 +144,13 @@ const NavigationControls: React.FC = () => {
       isNavigatingRef.current = true;
       const nextPath = navigationHistory[currentIndex + 1];
       setCurrentIndex(currentIndex + 1);
-      setLocation(nextPath);
+      navigate(nextPath);
     }
   }, [navigate, navigationHistory, currentIndex]);
 
   const goHome = useCallback(() => {
     if (location?.pathname !== '/') {
-      setLocation('/');
+      navigate('/');
     }
   }, [navigate, location?.pathname]);
 

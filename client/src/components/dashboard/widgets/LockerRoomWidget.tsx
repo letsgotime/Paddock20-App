@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useLocation, Link } from 'wouter';
+import { useNavigate } from 'react-router-dom';
 import { Shield, Shirt, Ruler, BookPlus, Edit2, Check, ArrowRight } from 'lucide-react';
 import { useAuth } from '@/hooks/useAuth';
 import { useUserProfileStore } from '@/services/userProfileService';
@@ -33,7 +33,7 @@ const defaultEquipmentData: EquipmentData = {
 };
 
 const LockerRoomWidget: React.FC = () => {
-  const [location, setLocation] = useLocation();
+  const navigate = useNavigate();
   const [isEditing, setIsEditing] = useState(false);
   const [equipment, setEquipment] = useState<EquipmentData>(defaultEquipmentData);
   
@@ -320,7 +320,7 @@ const LockerRoomWidget: React.FC = () => {
       {/* Add new equipment button */}
       <div className="mt-4">
         <button 
-          onClick={() => setLocation('/equipment-manager')}
+          onClick={() => navigate('/equipment-manager')}
           className="w-full py-2 bg-blue-900/30 hover:bg-blue-800/40 rounded-md flex items-center justify-center gap-2 text-blue-400 text-sm"
         >
           <BookPlus className="h-4 w-4" />
@@ -331,7 +331,7 @@ const LockerRoomWidget: React.FC = () => {
       {/* View all link */}
       <div className="mt-4 text-right">
         <button 
-          onClick={() => setLocation('/track-day-checklist')}
+          onClick={() => navigate('/track-day-checklist')}
           className="text-sm text-blue-400 hover:text-blue-300 flex items-center justify-end ml-auto"
         >
           <span>Track Day Checklist</span>

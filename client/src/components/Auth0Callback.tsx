@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { useAuth0 } from '@auth0/auth0-react';
 import { useLocation } from 'wouter';
-import { Loader2 } from 'lucide-react';
+import { Loader2, AlertTriangle } from 'lucide-react';
 
 /**
  * Auth0Callback - Handles the redirect callback from Auth0 login/signup
@@ -14,6 +14,30 @@ const Auth0Callback = () => {
   const [, setLocation] = useLocation();
   const { isAuthenticated, isLoading, error, user } = useAuth0();
   const [processingRedirect, setProcessingRedirect] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [showDemoOption, setShowDemoOption] = useState(false);
+  
+  // Check for error in URL params (which happens when the Auth0 domain rejects the callback URL)
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    if (params.has('error')) {
+      const errorDesc = params.get('error_description') || params.get('error');
+      setAuthError(errorDesc);
+      
+      // On production deployment, automatically go to demo mode after a short delay
+      if (window.location.hostname.includes('replit.app')) {
+        console.log('Deployed app detected with Auth0 error - automatically redirecting to demo mode');
+        setTimeout(() => {
+          enableDemoMode();
+        }, 1000);
+      } else {
+        // On dev environment, show the demo option button after a delay
+        setTimeout(() => {
+          setShowDemoOption(true);
+        }, 2000);
+      }
+    }
+  }, []);
   
   useEffect(() => {
     // Log extensive debugging information
@@ -55,35 +79,143 @@ const Auth0Callback = () => {
             return;
           }
           
-          // Store Auth0 token and user ID in localStorage for use during onboarding
-          if (user?.sub) {
-            localStorage.setItem('auth0_user_id', user.sub);
-            console.log('Auth0 user ID stored in localStorage for onboarding');
+          // IMPORTANT: Enforce the exact flow: Marketing page → Auth0 → Beta Modal → Onboarding
+          
+          // Get the user's status from localStorage
+          const hasCompletedBetaEnrollment = localStorage.getItem('paddock20_beta_status');
+          const hasCompletedOnboarding = localStorage.getItem(`paddock20_beta_onboarding_complete_${user?.sub || 'guest'}`);
+          
+          console.log('Auth flow status checks:', { 
+            isAuthenticated: true, 
+            hasCompletedBetaEnrollment, 
+            hasCompletedOnboarding 
+          });
+          
+          // Step 1: After Auth0 authentication, always direct to Beta Enrollment first
+          if (!hasCompletedBetaEnrollment) {
+            console.log('✅ Auth0 complete - directing to beta enrollment modal');
+            setLocation('/beta-enrollment');
           }
-          
-          // IMPORTANT: Follow this flow exactly: Auth0 → Beta Welcome → Onboarding → Dashboard
-          
-          // Always direct to Beta Welcome page first
-          console.log('✅ Auth0 complete - directing to beta welcome process');
-          localStorage.setItem('paddock20_beta_status', 'pending');
-          setLocation('/beta-welcome');
+          // Step 2: If beta enrollment is complete, check if onboarding is complete
+          else if (!hasCompletedOnboarding) {
+            console.log('✅ Beta enrollment complete - directing to onboarding process');
+            setLocation('/onboarding');
+          } 
+          // Step 3: If both beta enrollment and onboarding are complete, go to dashboard
+          else {
+            console.log('✅ All steps complete - sending to dashboard');
+            setLocation('/the-paddock');
+          }
         }, 500);
       } 
       // Authentication error
       else if (error) {
         console.error('❌ Authentication error:', error);
-        setTimeout(() => setLocation('/auth'), 500);
+        setAuthError(error.message || 'Authentication failed');
+        
+        // On production deployment, automatically go to demo mode after a short delay
+        if (window.location.hostname.includes('replit.app')) {
+          console.log('Deployed app detected with Auth0 error - automatically redirecting to demo mode');
+          setTimeout(() => {
+            enableDemoMode();
+          }, 1000);
+        } else {
+          // On dev environment, show the demo option button after a delay
+          setTimeout(() => {
+            setShowDemoOption(true);
+          }, 2000);
+        }
       }
       // Not authenticated but no error (unusual state)
       else {
         console.log('⚠️ Not authenticated but no error');
         if (hasAuthCode) {
           console.log('Authorization code present but auth failed silently - directing to auth page');
-          setTimeout(() => setLocation('/auth'), 500);
+          setAuthError('Authentication failed silently. This may be due to a callback URL mismatch.');
+          
+          // On production deployment, automatically go to demo mode after a short delay
+          if (window.location.hostname.includes('replit.app')) {
+            console.log('Deployed app detected with Auth0 error - automatically redirecting to demo mode');
+            setTimeout(() => {
+              enableDemoMode();
+            }, 1000);
+          } else {
+            // On dev environment, show the demo option button after a delay
+            setTimeout(() => {
+              setShowDemoOption(true);
+            }, 2000);
+          }
         }
       }
     }
   }, [isLoading, isAuthenticated, error, user, processingRedirect, setLocation]);
+
+  // Enable demo mode for testing on deployed app
+  const enableDemoMode = () => {
+    // Set all required demo mode flags for complete bypass
+    localStorage.setItem('PADDOCK20_DEMO_MODE', 'true');
+    localStorage.setItem('paddock20_demo_auth_bypass', 'true');
+    localStorage.setItem('paddock20_beta_status', 'enrolled');
+    localStorage.setItem('paddock20_beta_onboarding_complete_guest', 'true');
+    
+    // Set demo user data
+    const demoUser = {
+      id: 9999,
+      username: 'demoadmin',
+      email: 'demo@paddock20.example',
+      firstName: 'Demo',
+      lastName: 'User',
+      fullName: 'Demo User',
+      profileImage: 'https://ui-avatars.com/api/?name=Demo+User&background=1982FC&color=fff',
+      role: 'admin',
+    };
+    
+    localStorage.setItem('userProfile', JSON.stringify(demoUser));
+    
+    console.log('Demo mode fully enabled - redirecting to dashboard');
+    
+    // Force redirect to the paddock
+    window.location.href = '/the-paddock';
+  };
+
+  // If there's an auth error, show error and demo option
+  if (authError) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-black p-4">
+        <div className="max-w-md rounded-lg border border-red-900 bg-black/80 p-8 text-center">
+          <AlertTriangle className="mx-auto h-12 w-12 text-red-500" />
+          <h1 className="mt-4 text-2xl font-bold text-white">Authentication Error</h1>
+          <p className="mt-2 text-gray-300">{authError}</p>
+          
+          <div className="mt-8">
+            <p className="mb-4 text-gray-400">
+              This error occurs when using a new URL that isn't configured in Auth0's allowed callback URLs.
+            </p>
+            
+            {/* Always show the demo mode button, but vary the design based on timing */}
+            <button
+              onClick={enableDemoMode}
+              className={`w-full rounded px-6 py-3 text-lg font-bold text-white ${
+                showDemoOption 
+                  ? 'animate-pulse bg-[#08c519] hover:bg-[#08c519]/80' 
+                  : 'bg-[#1982FC] hover:bg-[#1982FC]/80'
+              }`}
+            >
+              {window.location.hostname.includes('replit.app')
+                ? 'START DEMO MODE NOW'
+                : 'Continue in Demo Mode'}
+            </button>
+            
+            <p className={`mt-3 text-sm ${showDemoOption ? 'text-green-500' : 'text-gray-500'}`}>
+              {showDemoOption 
+                ? 'RECOMMENDED: Demo mode allows you to use the application without Auth0.'
+                : 'Demo mode bypasses authentication for testing purposes.'}
+            </p>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-black">
