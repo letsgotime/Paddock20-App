@@ -5,5 +5,8 @@ description = "Add your description here"
 requires-python = ">=3.11"
 dependencies = [
     "flask>=3.1.0",
+    "markdown>=3.10.2",
     "obd>=0.7.3",
+    "pygments>=2.20.0",
+    "weasyprint>=69.0",
 ]

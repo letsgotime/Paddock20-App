@@ -1,0 +1,8 @@
+uploads = []
+generated = []
+
+[[outputs]]
+id = "-U0-7zt1vtMl3mxKz-YgC"
+uri = "file://Paddock20-Technical-Overview.pdf"
+type = "pdf"
+title = "Paddock20 — Technical Overview (PDF)"
