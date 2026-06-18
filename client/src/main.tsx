@@ -6,6 +6,17 @@ import "./bts.css";
 import "./utils/storageManager"; // Initialize enhanced storage management
 import { Auth0Provider } from '@auth0/auth0-react';
 
+// Normalize "/index.html" to "/" so the router matches the home route
+// (some preview/host environments load the app at /index.html directly)
+if (window.location.pathname.endsWith('/index.html')) {
+  const normalizedPath = window.location.pathname.replace(/index\.html$/, '');
+  window.history.replaceState(
+    null,
+    '',
+    normalizedPath + window.location.search + window.location.hash
+  );
+}
+
 // Auto-redirect to demo mode on Replit.app domains
 if (window.location.hostname.includes('replit.app') && 
     !window.location.pathname.includes('/demo-mode') && 
