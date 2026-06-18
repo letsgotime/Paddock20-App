@@ -27,8 +27,8 @@ project_backup_20250509_*/
 project_backup_20250510_154559/
 project_backup_20250510_154946/
 
-# Keep only these recent backups
-# project_backup_20250510_155254/
+# All project backup folders are excluded from Git
+project_backup_*/
 # project_backup_20250510_155037/
 
 # Other large files
