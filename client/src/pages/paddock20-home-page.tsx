@@ -220,7 +220,7 @@ const Paddock20HomePage: React.FC = () => {
       <div 
         className="fixed inset-0 bg-cover bg-center z-0 opacity-20"
         style={{
-          backgroundImage: "url('/assets/images/f1-stadium-sunset.png')",
+          backgroundImage: "url('/assets/images/f1-stadium-sunset.webp')",
           backgroundAttachment: "fixed",
         }}
       ></div>
@@ -1026,7 +1026,7 @@ const Paddock20HomePage: React.FC = () => {
             <div className="bg-black/40 rounded overflow-hidden border border-gray-800 group hover:border-green-800 transition-colors">
               <div className="h-32 overflow-hidden relative">
                 <img 
-                  src="/assets/gallery/ferrari-mountain-road.png" 
+                  src="/assets/gallery/ferrari-mountain-road.webp" 
                   alt="McLaren 720S" 
                   className="w-full h-full object-cover object-center"
                 />
@@ -1161,10 +1161,10 @@ const Paddock20HomePage: React.FC = () => {
                     <img src="/assets/gallery/Ferrari-458-With-HRE-P101-Wheels-By-TAG-Motorsports-2.jpg" alt="Ferrari 458" className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-shrink-0 w-16 h-16 rounded overflow-hidden transition-all opacity-60 hover:opacity-100">
-                    <img src="/assets/gallery/ferrari-mountain-road.png" alt="Ferrari Mountain Road" className="w-full h-full object-cover" />
+                    <img src="/assets/gallery/ferrari-mountain-road.webp" alt="Ferrari Mountain Road" className="w-full h-full object-cover" />
                   </div>
                   <div className="flex-shrink-0 w-16 h-16 rounded overflow-hidden transition-all opacity-60 hover:opacity-100 relative">
-                    <img src="/assets/gallery/ferrari-f1.png" alt="Ferrari F1" className="w-full h-full object-cover" />
+                    <img src="/assets/gallery/ferrari-f1.webp" alt="Ferrari F1" className="w-full h-full object-cover" />
                     <div className="absolute inset-0 flex items-center justify-center bg-black/40">
                       <svg xmlns="http://www.w3.org/2000/svg" className="h-8 w-8 text-white opacity-80" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                         <polygon points="5 3 19 12 5 21 5 3"></polygon>
@@ -1230,7 +1230,7 @@ const Paddock20HomePage: React.FC = () => {
           <div className="w-full lg:w-1/2 relative overflow-hidden">
             <div className="h-full min-h-[300px] lg:min-h-0 relative">
               <img 
-                src="/assets/gallery/ferrari-mountain-road.png" 
+                src="/assets/gallery/ferrari-mountain-road.webp" 
                 alt="Manifestation Visualization" 
                 className="w-full h-full object-cover object-center"
               />

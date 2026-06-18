@@ -506,7 +506,7 @@ const BetaTermsAndAgreements: React.FC<BetaTermsAndAgreementsProps> = ({ onCompl
           <div 
             className="absolute inset-0 bg-cover bg-center opacity-40"
             style={{ 
-              backgroundImage: `url('/assets/Stock Photos/F1/ferrari-f1-pitstop-aerial.png')`,
+              backgroundImage: `url('/assets/images/F1/ferrari-f1-pitstop-aerial.webp')`,
               filter: 'brightness(0.5)',
               animation: 'pulse 5s infinite ease-in-out'
             }}
@@ -516,7 +516,7 @@ const BetaTermsAndAgreements: React.FC<BetaTermsAndAgreementsProps> = ({ onCompl
           <div 
             className="absolute inset-0 bg-cover bg-center opacity-40"
             style={{ 
-              backgroundImage: `url('/assets/Stock Photos/F1/f1-stadium-sunset.png')`,
+              backgroundImage: `url('/assets/images/f1-stadium-sunset.webp')`,
               filter: 'brightness(0.5)',
               animation: 'pulse 5s infinite ease-in-out'
             }}
@@ -526,7 +526,7 @@ const BetaTermsAndAgreements: React.FC<BetaTermsAndAgreementsProps> = ({ onCompl
           <div 
             className="absolute inset-0 bg-cover bg-center opacity-40"
             style={{ 
-              backgroundImage: `url('/assets/Stock Photos/F1/redbull-honda-track.png')`,
+              backgroundImage: `url('/assets/images/F1/redbull-honda-track.webp')`,
               filter: 'brightness(0.5)',
               animation: 'pulse 5s infinite ease-in-out'
             }}
@@ -536,7 +536,7 @@ const BetaTermsAndAgreements: React.FC<BetaTermsAndAgreementsProps> = ({ onCompl
           <div 
             className="absolute inset-0 bg-cover bg-center opacity-40"
             style={{ 
-              backgroundImage: `url('/assets/Stock Photos/F1/ferrari-laferrari-mountains.png')`,
+              backgroundImage: `url('/assets/images/F1/ferrari-laferrari-mountains.webp')`,
               filter: 'brightness(0.5)',
               animation: 'pulse 5s infinite ease-in-out'
             }}

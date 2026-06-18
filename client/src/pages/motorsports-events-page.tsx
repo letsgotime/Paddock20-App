@@ -25,7 +25,7 @@ const motorsportsEvents: TrackEvent[] = [
     title: "Formula 1 Monaco Grand Prix",
     date: "May 28, 2025",
     location: "Monte Carlo, Monaco",
-    imageUrl: "/assets/Stock Photos/F1/ferrari-f1-pitstop-aerial.png",
+    imageUrl: "/assets/images/F1/ferrari-f1-pitstop-aerial.webp",
     trackName: "Circuit de Monaco",
     eventType: "F1",
     description: "Experience the glamour and prestige of the Monaco Grand Prix, widely considered to be one of the most important and prestigious automobile races in the world.",
@@ -40,7 +40,7 @@ const motorsportsEvents: TrackEvent[] = [
     title: "Nürburgring Track Day",
     date: "June 15, 2025",
     location: "Nürburg, Germany",
-    imageUrl: "/assets/Stock Photos/F1/redbull-honda-track.png",
+    imageUrl: "/assets/images/F1/redbull-honda-track.webp",
     trackName: "Nürburgring Nordschleife",
     eventType: "Track Day",
     description: "Test your skills on the legendary Nordschleife, known as 'The Green Hell', one of the most challenging race tracks in the world.",
@@ -54,7 +54,7 @@ const motorsportsEvents: TrackEvent[] = [
     title: "Ferrari Racing Days",
     date: "July 4, 2025",
     location: "Austin, Texas",
-    imageUrl: "/assets/Stock Photos/F1/ferrari-laferrari-mountains.png",
+    imageUrl: "/assets/images/F1/ferrari-laferrari-mountains.webp",
     trackName: "Circuit of the Americas",
     eventType: "Car Club",
     description: "Ferrari owners gather for an exclusive track day experience at the home of the US Grand Prix.",
@@ -96,7 +96,7 @@ const MotorsportsEventsPage: React.FC = () => {
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-to-b from-black via-transparent to-black z-10"></div>
         <img 
-          src="/assets/Stock Photos/F1/f1-stadium-sunset.png" 
+          src="/assets/images/f1-stadium-sunset.webp" 
           alt="Motorsports racing event" 
           className="w-full h-[40vh] object-cover"
         />

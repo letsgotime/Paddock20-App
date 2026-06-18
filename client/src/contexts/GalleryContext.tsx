@@ -539,7 +539,7 @@ export const GalleryProvider: React.FC<GalleryProviderProps> = ({ children }) =>
             {
               id: "cc-2",
               type: "image",
-              src: "/assets/gallery/ferrari-mountain-road.png",
+              src: "/assets/gallery/ferrari-mountain-road.webp",
               alt: "Ferrari on mountain road",
               title: "Mountain Run",
               description: "Precision engineering meets the perfect road",
@@ -548,7 +548,7 @@ export const GalleryProvider: React.FC<GalleryProviderProps> = ({ children }) =>
             {
               id: "cc-3",
               type: "video",
-              src: "/assets/gallery/ferrari-f1.png", // This would be a video URL in production
+              src: "/assets/gallery/ferrari-f1.webp", // This would be a video URL in production
               alt: "Ferrari F1 Race Car",
               title: "F1 Sound Check",
               description: "Listen to the incredible sounds of this F1-inspired engine",
@@ -562,12 +562,12 @@ export const GalleryProvider: React.FC<GalleryProviderProps> = ({ children }) =>
           date: "May 22, 2023",
           location: "Deals Gap, NC",
           description: "Epic mountain run through one of America's most challenging roads.",
-          cover: "/assets/gallery/ferrari-mountain-road.png",
+          cover: "/assets/gallery/ferrari-mountain-road.webp",
           media: [
             {
               id: "td-1",
               type: "image",
-              src: "/assets/gallery/ferrari-mountain-road.png",
+              src: "/assets/gallery/ferrari-mountain-road.webp",
               alt: "Ferrari on mountain road",
               title: "Dragon's Curve",
               description: "Taking on the infamous curves of Tail of the Dragon",

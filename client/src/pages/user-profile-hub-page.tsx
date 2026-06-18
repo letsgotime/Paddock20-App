@@ -47,7 +47,7 @@ const UserProfileHubPage: React.FC = () => {
       <div 
         className="fixed inset-0 bg-cover bg-center z-0 opacity-20"
         style={{
-          backgroundImage: "url('/assets/images/f1-stadium-sunset.png')",
+          backgroundImage: "url('/assets/images/f1-stadium-sunset.webp')",
           backgroundAttachment: "fixed",
         }}
       ></div>
